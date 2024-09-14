@@ -227,7 +227,7 @@ public class BootstrapServiceRegistryImpl
 			}
 		}
 	}
-	
+
 	private synchronized void destroy(ServiceBinding serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}

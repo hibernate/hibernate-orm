@@ -90,4 +90,3 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 }
-

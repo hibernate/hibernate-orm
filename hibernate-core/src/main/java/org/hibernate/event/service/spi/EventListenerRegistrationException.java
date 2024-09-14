@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 
 /**
  * Indicates a problem registering an event listener.
- * 
+ *
  * @author Steve Ebersole
  */
 public class EventListenerRegistrationException extends HibernateException {

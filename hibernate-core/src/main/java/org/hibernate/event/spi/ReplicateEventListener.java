@@ -7,7 +7,6 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
-import org.hibernate.ReplicationMode;
 
 /**
  * Defines the contract for handling of replicate events generated from a session.

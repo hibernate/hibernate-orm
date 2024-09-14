@@ -8,9 +8,9 @@ package org.hibernate.orm.test.onetoone.cache;
 
 
 /**
- * 
+ *
  * @author Wolfgang Voelkl
- * 
+ *
  */
 public class Object2 {
 	private Long id;
@@ -24,7 +24,7 @@ public class Object2 {
 	public void setId(Long l) {
 		this.id = l;
 	}
-	
+
 	public String getDummy() {
 		return dummy;
 	}

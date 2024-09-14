@@ -30,7 +30,7 @@ public class Mammal extends Animal {
 	public Date getBirthdate() {
 		return birthdate;
 	}
-	
+
 
 	public void setBirthdate(Date birthdate) {
 		this.birthdate = birthdate;

@@ -141,4 +141,3 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 }
-

@@ -17,4 +17,3 @@ public interface Resolvable {
 
 	BasicValue.Resolution<?> resolve();
 }
-

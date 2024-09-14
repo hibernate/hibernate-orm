@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.envers.integration.interfaces.hbm.allAudited;
 
 
-import org.hibernate.orm.test.envers.integration.interfaces.hbm.allAudited.SimpleInterface;
 
 /**
  * @author Hern�n Chanfreau

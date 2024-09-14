@@ -11,7 +11,6 @@ import java.sql.Connection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.WrapperOptions;

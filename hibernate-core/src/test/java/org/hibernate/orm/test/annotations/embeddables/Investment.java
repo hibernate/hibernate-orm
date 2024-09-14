@@ -14,7 +14,7 @@ import jakarta.persistence.Embeddable;
  */
 @Embeddable
 public class Investment {
-	
+
 	private DollarValue amount;
 	private String description;
     @Column(name = "`date`")

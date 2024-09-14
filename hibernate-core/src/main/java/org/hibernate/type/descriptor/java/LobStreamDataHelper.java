@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type.descriptor.java;
 
@@ -291,7 +291,7 @@ public final class LobStreamDataHelper {
 	/**
 	 * Make sure we allocate a buffer sized not bigger than 2048,
 	 * not higher than what is actually needed, and at least one.
-	 * 
+	 *
 	 * @param lengthHint the expected size of the full value
 	 * @return the buffer size
 	 */

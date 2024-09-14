@@ -24,5 +24,3 @@ public class BlobEntity {
 	@Lob
 	private Blob blob;
 }
-
-

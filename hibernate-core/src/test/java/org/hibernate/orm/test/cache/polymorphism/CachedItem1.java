@@ -22,5 +22,5 @@ public class CachedItem1 extends Cacheable {
 	public CachedItem1(long id, String name) {
 		super( id, name );
 	}
-	
+
 }

@@ -284,7 +284,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		session.close();
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-5732")
 	public void testInverseIndex() {
@@ -307,7 +307,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		
+
 		try {
 			SimpleSelect select = new SimpleSelect( sessionFactory() )
 					.setTableName( transactionsPersister.getTableName() )
@@ -337,7 +337,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 			s.close();
 		}
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-8083" )
 	public void testInverseIndexCascaded() {
@@ -395,7 +395,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		Hibernate.initialize( forum.getUsers() );
 		assertEquals( 1, forum.getUsers().size() );
 	}
-  
+
 	@Test
 	@JiraKey(value = "HHH-8794")
 	public void testOrderByNoElement() {

@@ -19,7 +19,7 @@ public class AId implements java.io.Serializable {
     protected AId() {
         this.id = 0;
     }
-    
+
     public AId(int id) {
         this.id = id;
     }
@@ -44,4 +44,3 @@ public class AId implements java.io.Serializable {
         return true;
     }
 }
-

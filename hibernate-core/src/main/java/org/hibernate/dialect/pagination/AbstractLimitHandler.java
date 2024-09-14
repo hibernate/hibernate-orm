@@ -18,7 +18,7 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 
 /**
- * Default implementation of {@link LimitHandler} interface. 
+ * Default implementation of {@link LimitHandler} interface.
  *
  * @author Lukasz Antoniak
  */

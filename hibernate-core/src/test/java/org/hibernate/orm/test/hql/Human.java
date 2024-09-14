@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Human.java 9873 2006-05-04 13:42:48Z max.andersen@jboss.com $
 package org.hibernate.orm.test.hql;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -26,12 +24,12 @@ public class Human extends Mammal {
 	private Collection pets;
 	private Map family;
 	private double heightInches;
-	
+
 	private BigInteger bigIntegerValue;
 	private BigDecimal bigDecimalValue;
 	private int intValue;
 	private float floatValue;
-	
+
 	private Set nickNames;
 	private Map addresses;
 
@@ -66,11 +64,11 @@ public class Human extends Mammal {
 	public void setNickName(String nickName) {
 		this.nickName = nickName;
 	}
-	
+
 	public double getHeightInches() {
 		return heightInches;
 	}
-	
+
 	public void setHeightInches(double height) {
 		this.heightInches = height;
 	}
@@ -78,7 +76,7 @@ public class Human extends Mammal {
 	public Map getFamily() {
 		return family;
 	}
-	
+
 
 	public void setFamily(Map family) {
 		this.family = family;
@@ -131,6 +129,6 @@ public class Human extends Mammal {
 	public void setIntValue(int intValue) {
 		this.intValue = intValue;
 	}
-	
-	
+
+
 }

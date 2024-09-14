@@ -72,7 +72,7 @@ public interface JpaConflictUpdateAction<T> {
 
 	/**
 	 * Modify the update query to restrict the target of the update
-	 * according to the conjunction of the specified restriction 
+	 * according to the conjunction of the specified restriction
 	 * predicates.
 	 * Replaces the previously added restriction(s), if any.
 	 * If no restrictions are specified, any previously added

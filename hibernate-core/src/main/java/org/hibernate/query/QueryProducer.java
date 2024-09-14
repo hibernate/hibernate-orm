@@ -402,7 +402,7 @@ public interface QueryProducer {
 	 * found to be invalid
 	 *
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
-	 * 
+	 *
 	 * @deprecated use {@link #createNamedQuery(String, Class)}
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")

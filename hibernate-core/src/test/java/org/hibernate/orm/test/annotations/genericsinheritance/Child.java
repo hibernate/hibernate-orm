@@ -14,7 +14,7 @@ public abstract class Child<P extends Parent> {
 
 	@Id Long id;
 	@ManyToOne P parent;
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -27,6 +27,6 @@ public abstract class Child<P extends Parent> {
 	public void setParent(P parent) {
 		this.parent = parent;
 	}
-	
-	
+
+
 }

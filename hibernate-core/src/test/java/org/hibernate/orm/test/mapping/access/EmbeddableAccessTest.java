@@ -60,7 +60,7 @@ public class EmbeddableAccessTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 	//end::access-embedded-mapping-example[]
-		
+
 		public Long getId() {
 			return id;
 		}
@@ -122,5 +122,5 @@ public class EmbeddableAccessTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 	//end::access-embeddable-mapping-example[]
-	
+
 }

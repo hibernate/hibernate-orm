@@ -15,7 +15,6 @@ import java.util.Date;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.orm.test.jpa.Cat;

@@ -20,11 +20,11 @@ public class MyDate implements Serializable {
 
 	public MyDate() {
 	}
-	
+
 	public MyDate(Date date) {
 		this.date = date;
 	}
-	
+
 	public Date getDate() {
 		return date;
 	}

@@ -43,7 +43,7 @@ public class ExplicitTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Id
 		private Integer id;
-		
+
 		private String sku;
 
 		@Type(

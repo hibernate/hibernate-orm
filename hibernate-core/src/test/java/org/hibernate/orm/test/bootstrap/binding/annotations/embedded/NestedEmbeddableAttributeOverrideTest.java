@@ -16,7 +16,7 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 public class NestedEmbeddableAttributeOverrideTest extends BaseCoreFunctionalTestCase {
-	
+
 	@Test
 	@JiraKey(value="HHH-8021")
 	public void testAttributeOverride() {
@@ -26,17 +26,17 @@ public class NestedEmbeddableAttributeOverrideTest extends BaseCoreFunctionalTes
 		EmbeddableA embedA = new EmbeddableA();
 		embedA.setEmbedAttrA("A");
 		embedA.setEmbedB(embedB);
-		
+
 		EntityWithNestedEmbeddables entity = new EntityWithNestedEmbeddables();
 		entity.setEmbedA(embedA);
-		
+
 		Session s = openSession();
 		s.beginTransaction();
 		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { EntityWithNestedEmbeddables.class };

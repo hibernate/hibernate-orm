@@ -23,6 +23,6 @@ public class FirstName {
 	public void setFirstName(String lowerCaseName) {
 		this.firstName = lowerCaseName;
 	}
-	
-	
+
+
 }

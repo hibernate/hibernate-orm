@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.jpa;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;

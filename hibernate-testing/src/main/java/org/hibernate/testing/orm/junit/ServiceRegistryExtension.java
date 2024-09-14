@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.testing.orm.junit;
 
@@ -17,7 +17,6 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
@@ -27,7 +26,6 @@ import org.hibernate.service.spi.ServiceContributor;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;

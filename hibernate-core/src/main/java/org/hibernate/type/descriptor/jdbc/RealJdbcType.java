@@ -9,7 +9,6 @@ package org.hibernate.type.descriptor.jdbc;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 

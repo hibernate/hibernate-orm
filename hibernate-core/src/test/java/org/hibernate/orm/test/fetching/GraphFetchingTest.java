@@ -21,7 +21,6 @@ import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.QueryHint;
 
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.NaturalId;
@@ -36,7 +35,6 @@ import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 
 /**
  * @author Vlad Mihalcea

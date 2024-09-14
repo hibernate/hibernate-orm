@@ -119,4 +119,3 @@ public final class ConnectionCheckingConnectionProvider extends UserSuppliedConn
 	}
 
 }
-

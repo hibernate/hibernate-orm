@@ -33,7 +33,7 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 	protected String[] getMappings() {
 		return new String[] { "unidir/ParentChild.hbm.xml" };
 	}
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		// No test needed at this time.  This was purely to test a
@@ -137,4 +137,3 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 }
-

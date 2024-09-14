@@ -10,7 +10,6 @@ import java.util.List;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 import org.hibernate.orm.test.envers.integration.onetoone.bidirectional.BiRefEdEntity;
 import org.hibernate.orm.test.envers.integration.onetoone.bidirectional.BiRefIngEntity;
 

@@ -16,11 +16,11 @@ import org.hibernate.annotations.FetchMode;
 
 @Entity
 public class Player {
-	
+
 	private Long id;
 	private Team team;
 	private String name;
-	
+
     @Id
     @GeneratedValue
 	public Long getId() {
@@ -49,5 +49,5 @@ public class Player {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 }

@@ -25,4 +25,3 @@ public class Dummy {
 		this.id = id;
 	}
 }
-

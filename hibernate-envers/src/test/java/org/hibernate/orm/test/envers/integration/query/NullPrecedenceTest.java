@@ -64,7 +64,7 @@ public class NullPrecedenceTest extends BaseEnversJPAFunctionalTestCase {
         expected.addAll( Arrays.asList( 1, 2 ) );
         Assert.assertEquals( expected, results );
     }
-    
+
     @Test
     public void testNullPrecedenceLast() {
         List results = getAuditReader().createQuery().forRevisionsOfEntity( StrIntTestEntity.class, true, false )
@@ -74,5 +74,5 @@ public class NullPrecedenceTest extends BaseEnversJPAFunctionalTestCase {
         List<Integer> expected = new ArrayList<>();
         expected.addAll( Arrays.asList( 2, 1 ) );
         Assert.assertEquals( expected, results );
-    }    
+    }
 }

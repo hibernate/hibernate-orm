@@ -149,4 +149,3 @@ abstract public class SpatialCriteriaTest extends SpatialTestBase {
 		}
 	}
 }
-

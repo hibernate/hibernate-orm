@@ -135,7 +135,7 @@ public final class PropertyFactory {
 		// we need to dirty check collections, since they can cause an owner
 		// version number increment
 
-		// we need to dirty check many-to-ones with not-found="ignore" in order 
+		// we need to dirty check many-to-ones with not-found="ignore" in order
 		// to update the cache (not the database), since in this case a null
 		// entity reference can lose information
 

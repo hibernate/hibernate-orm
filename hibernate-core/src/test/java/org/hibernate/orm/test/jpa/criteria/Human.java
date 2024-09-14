@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.criteria;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 /**
  * Human

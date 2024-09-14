@@ -18,8 +18,6 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.common.JournalingBatchObserver;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;

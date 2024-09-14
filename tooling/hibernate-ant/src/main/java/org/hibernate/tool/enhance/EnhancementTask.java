@@ -16,9 +16,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.cfg.Environment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

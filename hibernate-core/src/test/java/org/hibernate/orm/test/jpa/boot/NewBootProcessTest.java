@@ -8,7 +8,6 @@ package org.hibernate.orm.test.jpa.boot;
 
 import jakarta.persistence.EntityManagerFactory;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.orm.test.jpa.xml.versions.JpaXsdVersionsTest;

@@ -21,7 +21,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
-import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.internal.CoreLogging;

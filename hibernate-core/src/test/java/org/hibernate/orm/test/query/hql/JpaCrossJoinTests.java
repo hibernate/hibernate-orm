@@ -2,14 +2,13 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.jpa.spi.MutableJpaCompliance;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -22,7 +21,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Here, {@value AvailableSettings#JPA_QUERY_COMPLIANCE} should force the translation

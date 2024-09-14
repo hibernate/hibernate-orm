@@ -8,7 +8,6 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 
 /**
  * A self dirtiness tracker that declares additional methods that are intended for

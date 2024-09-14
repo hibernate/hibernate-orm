@@ -4,13 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-/*
- * User.java
- *
- * Created on May 3, 2005, 9:42 AM
- */
-
 package org.hibernate.orm.test.collection.propertyref.lazy;
 
 import java.util.HashSet;

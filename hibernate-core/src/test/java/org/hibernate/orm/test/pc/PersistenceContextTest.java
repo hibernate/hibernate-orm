@@ -22,7 +22,6 @@ import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.PersistenceUtil;
 
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.NaturalId;

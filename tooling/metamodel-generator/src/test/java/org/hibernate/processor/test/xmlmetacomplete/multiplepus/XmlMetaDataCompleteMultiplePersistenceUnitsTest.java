@@ -31,4 +31,3 @@ public class XmlMetaDataCompleteMultiplePersistenceUnitsTest extends Compilation
 		assertMetamodelClassGeneratedFor( Dummy.class );
 	}
 }
-

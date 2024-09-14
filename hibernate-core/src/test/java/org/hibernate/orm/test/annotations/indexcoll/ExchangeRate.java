@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.indexcoll;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -23,12 +21,12 @@ public class ExchangeRate {
 
 	@Id @GeneratedValue
 	private Integer id;
-	
+
 	@Column
 	private double rate;
-	
 
-	
+
+
 	public double getRate() {
 		return rate;
 	}

@@ -17,9 +17,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.orm.test.subclassfilter.Customer;
-import org.hibernate.orm.test.subclassfilter.Employee;
-import org.hibernate.orm.test.subclassfilter.Person;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

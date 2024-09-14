@@ -22,9 +22,9 @@ public class Crop {
 
 	@Id @GeneratedValue
 	private long id;
-	
+
 	private String name;
-	
+
 	@ManyToMany(mappedBy = "crops", cascade = CascadeType.ALL)
 	private List<Farm> farms;
 

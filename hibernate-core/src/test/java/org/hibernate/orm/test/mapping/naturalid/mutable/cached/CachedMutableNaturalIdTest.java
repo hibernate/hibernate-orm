@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 
 /**
  * Tests of mutable natural ids stored in second level cache
- * 
+ *
  * @author Guenther Demetz
  * @author Steve Ebersole
  */
@@ -128,11 +128,11 @@ public abstract class CachedMutableNaturalIdTest {
 					assertEquals( 0, statistics.getNaturalIdCacheHitCount() );
 				}
 		);
-		
+
 		// finally there should be only 2 NaturalIdCache puts : 1. insertion, 2. when updating natural-id from 'it' to 'it2'
 		assertEquals( 2, statistics.getNaturalIdCachePutCount() );
 	}
-	
+
 	@Test
 	@JiraKey( "HHH-7245" )
 	public void testNaturalIdChangeAfterResolveEntityFrom2LCache(SessionFactoryScope scope) {
@@ -178,7 +178,7 @@ public abstract class CachedMutableNaturalIdTest {
 				}
 		);
 	}
-	
+
 	@Test
 	@JiraKey( "HHH-16557" )
 	public void testCreateDeleteRecreate(SessionFactoryScope scope) {
@@ -275,7 +275,7 @@ public abstract class CachedMutableNaturalIdTest {
 			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount()); // thus hits should not increment
 		});
 	}
-	
+
 	@Test
 	public void testReattachUnmodifiedInstance(SessionFactoryScope scope) {
 		final B created = scope.fromTransaction(
@@ -311,4 +311,3 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 
 }
-

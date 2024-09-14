@@ -27,9 +27,9 @@ public class Club {
 	@GeneratedValue
 	@Column(name="CLUB_ID")
 	private int id;
-	
+
 	private String name;
-	
+
 	@OneToMany(mappedBy="club")
 	@Filter(name="iqMin", condition="{h}.HUMAN_IQ >= :min", aliases={@SqlFragmentAlias(alias="h", entity=Human.class)})
 	@Filter(name="pregnantMembers", condition="{m}.IS_PREGNANT=1", aliases={@SqlFragmentAlias(alias="m", table="ZOOLOGY_MAMMAL")})
@@ -58,6 +58,6 @@ public class Club {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
-	
+
+
 }

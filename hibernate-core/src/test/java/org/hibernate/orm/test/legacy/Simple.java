@@ -140,10 +140,3 @@ public class Simple implements Serializable {
 	}
 
 }
-
-
-
-
-
-
-

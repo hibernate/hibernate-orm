@@ -39,7 +39,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Handles "any" mappings
- * 
+ *
  * @author Gavin King
  */
 public class AnyType extends AbstractType implements CompositeType, AssociationType {

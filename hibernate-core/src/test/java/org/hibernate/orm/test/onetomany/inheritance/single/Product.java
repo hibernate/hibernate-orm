@@ -25,19 +25,19 @@ public abstract class Product {
 
 	@Column(name="INVCODE")
 	private String inventoryCode;
-	
+
 	public Product() {
-		
+
 	}
-	
+
 	public Product(String inventoryCode) {
 		this.inventoryCode = inventoryCode;
 	}
-	
+
 	public int getEntid() {
 		return entid;
 	}
-	
+
 	public String getInventoryCode() {
 		return inventoryCode;
 	}

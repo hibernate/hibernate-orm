@@ -12,8 +12,6 @@ import org.hibernate.orm.test.annotations.query.Attrset;
 import org.hibernate.orm.test.annotations.query.Attrvalue;
 import org.hibernate.orm.test.annotations.query.Employee;
 import org.hibernate.orm.test.annotations.query.Employeegroup;
-import org.hibernate.orm.test.hql.Panel;
-import org.hibernate.orm.test.hql.TrtPanel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -50,7 +48,7 @@ public class DeleteWithSubqueryTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-8447" )
 	public void testDeleteMultipleWhereIns() {

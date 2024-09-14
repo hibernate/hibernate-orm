@@ -20,7 +20,7 @@ public abstract class Person implements Serializable {
     public void setId(int id) {
         this.id = id;
     }
-    
+
     public Details getDetails() {
         return details;
     }

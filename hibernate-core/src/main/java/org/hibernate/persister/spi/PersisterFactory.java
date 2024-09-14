@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.spi;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;

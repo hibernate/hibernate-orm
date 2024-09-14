@@ -7,7 +7,6 @@
 package org.hibernate.engine.config.spi;
 
 
-import org.checkerframework.checker.nullness.qual.PolyNull;
 
 import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
 

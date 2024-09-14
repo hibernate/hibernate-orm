@@ -91,10 +91,10 @@ public class IsCollectionInitializedBytecodeEnhancementTest extends BaseEnversJP
 		MultipleCollectionEntity ret = res.get( 0 );
 
 		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), false );
-		
+
 		Hibernate.initialize(ret.getRefEntities1());
-		
+
 		assertEquals( Hibernate.isInitialized( ret.getRefEntities1() ), true );
-		
+
 	}
 }

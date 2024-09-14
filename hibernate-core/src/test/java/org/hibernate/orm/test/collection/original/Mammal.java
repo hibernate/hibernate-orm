@@ -35,7 +35,7 @@ public class Mammal extends Animal {
 	public void setMammalName3(String mammalName3) {
 		this.mammalName3 = mammalName3;
 	}
-	
-	
+
+
 
 }

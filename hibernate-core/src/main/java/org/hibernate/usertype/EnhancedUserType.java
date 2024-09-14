@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 
 /**
  * A custom type that may function as an identifier or discriminator type
- * 
+ *
  * @author Gavin King
  */
 public interface EnhancedUserType<J> extends UserType<J> {

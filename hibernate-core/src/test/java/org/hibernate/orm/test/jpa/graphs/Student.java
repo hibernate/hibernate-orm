@@ -10,7 +10,6 @@ import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -41,9 +40,9 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 public class Student {
 	@Id
 	private int id;
-	
+
 	private String name;
-	
+
 	@ManyToMany(cascade=CascadeType.PERSIST)
 	@JoinTable(
 		name="STUDENT_COURSES",

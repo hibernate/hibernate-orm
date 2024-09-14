@@ -37,7 +37,7 @@ public class ConfEntity implements Serializable{
 
 	@OneToMany(mappedBy="conf", cascade = ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private Set<UserConfEntity> userConf = new HashSet<UserConfEntity>();
-	
+
 	public String getConfKey() {
 		return confKey;
 	}

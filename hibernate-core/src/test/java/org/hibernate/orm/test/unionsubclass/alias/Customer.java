@@ -8,7 +8,7 @@ package org.hibernate.orm.test.unionsubclass.alias;
 import java.io.Serializable;
 
 /**
- * 
+ *
  * @author Strong Liu
  */
 public abstract class Customer implements Serializable {

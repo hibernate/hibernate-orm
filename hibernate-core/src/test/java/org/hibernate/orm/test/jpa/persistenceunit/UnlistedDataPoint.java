@@ -15,7 +15,7 @@ import jakarta.persistence.Id;
  */
 @Entity
 public class UnlistedDataPoint {
-	
+
 	@Id
 	@GeneratedValue
 	private long id;

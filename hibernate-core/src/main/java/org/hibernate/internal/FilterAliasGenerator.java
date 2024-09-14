@@ -6,7 +6,7 @@
  */
 package org.hibernate.internal;
 /**
- * 
+ *
  * @author Rob Worsnop
  *
  */

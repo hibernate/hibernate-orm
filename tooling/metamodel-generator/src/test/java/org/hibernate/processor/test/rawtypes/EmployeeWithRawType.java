@@ -57,4 +57,3 @@ public class EmployeeWithRawType implements java.io.Serializable {
 		this.desks = desks;
 	}
 }
-

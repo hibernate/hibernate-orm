@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.idgen.userdefined;
 
 import org.hibernate.boot.model.relational.Database;
@@ -15,8 +21,6 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 import java.lang.reflect.Member;
 import java.util.EnumSet;

@@ -18,12 +18,12 @@ import jakarta.persistence.Version;
 
 
    @NamedQueries( {
-      @NamedQuery(name = "Item.findByCategory", 
+      @NamedQuery(name = "Item.findByCategory",
           query = "SELECT i FROM Item i WHERE i.category=:category ORDER BY i.id")})
   @SuppressWarnings("serial")
   @Entity
   @Table(name = "O_ITEM")
-  public class Item implements Serializable 
+  public class Item implements Serializable
   {
 
     public static final String QUERY_BY_CATEGORY = "Item.findByCategory";
@@ -50,7 +50,7 @@ import jakarta.persistence.Version;
     @Version
     @Column(name = "I_VERSION")
     int version;
-    
+
     public String getId() {
        return id;
      }
@@ -58,7 +58,7 @@ import jakarta.persistence.Version;
      public void setId(String i) {
        id = i;
      }
-    
+
     public int getCategory() {
        return category;
      }
@@ -105,7 +105,7 @@ import jakarta.persistence.Version;
      public int getVersion() {
        return version;
      }
-     
+
      @Override
      public boolean equals(Object other) {
        if (other == null || other.getClass() != this.getClass()) {

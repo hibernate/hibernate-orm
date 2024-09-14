@@ -752,7 +752,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	public void setCollation(String collation) {
 		this.collation = collation;
 	}
-	
+
 	public String getDefaultValue() {
 		return defaultValue;
 	}

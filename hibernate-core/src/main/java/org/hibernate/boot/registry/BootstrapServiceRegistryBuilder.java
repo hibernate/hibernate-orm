@@ -84,7 +84,7 @@ public class BootstrapServiceRegistryBuilder {
 
 	/**
 	 * Defines when the lookup in the thread context {@code ClassLoader} is done.
-	 * 
+	 *
 	 * @param precedence The lookup precedence
 	 */
 	public void applyTcclLookupPrecedence(TcclLookupPrecedence precedence) {
@@ -180,7 +180,7 @@ public class BootstrapServiceRegistryBuilder {
 			if ( providedClassLoaders != null )  {
 				classLoaders.addAll( providedClassLoaders );
 			}
-			
+
 			classLoaderService = new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
 		}
 		else {

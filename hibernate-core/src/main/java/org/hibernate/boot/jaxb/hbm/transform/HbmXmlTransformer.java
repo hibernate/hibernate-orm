@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
@@ -954,7 +954,7 @@ public class HbmXmlTransformer {
 				queryParam.setType( hbmQueryParam.getType() );
 			}
 		}
-		
+
 		return query;
 	}
 
@@ -1074,7 +1074,7 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
-		
+
 		return query;
 	}
 
@@ -3249,7 +3249,7 @@ public class HbmXmlTransformer {
 			JaxbSingularAssociationAttribute fetchable) {
 		FetchType laziness = FetchType.LAZY;
 		JaxbSingularFetchModeImpl fetch = JaxbSingularFetchModeImpl.SELECT;
-		
+
 		if (hbmLazy != null) {
 			if (hbmLazy.equals( JaxbHbmLazyWithNoProxyEnum.FALSE )) {
 				laziness = FetchType.EAGER;
@@ -3258,7 +3258,7 @@ public class HbmXmlTransformer {
 				// TODO: @LazyToOne(LazyToOneOption.PROXY) or @LazyToOne(LazyToOneOption.NO_PROXY)
 			}
 		}
-		
+
 		// allow fetch style to override laziness, if necessary
 		if (constrained != null && ! constrained) {
 			// NOTE SPECIAL CASE: one-to-one constrained=false cannot be proxied, so default to join and non-lazy
@@ -3279,11 +3279,11 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
-		
+
 		fetchable.setFetch( laziness );
 		fetchable.setFetchMode( fetch );
 	}
-	
+
 	// ToMany
 	private void transferFetchable(
 			JaxbHbmLazyWithExtraEnum hbmLazy,
@@ -3292,7 +3292,7 @@ public class HbmXmlTransformer {
 			JaxbPluralAttribute fetchable) {
 		FetchType laziness = FetchType.LAZY;
 		JaxbPluralFetchModeImpl fetch = JaxbPluralFetchModeImpl.SELECT;
-		
+
 		if (hbmLazy != null) {
 			if (hbmLazy.equals( JaxbHbmLazyWithExtraEnum.EXTRA )) {
 				throw new MappingException( "HBM transformation: extra lazy not yet supported.", origin() );
@@ -3301,7 +3301,7 @@ public class HbmXmlTransformer {
 				laziness = FetchType.EAGER;
 			}
 		}
-		
+
 		// allow fetch style to override laziness, if necessary
 		if (hbmFetch == null) {
 			if (hbmOuterJoin != null && hbmOuterJoin.equals( JaxbHbmOuterJoinEnum.TRUE ) ) {
@@ -3318,11 +3318,11 @@ public class HbmXmlTransformer {
 				fetch = JaxbPluralFetchModeImpl.SUBSELECT;
 			}
 		}
-		
+
 		fetchable.setFetch( laziness );
 		fetchable.setFetchMode( fetch );
 	}
-	
+
 	// KeyManyToOne
 	private static FetchType convert(JaxbHbmLazyEnum hbmLazy) {
 		if ( hbmLazy != null && "false".equalsIgnoreCase( hbmLazy.value() ) ) {
@@ -3403,12 +3403,12 @@ public class HbmXmlTransformer {
 		}
 		return cascadeType;
 	}
-	
+
 	private boolean isOrphanRemoval(String s) {
 		return isNotEmpty( s )
 				&& s.toLowerCase( Locale.ROOT ).contains( "orphan" );
 	}
-	
+
 	private String getFullyQualifiedClassName(String className) {
 		// todo : right now we do both, we set the package into the XML and qualify the names; pick one...
 		//		1) pass the names through as-is and set the package into the XML; the orm.xml reader

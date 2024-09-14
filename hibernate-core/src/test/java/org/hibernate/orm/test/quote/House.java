@@ -18,7 +18,7 @@ public class House {
 	@Id
 	@GeneratedValue
 	private Long id;
-	
+
 	private String streetAddress;
 
 	public Long getId() {

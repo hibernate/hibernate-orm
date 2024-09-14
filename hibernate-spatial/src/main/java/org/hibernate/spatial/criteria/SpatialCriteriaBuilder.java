@@ -8,7 +8,6 @@ package org.hibernate.spatial.criteria;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 

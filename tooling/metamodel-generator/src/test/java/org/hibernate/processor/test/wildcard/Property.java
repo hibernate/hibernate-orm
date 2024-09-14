@@ -12,4 +12,3 @@ public interface Property<T> {
 
     T getValue();
 }
-

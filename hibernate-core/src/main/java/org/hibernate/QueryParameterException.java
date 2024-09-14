@@ -8,7 +8,7 @@ package org.hibernate;
 
 /**
  * Indicates a problem with the runtime arguments bound to query parameters.
- * 
+ *
  * @author Emmanuel Bernard
  */
 public class QueryParameterException extends QueryException {

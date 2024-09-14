@@ -29,7 +29,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  */
 public class EvictVisitor extends AbstractVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EvictVisitor.class );
-	
+
 	private final Object owner;
 
 	public EvictVisitor(EventSource session, Object owner) {
@@ -44,7 +44,7 @@ public class EvictVisitor extends AbstractVisitor {
 		}
 		return null;
 	}
-	
+
 	public void evictCollection(Object value, CollectionType type) {
 		final EventSource session = getSession();
 		final PersistentCollection<?> collection;
@@ -91,7 +91,7 @@ public class EvictVisitor extends AbstractVisitor {
 			}
 		}
 	}
-	
+
 	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return true;

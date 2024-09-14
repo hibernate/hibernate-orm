@@ -14,5 +14,3 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public interface Address {
 }
-
-

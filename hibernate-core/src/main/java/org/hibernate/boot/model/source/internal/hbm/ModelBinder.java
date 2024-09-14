@@ -2850,7 +2850,7 @@ public class ModelBinder {
 			if ( isNotEmpty( tableSource.getCheckConstraint() ) ) {
 				table.addCheckConstraint( tableSource.getCheckConstraint() );
 			}
-		} 
+		}
 
 		table.setComment(tableSpecSource.getComment());
 

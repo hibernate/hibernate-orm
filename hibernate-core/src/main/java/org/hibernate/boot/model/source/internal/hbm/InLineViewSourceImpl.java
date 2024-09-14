@@ -24,7 +24,7 @@ public class InLineViewSourceImpl
 			MappingDocument mappingDocument,
 			String schemaName,
 			String catalogName,
-			String selectStatement, 
+			String selectStatement,
 			String logicalName,
 			String comment) {
 		super( mappingDocument );
@@ -54,7 +54,7 @@ public class InLineViewSourceImpl
 	public String getLogicalName() {
 		return logicalName;
 	}
-	
+
 	@Override
 	public String getComment() {
 		return comment;

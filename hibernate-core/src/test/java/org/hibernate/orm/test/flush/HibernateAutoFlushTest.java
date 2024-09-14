@@ -7,9 +7,6 @@
 package org.hibernate.orm.test.flush;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
@@ -17,7 +14,6 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertTrue;
 
 /**

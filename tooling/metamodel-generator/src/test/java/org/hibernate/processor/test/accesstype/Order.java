@@ -17,19 +17,19 @@ import java.util.Set;
  */
 //@Entity
 public class Order {
-	
+
 	//@Id
 	long id;
-	
+
 	//@OneToMany
 	Set<Item> items;
-	
+
 	boolean filled;
 	Date date;
-	
+
 	//@OneToMany
 	List<String> notes;
-	
+
 	//@ManyToOne
 	Shop shop;
 }

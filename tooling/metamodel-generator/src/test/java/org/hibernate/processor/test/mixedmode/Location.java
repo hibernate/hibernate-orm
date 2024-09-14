@@ -56,8 +56,5 @@ public class Location {
 
 	public void setZeroCoordinates(ZeroCoordinates zeroCoordinates) {
 		this.zeroCoordinates = zeroCoordinates;
-	}	
+	}
 }
-
-
-

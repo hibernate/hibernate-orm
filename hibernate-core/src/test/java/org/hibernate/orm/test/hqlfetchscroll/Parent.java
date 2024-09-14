@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Parent {
-	
+
 	// A numeric id must be the <id> field.  Some databases (Sybase, etc.)
 	// require identifier columns in order to support scrollable results.
 	private long id;

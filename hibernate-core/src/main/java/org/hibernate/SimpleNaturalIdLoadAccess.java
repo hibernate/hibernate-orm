@@ -21,7 +21,7 @@ import java.util.Optional;
  * <pre>
  * Book book = session.bySimpleNaturalId(Book.class).load(isbn);
  * </pre>
- * 
+ *
  * @author Eric Dalquist
  * @author Steve Ebersole
  *
@@ -137,7 +137,7 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 * an uninitialized instance.
 	 *
 	 * @param naturalIdValue The value of the natural-id
-	 * 
+	 *
 	 * @return The persistent instance or {@code null}
 	 */
 	T load(Object naturalIdValue);

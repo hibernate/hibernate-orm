@@ -32,20 +32,20 @@ import static org.junit.Assert.assertTrue;
  * @author Brett Meyer
  */
 public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
-	
+
 	private static final int MAX_NAME_LENGTH = 30;
-	
+
 	private static final String EXPLICIT_FK_NAME_NATIVE = "fk_explicit_native";
-	
+
 	private static final String EXPLICIT_FK_NAME_JPA = "fk_explicit_jpa";
-	
+
 	private static final String EXPLICIT_UK_NAME = "uk_explicit";
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { DataPoint.class, DataPoint2.class };
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7797" )
 	public void testUniqueConstraints() {
@@ -64,7 +64,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertFalse( column.isNullable() );
 		assertTrue( column.isUnique() );
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-1904" )
 	public void testConstraintNameLength() {
@@ -105,10 +105,10 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 			}
 
 		}
-		
+
 		assertEquals("Could not find the necessary columns.", 3, foundCount);
 	}
-	
+
 	@Entity
 	@Table( name = "DataPoint", uniqueConstraints = {
 			@UniqueConstraint( name = EXPLICIT_UK_NAME, columnNames = { "explicit" } )
@@ -118,31 +118,31 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 		@GeneratedValue
 		@jakarta.persistence.Column( nullable = false, unique = true)
 		public long id;
-		
+
 		@jakarta.persistence.Column( nullable = false, unique = true)
 		public String foo1;
-		
+
 		@jakarta.persistence.Column( nullable = true, unique = true)
 		public String foo2;
-		
+
 		public String explicit;
 	}
-	
+
 	@Entity
 	@Table( name = "DataPoint2" )
 	public static class DataPoint2 {
 		@Id
 		@GeneratedValue
 		public long id;
-		
+
 		@OneToOne
 		public DataPoint dp;
-		
+
 		@OneToOne
 		@JoinColumn(name = "explicit_native",
 				foreignKey = @jakarta.persistence.ForeignKey(name = EXPLICIT_FK_NAME_NATIVE))
 		public DataPoint explicit_native;
-		
+
 		@OneToOne
 		@JoinColumn(name = "explicit_jpa", foreignKey = @jakarta.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA))
 		public DataPoint explicit_jpa;

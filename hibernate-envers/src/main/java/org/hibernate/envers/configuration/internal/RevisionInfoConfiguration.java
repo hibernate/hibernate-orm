@@ -160,7 +160,7 @@ public class RevisionInfoConfiguration {
 	public RootPersistentEntity getRevisionInfoMapping() {
 		return useDefaultRevisionInfoMapping ? generateDefaultRevisionInfoMapping( revisionInfoIdName ) : null;
 	}
-	
+
 	public Attribute getRevisionInfoRelationMapping() {
 		final ManyToOneAttribute attribute = new ManyToOneAttribute(
 				configuration.getRevisionFieldName(),
@@ -185,7 +185,7 @@ public class RevisionInfoConfiguration {
 				)
 		);
 
-		return attribute;		
+		return attribute;
 	}
 
 	private RootPersistentEntity generateDefaultRevisionInfoMapping(String revisionInfoIdName) {
@@ -494,7 +494,7 @@ public class RevisionInfoConfiguration {
 				revisionPropSqlType = column.columnDefinition();
 			}
 		}
-		
+
 		private void resolveRevisionTimestampFromProperty(MemberDetails memberDetails, String accessType) {
 			if ( revisionTimestampFound ) {
 				throw new EnversMappingException( "Only one property can be defined with @RevisionTimestamp" );
@@ -509,7 +509,7 @@ public class RevisionInfoConfiguration {
 				throwUnexpectedAnnotatedType( memberDetails, RevisionTimestamp.class, "long, Long, Date, LocalDateTime, Instant, or java.sql.Date" );
 			}
 		}
-		
+
 		private void resolveModifiedEntityNamesFromProperty(MemberDetails memberDetails, String accessType) {
 			if ( modifiedEntityNamesFound ) {
 				throw new EnversMappingException( "Only one property can be defined with @ModifiedEntityNames" );
@@ -556,7 +556,7 @@ public class RevisionInfoConfiguration {
 			}
 			return defaultListener;
 		}
-		
+
 		private void throwUnexpectedAnnotatedType(MemberDetails memberDetails, Class<?> annotation, String allowedTypes) {
 			throw new EnversMappingException(
 					String.format(

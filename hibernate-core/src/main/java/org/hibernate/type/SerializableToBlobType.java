@@ -40,7 +40,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 		ProcedureParameterExtractionAware<T>,
 		ProcedureParameterNamedBinder<T>,
 		DynamicParameterizedType {
-	
+
 	public static final String CLASS_NAME = "classname";
 
 	private static final long serialVersionUID = 1L;

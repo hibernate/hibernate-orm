@@ -11,5 +11,3 @@ package org.hibernate.processor.test.targetannotation;
  */
 public class AddressImpl implements Address {
 }
-
-

@@ -97,10 +97,10 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( _lock );
 		} );
 	}
-	
+
 	@Test(timeout = 5 * 1000) //5 seconds
 	@JiraKey( value = "HHH-7252" )
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
+	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
@@ -391,7 +391,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 		return "UPDATE Lock_ SET name = :name where id = :id";
 	}
-	
+
 	@Test
 	public void testLockRead() throws Exception {
 		final Lock lock = new Lock();

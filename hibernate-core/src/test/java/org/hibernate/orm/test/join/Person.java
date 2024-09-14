@@ -14,13 +14,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Transient;
 
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.GenericGenerator;
 
 /**

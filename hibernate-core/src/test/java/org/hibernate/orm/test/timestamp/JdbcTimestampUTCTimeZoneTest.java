@@ -54,4 +54,3 @@ public class JdbcTimestampUTCTimeZoneTest extends JdbcTimestampWithoutUTCTimeZon
 		return "2000-01-01 00:00:00.000000";
 	}
 }
-

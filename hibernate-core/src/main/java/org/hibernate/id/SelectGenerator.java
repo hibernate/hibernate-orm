@@ -12,7 +12,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.Type;
 
 import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 

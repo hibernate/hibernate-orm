@@ -64,11 +64,11 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
          * (selecting e entities at revision :revision)
          *   --> for DefaultAuditStrategy:
          *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
-         *       WHERE e2.revision <= :revision AND e2.id = e.id) 
-         *     
+         *       WHERE e2.revision <= :revision AND e2.id = e.id)
+         *
          *   --> for ValidityAuditStrategy:
          *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
-         *     
+         *
          *     AND
          * (only non-deleted entities)
          *     e.revision_type != DEL

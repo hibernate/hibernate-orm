@@ -52,5 +52,3 @@ public class HashEntity {
 		return (int) ( id ^ ( id >>> 32 ) );
 	}
 }
-
-

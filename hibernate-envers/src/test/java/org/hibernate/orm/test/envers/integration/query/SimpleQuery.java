@@ -382,30 +382,30 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 			Assert.assertTrue( (number >= 0 && number <= 5) || (number >= 20 && number <= 100) );
 		}
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-8495")
 	public void testIlike() {
 		StrIntTestEntity site1 = new StrIntTestEntity( "aBc", 10, id1 );
-		
+
 		StrIntTestEntity result = (StrIntTestEntity) getAuditReader().createQuery()
 				.forRevisionsOfEntity( StrIntTestEntity.class, true, true )
 				.add( AuditEntity.property( "str1" ).ilike( "abc" ) )
 				.getSingleResult();
-		
+
 		Assert.assertEquals( site1, result );
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-8495")
 	public void testIlikeWithMatchMode() {
 		StrIntTestEntity site1 = new StrIntTestEntity( "aBc", 10, id1 );
-		
+
 		StrIntTestEntity result = (StrIntTestEntity) getAuditReader().createQuery()
 				.forRevisionsOfEntity( StrIntTestEntity.class, true, true )
 				.add( AuditEntity.property( "str1" ).ilike( "BC", MatchMode.ANYWHERE ) )
 				.getSingleResult();
-		
+
 		Assert.assertEquals( site1, result );
 	}
 

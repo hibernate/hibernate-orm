@@ -35,7 +35,6 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 
 /**

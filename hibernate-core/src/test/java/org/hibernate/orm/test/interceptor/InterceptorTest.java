@@ -383,4 +383,3 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 }
-

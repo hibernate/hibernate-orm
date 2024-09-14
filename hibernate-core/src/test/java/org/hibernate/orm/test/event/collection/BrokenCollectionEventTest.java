@@ -264,7 +264,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		checkNumberOfResults( listeners, index );
-	}	
+	}
 	*/
 
 	private ParentWithCollection createParentWithNullChildren(String parentName) {

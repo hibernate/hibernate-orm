@@ -10,10 +10,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Copy of the model used in JoinTest, but using annotations rather than hbm.xml to look
@@ -33,4 +29,3 @@ public class SecondaryTableTest {
 		// really we have nothing to test
 	}
 }
-

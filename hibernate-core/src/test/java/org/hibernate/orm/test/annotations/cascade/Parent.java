@@ -29,19 +29,19 @@ public class Parent
 	/** */
 	@OneToMany(cascade=CascadeType.ALL, mappedBy="parent")
 	public Set<Child> children;
-	
+
 	/** */
 	@OneToOne(cascade=CascadeType.ALL)
 	@JoinColumn(name="defaultChildId", nullable=false)
 	Child defaultChild;
-	
+
 	/** */
 	public Parent() {}
 
 	/** */
 	public Child getDefaultChild() { return this.defaultChild; }
 	public void setDefaultChild(Child value) { this.defaultChild = value; }
-	
+
 	/** */
 	public Set<Child> getChildren() { return this.children; }
 	public void setChildren(Set<Child> value) { this.children = value; }

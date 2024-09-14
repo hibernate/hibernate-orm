@@ -125,4 +125,3 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 }
-

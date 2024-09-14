@@ -15,14 +15,14 @@ import jakarta.persistence.Table;
 public class Book extends Product {
 
 	private String isbn;
-	
+
 	@ManyToOne
 	private Library library;
-	
+
 	public Book() {
 		super();
 	}
-	
+
 	public Book(String inventoryCode, String isbn) {
 		super(inventoryCode);
 		this.isbn = isbn;

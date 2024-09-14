@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 
 /**
  * Indicates a problem generating a service proxy
- * 
+ *
  * @author Steve Ebersole
  */
 public class ServiceProxyGenerationException extends HibernateException {

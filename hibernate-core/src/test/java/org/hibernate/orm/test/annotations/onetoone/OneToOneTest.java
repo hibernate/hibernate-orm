@@ -421,7 +421,7 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertEquals( "C3", resultList.get( 0 ).getName() );
 		} );
 	}
-	
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {

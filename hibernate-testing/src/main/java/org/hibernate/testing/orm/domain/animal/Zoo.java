@@ -8,7 +8,6 @@ package org.hibernate.testing.orm.domain.animal;
 
 import java.util.HashMap;
 import java.util.Map;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embedded;
@@ -20,7 +19,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 

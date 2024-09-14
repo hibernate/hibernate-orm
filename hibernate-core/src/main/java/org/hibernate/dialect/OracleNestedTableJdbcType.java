@@ -44,4 +44,3 @@ public class OracleNestedTableJdbcType extends OracleArrayJdbcType {
 		return "OracleNestedTableTypeDescriptor(" + getSqlTypeName() + ")";
 	}
 }
-

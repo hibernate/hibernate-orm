@@ -13,7 +13,6 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.service.ServiceRegistry;
 

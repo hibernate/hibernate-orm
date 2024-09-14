@@ -6,16 +6,12 @@
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
-import java.sql.Statement;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
@@ -61,13 +57,13 @@ public class SingleTableNotNullDiscriminatorSuperClassTest {
 
 			Val2Entity val2 = new Val2Entity();
 			val2.setId( 2L );
-			
+
 			RootEntity root = new RootEntity();
 			root.setId( 3L );
 
 			OtherEntity otherEntity = new OtherEntity();
 			otherEntity.setId( 4L );
-			
+
 			session.persist( val1 );
 			session.persist( val2 );
 			session.persist( root );

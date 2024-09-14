@@ -78,7 +78,7 @@ public class Plan implements Serializable {
 	public void removeContract(Contract contract) {
 		if ( contract.getParent() != null ) {
 			contract.getParent().getSubcontracts().remove( contract );
-			contract.setParent( null );			
+			contract.setParent( null );
 		}
 		removeSubcontracts( contract );
 		contract.getPlans().remove( this );

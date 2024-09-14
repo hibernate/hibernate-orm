@@ -853,4 +853,3 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	}
 }
-

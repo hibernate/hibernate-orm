@@ -19,7 +19,7 @@ import org.junit.Test;
 /**
  * Thanks to Jan Hodac and Laurent Almeras for providing test cases for this
  * issue.
- * 
+ *
  * @author Guillaume Smet
  */
 @JiraKey(value = "HHH-7821")

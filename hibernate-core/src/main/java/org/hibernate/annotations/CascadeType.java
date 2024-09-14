@@ -44,14 +44,14 @@ public enum CascadeType {
 
 	/**
 	 * Equivalent to {@link jakarta.persistence.CascadeType#PERSIST}.
-	 * 
-	 * @see jakarta.persistence.EntityManager#persist(Object) 
+	 *
+	 * @see jakarta.persistence.EntityManager#persist(Object)
 	 */
 	PERSIST,
 
 	/**
 	 * Equivalent to {@link jakarta.persistence.CascadeType#MERGE}.
-	 * 
+	 *
 	 * @see jakarta.persistence.EntityManager#merge(Object)
 	 */
 	MERGE,
@@ -89,8 +89,8 @@ public enum CascadeType {
 	/**
 	 * A cascade type for the {@code replicate()} operation.
 	 *
-	 * @see org.hibernate.Session#replicate(Object, ReplicationMode) 
-	 * 
+	 * @see org.hibernate.Session#replicate(Object, ReplicationMode)
+	 *
 	 * @deprecated since {@link org.hibernate.Session#replicate(Object, ReplicationMode)}
 	 *             is deprecated
 	 */

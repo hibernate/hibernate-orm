@@ -21,5 +21,3 @@ public class BaseClass2 {
 	@GeneratedValue
 	private long id;
 }
-
-

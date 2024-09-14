@@ -61,9 +61,3 @@ public interface FooProxy {
 	public Fee getDependent();
 	public float getFormula();
 }
-
-
-
-
-
-

@@ -8,12 +8,12 @@ package org.hibernate.orm.test.legacy;
 import java.util.Set;
 
 public class W {
-	
+
 	private long id;
 	private Set zeds;
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public W() {
 	}

@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Enrolment.java 6970 2005-05-31 20:24:41Z oneovthafew $
 package org.hibernate.orm.test.readonly;
 import java.io.Serializable;
 
@@ -55,14 +53,14 @@ public class Enrolment implements Serializable {
 	public void setYear(short year) {
 		this.year = year;
 	}
-	
+
 	public boolean equals(Object other) {
 		if ( !(other instanceof Enrolment) ) return false;
 		Enrolment that = (Enrolment) other;
 		return studentNumber==that.studentNumber &&
 			courseCode.equals(that.courseCode);
 	}
-	
+
 	public int hashCode() {
 		return courseCode.hashCode();
 	}

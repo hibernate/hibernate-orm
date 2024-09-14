@@ -17,7 +17,7 @@ public class SubClass extends AllCached {
 	public SubClass() {
 		super();
 	}
-	
+
 	public SubClass(String name) {
 		super(name);
 	}

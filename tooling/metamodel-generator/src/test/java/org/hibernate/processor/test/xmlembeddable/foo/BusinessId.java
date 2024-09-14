@@ -14,5 +14,3 @@ import java.io.Serializable;
 public class BusinessId<T> implements Serializable {
 	private long businessId;
 }
-
-

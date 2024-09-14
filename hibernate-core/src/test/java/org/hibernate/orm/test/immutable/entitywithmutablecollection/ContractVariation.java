@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ContractVariation implements Serializable {
-	
+
 	private int id;
 	private Contract contract;
 	private String text;

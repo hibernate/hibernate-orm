@@ -132,7 +132,7 @@ public class PluralAttributeKeySourceImpl
 	public String getExplicitForeignKeyName() {
 		return explicitFkName;
 	}
-	
+
 	@Override
 	public boolean createForeignKeyConstraint() {
 		// HBM has not corollary to JPA's @ForeignKey(NO_CONSTRAINT)

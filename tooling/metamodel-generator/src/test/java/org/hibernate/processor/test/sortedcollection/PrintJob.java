@@ -23,5 +23,3 @@ public class PrintJob {
 	@Lob
 	private byte[] data;
 }
-
-

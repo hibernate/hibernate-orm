@@ -14,7 +14,6 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.components.Component1;
 import org.hibernate.orm.test.envers.entities.components.Component2;
-import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.PartialModifiedFlagsEntity;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.WithModifiedFlagReferencingEntity;
 import org.junit.Test;

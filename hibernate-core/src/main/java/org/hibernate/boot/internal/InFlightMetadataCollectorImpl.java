@@ -46,7 +46,6 @@ import org.hibernate.boot.model.internal.AggregateComponentSecondPass;
 import org.hibernate.boot.model.internal.AnnotatedClassType;
 import org.hibernate.boot.model.internal.CreateKeySecondPass;
 import org.hibernate.boot.model.internal.FkSecondPass;
-import org.hibernate.boot.model.internal.IdBagIdGeneratorResolverSecondPass;
 import org.hibernate.boot.model.internal.IdGeneratorResolver;
 import org.hibernate.boot.model.internal.ImplicitToOneJoinTableSecondPass;
 import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;

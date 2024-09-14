@@ -11,7 +11,6 @@ import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criteria.SpatialCriteriaBuilder;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 

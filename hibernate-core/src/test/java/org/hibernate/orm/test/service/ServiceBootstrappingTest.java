@@ -9,7 +9,6 @@ package org.hibernate.orm.test.service;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -20,7 +19,6 @@ import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.Connectio
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assume;

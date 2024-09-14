@@ -4,16 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-/*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
- *
- * Modified for https://jira.jboss.org/jira/browse/ISPN-299
- * Includes ideas described in http://portal.acm.org/citation.cfm?id=1547428
- *
- */
-
 package org.hibernate.internal.util.collections;
 
 import java.io.IOException;

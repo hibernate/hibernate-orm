@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jpa;
 
@@ -10,7 +10,7 @@ package org.hibernate.jpa;
  * List of Hibernate-specific (extension) hints available to query,
  * load, and lock scenarios.
  * <p>
- * Some hints are only effective in certain scenarios, which is noted 
+ * Some hints are only effective in certain scenarios, which is noted
  * on each constant's documentation.
  *
  * @apiNote The stringly-typed hints defined here correspond to
@@ -22,8 +22,8 @@ package org.hibernate.jpa;
  */
 public interface HibernateHints {
 	/**
-	 * Hint for specifying the {@link org.hibernate.FlushMode} to 
-	 * apply to an {@link jakarta.persistence.EntityManager} or 
+	 * Hint for specifying the {@link org.hibernate.FlushMode} to
+	 * apply to an {@link jakarta.persistence.EntityManager} or
 	 * {@link jakarta.persistence.Query}.
 	 *
 	 * @see org.hibernate.query.Query#setHibernateFlushMode
@@ -64,7 +64,7 @@ public interface HibernateHints {
 	String HINT_FETCH_SIZE = "org.hibernate.fetchSize";
 
 	/**
-	 * Hint for specifying whether results from a query should be 
+	 * Hint for specifying whether results from a query should be
 	 * stored in the query cache.
 	 *
 	 * @see org.hibernate.query.SelectionQuery#setCacheable
@@ -91,7 +91,7 @@ public interface HibernateHints {
 	String HINT_CACHE_MODE = "org.hibernate.cacheMode";
 
 	/**
-	 * Hint for specifying a database comment to be appended to the 
+	 * Hint for specifying a database comment to be appended to the
 	 * SQL statement sent to the database.
 	 *
 	 * @implSpec Not valid for {@link org.hibernate.procedure.ProcedureCall},
@@ -121,16 +121,16 @@ public interface HibernateHints {
 	 * <p>
 	 * Accepts either a {@link jakarta.persistence.LockModeType} or a
 	 * {@link org.hibernate.LockMode}.
-	 * 
-	 * @apiNote While Hibernate supports applying a lock mode to a 
-	 *          native query, the JPA specification requires that 
-	 *          {@link jakarta.persistence.Query#setLockMode} throw 
+	 *
+	 * @apiNote While Hibernate supports applying a lock mode to a
+	 *          native query, the JPA specification requires that
+	 *          {@link jakarta.persistence.Query#setLockMode} throw
 	 *          an {@link IllegalStateException} in this scenario.
 	 */
 	String HINT_NATIVE_LOCK_MODE = "org.hibernate.lockMode";
 
 	/**
-	 * Hint for specifying the 
+	 * Hint for specifying the
 	 * {@linkplain org.hibernate.query.SynchronizeableQuery query spaces}
 	 * that affect the results of a native query.
 	 * <p>
@@ -144,7 +144,7 @@ public interface HibernateHints {
 	 * Typically, these are the names of tables which are referenced by
 	 * the query.
 	 *
-	 * @see org.hibernate.query.SynchronizeableQuery#addSynchronizedQuerySpace 
+	 * @see org.hibernate.query.SynchronizeableQuery#addSynchronizedQuerySpace
 	 * @see #HINT_FLUSH_MODE
 	 * @see org.hibernate.annotations.NamedNativeQuery#querySpaces
 	 */
@@ -225,7 +225,7 @@ public interface HibernateHints {
 	String HINT_QUERY_PLAN_CACHEABLE = "hibernate.query.plan.cacheable";
 
 	/**
-	 * Hint for specifying a query hint to be appended to the 
+	 * Hint for specifying a query hint to be appended to the
 	 * SQL statement sent to the database.
 	 *
 	 * @see org.hibernate.query.spi.MutableQueryOptions#addDatabaseHint(String)

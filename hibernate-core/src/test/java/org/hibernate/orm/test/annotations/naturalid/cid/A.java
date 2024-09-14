@@ -20,10 +20,10 @@ public class A {
     private AId accountId;
     @NaturalId(mutable = false)
     private String shortCode;
-    
+
     protected A() {
     }
-    
+
     public A(AId accountId, String shortCode) {
         this.accountId = accountId;
         this.shortCode = shortCode;

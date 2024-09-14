@@ -16,7 +16,7 @@ public class RecursiveBidirectionalOneToManyNoCacheTest extends AbstractRecursiv
 	public String getCacheConcurrencyStrategy() {
 			return null;
 	}
-	
+
 	protected CacheMode getSessionCacheMode() {
 			return CacheMode.IGNORE;
 	}

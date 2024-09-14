@@ -23,7 +23,6 @@ import org.junit.runners.model.Statement;
 
 import org.jboss.logging.Logger;
 
-import static org.junit.Assert.fail;
 
 /**
  * A custom JUnit statement which will run annotation processor prior to execute the original statement/test.
@@ -169,5 +168,3 @@ public class CompilationStatement extends Statement {
 		}
 	}
 }
-
-

@@ -148,7 +148,7 @@ public interface EnversSettings {
 	 *
 	 * This option is meant to maintain backward compatibility while attempting to correct a bug in behavior without
 	 * impacting existing users who may use the current behavior.
-	 * 
+	 *
 	 * Defaults to {@literal false}.
 	 *
 	 * @since 5.4.4

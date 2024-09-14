@@ -8,7 +8,6 @@ package org.hibernate.orm.test.stats;
 
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;

@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  * <p>
  * For this functionality to be used, {@value org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be
  * enabled.  For performance reasons, it's disabled by default.
- * 
+ *
  * @author Andreas Berger
  */
 public class CollectionCacheInvalidator

@@ -32,4 +32,3 @@ class House {
 		this.address = address;
 	}
 }
-

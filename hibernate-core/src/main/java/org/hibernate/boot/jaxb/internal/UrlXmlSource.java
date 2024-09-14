@@ -14,7 +14,6 @@ import java.net.UnknownHostException;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.XmlSource;

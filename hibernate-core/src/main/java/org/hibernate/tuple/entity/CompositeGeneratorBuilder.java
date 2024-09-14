@@ -15,7 +15,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 

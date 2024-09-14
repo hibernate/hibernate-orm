@@ -19,7 +19,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * A one-to-one association that maps to specific formula(s)
  * instead of the primary key column of the owning entity.
- * 
+ *
  * @author Gavin King
  */
 public class SpecialOneToOneType extends OneToOneType {
@@ -28,7 +28,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			TypeConfiguration typeConfiguration,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType,
-			boolean referenceToPrimaryKey, 
+			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
@@ -37,13 +37,13 @@ public class SpecialOneToOneType extends OneToOneType {
 			boolean constrained) {
 		super(
 				typeConfiguration,
-				referencedEntityName, 
+				referencedEntityName,
 				foreignKeyType,
-				referenceToPrimaryKey, 
-				uniqueKeyPropertyName, 
+				referenceToPrimaryKey,
+				uniqueKeyPropertyName,
 				lazy,
 				unwrapProxy,
-				entityName, 
+				entityName,
 				propertyName,
 				constrained
 			);
@@ -52,11 +52,11 @@ public class SpecialOneToOneType extends OneToOneType {
 	public SpecialOneToOneType(SpecialOneToOneType original, String superTypeEntityName) {
 		super( original, superTypeEntityName );
 	}
-	
+
 	public int getColumnSpan(MappingContext mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
-	
+
 	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mappingContext ).getSqlTypeCodes( mappingContext );
 	}
@@ -79,8 +79,8 @@ public class SpecialOneToOneType extends OneToOneType {
 			Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session );
 			if (id==null) {
 				throw new AssertionFailure(
-						"cannot cache a reference to an object with a null id: " + 
-						getAssociatedEntityName() 
+						"cannot cache a reference to an object with a null id: " +
+						getAssociatedEntityName()
 				);
 			}
 			return getIdentifierType(session).disassemble(id, session, owner);
@@ -120,7 +120,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			return resolveIdentifier(id, session);
 		}
 	}
-	
+
 
 
 }

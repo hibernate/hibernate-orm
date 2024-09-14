@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Contract implements Serializable {
-	
+
 	private long id;
 	private long version;
 	private String customerName;
@@ -49,7 +49,7 @@ public class Contract implements Serializable {
 	public void setVersion(long version) {
 		this.version = version;
 	}
-	
+
 	public Set getPlans() {
 		return plans;
 	}

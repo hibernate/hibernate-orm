@@ -7,7 +7,6 @@
 package org.hibernate.hikaricp.internal;
 
 import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -17,7 +16,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 /**
  * Provides the {@link HikariCPConnectionProvider} to the
  * {@link org.hibernate.boot.registry.selector.spi.StrategySelector} service.
- * 
+ *
  * @author Brett Meyer
  */
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {

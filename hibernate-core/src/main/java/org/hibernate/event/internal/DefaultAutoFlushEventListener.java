@@ -35,7 +35,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 
 	/**
 	 * Handle the given auto-flush event.
-	 * 
+	 *
 	 * @param event The auto-flush event to be handled.
 	 */
 	@Override

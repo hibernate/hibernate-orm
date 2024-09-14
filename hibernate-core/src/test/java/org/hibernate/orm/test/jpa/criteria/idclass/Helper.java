@@ -20,12 +20,12 @@ public class Helper {
 	private String name;
 	public String getName( ) { return this.name; }
 	public void setName( String value ) { this.name = value; }
-	
+
 	@Id
 	private String type;
 	public String getType( ) { return this.type; }
 	public void setType( String value ) { this.type = value; }
-	
+
 	@Override
 	public String toString( ) {
 		return "[Name:" + this.getName( ) + "; Type: " + this.getType( ) + "]";

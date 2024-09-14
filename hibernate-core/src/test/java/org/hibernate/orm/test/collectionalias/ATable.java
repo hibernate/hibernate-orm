@@ -26,7 +26,7 @@ public class ATable implements Serializable
 	private Integer firstId;
 
 	private List<TableB> tablebs = new ArrayList<TableB>();
-	
+
 	public ATable()
 	{
 	}
@@ -86,7 +86,7 @@ public class ATable implements Serializable
 		return true;
 	}
 
-	
+
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "tablea")
 	public List<TableB> getTablebs()
 	{
@@ -97,6 +97,6 @@ public class ATable implements Serializable
 	{
 		this.tablebs = tablebs;
 	}
-	
-	
+
+
 }

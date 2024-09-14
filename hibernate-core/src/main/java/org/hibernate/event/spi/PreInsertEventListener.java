@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 /**
  * Called before inserting an item in the datastore
- * 
+ *
  * @author Gavin King
  */
 public interface PreInsertEventListener {

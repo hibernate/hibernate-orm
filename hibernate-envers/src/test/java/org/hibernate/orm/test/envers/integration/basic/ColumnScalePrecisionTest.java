@@ -13,7 +13,6 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.orm.test.envers.integration.basic.ScalePrecisionEntity;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;

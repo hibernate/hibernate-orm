@@ -11,7 +11,6 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.StringHelper;

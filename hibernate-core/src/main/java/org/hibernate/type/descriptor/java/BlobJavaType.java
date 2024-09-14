@@ -138,7 +138,7 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access blob stream", e );
 		}
-		
+
 		throw unknownUnwrap( type );
 	}
 

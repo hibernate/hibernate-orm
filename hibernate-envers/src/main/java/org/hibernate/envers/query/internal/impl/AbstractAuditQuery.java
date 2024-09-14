@@ -96,7 +96,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	public String getAlias() {
 		return REFERENCED_ENTITY_ALIAS;
 	}
-	
+
 	protected Query buildQuery() {
 		Query query = qb.toQuery( versionsReader.getSessionImplementor() );
 		setQueryProperties( query );
@@ -362,9 +362,9 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		// todo: can this be replaced by a call to getEntittyConfiguration#getEntityClassName()?
 		return entityName;
 	}
-	
+
 	protected void addAssociationQuery(String associationName, AbstractAuditAssociationQuery<AuditQueryImplementor> query) {
 		associationQueries.add( query );
 		associationQueryMap.put( associationName, query );
-	}	
+	}
 }

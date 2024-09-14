@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;

@@ -12,7 +12,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Tuple;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;

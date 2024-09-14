@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: $
 package org.hibernate.orm.test.cascade.circle;
 
 import java.util.HashSet;
@@ -14,7 +12,7 @@ import java.util.Set;
 
 
 public class Route {
-	
+
 //	@Id
 //	@SequenceGenerator(name="ROUTE_SEQ", sequenceName="ROUTE_SEQ", initialValue=1, allocationSize=1)
 //	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="ROUTE_SEQ")
@@ -29,7 +27,7 @@ public class Route {
 	private Set vehicles = new HashSet();
 
 	private String name;
-	
+
 //	@Transient
 	private String transientField = null;
 
@@ -64,7 +62,7 @@ public class Route {
 	public Long getRouteID() {
 		return routeID;
 	}
-	
+
 	public long getVersion() {
 		return version;
 	}
@@ -76,12 +74,12 @@ public class Route {
 	public String toString()
 	{
 		StringBuilder buffer = new StringBuilder();
-		
+
 		buffer.append("Route name: " + name + " id: " + routeID + " transientField: " + transientField + "\n");
 		for (Iterator it = nodes.iterator(); it.hasNext();) {
 			buffer.append("Node: " + it.next() );
 		}
-		
+
 		for (Iterator it = vehicles.iterator(); it.hasNext();) {
 			buffer.append("Vehicle: " + it.next() );
 		}

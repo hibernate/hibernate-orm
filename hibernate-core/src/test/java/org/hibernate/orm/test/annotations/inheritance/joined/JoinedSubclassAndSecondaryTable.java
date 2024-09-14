@@ -14,9 +14,6 @@ import org.hibernate.Session;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.orm.test.annotations.inheritance.joined.Pool;
-import org.hibernate.orm.test.annotations.inheritance.joined.PoolAddress;
-import org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

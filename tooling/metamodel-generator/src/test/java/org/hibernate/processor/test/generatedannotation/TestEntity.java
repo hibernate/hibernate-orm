@@ -17,6 +17,3 @@ public class TestEntity {
 	@Id
 	private long id;
 }
-
-
-

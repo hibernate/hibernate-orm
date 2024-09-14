@@ -72,6 +72,3 @@ public class Boy {
 		this.nickNames = nickNames;
 	}
 }
-
-
-

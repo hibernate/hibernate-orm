@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
  * A type that maps JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY} and {@link Serializable}.
  * </p>
  * TODO : this should really have access to the actual Serializable class so we have access to the proper classloader
- * 
+ *
  * @author Strong Liu
  */
 public class SerializableToImageType extends AbstractSingleColumnStandardBasicType<Serializable> {

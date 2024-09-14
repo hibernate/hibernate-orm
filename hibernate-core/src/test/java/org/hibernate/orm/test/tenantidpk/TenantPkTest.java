@@ -1,4 +1,3 @@
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -7,7 +6,6 @@
  */
 package org.hibernate.orm.test.tenantidpk;
 
-import org.hibernate.PropertyValueException;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -28,7 +26,6 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTIO
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
 @DomainModel(annotatedClasses = { Account.class, Client.class })

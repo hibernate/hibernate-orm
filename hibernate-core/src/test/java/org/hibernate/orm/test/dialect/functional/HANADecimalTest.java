@@ -28,7 +28,7 @@ import org.junit.Test;
  * Tests the correctness of the parameter hibernate.dialect.hana.treat_double_typed_fields_as_decimal which controls the
  * handling of double types as either {@link BigDecimal} (parameter is set to true) or {@link Double} (default behavior
  * or parameter is set to false)
- * 
+ *
  * @author Jonathan Bregler
  */
 @RequiresDialect(HANADialect.class)
@@ -81,7 +81,7 @@ public class HANADecimalTest extends BaseCoreFunctionalTestCase {
 		entity.decimalDouble = BigDecimal.valueOf( 1.19d );
 
 		s.persist( entity );
-		
+
 		DecimalEntity entity2 = new DecimalEntity();
 		entity2.key = Integer.valueOf( 2 );
 		entity2.doubleDouble = 0.3d;
@@ -109,7 +109,7 @@ public class HANADecimalTest extends BaseCoreFunctionalTestCase {
 		assertEquals( new BigDecimal( "1.190000000000000" ), retrievedEntity.decimalDecimal );
 		assertEquals( 1.19d, retrievedEntity.doubleDecimal, 0 );
 		assertEquals( new BigDecimal( "1.19" ), retrievedEntity.decimalDouble );
-		
+
 		retrievedEntity = retrievedEntities.get( 1 );
 		assertEquals( Integer.valueOf( 2 ), retrievedEntity.key );
 		assertEquals( 0.3d, retrievedEntity.doubleDouble, 0 );

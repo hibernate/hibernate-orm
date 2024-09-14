@@ -24,7 +24,7 @@ import org.hibernate.Incubating;
  * <li>the method {@link org.hibernate.Hibernate#initialize(Object)} to
  *     force it to be fetched.
  * </ul>
- * 
+ *
  * @author Fabricio Gregorio
  */
 @Incubating
@@ -38,7 +38,7 @@ public interface LazyInitializable {
 	 * @see org.hibernate.Hibernate#isInitialized(Object)
 	 */
 	boolean wasInitialized();
-	
+
 	/**
 	 * To be called internally by the session, forcing immediate initialization.
 	 *

@@ -12,7 +12,7 @@ import java.io.Reader;
 
 /**
  * Exposes a {@link Reader} as an {@link InputStream}.
- * 
+ *
  * @author Gavin King
  */
 public class ReaderInputStream extends InputStream {

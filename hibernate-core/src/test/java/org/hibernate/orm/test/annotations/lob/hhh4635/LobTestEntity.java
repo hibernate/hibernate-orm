@@ -20,10 +20,10 @@ public class LobTestEntity {
 
 	@Id
 	private Long id;
-	
+
 	@Lob
 	private Blob lobValue;
-	
+
 	@Column( name = "qwerty", length = 4000 )
 	private String qwerty;
 
@@ -50,5 +50,5 @@ public class LobTestEntity {
 	public String getQwerty() {
 		return qwerty;
 	}
-	
+
 }

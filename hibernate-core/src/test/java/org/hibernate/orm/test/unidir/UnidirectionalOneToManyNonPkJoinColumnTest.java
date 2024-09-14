@@ -23,7 +23,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea

@@ -15,7 +15,6 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;

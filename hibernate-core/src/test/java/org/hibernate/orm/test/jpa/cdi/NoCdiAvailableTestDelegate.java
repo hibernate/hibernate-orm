@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.cdi;
 
-import java.util.Collections;
 import java.util.Map;
 
 import jakarta.persistence.EntityManagerFactory;

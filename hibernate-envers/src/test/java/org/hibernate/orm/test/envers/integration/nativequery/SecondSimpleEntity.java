@@ -43,4 +43,3 @@ public class SecondSimpleEntity {
 		this.stringField = stringField;
 	}
 }
-

@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.nullable;
 
-import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;

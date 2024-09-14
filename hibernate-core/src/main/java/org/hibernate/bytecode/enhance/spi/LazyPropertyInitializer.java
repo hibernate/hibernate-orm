@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Contract for controlling how lazy properties get initialized.
- * 
+ *
  * @author Gavin King
  */
 public interface LazyPropertyInitializer {

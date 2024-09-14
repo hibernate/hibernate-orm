@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class AssociatedDataPoint {
 	private long id;
-	
+
 	private AssociatedDataPoint manyToOne;
-	
+
 	private List<AssociatedDataPoint> manyToMany;
 
 	public long getId() {

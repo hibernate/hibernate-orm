@@ -8,7 +8,6 @@ package org.hibernate.orm.test.dialect.unit.locktimeout;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 

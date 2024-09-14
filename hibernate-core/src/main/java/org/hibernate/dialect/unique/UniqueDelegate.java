@@ -53,7 +53,7 @@ public interface UniqueDelegate {
 	 * <p>
 	 * This is for handling single columns explicitly marked {@linkplain Column#isUnique() unique},
 	 * not for dealing with {@linkplain UniqueKey unique keys}.
-	 * 
+	 *
 	 * @param column The column to which to apply the unique
 	 * @param context A context for SQL string generation
 	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be

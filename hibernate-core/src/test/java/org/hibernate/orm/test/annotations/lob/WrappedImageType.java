@@ -11,7 +11,7 @@ import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY} and {@code Byte[]}
- * 
+ *
  * @author Strong Liu
  */
 public class WrappedImageType extends AbstractSingleColumnStandardBasicType<Byte[]> {

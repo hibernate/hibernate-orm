@@ -28,7 +28,7 @@ import org.junit.Test;
  * Tests the correctness of the parameter hibernate.dialect.hana.use_legacy_boolean_type which controls the mapping of
  * boolean types to be either TINYINT (parameter is set to true) or BOOLEAN (default behavior or parameter is set to
  * false)
- * 
+ *
  * @author Jonathan Bregler
  */
 @RequiresDialect(HANADialect.class)

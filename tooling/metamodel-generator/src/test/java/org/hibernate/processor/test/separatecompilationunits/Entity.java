@@ -15,5 +15,3 @@ import org.hibernate.processor.test.separatecompilationunits.superclass.MappedSu
 public class Entity extends MappedSuperclass {
 	private String name;
 }
-
-

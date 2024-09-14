@@ -36,4 +36,3 @@ public class CardField implements Serializable {
 		this.primaryKey = primaryKey;
 	}
 }
-

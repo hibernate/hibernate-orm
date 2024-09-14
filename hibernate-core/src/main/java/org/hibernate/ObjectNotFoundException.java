@@ -23,7 +23,7 @@ package org.hibernate;
 public class ObjectNotFoundException extends UnresolvableObjectException {
 	/**
 	 * Constructs a {@code ObjectNotFoundException} using the given information.
-	 * 
+	 *
 	 *  @param identifier The identifier of the entity
 	 * @param entityName The name of the entity
 	 */

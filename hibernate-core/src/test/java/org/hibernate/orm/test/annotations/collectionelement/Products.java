@@ -17,7 +17,7 @@ public class Products {
 	@Id
 	@GeneratedValue
 	private Integer id;
-	
+
 	@ElementCollection
 	@OrderBy("name ASC")
 	private Set<Widgets> widgets;

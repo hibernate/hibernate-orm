@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.sql.storedproc;
 
-import java.sql.CallableStatement;
 import java.util.List;
 
 import org.hibernate.boot.MetadataBuilder;

@@ -21,4 +21,3 @@ public class Tire {
 	public void setCar(Car car) {
 	}
 }
-

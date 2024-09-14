@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
-	
+
 	@Test
 	public void testBasicCorrelation() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
@@ -123,7 +123,7 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-8556")
 	public void testCorrelatedJoinsFromSubquery() {
@@ -135,7 +135,7 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
         Join<Customer, Order> sqo = sq.correlate(customer.join(Customer_.orders));
         sq.select(sqo);
         Set<Join<?, ?>> cJoins = sq.getCorrelatedJoins();
-        
+
         // ensure the join is returned in #getCorrelatedJoins
         assertEquals( cJoins.size(), 1);
 	}

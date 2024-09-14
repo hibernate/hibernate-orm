@@ -19,11 +19,11 @@ import org.hibernate.persister.collection.CollectionPersister;
  * <p>
  * For example, {@link org.hibernate.persister.collection.OneToManyPersister}
  * needs to insert indexes for lists.  See HHH-8083.
- * 
+ *
  * @author Brett Meyer
  */
 public final class QueuedOperationCollectionAction extends CollectionAction {
-	
+
 	/**
 	 * Constructs a CollectionUpdateAction
 	 *  @param collection The collection to update

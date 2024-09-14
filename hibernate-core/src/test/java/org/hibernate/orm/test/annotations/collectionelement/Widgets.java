@@ -30,7 +30,7 @@ public class Widgets {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	@Id
 	@GeneratedValue
 	public int getId() {
@@ -51,4 +51,3 @@ public class Widgets {
 		private String name2;
 	}
 }
-

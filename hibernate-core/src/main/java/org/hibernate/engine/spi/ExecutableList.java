@@ -146,7 +146,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Removes the entry at position index in the list.
-	 * 
+	 *
 	 * @param index The index of the element to remove
 	 *
 	 * @return the entry that was removed
@@ -179,7 +179,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Removes the last n entries from the list.
-	 * 
+	 *
 	 * @param n The number of elements to remove.
 	 */
 	public void removeLastN(int n) {
@@ -198,7 +198,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Add an {@link Executable} to this list.
-	 * 
+	 *
 	 * @param executable the executable to add to the list
 	 *
 	 * @return true if the object was added to the list
@@ -271,7 +271,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Returns an iterator for the list. Wraps the list just in case something tries to modify it.
-	 * 
+	 *
 	 * @return an unmodifiable iterator
 	 */
 	@Override
@@ -281,7 +281,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Write this list out to the given stream as part of serialization
-	 * 
+	 *
 	 * @param oos The stream to which to serialize our state
 	 */
 	@Override
@@ -310,7 +310,7 @@ public class ExecutableList<E extends ComparableExecutable>
 	/**
 	 * Read this object state back in from the given stream as part of
 	 * the deserialization process.
-	 * 
+	 *
 	 * @param in The stream from which to read our serial state
 	 */
 	@Override
@@ -344,7 +344,7 @@ public class ExecutableList<E extends ComparableExecutable>
 	/**
 	 * Allow the {@link Executable}s to reassociate themselves with the
 	 * session after deserialization.
-	 * 
+	 *
 	 * @param session The session with which to associate the {@code Executable}s
 	 */
 	public void afterDeserialize(EventSource session) {

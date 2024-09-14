@@ -80,7 +80,6 @@ import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.HqlInterpretation;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
@@ -110,7 +109,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 import jakarta.persistence.FlushModeType;
-import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQueryReference;

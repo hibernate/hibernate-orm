@@ -311,7 +311,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	
+
 	// HHH-4394
 	@Test
 	public void testOrderByContractor() {
@@ -359,7 +359,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	
+
 	@Test
 	public void testRemoveInBetween() {
 		Session s;
@@ -582,15 +582,15 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		Permission readAccess = new Permission();
 		readAccess.setPermission( "read" );
 		readAccess.setExpirationDate( new Date() );
-		
+
 		Permission writeAccess = new Permission();
 		writeAccess.setPermission( "write" );
 		writeAccess.setExpirationDate( new Date( new Date().getTime() - 10*60*1000 ) );
-		
+
 		Permission executeAccess = new Permission();
 		executeAccess.setPermission( "execute" );
 		executeAccess.setExpirationDate( new Date( new Date().getTime() - 5*60*1000 ) );
-		
+
 		Set<Permission> coll = new HashSet<>( 3 );
 		coll.add( readAccess );
 		coll.add( writeAccess );
@@ -613,7 +613,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().rollback();
 		s.close();
 	}
-	
+
 	@Test
 	public void testJoinedSubclassManyToMany() {
 		Session s = openSession();
@@ -712,7 +712,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		e = s.get( e.getClass(),e.getId() );
-		// follow both directions of many to many association 
+		// follow both directions of many to many association
 		assertEquals("same employee", e.getName(), e.getContactInfo().getPhoneNumbers().get(0).getEmployees().iterator().next().getName());
 		s.getTransaction().commit();
 
@@ -748,7 +748,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		e = s.get( e.getClass(), e.getId() );
-		assertEquals( "same job in both directions", 
+		assertEquals( "same job in both directions",
 			e.getJobInfo().getJobDescription(),
 			e.getJobInfo().getPm().getManages().iterator().next().getJobInfo().getJobDescription()  );
 		s.getTransaction().commit();

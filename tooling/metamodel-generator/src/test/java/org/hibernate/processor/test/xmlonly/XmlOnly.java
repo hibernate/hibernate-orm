@@ -21,6 +21,3 @@ public class XmlOnly {
 		this.id = id;
 	}
 }
-
-
-

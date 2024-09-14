@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.emops;
 
-import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 

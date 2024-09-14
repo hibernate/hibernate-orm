@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Employee.java 4364 2004-08-17 12:10:32Z oneovthafew $
 package org.hibernate.orm.test.joinedsubclass;
 import java.math.BigDecimal;
 
@@ -60,7 +58,7 @@ public class Employee extends Person {
 		return passwordExpiryDays;
 	}
 	/**
-	 * @param passwordExpiryDays The password expiry policy in days. 
+	 * @param passwordExpiryDays The password expiry policy in days.
 	 */
 	public void setPasswordExpiryDays(double passwordExpiryDays) {
 		this.passwordExpiryDays = passwordExpiryDays;

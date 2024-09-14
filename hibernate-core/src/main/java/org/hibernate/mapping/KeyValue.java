@@ -20,11 +20,11 @@ import org.hibernate.generator.Generator;
 public interface KeyValue extends Value {
 
 	ForeignKey createForeignKeyOfEntity(String entityName);
-	
+
 	boolean isCascadeDeleteEnabled();
-	
+
 	String getNullValue();
-	
+
 	boolean isUpdateable();
 
 	@Deprecated(since = "7.0")

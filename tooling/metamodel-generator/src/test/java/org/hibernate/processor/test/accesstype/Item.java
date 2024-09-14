@@ -19,15 +19,15 @@ import jakarta.persistence.OneToMany;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-@Entity  
+@Entity
 public class Item {
-	
+
 	long id;
-	
+
 	int quantity;
-	
+
 	Product product;
-	
+
 	Order order;
 
 	Detail detail;
@@ -66,7 +66,7 @@ public class Item {
 	public void setOrder(Order order) {
 		this.order = order;
 	}
-	
+
 	@OneToMany
 	public Map<String, Order> getNamedOrders() {
 		return null;

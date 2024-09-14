@@ -1,20 +1,23 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.property.access.spi;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.hibernate.PropertyAccessException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.assertj.core.api.Assertions;
 
 public class GetterMethodImplTest {
 

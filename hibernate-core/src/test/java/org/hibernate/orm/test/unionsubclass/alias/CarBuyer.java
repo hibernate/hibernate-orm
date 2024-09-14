@@ -8,7 +8,7 @@ package org.hibernate.orm.test.unionsubclass.alias;
 
 
 /**
- * 
+ *
  * @author Strong Liu
  */
 public class CarBuyer extends Customer {

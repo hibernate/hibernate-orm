@@ -38,7 +38,7 @@ private List bunchOfStrings;
   public Set getInterventions() {
   	return interventions;
   }
-  
+
   public void setInterventions(Set iv) {
   	interventions = iv;
   }
@@ -46,7 +46,7 @@ private List bunchOfStrings;
   List getBunchOfStrings() {
   	return bunchOfStrings;
   }
-  
+
   void setBunchOfStrings(List s) {
   	bunchOfStrings = s;
   }

@@ -21,7 +21,7 @@ public class CompositeKey implements Serializable {
 
 	public CompositeKey() {
 	}
-	
+
 	public CompositeKey(int a, int b) {
 		this.a = a;
 		this.b = b;

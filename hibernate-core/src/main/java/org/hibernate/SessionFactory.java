@@ -348,8 +348,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Return all {@link EntityGraph}s registered for the given entity type.
-	 * 
-	 * @see #addNamedEntityGraph 
+	 *
+	 * @see #addNamedEntityGraph
 	 */
 	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 

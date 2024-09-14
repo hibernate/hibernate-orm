@@ -51,7 +51,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		final NaturalIdStatistics naturalIdStatistics = statistics.getNaturalIdStatistics( AllCached.class.getName() );
 		assertEquals( 1, naturalIdStatistics.getCachePutCount() );
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
@@ -70,7 +70,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		);
 		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
@@ -97,7 +97,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				}
 		);
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
@@ -128,7 +128,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
@@ -164,7 +164,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		assertEquals(0, statistics.getNaturalIdCacheHitCount());
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7309" )
 	public void testInsertUpdateEntity_NaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {

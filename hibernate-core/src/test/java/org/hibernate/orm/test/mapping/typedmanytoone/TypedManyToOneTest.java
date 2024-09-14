@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.mapping.typedmanytoone;
 
@@ -31,7 +31,7 @@ public class TypedManyToOneTest {
 		final Customer cust = new Customer();
 		cust.setCustomerId("abc123");
 		cust.setName("Matt");
-		
+
 		Address ship = new Address();
 		ship.setStreet("peachtree rd");
 		ship.setState("GA");
@@ -39,7 +39,7 @@ public class TypedManyToOneTest {
 		ship.setZip("30326");
 		ship.setAddressId( new AddressId("SHIPPING", "xyz123") );
 		ship.setCustomer(cust);
-		
+
 		Address bill = new Address();
 		bill.setStreet("peachtree rd");
 		bill.setState("GA");
@@ -47,7 +47,7 @@ public class TypedManyToOneTest {
 		bill.setZip("30326");
 		bill.setAddressId( new AddressId("BILLING", "xyz123") );
 		bill.setCustomer(cust);
-		
+
 		cust.setBillingAddress(bill);
 		cust.setShippingAddress(ship);
 
@@ -99,4 +99,3 @@ public class TypedManyToOneTest {
 	}
 
 }
-

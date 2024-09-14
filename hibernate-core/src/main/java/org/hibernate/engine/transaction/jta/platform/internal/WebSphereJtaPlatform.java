@@ -9,7 +9,6 @@ package org.hibernate.engine.transaction.jta.platform.internal;
 import java.lang.reflect.Method;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
 import org.hibernate.internal.util.NullnessUtil;

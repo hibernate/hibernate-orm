@@ -40,14 +40,14 @@ public class SimpleEntityWithAssociation {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public Integer getNegatedNumber() {
 		return negatedNumber;
 	}
 
 	public void setNegatedNumber(Integer negatedNumber) {
 		this.negatedNumber = negatedNumber;
-	}	
+	}
 
 	public Set getAssociatedEntities() {
 		return associatedEntities;

@@ -34,12 +34,12 @@ public abstract class AbstractRevisionEndTimestampTest extends BaseEnversJPAFunc
         options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, "true" );
 		options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_LEGACY_PLACEMENT, "false" );
     }
-    
+
 	@SuppressWarnings("unchecked")
 	protected List<Map<String, Object>> getRevisions(Class<?> clazz, Integer id) {
 		String sql = String.format( "SELECT e FROM %s_AUD e WHERE e.originalId.id = :id", clazz.getName() );
 		return getEntityManager().createQuery( sql ).setParameter( "id", id ).getResultList();
-	}    
+	}
 
 	protected void verifyRevisionEndTimestampsInSubclass(Class<?> clazz, Integer id) {
 		final List<Map<String, Object>> entities = getRevisions( clazz, id );

@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.hql;
 
 import java.util.HashMap;
@@ -23,32 +29,32 @@ import static org.junit.Assert.assertThat;
  */
 @JiraKey(value = "HHH-14475")
 public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
-    
+
     @Override
     protected Class[] getAnnotatedClasses() {
         return new Class[] {Project.class, Role.class, Person.class};
     }
-    
+
     @Before
     public void setUp() {
         doInHibernate( this::sessionFactory, session -> {
 
             Project project = new Project(1);
             Role role = new Role(1);
-            
+
             session.persist( project );
             session.persist( role );
 
             Person person = new Person(1, project, role);
-            
+
             session.persist( person );
         });
     }
-    
+
     @Test
     public void testSelectIndices() {
         doInHibernate( this::sessionFactory, session -> {
-            
+
             List<Object> result = session.createQuery(
                     "select indices(p.roles) from Person p"
             ).list();
@@ -73,7 +79,7 @@ public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
 
         public Person() {
         }
-        
+
         public Person(Integer id, Project project, Role role) {
             this.id = id;
             roles = new HashMap<>();
@@ -89,7 +95,7 @@ public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
 
         public Project() {
         }
-        
+
         public Project(Integer id) {
             this.id = id;
         }
@@ -104,7 +110,7 @@ public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
 
         public Role() {
         }
-        
+
         public Role(Integer id) {
             this.id = id;
         }

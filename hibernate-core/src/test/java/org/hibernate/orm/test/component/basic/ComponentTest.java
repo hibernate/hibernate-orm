@@ -94,7 +94,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 
 		assertEquals( 1, sessionFactory().getStatistics().getEntityDeleteCount() );
 	}
-	
+
 
 	@Test
 	public void testComponent() {
@@ -214,7 +214,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 				}
 		);
 	}
-	
+
 	@Test
 	public void testCustomColumnReadAndWrite() {
 		inTransaction(
@@ -268,7 +268,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 				}
 		);
 	}
-	
+
 	@Test
 	public void testNamedQuery() {
 		inTransaction(

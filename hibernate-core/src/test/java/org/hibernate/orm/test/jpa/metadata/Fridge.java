@@ -58,4 +58,3 @@ public class Fridge {
 		this.height = height;
 	}
 }
-

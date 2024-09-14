@@ -65,15 +65,15 @@ public interface AuditReader {
 	 * Find an entity by primary key on the given date.  The date specifies restricting
 	 * the result to any entity created on or before the date with the highest revision
 	 * number.
-	 *  
+	 *
 	 * @param cls Class of the entity.
 	 * @param primaryKey Primary key of the entity.
 	 * @param date Date for which to get entity revision.
-	 * 
+	 *
 	 * @return The found entity instance at created on or before the specified date with the highest
 	 *         revision number or null, if an entity with the id had not been created on or before the
 	 *         specified date.
-	 *         
+	 *
 	 * @throws IllegalArgumentException if cls, primaryKey, or date is null.
 	 * @throws NotAuditedException When entities of the given class are not audited.
 	 * @throws RevisionDoesNotExistException If the given date is before the first revision.
@@ -227,7 +227,7 @@ public interface AuditReader {
 	 * @throws IllegalStateException If the associated entity manager is closed.
 	 * @throws RevisionDoesNotExistException If the given date is before the first revision.
 	 * @throws IllegalArgumentException If <code>date</code> is <code>null</code>.
-	 */	
+	 */
 	Number getRevisionNumberForDate(LocalDateTime date) throws IllegalStateException,
 			RevisionDoesNotExistException, IllegalArgumentException;
 

@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid.lazy;
 
 import java.math.BigDecimal;
@@ -78,7 +77,7 @@ public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
       Integer id = c1.getId();
       tx.commit();
       s.close();
-      
+
       s = openSession();
       tx = s.beginTransaction();
 
@@ -91,7 +90,7 @@ public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
       list.remove(ci);
       s.remove(ci);
       s.flush();
-      
+
       tx.commit();//fail
       s.close();
 

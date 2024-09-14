@@ -122,7 +122,7 @@ public interface EntityEntry {
 	 * <li>if the current status is {@link Status#DELETED},
 	 *     then the entity was not read-only when it was deleted.
 	 * </ul>
-	 * 
+	 *
 	 * @return {@code true}, if the entity is modifiable;
 	 *         {@code false}, otherwise,
 	 */

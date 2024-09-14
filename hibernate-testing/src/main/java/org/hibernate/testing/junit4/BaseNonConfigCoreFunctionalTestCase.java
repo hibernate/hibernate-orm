@@ -59,7 +59,6 @@ import org.junit.Before;
 
 import static java.lang.Thread.currentThread;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.util.ServiceRegistryUtil.serviceRegistryBuilder;
 import static org.junit.Assert.fail;
 

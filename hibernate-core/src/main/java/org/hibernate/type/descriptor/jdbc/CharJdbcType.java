@@ -8,9 +8,6 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#CHAR CHAR} handling.

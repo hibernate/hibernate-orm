@@ -111,8 +111,8 @@ public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctiona
         catch ( Exception e ) {
             assertTyping( IllegalStateException.class, e );
         }
-    }    
-    
+    }
+
     @Entity(name = "TemplateType")
     @Audited
     public static class TemplateType {
@@ -188,5 +188,5 @@ public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctiona
         public void setTemplateType(TemplateType templateType) {
             this.templateType = templateType;
         }
-    }    
+    }
 }

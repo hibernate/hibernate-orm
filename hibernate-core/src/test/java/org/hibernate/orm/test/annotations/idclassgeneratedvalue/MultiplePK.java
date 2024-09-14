@@ -27,7 +27,7 @@ public class MultiplePK implements Serializable
       id3 = null;
       cachedHashCode = super.hashCode();
    }
-   
+
    public MultiplePK(Long id1, Long id2, Long id3)
    {
       this.id1 = id1;
@@ -35,7 +35,7 @@ public class MultiplePK implements Serializable
       this.id3 = id3;
       this.cachedHashCode = calculateHashCode();
    }
-   
+
 
    private int calculateHashCode() {
        int result = id1.hashCode();
@@ -50,18 +50,18 @@ public class MultiplePK implements Serializable
    public Long getId2() {
        return id2;
    }
-   
+
    public Long getId3() {
       return id3;
   }
 
    @Override
-   public boolean equals(Object o) 
+   public boolean equals(Object o)
    {
        if ( this == o ) {
            return true;
        }
-       if ( o == null || getClass() != o.getClass() ) 
+       if ( o == null || getClass() != o.getClass() )
        {
            return false;
        }

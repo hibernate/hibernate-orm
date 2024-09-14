@@ -30,6 +30,5 @@ public class UnidirectionalOneToManySetCollectionEventTest extends AbstractAssoc
 	@Override
 	public Collection createCollection() {
 		return new HashSet();
-	}	
+	}
 }
-

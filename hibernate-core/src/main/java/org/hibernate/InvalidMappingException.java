@@ -13,7 +13,7 @@ import org.hibernate.boot.jaxb.Origin;
  * <p>
  * Similar to {@link MappingException}, but contains more information
  * about the path and type of mapping (e.g. file, resource or URL).
- * 
+ *
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
@@ -61,7 +61,7 @@ public class InvalidMappingException extends MappingException {
 	public String getType() {
 		return type;
 	}
-	
+
 	public String getPath() {
 		return path;
 	}

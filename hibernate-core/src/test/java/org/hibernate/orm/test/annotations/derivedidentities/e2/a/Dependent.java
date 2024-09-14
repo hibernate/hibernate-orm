@@ -21,7 +21,7 @@ import jakarta.persistence.Table;
 public class Dependent {
 	@Id
 	String name;
-	
+
 	@Id @ManyToOne
 	@JoinColumn(name="FK1", referencedColumnName="firstName")
 	@JoinColumn(name="FK2", referencedColumnName="lastName")

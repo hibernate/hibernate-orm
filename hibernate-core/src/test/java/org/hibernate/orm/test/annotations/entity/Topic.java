@@ -4,7 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.orm.test.annotations.entity;
 
 import java.util.HashSet;
@@ -34,8 +33,8 @@ public class Topic {
 	@OneToMany(mappedBy="topic", cascade=CascadeType.ALL)
 	@Filter(name="byState", condition=":state = state")
 	private Set<Narrative> narratives = new HashSet<Narrative>();
-	
-	
+
+
 	public int getId() {
 		return id;
 	}
@@ -51,6 +50,6 @@ public class Topic {
 	public void addNarrative(Narrative val) {
 		narratives.add(val);
 		val.setTopic(this);
-	} 
+	}
 
 }

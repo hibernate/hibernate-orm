@@ -25,26 +25,26 @@ public class Classes {
 	public static class Edition<T> {
 		T name;
 	}
-	
-	
+
+
 	@Entity(name = "Book")
 	@Table(name="Book")
 	public static class Book {
 		@Id
 		@GeneratedValue(strategy=GenerationType.AUTO)
 		Long id;
-		
+
 		@Embedded
 		Edition<String> edition;
 	}
-	
+
 	@Entity(name = "PopularBook")
 	@Table(name="PopularBook")
 	public static class PopularBook {
 		@Id
 		@GeneratedValue(strategy=GenerationType.AUTO)
 		Long id;
-		
+
 		@ElementCollection
 		@JoinTable(name="PopularBook_Editions",joinColumns={@JoinColumn(name="PopularBook_id")})
 

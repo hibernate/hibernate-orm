@@ -20,7 +20,6 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
-import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
 
 /**

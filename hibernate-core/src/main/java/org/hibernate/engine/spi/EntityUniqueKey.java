@@ -14,8 +14,6 @@ import java.io.Serializable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

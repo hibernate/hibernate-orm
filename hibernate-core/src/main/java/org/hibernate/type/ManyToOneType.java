@@ -177,7 +177,7 @@ public class ManyToOneType extends EntityType {
 			);
 			if ( id == null ) {
 				throw new AssertionFailure(
-						"cannot cache a reference to an object with a null id: " + 
+						"cannot cache a reference to an object with a null id: " +
 						getAssociatedEntityName()
 				);
 			}
@@ -209,7 +209,7 @@ public class ManyToOneType extends EntityType {
 			Serializable oid,
 			SharedSessionContractImplementor session,
 			Object owner) throws HibernateException {
-		
+
 		//TODO: currently broken for unique-key references (does not detect
 		//      change to unique key property of the associated object)
 
@@ -272,7 +272,7 @@ public class ManyToOneType extends EntityType {
 			Object newid = getIdentifier( current, session );
 			return getIdentifierType( session ).isDirty( oldid, newid, checkable, session );
 		}
-		
+
 	}
 
 }

@@ -33,7 +33,7 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
  */
 @JiraKey( value = "HHH-12077" )
 public class AuditStraegySelectorTest {
-    
+
 	@Test
 	public void testAuditStrategySelectorNoneSpecified() {
 		testAuditStrategySelector( null, DefaultAuditStrategy.class );
@@ -82,5 +82,5 @@ public class AuditStraegySelectorTest {
 		finally {
 			ServiceRegistryBuilder.destroy( sr );
 		}
-	}    
+	}
 }

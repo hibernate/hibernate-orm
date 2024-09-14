@@ -132,5 +132,5 @@ public class AssociationToOneLeftJoinQueryTest extends BaseEnversJPAFunctionalTe
 		assertEquals( "Expected car3 to be returned but only once", 1, resultList.size() );
 		assertEquals( "Unexpected car at index 0", car3.getId(), resultList.get(0).getId() );
 	}
-	
+
 }

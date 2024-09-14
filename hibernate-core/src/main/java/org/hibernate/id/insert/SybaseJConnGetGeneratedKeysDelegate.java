@@ -24,7 +24,7 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getG
  * Specialized {@link GetGeneratedKeysDelegate} which appends the database
  * specific clause which signifies to return generated {@code IDENTITY} values
  * to the end of the insert statement.
- * 
+ *
  * @author Christian Beikov
  */
 public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegate {

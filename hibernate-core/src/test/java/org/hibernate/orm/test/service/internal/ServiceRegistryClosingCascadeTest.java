@@ -10,7 +10,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 

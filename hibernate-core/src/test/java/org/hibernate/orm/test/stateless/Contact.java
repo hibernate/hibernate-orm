@@ -8,7 +8,7 @@ package org.hibernate.orm.test.stateless;
 
 
 /**
- * 
+ *
  * @author stliu
  */
 public class Contact {
@@ -26,5 +26,5 @@ public class Contact {
 		this.org = org;
 	}
 	private Org org;
-	
+
 }

@@ -13,7 +13,6 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Date;
 
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Distributor;

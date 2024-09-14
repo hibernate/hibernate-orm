@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Plural annotation for @ColumnTransformer.
  * Useful when more than one column is using this behavior.
- *  
+ *
  * @author Emmanuel Bernard
  */
 @Target({FIELD,METHOD})

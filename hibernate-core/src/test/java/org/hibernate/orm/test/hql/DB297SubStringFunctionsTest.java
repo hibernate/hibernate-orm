@@ -9,13 +9,11 @@ package org.hibernate.orm.test.hql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.PersistenceException;
 
 import org.hibernate.QueryException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.RequiresDialect;

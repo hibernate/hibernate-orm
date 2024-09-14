@@ -31,11 +31,11 @@ public class Library {
 	@OneToMany(mappedBy="library", cascade = CascadeType.ALL)
 	@MapKey(name="isbn")
 	private Map<String,Book> booksOnIsbn = new HashMap<>();
-	
+
 	public int getEntid() {
 		return entid;
 	}
-	
+
 	public Map<String,Book> getBooksOnInventory() {
 		return booksOnInventory;
 	}

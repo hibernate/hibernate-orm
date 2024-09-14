@@ -4,11 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-/*
- * Created on 20-Dec-2004
- *
- */
 package org.hibernate.orm.test.legacy;
 
 import java.io.Serializable;
@@ -23,8 +18,8 @@ public class CompositeIdId implements Serializable {
     String id;
     String name;
     CompositeElement composite;
-    
-    
+
+
     public String getId() {
         return id;
     }
@@ -43,12 +38,12 @@ public class CompositeIdId implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
-    
+
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object obj) {
-        // not totally NP or type safe equals, but enough for the unittests. 
+        // not totally NP or type safe equals, but enough for the unittests.
         CompositeIdId o = (CompositeIdId) obj;
         if(o==null) return false;
         return o.getUser().equals( getUser()) && o.getId().equals(getId());

@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import org.hibernate.type.SqlTypes;
 
 import java.sql.Types;
 import java.util.concurrent.ConcurrentHashMap;

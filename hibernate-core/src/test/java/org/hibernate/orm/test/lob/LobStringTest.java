@@ -11,14 +11,12 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -31,7 +29,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-import jakarta.persistence.Tuple;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

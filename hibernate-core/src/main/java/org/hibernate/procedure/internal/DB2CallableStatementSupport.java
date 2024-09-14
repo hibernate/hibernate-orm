@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;

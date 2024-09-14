@@ -21,7 +21,6 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
-import static org.junit.Assert.assertEquals;
 
 /**
  *  @author Erin Schnabel

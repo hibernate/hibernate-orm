@@ -12,7 +12,7 @@ import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Manages callbacks from the {@link jakarta.transaction.Synchronization} registered by Hibernate.
- * 
+ *
  * @author Steve Ebersole
  */
 public class SynchronizationCallbackCoordinatorNonTrackingImpl implements SynchronizationCallbackCoordinator {

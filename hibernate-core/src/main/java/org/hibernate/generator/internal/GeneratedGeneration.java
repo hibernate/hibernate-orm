@@ -63,4 +63,3 @@ public class GeneratedGeneration implements OnExecutionGenerator {
 		return writable && sql==null;
 	}
 }
-

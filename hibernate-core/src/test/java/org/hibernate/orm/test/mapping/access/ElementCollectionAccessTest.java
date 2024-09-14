@@ -13,7 +13,6 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -69,7 +68,7 @@ public class ElementCollectionAccessTest extends BaseEntityManagerFunctionalTest
 
 		//Getters and setters are omitted for brevity
 	//end::access-element-collection-mapping-example[]
-		
+
 		public Long getId() {
 			return id;
 		}
@@ -127,5 +126,5 @@ public class ElementCollectionAccessTest extends BaseEntityManagerFunctionalTest
 		}
 	}
 	//end::access-embeddable-mapping-example[]
-	
+
 }

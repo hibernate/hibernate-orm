@@ -39,7 +39,7 @@ public class IdClassHbmTest extends BaseCoreFunctionalTestCase {
 		s.persist(cust);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		CustomerId custId = new CustomerId("JBoss", "RouteOne");
 		t = s.beginTransaction();
@@ -48,7 +48,7 @@ public class IdClassHbmTest extends BaseCoreFunctionalTestCase {
 		assertEquals( cust.getCustomerName(), custId.getCustomerName() );
 		assertEquals( cust.getOrgName(), custId.getOrgName() );
 		t.commit();
-		s.close();		
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -65,12 +65,11 @@ public class IdClassHbmTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Detroit", cust.getAddress() );
 		assertEquals( cust.getCustomerName(), custId.getCustomerName() );
 		assertEquals( cust.getOrgName(), custId.getOrgName() );
-		
+
 		s.createQuery( "delete from Customer" ).executeUpdate();
-		
+
 		t.commit();
 		s.close();
 	}
 
 }
-

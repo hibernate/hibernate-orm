@@ -50,12 +50,12 @@ import static org.junit.Assert.assertTrue;
  * @author Nathan Xu
  */
 public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
-	
+
 	@Test
 	public void testLoadGraph() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
-		
+
 		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
 		entityGraph.addAttributeNodes( "location" );
 		entityGraph.addAttributeNodes( "markets" );
@@ -65,31 +65,31 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 
 		entityManager.getTransaction().commit();
 		entityManager.close();
-		
+
 		assertFalse( Hibernate.isInitialized( company.employees ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
 		assertTrue( Hibernate.isInitialized( company.markets ) );
 		// With "loadgraph", non-specified attributes use the fetch modes defined in the mappings.  So, here,
 		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
 		assertTrue( Hibernate.isInitialized( company.phoneNumbers ) );
-		
+
 		entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
-		
+
 		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
 		subgraph.addAttributeNodes( "managers" );
 		subgraph.addAttributeNodes( "friends" );
 		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
 		subSubgraph.addAttributeNodes( "managers" );
 		subSubgraph.addAttributeNodes( "friends" );
-		
+
 		query = entityManager.createQuery( "from " + Company.class.getName() );
 		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		company = (Company) query.getSingleResult();
-		
+
 		entityManager.getTransaction().commit();
 		entityManager.close();
-		
+
 		assertTrue( Hibernate.isInitialized( company.employees ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
 		assertEquals( 12345, company.location.zip );
@@ -97,7 +97,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		// With "loadgraph", non-specified attributes use the fetch modes defined in the mappings.  So, here,
 		// @ElementCollection(fetch = FetchType.EAGER) should cause the follow-on selects to happen.
 		assertTrue( Hibernate.isInitialized( company.phoneNumbers ) );
-		
+
 		boolean foundManager = false;
 		Iterator<Employee> employeeItr = company.employees.iterator();
 		while (employeeItr.hasNext()) {
@@ -215,7 +215,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager.getTransaction().begin();
 
 		entityManager.unwrap( Session.class ).enableFetchProfile( "company.location" );
-		
+
 		EntityGraph<CompanyFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyFetchProfile.class );
 		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + CompanyFetchProfile.class.getName() );
@@ -273,7 +273,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		}
 		assertTrue(foundManager);
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-9457")
 	public void testLoadGraphOrderByWithImplicitJoin() {
@@ -409,7 +409,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	public void testEntityGraphWithExplicitFetch() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
-		
+
 		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
 		entityGraph.addAttributeNodes( "location" );
 		entityGraph.addAttributeNodes( "markets" );
@@ -419,10 +419,10 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 				+ " as c left join fetch c.location left join fetch c.employees" );
 		query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
-		
+
 		entityManager.getTransaction().commit();
 		entityManager.close();
-		
+
 		assertTrue( Hibernate.isInitialized( company.employees ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
 		assertTrue( Hibernate.isInitialized( company.markets ) );
@@ -521,23 +521,23 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	public void createData() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
-		
+
 		Manager manager1 = new Manager();
 		entityManager.persist( manager1 );
-		
+
 		Manager manager2 = new Manager();
 		manager2.managers.add( manager1 );
 		entityManager.persist( manager2 );
-		
+
 		Employee employee = new Employee();
 		employee.managers.add( manager1 );
 		entityManager.persist( employee );
-		
+
 		Location location = new Location();
 		location.address = "123 somewhere";
 		location.zip = 12345;
 		entityManager.persist( location );
-		
+
 		Company company = new Company();
 		company.employees.add( employee );
 		company.employees.add( manager1 );
@@ -559,7 +559,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		companyFetchProfile.phoneNumbers.add( "012-345-6789" );
 		companyFetchProfile.phoneNumbers.add( "987-654-3210" );
 		entityManager.persist( companyFetchProfile );
-		
+
 		entityManager.getTransaction().commit();
 		entityManager.close();
 	}

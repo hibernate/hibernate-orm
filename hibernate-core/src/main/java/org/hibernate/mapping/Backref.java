@@ -49,7 +49,7 @@ public class Backref extends Property {
 		}
 		return propertyAccessStrategy;
 	}
-	
+
 	public String getEntityName() {
 		return entityName;
 	}

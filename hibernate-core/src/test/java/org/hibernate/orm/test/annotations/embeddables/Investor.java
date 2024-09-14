@@ -19,9 +19,9 @@ import jakarta.persistence.Id;
  */
 @Entity
 public class Investor {
-	
+
 	private Long id;
-	
+
 	private List<Investment> investments = new ArrayList<Investment>();
 
 	@Id
@@ -32,7 +32,7 @@ public class Investor {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	@ElementCollection(fetch = FetchType.EAGER)
 	public List<Investment> getInvestments() {
 		return investments;

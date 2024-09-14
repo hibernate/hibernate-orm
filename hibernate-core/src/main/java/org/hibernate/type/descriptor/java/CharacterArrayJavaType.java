@@ -19,7 +19,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
 
 /**
  * Descriptor for {@code Character[]} handling, which disallows {@code null} elements.

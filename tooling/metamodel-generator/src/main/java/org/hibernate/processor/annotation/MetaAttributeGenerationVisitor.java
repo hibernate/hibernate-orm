@@ -194,4 +194,3 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 	}
 
 }
-

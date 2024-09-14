@@ -15,7 +15,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * An operation which may be scheduled for later execution. Usually, the
  * operation is a database insert/update/delete, together with required
  * second-level cache management.
- * 
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
@@ -56,7 +56,7 @@ public interface Executable {
 	 * before-transaction-completion process
 	 */
 	@Nullable BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess();
-	
+
 	/**
 	 * Reconnect to session after deserialization
 	 *

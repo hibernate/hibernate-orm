@@ -13,7 +13,7 @@ import org.hibernate.testing.RequiresDialect;
 
 /**
  * Custom SQL tests for DB2
- * 
+ *
  * @author Max Rydahl Andersen
  */
 @RequiresDialect( DB2Dialect.class )
@@ -22,4 +22,3 @@ public class DB2CustomSQLTest extends CustomStoredProcTestSupport {
 		return new String[] { "sql/hand/custom/db2/Mappings.hbm.xml" };
 	}
 }
-

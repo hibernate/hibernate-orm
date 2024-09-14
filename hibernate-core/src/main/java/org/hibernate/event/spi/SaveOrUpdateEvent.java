@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 import org.hibernate.engine.spi.EntityEntry;
 
-/** 
+/**
  * An event class for saveOrUpdate()
  *
  * @author Steve Ebersole
@@ -74,15 +74,15 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 	public Object getEntity() {
 		return entity;
 	}
-	
+
 	public void setEntity(Object entity) {
 		this.entity = entity;
 	}
-	
+
 	public EntityEntry getEntry() {
 		return entry;
 	}
-	
+
 	public void setEntry(EntityEntry entry) {
 		this.entry = entry;
 	}

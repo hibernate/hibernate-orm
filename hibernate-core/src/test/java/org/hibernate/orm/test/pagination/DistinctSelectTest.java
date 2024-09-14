@@ -24,7 +24,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * HHH-5715 bug test case: Duplicated entries when using select distinct with join and pagination. The bug has to do
  * with new {@link SQLServerDialect} that uses row_number function for pagination
- * 
+ *
  * @author Valotasios Yoryos
  */
 @JiraKey( value = "HHH-5715" )

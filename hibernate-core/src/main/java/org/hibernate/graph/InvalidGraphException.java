@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 
 /**
  * Thrown by {@link GraphParser} to indicate textual entity graph representation parsing errors.
- * 
+ *
  * @author asusnjar
  *
  */

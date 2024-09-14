@@ -14,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * <p>
  * Note that every {@linkplain java.sql.SQLException exception arising
  * from the JDBC layer} is wrapped in some form of {@link JDBCException}.
- * 
+ *
  * @author Gavin King
  */
 public class HibernateException extends PersistenceException {

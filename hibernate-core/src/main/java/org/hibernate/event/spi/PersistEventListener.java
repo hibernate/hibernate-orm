@@ -15,14 +15,14 @@ import org.hibernate.HibernateException;
  */
 public interface PersistEventListener {
 
-	/** 
+	/**
 	 * Handle the given create event.
 	 *
 	 * @param event The create event to be handled.
 	 */
 	void onPersist(PersistEvent event) throws HibernateException;
 
-	/** 
+	/**
 	 * Handle the given create event.
 	 *
 	 * @param event The create event to be handled.

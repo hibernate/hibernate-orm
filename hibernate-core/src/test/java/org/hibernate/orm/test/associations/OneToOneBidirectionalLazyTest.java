@@ -34,9 +34,9 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 
 	@Test
 	public void testLifecycle() {
-		
+
 	}
-	
+
 	//tag::associations-one-to-one-bidirectional-lazy-example[]
 	@Entity(name = "Phone")
 	public static class Phone {

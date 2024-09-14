@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cache.jcache.internal;
 
@@ -28,7 +28,6 @@ import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cache.jcache.MissingCacheStrategy;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
-import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
 import org.hibernate.cache.spi.support.RegionNameQualifier;

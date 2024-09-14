@@ -1893,7 +1893,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 
 	// native identifier generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 	/**
 	 * The name identifying the "native" id generation strategy for this dialect.
 	 * <p>
@@ -2355,7 +2355,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param tableName The name of the table to drop
 	 *
 	 * @return The {@code drop table} statement as a string
-	 * 
+	 *
 	 * @deprecated No longer used
 	 *
 	 * @see StandardTableExporter#getSqlDropStrings

@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.event;
 
@@ -59,7 +59,7 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 
         Object mergeEntity = new Simple( 1 );
         Object managedEntity = new Simple( 2 );
-        
+
         cache.put(mergeEntity, managedEntity);
 
 		checkCacheConsistency( cache, 1 );
@@ -86,14 +86,14 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 
         Object mergeEntity = new Simple( 1 );
         Object managedEntity = new Simple( 2 );
-        
+
         cache.put(mergeEntity, managedEntity);
 
 		checkCacheConsistency( cache, 1 );
 
 		assertTrue(cache.containsKey(mergeEntity));
         assertFalse( cache.containsKey( managedEntity ) );
-        
+
         assertTrue( cache.invertMap().containsKey( managedEntity ) );
         assertFalse( cache.invertMap().containsKey( mergeEntity ) );
     }
@@ -132,7 +132,7 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 
         Object mergeEntity = new Simple( 1 );
         Object managedEntity = new Simple( 2 );
-        
+
         cache.put(mergeEntity, managedEntity, true);
 
 		checkCacheConsistency( cache, 1 );
@@ -142,7 +142,7 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 
         assertTrue( cache.invertMap().containsKey( managedEntity ) );
         assertFalse( cache.invertMap().containsKey( mergeEntity ) );
-        
+
         cache.clear();
 
 		checkCacheConsistency( cache, 0 );

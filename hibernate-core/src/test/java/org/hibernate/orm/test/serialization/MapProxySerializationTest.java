@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;

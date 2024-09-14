@@ -22,7 +22,6 @@ import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.CacheMode;
 import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.callbacks.RemoteControl;

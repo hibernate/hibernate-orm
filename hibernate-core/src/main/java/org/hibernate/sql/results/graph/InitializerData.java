@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph;
 
-import java.util.Objects;
 
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 

@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Occurs after deleting an item from the datastore
- * 
+ *
  * @author Gavin King
  */
 public class PostDeleteEvent extends AbstractEvent {
@@ -19,7 +19,7 @@ public class PostDeleteEvent extends AbstractEvent {
 	private final EntityPersister persister;
 	private final Object id;
 	private final Object[] deletedState;
-	
+
 	public PostDeleteEvent(
 			Object entity,
 			Object id,
@@ -32,7 +32,7 @@ public class PostDeleteEvent extends AbstractEvent {
 		this.persister = persister;
 		this.deletedState = deletedState;
 	}
-	
+
 	public Object getId() {
 		return id;
 	}

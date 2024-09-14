@@ -24,9 +24,9 @@ public class Course {
 	@Id
 	@GeneratedValue
 	private int id;
-	
+
 	private String name;
-	
+
 	@ManyToMany(mappedBy="courses", cascade=CascadeType.ALL)
 	private List<Student> students = new ArrayList<>();
 

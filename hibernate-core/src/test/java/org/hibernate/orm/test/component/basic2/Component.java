@@ -21,7 +21,7 @@ public class Component {
 
     @Id
 	private Long id;
-    
+
     @Embedded
 	private Component.Emb emb;
 

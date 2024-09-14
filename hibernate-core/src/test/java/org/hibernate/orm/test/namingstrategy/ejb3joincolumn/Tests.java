@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.namingstrategy.ejb3joincolumn;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 

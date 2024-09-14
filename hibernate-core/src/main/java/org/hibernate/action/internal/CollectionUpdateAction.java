@@ -62,7 +62,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 			if ( !collection.isDirty() ) {
 				throw new AssertionFailure( "collection is not dirty" );
 			}
-			//do nothing - we only need to notify the cache... 
+			//do nothing - we only need to notify the cache...
 		}
 		else if ( !affectedByFilters && collection.empty() ) {
 			if ( !emptySnapshot ) {
@@ -95,7 +95,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 			statistics.updateCollection( persister.getRole() );
 		}
 	}
-	
+
 	private void preUpdate() {
 		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_UPDATE
 				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent,

@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Human.java 7203 2005-06-19 02:01:05Z oneovthafew $
 package org.hibernate.orm.test.subselect;
 
 
@@ -18,7 +16,7 @@ public class Human {
 	private char sex;
 	private String address;
 	private double heightInches;
-	
+
 	public void setAddress(String address) {
 		this.address = address;
 	}

@@ -294,4 +294,3 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 		return "OracleArrayTypeDescriptor(" + typeName + ")";
 	}
 }
-

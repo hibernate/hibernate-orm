@@ -168,12 +168,12 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 		List<String> divisions = new ArrayList<String>( );
 		divisions.add( "NA" );
 		divisions.add( "EU" );
-			
+
 		// Building the query.
 		CriteriaBuilder criteria = em.getCriteriaBuilder( );
 		CriteriaQuery<Widget> query = criteria.createQuery( Widget.class );
 		Root<Widget> root = query.from( Widget.class );
-			
+
 		Predicate predicate = root.get( "division" ).in( divisions );
 		query.where( predicate );
 

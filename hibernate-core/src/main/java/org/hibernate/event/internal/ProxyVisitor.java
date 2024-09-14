@@ -49,7 +49,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 			&& snapshot.getRole() != null
 			&& snapshot.getKey() != null;
 	}
-	
+
 	/**
 	 * Reattach a detached (disassociated) initialized or uninitialized
 	 * collection wrapper, using a snapshot carried with the collection

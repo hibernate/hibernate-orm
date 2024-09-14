@@ -14,7 +14,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.NaturalId;
 
-import static org.hibernate.generator.EventType.INSERT;
 
 /**
  * @author Steve Ebersole

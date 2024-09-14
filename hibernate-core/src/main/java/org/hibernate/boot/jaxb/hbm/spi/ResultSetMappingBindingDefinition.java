@@ -8,7 +8,6 @@ package org.hibernate.boot.jaxb.hbm.spi;
 
 import java.util.List;
 
-import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 
 /**
  * @author Steve Ebersole

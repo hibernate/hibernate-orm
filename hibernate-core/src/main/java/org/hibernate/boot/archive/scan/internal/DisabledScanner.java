@@ -8,9 +8,6 @@ package org.hibernate.boot.archive.scan.internal;
 
 import java.util.Collections;
 
-import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
-import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
-import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;

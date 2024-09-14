@@ -45,4 +45,3 @@ public class SimpleEntity {
 		this.stringField = stringField;
 	}
 }
-

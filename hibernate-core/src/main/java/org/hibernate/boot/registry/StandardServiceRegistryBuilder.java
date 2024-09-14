@@ -37,7 +37,7 @@ import static org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KE
  * Configuration properties are enumerated by {@link AvailableSettings}.
  *
  * @author Steve Ebersole
- * 
+ *
  * @see StandardServiceRegistryImpl
  * @see BootstrapServiceRegistryBuilder
  */

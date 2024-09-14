@@ -135,7 +135,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testImmutableAttribute(){
 		configuration().addAttributeConverter( ExifConverter.class);
@@ -218,7 +218,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testMisplacedImmutableAnnotation() {
 		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )

@@ -8,7 +8,7 @@ package org.hibernate.event.spi;
 
 /**
  * Called before deleting an item from the datastore
- * 
+ *
  * @author Gavin King
  */
 public interface PreDeleteEventListener {

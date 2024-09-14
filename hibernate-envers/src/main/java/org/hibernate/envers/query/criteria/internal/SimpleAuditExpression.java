@@ -11,7 +11,6 @@ import java.util.Locale;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.internal.entities.ComponentDescription;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;

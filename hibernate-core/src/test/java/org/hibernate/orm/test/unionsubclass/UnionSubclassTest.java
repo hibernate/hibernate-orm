@@ -575,4 +575,3 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 				} );
 	}
 }
-

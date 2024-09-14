@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.util.Map;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests that proxies can still be resolved correctly in ToOneIdMapper even the object is already deleted and can't

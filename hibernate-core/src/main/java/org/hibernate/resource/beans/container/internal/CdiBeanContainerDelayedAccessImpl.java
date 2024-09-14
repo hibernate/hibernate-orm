@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.resource.beans.container.internal;
 
@@ -31,8 +31,8 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 
 	@Override
 	protected <B> ContainedBeanImplementor<B> createBean(
-			Class<B> beanType, 
-			BeanLifecycleStrategy lifecycleStrategy, 
+			Class<B> beanType,
+			BeanLifecycleStrategy lifecycleStrategy,
 			BeanInstanceProducer fallbackProducer) {
 		return new BeanImpl<>( beanType, lifecycleStrategy, fallbackProducer );
 	}
@@ -55,7 +55,7 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 
 		private BeanImpl(
 				Class<B> beanType,
-				BeanLifecycleStrategy lifecycleStrategy, 
+				BeanLifecycleStrategy lifecycleStrategy,
 				BeanInstanceProducer fallbackProducer) {
 			this.beanType = beanType;
 			this.lifecycleStrategy = lifecycleStrategy;
@@ -94,7 +94,7 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		private NamedBeanImpl(
 				String name,
 				Class<B> beanType,
-				BeanLifecycleStrategy lifecycleStrategy, 
+				BeanLifecycleStrategy lifecycleStrategy,
 				BeanInstanceProducer fallbackProducer) {
 			this.name = name;
 			this.beanType = beanType;

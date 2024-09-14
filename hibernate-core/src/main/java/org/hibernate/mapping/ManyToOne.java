@@ -92,7 +92,7 @@ public class ManyToOne extends ToOne {
 			if ( property==null ) {
 				throw new MappingException( "Referenced entity '" + referencedEntityName
 						+ "' has no property named '" + referencedPropertyName + "'" );
-			} 
+			}
 			else {
 				// Make sure synthetic properties are sorted
 				if ( property.getValue() instanceof Component component ) {
@@ -101,9 +101,9 @@ public class ManyToOne extends ToOne {
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( isForeignKeyEnabled() && !hasFormula() ) {
 					final ForeignKey foreignKey = getTable().createForeignKey(
-							getForeignKeyName(), 
-							getConstraintColumns(), 
-							( (EntityType) getType() ).getAssociatedEntityName(), 
+							getForeignKeyName(),
+							getConstraintColumns(),
+							( (EntityType) getType() ).getAssociatedEntityName(),
 							getForeignKeyDefinition(),
 							getForeignKeyOptions(),
 							new ArrayList<>( property.getColumns() )
@@ -114,7 +114,7 @@ public class ManyToOne extends ToOne {
 			}
 		}
 	}
-	
+
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

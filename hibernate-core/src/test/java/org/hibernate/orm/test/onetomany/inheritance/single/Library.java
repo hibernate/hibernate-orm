@@ -36,7 +36,7 @@ public class Library {
 	public int getEntid() {
 		return entid;
 	}
-	
+
 	public Map<String,Book> getBooksOnInventory() {
 		return booksOnInventory;
 	}

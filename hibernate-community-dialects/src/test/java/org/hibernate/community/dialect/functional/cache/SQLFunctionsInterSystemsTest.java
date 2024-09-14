@@ -128,7 +128,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		//misuse of "Single" as a propertyobject, but it was the first testclass i found with a collection ;)
 		Single single = new Single() { // trivial hack to test properties with arrays.
 			@SuppressWarnings( {"unchecked"})
-			String[] getStuff() { 
+			String[] getStuff() {
 				return (String[]) getSeveral().toArray(new String[getSeveral().size()]);
 			}
 		};

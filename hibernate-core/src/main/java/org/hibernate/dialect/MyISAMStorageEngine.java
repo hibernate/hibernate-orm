@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 /**
  * Represents the MyISAM storage engine.
- * 
+ *
  * @author Vlad Mihalcea
  */
 public class MyISAMStorageEngine implements MySQLStorageEngine{

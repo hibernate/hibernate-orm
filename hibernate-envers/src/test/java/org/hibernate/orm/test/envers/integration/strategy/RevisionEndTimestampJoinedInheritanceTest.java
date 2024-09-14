@@ -278,5 +278,5 @@ public class RevisionEndTimestampJoinedInheritanceTest extends AbstractRevisionE
 			Executive that = (Executive) object;
 			return !( title != null ? !title.equals( that.title ) : that.title != null );
 		}
-	}    
+	}
 }

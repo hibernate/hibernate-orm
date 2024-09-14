@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Properties;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 

@@ -35,7 +35,7 @@ public class AttributeOverrideTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		//legacy mappings
 		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "ASSESSMENT") );
-		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "SQUARE_FEET") );		
+		assertTrue( isColumnPresent( "PropertyRecord_legacyUnsortedParcels", "SQUARE_FEET") );
 	}
 
 	public boolean isColumnPresent(String tableName, String columnName) {

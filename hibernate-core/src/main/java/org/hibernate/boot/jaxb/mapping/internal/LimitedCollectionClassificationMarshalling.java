@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import java.util.Locale;
 
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 

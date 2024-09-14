@@ -11,7 +11,6 @@ import java.sql.SQLException;
 
 import org.hibernate.query.spi.Limit;
 
-import static java.util.regex.Pattern.compile;
 
 /**
  * Handler not supporting query LIMIT clause. JDBC API is used to set maximum number of returned rows.

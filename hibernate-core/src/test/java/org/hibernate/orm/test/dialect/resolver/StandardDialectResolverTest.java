@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.dialect.resolver;
 
@@ -12,7 +12,6 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
-import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -22,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * Unit test of the {@link StandardDialectResolver} class.
- * 
+ *
  * @author Bryan Turner
  */
 public class StandardDialectResolverTest extends BaseUnitTestCase {

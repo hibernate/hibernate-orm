@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table( name = "Table1" )
 public class Table1 {
-	
+
 	@Id
 	@GeneratedValue
 	private long id;

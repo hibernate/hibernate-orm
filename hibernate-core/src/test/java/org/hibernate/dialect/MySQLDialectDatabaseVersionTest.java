@@ -1,3 +1,9 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.dialect;
 
 import java.util.Map;
@@ -23,7 +29,7 @@ public class MySQLDialectDatabaseVersionTest extends BaseUnitTestCase {
 		assertEquals(0, dialect.getVersion().getMinor());
 		assertEquals(37, dialect.getVersion().getMicro());
 	}
-	
+
 	@Test
 	public void releaseVersion() {
 		String version = "8.0.37";
@@ -91,7 +97,7 @@ public class MySQLDialectDatabaseVersionTest extends BaseUnitTestCase {
 		public Map<String, Object> getConfigurationValues() {
 			return Map.of();
 		}
-		
+
 	}
 
 }

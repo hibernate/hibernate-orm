@@ -28,7 +28,7 @@ import static org.junit.Assert.assertSame;
 /**
  * Test HHH-6361: Collection events may contain wrong stored snapshot after
  * merging a detached entity into the persistencecontext.
- * 
+ *
  * @author Erik-Berndt Scheper
  */
 @JiraKey( value = "HHH-6361" )

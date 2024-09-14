@@ -37,11 +37,11 @@ public class PreLoadEvent extends AbstractEvent {
 	public Object getId() {
 		return id;
 	}
-	
+
 	public EntityPersister getPersister() {
 		return persister;
 	}
-	
+
 	public Object[] getState() {
 		return state;
 	}
@@ -50,7 +50,7 @@ public class PreLoadEvent extends AbstractEvent {
 		this.entity = entity;
 		return this;
 	}
-	
+
 	public PreLoadEvent setId(Object id) {
 		this.id = id;
 		return this;
@@ -60,7 +60,7 @@ public class PreLoadEvent extends AbstractEvent {
 		this.persister = persister;
 		return this;
 	}
-	
+
 	public PreLoadEvent setState(Object[] state) {
 		this.state = state;
 		return this;

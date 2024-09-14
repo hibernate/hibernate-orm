@@ -7,7 +7,6 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -15,7 +14,6 @@ import java.util.Objects;
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
-import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -203,5 +201,5 @@ public class CollectionMappedByResolver {
 		public Table getTable() {
 			return table;
 		}
-	}    
+	}
 }

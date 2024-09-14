@@ -18,7 +18,7 @@ public class Bid {
 	private int id;
 	private long itemId;
 	private double amount;
-	
+
 	@Id
     public int getId() {
 		return id;
@@ -38,7 +38,7 @@ public class Bid {
 	public void setAmount(double val) {
 		this.amount = val;
 	}
-	
-	
-	
+
+
+
 }

@@ -21,9 +21,9 @@ public class Title implements Serializable {
     @GeneratedValue
     @Column(name="id_title")
     private Integer id;
-    
+
     private String description;
-    
+
     public Integer getId() {
         return id;
     }
@@ -36,7 +36,7 @@ public class Title implements Serializable {
     public void setDescription(String description) {
         this.description = description;
     }
-    
-    
-    
+
+
+
 }

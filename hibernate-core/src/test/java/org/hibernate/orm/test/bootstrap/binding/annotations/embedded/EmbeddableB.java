@@ -13,7 +13,7 @@ import jakarta.persistence.Embeddable;
  */
 @Embeddable
 public class EmbeddableB {
-	
+
 	private String embedAttrB;
 
 	public String getEmbedAttrB() {

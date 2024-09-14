@@ -22,7 +22,7 @@ import org.hibernate.usertype.UserCollectionType;
  * @author Gavin King
  */
 public class List extends IndexedCollection {
-	
+
 	private int baseIndex;
 
 	/**
@@ -56,7 +56,7 @@ public class List extends IndexedCollection {
 	public CollectionType getDefaultCollectionType() throws MappingException {
 		return new ListType( getRole(), getReferencedPropertyName() );
 	}
-	
+
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -64,7 +64,7 @@ public class List extends IndexedCollection {
 	public int getBaseIndex() {
 		return baseIndex;
 	}
-	
+
 	public void setBaseIndex(int baseIndex) {
 		this.baseIndex = baseIndex;
 	}

@@ -40,7 +40,7 @@ public class ProxoolConnectionProviderTest extends BaseUnitTestCase {
 		StandardServiceRegistry serviceRegistryTwo = buildServiceRegistry( "pool-two" );
 		ConnectionProvider providerTwo = serviceRegistryTwo.getService( ConnectionProvider.class );
 		assertDefinedPools( "pool-one", "pool-two" );
-		
+
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		assertDefinedPools( "pool-two" );
 

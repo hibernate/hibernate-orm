@@ -50,4 +50,3 @@ public class BasicPropertiesTest {
 		assertEquals( ec.getField2(), "foo2" );
 	}
 }
-

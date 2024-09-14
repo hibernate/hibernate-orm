@@ -10,7 +10,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.DirtyCheckEnhancementContext;
 import org.hibernate.orm.test.collection.backref.map.compkey.MapKey;

@@ -18,7 +18,6 @@ import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.EnhancedUserType;
-import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;

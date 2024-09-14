@@ -11,8 +11,6 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 

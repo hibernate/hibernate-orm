@@ -25,10 +25,10 @@ import jakarta.persistence.ManyToMany;
 public class Employee {
 	@Id @GeneratedValue
 	public long id;
-	
+
 	@ManyToMany
 	public Set<Manager> managers = new HashSet<Manager>();
-	
+
 	@ManyToMany
 	public Set<Employee> friends = new HashSet<Employee>();
 }

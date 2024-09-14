@@ -9,7 +9,6 @@ import java.util.Collection;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
 
 @Embeddable
 public class InternetFavorites {

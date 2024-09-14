@@ -16,7 +16,6 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
-import org.hibernate.orm.test.jpa.model.MyEntity;
 
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
@@ -26,7 +25,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**

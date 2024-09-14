@@ -23,11 +23,11 @@ public class Parent {
     private Integer id;
     private Set<Child> children = new HashSet<Child>();
     private int nrOfChildren;
-    
+
     public Parent() {
-        
+
     }
-    
+
     @Id
     public Integer getId() {
         return id;
@@ -43,15 +43,14 @@ public class Parent {
     public void setChildren(Set<Child> children) {
         this.children = children;
     }
-    
+
     @PostLoad
     public void postLoad() {
        nrOfChildren = children.size();
     }
-    
+
     @Transient
     public int getNrOfChildren() {
         return nrOfChildren;
     }
 }
-

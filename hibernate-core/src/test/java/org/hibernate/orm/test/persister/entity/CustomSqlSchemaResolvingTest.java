@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.persister.entity;
 
@@ -48,10 +48,10 @@ public class CustomSqlSchemaResolvingTest {
 
 		assertEquals( "Incorrect custom SQL for insert in  Entity: " + className,
 				"INSERT INTO FOO (name, id) VALUES (?, ?)", insertQuery );
-		
+
 		assertEquals( "Incorrect custom SQL for delete in  Entity: " + className,
 				"DELETE FROM FOO WHERE id = ?", deleteQuery );
-		
+
 		assertEquals( "Incorrect custom SQL for update in  Entity: " + className,
 				"UPDATE FOO SET name = ? WHERE id = ?", updateQuery );
 
@@ -90,7 +90,7 @@ public class CustomSqlSchemaResolvingTest {
 
 		private String name;
 	}
-	
+
 	@Entity(name = "Dummy")
 	@Table(name = "FOO")
 	public static class Dummy {

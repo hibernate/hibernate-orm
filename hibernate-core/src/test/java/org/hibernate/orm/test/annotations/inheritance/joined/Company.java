@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 @SecondaryTable(name = "CompanyAddress")
 public class Company extends Customer {
 
-	private String companyName;	
+	private String companyName;
 	private String companyAddress;
 
 	@Column
@@ -41,10 +41,10 @@ public class Company extends Customer {
 		this.companyAddress = companyAddress;
 	}
 
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
 }

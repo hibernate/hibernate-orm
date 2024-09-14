@@ -4,8 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
 import jakarta.persistence.AttributeOverride;
@@ -33,9 +31,9 @@ import org.hibernate.annotations.SecondaryRow;
 @SecondaryRow(table ="POOL_ADDRESS", optional=true)
 @SecondaryRow(table ="POOL_ADDRESS_2", optional=true, owned = false)
 public class Pool {
-	@Id @GeneratedValue 
+	@Id @GeneratedValue
 	private Integer id;
-	
+
 	@Embedded
 	private PoolAddress address;
 

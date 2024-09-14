@@ -15,7 +15,7 @@ public class ConfId  implements Serializable{
 	private String confKey;
 
 	private String confValue;
-	
+
 	public ConfId(){
 	}
 

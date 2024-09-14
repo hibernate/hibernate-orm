@@ -11,9 +11,6 @@ import org.hibernate.query.sqm.CastType;
 
 import org.hibernate.testing.RequiresDialect;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Vlad Mihalcea

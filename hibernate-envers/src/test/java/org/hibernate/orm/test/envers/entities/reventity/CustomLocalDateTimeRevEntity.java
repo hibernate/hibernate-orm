@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.test.entities.reventity;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 

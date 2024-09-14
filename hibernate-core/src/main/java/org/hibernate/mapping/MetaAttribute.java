@@ -22,10 +22,10 @@ public class MetaAttribute implements Serializable {
 	public MetaAttribute(String name) {
 		this.name = name;
 	}
-	
+
 	public String getName() {
 		return name;
-	}	
+	}
 
 	public java.util.List<String> getValues() {
 		return Collections.unmodifiableList(values);

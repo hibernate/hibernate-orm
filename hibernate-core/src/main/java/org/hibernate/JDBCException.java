@@ -78,7 +78,7 @@ public class JDBCException extends HibernateException {
 	public SQLException getSQLException() {
 		return sqlException;
 	}
-	
+
 	/**
 	 * Get the actual SQL statement being executed when the exception occurred.
 	 *

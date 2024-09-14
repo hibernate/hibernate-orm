@@ -1,13 +1,12 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql.results.graph;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
@@ -23,7 +22,6 @@ import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;

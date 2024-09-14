@@ -18,7 +18,7 @@ import java.sql.Clob;
  * {@link #blobLocator} is used to hold BLOB data that is materialized lazily
  * via a JDBC BLOB locator; it is mapped via the
  * {@link org.hibernate.type.StandardBasicTypes#BLOB}
- * 
+ *
  *
  * @author Steve Ebersole
  */

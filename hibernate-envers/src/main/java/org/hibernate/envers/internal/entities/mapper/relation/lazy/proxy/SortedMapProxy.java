@@ -42,7 +42,7 @@ public class SortedMapProxy<K, V> implements SortedMap<K, V>, LazyInitializable,
 	public final boolean wasInitialized() {
 		return delegate != null;
 	}
-	
+
 	@Override
 	public final void forceInitialization() {
 		checkInit();

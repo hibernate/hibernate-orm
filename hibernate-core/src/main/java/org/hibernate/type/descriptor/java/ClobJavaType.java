@@ -121,7 +121,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access clob stream", e );
 		}
-		
+
 		throw unknownUnwrap( type );
 	}
 

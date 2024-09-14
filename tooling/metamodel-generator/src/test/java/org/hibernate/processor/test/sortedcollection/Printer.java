@@ -32,5 +32,3 @@ public class Printer {
 	@SortNatural
 	private SortedMap<String, PrintJob> printedJobs;
 }
-
-

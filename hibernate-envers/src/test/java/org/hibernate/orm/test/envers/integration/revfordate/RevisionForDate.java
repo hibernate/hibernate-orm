@@ -76,7 +76,7 @@ public class RevisionForDate extends BaseEnversJPAFunctionalTestCase {
 	public void testTimestamps1() {
 		getAuditReader().getRevisionNumberForDate( new Date( timestamp1 ) );
 	}
-	
+
 	@Test(expected = RevisionDoesNotExistException.class)
 	public void testTimestampslWithFind() {
 		getAuditReader().find( StrTestEntity.class, id, new Date( timestamp1 ) );
@@ -89,7 +89,7 @@ public class RevisionForDate extends BaseEnversJPAFunctionalTestCase {
 		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp3 ) ).intValue() == 2;
 		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp4 ) ).intValue() == 3;
 	}
-	
+
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "Fails because of int size")
 	public void testEntitiesForTimestamps() {

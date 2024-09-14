@@ -29,5 +29,5 @@ public class DefaultPreLoadEventListener implements PreLoadEventListener {
 				persister.getPropertyTypes()
 		);
 	}
-	
+
 }

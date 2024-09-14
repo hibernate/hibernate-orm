@@ -9,7 +9,6 @@ package org.hibernate.bytecode.enhance.spi;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.persistence.Basic;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;

@@ -7,8 +7,6 @@
 package org.hibernate.orm.test.serialization;
 
 
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
 
 import org.junit.Test;
 

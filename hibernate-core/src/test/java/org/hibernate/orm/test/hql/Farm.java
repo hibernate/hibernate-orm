@@ -25,7 +25,7 @@ public class Farm {
 
 	@Id @GeneratedValue
 	private long id;
-	
+
 	private String name;
 
 	@ManyToMany(cascade = CascadeType.ALL)

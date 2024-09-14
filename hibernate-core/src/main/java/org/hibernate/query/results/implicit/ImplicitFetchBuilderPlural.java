@@ -1,17 +1,15 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.results.implicit;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -19,7 +17,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
-import static org.hibernate.query.results.ResultsHelper.impl;
 
 /**
  * @author Christian Beikov

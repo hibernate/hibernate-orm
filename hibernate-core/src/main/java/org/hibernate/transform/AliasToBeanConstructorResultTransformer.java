@@ -9,7 +9,6 @@ package org.hibernate.transform;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.QueryException;
 import org.hibernate.query.TypedTupleTransformer;
 
 /**

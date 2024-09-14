@@ -62,7 +62,7 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 
 		return collection;
 	}
-	
+
 	/**
 	 * Creates a new object based on the specified class with the given constructor arguments.
 	 *

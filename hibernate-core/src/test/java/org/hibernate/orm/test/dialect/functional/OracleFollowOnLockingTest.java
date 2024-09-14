@@ -33,8 +33,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;

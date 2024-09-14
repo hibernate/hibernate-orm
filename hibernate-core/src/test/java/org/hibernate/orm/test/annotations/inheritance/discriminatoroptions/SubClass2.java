@@ -16,5 +16,3 @@ import jakarta.persistence.Entity;
 @DiscriminatorValue("B")
 public class SubClass2 extends BaseClass2 {
 }
-
-

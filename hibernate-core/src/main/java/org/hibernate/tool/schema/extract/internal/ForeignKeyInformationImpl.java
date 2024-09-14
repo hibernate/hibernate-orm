@@ -35,7 +35,7 @@ public class ForeignKeyInformationImpl implements ForeignKeyInformation {
 	public Iterable<ColumnReferenceMapping> getColumnReferenceMappings() {
 		return columnMappingList;
 	}
-	
+
 	public static class ColumnReferenceMappingImpl implements ColumnReferenceMapping {
 		private final ColumnInformation referencing;
 		private final ColumnInformation referenced;

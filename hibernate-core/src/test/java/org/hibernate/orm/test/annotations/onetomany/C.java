@@ -20,9 +20,9 @@ public class C {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Id
 	Long id;
-	
+
 	@NotNull
-	String name;	
+	String name;
 
 	public Long getId() {
 		return id;

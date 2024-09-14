@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.caching.mocked;
 
@@ -54,17 +54,17 @@ public class NaturalIdCacheKeyTest {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(key);
-        
+
         final ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
         final NaturalIdCacheKey keyClone = (NaturalIdCacheKey) ois.readObject();
-        
+
         assertEquals(key, keyClone);
         assertEquals(key.hashCode(), keyClone.hashCode());
         assertEquals(key.toString(), keyClone.toString());
         assertEquals(key.getEntityName(), keyClone.getEntityName());
         assertArrayEquals( (Object[]) key.getNaturalIdValues(), (Object[]) keyClone.getNaturalIdValues() );
         assertEquals(key.getTenantId(), keyClone.getTenantId());
-        
+
     }
 
 

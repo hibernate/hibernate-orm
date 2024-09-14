@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql.results.caching.internal;
 
@@ -14,7 +14,6 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
 import org.hibernate.sql.results.jdbc.internal.CachedJdbcValuesMetadata;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**

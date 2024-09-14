@@ -139,6 +139,6 @@ public class FetchModeSubselectTest extends BaseEntityManagerFunctionalTestCase 
 		private Department department;
 
 		//Getters and setters omitted for brevity
-		
+
 	}
 }

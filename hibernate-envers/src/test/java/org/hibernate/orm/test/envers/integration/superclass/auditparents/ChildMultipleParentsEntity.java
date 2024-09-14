@@ -72,4 +72,3 @@ public class ChildMultipleParentsEntity extends MappedParentEntity {
 		this.child = child;
 	}
 }
-

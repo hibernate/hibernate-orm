@@ -99,7 +99,7 @@ public class MultipleCollectionRefEntity2 implements org.hibernate.orm.test.even
 		return true;
 	}
 
-	
+
 	public MultipleCollectionRefEntity2 deepCopy(MultipleCollectionEntity newRef) {
 		MultipleCollectionRefEntity2 clone = new MultipleCollectionRefEntity2();
 		clone.setText(this.text);

@@ -130,4 +130,3 @@ public class JdbcTimeCustomTimeZoneTest
 		private Time createdOn = new Time( 0 );
 	}
 }
-

@@ -35,9 +35,9 @@ public class UserEntity implements Serializable{
 	@OrderColumn(name = "cnf_order")
 	@OneToMany(mappedBy="user", fetch = EAGER, cascade = ALL, orphanRemoval = true)
 	private Set<UserConfEntity> confs =  new HashSet<UserConfEntity>();
-	
+
 	private String name;
-	
+
 	public Long getId() {
 		return id;
 	}

@@ -127,7 +127,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// EntityEntry to take precedence
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
-		
+
 		persistenceContext.removeEntityHolder( key );
 		persistenceContext.removeEntry( object );
 

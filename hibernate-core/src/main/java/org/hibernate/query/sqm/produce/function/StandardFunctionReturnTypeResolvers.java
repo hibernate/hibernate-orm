@@ -1,12 +1,11 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.sqm.produce.function;
 
-import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -15,17 +14,14 @@ import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;

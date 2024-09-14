@@ -17,9 +17,9 @@ public class TableA
 {
 	@Id
 	private int id;
-	
+
 	private String test;
-	
+
 	private String test2;
 
 	@Override

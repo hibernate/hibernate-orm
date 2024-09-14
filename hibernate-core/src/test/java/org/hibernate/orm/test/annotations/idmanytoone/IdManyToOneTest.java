@@ -95,7 +95,7 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
                 CourseStudent.class,
 
 				//tested only through deployment
-				//ANN-590 testIdClassManyToOneWithReferenceColumn 
+				//ANN-590 testIdClassManyToOneWithReferenceColumn
 				Customers.class,
 				ShoppingBaskets.class,
 				ShoppingBasketsPK.class,

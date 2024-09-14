@@ -13,7 +13,6 @@ import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.PostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

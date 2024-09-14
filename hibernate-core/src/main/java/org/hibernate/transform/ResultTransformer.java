@@ -30,4 +30,3 @@ public interface ResultTransformer<T> extends TupleTransformer<T>, ResultListTra
 		return resultList;
 	}
 }
-

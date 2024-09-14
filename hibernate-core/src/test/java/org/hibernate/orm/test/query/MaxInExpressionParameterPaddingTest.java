@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.query;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -31,9 +30,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 /**

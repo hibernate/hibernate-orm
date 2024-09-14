@@ -42,7 +42,7 @@ public interface ResultSetReturn {
 	 * @return The resulting {@link ResultSet}
 	 */
 	ResultSet extract(Statement statement, String sql);
-	
+
 	/**
 	 * Execute the {@link PreparedStatement} return its first {@link ResultSet}, if any.
 	 * If there is no {@link ResultSet}, returns {@code null}
@@ -64,7 +64,7 @@ public interface ResultSetReturn {
 	 * @return The extracted {@link ResultSet}, or {@code null}
 	 */
 	ResultSet execute(Statement statement, String sql);
-	
+
 	/**
 	 * Execute the {@link PreparedStatement}, returning its "affected row count".
 	 *
@@ -74,7 +74,7 @@ public interface ResultSetReturn {
 	 * @return The {@link PreparedStatement#executeUpdate()} result
 	 */
 	int executeUpdate(PreparedStatement statement, String sql);
-	
+
 	/**
 	 * Execute the given SQL statement returning its "affected row count".
 	 *

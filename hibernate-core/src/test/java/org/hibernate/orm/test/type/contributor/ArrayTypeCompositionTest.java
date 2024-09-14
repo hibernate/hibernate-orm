@@ -94,4 +94,3 @@ public class ArrayTypeCompositionTest extends BaseEntityManagerFunctionalTestCas
 
 
 }
-

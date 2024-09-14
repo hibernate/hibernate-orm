@@ -25,7 +25,7 @@ public class PropertyAccessStrategyMapImpl implements PropertyAccessStrategy {
 
 	@Override
 	public PropertyAccess buildPropertyAccess(@Nullable Class<?> containerJavaType, String propertyName, boolean setterRequired) {
-		
+
 		// Sometimes containerJavaType is null, but if it isn't, make sure it's a Map.
 		if (containerJavaType != null && !Map.class.isAssignableFrom( containerJavaType)) {
 			throw new IllegalArgumentException(

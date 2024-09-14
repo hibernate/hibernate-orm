@@ -57,7 +57,7 @@ public class UnexpectedDeleteTest3 {
     public void test(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
             Parent parent = s.get( Parent.class, 1L );
-           
+
             Child child = new Child();
             child.setId( 1L );
             s.persist( child );

@@ -25,6 +25,7 @@ plugins {
 	id 'org.hibernate.orm.database-service' apply false
 	id 'biz.aQute.bnd' version '7.0.0' apply false
 
+	id 'com.diffplug.spotless' version '6.25.0'
 	id 'org.checkerframework' version '0.6.40'
 	id 'org.hibernate.orm.build.jdks'
 

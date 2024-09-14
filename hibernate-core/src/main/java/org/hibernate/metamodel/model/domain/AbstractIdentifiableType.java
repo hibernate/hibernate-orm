@@ -420,11 +420,10 @@ public abstract class AbstractIdentifiableType<J>
 			}
 			else {
 				assert type instanceof EmbeddableDomainType;
-				final EmbeddableDomainType<?> compositeType = (EmbeddableDomainType<?>) type;
 				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						(SqmPathSource) id,
-						compositeType,
+						(EmbeddableDomainType<?>) type,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,
 						id.isGeneric()
 				);

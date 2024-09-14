@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.sql.Date;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 
 import org.hibernate.dialect.Dialect;
@@ -39,7 +37,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.core.Is.is;
 
 /**
@@ -164,16 +161,16 @@ public class DateArrayTest {
 				assertThat(
 						tuple[1],
 						is( new Object[] {
-								new Timestamp( Date.valueOf( date1 ).getTime() ),
-								new Timestamp( Date.valueOf( date2 ).getTime() ),
-								new Timestamp( Date.valueOf( date3 ).getTime() )
+								date1,
+								date2,
+								date3
 						} )
 				);
 			}
 			else {
 				assertThat(
 						tuple[1],
-						is( new Date[] { Date.valueOf( date1 ), Date.valueOf( date2 ), Date.valueOf( date3 ) } )
+						is( new LocalDate[] { date1, date2, date3 } )
 				);
 			}
 		} );

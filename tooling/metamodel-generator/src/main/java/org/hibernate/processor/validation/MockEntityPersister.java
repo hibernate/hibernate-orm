@@ -13,6 +13,7 @@ import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 import java.io.Serializable;
@@ -115,17 +116,35 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 
 	abstract Type createPropertyType(String propertyPath);
 
-	@Override
-	public Type getIdentifierType() {
-		//TODO: propertyType(getIdentifierPropertyName())
-		return factory.getTypeConfiguration().getBasicTypeForJavaType(Long.class);
-	}
-
+	/**
+	 * Override on subclasses!
+	 */
 	@Override
 	public String getIdentifierPropertyName() {
-		//TODO: return the correct @Id property name
-		return "id";
+		return getRootEntityPersister().identifierPropertyName();
 	}
+
+	protected abstract String identifierPropertyName();
+
+	/**
+	 * Override on subclasses!
+	 */
+	@Override
+	public Type getIdentifierType() {
+		return getRootEntityPersister().identifierType();
+	}
+
+	protected abstract Type identifierType();
+
+	/**
+	 * Override on subclasses!
+	 */
+	@Override
+	public BasicType<?> getVersionType() {
+		return getRootEntityPersister().versionType();
+	}
+
+	protected abstract BasicType<?> versionType();
 
 	@Override
 	public Type toType(String propertyName) throws QueryException {
@@ -139,13 +158,10 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	}
 
 	@Override
-	public String getRootEntityName() {
-		for (MockEntityPersister persister : factory.getMockEntityPersisters()) {
-			if (this != persister && persister.isSubclassPersister(this)) {
-				return persister.getRootEntityName();
-			}
-		}
-		return entityName;
+	public abstract String getRootEntityName();
+
+	public MockEntityPersister getRootEntityPersister() {
+		return factory.createMockEntityPersister(getRootEntityName());
 	}
 
 	@Override
@@ -217,7 +233,12 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 
 	@Override
 	public int getVersionProperty() {
-		return -66;
+		return 0;
+	}
+
+	@Override
+	public boolean isVersioned() {
+		return true;
 	}
 
 	@Override

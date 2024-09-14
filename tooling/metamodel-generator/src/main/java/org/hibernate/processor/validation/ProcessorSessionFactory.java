@@ -10,6 +10,7 @@ import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -147,6 +148,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return null;
 		}
 	}
+
 
 	@Override
 	Type propertyType(String typeName, String propertyPath) {
@@ -371,6 +373,21 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		@Override
+		public String getRootEntityName() {
+			TypeElement result = type;
+			TypeMirror superclass = type.getSuperclass();
+			while ( superclass!=null && superclass.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) superclass;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				if ( hasAnnotation(typeElement, "Entity") ) {
+					result = typeElement;
+				}
+				superclass = typeElement.getSuperclass();
+			}
+			return ProcessorSessionFactory.getEntityName(result);
+		}
+
+		@Override
 		boolean isSubclassPersister(MockEntityPersister entityPersister) {
 			EntityPersister persister = (EntityPersister) entityPersister;
 			return typeUtil.isSubtype( persister.type.asType(), type.asType() );
@@ -383,6 +400,35 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 					factory.propertyType(symbol, getEntityName(), propertyPath, defaultAccessType);
 		}
 
+		@Override
+		public String identifierPropertyName() {
+			for (Element element : type.getEnclosedElements()) {
+				if ( hasAnnotation(element, "Id") || hasAnnotation(element, "EmbeddedId") ) {
+					return element.getSimpleName().toString();
+				}
+			}
+			return "id";
+		}
+
+		@Override
+		public Type identifierType() {
+			for (Element element : type.getEnclosedElements()) {
+				if ( hasAnnotation(element, "Id")|| hasAnnotation(element, "EmbeddedId") ) {
+					return factory.propertyType(element, getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType);
+				}
+			}
+			return null;
+		}
+
+		@Override
+		public BasicType<?> versionType() {
+			for (Element element : type.getEnclosedElements()) {
+				if ( hasAnnotation(element, "Version") ) {
+					return (BasicType<?>) factory.propertyType(element, getEntityName(), "{version}", defaultAccessType);
+				}
+			}
+			return null;
+		}
 	}
 
 	public abstract static class ToManyAssociationPersister extends MockCollectionPersister {

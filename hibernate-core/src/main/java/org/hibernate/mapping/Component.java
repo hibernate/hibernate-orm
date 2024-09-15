@@ -79,7 +79,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private PersistentClass owner;
 	private boolean dynamic;
 	private boolean isKey;
-	private Boolean isGeneric;
+	private transient Boolean isGeneric;
 	private String roleName;
 	private MappedSuperclass mappedSuperclass;
 	private Value discriminator;
@@ -97,7 +97,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private String[] instantiatorPropertyNames;
 
 	// cache the status of the type
-	private volatile CompositeType type;
+	private transient volatile CompositeType type;
 
 	private AggregateColumn aggregateColumn;
 	private AggregateColumn parentAggregateColumn;
@@ -678,11 +678,19 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
 					// skip any 'assigned' generators, they would have been
 					// handled by the StandardGenerationContextLocator
-					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							value.createGenerator( dialect, rootClass, property ),
-							getType().isMutable() ? injector( property, getAttributeDeclarer( rootClass ) ) : null,
-							i
-					) );
+					if ( value.createGenerator( dialect, rootClass, property )
+							instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+						generator.addGeneratedValuePlan( new ValueGenerationPlan(
+								beforeExecutionGenerator,
+								getType().isMutable()
+										? injector( property, getAttributeDeclarer( rootClass ) )
+										: null,
+								i
+						) );
+					}
+					else {
+						throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
+					}
 				}
 			}
 		}
@@ -755,12 +763,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
-		private final Generator subgenerator;
+		private final BeforeExecutionGenerator generator;
 		private final Setter injector;
 		private final int propertyIndex;
 
-		public ValueGenerationPlan(Generator subgenerator, Setter injector, int propertyIndex) {
-			this.subgenerator = subgenerator;
+		public ValueGenerationPlan(BeforeExecutionGenerator generator, Setter injector, int propertyIndex) {
+			this.generator = generator;
 			this.injector = injector;
 			this.propertyIndex = propertyIndex;
 		}
@@ -777,9 +785,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
-			if ( !subgenerator.generatedOnExecution( incomingObject, session ) ) {
-				return ( (BeforeExecutionGenerator) subgenerator)
-						.generate( session, incomingObject, null, INSERT );
+			if ( !generator.generatedOnExecution( incomingObject, session ) ) {
+				return generator.generate( session, incomingObject, null, INSERT );
 			}
 			else {
 				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
@@ -788,15 +795,15 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void registerExportables(Database database) {
-			if ( subgenerator instanceof ExportableProducer ) {
-				( (ExportableProducer) subgenerator).registerExportables( database );
+			if ( generator instanceof ExportableProducer exportableProducer ) {
+				exportableProducer.registerExportables( database );
 			}
 		}
 
 		@Override
 		public void initialize(SqlStringGenerationContext context) {
-			if ( subgenerator instanceof Configurable) {
-				( (Configurable) subgenerator).initialize( context );
+			if ( generator instanceof Configurable configurable ) {
+				configurable.initialize( context );
 			}
 		}
 	}
@@ -949,7 +956,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public boolean isGeneric() {
 		if ( isGeneric == null ) {
-			isGeneric = getComponentClassName() != null && getComponentClass().getTypeParameters().length != 0;
+			isGeneric = getComponentClassName() != null
+					&& getComponentClass().getTypeParameters().length > 0;
 		}
 		return isGeneric;
 	}

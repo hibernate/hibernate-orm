@@ -261,12 +261,21 @@ Hibernate previously added support for generating check constraints for enums ma
 as part of schema generation.  7.0 adds the same capability for enums mapped using an `AttributeConverter`,
 by asking the converter to convert all the enum constants on start up.
 
+[[datetime-native]]
+== Date and time types returned by native queries
+
+In the absence of a `@SqlResultSetMapping`, previous versions of Hibernate used `java.sql` types (`Date`, `Time`, `Timestamp`) to represent date/time types returned by a native query.
+In 7.0, such queries return types defined by `java.time` (`LocalDate`, `LocalTime`, `LocalDateTime`) by default.
+The previous behavior may be recovered by setting `hibernate.query.native.prefer_jdbc_datetime_types` to `true`.
+
 
 [[ddl-implicit-datatype-timestamp]]
-== Default precision for timestamp on some databases
+== Default precision for `timestamp` on some databases
 
 The default precision for Oracle timestamps was changed to 9 i.e. nanosecond precision.
 The default precision for SQL Server timestamps was changed to 7 i.e. 100 nanosecond precision.
+
+Note that these changes only affect DDL generation.
 
 
 [[sf-name]]

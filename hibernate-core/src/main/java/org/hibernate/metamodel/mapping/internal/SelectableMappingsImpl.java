@@ -24,6 +24,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -37,7 +38,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		this.selectableMappings = selectableMappings;
 	}
 
-	private static void resolveJdbcMappings(List<JdbcMapping> jdbcMappings, Mapping mapping, Type valueType) {
+	private static void resolveJdbcMappings(List<JdbcMapping> jdbcMappings, MappingContext mapping, Type valueType) {
 		final Type keyType;
 		if ( valueType instanceof EntityType ) {
 			keyType = ( (EntityType) valueType ).getIdentifierOrUniqueKeyType( mapping );
@@ -56,6 +57,10 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		}
 	}
 
+	/**
+	 * @deprecated use {@link #from(String, Value, int[], MappingContext, TypeConfiguration, boolean[], boolean[], Dialect, SqmFunctionRegistry, RuntimeModelCreationContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public static SelectableMappings from(
 			String containingTableExpression,
 			Value value,
@@ -67,12 +72,36 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry,
 			RuntimeModelCreationContext creationContext) {
+		return from(
+				containingTableExpression,
+				value, propertyOrder,
+				(MappingContext) mapping,
+				typeConfiguration,
+				insertable,
+				updateable,
+				dialect,
+				sqmFunctionRegistry,
+				creationContext
+		);
+	}
+
+	public static SelectableMappings from(
+			String containingTableExpression,
+			Value value,
+			int[] propertyOrder,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			boolean[] insertable,
+			boolean[] updateable,
+			Dialect dialect,
+			SqmFunctionRegistry sqmFunctionRegistry,
+			RuntimeModelCreationContext creationContext) {
 		if ( insertable.length == 0 ) {
 			return from(
 					containingTableExpression,
 					value,
 					propertyOrder,
-					mapping,
+					mappingContext,
 					typeConfiguration,
 					dialect,
 					sqmFunctionRegistry,
@@ -80,7 +109,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			);
 		}
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
-		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
+		resolveJdbcMappings( jdbcMappings, mappingContext, value.getType() );
 
 		final List<Selectable> selectables = value.getVirtualSelectables();
 
@@ -107,7 +136,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			String containingTableExpression,
 			Value value,
 			int[] propertyOrder,
-			Mapping mapping,
+			MappingContext mapping,
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry,

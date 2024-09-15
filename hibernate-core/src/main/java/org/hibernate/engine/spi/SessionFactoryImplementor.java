@@ -33,6 +33,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -46,7 +47,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext,
+		extends MappingContext, SessionFactory, SqmCreationContext, SqlAstCreationContext,
 				QueryParameterBindingTypeResolver { //deprecated extension, use MappingMetamodel
 	/**
 	 * Get the UUID for this {@code SessionFactory}.

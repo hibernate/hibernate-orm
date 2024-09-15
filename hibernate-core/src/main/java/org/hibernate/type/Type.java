@@ -96,15 +96,32 @@ public interface Type extends Serializable {
 	/**
 	 * How many columns are used to persist this type?
 	 * <p>
-	 * Always the same as {@link #getSqlTypeCodes(Mapping) getSqlTypCodes(mapping).length}.
+	 * Always the same as {@link #getSqlTypeCodes(MappingContext) getSqlTypCodes(mapping).length}.
 	 *
 	 * @param mapping The mapping object :/
 	 *
 	 * @return The number of columns
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 * @deprecated use {@link  #getColumnSpan(MappingContext)}
 	 */
-	int getColumnSpan(Mapping mapping) throws MappingException;
+	@Deprecated(since = "7.0")
+	default int getColumnSpan(Mapping mapping) throws MappingException{
+		return getColumnSpan( (MappingContext) mapping);
+	}
+
+	/**
+	 * How many columns are used to persist this type?
+	 * <p>
+	 * Always the same as {@link #getSqlTypeCodes(MappingContext) getSqlTypCodes(mappingContext).length}.
+	 *
+	 * @param mappingContext The mapping Context object {@link MappingContext}
+	 *
+	 * @return The number of columns
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mappingContext object.
+	 */
+	int getColumnSpan(MappingContext mappingContext) throws MappingException;
 
 	/**
 	 * Return the JDBC types codes as defined by {@link java.sql.Types} or {@link SqlTypes}
@@ -117,8 +134,26 @@ public interface Type extends Serializable {
 	 * @return The JDBC type codes.
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 * @deprecated use {@link #getSqlTypeCodes(MappingContext)}
 	 */
-	int[] getSqlTypeCodes(Mapping mapping) throws MappingException;
+	@Deprecated(since = "7.0")
+	default int[] getSqlTypeCodes(Mapping mapping) throws MappingException{
+		return getSqlTypeCodes((MappingContext) mapping);
+	}
+
+	/**
+	 * Return the JDBC types codes as defined by {@link java.sql.Types} or {@link SqlTypes}
+	 * for the columns mapped by this type.
+	 * <p>
+	 * The number of elements in this array must match the return from {@link #getColumnSpan}.
+	 *
+	 * @param mappingContext The mapping context {@link MappingContext} :/
+	 *
+	 * @return The JDBC type codes.
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 */
+	int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException;
 
 	/**
 	 * The class handled by this type.
@@ -504,6 +539,22 @@ public interface Type extends Serializable {
 	 * @param mapping The mapping abstraction
 	 *
 	 * @return array indicating column nullness for a value instance
+	 * @deprecated use {@link #toColumnNullness(Object, MappingContext)}
 	 */
-	boolean[] toColumnNullness(@Nullable Object value, Mapping mapping);
+	@Deprecated(since = "7.0")
+	default boolean[] toColumnNullness(@Nullable Object value, Mapping mapping){
+		return toColumnNullness( value,(MappingContext) mapping);
+	}
+
+	/**
+	 * Given an instance of the type, return an array of {@code boolean} values indicating which
+	 * mapped columns would be null.
+	 *
+	 * @param value an instance of the type
+	 * @param mappingContext The mapping context {@link MappingContext}
+	 *
+	 * @return array indicating column nullness for a value instance
+	 */
+
+	boolean[] toColumnNullness(@Nullable Object value, MappingContext mappingContext);
 }

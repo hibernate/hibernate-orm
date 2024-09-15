@@ -30,7 +30,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -162,12 +161,12 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) throws MappingException {
+	public int getColumnSpan(MappingContext session) throws MappingException {
 		return 0;
 	}
 
@@ -800,7 +799,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 }

@@ -36,6 +36,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.MappingContext;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -278,7 +279,15 @@ public class Property implements Serializable, MetaAttributable {
 		this.metaAttributes = metas;
 	}
 
+	/**
+	 * @deprecated use {@link #isValid(MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public boolean isValid(Mapping mapping) throws MappingException {
+		return isValid( (MappingContext) mapping);
+	}
+
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
 		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
 			throw new MappingException(
@@ -295,7 +304,7 @@ public class Property implements Serializable, MetaAttributable {
 							"and the Javadoc of the org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING field."
 			);
 		}
-		return value.isValid( mapping );
+		return value.isValid( mappingContext );
 	}
 
 	public String toString() {

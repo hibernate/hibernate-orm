@@ -61,12 +61,12 @@ public class MetaType extends AbstractType {
 		return entityNameToDiscriminatorValueMap;
 	}
 
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return baseType.getSqlTypeCodes(mapping);
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return baseType.getSqlTypeCodes( mappingContext );
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+	public int getColumnSpan(MappingContext mapping) throws MappingException {
 		return baseType.getColumnSpan(mapping);
 	}
 
@@ -110,7 +110,15 @@ public class MetaType extends AbstractType {
 		return (String) value; //value is the entity name
 	}
 
+	/**
+	 * @deprecated use {@link #fromXMLString(String, MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public Object fromXMLString(String xml, Mapping factory) throws HibernateException {
+		return fromXMLString( xml, (MappingContext) factory );
+	}
+
+	public Object fromXMLString(String xml, MappingContext mappingContext) throws HibernateException {
 		return xml; //xml is the entity name
 	}
 
@@ -140,7 +148,7 @@ public class MetaType extends AbstractType {
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		throw new UnsupportedOperationException();
 	}
 

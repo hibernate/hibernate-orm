@@ -16,6 +16,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedSetType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -50,7 +51,11 @@ public class Set extends Collection {
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+		validate( (MappingContext) mapping );
+	}
+
+	public void validate(MappingContext mappingContext) throws MappingException {
+		super.validate( mappingContext );
 		//for backward compatibility, disable this:
 		/*Iterator iter = getElement().getColumnIterator();
 		while ( iter.hasNext() ) {

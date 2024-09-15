@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -92,19 +93,24 @@ public abstract class IndexedCollection extends Collection {
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+		validate( (MappingContext) mapping);
+	}
+
+	public void validate(MappingContext mappingContext) throws MappingException {
+		super.validate( mappingContext );
 
 		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
 
-		if ( !getIndex().isValid(mapping) ) {
+		if ( !getIndex().isValid( mappingContext ) ) {
 			throw new MappingException(
-				"collection index mapping has wrong number of columns: " +
-				getRole() +
-				" type: " +
-				getIndex().getType().getName()
+					"collection index mapping has wrong number of columns: " +
+							getRole() +
+							" type: " +
+							getIndex().getType().getName()
 			);
 		}
 	}
+
 
 	public boolean isList() {
 		return false;

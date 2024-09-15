@@ -34,7 +34,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
@@ -54,6 +53,7 @@ import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -155,6 +155,7 @@ public abstract class SimpleValue implements KeyValue {
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
+
 
 	public TypeConfiguration getTypeConfiguration() {
 		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
@@ -400,19 +401,23 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	@Override
 	public boolean isUpdateable() {
 		//needed to satisfy KeyValue
 		return true;
 	}
-	
+
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
 
+	@Override
 	public String getNullValue() {
 		return nullValue;
 	}
@@ -461,6 +466,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.foreignKeyDefinition = foreignKeyDefinition;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return alternateUniqueKey;
 	}
@@ -469,6 +475,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.alternateUniqueKey = unique;
 	}
 
+	@Override
 	public boolean isNullable() {
 		for ( Selectable selectable : getSelectables() ) {
 			if ( selectable instanceof Formula ) {
@@ -486,12 +493,14 @@ public abstract class SimpleValue implements KeyValue {
 		return true;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return true;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
-		return getColumnSpan() == getType().getColumnSpan( mapping );
+	@Override
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
+		return getColumnSpan() == getType().getColumnSpan( mappingContext );
 	}
 
 	protected void setAttributeConverterDescriptor(ConverterDescriptor descriptor) {

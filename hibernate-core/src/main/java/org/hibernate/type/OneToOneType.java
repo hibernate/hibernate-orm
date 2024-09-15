@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -79,17 +78,17 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) throws MappingException {
+	public int getColumnSpan(MappingContext session) throws MappingException {
 		return 0;
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 

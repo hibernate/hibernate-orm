@@ -13,7 +13,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.*;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -99,13 +102,13 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+	public int getColumnSpan(MappingContext mapping) throws MappingException {
 		return requireIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).getSqlTypeCodes( mapping );
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return requireIdentifierOrUniqueKeyType( mappingContext ).getSqlTypeCodes( mappingContext );
 	}
 
 	@Override
@@ -231,7 +234,7 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );

@@ -12,7 +12,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -54,12 +53,12 @@ public class SpecialOneToOneType extends OneToOneType {
 		super( original, superTypeEntityName );
 	}
 	
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+	public int getColumnSpan(MappingContext mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
 	
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return super.getIdentifierOrUniqueKeyType( mapping ).getSqlTypeCodes( mapping );
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return super.getIdentifierOrUniqueKeyType( mappingContext ).getSqlTypeCodes( mappingContext );
 	}
 
 	public boolean useLHSPrimaryKey() {

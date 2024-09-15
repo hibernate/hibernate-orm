@@ -16,7 +16,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -33,6 +32,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.MappingContext;
 
 /**
  * @deprecated The functionality of DiscriminatorType, {@link DiscriminatorMetadata} and {@link MetaType} have been
@@ -145,7 +145,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T> {
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		return value == null
 				? ArrayHelper.FALSE
 				: ArrayHelper.TRUE;
@@ -171,12 +171,12 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T> {
 	// simple delegation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return underlyingType.getSqlTypeCodes( mapping );
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return underlyingType.getSqlTypeCodes( mappingContext );
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+	public int getColumnSpan(MappingContext mapping) throws MappingException {
 		return underlyingType.getColumnSpan( mapping );
 	}
 

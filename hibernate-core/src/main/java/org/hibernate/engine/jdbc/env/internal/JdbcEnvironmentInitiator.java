@@ -13,13 +13,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
@@ -321,7 +321,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return temporaryJdbcSessionOwner.transactionCoordinator.createIsolationDelegate().delegateWork(
 					new AbstractReturningWork<>() {
 						@Override
-						public JdbcEnvironmentImpl execute(Connection connection) {
+						public JdbcEnvironmentImpl execute(Connection connection) throws SQLException {
 							try {
 								final DatabaseMetaData metadata = connection.getMetaData();
 								logDatabaseAndDriver( metadata );
@@ -357,7 +357,12 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 								);
 							}
 							catch (SQLException e) {
-								log.unableToObtainConnectionMetadata( e );
+								if ( shouldIgnoreMetadataAccessFailure( configurationValues ) ) {
+									log.unableToObtainConnectionMetadata( e );
+								}
+								else {
+									throw e;
+								}
 							}
 
 							// accessing the JDBC metadata failed
@@ -387,10 +392,23 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 		}
 		catch ( Exception e ) {
-			log.unableToObtainConnectionToQueryMetadata( e );
+			if ( shouldIgnoreMetadataAccessFailure( configurationValues ) ) {
+				log.unableToObtainConnectionToQueryMetadata( e );
+			}
+			else {
+				throw new HibernateException( "Unable to access JDBC metadata", e );
+			}
 		}
 		// accessing the JDBC metadata failed
 		return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+	}
+
+	private static boolean shouldIgnoreMetadataAccessFailure(Map<String, Object> configurationValues) {
+		return getBoolean(
+				JdbcSettings.IGNORE_METADATA_ACCESS_FAILURE_ON_BOOT,
+				configurationValues,
+				true
+		);
 	}
 
 	private static void logDatabaseAndDriver(DatabaseMetaData dbmd) throws SQLException {

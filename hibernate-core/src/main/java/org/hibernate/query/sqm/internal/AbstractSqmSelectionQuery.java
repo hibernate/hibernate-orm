@@ -25,7 +25,6 @@ import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -35,7 +34,6 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -87,7 +85,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	protected boolean needsDistinct(boolean containsCollectionFetches, boolean hasLimit, SqmSelectStatement<?> sqmStatement) {
 		return containsCollectionFetches
-				&& ( hasLimit || sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) );
+			&& ( hasLimit || sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) );
 	}
 
 	protected static boolean hasAppliedGraph(MutableQueryOptions queryOptions) {
@@ -186,7 +184,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		final List<Order<? super R>> keyDefinition = keyedPage.getKeyDefinition();
 		final List<Order<? super R>> appliedKeyDefinition =
 				keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE
-						? Order.reverse(keyDefinition) : keyDefinition;
+						? Order.reverse( keyDefinition ) : keyDefinition;
 
 		setMaxResults( page.getMaxResults() + 1 );
 		if ( key == null ) {
@@ -309,12 +307,9 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	protected TupleMetadata buildTupleMetadata(SqmStatement<?> statement, Class<R> resultType) {
-		if ( statement instanceof SqmSelectStatement<?> ) {
-			final SqmSelectStatement<?> select = (SqmSelectStatement<?>) statement;
-			final SqmSelectClause selectClause = select.getQueryPart().getFirstQuerySpec().getSelectClause();
+		if ( statement instanceof SqmSelectStatement<?> select ) {
 			final List<SqmSelection<?>> selections =
-					selectClause
-							.getSelections();
+					select.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
 			return isTupleMetadataRequired( resultType, selections.get(0) )
 					? getTupleMetadata( selections )
 					: null;
@@ -326,15 +321,15 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	private static <R> boolean isTupleMetadataRequired(Class<R> resultType, SqmSelection<?> selection) {
 		return isHqlTuple( selection )
-				|| !isInstantiableWithoutMetadata( resultType )
+			|| !isInstantiableWithoutMetadata( resultType )
 				&& !isSelectionAssignableToResultType( selection, resultType );
 	}
 
 	private static boolean isInstantiableWithoutMetadata(Class<?> resultType) {
 		return resultType == null
-				|| resultType.isArray()
-				|| Object.class == resultType
-				|| List.class == resultType;
+			|| resultType.isArray()
+			|| Object.class == resultType
+			|| List.class == resultType;
 	}
 
 	private TupleMetadata getTupleMetadata(List<SqmSelection<?>> selections) {
@@ -398,10 +393,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	protected static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
-		if ( queryPart instanceof SqmQuerySpec<?> ) {
-			final SqmQuerySpec<?> sqmQuerySpec = (SqmQuerySpec<?>) queryPart;
-			final List<SqmSelection<?>> selections = sqmQuerySpec.getSelectClause().getSelections();
-			if ( selections.isEmpty() ) {
+		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
+			if ( sqmQuerySpec.getSelectClause().getSelections().isEmpty() ) {
 				// make sure there is at least one root
 				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
 				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
@@ -416,25 +409,23 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 				}
 			}
 		}
-		else {
-			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
+		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
 			for ( SqmQueryPart<?> part : queryGroup.getQueryParts() ) {
 				validateCriteriaQuery( part );
 			}
 		}
+		else {
+			assert false;
+		}
 	}
 
 	protected static <T> HqlInterpretation<T> interpretation(
-			NamedHqlQueryMementoImpl memento,
+			NamedHqlQueryMementoImpl<?> memento,
 			Class<T> expectedResultType,
 			SharedSessionContractImplementor session) {
 		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
-		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-		final HqlInterpretation<T> interpretation = interpretationCache.resolveHqlInterpretation(
-				memento.getHqlString(),
-				expectedResultType,
-				queryEngine.getHqlTranslator()
-		);
-		return interpretation;
+		return queryEngine.getInterpretationCache()
+				.resolveHqlInterpretation( memento.getHqlString(), expectedResultType,
+						queryEngine.getHqlTranslator() );
 	}
 }

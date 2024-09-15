@@ -334,18 +334,24 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public FlushModeType getFlushMode() {
+		getSession().checkOpen();
 		return FlushModeTypeHelper.getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override
 	public SelectionQuery<R> setFlushMode(FlushModeType flushMode) {
+		getSession().checkOpen();
 		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode( flushMode ) );
 		return this;
 	}
 
 	@Override
 	public SelectionQuery<R> setMaxResults(int maxResult) {
-		super.applyMaxResults( maxResult );
+		if ( maxResult < 0 ) {
+			throw new IllegalArgumentException( "Max results cannot be negative" );
+		}
+		getSession().checkOpen();
+		getQueryOptions().getLimit().setMaxRows(maxResult);
 		return this;
 	}
 
@@ -353,7 +359,7 @@ public abstract class AbstractSelectionQuery<R>
 	public SelectionQuery<R> setFirstResult(int startPosition) {
 		getSession().checkOpen();
 		if ( startPosition < 0 ) {
-			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
+			throw new IllegalArgumentException( "First result cannot be negative" );
 		}
 		getQueryOptions().getLimit().setFirstRow( startPosition );
 		return this;

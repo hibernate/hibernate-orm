@@ -36,7 +36,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.AvailableHints;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -197,20 +196,13 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public QueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
-		super.setQueryFlushMode(queryFlushMode);
+		super.setQueryFlushMode( queryFlushMode );
 		return this;
 	}
 
 	@Override
-	public FlushModeType getFlushMode() {
-//		getSession().checkOpen();
-		return FlushModeTypeHelper.getFlushModeType( getHibernateFlushMode() );
-	}
-
-	@Override
 	public QueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
-//		getSession().checkOpen();
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
+		super.setFlushMode( flushModeType );
 		return this;
 	}
 
@@ -400,7 +392,6 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Set<Parameter<?>> getParameters() {
 		return super.getParameters();
 	}

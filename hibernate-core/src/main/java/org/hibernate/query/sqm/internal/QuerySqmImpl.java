@@ -702,26 +702,26 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public <T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
-		applyTupleTransformer( transformer );
+		getQueryOptions().setTupleTransformer( transformer );
 		//noinspection unchecked
 		return (SqmQueryImplementor<T>) this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer) {
-		applyResultListTransformer( transformer );
+		getQueryOptions().setResultListTransformer( transformer );
 		return this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setMaxResults(int maxResult) {
-		applyMaxResults( maxResult );
+		super.setMaxResults( maxResult );
 		return this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setFirstResult(int startPosition) {
-		applyFirstResult( startPosition );
+		super.setFirstResult( startPosition );
 		return this;
 	}
 
@@ -733,13 +733,13 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public SqmQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
-		super.setQueryFlushMode(queryFlushMode);
+		super.setQueryFlushMode( queryFlushMode );
 		return this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setFlushMode(FlushModeType flushMode) {
-		applyJpaFlushMode( flushMode );
+		super.setFlushMode( flushMode );
 		return this;
 	}
 
@@ -759,11 +759,6 @@ public class QuerySqmImpl<R>
 		verifySelect();
 		getSession().checkOpen( false );
 		return getLockOptions().getLockMode().toJpaLockMode();
-	}
-
-	@Override
-	public FlushModeType getFlushMode() {
-		return getJpaFlushMode();
 	}
 
 	@Override
@@ -819,7 +814,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public SqmQueryImplementor<R> setHint(String hintName, Object value) {
-		applyHint( hintName, value );
+		super.setHint( hintName, value );
 		return this;
 	}
 

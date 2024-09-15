@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * shows that orphanRemoval = true is not removing the orphan of OneToOne relations in Embedded objects
  * for unidirectional relationship.
  *
- * @TestForIssue( jiraKey = "HHH-9663" )
+ * @JiraKey( value = "HHH-9663" )
  */
 @Jpa(
 		annotatedClasses = {

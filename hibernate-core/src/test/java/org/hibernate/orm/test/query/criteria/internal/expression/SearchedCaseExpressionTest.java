@@ -19,7 +19,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -81,7 +81,7 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13167")
+	@JiraKey(value = "HHH-13167")
 	public void testMissingElseClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = new Event();

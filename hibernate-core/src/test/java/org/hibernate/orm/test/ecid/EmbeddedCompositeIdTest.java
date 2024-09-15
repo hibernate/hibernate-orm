@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -70,7 +70,7 @@ public class EmbeddedCompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-799")
+	@JiraKey(value = "HHH-799")
 	public void testMerging(SessionFactoryScope scope) {
 		Course course = new Course( "EN-101", "BA", "preparatory english" );
 		scope.inTransaction(

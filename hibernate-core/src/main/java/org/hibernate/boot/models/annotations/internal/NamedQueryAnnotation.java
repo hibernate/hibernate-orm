@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.annotations.FlushModeType;
@@ -16,13 +17,10 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.hibernate.query.QueryFlushMode;
 
-import static org.hibernate.boot.models.HibernateAnnotations.NAMED_QUERY;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.interpretFlushMode;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -32,6 +30,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 	private String query;
 	private Class<?> resultClass;
 	private FlushModeType flushMode;
+	private QueryFlushMode flush;
 	boolean cacheable;
 	String cacheRegion;
 	int fetchSize;
@@ -41,9 +40,13 @@ public class NamedQueryAnnotation implements NamedQuery {
 	CacheRetrieveMode cacheRetrieveMode;
 	boolean readOnly;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public NamedQueryAnnotation(SourceModelBuildingContext modelContext) {
 		resultClass = void.class;
 		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
+		flush = QueryFlushMode.DEFAULT;
 		cacheable = false;
 		cacheRegion = "";
 		fetchSize = -1;
@@ -54,11 +57,15 @@ public class NamedQueryAnnotation implements NamedQuery {
 		readOnly = false;
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK and Jandes variant
+	 */
 	public NamedQueryAnnotation(NamedQuery annotation, SourceModelBuildingContext modelContext) {
 		this.name = annotation.name();
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
 		this.flushMode = annotation.flushMode();
+		this.flush = annotation.flush();
 		this.cacheable = annotation.cacheable();
 		this.cacheRegion = annotation.cacheRegion();
 		this.fetchSize = annotation.fetchSize();
@@ -73,19 +80,23 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.readOnly = annotation.readOnly();
 	}
 
-	public NamedQueryAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, NAMED_QUERY, "name", modelContext );
-		this.query = extractJandexValue( annotation, NAMED_QUERY, "query", modelContext );
-		this.resultClass = extractJandexValue( annotation, NAMED_QUERY, "resultClass", modelContext );
-		this.flushMode = extractJandexValue( annotation, NAMED_QUERY, "flushMode", modelContext );
-		this.cacheable = extractJandexValue( annotation, NAMED_QUERY, "cacheable", modelContext );
-		this.cacheRegion = extractJandexValue( annotation, NAMED_QUERY, "cacheRegion", modelContext );
-		this.fetchSize = extractJandexValue( annotation, NAMED_QUERY, "fetchSize", modelContext );
-		this.timeout = extractJandexValue( annotation, NAMED_QUERY, "timeout", modelContext );
-		this.comment = extractJandexValue( annotation, NAMED_QUERY, "comment", modelContext );
-		this.cacheStoreMode = extractJandexValue( annotation, NAMED_QUERY, "cacheStoreMode", modelContext );
-		this.cacheRetrieveMode = extractJandexValue( annotation, NAMED_QUERY, "cacheRetrieveMode", modelContext );
-		this.readOnly = extractJandexValue( annotation, NAMED_QUERY, "readOnly", modelContext );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public NamedQueryAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.query = (String) attributeValues.get( "query" );
+		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
+		this.flushMode = (FlushModeType) attributeValues.get( "flushMode" );
+		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
+		this.cacheable = (boolean) attributeValues.get( "cacheable" );
+		this.cacheRegion = (String) attributeValues.get( "cacheRegion" );
+		this.fetchSize = (int) attributeValues.get( "fetchSize" );
+		this.timeout = (int) attributeValues.get( "timeout" );
+		this.comment = (String) attributeValues.get( "comment" );
+		this.cacheStoreMode = (CacheStoreMode) attributeValues.get( "cacheStoreMode" );
+		this.cacheRetrieveMode = (CacheRetrieveMode) attributeValues.get( "cacheRetrieveMode" );
+		this.readOnly = (boolean) attributeValues.get( "readOnly" );
 	}
 
 	@Override
@@ -120,6 +131,15 @@ public class NamedQueryAnnotation implements NamedQuery {
 
 	public void resultClass(Class<?> value) {
 		this.resultClass = value;
+	}
+
+	@Override
+	public QueryFlushMode flush() {
+		return flush;
+	}
+
+	public void flush(QueryFlushMode value) {
+		this.flush = value;
 	}
 
 	@Override

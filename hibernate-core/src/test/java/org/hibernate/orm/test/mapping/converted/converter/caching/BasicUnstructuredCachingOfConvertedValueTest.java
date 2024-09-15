@@ -12,7 +12,7 @@ import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -42,7 +42,7 @@ public class BasicUnstructuredCachingOfConvertedValueTest {
 	public static final int postalAreaAttributeIndex = 0;
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9615" )
+	@JiraKey( value = "HHH-9615" )
 	public void basicCacheStructureTest(SessionFactoryScope scope) {
 		EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()

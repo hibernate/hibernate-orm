@@ -26,7 +26,6 @@ public class Implicit3UuidGenerationTests {
 	@Test
 	@ServiceRegistry
 	@DomainModel(annotatedClasses = Book.class)
-	@FailureExpected( jiraKey = "HHH-18420", reason = "Implicit UUID generation continues to use UUIDGenerator for the time being" )
 	void verifyModel(ServiceRegistryScope registryScope, DomainModelScope domainModelScope) {
 		domainModelScope.withHierarchy( Book.class, (descriptor) -> {
 			Helper.verifyAlgorithm( registryScope, domainModelScope, descriptor, StandardRandomStrategy.class );

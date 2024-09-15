@@ -22,7 +22,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -49,7 +49,7 @@ public class EntityUpdateCacheModeIgnoreTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH9739")
+	@JiraKey( value = "HHH9739")
 	public void testCachModeIgnore() {
 		// Test that there is no interaction with cache except for invalidation when using CacheMode.IGNORE
 		// From API Doc : CacheMode.IGNORE -> The session will never interact with the cache, except to invalidate cache items when updates occur.

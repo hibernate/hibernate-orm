@@ -512,4 +512,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public boolean isPassProcedureParameterNames() {
 		return delegate.isPassProcedureParameterNames();
 	}
+
+	@Override
+	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
+		return delegate.isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+	}
 }

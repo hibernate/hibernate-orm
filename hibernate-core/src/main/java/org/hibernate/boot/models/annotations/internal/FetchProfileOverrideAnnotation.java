@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.FetchProfileOverride;
-import org.hibernate.boot.models.DialectOverrideAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -44,25 +40,12 @@ public class FetchProfileOverrideAnnotation implements FetchProfileOverride {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public FetchProfileOverrideAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.mode = extractJandexValue(
-				annotation,
-				DialectOverrideAnnotations.FETCH_PROFILE_OVERRIDE,
-				"mode",
-				modelContext
-		);
-		this.fetch = extractJandexValue(
-				annotation,
-				DialectOverrideAnnotations.FETCH_PROFILE_OVERRIDE,
-				"fetch",
-				modelContext
-		);
-		this.profile = extractJandexValue(
-				annotation,
-				DialectOverrideAnnotations.FETCH_PROFILE_OVERRIDE,
-				"profile",
-				modelContext
-		);
+	public FetchProfileOverrideAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.mode = (org.hibernate.annotations.FetchMode) attributeValues.get( "mode" );
+		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
+		this.profile = (String) attributeValues.get( "profile" );
 	}
 
 	@Override

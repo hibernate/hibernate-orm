@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -69,7 +69,7 @@ public class SubselectFetchTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15202")
+	@JiraKey( value = "HHH-15202")
 	public void testSubselectFetchOnlyCreatedIfEnabled(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

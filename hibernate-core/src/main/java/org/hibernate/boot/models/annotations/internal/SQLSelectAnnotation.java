@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.HibernateAnnotations.SQL_SELECT;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -46,20 +44,10 @@ public class SQLSelectAnnotation implements SQLSelect {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SQLSelectAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.sql = extractJandexValue( annotation, SQL_SELECT, "sql", modelContext );
-		this.resultSetMapping = extractJandexValue(
-				annotation,
-				SQL_SELECT,
-				"resultSetMapping",
-				modelContext
-		);
-		this.querySpaces = extractJandexValue(
-				annotation,
-				SQL_SELECT,
-				"querySpaces",
-				modelContext
-		);
+	public SQLSelectAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.sql = (String) attributeValues.get( "sql" );
+		this.resultSetMapping = (jakarta.persistence.SqlResultSetMapping) attributeValues.get( "resultSetMapping" );
+		this.querySpaces = (String[]) attributeValues.get( "querySpaces" );
 	}
 
 	@Override

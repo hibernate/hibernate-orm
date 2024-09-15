@@ -30,7 +30,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
@@ -802,7 +801,7 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public Exporter<Constraint> getUniqueKeyExporter() {
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
 		return NOOP_EXPORTER;
 	}
 

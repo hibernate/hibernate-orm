@@ -7,21 +7,18 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.IndexCollector;
 import org.hibernate.boot.models.annotations.spi.UniqueConstraintCollector;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.TableGenerator;
 
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectIndexes;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectUniqueConstraints;
@@ -46,7 +43,18 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public TableGeneratorJpaAnnotation(SourceModelBuildingContext modelContext) {
-		this.name = "";
+		this( "", modelContext );
+	}
+
+	/**
+	 * Used in creating named, defaulted annotation instances.  Generally this
+	 * is a situation where we have:<ol>
+	 *     <li>{@linkplain GeneratedValue#strategy()} set to {@linkplain jakarta.persistence.GenerationType#TABLE}</li>
+	 *     <li>{@linkplain GeneratedValue#generator()} set to a non-empty String, but with no matching {@linkplain TableGenerator}</li>
+	 * </ol>
+	 */
+	public TableGeneratorJpaAnnotation(String name, SourceModelBuildingContext modelContext) {
+		this.name = name;
 		this.table = "";
 		this.catalog = "";
 		this.schema = "";
@@ -81,49 +89,19 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TableGeneratorJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, TABLE_GENERATOR, "name", modelContext );
-		this.table = extractJandexValue( annotation, TABLE_GENERATOR, "table", modelContext );
-		this.catalog = extractJandexValue( annotation, TABLE_GENERATOR, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, TABLE_GENERATOR, "schema", modelContext );
-		this.pkColumnName = extractJandexValue(
-				annotation,
-				TABLE_GENERATOR,
-				"pkColumnName",
-				modelContext
-		);
-		this.valueColumnName = extractJandexValue(
-				annotation,
-				TABLE_GENERATOR,
-				"valueColumnName",
-				modelContext
-		);
-		this.pkColumnValue = extractJandexValue(
-				annotation,
-				TABLE_GENERATOR,
-				"pkColumnValue",
-				modelContext
-		);
-		this.initialValue = extractJandexValue(
-				annotation,
-				TABLE_GENERATOR,
-				"initialValue",
-				modelContext
-		);
-		this.allocationSize = extractJandexValue(
-				annotation,
-				TABLE_GENERATOR,
-				"allocationSize",
-				modelContext
-		);
-		this.uniqueConstraints = extractJandexValue(
-				annotation,
-				TABLE_GENERATOR,
-				"uniqueConstraints",
-				modelContext
-		);
-		this.indexes = extractJandexValue( annotation, TABLE_GENERATOR, "indexes", modelContext );
-		this.options = extractJandexValue( annotation, TABLE_GENERATOR, "options", modelContext );
+	public TableGeneratorJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.table = (String) attributeValues.get( "table" );
+		this.catalog = (String) attributeValues.get( "catalog" );
+		this.schema = (String) attributeValues.get( "schema" );
+		this.pkColumnName = (String) attributeValues.get( "pkColumnName" );
+		this.valueColumnName = (String) attributeValues.get( "valueColumnName" );
+		this.pkColumnValue = (String) attributeValues.get( "pkColumnValue" );
+		this.initialValue = (int) attributeValues.get( "initialValue" );
+		this.allocationSize = (int) attributeValues.get( "allocationSize" );
+		this.uniqueConstraints = (jakarta.persistence.UniqueConstraint[]) attributeValues.get( "uniqueConstraints" );
+		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
+		this.options = (String) attributeValues.get( "options" );
 	}
 
 	@Override

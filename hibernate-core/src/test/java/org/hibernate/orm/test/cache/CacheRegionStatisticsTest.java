@@ -19,7 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 public class CacheRegionStatisticsTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15105")
+	@JiraKey( value = "HHH-15105")
 	public void testAccessDefaultQueryRegionStatistics() {
 		final Statistics statistics = sessionFactory().getStatistics();
 		final CacheRegionStatistics queryRegionStatistics = statistics.getQueryRegionStatistics(

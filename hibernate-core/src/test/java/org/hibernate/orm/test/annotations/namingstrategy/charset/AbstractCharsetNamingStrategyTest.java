@@ -25,7 +25,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.orm.test.annotations.namingstrategy.LongIdentifierNamingStrategy;
 import org.junit.After;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12357" )
+@JiraKey( value = "HHH-12357" )
 public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase {
 
 	protected ServiceRegistry serviceRegistry;

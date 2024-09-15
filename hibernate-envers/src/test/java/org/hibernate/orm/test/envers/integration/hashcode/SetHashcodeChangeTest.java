@@ -18,7 +18,7 @@ import org.hibernate.envers.NotAudited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.CascadeType;
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11063")
+@JiraKey(value = "HHH-11063")
 public class SetHashcodeChangeTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer authorId;
 

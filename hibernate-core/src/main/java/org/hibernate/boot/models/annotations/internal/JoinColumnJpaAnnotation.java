@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
@@ -23,7 +24,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -81,29 +81,19 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JoinColumnJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "name", modelContext );
-		this.referencedColumnName = extractJandexValue(
-				annotation,
-				JpaAnnotations.JOIN_COLUMN,
-				"referencedColumnName",
-				modelContext
-		);
-		this.unique = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "unique", modelContext );
-		this.nullable = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "nullable", modelContext );
-		this.insertable = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "insertable", modelContext );
-		this.updatable = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJandexValue(
-				annotation,
-				JpaAnnotations.JOIN_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "options", modelContext );
-		this.table = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "table", modelContext );
-		this.foreignKey = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "foreignKey", modelContext );
-		this.check = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "check", modelContext );
-		this.comment = extractJandexValue( annotation, JpaAnnotations.JOIN_COLUMN, "comment", modelContext );
+	public JoinColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.referencedColumnName = (String) attributeValues.get( "referencedColumnName" );
+		this.unique = (boolean) attributeValues.get( "unique" );
+		this.nullable = (boolean) attributeValues.get( "nullable" );
+		this.insertable = (boolean) attributeValues.get( "insertable" );
+		this.updatable = (boolean) attributeValues.get( "updatable" );
+		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
+		this.options = (String) attributeValues.get( "options" );
+		this.table = (String) attributeValues.get( "table" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
+		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
+		this.comment = (String) attributeValues.get( "comment" );
 	}
 
 	@Override

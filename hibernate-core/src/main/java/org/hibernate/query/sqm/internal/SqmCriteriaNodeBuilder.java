@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.internal;
 
 import java.io.InvalidObjectException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -31,26 +32,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.function.AvgFunction;
 import org.hibernate.dialect.function.SumReturnTypeResolver;
 import org.hibernate.dialect.function.array.DdlTypeHelper;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
@@ -72,6 +73,7 @@ import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FrameKind;
@@ -88,7 +90,6 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -199,16 +200,17 @@ import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
  *
  * @author Steve Ebersole
  */
-public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, Serializable {
+public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmCriteriaNodeBuilder.class );
 
 	private final String uuid;
 	private final String name;
-	private final transient boolean jpaComplianceEnabled;
+	private final transient JpaCompliance jpaCompliance;
 	private final transient QueryEngine queryEngine;
-	private final transient Supplier<SessionFactoryImplementor> sessionFactory;
 	private transient ValueHandlingMode criteriaValueHandlingMode;
+	private final transient ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
+	private final transient BindingContext bindingContext;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
@@ -220,15 +222,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmCriteriaNodeBuilder(
 			String uuid, String name,
 			QueryEngine queryEngine,
-			boolean jpaComplianceEnabled,
-			ValueHandlingMode criteriaValueHandlingMode,
-			Supplier<SessionFactoryImplementor> sessionFactory) {
-		this.sessionFactory = sessionFactory;
+			QueryEngineOptions options,
+			BindingContext bindingContext) {
 		this.queryEngine = queryEngine;
 		this.uuid = uuid;
 		this.name = name;
-		this.jpaComplianceEnabled = jpaComplianceEnabled;
-		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
+		this.jpaCompliance = options.getJpaCompliance();
+		this.criteriaValueHandlingMode = options.getCriteriaValueHandlingMode();
+		this.immutableEntityUpdateQueryHandlingMode = options.getImmutableEntityUpdateQueryHandlingMode();
+		this.bindingContext = bindingContext;
 		// load registered criteria builder extensions
 		this.extensions = new HashMap<>();
 		for ( CriteriaBuilderExtension extension : ServiceLoader.load( CriteriaBuilderExtension.class ) ) {
@@ -237,13 +239,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 	}
 
-	public void setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
+	@Override
+	public ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
+		ValueHandlingMode current = this.criteriaValueHandlingMode;
 		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
+		return current;
 	}
 
 	@Override
 	public JpaMetamodel getDomainModel() {
-		return getSessionFactory().getJpaMetamodel();
+		return bindingContext.getJpaMetamodel();
 	}
 
 	@Override
@@ -253,14 +258,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public boolean isJpaQueryComplianceEnabled() {
-		return jpaComplianceEnabled;
+		return jpaCompliance.isJpaQueryComplianceEnabled();
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory.get();
+	public JpaCompliance getJpaCompliance() {
+		return jpaCompliance;
 	}
 
+	@Override
+	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+		return immutableEntityUpdateQueryHandlingMode;
+	}
 
 	@Override
 	public BasicType<Boolean> getBooleanType() {
@@ -328,8 +337,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public JpaMetamodelImplementor getJpaMetamodel() {
-		return getSessionFactory().getJpaMetamodel();
+	public JpaMetamodel getJpaMetamodel() {
+		return bindingContext.getJpaMetamodel();
 	}
 
 	@Override
@@ -349,8 +358,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> SqmSelectStatement<T> createQuery(String hql, Class<T> resultClass) {
 		final SqmStatement<T> statement =
-				sessionFactory.get().getQueryEngine().getHqlTranslator()
-						.translate( hql, resultClass );
+				queryEngine.getHqlTranslator().translate( hql, resultClass );
 		if ( statement instanceof SqmSelectStatement ) {
 			return new SqmSelectStatement<>( (SqmSelectStatement<T>) statement );
 		}
@@ -1545,7 +1553,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> SqmLiteral<T> literal(T value) {
 		if ( value == null ) {
-			if ( jpaComplianceEnabled ) {
+			if ( jpaCompliance.isJpaQueryComplianceEnabled() ) {
 				throw new IllegalArgumentException( "literal value cannot be null" );
 			}
 			return new SqmLiteralNull<>( this );
@@ -1553,13 +1561,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		else {
 			final BindableType<? super T> valueParamType = getParameterBindType( value );
 			final SqmExpressible<? super T> sqmExpressible =
-					valueParamType == null ? null : valueParamType.resolveExpressible( getSessionFactory() );
+					valueParamType == null ? null : valueParamType.resolveExpressible( this );
 			return new SqmLiteral<>( value, sqmExpressible, this );
 		}
 	}
 
-	private MappingMetamodelImplementor getMappingMetamodel() {
-		return getSessionFactory().getMappingMetamodel();
+	@Override
+	public MappingMetamodelImplementor getMappingMetamodel() {
+		return (MappingMetamodelImplementor) bindingContext.getMappingMetamodel();
 	}
 
 	@Override
@@ -1658,7 +1667,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmExpression<String> concat(List<Expression<String>> expressions) {
-		//noinspection unchecked
+		//noinspection RedundantCast, unchecked
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				(List<? extends SqmTypedNode<?>>) (List<?>) expressions,
 				null,
@@ -2062,8 +2071,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T> value(T value) {
-		if ( value instanceof Duration ) {
-			final Duration duration = (Duration) value;
+		if ( value instanceof Duration duration ) {
 			final JpaExpression<Duration> expression = duration.getNano() == 0
 					? duration( duration.getSeconds(), TemporalUnit.SECOND )
 					: duration( duration.getNano() + duration.getSeconds() * 1_000_000_000, TemporalUnit.NANOSECOND );
@@ -2080,13 +2088,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	private <T> boolean isInstance(BindableType<T> bindableType, T value) {
-		if ( bindableType instanceof SqmExpressible<?> ) {
-			final SqmExpressible<?> expressible = (SqmExpressible<?>) bindableType;
+		if ( bindableType instanceof SqmExpressible<?> expressible ) {
 			return expressible.getExpressibleJavaType().isInstance( value );
 		}
 		else {
 			return bindableType.getBindableJavaType().isInstance( value )
-				|| bindableType.resolveExpressible( getSessionFactory() ).getExpressibleJavaType().isInstance( value );
+				|| bindableType.resolveExpressible( this ).getExpressibleJavaType().isInstance( value );
 		}
 	}
 
@@ -2128,7 +2135,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new ValueBindJpaCriteriaParameter<>( bindableType, value, this );
 		}
 		final T coercedValue =
-				bindableType.resolveExpressible( getSessionFactory() ).getExpressibleJavaType()
+				bindableType.resolveExpressible( this ).getExpressibleJavaType()
 						.coerce(value, this::getTypeConfiguration );
 		if ( isInstance( bindableType, coercedValue ) ) {
 			return new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this );
@@ -2143,15 +2150,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		BindableType<E> bindableType = null;
 		if ( elementTypeInferenceSource != null ) {
 			if ( elementTypeInferenceSource instanceof BindableType ) {
+				//noinspection unchecked
 				bindableType = (BindableType<E>) elementTypeInferenceSource;
 			}
 			else if ( elementTypeInferenceSource.getNodeType() != null ) {
-				bindableType = (BindableType<E>) elementTypeInferenceSource.getNodeType();
+				bindableType = elementTypeInferenceSource.getNodeType();
 			}
 		}
 		DomainType<E> elementType = null;
 		if ( bindableType != null ) {
-			final SqmExpressible<E> sqmExpressible = bindableType.resolveExpressible( getSessionFactory() );
+			final SqmExpressible<E> sqmExpressible = bindableType.resolveExpressible( this );
 			elementType = sqmExpressible.getSqmType();
 		}
 		if ( elementType == null ) {
@@ -2672,27 +2680,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(Expression<E> elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false, this );
+		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false);
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(E elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false, this );
+		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false);
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(Expression<E> elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true, this );
+		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true);
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(E elem, Expression<C> collection) {
-		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true, this );
+		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true);
 	}
 
-	private SqmMemberOfPredicate createSqmMemberOfPredicate(SqmExpression<?> elem, SqmPath<?> collection, boolean negated, NodeBuilder nodeBuilder) {
-		if ( collection instanceof SqmPluralValuedSimplePath ) {
-			return new SqmMemberOfPredicate( elem, (SqmPluralValuedSimplePath) collection, negated, this );
+	private SqmMemberOfPredicate createSqmMemberOfPredicate(SqmExpression<?> elem, SqmPath<?> collection, boolean negated) {
+		if ( collection instanceof SqmPluralValuedSimplePath<?> pluralValuedSimplePath ) {
+			return new SqmMemberOfPredicate( elem, pluralValuedSimplePath, negated, this );
 		}
 		else {
 			throw new SemanticException( "Operand of 'member of' operator must be a plural path" );
@@ -2958,6 +2966,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 *
 	 * @throws InvalidObjectException Thrown if we could not resolve the factory by uuid/name.
 	 */
+	@Serial
 	private Object readResolve() throws InvalidObjectException {
 		LOG.trace( "Resolving serialized SqmCriteriaNodeBuilder" );
 		return locateSessionFactoryOnDeserialization( uuid, name ).getCriteriaBuilder();
@@ -5263,7 +5272,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<String> collectionToString(
+	public SqmExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			Expression<String> separatorExpression) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
@@ -5274,7 +5283,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<String> collectionToString(
+	public SqmExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			String separator) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(

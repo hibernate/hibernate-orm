@@ -8,6 +8,7 @@ package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
@@ -19,11 +20,8 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.JoinTable;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCatalog;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyOptionalString;
@@ -102,34 +100,19 @@ public class JoinTableJpaAnnotation implements JoinTable, CommonTableDetails {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JoinTableJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "name", modelContext );
-		this.catalog = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "schema", modelContext );
-		this.joinColumns = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "joinColumns", modelContext );
-		this.inverseJoinColumns = extractJandexValue(
-				annotation,
-				JpaAnnotations.JOIN_TABLE,
-				"inverseJoinColumns",
-				modelContext
-		);
-		this.foreignKey = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "foreignKey", modelContext );
-		this.inverseForeignKey = extractJandexValue(
-				annotation,
-				JpaAnnotations.JOIN_TABLE,
-				"inverseForeignKey",
-				modelContext
-		);
-		this.uniqueConstraints = extractJandexValue(
-				annotation,
-				JpaAnnotations.JOIN_TABLE,
-				"uniqueConstraints",
-				modelContext
-		);
-		this.indexes = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "indexes", modelContext );
-		this.check = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "check", modelContext );
-		this.comment = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "comment", modelContext );
-		this.options = extractJandexValue( annotation, JpaAnnotations.JOIN_TABLE, "options", modelContext );
+	public JoinTableJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.catalog = (String) attributeValues.get( "catalog" );
+		this.schema = (String) attributeValues.get( "schema" );
+		this.joinColumns = (jakarta.persistence.JoinColumn[]) attributeValues.get( "joinColumns" );
+		this.inverseJoinColumns = (jakarta.persistence.JoinColumn[]) attributeValues.get( "inverseJoinColumns" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
+		this.inverseForeignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "inverseForeignKey" );
+		this.uniqueConstraints = (jakarta.persistence.UniqueConstraint[]) attributeValues.get( "uniqueConstraints" );
+		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
+		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
+		this.comment = (String) attributeValues.get( "comment" );
+		this.options = (String) attributeValues.get( "options" );
 	}
 
 	@Override

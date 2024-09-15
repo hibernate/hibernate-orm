@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import jakarta.persistence.TypedQuery;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15944")
+@JiraKey(value = "HHH-15944")
 public class PolymorphicQueriesWithJoinTest {
 
 	public static final Long PERSON_ID = 1l;

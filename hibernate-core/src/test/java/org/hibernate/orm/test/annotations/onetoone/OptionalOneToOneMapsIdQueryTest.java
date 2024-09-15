@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
@@ -25,7 +25,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@TestForIssue( jiraKey = "HHH-13875")
+@JiraKey( value = "HHH-13875")
 public class OptionalOneToOneMapsIdQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test

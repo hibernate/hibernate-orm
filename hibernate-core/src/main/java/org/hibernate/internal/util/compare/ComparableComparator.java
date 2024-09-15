@@ -15,7 +15,9 @@ import java.util.Comparator;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SuppressWarnings("rawtypes")
 public class ComparableComparator<T extends Comparable> implements Comparator<T>, Serializable {
+
 	public static final Comparator INSTANCE = new ComparableComparator();
 
 	@SuppressWarnings("unchecked")

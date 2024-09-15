@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -136,7 +136,7 @@ public class ReflectHelperTest {
 		assertNotNull( ReflectHelper.findSetterMethod( C.class, "id", Integer.class ) );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12090")
+	@JiraKey(value = "HHH-12090")
 	@Test
 	public void test_getMethod_nestedInterfaces_on_superclasses()
 			throws InvocationTargetException, IllegalAccessException {
@@ -149,7 +149,7 @@ public class ReflectHelperTest {
 		assertEquals( OFF,  statusMethodFClass.invoke( new F() ) );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12090")
+	@JiraKey(value = "HHH-12090")
 	@Test
 	public void test_setMethod_nestedInterfaces_on_superclasses() {
 		assertNotNull( ReflectHelper.findSetterMethod( E.class, "id", String.class ) );

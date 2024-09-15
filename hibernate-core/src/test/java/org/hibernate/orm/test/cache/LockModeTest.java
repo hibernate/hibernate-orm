@@ -11,7 +11,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
@@ -76,7 +76,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 
 	/**
 	 */
-	@TestForIssue(jiraKey = "HHH-9764")
+	@JiraKey(value = "HHH-9764")
 	@Test
 	public void testDefaultLockModeOnCollectionInitialization() {
 		Session s1 = openSession();
@@ -109,7 +109,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		s1.close();
 	}
 
-	@TestForIssue(jiraKey = "HHH-9764")
+	@JiraKey(value = "HHH-9764")
 	@Test
 	public void testDefaultLockModeOnEntityLoad() {
 
@@ -145,7 +145,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		s1.close();
 	}
 
-	@TestForIssue(jiraKey = "HHH-9764")
+	@JiraKey(value = "HHH-9764")
 	@Test
 	public void testReadLockModeOnEntityLoad() {
 

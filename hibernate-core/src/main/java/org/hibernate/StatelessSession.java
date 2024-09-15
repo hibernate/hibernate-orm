@@ -9,6 +9,8 @@ package org.hibernate;
 import jakarta.persistence.EntityGraph;
 import org.hibernate.graph.GraphSemantic;
 
+import java.util.List;
+
 /**
  * A command-oriented API often used for performing bulk operations against
  * the database. A stateless session has no persistence context, and always
@@ -249,6 +251,21 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @since 6.3
 	 */
 	<T> T get(EntityGraph<T> graph, GraphSemantic graphSemantic, Object id, LockMode lockMode);
+
+	/**
+	 * Retrieve multiple rows, returning entity instances in a
+	 * list where the position of an instance in the list matches
+	 * the position of its identifier in the given array, and the
+	 * list contains a null value if there is no persistent
+	 * instance matching a given identifier.
+	 *
+	 * @param entityClass The class of the entity to retrieve
+	 * @param ids         The ids of the entities to retrieve
+	 * @return an ordered list of detached entity instances, with
+	 *         null elements representing missing entities
+	 * @since 7.0
+	 */
+	<T> List<T> getAll(Class<T> entityClass, List<Object> ids);
 
 	/**
 	 * Refresh the entity instance state from the database.

@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -31,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.core.Is.is;
 
-@TestForIssue(jiraKey = "HHH-15162")
+@JiraKey(value = "HHH-15162")
 @DomainModel(
 		annotatedClasses = LobStringFunctionsTest.TestEntity.class
 )

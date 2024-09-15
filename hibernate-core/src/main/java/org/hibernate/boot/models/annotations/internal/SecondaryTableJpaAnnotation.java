@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -16,11 +17,8 @@ import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.SecondaryTable;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyOptionalString;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectCheckConstraints;
@@ -85,27 +83,17 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SecondaryTableJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "name", modelContext );
-		this.catalog = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "schema", modelContext );
-		this.pkJoinColumns = extractJandexValue(
-				annotation,
-				JpaAnnotations.SECONDARY_TABLE,
-				"pkJoinColumns",
-				modelContext
-		);
-		this.foreignKey = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "foreignKey", modelContext );
-		this.uniqueConstraints = extractJandexValue(
-				annotation,
-				JpaAnnotations.SECONDARY_TABLE,
-				"uniqueConstraints",
-				modelContext
-		);
-		this.indexes = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "indexes", modelContext );
-		this.check = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "check", modelContext );
-		this.comment = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "comment", modelContext );
-		this.options = extractJandexValue( annotation, JpaAnnotations.SECONDARY_TABLE, "options", modelContext );
+	public SecondaryTableJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.catalog = (String) attributeValues.get( "catalog" );
+		this.schema = (String) attributeValues.get( "schema" );
+		this.pkJoinColumns = (jakarta.persistence.PrimaryKeyJoinColumn[]) attributeValues.get( "pkJoinColumns" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
+		this.uniqueConstraints = (jakarta.persistence.UniqueConstraint[]) attributeValues.get( "uniqueConstraints" );
+		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
+		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
+		this.comment = (String) attributeValues.get( "comment" );
+		this.options = (String) attributeValues.get( "options" );
 	}
 
 	@Override

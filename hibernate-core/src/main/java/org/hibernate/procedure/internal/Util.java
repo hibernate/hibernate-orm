@@ -54,10 +54,11 @@ public class Util {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final NamedObjectRepository namedObjectRepository = context.getSessionFactory().getQueryEngine().getNamedObjectRepository();
-
+		final NamedObjectRepository namedObjectRepository =
+				context.getSessionFactory().getQueryEngine().getNamedObjectRepository();
 		for ( String resultSetMappingName : resultSetMappingNames ) {
-			final NamedResultSetMappingMemento memento = namedObjectRepository.getResultSetMappingMemento( resultSetMappingName );
+			final NamedResultSetMappingMemento memento =
+					namedObjectRepository.getResultSetMappingMemento( resultSetMappingName );
 			if ( memento == null ) {
 				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}

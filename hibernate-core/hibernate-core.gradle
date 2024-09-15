@@ -28,6 +28,7 @@ dependencies {
     api jakartaLibs.jta
 
     implementation libs.hibernateModels
+    implementation libs.hibernateModelsJandex
     implementation libs.jandex
     implementation libs.classmate
     implementation libs.byteBuddy
@@ -65,6 +66,7 @@ dependencies {
     }
     testImplementation "joda-time:joda-time:2.3"
     testImplementation dbLibs.h2
+    testImplementation libs.hibernateModelsJandex
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld

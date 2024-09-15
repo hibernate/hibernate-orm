@@ -22,7 +22,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		},
 		useCollectingStatementInspector = true
 )
-@TestForIssue(jiraKey = "HHH-11640")
+@JiraKey(value = "HHH-11640")
 public class NamedQueryCommentTest {
 
 	private static SQLStatementInspector statementInspector;

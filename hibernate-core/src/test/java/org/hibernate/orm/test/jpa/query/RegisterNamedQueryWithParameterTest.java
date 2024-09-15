@@ -2,15 +2,15 @@ package org.hibernate.orm.test.jpa.query;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 
@@ -19,7 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Jpa(
 		annotatedClasses = RegisterNamedQueryWithParameterTest.TestEntity.class
 )
-@TestForIssue(jiraKey = "HHH-15653")
+@JiraKey(value = "HHH-15653")
 public class RegisterNamedQueryWithParameterTest {
 
 	private static final String QUERY_NAME = "ENTITY_BY_NAME";
@@ -32,16 +32,23 @@ public class RegisterNamedQueryWithParameterTest {
 					Query query = entityManager.createNativeQuery( QUERY );
 					scope.getEntityManagerFactory().addNamedQuery( "ENTITY_BY_NAME", query );
 
-					TestEntity entity = new TestEntity( 1l, "And", 1 );
-					TestEntity entity2 = new TestEntity( 2l, "Fab", 2 );
+					TestEntity entity = new TestEntity( 1L, "And", 1 );
+					TestEntity entity2 = new TestEntity( 2L, "Fab", 2 );
 					entityManager.persist( entity );
 					entityManager.persist( entity2 );
 				}
 		);
 	}
 
+	@AfterAll
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> entityManager.createQuery( "delete from TestEntity" ).executeUpdate()
+		);
+	}
+
 	@Test
-	public void testExecuteNativQuery(EntityManagerFactoryScope scope) {
+	public void testExecuteNativeQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					Query query = entityManager.createNamedQuery( QUERY_NAME );

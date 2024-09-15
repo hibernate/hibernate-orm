@@ -18,7 +18,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.java.BlobJavaType;
 import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -86,7 +86,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8193" )
+	@JiraKey( value = "HHH-8193" )
 	public void testStreamResetOnAccess() throws IOException, SQLException {
 		byte[] bytes = new byte[] { 1, 2, 3, 4 };
 		BlobImplementer blob = (BlobImplementer) BlobProxy.generateProxy( bytes );

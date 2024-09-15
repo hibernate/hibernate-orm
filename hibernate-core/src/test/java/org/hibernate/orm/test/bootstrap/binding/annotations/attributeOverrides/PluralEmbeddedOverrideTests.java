@@ -26,7 +26,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.BasicType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -64,7 +64,7 @@ public class PluralEmbeddedOverrideTests {
 
 	@SuppressWarnings("rawtypes")
 	@Test
-	@TestForIssue(jiraKey = "HHH-8630")
+	@JiraKey(value = "HHH-8630")
 	public void testModel(DomainModelScope scope) {
 		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( AggregatedTypeValue.class.getName() );
 		final Property attributesBinding = entityBinding.getProperty( "attributes" );

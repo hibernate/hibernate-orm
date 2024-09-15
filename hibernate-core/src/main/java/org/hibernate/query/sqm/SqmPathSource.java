@@ -11,7 +11,7 @@ import java.util.Locale;
 import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -57,7 +57,7 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	default SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+	default SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
 		return findSubPathSource( name );
 	}
 
@@ -88,7 +88,7 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 * @throws IllegalArgumentException if the subPathSource is not found
 	 */
-	default SqmPathSource<?> getSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+	default SqmPathSource<?> getSubPathSource(String name, JpaMetamodel metamodel) {
 		final SqmPathSource<?> subPathSource = findSubPathSource( name, metamodel );
 		if ( subPathSource == null ) {
 			throw new PathElementException(

@@ -20,7 +20,7 @@ import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.Ra
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -111,7 +111,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedIsNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -142,7 +142,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedParameterAllNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -176,7 +176,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedParameterOneNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -211,7 +211,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8172")
+	@JiraKey(value = "HHH-8172")
 	public void testQueryWithEmbeddedWithNullUsingSubAttributes(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -586,7 +586,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9642")
+	@JiraKey(value = "HHH-9642")
 	public void testEmbeddedAndOneToManyHql(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -769,7 +769,7 @@ public class EmbeddedTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-3868")
+	@JiraKey(value = "HHH-3868")
 	public void testTransientMergeComponentParent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

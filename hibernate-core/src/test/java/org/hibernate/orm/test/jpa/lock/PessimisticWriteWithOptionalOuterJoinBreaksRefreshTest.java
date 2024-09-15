@@ -16,7 +16,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-13000")
+@JiraKey(value = "HHH-13000")
 @Jpa(annotatedClasses = {
 		PessimisticWriteWithOptionalOuterJoinBreaksRefreshTest.Parent.class,
 		PessimisticWriteWithOptionalOuterJoinBreaksRefreshTest.Child.class

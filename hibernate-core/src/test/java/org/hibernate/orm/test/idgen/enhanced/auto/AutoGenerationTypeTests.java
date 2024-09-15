@@ -15,6 +15,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hamcrest.MatcherAssert;
+
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.boot.Metadata;
@@ -28,6 +30,7 @@ import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.enhanced.DatabaseStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -131,12 +134,11 @@ public class AutoGenerationTypeTests {
 					.buildMetadata();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity4.class.getName() );
+			final Property identifierProperty = entityBinding.getRootClass().getIdentifierProperty();
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
-			final IdentifierGenerator idGenerator = generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
-
-			assertThat( idGenerator, instanceOf( UUIDGenerator.class ) );
+			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass(), identifierProperty );
+			MatcherAssert.assertThat( generator, instanceOf( UuidGenerator.class ) );
 		}
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.validation;
 
+import jakarta.persistence.metamodel.Bindable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -24,6 +25,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -55,16 +57,24 @@ import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractPluralAttribute;
 import org.hibernate.metamodel.model.domain.internal.BagAttributeImpl;
+import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.ListAttributeImpl;
@@ -82,7 +92,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -100,6 +109,7 @@ import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.stat.internal.StatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BagType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.ListType;
@@ -151,6 +161,8 @@ public abstract class MockSessionFactory
 
 	private final MetadataImplementor bootModel;
 	private final MetadataContext metadataContext;
+
+	private final NodeBuilder nodeBuilder;
 
 	public MockSessionFactory() {
 
@@ -222,6 +234,8 @@ public abstract class MockSessionFactory
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.windowFunctions();
 		typeConfiguration.scope((SessionFactoryImplementor) this);
+
+		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
 	}
 
 	@Override
@@ -336,6 +350,12 @@ public abstract class MockSessionFactory
 				.getIdentifierType();
 	}
 
+	public BasicType<?> getVersionType(String className)
+			throws MappingException {
+		return createEntityPersister(className)
+				.getVersionType();
+	}
+
 	@Override
 	public String getIdentifierPropertyName(String className)
 			throws MappingException {
@@ -358,6 +378,12 @@ public abstract class MockSessionFactory
 	@Override
 	public StandardServiceRegistryImpl getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	public Class<?> classForName(String className) {
+		return serviceRegistry.requireService( ClassLoaderService.class )
+				.classForName( className );
 	}
 
 	@Override
@@ -460,7 +486,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public QueryInterpretationCache getInterpretationCache() {
-		return new QueryInterpretationCacheDisabledImpl(this::getStatistics);
+		return new QueryInterpretationCacheDisabledImpl( serviceRegistry );
 	}
 
 	@Override
@@ -475,14 +501,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public NodeBuilder getCriteriaBuilder() {
-		return new SqmCriteriaNodeBuilder(
-				"",
-				"",
-				this,
-				false,
-				ValueHandlingMode.INLINE,
-				() -> MockSessionFactory.this
-		);
+		return nodeBuilder;
 	}
 
 	@Override
@@ -912,8 +931,72 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
-			SqmPathSource<?> source = super.findSubPathSource(name, metamodel);
+		public SingularPersistentAttribute<? super X, ?> findVersionAttribute() {
+			final BasicType<?> type = getVersionType(getHibernateEntityName());
+			if (type == null) {
+				return null;
+			}
+			else {
+				return new SingularAttributeImpl<>(
+						MockEntityDomainType.this,
+						"{version}",
+						AttributeClassification.BASIC,
+						type,
+						type.getRelationalJavaType(),
+						null,
+						false,
+						true,
+						false,
+						false,
+						metadataContext
+				);
+			}
+		}
+
+		@Override
+		public boolean hasVersionAttribute() {
+			return getVersionType(getHibernateEntityName()) != null;
+		}
+
+		@Override
+		public SqmPathSource<?> getIdentifierDescriptor() {
+			final Type type = getIdentifierType(getHibernateEntityName());
+			if (type == null) {
+				return null;
+			}
+			else if (type instanceof BasicDomainType) {
+				return new BasicSqmPathSource<>(
+						EntityIdentifierMapping.ID_ROLE_NAME,
+						null,
+						(BasicDomainType<?>) type,
+						MockEntityDomainType.this.getExpressibleJavaType(),
+						Bindable.BindableType.SINGULAR_ATTRIBUTE,
+						false
+				);
+			}
+			else if (type instanceof EmbeddableDomainType) {
+				return new EmbeddedSqmPathSource<>(
+						EntityIdentifierMapping.ID_ROLE_NAME,
+						null,
+						(EmbeddableDomainType<?>) type,
+						Bindable.BindableType.SINGULAR_ATTRIBUTE,
+						false
+				);
+			}
+			else {
+				return null;
+			}
+		}
+
+		@Override
+		public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+			switch (name) {
+				case EntityIdentifierMapping.ID_ROLE_NAME:
+					return getIdentifierDescriptor();
+				case "{version}":
+					return findVersionAttribute();
+			}
+			final SqmPathSource<?> source = super.findSubPathSource(name, metamodel);
 			if ( source != null ) {
 				return source;
 			}

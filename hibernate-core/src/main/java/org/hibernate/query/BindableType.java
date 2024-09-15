@@ -7,7 +7,6 @@
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.SqmExpressible;
 
 /**
@@ -30,7 +29,7 @@ public interface BindableType<J> {
 	}
 
 	/**
-	 * Resolve this parameter type to the corresponding SqmExpressible
+	 * Resolve this parameter type to the corresponding {@link SqmExpressible}
 	 */
-	SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory);
+	SqmExpressible<J> resolveExpressible(BindingContext bindingContext);
 }

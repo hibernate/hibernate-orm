@@ -22,7 +22,7 @@ public class RowTransformerStandardImpl<T> implements RowTransformer<T> {
 	 * Singleton access
 	 */
 	@SuppressWarnings("rawtypes")
-	public static final RowTransformerStandardImpl INSTANCE = new RowTransformerStandardImpl();
+	private static final RowTransformerStandardImpl INSTANCE = new RowTransformerStandardImpl();
 
 	@SuppressWarnings("unchecked")
 	public static <T> RowTransformer<T> instance() {

@@ -14,7 +14,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialect(PostgreSQLDialect.class)
 @SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41335")
-@TestForIssue( jiraKey = "HHH-13493")
+@JiraKey( value = "HHH-13493")
 public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {

@@ -65,9 +65,9 @@ public abstract class CollectionSecondPass implements SecondPass {
 	abstract public void secondPass(Map<String, PersistentClass> persistentClasses) throws MappingException;
 
 	private static String columns(Value val) {
-		StringBuilder columns = new StringBuilder();
+		final StringBuilder columns = new StringBuilder();
 		for ( Selectable selectable : val.getSelectables() ) {
-			if ( columns.length() > 0 ) {
+			if ( !columns.isEmpty() ) {
 				columns.append( ", " );
 			}
 			columns.append( selectable.getText() );

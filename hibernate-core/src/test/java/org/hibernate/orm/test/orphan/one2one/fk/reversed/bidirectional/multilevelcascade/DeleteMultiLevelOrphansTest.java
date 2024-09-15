@@ -8,7 +8,7 @@ package org.hibernate.orm.test.orphan.one2one.fk.reversed.bidirectional.multilev
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -74,7 +74,7 @@ public class DeleteMultiLevelOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9091")
+	@JiraKey(value = "HHH-9091")
 	public void testOrphanedWhileManaged(SessionFactoryScope scope) {
 
 		Preisregelung p = scope.fromTransaction(
@@ -103,7 +103,7 @@ public class DeleteMultiLevelOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9091")
+	@JiraKey(value = "HHH-9091")
 	public void testReplacedWhileManaged(SessionFactoryScope scope) {
 
 		Tranchenmodell t = scope.fromTransaction(

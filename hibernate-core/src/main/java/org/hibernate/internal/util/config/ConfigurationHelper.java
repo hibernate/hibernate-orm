@@ -570,6 +570,18 @@ public final class ConfigurationHelper {
 				.getPreferredSqlTypeCodeForArray();
 	}
 
+	public static void setIfNotEmpty(String value, String settingName, Map<String, String> configuration) {
+		if ( StringHelper.isNotEmpty( value ) ) {
+			configuration.put( settingName, value );
+		}
+	}
+
+	public static void setIfNotNull(Object value, String settingName, Map<String, Object> configuration) {
+		if ( value != null ) {
+			configuration.put( settingName, value );
+		}
+	}
+
 	private static class TypeCodeConverter implements ConfigurationService.Converter<Integer> {
 
 		public static final TypeCodeConverter INSTANCE = new TypeCodeConverter();

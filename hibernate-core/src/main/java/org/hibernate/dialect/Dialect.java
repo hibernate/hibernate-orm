@@ -112,10 +112,10 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -344,7 +344,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
-		this.version = info.makeCopyOrDefault( getMinimumSupportedVersion() );
+		this.version = determineDatabaseVersion( info );
 		checkVersion();
 		registerDefaultKeywords();
 		registerKeywords(info);
@@ -361,6 +361,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					minimumVersion.getMajor() + "." + minimumVersion.getMinor() + "." + minimumVersion.getMicro()
 			);
 		}
+	}
+
+	/**
+	 * Determine the database version, as precise as possible and using Dialect-specific techniques,
+	 * from a {@link DialectResolutionInfo} object.
+	 * @param info The dialect resolution info that would be passed by Hibernate ORM
+	 * to the constructor of a Dialect of the same type.
+	 * @return The corresponding database version.
+	 */
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return info.makeCopyOrDefault( getMinimumSupportedVersion() );
 	}
 
 	/**
@@ -3263,7 +3274,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link UserDefinedType}s,
+	 * Get an {@link Exporter} for {@link UserDefinedType user defined types},
 	 * usually {@link StandardUserDefinedTypeExporter}.
 	 */
 	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
@@ -3271,7 +3282,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link Sequence}s,
+	 * Get an {@link Exporter} for {@linkplain Sequence sequences},
 	 * usually {@link StandardSequenceExporter}.
 	 */
 	public Exporter<Sequence> getSequenceExporter() {
@@ -3279,7 +3290,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link Index}es,
+	 * Get an {@link Exporter} for {@linkplain Index indexes},
 	 * usually {@link StandardIndexExporter}.
 	 */
 	public Exporter<Index> getIndexExporter() {
@@ -3287,7 +3298,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for {@link ForeignKey}s,
+	 * Get an {@link Exporter} for {@linkplain ForeignKey foreign key} constraints,
 	 * usually {@link StandardForeignKeyExporter}.
 	 */
 	public Exporter<ForeignKey> getForeignKeyExporter() {
@@ -3295,10 +3306,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Get an {@link Exporter} for unique key {@link Constraint}s,
+	 * Get an {@link Exporter} for {@linkplain UniqueKey unique key} constraints,
 	 * usually {@link StandardUniqueKeyExporter}.
 	 */
-	public Exporter<Constraint> getUniqueKeyExporter() {
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
 		return uniqueKeyExporter;
 	}
 
@@ -5566,9 +5577,31 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Does this dialect support appending table options SQL fragment at the end of the SQL Table creation statement?
 	 *
-	 *  @return {@code true} indicates it does; {@code false} indicates it does not;
+	 * @return {@code true} indicates it does; {@code false} indicates it does not;
 	 */
-	public boolean supportsTableOptions(){
+	public boolean supportsTableOptions() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support binding {@link Types#NULL} for {@link PreparedStatement#setNull(int, int)}?
+	 * if it does, then call of {@link PreparedStatement#getParameterMetaData()} could be eliminated for better performance.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not;
+	 * @see org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType
+	 */
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support binding {@code null} for {@link PreparedStatement#setObject(int, Object)}?
+	 * if it does, then call of {@link PreparedStatement#getParameterMetaData()} could be eliminated for better performance.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not;
+	 * @see org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType
+	 */
+	public boolean supportsBindingNullForSetObject() {
 		return false;
 	}
 

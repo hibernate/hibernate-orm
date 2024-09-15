@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TreatDisjunctionTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15726")
+	@JiraKey( value = "HHH-15726")
 	public void testQuery(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(

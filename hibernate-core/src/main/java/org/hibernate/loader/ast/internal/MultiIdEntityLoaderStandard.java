@@ -40,6 +40,8 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import org.jboss.logging.Logger;
 
+import static java.lang.Boolean.TRUE;
+
 /**
  * Standard MultiIdEntityLoader
  *
@@ -157,7 +159,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 
 			if ( idsInBatch.size() >= maxBatchSize ) {
 				// we've hit the allotted max-batch-size, perform an "intermediate load"
-				loadEntitiesById( idsInBatch, lockOptions, session );
+				loadEntitiesById( idsInBatch, lockOptions, loadOptions, session );
 				idsInBatch.clear();
 			}
 
@@ -169,7 +171,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 		if ( !idsInBatch.isEmpty() ) {
 			// we still have ids to load from the processing above since the last max-batch-size trigger,
 			// perform a load for them
-			loadEntitiesById( idsInBatch, lockOptions, session );
+			loadEntitiesById( idsInBatch, lockOptions, loadOptions, session );
 		}
 
 		// for each result where we set the EntityKey earlier, replace them
@@ -186,6 +188,9 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 					// the entity is locally deleted, and the options ask that we not return such entities...
 					entity = null;
 				}
+				else {
+					entity = persistenceContext.proxyFor( entity );
+				}
 			}
 			result.set( position, entity );
 		}
@@ -197,7 +202,8 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 	private List<T> loadEntitiesById(
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
+			MultiIdLoadOptions loadOptions,
+			EventSource session) {
 		assert idsInBatch != null;
 		assert ! idsInBatch.isEmpty();
 
@@ -265,7 +271,9 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
+				new ExecutionContextWithSubselectFetchHandler( session,
+						subSelectFetchableKeysHandler,
+						TRUE.equals( loadOptions.getReadOnly(session) ) ),
 				RowTransformerStandardImpl.instance(),
 				null,
 				ListResultsConsumer.UniqueSemantic.FILTER,
@@ -403,7 +411,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			System.arraycopy( ids, idPosition, idsInBatch, 0, batchSize );
 
 			result.addAll(
-					loadEntitiesById( Arrays.asList( idsInBatch ), lockOptions, session )
+					loadEntitiesById( Arrays.asList( idsInBatch ), lockOptions, loadOptions, session )
 			);
 
 			numberOfIdsLeft = numberOfIdsLeft - batchSize;

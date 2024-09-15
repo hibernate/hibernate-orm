@@ -8,7 +8,7 @@ package org.hibernate.orm.test.mapping.converted.converter.lob;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class ConverterAndLobTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9615" )
+	@JiraKey( value = "HHH-9615" )
 	public void basicTest(SessionFactoryScope scope) {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

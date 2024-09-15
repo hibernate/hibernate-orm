@@ -25,7 +25,6 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -92,9 +91,6 @@ public interface SessionFactoryImplementor
 	}
 
 	@Override
-	QueryEngine getQueryEngine();
-
-	@Override
 	SessionBuilderImplementor withOptions();
 
 	/**
@@ -115,7 +111,6 @@ public interface SessionFactoryImplementor
 	 *
 	 * @return The factory's ServiceRegistry
 	 */
-	@Override
 	ServiceRegistryImplementor getServiceRegistry();
 
 	/**

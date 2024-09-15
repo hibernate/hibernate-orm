@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -242,10 +241,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isFailOnPaginationOverCollectionFetchEnabled();
 
-	default ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
-		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
-	}
-
 	/**
 	 * The default catalog to use in generated SQL when a catalog wasn't specified in the mapping,
 	 * neither explicitly nor implicitly (see the concept of implicit catalog in XML mapping).
@@ -370,4 +365,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	boolean isPassProcedureParameterNames();
+
+	/**
+	 * Should native queries return JDBC datetime types
+	 * instead of using {@code java.time} types.
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#NATIVE_PREFER_JDBC_DATETIME_TYPES
+	 */
+	boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
 }

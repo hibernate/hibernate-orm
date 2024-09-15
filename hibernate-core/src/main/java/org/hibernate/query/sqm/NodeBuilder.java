@@ -17,9 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.Internal;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -78,7 +81,7 @@ import jakarta.persistence.criteria.Subquery;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public interface NodeBuilder extends HibernateCriteriaBuilder {
+public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	JpaMetamodel getDomainModel();
 
 	TypeConfiguration getTypeConfiguration();
@@ -87,7 +90,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	QueryEngine getQueryEngine();
 
-	void setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode);
+	@Internal
+	ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode);
 
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,
@@ -482,10 +486,10 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount);
 
 	@Override
-	<T> SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
 
 	@Override
-	<T> SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
 
 	@Override
 	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
@@ -1194,5 +1198,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	BasicType<Character> getCharacterType();
 
-	SessionFactoryImplementor getSessionFactory();
+	JpaCompliance getJpaCompliance();
+
+	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
 }

@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				LazyOneToManyOrphanWithIdentityIdTest.Child.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15258")
+@JiraKey(value = "HHH-15258")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class LazyOneToManyOrphanWithIdentityIdTest {
 

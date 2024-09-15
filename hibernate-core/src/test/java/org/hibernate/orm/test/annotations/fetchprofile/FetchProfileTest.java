@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
  *
  * @author Hardy Ferentschik
  */
-@TestForIssue( jiraKey = "HHH-4812" )
+@JiraKey( value = "HHH-4812" )
 public class FetchProfileTest extends BaseUnitTestCase {
 
 	private ServiceRegistry serviceRegistry;

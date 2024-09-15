@@ -32,7 +32,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.function.SqlColumn;
 import org.hibernate.grammars.hql.HqlLexer;
@@ -48,13 +47,13 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
@@ -411,7 +410,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				? ParameterStyle.UNKNOWN
 				: ParameterStyle.MIXED;
 
-		final TypeConfiguration typeConfiguration = creationContext.getNodeBuilder().getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		this.integerDomainType = typeConfiguration.standardBasicTypeForJavaType( Integer.class );
 		this.listJavaType = javaTypeRegistry.resolveDescriptor( List.class );
@@ -785,10 +784,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final HqlParser.QueryExpressionContext queryExpressionContext = (HqlParser.QueryExpressionContext) ctx.getChild( queryExpressionIndex );
 		final SqmSelectQuery<Object> cte;
 		if ( cteContainer instanceof SqmSubQuery<?> ) {
-			cte = new SqmSubQuery<>(
-					processingStateStack.getCurrent().getProcessingQuery(),
-					creationContext.getNodeBuilder()
-			);
+			cte = new SqmSubQuery<>( ( (SqmSubQuery<?>) cteContainer ).getParent(), creationContext.getNodeBuilder() );
 		}
 		else {
 			cte = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
@@ -1287,7 +1283,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private EntityDomainType<R> getResultEntity() {
-		final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
+		final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
 		if ( expectedResultEntity != null ) {
 			@SuppressWarnings("rawtypes")
 			final EntityDomainType entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
@@ -1436,7 +1432,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmSelectClause visitSelectClause(HqlParser.SelectClauseContext ctx) {
 		// todo (6.0) : primer a select-clause-specific SemanticPathPart into the stack
 		final SqmSelectClause selectClause =
-				new SqmSelectClause(ctx.DISTINCT() != null, creationContext.getNodeBuilder() );
+				new SqmSelectClause( ctx.DISTINCT() != null, creationContext.getNodeBuilder() );
 		final HqlParser.SelectionListContext selectionListContext = ctx.selectionList();
 		for ( HqlParser.SelectionContext selectionContext : selectionListContext.selection() ) {
 			selectClause.addSelection( visitSelection( selectionContext ) );
@@ -1553,15 +1549,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private JavaType<?> resolveInstantiationTargetJtd(String className) {
-		final Class<?> targetJavaType = classForName( creationContext.getJpaMetamodel().qualifyImportableName( className ) );
-		return creationContext.getJpaMetamodel()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
+		final String qualifiedName = creationContext.getJpaMetamodel().qualifyImportableName( className );
+		final Class<?> targetJavaType = creationContext.classForName( qualifiedName );
+		return creationContext.getTypeConfiguration().getJavaTypeRegistry()
 				.resolveDescriptor( targetJavaType );
-	}
-
-	private Class<?> classForName(String className) {
-		return creationContext.getServiceRegistry().requireService( ClassLoaderService.class ).classForName( className );
 	}
 
 	@Override
@@ -3008,9 +2999,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
 		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
-
-		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
-			final SqmPathSource<?> identifierDescriptor = ( (IdentifiableDomainType<?>) sqmPathType ).getIdentifierDescriptor();
+		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
+			final SqmPathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
+			if ( identifierDescriptor == null ) {
+				// mainly for benefit of Hibernate Processor
+				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+						+ "' of 'id()' is a '" + identifiableType.getTypeName()
+						+ "' and does not have a well-defined '@Id' attribute" );
+			}
 			return sqmPath.get( identifierDescriptor.getPathName() );
 		}
 		else if ( sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
@@ -3018,7 +3014,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
-					+ "' of 'id()' function does not resolve to an entity type" );
+					+ "' of 'id()' does not resolve to an entity type" );
 		}
 	}
 
@@ -3031,26 +3027,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPath<?> visitEntityVersionReference(HqlParser.EntityVersionReferenceContext ctx) {
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
 		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
-
-		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
-			@SuppressWarnings("unchecked")
-			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<Object>) sqmPathType;
-			final SingularPersistentAttribute<Object, ?> versionAttribute = identifiableType.findVersionAttribute();
-			if ( versionAttribute == null ) {
-				throw new FunctionArgumentException(
-						String.format(
-								"Argument '%s' of 'version()' function resolved to entity type '%s' which does not have a '@Version' attribute",
-								sqmPath.getNavigablePath(),
-								identifiableType.getTypeName()
-						)
-				);
+		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
+			if ( !identifiableType.hasVersionAttribute() ) {
+				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+						+ "' of 'version()' is a '" + identifiableType.getTypeName()
+						+ "' and does not have a '@Version' attribute" );
 			}
-
+			@SuppressWarnings("unchecked")
+			final SingularPersistentAttribute<Object, ?> versionAttribute =
+					(SingularPersistentAttribute<Object, ?>) identifiableType.findVersionAttribute();
 			return sqmPath.get( versionAttribute );
 		}
-
-		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
-				+ "' of 'version()' function does not resolve to an entity type" );
+		else {
+			throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+					+ "' of 'version()' does not resolve to an entity type" );
+		}
 	}
 
 	@Override
@@ -3069,35 +3060,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
 			@SuppressWarnings("unchecked")
-			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<? super Object>) sqmPathType;
+			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<Object>) sqmPathType;
 			final List<? extends PersistentAttribute<Object, ?>> attributes = identifiableType.findNaturalIdAttributes();
 			if ( attributes == null ) {
-				throw new FunctionArgumentException(
-						String.format(
-								"Argument '%s' of 'naturalid()' function resolved to entity type '%s' which does not have a natural id",
-								sqmPath.getNavigablePath(),
-								identifiableType.getTypeName()
-						)
+				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+						+ "' of 'naturalid()' is a '" + identifiableType.getTypeName()
+						+ "' and does not have a natural id"
 				);
 			}
 			else if ( attributes.size() >1 ) {
-				throw new FunctionArgumentException(
-						String.format(
-								"Argument '%s' of 'naturalid()' function resolved to entity type '%s' which has a composite natural id",
-								sqmPath.getNavigablePath(),
-								identifiableType.getTypeName()
-						)
+				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+						+ "' of 'naturalid()' is a '" + identifiableType.getTypeName()
+						+ "' and has a composite natural id"
 				);
 			}
 
 			@SuppressWarnings("unchecked")
-			SingularAttribute<Object, ?> naturalIdAttribute
+			final SingularAttribute<Object, ?> naturalIdAttribute
 					= (SingularAttribute<Object, ?>) attributes.get(0);
 			return sqmPath.get( naturalIdAttribute );
 		}
 
 		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
-				+ "' of 'naturalid()' function does not resolve to an entity type" );
+				+ "' of 'naturalid()' does not resolve to an entity type" );
 	}
 //
 //	@Override

@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner.
  */
-@TestForIssue( jiraKey = "HHH-8401")
+@JiraKey( value = "HHH-8401")
 @RequiresDialect( value = MySQLDialect.class)
 @ServiceRegistry
 @DomainModel

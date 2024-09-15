@@ -461,7 +461,6 @@ public class EmbeddableBinder {
 							? Nullability.FORCED_NULL
 							: ( isNullable ? Nullability.NO_CONSTRAINT : Nullability.FORCED_NOT_NULL ),
 					propertyAnnotatedElement,
-					Map.of(),
 					entityBinder,
 					isIdentifierMapper,
 					isComponentEmbedded,
@@ -480,7 +479,6 @@ public class EmbeddableBinder {
 							subholder,
 							propertyAnnotatedElement,
 							value,
-							Map.of(),
 							context
 					);
 				}

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.insertordering;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
@@ -29,7 +29,7 @@ import java.util.Set;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
-@TestForIssue(jiraKey = "HHH-16485")
+@JiraKey(value = "HHH-16485")
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 public class InsertOrderingRootEntityNameDependencyTest extends BaseNonConfigCoreFunctionalTestCase {
 

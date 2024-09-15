@@ -31,7 +31,7 @@ public class FullyQualifiedReflectivePath implements SemanticPathPart, FullyQual
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		if ( isTerminal ) {
-			return new FullyQualifiedReflectivePathTerminal( this, name, creationState );
+			return new FullyQualifiedReflectivePathTerminal<>( this, name, creationState );
 		}
 		else {
 			return new FullyQualifiedReflectivePath( this, name );

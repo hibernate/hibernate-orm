@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -29,8 +31,6 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.PostDeleteEvent;
@@ -60,6 +60,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -510,6 +512,30 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
+	@Override
+	public <T> List<T> getAll(Class<T> entityClass, List<Object> ids) {
+		for (Object id : ids) {
+			if ( id == null ) {
+				throw new IllegalArgumentException("Null id");
+			}
+		}
+		final EntityPersister persister = getEntityPersister( entityClass.getName() );
+		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
+		final JpaRoot<T> from = query.from(entityClass);
+		query.where( from.get( persister.getIdentifierPropertyName() ).in(ids) );
+		final List<T> resultList = createSelectionQuery(query).getResultList();
+		final List<Object> idList = new ArrayList<>( resultList.size() );
+		for (T entity : resultList) {
+			idList.add( persister.getIdentifier(entity, this) );
+		}
+		final List<T> list = new ArrayList<>( ids.size() );
+		for (Object id : ids) {
+			final int pos = idList.indexOf(id);
+			list.add( pos < 0 ? null : resultList.get(pos) );
+		}
+		return list;
+	}
+
 	private EntityPersister getEntityPersister(String entityName) {
 		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
@@ -730,11 +756,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		else if ( isPersistentAttributeInterceptable( association ) ) {
-			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( association );
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				final EnhancementAsProxyLazinessInterceptor proxyInterceptor =
-						(EnhancementAsProxyLazinessInterceptor) interceptor;
+			if ( asPersistentAttributeInterceptable( association ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 				proxyInterceptor.setSession( this );
 				try {
 					proxyInterceptor.forceInitialize( association, null );
@@ -748,8 +771,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				}
 			}
 		}
-		else if ( association instanceof PersistentCollection ) {
-			final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) association;
+		else if ( association instanceof PersistentCollection<?> persistentCollection ) {
 			if ( !persistentCollection.wasInitialized() ) {
 				final CollectionPersister collectionDescriptor = getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( persistentCollection.getRole() );

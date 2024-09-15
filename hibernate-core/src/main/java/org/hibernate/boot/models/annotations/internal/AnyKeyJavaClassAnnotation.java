@@ -7,13 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -36,13 +33,8 @@ public class AnyKeyJavaClassAnnotation implements AnyKeyJavaClass {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AnyKeyJavaClassAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				org.hibernate.boot.models.HibernateAnnotations.ANY_KEY_JAVA_CLASS,
-				"value",
-				modelContext
-		);
+	public AnyKeyJavaClassAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (Class<?>) attributeValues.get( "value" );
 	}
 
 	@Override

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
@@ -47,6 +46,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.StringHelper.splitFull;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MODULO;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN_OR_EQUAL;
@@ -200,21 +200,17 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
 			final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 			final ReturnableType<?> resultType = resolveResultType( walker );
-			final MappingModelExpressible<?> mappingModelExpressible = resultType == null ? null : getMappingModelExpressible(
-					walker,
-					resultType,
-					arguments
-			);
+			final MappingModelExpressible<?> mappingModelExpressible =
+					resultType == null
+							? null
+							: getMappingModelExpressible( walker, resultType, arguments );
 			final SqlAstNode expression = arguments.get( 0 );
 			if ( expression instanceof SqlTupleContainer ) {
 				// SqlTupleContainer means this is a composite temporal type i.e. uses `@TimeZoneStorage(COLUMN)`
 				// The support for this kind of type requires that we inject the offset from the second column
 				// as literal into the pattern, and apply the formatting on the date time part
 				final SqlTuple sqlTuple = ( (SqlTupleContainer) expression ).getSqlTuple();
-				final AbstractSqmSelfRenderingFunctionDescriptor timestampaddFunction = getFunction(
-						walker,
-						"timestampadd"
-				);
+				final FunctionRenderer timestampaddFunction = getFunction( walker, "timestampadd" );
 				final BasicType<Integer> integerType = typeConfiguration.getBasicTypeRegistry()
 						.resolve( StandardBasicTypes.INTEGER );
 				arguments.set( 0, getOffsetAdjusted( sqlTuple, timestampaddFunction, integerType ) );
@@ -224,21 +220,13 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				final Format format = (Format) arguments.get( 1 );
 				// If the format contains a time zone or offset, we must replace that with the offset column
 				if ( format.getFormat().contains( "x" ) || !supportsPatternLiterals ) {
-					final AbstractSqmSelfRenderingFunctionDescriptor concatFunction = getFunction(
-							walker,
-							"concat"
-					);
-					final AbstractSqmSelfRenderingFunctionDescriptor substringFunction = getFunction(
-							walker,
-							"substring",
-							3
-					);
+					final FunctionRenderer concatFunction = getFunction( walker, "concat" );
+					final FunctionRenderer substringFunction = getFunction( walker, "substring", 3 );
 					final BasicType<String> stringType = typeConfiguration.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.STRING );
-					final Dialect dialect = walker.getCreationContext()
-							.getSessionFactory()
-							.getJdbcServices()
-							.getDialect();
+					final Dialect dialect =
+							walker.getCreationContext().getSessionFactory().getJdbcServices()
+									.getDialect();
 					Expression formatExpression = null;
 					final StringBuilder sb = new StringBuilder();
 					final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( sb );
@@ -250,7 +238,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 					else {
 						delimiter = "";
 					}
-					final String[] chunks = StringHelper.splitFull( "'", format.getFormat() );
+					final String[] chunks = splitFull( "'", format.getFormat() );
 					final Expression offsetExpression = sqlTuple.getExpressions().get( 1 );
 					// Splitting by `'` will put actual format pattern parts to even indices and literal pattern parts
 					// to uneven indices. We will only replace the time zone and offset pattern in the format pattern parts
@@ -260,17 +248,17 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 						// xxx stands for the full offset i.e. `+01:00`
 						// xx stands for the medium offset i.e. `+0100`
 						// x stands for the small offset i.e. `+01`
-						final String[] fullParts = StringHelper.splitFull( "xxx", chunks[i] );
+						final String[] fullParts = splitFull( "xxx", chunks[i] );
 						for ( int j = 0; j < fullParts.length; j++ ) {
 							if ( fullParts[j].isEmpty() ) {
 								continue;
 							}
-							final String[] mediumParts = StringHelper.splitFull( "xx", fullParts[j] );
+							final String[] mediumParts = splitFull( "xx", fullParts[j] );
 							for ( int k = 0; k < mediumParts.length; k++ ) {
 								if ( mediumParts[k].isEmpty() ) {
 									continue;
 								}
-								final String[] smallParts = StringHelper.splitFull( "x", mediumParts[k] );
+								final String[] smallParts = splitFull( "x", mediumParts[k] );
 								for ( int l = 0; l < smallParts.length; l++ ) {
 									if ( smallParts[l].isEmpty() ) {
 										continue;
@@ -394,15 +382,12 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				}
 
 				if ( !supportsPatternLiterals ) {
-					final AbstractSqmSelfRenderingFunctionDescriptor concatFunction = getFunction(
-							walker,
-							"concat"
-					);
+					final FunctionRenderer concatFunction = getFunction( walker, "concat" );
 					final BasicType<String> stringType = typeConfiguration.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.STRING );
 					Expression formatExpression = null;
 					final Format format = (Format) arguments.get( 1 );
-					final String[] chunks = StringHelper.splitFull( "'", format.getFormat() );
+					final String[] chunks = splitFull( "'", format.getFormat() );
 					// Splitting by `'` will put actual format pattern parts to even indices and literal pattern parts
 					// to uneven indices. We need to apply the format parts and then concatenate because the pattern
 					// doesn't support literals
@@ -441,31 +426,27 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			);
 		}
 
-		private AbstractSqmSelfRenderingFunctionDescriptor getFunction(SqmToSqlAstConverter walker, String name) {
-			return (AbstractSqmSelfRenderingFunctionDescriptor) walker.getCreationContext()
-					.getSessionFactory()
-					.getQueryEngine()
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( name );
+		private FunctionRenderer getFunction(SqmToSqlAstConverter walker, String name) {
+			return (FunctionRenderer)
+					walker.getCreationContext().getSessionFactory().getQueryEngine()
+							.getSqmFunctionRegistry().findFunctionDescriptor( name );
 		}
 
-		private AbstractSqmSelfRenderingFunctionDescriptor getFunction(SqmToSqlAstConverter walker, String name, int argumentCount) {
-			final SqmFunctionDescriptor functionDescriptor = walker.getCreationContext()
-					.getSessionFactory()
-					.getQueryEngine()
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( name );
-			if ( functionDescriptor instanceof MultipatternSqmFunctionDescriptor ) {
-				return (AbstractSqmSelfRenderingFunctionDescriptor)
-						( (MultipatternSqmFunctionDescriptor) functionDescriptor )
-								.getFunction( argumentCount );
+		private FunctionRenderer getFunction(SqmToSqlAstConverter walker, String name, int argumentCount) {
+			final SqmFunctionDescriptor functionDescriptor =
+					walker.getCreationContext().getSessionFactory().getQueryEngine().getSqmFunctionRegistry()
+							.findFunctionDescriptor( name );
+			if ( functionDescriptor instanceof MultipatternSqmFunctionDescriptor multipatternSqmFunctionDescriptor ) {
+				return (FunctionRenderer) multipatternSqmFunctionDescriptor.getFunction( argumentCount );
 			}
-			return (AbstractSqmSelfRenderingFunctionDescriptor) functionDescriptor;
+			else {
+				return (FunctionRenderer) functionDescriptor;
+			}
 		}
 
 		private SqlAstNode getOffsetAdjusted(
 				SqlTuple sqlTuple,
-				AbstractSqmSelfRenderingFunctionDescriptor timestampaddFunction,
+				FunctionRenderer timestampaddFunction,
 				BasicType<Integer> integerType) {
 			final Expression instantExpression = sqlTuple.getExpressions().get( 0 );
 			final Expression offsetExpression = sqlTuple.getExpressions().get( 1 );
@@ -484,7 +465,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		}
 
 		private Expression createFullOffset(
-				AbstractSqmSelfRenderingFunctionDescriptor concatFunction,
+				FunctionRenderer concatFunction,
 				BasicType<String> stringType,
 				BasicType<Integer> integerType,
 				Expression offsetExpression) {
@@ -527,8 +508,8 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		}
 
 		private Expression createMediumOffset(
-				AbstractSqmSelfRenderingFunctionDescriptor concatFunction,
-				AbstractSqmSelfRenderingFunctionDescriptor substringFunction,
+				FunctionRenderer concatFunction,
+				FunctionRenderer substringFunction,
 				BasicType<String> stringType,
 				BasicType<Integer> integerType,
 				Expression offsetExpression) {
@@ -593,8 +574,8 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		}
 
 		private Expression createSmallOffset(
-				AbstractSqmSelfRenderingFunctionDescriptor concatFunction,
-				AbstractSqmSelfRenderingFunctionDescriptor substringFunction,
+				FunctionRenderer concatFunction,
+				FunctionRenderer substringFunction,
 				BasicType<String> stringType,
 				BasicType<Integer> integerType,
 				Expression offsetExpression) {
@@ -621,7 +602,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		}
 
 		private Expression concatAsLiteral(
-				AbstractSqmSelfRenderingFunctionDescriptor concatFunction,
+				FunctionRenderer concatFunction,
 				BasicType<String> stringType,
 				String delimiter,
 				Expression expression,
@@ -645,23 +626,24 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		}
 
 		private Expression concat(
-				AbstractSqmSelfRenderingFunctionDescriptor concatFunction,
+				FunctionRenderer concatFunction,
 				BasicType<String> stringType,
 				Expression expression,
 				Expression expression2) {
 			if ( expression == null ) {
 				return expression2;
 			}
-			else if ( expression instanceof SelfRenderingFunctionSqlAstExpression
-					&& "concat".equals( ( (SelfRenderingFunctionSqlAstExpression) expression ).getFunctionName() ) ) {
-				List<SqlAstNode> list = (List<SqlAstNode>) ( (SelfRenderingFunctionSqlAstExpression) expression ).getArguments();
+			else if ( expression instanceof SelfRenderingFunctionSqlAstExpression selfRenderingFunction
+					&& "concat".equals( selfRenderingFunction.getFunctionName() ) ) {
+				final List<SqlAstNode> list = (List<SqlAstNode>) selfRenderingFunction.getArguments();
 				final SqlAstNode lastOperand = list.get( list.size() - 1 );
-				if ( expression2 instanceof QueryLiteral<?> && lastOperand instanceof QueryLiteral<?> ) {
+				if ( expression2 instanceof QueryLiteral<?> literal2
+						&& lastOperand instanceof QueryLiteral<?> literalOperand ) {
 					list.set(
 							list.size() - 1,
 							new QueryLiteral<>(
-									( (QueryLiteral<?>) lastOperand ).getLiteralValue().toString() +
-											( (QueryLiteral<?>) expression2 ).getLiteralValue().toString(),
+									literalOperand.getLiteralValue().toString()
+											+ literal2.getLiteralValue().toString(),
 									stringType
 							)
 					);
@@ -671,17 +653,17 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				}
 				return expression;
 			}
-			else if ( expression2 instanceof SelfRenderingFunctionSqlAstExpression
-					&& "concat".equals( ( (SelfRenderingFunctionSqlAstExpression) expression2 ).getFunctionName() ) ) {
-				final List<SqlAstNode> list = (List<SqlAstNode>)
-						( (SelfRenderingFunctionSqlAstExpression) expression2 ).getArguments();
+			else if ( expression2 instanceof SelfRenderingFunctionSqlAstExpression selfRenderingFunction
+					&& "concat".equals( selfRenderingFunction.getFunctionName() ) ) {
+				final List<SqlAstNode> list = (List<SqlAstNode>) selfRenderingFunction.getArguments();
 				final SqlAstNode firstOperand = list.get( 0 );
-				if ( expression instanceof QueryLiteral<?> && firstOperand instanceof QueryLiteral<?> ) {
+				if ( expression instanceof QueryLiteral<?> literal
+						&& firstOperand instanceof QueryLiteral<?> literalOperand ) {
 					list.set(
 							list.size() - 1,
 							new QueryLiteral<>(
-									( (QueryLiteral<?>) expression ).getLiteralValue().toString() +
-											( (QueryLiteral<?>) firstOperand ).getLiteralValue().toString(),
+									literal.getLiteralValue().toString() +
+											literalOperand.getLiteralValue().toString(),
 									stringType
 							)
 					);
@@ -691,10 +673,11 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				}
 				return expression2;
 			}
-			else if ( expression instanceof QueryLiteral<?> && expression2 instanceof QueryLiteral<?> ) {
+			else if ( expression instanceof QueryLiteral<?> literal
+					&& expression2 instanceof QueryLiteral<?> literal2 ) {
 				return new QueryLiteral<>(
-						( (QueryLiteral<?>) expression ).getLiteralValue().toString() +
-								( (QueryLiteral<?>) expression2 ).getLiteralValue().toString(),
+						literal.getLiteralValue().toString() +
+								literal2.getLiteralValue().toString(),
 						stringType
 				);
 			}

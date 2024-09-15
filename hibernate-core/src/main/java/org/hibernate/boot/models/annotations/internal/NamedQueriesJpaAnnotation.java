@@ -7,17 +7,15 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -41,8 +39,8 @@ public class NamedQueriesJpaAnnotation implements NamedQueries, RepeatableContai
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedQueriesJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, JpaAnnotations.NAMED_QUERIES, "value", modelContext );
+	public NamedQueriesJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (NamedQuery[]) attributeValues.get( "value" );
 	}
 
 	@Override

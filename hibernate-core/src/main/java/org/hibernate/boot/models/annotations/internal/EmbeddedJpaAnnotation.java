@@ -6,11 +6,10 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
 import java.lang.annotation.Annotation;
+import java.util.Map;
+
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import jakarta.persistence.Embedded;
 
@@ -33,7 +32,7 @@ public class EmbeddedJpaAnnotation implements Embedded {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public EmbeddedJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public EmbeddedJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

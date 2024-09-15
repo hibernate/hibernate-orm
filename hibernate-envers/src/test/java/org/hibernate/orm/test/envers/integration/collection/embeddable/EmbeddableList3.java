@@ -11,7 +11,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestNoProxyEntity;
 import org.hibernate.orm.test.envers.entities.collection.EmbeddableListEntity3;
 import org.hibernate.orm.test.envers.entities.components.relations.ManyToOneEagerComponent;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Cankut Guven
  */
-@TestForIssue(jiraKey = "HHH-11364")
+@JiraKey(value = "HHH-11364")
 public class EmbeddableList3 extends BaseEnversJPAFunctionalTestCase {
 	private Integer ele3_id;
 

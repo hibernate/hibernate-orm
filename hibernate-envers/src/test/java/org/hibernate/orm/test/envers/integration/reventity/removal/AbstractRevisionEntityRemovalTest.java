@@ -18,14 +18,14 @@ import org.hibernate.orm.test.envers.entities.manytomany.ListOwningEntity;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue( jiraKey = "HHH-7807" )
+@JiraKey( value = "HHH-7807" )
 @RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
 public abstract class AbstractRevisionEntityRemovalTest extends BaseEnversJPAFunctionalTestCase {
 	@Override

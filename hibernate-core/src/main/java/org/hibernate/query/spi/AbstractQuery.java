@@ -27,6 +27,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -35,7 +36,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.AvailableHints;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -195,18 +195,14 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public FlushModeType getFlushMode() {
-		getSession().checkOpen();
-		final FlushMode flushMode = getQueryOptions().getFlushMode() == null
-				? getSession().getHibernateFlushMode()
-				: getQueryOptions().getFlushMode();
-		return FlushModeTypeHelper.getFlushModeType( flushMode );
+	public QueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode( queryFlushMode );
+		return this;
 	}
 
 	@Override
 	public QueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
-		getSession().checkOpen();
-		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
+		super.setFlushMode( flushModeType );
 		return this;
 	}
 
@@ -366,7 +362,7 @@ public abstract class AbstractQuery<R>
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
-		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
+		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
@@ -396,7 +392,6 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Set<Parameter<?>> getParameters() {
 		return super.getParameters();
 	}

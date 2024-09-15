@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.boot.models;
 
 import org.hibernate.models.AnnotationAccessException;
-import org.hibernate.models.internal.jandex.JandexClassDetails;
+import org.hibernate.models.jandex.internal.JandexClassDetails;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;

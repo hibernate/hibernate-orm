@@ -70,7 +70,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -315,38 +314,32 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 					modelCreationContext
 			);
 			collectionPersisterMap.put( model.getRole(), persister );
-			final Type indexType = persister.getIndexType();
-			if ( indexType instanceof org.hibernate.type.EntityType ) {
-				final String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
-				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
-				//noinspection Java8MapApi
-				if ( roles == null ) {
-					roles = new HashSet<>();
-					collectionRolesByEntityParticipant.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
+			if ( persister.getIndexType() instanceof org.hibernate.type.EntityType entityType ) {
+				registerEntityParticipant( entityType, persister );
 			}
-			final Type elementType = persister.getElementType();
-			if ( elementType instanceof org.hibernate.type.EntityType ) {
-				final String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
-				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
-				//noinspection Java8MapApi
-				if ( roles == null ) {
-					roles = new HashSet<>();
-					collectionRolesByEntityParticipant.put( entityName, roles );
-				}
-				roles.add( persister.getRole() );
+			if ( persister.getElementType() instanceof org.hibernate.type.EntityType entityType ) {
+				registerEntityParticipant( entityType, persister );
 			}
 		}
+	}
+
+	private void registerEntityParticipant(org.hibernate.type.EntityType entityType, CollectionPersister persister) {
+		final String entityName = entityType.getAssociatedEntityName();
+		Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
+		//noinspection Java8MapApi
+		if ( roles == null ) {
+			roles = new HashSet<>();
+			collectionRolesByEntityParticipant.put( entityName, roles );
+		}
+		roles.add( persister.getRole() );
 	}
 
 	private static void registerEntityNameResolvers(
 			EntityPersister persister,
 			Set<EntityNameResolver> entityNameResolvers) {
-		if ( persister.getRepresentationStrategy() == null ) {
-			return;
+		if ( persister.getRepresentationStrategy() != null ) {
+			registerEntityNameResolvers( persister.getRepresentationStrategy(), entityNameResolvers );
 		}
-		registerEntityNameResolvers( persister.getRepresentationStrategy(), entityNameResolvers );
 	}
 
 	private static void registerEntityNameResolvers(
@@ -607,7 +600,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override @SuppressWarnings("deprecation")
 	public EntityPersister entityPersister(String entityName) throws MappingException {
-		EntityPersister result = entityPersisterMap.get( entityName );
+		final EntityPersister result = entityPersisterMap.get( entityName );
 		if ( result == null ) {
 			throw new MappingException( "Unknown entity: " + entityName );
 		}
@@ -641,7 +634,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override
 	public CollectionPersister getCollectionDescriptor(String role) {
-		CollectionPersister collectionPersister = collectionPersisterMap.get( role );
+		final CollectionPersister collectionPersister = collectionPersisterMap.get( role );
 		if ( collectionPersister == null ) {
 			throw new IllegalArgumentException( "Unable to locate persister: " + role );
 		}
@@ -719,7 +712,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public RootGraph<?> defaultGraph(Class entityJavaType) {
+	public RootGraph<?> defaultGraph(Class<?> entityJavaType) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -734,7 +727,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public List<RootGraph<?>> findRootGraphsForType(Class baseEntityJavaType) {
+	public List<RootGraph<?>> findRootGraphsForType(Class<?> baseEntityJavaType) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -782,8 +775,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	public MappingModelExpressible<?> resolveMappingExpressible(
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath, TableGroup> tableGroupLocator) {
-		if ( sqmExpressible instanceof SqmPath ) {
-			final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpressible;
+		if ( sqmExpressible instanceof SqmPath<?> sqmPath ) {
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
 			if ( navigablePath.getParent() != null ) {
 				final TableGroup parentTableGroup = tableGroupLocator.apply( navigablePath.getParent() );
@@ -804,35 +796,34 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			return resolveMappingExpressible( sqmExpressible.getSqmType(), tableGroupLocator );
 		}
 
-		if ( sqmExpressible instanceof SqmFieldLiteral ) {
-			return getTypeConfiguration().getBasicTypeForJavaType( ( (SqmFieldLiteral<?>) sqmExpressible).getJavaType() );
+		if ( sqmExpressible instanceof SqmFieldLiteral<?> sqmFieldLiteral ) {
+			return getTypeConfiguration().getBasicTypeForJavaType( sqmFieldLiteral.getJavaType() );
 		}
 
 		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
 			throw new UnsupportedOperationException( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
 		}
 
-		if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> ) {
+		if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> anonymousTupleSqmPathSource ) {
 			return resolveMappingExpressible(
-					( (AnonymousTupleSqmPathSource<?>) sqmExpressible ).getSqmPathType(),
+					anonymousTupleSqmPathSource.getSqmPathType(),
 					tableGroupLocator
 			);
 		}
 
-		if ( sqmExpressible instanceof EmbeddableTypeImpl ) {
+		if ( sqmExpressible instanceof EmbeddableTypeImpl<?> ) {
 			return (MappingModelExpressible<?>) sqmExpressible;
 		}
 
-		if ( sqmExpressible instanceof EntityDomainType<?> ) {
-			return getEntityDescriptor( ( (EntityDomainType<?>) sqmExpressible).getHibernateEntityName() );
+		if ( sqmExpressible instanceof EntityDomainType<?> entityDomainType ) {
+			return getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 		}
 
-		if ( sqmExpressible instanceof TupleType<?> ) {
+		if ( sqmExpressible instanceof TupleType<?> tupleType ) {
 			final MappingModelExpressible<?> mappingModelExpressible = tupleTypeCache.get(sqmExpressible);
 			if ( mappingModelExpressible != null ) {
 				return mappingModelExpressible;
 			}
-			final TupleType<?> tupleType = (TupleType<?>) sqmExpressible;
 			final MappingModelExpressible<?>[] components = new MappingModelExpressible<?>[tupleType.componentCount()];
 			for ( int i = 0; i < components.length; i++ ) {
 				components[i] = resolveMappingExpressible( tupleType.get( i ), tableGroupLocator );

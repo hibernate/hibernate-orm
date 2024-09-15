@@ -30,7 +30,7 @@ import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntitySubSubclass2;
 import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntitySubclass;
 import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntitySubclass2;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -160,7 +160,7 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9549" )
+	@JiraKey( value = "HHH-9549" )
 	public void treatRoot() {
 		EntityManager em = getOrCreateEntityManager();
 
@@ -190,7 +190,7 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9549" )
+	@JiraKey( value = "HHH-9549" )
 	public void treatRootReturnSuperclass() {
 		EntityManager em = getOrCreateEntityManager();
 
@@ -234,7 +234,7 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9411")
+	@JiraKey(value = "HHH-9411")
 	public void testTreatWithRestrictionOnAbstractClass() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityTransaction entityTransaction = em.getTransaction();
@@ -265,7 +265,7 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16657")
+	@JiraKey(value = "HHH-16657")
 	public void testTypeFilterInSubquery() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityTransaction entityTransaction = em.getTransaction();

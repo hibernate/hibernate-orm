@@ -2,7 +2,7 @@ package org.hibernate.orm.test.loading;
 
 import java.util.Collections;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +23,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-11958" )
+@JiraKey( value = "HHH-11958" )
 public class ReadonlyHintTest {
 
 	private static final String ORIGINAL_NAME = "original";

@@ -38,9 +38,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -50,7 +48,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
@@ -76,13 +73,12 @@ public class MatchingIdSelectionHelper {
 	 */
 	public static SelectStatement generateMatchingIdSelectStatement(
 			EntityMappingType targetEntityDescriptor,
-			SqmDeleteOrUpdateStatement sqmStatement,
+			SqmDeleteOrUpdateStatement<?> sqmStatement,
 			boolean queryRoot,
 			Predicate restriction,
 			MultiTableSqmMutationConverter sqmConverter,
-			DomainQueryExecutionContext executionContext,
-			SessionFactoryImplementor sessionFactory) {
-		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
+			DomainQueryExecutionContext executionContext) {
+		final EntityDomainType<?> entityDomainType = sqmStatement.getTarget().getModel();
 		if ( log.isTraceEnabled() ) {
 			log.tracef(
 					"Starting generation of entity-id SQM selection - %s",
@@ -110,15 +106,14 @@ public class MatchingIdSelectionHelper {
 				mutatingTableGroup.getNavigablePath(),
 				mutatingTableGroup,
 				sqmConverter,
-				(selection, jdbcMapping) -> {
-					domainResults.add(
-							new BasicResult<>(
-									selection.getValuesArrayPosition(),
-									null,
-									jdbcMapping
-							)
-					);
-				}
+				(selection, jdbcMapping) ->
+						domainResults.add(
+								new BasicResult<>(
+										selection.getValuesArrayPosition(),
+										null,
+										jdbcMapping
+								)
+						)
 		);
 		sqmConverter.getProcessingStateStack().pop();
 
@@ -152,14 +147,14 @@ public class MatchingIdSelectionHelper {
 		sqmQuerySpec.setFromClause( new SqmFromClause( 1 ) );
 		sqmQuerySpec.addRoot( sqmStatement.getTarget() );
 		sqmQuerySpec.setSelectClause( new SqmSelectClause( false, 1, sqmQuerySpec.nodeBuilder() ) );
-		entityDescriptor.getIdentifierMapping().forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
-			sqmQuerySpec.getSelectClause().addSelection(
-					SelectableMappingExpressionConverter.forSelectableMapping(
-							sqmStatement.getTarget(),
-							selectableMapping
-					)
-			);
-		} );
+		entityDescriptor.getIdentifierMapping()
+				.forEachSelectable( 0, (selectionIndex, selectableMapping) ->
+						sqmQuerySpec.getSelectClause().addSelection(
+								SelectableMappingExpressionConverter.forSelectableMapping(
+										sqmStatement.getTarget(),
+										selectableMapping
+								)
+						));
 		sqmQuerySpec.setWhereClause( sqmStatement.getWhereClause() );
 
 		return new SqmSelectStatement<>(
@@ -169,59 +164,59 @@ public class MatchingIdSelectionHelper {
 				nodeBuilder
 		);
 	}
-
-	/**
-	 * @asciidoc
-	 *
-	 * Generates a query-spec for selecting all ids matching the restriction defined as part
-	 * of the user's update/delete query.  This query-spec is generally used:
-	 *
-	 * 		* to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
-	 * 		* as a sub-query restriction to insert rows into an "id table"
-	 */
-	public static QuerySpec generateMatchingIdSelectQuery(
-			EntityMappingType targetEntityDescriptor,
-			SqmDeleteOrUpdateStatement sqmStatement,
-			DomainParameterXref domainParameterXref,
-			Predicate restriction,
-			MultiTableSqmMutationConverter sqmConverter,
-			SessionFactoryImplementor sessionFactory) {
-		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
-		if ( log.isTraceEnabled() ) {
-			log.tracef(
-					"Starting generation of entity-id SQM selection - %s",
-					entityDomainType.getHibernateEntityName()
-			);
-		}
-
-		final QuerySpec idSelectionQuery = new QuerySpec( true, 1 );
-
-		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
-		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
-
-		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
-				(position, selection) -> {
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
-							mutatingTableGroup.getNavigablePath(),
-							selection.getContainingTableExpression()
-					);
-					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-							tableReference,
-							selection
-					);
-					idSelectionQuery.getSelectClause().addSqlSelection(
-							new SqlSelectionImpl(
-									position,
-									expression
-							)
-					);
-				}
-		);
-
-		idSelectionQuery.applyPredicate( restriction );
-
-		return idSelectionQuery;
-	}
+//
+//	/**
+//	 * @asciidoc
+//	 *
+//	 * Generates a query-spec for selecting all ids matching the restriction defined as part
+//	 * of the user's update/delete query.  This query-spec is generally used:
+//	 *
+//	 * 		* to select all the matching ids via JDBC - see {@link MatchingIdSelectionHelper#selectMatchingIds}
+//	 * 		* as a sub-query restriction to insert rows into an "id table"
+//	 */
+//	public static QuerySpec generateMatchingIdSelectQuery(
+//			EntityMappingType targetEntityDescriptor,
+//			SqmDeleteOrUpdateStatement sqmStatement,
+//			DomainParameterXref domainParameterXref,
+//			Predicate restriction,
+//			MultiTableSqmMutationConverter sqmConverter,
+//			SessionFactoryImplementor sessionFactory) {
+//		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
+//		if ( log.isTraceEnabled() ) {
+//			log.tracef(
+//					"Starting generation of entity-id SQM selection - %s",
+//					entityDomainType.getHibernateEntityName()
+//			);
+//		}
+//
+//		final QuerySpec idSelectionQuery = new QuerySpec( true, 1 );
+//
+//		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
+//		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
+//
+//		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
+//				(position, selection) -> {
+//					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
+//							mutatingTableGroup.getNavigablePath(),
+//							selection.getContainingTableExpression()
+//					);
+//					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
+//							tableReference,
+//							selection
+//					);
+//					idSelectionQuery.getSelectClause().addSqlSelection(
+//							new SqlSelectionImpl(
+//									position,
+//									expression
+//							)
+//					);
+//				}
+//		);
+//
+//		idSelectionQuery.applyPredicate( restriction );
+//
+//		return idSelectionQuery;
+//	}
 
 	/**
 	 * Centralized selection of ids matching the restriction of the DELETE
@@ -243,22 +238,20 @@ public class MatchingIdSelectionHelper {
 			// For delete statements we also want to collect FK values to execute collection table cleanups
 			entityDescriptor.visitSubTypeAttributeMappings(
 					attribute -> {
-						if ( attribute instanceof PluralAttributeMapping ) {
-							final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
-
+						if ( attribute instanceof PluralAttributeMapping pluralAttribute ) {
 							if ( pluralAttribute.getSeparateCollectionTable() != null ) {
 								// Ensure that the FK target columns are available
 								final ValuedModelPart targetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
 								final boolean useFkTarget = !targetPart.isEntityIdentifierMapping();
 								if ( useFkTarget ) {
-									targetPart.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
-										sqmQuerySpec.getSelectClause().addSelection(
-												SelectableMappingExpressionConverter.forSelectableMapping(
-														sqmMutationStatement.getTarget(),
-														selectableMapping
-												)
-										);
-									} );
+									targetPart.forEachSelectable( 0, (selectionIndex, selectableMapping) ->
+											sqmQuerySpec.getSelectClause().addSelection(
+													SelectableMappingExpressionConverter.forSelectableMapping(
+															sqmMutationStatement.getTarget(),
+															selectableMapping
+													)
+											)
+									);
 								}
 							}
 						}
@@ -288,8 +281,6 @@ public class MatchingIdSelectionHelper {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref( domainParameterXref, translator ),
-				factory.getRuntimeMetamodels().getMappingMetamodel(),
-				translation.getFromClauseAccess()::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
@@ -325,7 +316,7 @@ public class MatchingIdSelectionHelper {
 			rowTransformer = RowTransformerSingularReturnImpl.instance();
 		}
 		else {
-			rowTransformer = RowTransformerArrayImpl.INSTANCE;
+			rowTransformer = RowTransformerArrayImpl.instance();
 		}
 		//noinspection unchecked
 		return jdbcServices.getJdbcSelectExecutor().list(

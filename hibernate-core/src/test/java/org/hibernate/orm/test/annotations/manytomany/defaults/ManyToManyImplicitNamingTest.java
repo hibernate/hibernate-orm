@@ -14,7 +14,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.EntityType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -149,7 +149,7 @@ public class ManyToManyImplicitNamingTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
+	@JiraKey( value = "HHH-9390")
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")

@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,13 +33,8 @@ public class ValueGenerationTypeAnnotation implements ValueGenerationType {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ValueGenerationTypeAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.generatedBy = extractJandexValue(
-				annotation,
-				HibernateAnnotations.VALUE_GENERATION_TYPE,
-				"generatedBy",
-				modelContext
-		);
+	public ValueGenerationTypeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.generatedBy = (Class<? extends org.hibernate.generator.Generator>) attributeValues.get( "generatedBy" );
 	}
 
 	@Override

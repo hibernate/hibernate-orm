@@ -13,14 +13,14 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-6661")
+@JiraKey(value = "HHH-6661")
 public class HierarchyTest extends BaseEnversJPAFunctionalTestCase {
 	private Long parentId = null;
 	private Long child1Id = null;

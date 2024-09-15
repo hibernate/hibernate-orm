@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DialectOverride.SQLRestrictions;
@@ -14,9 +15,6 @@ import org.hibernate.boot.models.DialectOverrideAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -46,13 +44,10 @@ public class OverriddenSQLRestrictionsAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OverriddenSQLRestrictionsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_RESTRICTIONS,
-				"value",
-				modelContext
-		);
+	public OverriddenSQLRestrictionsAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.value = (DialectOverride.SQLRestriction[]) attributeValues.get( "value" );
 	}
 
 	@Override

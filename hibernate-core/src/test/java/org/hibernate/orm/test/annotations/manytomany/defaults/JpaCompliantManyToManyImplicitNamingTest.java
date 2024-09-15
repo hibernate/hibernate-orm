@@ -9,7 +9,7 @@ package org.hibernate.orm.test.annotations.manytomany.defaults;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
@@ -26,7 +26,7 @@ public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicit
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
+	@JiraKey( value = "HHH-9390")
 	public void testUnidirOwnerPrimaryTableAssocEntityNamePKOverride() {
 		// City.stolenItems; associated entity: Item
 		// City has @Entity with no name configured and @Table(name = "tbl_city")
@@ -45,7 +45,7 @@ public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicit
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
+	@JiraKey( value = "HHH-9390")
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")

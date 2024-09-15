@@ -66,43 +66,43 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		switch ( functionKind ) {
-			case ORDERED_SET_AGGREGATE:
-				return generateOrderedSetAggregateSqmExpression(
-						arguments,
-						null,
-						null,
-						impliedResultType,
-						queryEngine
-				);
-			case AGGREGATE:
-				return generateAggregateSqmExpression(
-						arguments,
-						null,
-						impliedResultType,
-						queryEngine
-				);
-			case WINDOW:
-				return generateWindowSqmExpression(
-						arguments,
-						null,
-						null,
-						null,
-						impliedResultType,
-						queryEngine
-				);
-			default:
-				return new SelfRenderingSqmFunction<>(
-						this,
-						this,
-						arguments,
-						impliedResultType,
-						getArgumentsValidator(),
-						getReturnTypeResolver(),
-						queryEngine.getCriteriaBuilder(),
-						getName()
-				);
-	}
+		return switch (functionKind) {
+			case ORDERED_SET_AGGREGATE ->
+					generateOrderedSetAggregateSqmExpression(
+							arguments,
+							null,
+							null,
+							impliedResultType,
+							queryEngine
+					);
+			case AGGREGATE ->
+					generateAggregateSqmExpression(
+							arguments,
+							null,
+							impliedResultType,
+							queryEngine
+					);
+			case WINDOW ->
+					generateWindowSqmExpression(
+							arguments,
+							null,
+							null,
+							null,
+							impliedResultType,
+							queryEngine
+					);
+			default ->
+					new SelfRenderingSqmFunction<>(
+							this,
+							this,
+							arguments,
+							impliedResultType,
+							getArgumentsValidator(),
+							getReturnTypeResolver(),
+							queryEngine.getCriteriaBuilder(),
+							getName()
+					);
+		};
 	}
 
 	@Override

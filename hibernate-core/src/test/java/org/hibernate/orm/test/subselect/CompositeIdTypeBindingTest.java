@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,7 +18,7 @@ import org.junit.Test;
 /**
  * @author Strong Liu
  */
-@TestForIssue( jiraKey = "HHH-8312")
+@JiraKey( value = "HHH-8312")
 public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

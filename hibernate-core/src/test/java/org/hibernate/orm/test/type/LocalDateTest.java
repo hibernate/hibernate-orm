@@ -29,13 +29,13 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.runners.Parameterized;
 
 /**
  * Tests for storage of LocalDate properties.
  */
-@TestForIssue(jiraKey = "HHH-10371")
+@JiraKey(value = "HHH-10371")
 @SkipForDialect(value = HANADialect.class,
 		comment = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
 @SkipForDialect(value = MySQLDialect.class,

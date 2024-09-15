@@ -7,38 +7,27 @@
 package org.hibernate.query.sqm.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * The context in which all SQM creations occur (think SessionFactory).
+ * The context in which all SQM creations occur.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface SqmCreationContext {
-	/**
-	 * Access to the domain model metadata
-	 */
-	JpaMetamodelImplementor getJpaMetamodel();
-
-	/**
-	 * Access to the ServiceRegistry for the context
-	 */
-	default ServiceRegistry getServiceRegistry() {
-		return getJpaMetamodel().getServiceRegistry();
-	}
-
-	default TypeConfiguration getTypeConfiguration() {
-		return getJpaMetamodel().getTypeConfiguration();
-	}
-
+public interface SqmCreationContext extends BindingContext {
 	QueryEngine getQueryEngine();
 
 	default NodeBuilder getNodeBuilder() {
 		return getQueryEngine().getCriteriaBuilder();
 	}
+
+	/**
+	 * @apiNote Avoid calling this method, since {@link Class}
+	 *          objects are not available to the query validator
+	 *          in Hibernate Processor at compilation time.
+	 */
+	Class<?> classForName(String className);
 }

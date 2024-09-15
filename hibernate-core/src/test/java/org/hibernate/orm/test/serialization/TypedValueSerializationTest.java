@@ -15,7 +15,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.Type;
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ import org.junit.Test;
 public class TypedValueSerializationTest {
 	
 	@Test
-	@TestForIssue(jiraKey = "HHH-9024")
+	@JiraKey(value = "HHH-9024")
 	public void testTypedValueSerialization() throws Exception {
 		final Type mockType = mock(Type.class);
 		final String value = "foo";

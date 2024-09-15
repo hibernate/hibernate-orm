@@ -26,7 +26,7 @@ import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionEntit
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.orm.test.envers.entities.collection.MultipleCollectionRefEntity2;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.Test;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Erik-Berndt Scheper
  */
-@TestForIssue(jiraKey = "HHH-6349")
+@JiraKey(value = "HHH-6349")
 @SkipForDialect(value = OracleDialect.class,
 		comment = "Oracle does not support identity key generation")
 @SkipForDialect(value = AltibaseDialect.class,

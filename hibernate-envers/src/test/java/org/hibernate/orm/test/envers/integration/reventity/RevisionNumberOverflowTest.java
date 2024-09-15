@@ -25,7 +25,7 @@ import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-6615")
+@JiraKey(value = "HHH-6615")
 public class RevisionNumberOverflowTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

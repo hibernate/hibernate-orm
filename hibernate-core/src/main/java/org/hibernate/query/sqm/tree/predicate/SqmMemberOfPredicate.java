@@ -39,7 +39,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 
 		final SimpleDomainType<?> simpleDomainType = pluralPath.getReferencedPathSource().getElementType();
 
-		if ( !areTypesComparable(leftHandExpression.getNodeType(), simpleDomainType, nodeBuilder.getSessionFactory()) ) {
+		if ( !areTypesComparable( leftHandExpression.getNodeType(), simpleDomainType, nodeBuilder ) ) {
 			throw new SemanticException(
 					String.format(
 							"Cannot compare left expression of type '%s' with right expression of type '%s'",

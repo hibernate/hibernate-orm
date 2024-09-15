@@ -54,7 +54,7 @@ public class JpaCriteriaParameter<T>
 		if ( type == null ) {
 			return null;
 		}
-		return type.resolveExpressible( nodeBuilder.getSessionFactory() );
+		return type.resolveExpressible( nodeBuilder );
 	}
 
 	@Override

@@ -836,7 +836,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			};
 		}
 		else {
-			return ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.instance();
 		}
 	}
 }

@@ -24,7 +24,7 @@ import jakarta.persistence.Subgraph;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.util.MutableLong;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -47,7 +47,7 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isInitia
 public class InheritedEntityGraphTest {
 
 	@Test
-    @TestForIssue(jiraKey = "HHH-10261")
+    @JiraKey(value = "HHH-10261")
     void singleAttributeNodeInheritanceTest(SessionFactoryScope scope) {
 
 	    MutableLong fooId = new MutableLong();
@@ -84,7 +84,7 @@ public class InheritedEntityGraphTest {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-10261")
+    @JiraKey(value = "HHH-10261")
     void collectionAttributeNodeInheritanceTest(SessionFactoryScope scope) {
 
 	    MutableLong fooId = new MutableLong();
@@ -122,7 +122,7 @@ public class InheritedEntityGraphTest {
 
 
     @Test
-    @TestForIssue(jiraKey = "HHH-10261")
+    @JiraKey(value = "HHH-10261")
     void singleAttributeSubgraphInheritanceTest(SessionFactoryScope scope) {
 
 	    MutableLong foo2Id = new MutableLong();
@@ -165,7 +165,7 @@ public class InheritedEntityGraphTest {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-10261")
+    @JiraKey(value = "HHH-10261")
     void collectionAttributeSubgraphInheritanceTest(SessionFactoryScope scope) {
 
 	    MutableLong foo2Id = new MutableLong();

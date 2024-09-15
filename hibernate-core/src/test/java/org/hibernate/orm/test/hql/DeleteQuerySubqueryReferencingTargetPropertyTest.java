@@ -10,13 +10,13 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
-@TestForIssue(jiraKey = "HHH-12492")
+@JiraKey(value = "HHH-12492")
 public class DeleteQuerySubqueryReferencingTargetPropertyTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

@@ -54,7 +54,6 @@ import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
 import org.hibernate.binder.TypeBinder;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -175,7 +174,7 @@ public class EntityBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() );
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
-	private MetadataBuildingContext context;
+	private final MetadataBuildingContext context;
 
 	private String name;
 	private ClassDetails annotatedClass;
@@ -213,7 +212,6 @@ public class EntityBinder {
 	public static void bindEntityClass(
 			ClassDetails clazzToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
-			Map<String, IdentifierGeneratorDefinition> generators,
 			MetadataBuildingContext context) {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Binding entity from annotated class: %s", clazzToProcess.getName() );
@@ -242,16 +240,16 @@ public class EntityBinder {
 				inheritanceStates
 		);
 		entityBinder.handleInheritance( inheritanceState, superEntity, holder );
-		entityBinder.handleIdentifier( holder, inheritanceStates, generators, inheritanceState );
+		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState );
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		if ( persistentClass instanceof RootClass ) {
-			collector.addSecondPass( new CreateKeySecondPass( (RootClass) persistentClass ) );
-			bindSoftDelete( clazzToProcess, (RootClass) persistentClass, inheritanceState, context );
+		if ( persistentClass instanceof RootClass rootClass ) {
+			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
+			bindSoftDelete( clazzToProcess, rootClass, context );
 		}
-		if ( persistentClass instanceof Subclass) {
+		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
-			superEntity.addSubclass( (Subclass) persistentClass );
+			superEntity.addSubclass( subclass );
 		}
 		collector.addEntityBinding( persistentClass );
 		// process secondary tables and complementary definitions (ie o.h.a.Table)
@@ -306,12 +304,11 @@ public class EntityBinder {
 	private static void bindSoftDelete(
 			ClassDetails classDetails,
 			RootClass rootClass,
-			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
 		// todo (soft-delete) : do we assume all package-level registrations are already available?
 		//		or should this be a "second pass"?
 
-		final SoftDelete softDelete = extractSoftDelete( classDetails, inheritanceState, context );
+		final SoftDelete softDelete = extractSoftDelete( classDetails, context );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -322,10 +319,7 @@ public class EntityBinder {
 		}
 	}
 
-	private static SoftDelete extractSoftDelete(
-			ClassDetails classDetails,
-			InheritanceState inheritanceState,
-			MetadataBuildingContext context) {
+	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
 		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 		final SoftDelete fromClass = classDetails.getAnnotationUsage( SoftDelete.class, sourceModelContext );
 		if ( fromClass != null ) {
@@ -381,9 +375,10 @@ public class EntityBinder {
 	}
 
 	private void applyTypeBinder(Annotation containingAnnotation, PersistentClass persistentClass) {
-		final Class<? extends TypeBinder<?>> binderClass = containingAnnotation.annotationType()
-				.getAnnotation( TypeBinderType.class )
-				.binder();
+		final Class<? extends TypeBinder<?>> binderClass =
+				containingAnnotation.annotationType()
+						.getAnnotation( TypeBinderType.class )
+						.binder();
 
 		try {
 			//noinspection rawtypes
@@ -399,7 +394,6 @@ public class EntityBinder {
 	private void handleIdentifier(
 			PropertyHolder propertyHolder,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
-			Map<String, IdentifierGeneratorDefinition> generators,
 			InheritanceState inheritanceState) {
 		final ElementsToProcess elementsToProcess = inheritanceState.postProcess( persistentClass, this );
 		final Set<String> idPropertiesIfIdClass = handleIdClass(
@@ -415,7 +409,6 @@ public class EntityBinder {
 				inheritanceState,
 				context,
 				propertyHolder,
-				generators,
 				idPropertiesIfIdClass,
 				elementsToProcess,
 				inheritanceStates
@@ -902,6 +895,7 @@ public class EntityBinder {
 			else if ( foreignKey != null ) {
 				key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( foreignKey.options() );
 			}
 			else if ( noConstraintByDefault ) {
 				key.disableForeignKey();
@@ -910,11 +904,13 @@ public class EntityBinder {
 				final ForeignKey nestedFk = pkJoinColumns.foreignKey();
 				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( nestedFk.options() );
 			}
 			else if ( pkJoinColumn != null ) {
 				final ForeignKey nestedFk = pkJoinColumn.foreignKey();
 				key.setForeignKeyName( nullIfEmpty( nestedFk.name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( nestedFk.foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( nestedFk.options() );
 			}
 		}
 	}
@@ -1035,7 +1031,6 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			MetadataBuildingContext context,
 			PropertyHolder propertyHolder,
-			Map<String, IdentifierGeneratorDefinition> generators,
 			Set<String> idPropertiesIfIdClass,
 			ElementsToProcess elementsToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates) {
@@ -1066,7 +1061,6 @@ public class EntityBinder {
 									? Nullability.FORCED_NULL
 									: Nullability.NO_CONSTRAINT,
 							propertyAnnotatedElement,
-							generators,
 							this,
 							false,
 							false,
@@ -1096,7 +1090,7 @@ public class EntityBinder {
 	private static String getMissingPropertiesString(Set<String> propertyNames) {
 		final StringBuilder sb = new StringBuilder();
 		for ( String property : propertyNames ) {
-			if ( sb.length() > 0 ) {
+			if ( !sb.isEmpty() ) {
 				sb.append( ", " );
 			}
 			sb.append( "'" ).append( property ).append( "'" );
@@ -1113,16 +1107,11 @@ public class EntityBinder {
 			return new RootClass( metadataBuildingContext );
 		}
 		else {
-			switch ( inheritanceState.getType() ) {
-				case SINGLE_TABLE:
-					return new SingleTableSubclass( superEntity, metadataBuildingContext );
-				case JOINED:
-					return new JoinedSubclass( superEntity, metadataBuildingContext );
-				case TABLE_PER_CLASS:
-					return new UnionSubclass( superEntity, metadataBuildingContext );
-				default:
-					throw new AssertionFailure( "Unknown inheritance type: " + inheritanceState.getType() );
-			}
+			return switch ( inheritanceState.getType() ) {
+				case SINGLE_TABLE -> new SingleTableSubclass( superEntity, metadataBuildingContext );
+				case JOINED -> new JoinedSubclass( superEntity, metadataBuildingContext );
+				case TABLE_PER_CLASS -> new UnionSubclass( superEntity, metadataBuildingContext );
+			};
 		}
 	}
 
@@ -1684,7 +1673,7 @@ public class EntityBinder {
 			effectiveCache = buildCacheMock( annotatedClass, context );
 			isCached = isCacheable( sharedCacheMode, cacheable );
 		}
-		cacheConcurrentStrategy = resolveCacheConcurrencyStrategy( effectiveCache.usage() );
+		cacheConcurrentStrategy = getCacheConcurrencyStrategy( effectiveCache.usage() );
 		cacheRegion = effectiveCache.region();
 		cacheLazyProperty = isCacheLazy( effectiveCache, annotatedClass );
 
@@ -1721,11 +1710,6 @@ public class EntityBinder {
 				// treat both NONE and UNSPECIFIED the same
 					false;
 		};
-	}
-
-	private static String resolveCacheConcurrencyStrategy(CacheConcurrencyStrategy strategy) {
-		final org.hibernate.cache.spi.access.AccessType accessType = strategy.toAccessType();
-		return accessType == null ? null : accessType.getExternalName();
 	}
 
 	private static Cache buildCacheMock(ClassDetails classDetails, MetadataBuildingContext context) {
@@ -2005,6 +1989,7 @@ public class EntityBinder {
 			else {
 				key.setForeignKeyName( nullIfEmpty( jpaSecondaryTable.foreignKey().name() ) );
 				key.setForeignKeyDefinition( nullIfEmpty( jpaSecondaryTable.foreignKey().foreignKeyDefinition() ) );
+				key.setForeignKeyOptions( jpaSecondaryTable.foreignKey().options() );
 			}
 		}
 	}

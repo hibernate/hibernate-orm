@@ -14,7 +14,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-10026" )
+@JiraKey( value = "HHH-10026" )
 public class ZonedDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

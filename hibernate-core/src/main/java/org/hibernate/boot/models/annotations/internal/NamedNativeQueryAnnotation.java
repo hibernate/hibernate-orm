@@ -9,6 +9,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.annotations.FlushModeType;
@@ -21,13 +22,9 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-
-import static org.hibernate.boot.models.HibernateAnnotations.NAMED_NATIVE_QUERY;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
+import org.hibernate.query.QueryFlushMode;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,6 +34,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	private Class<?> resultClass;
 	private String resultSetMapping;
 	private FlushModeType flushMode;
+	private QueryFlushMode flush;
 	boolean cacheable;
 	String cacheRegion;
 	int fetchSize;
@@ -48,10 +46,14 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	String[] querySpaces;
 	boolean callable;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public NamedNativeQueryAnnotation(SourceModelBuildingContext modelContext) {
 		resultClass = void.class;
 		resultSetMapping = "";
 		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
+		flush = QueryFlushMode.DEFAULT;
 		cacheable = false;
 		cacheRegion = "";
 		fetchSize = -1;
@@ -64,12 +66,16 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		callable = false;
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public NamedNativeQueryAnnotation(NamedNativeQuery annotation, SourceModelBuildingContext modelContext) {
 		this.name = annotation.name();
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
 		this.resultSetMapping = annotation.resultSetMapping();
 		this.flushMode = annotation.flushMode();
+		this.flush = annotation.flush();
 		this.cacheable = annotation.cacheable();
 		this.cacheRegion = annotation.cacheRegion();
 		this.fetchSize = annotation.fetchSize();
@@ -86,22 +92,26 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.callable = annotation.callable();
 	}
 
-	public NamedNativeQueryAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "name", modelContext );
-		this.query = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "query", modelContext );
-		this.resultClass = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "resultClass", modelContext );
-		this.resultSetMapping = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "resultSetMapping", modelContext );
-		this.flushMode = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "flushMode", modelContext );
-		this.cacheable = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "cacheable", modelContext );
-		this.cacheRegion = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "cacheRegion", modelContext );
-		this.fetchSize = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "fetchSize", modelContext );
-		this.timeout = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "timeout", modelContext );
-		this.comment = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "comment", modelContext );
-		this.cacheStoreMode = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "cacheStoreMode", modelContext );
-		this.cacheRetrieveMode = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "cacheRetrieveMode", modelContext );
-		this.readOnly = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "readOnly", modelContext );
-		this.querySpaces = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "querySpaces", modelContext );
-		this.callable = extractJandexValue( annotation, NAMED_NATIVE_QUERY, "callable", modelContext );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public NamedNativeQueryAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.query = (String) attributeValues.get( "query" );
+		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
+		this.resultSetMapping = (String) attributeValues.get( "resultSetMapping" );
+		this.flushMode = (FlushModeType) attributeValues.get( "flushMode" );
+		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
+		this.cacheable = (boolean) attributeValues.get( "cacheable" );
+		this.cacheRegion = (String) attributeValues.get( "cacheRegion" );
+		this.fetchSize = (int) attributeValues.get( "fetchSize" );
+		this.timeout = (int) attributeValues.get( "timeout" );
+		this.comment = (String) attributeValues.get( "comment" );
+		this.cacheStoreMode = (CacheStoreMode) attributeValues.get( "cacheStoreMode" );
+		this.cacheRetrieveMode = (CacheRetrieveMode) attributeValues.get( "cacheRetrieveMode" );
+		this.readOnly = (boolean) attributeValues.get( "readOnly" );
+		this.querySpaces = (String[]) attributeValues.get( "querySpaces" );
+		this.callable = (boolean) attributeValues.get( "callable" );
 	}
 
 	@Override
@@ -145,6 +155,15 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 
 	public void resultSetMapping(String value) {
 		this.resultSetMapping = value;
+	}
+
+	@Override
+	public QueryFlushMode flush() {
+		return flush;
+	}
+
+	public void flush(QueryFlushMode value) {
+		this.flush = value;
 	}
 
 	@Override

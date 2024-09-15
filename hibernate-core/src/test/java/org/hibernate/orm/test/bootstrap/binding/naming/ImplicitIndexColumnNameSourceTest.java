@@ -9,7 +9,7 @@ package org.hibernate.orm.test.bootstrap.binding.naming;
 import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNameSource;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 public class ImplicitIndexColumnNameSourceTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10810")
+	@JiraKey(value = "HHH-10810")
 	public void testExtensionImplicitNameSource() {
 		assertTrue( ImplicitNameSource.class.isAssignableFrom( ImplicitIndexColumnNameSource.class ) );
 	}

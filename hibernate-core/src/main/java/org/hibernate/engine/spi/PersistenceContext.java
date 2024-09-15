@@ -17,7 +17,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.query.Query;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -272,6 +271,10 @@ public interface PersistenceContext {
 			final EntityPersister persister,
 			final boolean disableVersionIncrement);
 
+	EntityEntry addReferenceEntry(
+			final Object entity,
+			final Status status);
+
 	/**
 	 * Is the given collection associated with this persistence context?
 	 */
@@ -353,16 +356,6 @@ public interface PersistenceContext {
 	 * if no proxy exists.
 	 */
 	Object proxyFor(EntityHolder holder, EntityPersister persister);
-
-	/**
-	 * Return the existing {@linkplain EntityHolder#getProxy() proxy} associated with
-	 * the given {@link EntityHolder}, or the {@linkplain EntityHolder#getEntity() entity}
-	 * if it contains no proxy.
-	 *
-	 * @deprecated Use {@link #proxyFor(EntityHolder, EntityPersister)} instead.
-	 */
-	@Deprecated( forRemoval = true )
-	Object proxyFor(EntityHolder holder);
 
 	/**
 	 * Cross between {@link #addEntity(EntityKey, Object)} and {@link #addProxy(EntityKey, Object)}
@@ -497,13 +490,6 @@ public interface PersistenceContext {
 	 * @return The proxy reference.
 	 */
 	Object removeProxy(EntityKey key);
-
-//	/**
-//	 * Retrieve the set of EntityKeys representing nullifiable references
-//	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
-//	 */
-//	@Deprecated
-//	HashSet getNullifiableEntityKeys();
 
 	/**
 	 * Return an existing entity holder for the entity key, possibly creating one if necessary.
@@ -675,16 +661,15 @@ public interface PersistenceContext {
 	/**
 	 * Will entities and proxies that are loaded into this persistence
 	 * context be made read-only by default?
-	 *
-	 * To determine the read-only/modifiable setting for a particular entity
-	 * or proxy:
-	 * @see PersistenceContext#isReadOnly(Object)
-	 * @see org.hibernate.Session#isReadOnly(Object)
+	 * <p>
+	 * To determine the read-only/modifiable setting for a particular
+	 * entity or proxy, call {@link #isReadOnly(Object)}.
 	 *
 	 * @return true, loaded entities/proxies will be made read-only by default;
 	 *         false, loaded entities/proxies will be made modifiable by default.
 	 *
 	 * @see org.hibernate.Session#isDefaultReadOnly()
+	 * @see org.hibernate.Session#isReadOnly(Object)
 	 */
 	boolean isDefaultReadOnly();
 
@@ -692,28 +677,25 @@ public interface PersistenceContext {
 	 * Change the default for entities and proxies loaded into this persistence
 	 * context from modifiable to read-only mode, or from read-only mode to
 	 * modifiable.
-	 *
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
 	 * read-only/modifiable setting as the uninitialized
 	 * proxy has, regardless of the persistence context's current setting.
-	 *
+	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
-	 * or proxy that is already in this session:
-+	 * @see PersistenceContext#setReadOnly(Object,boolean)
-	 * @see org.hibernate.Session#setReadOnly(Object, boolean)
-	 *
-	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a Query:
-	 * @see Query#setReadOnly(boolean)
+	 * or proxy that is already in this session, call
+	 * {@link #setReadOnly(Object,boolean)}.
 	 *
 	 * @param readOnly true, the default for loaded entities/proxies is read-only;
 	 *                 false, the default for loaded entities/proxies is modifiable
 	 *
 	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 * @see org.hibernate.query.Query#setReadOnly(boolean)
+	 * @see org.hibernate.Session#isReadOnly(Object)
 	 */
 	void setDefaultReadOnly(boolean readOnly);
 
@@ -733,25 +715,25 @@ public interface PersistenceContext {
 	/**
 	 * Set an unmodified persistent object to read-only mode, or a read-only
 	 * object to modifiable mode.
-	 *
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
 	 * read-only/modifiable setting as the uninitialized
 	 * proxy has, regardless of the session's current setting.
-	 *
+	 * <p>
 	 * If the entity or proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
 	 *
 	 * @param entityOrProxy an entity or proxy
-	 * @param readOnly if {@code true}, the entity or proxy is made read-only; otherwise, the entity or proxy is made
-	 * modifiable.
+	 * @param readOnly if {@code true}, the entity or proxy is made read-only;
+	 *                 otherwise, the entity or proxy is made modifiable.
 	 *
 	 * @see org.hibernate.Session#setDefaultReadOnly
 	 * @see org.hibernate.Session#setReadOnly
-	 * @see Query#setReadOnly
+	 * @see org.hibernate.query.Query#setReadOnly
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 

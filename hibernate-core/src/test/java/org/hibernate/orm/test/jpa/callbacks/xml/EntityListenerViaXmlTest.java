@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.callbacks.xml;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -33,7 +33,7 @@ public class EntityListenerViaXmlTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9771")
+	@JiraKey(value = "HHH-9771")
 	public void testUsage(EntityManagerFactoryScope scope) {
 		JournalingListener.reset();
 

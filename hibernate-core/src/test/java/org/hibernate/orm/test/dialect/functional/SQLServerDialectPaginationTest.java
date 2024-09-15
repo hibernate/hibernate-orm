@@ -20,7 +20,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11642")
+@JiraKey(value = "HHH-11642")
 @RequiresDialect(SQLServerDialect.class)
 public class SQLServerDialectPaginationTest extends BaseEntityManagerFunctionalTestCase {
 	@Override

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.orphan.one2one.fk.bidirectional.multilevelcascade
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -82,7 +82,7 @@ public class DeleteMultiLevelOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9091")
+	@JiraKey(value = "HHH-9091")
 	public void testDirectAssociationOrphanedWhileManaged(SessionFactoryScope scope) {
 
 		Preisregelung p = scope.fromTransaction(
@@ -123,7 +123,7 @@ public class DeleteMultiLevelOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9091")
+	@JiraKey(value = "HHH-9091")
 	public void testReplacedDirectAssociationWhileManaged(SessionFactoryScope scope) {
 
 		// Create a new Tranchenmodell with new direct and nested associations
@@ -212,7 +212,7 @@ public class DeleteMultiLevelOrphansTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9091")
+	@JiraKey(value = "HHH-9091")
 	public void testDirectAndNestedAssociationsOrphanedWhileManaged(SessionFactoryScope scope) {
 
 		Preisregelung p = scope.fromTransaction(

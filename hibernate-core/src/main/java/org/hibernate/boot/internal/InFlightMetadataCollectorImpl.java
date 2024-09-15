@@ -46,7 +46,8 @@ import org.hibernate.boot.model.internal.AggregateComponentSecondPass;
 import org.hibernate.boot.model.internal.AnnotatedClassType;
 import org.hibernate.boot.model.internal.CreateKeySecondPass;
 import org.hibernate.boot.model.internal.FkSecondPass;
-import org.hibernate.boot.model.internal.IdGeneratorResolverSecondPass;
+import org.hibernate.boot.model.internal.IdBagIdGeneratorResolverSecondPass;
+import org.hibernate.boot.model.internal.IdGeneratorResolver;
 import org.hibernate.boot.model.internal.ImplicitToOneJoinTableSecondPass;
 import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;
 import org.hibernate.boot.model.internal.QuerySecondPass;
@@ -105,8 +106,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.models.internal.SourceModelBuildingContextImpl;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsConfiguration;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -228,11 +229,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private static SourceModelBuildingContext createModelBuildingContext(BootstrapContext bootstrapContext) {
 		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
-		return new SourceModelBuildingContextImpl(
-				classLoading,
-				bootstrapContext.getJandexView(),
-				ModelsHelper::preFillRegistries
-		);
+
+		final ModelsConfiguration modelsConfiguration = new ModelsConfiguration();
+		modelsConfiguration.setClassLoading(classLoading);
+//		modelsConfiguration.setExplicitContextProvider(  );
+		modelsConfiguration.configValue( "hibernate.models.jandex.index", bootstrapContext.getJandexView() );
+		modelsConfiguration.setRegistryPrimer( ModelsHelper::preFillRegistries );
+		return modelsConfiguration.bootstrap();
 	}
 
 	@Override
@@ -285,7 +288,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+	public NamedObjectRepository buildNamedQueryRepository() {
 		throw new UnsupportedOperationException( "#buildNamedQueryRepository should not be called on InFlightMetadataCollector" );
 	}
 
@@ -712,9 +715,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			throw new IllegalArgumentException( "ID generator object or name is null." );
 		}
 
+		if ( generator.getName().isEmpty() ) {
+			return;
+		}
+
 		if ( defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
 			return;
 		}
+
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
 		if ( old != null && !old.equals( generator ) ) {
 			if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
@@ -1673,7 +1681,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 	}
 
-	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
+	private ArrayList<IdGeneratorResolver> idGeneratorResolverSecondPassList;
 	private ArrayList<SetBasicValueTypeSecondPass> setBasicValueTypeSecondPassList;
 	private ArrayList<AggregateComponentSecondPass> aggregateComponentSecondPassList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
@@ -1694,8 +1702,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	@Override
 	public void addSecondPass(SecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( secondPass instanceof IdGeneratorResolverSecondPass ) {
-			addIdGeneratorResolverSecondPass( (IdGeneratorResolverSecondPass) secondPass, onTopOfTheQueue );
+		if ( secondPass instanceof IdGeneratorResolver ) {
+			addIdGeneratorResolverSecondPass( (IdGeneratorResolver) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof SetBasicValueTypeSecondPass ) {
 			addSetBasicValueTypeSecondPass( (SetBasicValueTypeSecondPass) secondPass, onTopOfTheQueue );
@@ -1762,7 +1770,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		addSecondPass( secondPass, aggregateComponentSecondPassList, onTopOfTheQueue );
 	}
 
-	private void addIdGeneratorResolverSecondPass(IdGeneratorResolverSecondPass secondPass, boolean onTopOfTheQueue) {
+	private void addIdGeneratorResolverSecondPass(IdGeneratorResolver secondPass, boolean onTopOfTheQueue) {
 		if ( idGeneratorResolverSecondPassList == null ) {
 			idGeneratorResolverSecondPassList = new ArrayList<>();
 		}

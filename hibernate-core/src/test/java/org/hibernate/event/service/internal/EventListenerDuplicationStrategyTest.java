@@ -10,7 +10,7 @@ import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.EventType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Note: I'm using ClearEvent for the tests because it's the simpler one I've found.
  * </p>
  */
-@TestForIssue(jiraKey = "HHH-13831")
+@JiraKey(value = "HHH-13831")
 public class EventListenerDuplicationStrategyTest {
 
 	Tracker tracker = new Tracker();

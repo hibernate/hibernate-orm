@@ -12,9 +12,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -33,12 +35,18 @@ import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
+import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceException;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,8 +97,7 @@ public class MetadataAccessTests {
 				.doesNotContainKeys( JdbcSettings.DIALECT, JdbcSettings.JAKARTA_HBM2DDL_DB_NAME );
 
 		try (StandardServiceRegistry registry = registryBuilder.build()) {
-			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
-			final Dialect dialect = jdbcEnvironment.getDialect();
+			final Dialect dialect = getDialect( registry );
 			assertThat( dialect ).isNotNull();
 			assertThat( dialect ).isInstanceOf( H2Dialect.class );
 		}
@@ -134,7 +141,20 @@ public class MetadataAccessTests {
 
 	@ParameterizedTest
 	@MethodSource("dialects")
-	void testAccessDisabledExplicitDialect(String productName, Class<?> dialectClass, DatabaseVersion expectedDatabaseVersion) {
+	void testAccessDisabledExplicitDialect(String productName, Class<?> dialectClass,
+			DatabaseVersion expectedDatabaseVersion) {
+		try ( StandardServiceRegistry registry = createRegistryWithMetadataAccessDisabledAndDialect( dialectClass ) ) {
+			final Dialect dialect = getDialect( registry );
+			assertThat( dialect ).isInstanceOf( dialectClass );
+			assertThat( dialect.getVersion() ).isEqualTo( expectedDatabaseVersion );
+		}
+
+		assertThat( triggerable.triggerMessages() )
+				.as( triggerable.toString() )
+				.isEmpty();
+	}
+
+	private StandardServiceRegistry createRegistryWithMetadataAccessDisabledAndDialect(Class<?> dialectClass) {
 		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
 		registryBuilder.clearSettings();
 
@@ -143,16 +163,7 @@ public class MetadataAccessTests {
 		assertThat( registryBuilder.getSettings() )
 				.doesNotContainKeys( JdbcSettings.JAKARTA_HBM2DDL_DB_NAME );
 
-		try (StandardServiceRegistry registry = registryBuilder.build()) {
-			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
-			final Dialect dialect = jdbcEnvironment.getDialect();
-			assertThat( dialect ).isInstanceOf( dialectClass );
-			assertThat( dialect.getVersion() ).isEqualTo( expectedDatabaseVersion );
-		}
-
-		assertThat( triggerable.triggerMessages() )
-				.as( triggerable.toString() )
-				.isEmpty();
+		return registryBuilder.build();
 	}
 
 	@ParameterizedTest
@@ -190,8 +201,7 @@ public class MetadataAccessTests {
 
 		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
 		try (StandardServiceRegistry registry = registryBuilder.build()) {
-			final JdbcEnvironment jdbcEnvironment = registry.getService( JdbcEnvironment.class );
-			final Dialect dialect = jdbcEnvironment.getDialect();
+			final Dialect dialect = getDialect( registry );
 			fail( "Should fail to boot - " + dialect );
 		}
 		catch (ServiceException expected) {
@@ -199,6 +209,50 @@ public class MetadataAccessTests {
 			final HibernateException cause = (HibernateException) expected.getCause();
 			assertThat( cause.getMessage() ).startsWith( "Unable to determine Dialect without JDBC metadata" );
 		}
+	}
+
+	@Test
+	void testDetermineDatabaseVersion() {
+		final Dialect metadataAccessDisabledDialect;
+		try ( StandardServiceRegistry registry =
+				createRegistryWithMetadataAccessDisabledAndDialect( DialectContext.getDialectClass() ) ) {
+			// The version on this dialect may be anything, but most likely will be the minimum version.
+			// We're not interested in that, but in how determineDatabaseVersion() behaves for this dialect,
+			// when passed actual resolution info -- which Quarkus may do.
+			metadataAccessDisabledDialect = getDialect( registry );
+		}
+
+		try ( StandardServiceRegistry registry = createRegistryWithTestedDatabaseAndMetadataAccessAllowed() ) {
+			final Dialect metadataAccessAllowedDialect = getDialect( registry );
+
+			// We expect determineDatabaseVersion(), when called on metadataAccessDisabledDialect,
+			// to return the version that would have been returned,
+			// had we booted up with auto-detection of version (metadata access allowed).
+			assertThat( metadataAccessDisabledDialect.determineDatabaseVersion( getDialectResolutionInfo( registry ) ) )
+					.isEqualTo( metadataAccessAllowedDialect.getVersion() );
+		}
+	}
+
+	private StandardServiceRegistry createRegistryWithTestedDatabaseAndMetadataAccessAllowed() {
+		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+
+		registryBuilder.addInitiator( new CapturingDialectFactory.Initiator() );
+
+		// allow access to the jdbc metadata
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, true );
+
+		// leave connection info as defined in global test configuration (most likely system properties)
+
+		return registryBuilder.build();
+	}
+
+	private static Dialect getDialect(StandardServiceRegistry registry) {
+		return registry.getService( JdbcEnvironment.class ).getDialect();
+	}
+
+	private static DialectResolutionInfo getDialectResolutionInfo(StandardServiceRegistry registry) {
+		return ( (CapturingDialectFactory) registry.getService( DialectFactory.class ) )
+				.capturedDialectResolutionInfoSource.getDialectResolutionInfo();
 	}
 
 	// Ugly hack because neither MINIMUM_VERSION nor getMinimumSupportedVersion()
@@ -211,6 +265,31 @@ public class MetadataAccessTests {
 		}
 		catch (IllegalAccessException | NoSuchFieldException e) {
 			throw new RuntimeException( "Error extracting '" + versionConstantName + "' from '" + dialectClass + "'", e );
+		}
+	}
+
+	// A hack to easily retrieve DialectResolutionInfo exactly as it would be constructed by Hibernate ORM
+	private static class CapturingDialectFactory extends DialectFactoryImpl {
+		static class Initiator implements StandardServiceInitiator<DialectFactory> {
+			@Override
+			public Class<DialectFactory> getServiceInitiated() {
+				return DialectFactory.class;
+			}
+
+			@Override
+			public DialectFactory initiateService(Map<String, Object> configurationValues,
+					ServiceRegistryImplementor registry) {
+				return new CapturingDialectFactory();
+			}
+		}
+
+		DialectResolutionInfoSource capturedDialectResolutionInfoSource;
+
+		@Override
+		public Dialect buildDialect(Map<String, Object> configValues, DialectResolutionInfoSource resolutionInfoSource)
+				throws HibernateException {
+			this.capturedDialectResolutionInfoSource = resolutionInfoSource;
+			return super.buildDialect( configValues, resolutionInfoSource );
 		}
 	}
 }

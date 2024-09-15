@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Benjamin M.
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-14113" )
+@JiraKey( value = "HHH-14113" )
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class EntityGraphAttributeResolutionTest extends BaseEntityManagerFunctionalTestCase {
 

@@ -7,9 +7,9 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.AttributeAccessor;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -41,14 +41,10 @@ public class AttributeAccessorAnnotation implements AttributeAccessor {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AttributeAccessorAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.ATTRIBUTE_ACCESSOR, "value", modelContext );
-		this.strategy = extractJandexValue(
-				annotation,
-				HibernateAnnotations.ATTRIBUTE_ACCESSOR,
-				"strategy",
-				modelContext
-		);
+	public AttributeAccessorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (String) attributeValues.get( "value" );
+		this.strategy = (Class<? extends org.hibernate.property.access.spi.PropertyAccessStrategy>) attributeValues
+				.get( "strategy" );
 	}
 
 	@Override

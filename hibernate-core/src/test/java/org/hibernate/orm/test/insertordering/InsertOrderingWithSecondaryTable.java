@@ -28,13 +28,13 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11714")
+@JiraKey(value = "HHH-11714")
 public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 
 	@Override

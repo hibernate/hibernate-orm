@@ -19,7 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-13640" )
+@JiraKey( value = "HHH-13640" )
 @DomainModel(
 		annotatedClasses = {
 				LazyToOnesProxyWithSubclassesStatelessTest.Animal.class,

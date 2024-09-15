@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_UPDATES;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -26,19 +24,28 @@ public class OverriddenSQLUpdatesAnnotation
 		implements DialectOverride.SQLUpdates, RepeatableContainer<DialectOverride.SQLUpdate> {
 	private DialectOverride.SQLUpdate[] value;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenSQLUpdatesAnnotation(SourceModelBuildingContext sourceModelBuildingContext) {
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public OverriddenSQLUpdatesAnnotation(
 			DialectOverride.SQLUpdates annotation,
 			SourceModelBuildingContext sourceModelContext) {
 		this.value = extractJdkValue( annotation, DIALECT_OVERRIDE_SQL_UPDATES, "value", sourceModelContext );
 	}
 
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
 	public OverriddenSQLUpdatesAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext sourceModelContext) {
-		this.value = extractJandexValue( annotation, DIALECT_OVERRIDE_SQL_UPDATES, "value", sourceModelContext );
+		this.value = (DialectOverride.SQLUpdate[]) attributeValues.get( "value" );
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = {"HHH-1134"} )
+@JiraKey( value = "HHH-1134" )
 public class MultiInheritanceDiscriminatorTest {
 
 	@DomainModel(

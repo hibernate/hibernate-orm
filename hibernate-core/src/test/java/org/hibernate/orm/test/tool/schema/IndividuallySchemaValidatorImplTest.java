@@ -42,7 +42,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -62,7 +62,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Dominique Toupin
  */
-@TestForIssue(jiraKey = "HHH-10332")
+@JiraKey(value = "HHH-10332")
 @RequiresDialect(H2Dialect.class)
 public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 

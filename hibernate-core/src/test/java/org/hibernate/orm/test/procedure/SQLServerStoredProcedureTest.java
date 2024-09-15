@@ -18,7 +18,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -235,7 +235,7 @@ public class SQLServerStoredProcedureTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-18280")
+	@JiraKey(value = "HHH-18280")
 	public void testStoredProcedureInAndOutParametersInvertedParamRegistationOrder2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -255,7 +255,7 @@ public class SQLServerStoredProcedureTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-18280")
+	@JiraKey(value = "HHH-18280")
 	public void testStoredProcedureInAndOutParametersInvertedParamRegistationOrder2_(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -276,7 +276,7 @@ public class SQLServerStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-18280")
+	@JiraKey(value = "HHH-18280")
 	public void testStoredProcedureInAndOutParametersInvertedParamRegistationOrder3(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

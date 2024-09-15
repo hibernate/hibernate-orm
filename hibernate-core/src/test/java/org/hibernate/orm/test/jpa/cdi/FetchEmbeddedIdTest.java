@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				FetchEmbeddedIdTest.UserGroup.class
 		}
 )
-@TestForIssue( jiraKey = "HHH-15875")
+@JiraKey( value = "HHH-15875")
 public class FetchEmbeddedIdTest {
 
 	@BeforeAll

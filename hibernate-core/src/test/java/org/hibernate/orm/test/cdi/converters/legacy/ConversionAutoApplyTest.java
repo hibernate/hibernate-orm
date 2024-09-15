@@ -44,7 +44,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
@@ -52,7 +52,7 @@ import org.junit.Test;
  *
  * @author Karthik Abram
  */
-@TestForIssue( jiraKey = "HHH-10549" )
+@JiraKey( value = "HHH-10549" )
 public class ConversionAutoApplyTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test

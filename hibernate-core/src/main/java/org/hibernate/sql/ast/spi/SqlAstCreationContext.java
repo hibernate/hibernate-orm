@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.query.BindingContext;
 
 /**
  * The "context" in which creation of SQL AST occurs.  Provides
@@ -16,7 +16,7 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author Steve Ebersole
  */
-public interface SqlAstCreationContext {
+public interface SqlAstCreationContext extends BindingContext {
 	/**
 	 * The SessionFactory
 	 */
@@ -26,11 +26,6 @@ public interface SqlAstCreationContext {
 	 * The runtime MappingMetamodelImplementor
 	 */
 	MappingMetamodelImplementor getMappingMetamodel();
-
-	/**
-	 * Access to Services
-	 */
-	ServiceRegistry getServiceRegistry();
 
 	/**
 	 * When creating {@link org.hibernate.sql.results.graph.Fetch} references,

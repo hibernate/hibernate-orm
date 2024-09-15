@@ -21,7 +21,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -117,7 +117,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10984" )
+	@JiraKey( value = "HHH-10984" )
 	public void testUnflushedDeleteAndThenMultiLoadPart0(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -136,7 +136,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10984" )
+	@JiraKey( value = "HHH-10984" )
 	public void testUnflushedDeleteAndThenMultiLoadPart1(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -153,7 +153,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10984" )
+	@JiraKey( value = "HHH-10984" )
 	public void testUnflushedDeleteAndThenMultiLoadPart2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -170,7 +170,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10984" )
+	@JiraKey( value = "HHH-10984" )
 	public void testUnflushedDeleteAndThenMultiLoadPart3(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -187,7 +187,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10984" )
+	@JiraKey( value = "HHH-10984" )
 	public void testUnflushedDeleteAndThenMultiLoadPart4(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -202,7 +202,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10617" )
+	@JiraKey( value = "HHH-10617" )
 	public void testDuplicatedRequestedIds(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -216,7 +216,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10617")
+	@JiraKey(value = "HHH-10617")
 	public void testDuplicatedRequestedIdswithDisableOrderedReturn(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -230,7 +230,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10617" )
+	@JiraKey( value = "HHH-10617" )
 	public void testNonExistentIdRequest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -276,7 +276,7 @@ public class MultiLoadTest {
 		);
 	}
 
-	@Test @FailureExpected(jiraKey = "HHH-18544")
+	@Test
 	public void testBasicMultiLoadWithManagedAndNoCheckingProxied(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -290,7 +290,7 @@ public class MultiLoadTest {
 		);
 	}
 
-	@Test @FailureExpected(jiraKey = "HHH-18544")
+	@Test
 	public void testBasicMultiLoadWithManagedAndCheckingProxied(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -307,7 +307,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -371,7 +371,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -436,7 +436,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -477,7 +477,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -523,7 +523,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -563,7 +563,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12944")
+	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

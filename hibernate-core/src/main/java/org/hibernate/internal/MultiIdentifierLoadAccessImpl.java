@@ -6,19 +6,26 @@
  */
 package org.hibernate.internal;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
+import org.hibernate.UnknownProfileException;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Steve Ebersole
@@ -29,6 +36,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 
 	private LockOptions lockOptions;
 	private CacheMode cacheMode;
+	private Boolean readOnly;
 
 	private RootGraphImplementor<T> rootGraph;
 	private GraphSemantic graphSemantic;
@@ -37,6 +45,9 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private boolean sessionCheckingEnabled;
 	private boolean returnOfDeletedEntitiesEnabled;
 	private boolean orderedReturnEnabled = true;
+
+	private Set<String> enabledFetchProfiles;
+	private Set<String> disabledFetchProfiles;
 
 	public MultiIdentifierLoadAccessImpl(SessionImpl session, EntityPersister entityPersister) {
 		this.session = session;
@@ -57,6 +68,12 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	public MultiIdentifierLoadAccess<T> with(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
+		return this;
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess<T> withReadOnly(boolean readOnly) {
+		this.readOnly = readOnly;
 		return this;
 	}
 
@@ -122,13 +139,20 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	}
 
 	@Override
+	public Boolean getReadOnly(SessionImplementor session) {
+		return readOnly != null
+				? readOnly
+				: session.getLoadQueryInfluencers().getReadOnly();
+	}
+
+	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(K... ids) {
 		return perform( () -> (List<T>) entityPersister.multiLoad( ids, session, this ) );
 	}
 
 	public List<T> perform(Supplier<List<T>> executor) {
-		CacheMode sessionCacheMode = session.getCacheMode();
+		final CacheMode sessionCacheMode = session.getCacheMode();
 		boolean cacheModeChanged = false;
 		if ( cacheMode != null ) {
 			// naive check for now...
@@ -140,20 +164,17 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		}
 
 		try {
-			if ( graphSemantic != null ) {
-				if ( rootGraph == null ) {
-					throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-				}
-				session.getLoadQueryInfluencers().getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
-			}
-
+			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+			final HashSet<String> fetchProfiles =
+					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
+			final EffectiveEntityGraph effectiveEntityGraph =
+					influencers.applyEntityGraph( rootGraph, graphSemantic );
 			try {
 				return executor.get();
 			}
 			finally {
-				if ( graphSemantic != null ) {
-					session.getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
-				}
+				effectiveEntityGraph.clear();
+				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}
 		finally {
@@ -168,12 +189,41 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(List<K> ids) {
 		if ( ids.isEmpty() ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
-		return perform( () -> (List<T>) entityPersister.multiLoad(
-				ids.toArray( LoaderHelper.createTypedArray( ids.get( 0 ).getClass(), ids.size() ) ),
-				session,
-				this
-		) );
+		else {
+			return perform( () -> (List<T>) entityPersister.multiLoad(
+					ids.toArray( LoaderHelper.createTypedArray( ids.get( 0 ).getClass(), ids.size() ) ),
+					session,
+					this
+			) );
+		}
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess<T> enableFetchProfile(String profileName) {
+		if ( !session.getFactory().containsFetchProfileDefinition( profileName ) ) {
+			throw new UnknownProfileException( profileName );
+		}
+		if ( enabledFetchProfiles == null ) {
+			enabledFetchProfiles = new HashSet<>();
+		}
+		enabledFetchProfiles.add( profileName );
+		if ( disabledFetchProfiles != null ) {
+			disabledFetchProfiles.remove( profileName );
+		}
+		return this;
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess<T> disableFetchProfile(String profileName) {
+		if ( disabledFetchProfiles == null ) {
+			disabledFetchProfiles = new HashSet<>();
+		}
+		disabledFetchProfiles.add( profileName );
+		if ( enabledFetchProfiles != null ) {
+			enabledFetchProfiles.remove( profileName );
+		}
+		return this;
 	}
 }

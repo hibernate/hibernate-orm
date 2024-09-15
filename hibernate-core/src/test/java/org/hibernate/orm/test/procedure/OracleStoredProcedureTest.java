@@ -28,7 +28,7 @@ import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -136,7 +136,7 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15542")
+	@JiraKey(value = "HHH-15542")
 	public void testStoredProcedureInAndOutAndRefCursorParameters(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -164,7 +164,7 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-18280")
+	@JiraKey(value = "HHH-18280")
 	public void testStoredProcedureInAndOutAndRefCursorParametersInvertedParamRegistationOrder(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -192,7 +192,7 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-18280")
+	@JiraKey(value = "HHH-18280")
 	public void testStoredProcedureInAndOutAndRefCursorParametersInvertedParamRegistationOrder2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -334,7 +334,7 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11863")
+	@JiraKey(value = "HHH-11863")
 	public void testSysRefCursorAsOutParameter(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction(
@@ -360,7 +360,7 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11863")
+	@JiraKey(value = "HHH-11863")
 	public void testOutAndSysRefCursorAsOutParameter(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction(
@@ -386,7 +386,7 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12661")
+	@JiraKey(value = "HHH-12661")
 	public void testBindParameterAsHibernateType(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction(

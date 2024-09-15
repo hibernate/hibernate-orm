@@ -17,7 +17,7 @@ import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.IllegalQueryOperationException;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Before;
@@ -46,7 +46,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(OracleDialect.class)
-@TestForIssue(jiraKey = "HHH-9486")
+@JiraKey(value = "HHH-9486")
 public class OracleFollowOnLockingTest extends
 		BaseNonConfigCoreFunctionalTestCase {
 
@@ -280,7 +280,7 @@ public class OracleFollowOnLockingTest extends
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-16433")
+	@JiraKey(value = "HHH-16433")
 	public void testPessimisticLockWithOrderByThenNoFollowOnLocking() {
 
 		final Session session = openSession();

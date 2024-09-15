@@ -19,7 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 public class EntityManagerDeserializationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11555")
+	@JiraKey(value = "HHH-11555")
 	public void deserializedEntityManagerPersistenceExceptionManagementTest(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

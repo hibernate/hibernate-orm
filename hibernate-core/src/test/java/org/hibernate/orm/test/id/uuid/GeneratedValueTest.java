@@ -25,6 +25,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -60,9 +61,8 @@ public class GeneratedValueTest {
 			assertEquals( UUID.class, entityBinding.getIdentifier().getType().getReturnedClass() );
 			KeyValue keyValue = entityBinding.getIdentifier();
 			Dialect dialect = metadata.getDatabase().getDialect();
-			final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityBinding);
-			IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
-			assertTyping( UUIDGenerator.class, generator );
+			final Generator generator = keyValue.createGenerator( dialect, (RootClass) entityBinding);
+			assertTyping( UuidGenerator.class, generator );
 
 			// now a functional test
 			SessionFactory sf = metadata.buildSessionFactory();

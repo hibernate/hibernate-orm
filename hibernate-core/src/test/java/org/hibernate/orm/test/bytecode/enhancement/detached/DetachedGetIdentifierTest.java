@@ -2,10 +2,9 @@ package org.hibernate.orm.test.bytecode.enhancement.detached;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import jakarta.persistence.Entity;

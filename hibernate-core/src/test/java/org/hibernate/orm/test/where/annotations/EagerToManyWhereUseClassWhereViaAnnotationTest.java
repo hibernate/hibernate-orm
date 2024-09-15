@@ -17,7 +17,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest extends BaseNonConfi
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15936" )
+	@JiraKey( value = "HHH-15936" )
 	public void testAssociatedWhereClause() {
 
 		Product product = new Product();

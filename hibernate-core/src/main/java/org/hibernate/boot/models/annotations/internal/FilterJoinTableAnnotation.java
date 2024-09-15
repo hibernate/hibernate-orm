@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
@@ -16,10 +17,7 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -52,16 +50,11 @@ public class FilterJoinTableAnnotation implements FilterJoinTable, FilterDetails
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public FilterJoinTableAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, FILTER_JOIN_TABLE, "name", modelContext );
-		this.condition = extractJandexValue( annotation, FILTER_JOIN_TABLE, "condition", modelContext );
-		this.deduceAliasInjectionPoints = extractJandexValue(
-				annotation,
-				FILTER_JOIN_TABLE,
-				"deduceAliasInjectionPoints",
-				modelContext
-		);
-		this.aliases = extractJandexValue( annotation, FILTER_JOIN_TABLE, "aliases", modelContext );
+	public FilterJoinTableAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.condition = (String) attributeValues.get( "condition" );
+		this.deduceAliasInjectionPoints = (boolean) attributeValues.get( "deduceAliasInjectionPoints" );
+		this.aliases = (org.hibernate.annotations.SqlFragmentAlias[]) attributeValues.get( "aliases" );
 	}
 
 	@Override

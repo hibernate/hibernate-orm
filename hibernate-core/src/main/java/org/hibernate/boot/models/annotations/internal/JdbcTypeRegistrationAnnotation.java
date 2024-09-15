@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeRegistration;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -40,19 +36,11 @@ public class JdbcTypeRegistrationAnnotation implements JdbcTypeRegistration {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JdbcTypeRegistrationAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				HibernateAnnotations.JDBC_TYPE_REGISTRATION,
-				"value",
-				modelContext
-		);
-		this.registrationCode = extractJandexValue(
-				annotation,
-				HibernateAnnotations.JDBC_TYPE_REGISTRATION,
-				"registrationCode",
-				modelContext
-		);
+	public JdbcTypeRegistrationAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.value = (Class<? extends org.hibernate.type.descriptor.jdbc.JdbcType>) attributeValues.get( "value" );
+		this.registrationCode = (int) attributeValues.get( "registrationCode" );
 	}
 
 	@Override

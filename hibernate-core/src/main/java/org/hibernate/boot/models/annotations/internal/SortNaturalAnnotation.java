@@ -7,11 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -32,7 +31,7 @@ public class SortNaturalAnnotation implements SortNatural {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SortNaturalAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public SortNaturalAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

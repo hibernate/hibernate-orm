@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.HQLSelect;
@@ -35,6 +36,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -271,7 +273,7 @@ public abstract class QueryBinder {
 				.setCacheMode(getCacheMode(namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode()))
 				.setTimeout(timeout < 0 ? null : timeout)
 				.setFetchSize(fetchSize < 0 ? null : fetchSize)
-				.setFlushMode(getFlushMode(namedNativeQuery.flushMode()))
+				.setFlushMode(getFlushMode(namedNativeQuery.flush(), namedNativeQuery.flushMode()))
 				.setReadOnly(namedNativeQuery.readOnly())
 				.setQuerySpaces(querySpaces)
 				.setComment(nullIfEmpty(namedNativeQuery.comment()));
@@ -412,7 +414,7 @@ public abstract class QueryBinder {
 				.setCacheMode(getCacheMode(namedQuery.cacheRetrieveMode(), namedQuery.cacheStoreMode()))
 				.setTimeout(timeout < 0 ? null : timeout)
 				.setFetchSize(fetchSize < 0 ? null : fetchSize)
-				.setFlushMode(getFlushMode(namedQuery.flushMode()))
+				.setFlushMode(getFlushMode(namedQuery.flush(), namedQuery.flushMode()))
 				.setReadOnly(namedQuery.readOnly())
 				.setComment(nullIfEmpty(namedQuery.comment()));
 	}
@@ -420,6 +422,12 @@ public abstract class QueryBinder {
 	private static CacheMode getCacheMode(CacheRetrieveMode cacheRetrieveMode, CacheStoreMode cacheStoreMode) {
 		final CacheMode cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
 		return cacheMode == null ? CacheMode.NORMAL : cacheMode;
+	}
+
+	private static FlushMode getFlushMode(QueryFlushMode queryFlushMode, FlushModeType flushModeType) {
+		return queryFlushMode == QueryFlushMode.DEFAULT
+				? getFlushMode( flushModeType )
+				: FlushModeTypeHelper.getFlushMode(queryFlushMode);
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {

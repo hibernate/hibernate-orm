@@ -6,7 +6,7 @@ import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SettingProvider;
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 		}
 )
-@TestForIssue(jiraKey = "HHH-16009")
+@JiraKey(value = "HHH-16009")
 public class IdClassAndOrderByTest {
 
 	public static final String COMPANY_NAME = "Foo Company";

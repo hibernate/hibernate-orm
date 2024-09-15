@@ -16,7 +16,7 @@ import org.hibernate.Session;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -53,7 +53,7 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Test
-	@TestForIssue( jiraKey = "HHH-7767" )
+	@JiraKey( value = "HHH-7767" )
     public void testCriteriaRestrictionOnIdManyToOne() {
 		inTransaction( s -> {
 			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'", Object[].class ).list();

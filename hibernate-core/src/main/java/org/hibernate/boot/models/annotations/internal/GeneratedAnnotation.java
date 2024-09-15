@@ -7,15 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Generated;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.generator.EventType;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -45,10 +41,10 @@ public class GeneratedAnnotation implements Generated {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public GeneratedAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.event = extractJandexValue( annotation, HibernateAnnotations.GENERATED, "event", modelContext );
-		this.sql = extractJandexValue( annotation, HibernateAnnotations.GENERATED, "sql", modelContext );
-		this.writable = extractJandexValue( annotation, HibernateAnnotations.GENERATED, "writable", modelContext );
+	public GeneratedAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.event = (EventType[]) attributeValues.get( "event" );
+		this.sql = (String) attributeValues.get( "sql" );
+		this.writable = (boolean) attributeValues.get( "writable" );
 	}
 
 	@Override

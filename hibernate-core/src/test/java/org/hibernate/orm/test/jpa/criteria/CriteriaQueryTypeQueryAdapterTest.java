@@ -32,7 +32,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunctionalTestCase {
@@ -46,7 +46,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	public void testCriteriaQueryParameterIsBoundCheckNotFails() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -63,7 +63,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	public void testCriteriaQueryGetParameters() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -83,7 +83,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	@Test(expected = IllegalArgumentException.class)
 	public void testCriteriaQueryGetParameterOfWrongType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -98,7 +98,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@TestForIssue(jiraKey = "HHH-12685")
+	@JiraKey(value = "HHH-12685")
 	@Test(expected = IllegalArgumentException.class)
 	public void testCriteriaQueryGetNonExistingParameter() {
 		doInJPA( this::entityManagerFactory, entityManager -> {

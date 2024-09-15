@@ -7,14 +7,11 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 
@@ -43,9 +40,9 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CurrentTimestampAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.event = extractJandexValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "event", modelContext );
-		this.source = extractJandexValue( annotation, HibernateAnnotations.CURRENT_TIMESTAMP, "source", modelContext );
+	public CurrentTimestampAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.event = (org.hibernate.generator.EventType[]) attributeValues.get( "event" );
+		this.source = (org.hibernate.annotations.SourceType) attributeValues.get( "source" );
 	}
 
 	@Override

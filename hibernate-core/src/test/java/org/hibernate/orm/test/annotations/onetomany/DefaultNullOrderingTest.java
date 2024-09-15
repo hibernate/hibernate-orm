@@ -23,13 +23,13 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Lukasz Antoniak
  */
-@TestForIssue(jiraKey = "HHH-465")
+@JiraKey(value = "HHH-465")
 @RequiresDialect(value = H2Dialect.class,
 		comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {

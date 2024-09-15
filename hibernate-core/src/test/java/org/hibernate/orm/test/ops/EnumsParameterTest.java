@@ -12,7 +12,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15498")
+@JiraKey(value = "HHH-15498")
 public class EnumsParameterTest {
 
 	@BeforeEach

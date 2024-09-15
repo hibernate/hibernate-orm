@@ -10,7 +10,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.ManagedType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class MappedSuperclassTypeTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-6896" )
+	@JiraKey( value = "HHH-6896" )
 	public void ensureMappedSuperclassTypeReturnedAsManagedType(EntityManagerFactoryScope scope) {
 		ManagedType<SomeMappedSuperclass> type = scope.getEntityManagerFactory().getMetamodel().managedType( SomeMappedSuperclass.class );
 		// the issue was in regards to throwing an exception, but also check for nullness
@@ -36,7 +36,7 @@ public class MappedSuperclassTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8533" )
+	@JiraKey( value = "HHH-8533" )
 	@SuppressWarnings("unchecked")
 	public void testAttributeAccess(EntityManagerFactoryScope scope) {
 		final EntityType<SomeMappedSuperclassSubclass> entityType =  scope.getEntityManagerFactory().getMetamodel().entity( SomeMappedSuperclassSubclass.class );

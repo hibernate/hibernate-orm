@@ -9,6 +9,8 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.GenerationType;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.GUIDGenerator;
@@ -113,4 +115,44 @@ public class GeneratorStrategies {
 		return clazz;
 	}
 
+	public static Class<? extends Generator> mapLegacyNamedGenerator(String strategy, Dialect dialect) {
+		if ( "native".equals(strategy) ) {
+			strategy = dialect.getNativeIdentifierGeneratorStrategy();
+		}
+		switch (strategy) {
+			case "assigned":
+				return org.hibernate.id.Assigned.class;
+			case "enhanced-sequence":
+			case "sequence":
+				return SequenceStyleGenerator.class;
+			case "enhanced-table":
+			case "table":
+				return org.hibernate.id.enhanced.TableGenerator.class;
+			case "identity":
+				return IdentityGenerator.class;
+			case "increment":
+				return IncrementGenerator.class;
+			case "foreign":
+				return ForeignGenerator.class;
+			case "uuid":
+			case "uuid.hex":
+				return UUIDHexGenerator.class;
+			case "uuid2":
+				return UUIDGenerator.class;
+			case "select":
+				return SelectGenerator.class;
+			case "guid":
+				return GUIDGenerator.class;
+		}
+
+		return null;
+	}
+
+	public static Class<? extends Generator> mapLegacyNamedGenerator(String strategy, MetadataBuildingContext buildingContext) {
+		return mapLegacyNamedGenerator( strategy, buildingContext.getMetadataCollector().getDatabase().getDialect() );
+	}
+
+	public static Class<? extends Generator> mapLegacyNamedGenerator(String strategy, SimpleValue idValue) {
+		return mapLegacyNamedGenerator( strategy, idValue.getMetadata().getDatabase().getDialect() );
+	}
 }

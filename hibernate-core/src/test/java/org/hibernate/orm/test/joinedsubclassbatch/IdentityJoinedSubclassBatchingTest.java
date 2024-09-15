@@ -13,7 +13,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author dcebotarenco
  */
-@TestForIssue(jiraKey = "HHH-2558")
+@JiraKey(value = "HHH-2558")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel(
 		annotatedClasses = {

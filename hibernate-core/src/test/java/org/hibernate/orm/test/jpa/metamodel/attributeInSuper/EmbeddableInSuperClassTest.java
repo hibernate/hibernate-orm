@@ -10,7 +10,7 @@ import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.ManagedType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class EmbeddableInSuperClassTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6475")
+	@JiraKey(value = "HHH-6475")
 	public void ensureAttributeForEmbeddableIsGeneratedInMappedSuperClass(EntityManagerFactoryScope scope) {
 		EmbeddableType<EmbeddableEntity> embeddableType = scope.getEntityManagerFactory().getMetamodel().embeddable( EmbeddableEntity.class );
 

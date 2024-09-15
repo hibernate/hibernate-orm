@@ -350,18 +350,18 @@ public class ToOneBinder {
 			MemberDetails property,
 			PropertyData inferredData,
 			PropertyHolder propertyHolder) {
-		handleLazy( toOne, property, inferredData, propertyHolder );
+		handleLazy( toOne, property );
 		handleFetch( toOne, property );
 		handleFetchProfileOverrides( toOne, property, propertyHolder, inferredData );
 	}
 
-	private static void handleLazy(ToOne toOne, MemberDetails property, PropertyData inferredData, PropertyHolder propertyHolder) {
+	private static void handleLazy(ToOne toOne, MemberDetails property) {
 		if ( property.hasDirectAnnotationUsage( NotFound.class ) ) {
 			toOne.setLazy( false );
 			toOne.setUnwrapProxy( true );
 		}
 		else {
-			boolean eager = isEager( property, inferredData, propertyHolder );
+			boolean eager = isEager( property );
 			toOne.setLazy( !eager );
 			toOne.setUnwrapProxy( eager );
 			toOne.setUnwrapProxyImplicit( true );
@@ -376,9 +376,8 @@ public class ToOneBinder {
 		final MetadataBuildingContext context = toOne.getBuildingContext();
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		final SourceModelBuildingContext sourceModelContext = collector.getSourceModelBuildingContext();
-		property.forEachAnnotationUsage( FetchProfileOverride.class, sourceModelContext, (usage) -> {
-			collector.addSecondPass( new FetchSecondPass( usage, propertyHolder, inferredData.getPropertyName(), context ) );
-		} );
+		property.forEachAnnotationUsage( FetchProfileOverride.class, sourceModelContext,
+				usage -> collector.addSecondPass( new FetchSecondPass( usage, propertyHolder, inferredData.getPropertyName(), context ) ));
 	}
 
 	private static void handleFetch(ToOne toOne, MemberDetails property) {
@@ -410,9 +409,8 @@ public class ToOneBinder {
 		}
 	}
 
-	private static boolean isEager(MemberDetails property, PropertyData inferredData, PropertyHolder propertyHolder) {
-		final FetchType fetchType = getJpaFetchType( property );
-		return fetchType == EAGER;
+	private static boolean isEager(MemberDetails property) {
+		return getJpaFetchType( property ) == EAGER;
 	}
 
 	private static FetchType getJpaFetchType(MemberDetails property) {
@@ -611,6 +609,7 @@ public class ToOneBinder {
 				else if ( foreignKey != null ) {
 					value.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 					value.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					value.setForeignKeyOptions( foreignKey.options() );
 				}
 				else if ( noConstraintByDefault ) {
 					value.disableForeignKey();
@@ -619,11 +618,13 @@ public class ToOneBinder {
 					final ForeignKey joinColumnsForeignKey = joinColumns.foreignKey();
 					value.setForeignKeyName( nullIfEmpty( joinColumnsForeignKey.name() ) );
 					value.setForeignKeyDefinition( nullIfEmpty( joinColumnsForeignKey.foreignKeyDefinition() ) );
+					value.setForeignKeyOptions( joinColumnsForeignKey.options() );
 				}
 				else if ( joinColumn != null ) {
 					final ForeignKey joinColumnForeignKey = joinColumn.foreignKey();
 					value.setForeignKeyName( nullIfEmpty( joinColumnForeignKey.name() ) );
 					value.setForeignKeyDefinition( nullIfEmpty( joinColumnForeignKey.foreignKeyDefinition() ) );
+					value.setForeignKeyOptions( joinColumnForeignKey.options() );
 				}
 			}
 		}

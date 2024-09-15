@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 import org.junit.jupiter.api.Test;
@@ -85,7 +85,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParametersMixturePositionalAndNamed() {
 		inTransaction(
 				s -> {
@@ -102,7 +102,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParametersMixtureNamedAndPositional() {
 		inTransaction(
 				s -> {
@@ -119,7 +119,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testReusedNamedCollectionParam() {
 		inTransaction(
 				session -> {
@@ -135,7 +135,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testReusedPositionalCollectionParam() {
 		inTransaction(
 				session -> {
@@ -154,7 +154,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	 * query is wrong in terms of JPA and exception must be thrown
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParametersMixtureNamedCollectionAndPositional() {
 		inTransaction(
 				s -> {
@@ -178,7 +178,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12290")
+	@JiraKey(value = "HHH-12290")
 	public void testParameterCollectionParenthesesAndPositional() {
 		final Item item = new Item( "Mouse" );
 		final Item item2 = new Item( "Computer" );

@@ -11,7 +11,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.core.Is.is;
@@ -21,7 +21,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "")
+@JiraKey(value = "")
 public class SetSubselectTest extends BaseCoreFunctionalTestCase {
 
 	@Override

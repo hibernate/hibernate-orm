@@ -27,8 +27,8 @@ public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 
 	private static final SingleResultConsumer<?> INSTANCE = new SingleResultConsumer<>();
 
+	@SuppressWarnings( "unchecked" )
 	public static <T> SingleResultConsumer<T> instance() {
-		//noinspection unchecked
 		return (SingleResultConsumer<T>) INSTANCE;
 	}
 

@@ -24,7 +24,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -50,7 +50,7 @@ public class JoinColumnOrFormulaTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9897" )
+	@JiraKey( value = "HHH-9897" )
 	@FailureExpected( jiraKey = "HHH-9897" )
 	public void testUseOfJoinColumnOrFormula() {
 		Metadata metadata = new MetadataSources( ssr )

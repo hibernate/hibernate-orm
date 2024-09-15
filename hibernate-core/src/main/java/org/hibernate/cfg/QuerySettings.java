@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.spi.QueryPlan;
 
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -26,6 +25,7 @@ public interface QuerySettings {
 	 * @since 6.5
 	 */
 	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
+
 	/**
 	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
 	 * translation.
@@ -98,13 +98,14 @@ public interface QuerySettings {
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
-	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the
-	 * HQL {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last},
-	 * or an instance of {@link NullPrecedence}.
+	 * Specifies the default {@linkplain jakarta.persistence.criteria.Nulls precedence
+	 * of null values} sorted via the HQL {@code ORDER BY} clause, either {@code none},
+	 * {@code first}, or {@code last}, or an instance of the enumeration
+	 * {@link jakarta.persistence.criteria.Nulls}.
 	 * <p>
 	 * The default is {@code none}.
 	 *
-	 * @see NullPrecedence
+	 * @see jakarta.persistence.criteria.Nulls
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(jakarta.persistence.criteria.Nulls)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
@@ -135,14 +136,27 @@ public interface QuerySettings {
 	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
 
 	/**
-	 * When set to true, indicates that ordinal parameters (represented by the '?' placeholder) in native queries will be ignored.
+	 * When enabled, ordinal parameters (represented by the {@code ?} placeholder) in
+	 * native queries will be ignored.
 	 * <p>
-	 * By default, this is set to false, i.e. native queries will be checked for ordinal placeholders.
-	 * <p>
+	 * By default, native queries are checked for ordinal placeholders.
 	 *
 	 * @see SessionFactoryOptions#getNativeJdbcParametersIgnored()
 	 */
 	String NATIVE_IGNORE_JDBC_PARAMETERS = "hibernate.query.native.ignore_jdbc_parameters";
+
+	/**
+	 * When enabled, native queries will return {@link java.sql.Date},
+	 * {@link java.sql.Time}, and {@link java.sql.Timestamp} instead of the
+	 * datetime types from {@link java.time}, recovering the behavior of
+	 * native queries in Hibernate 6 and earlier.
+	 * <p>
+	 * By default, native queries return {@link java.time.LocalDate},
+	 * {@link java.time.LocalTime}, and {@link java.time.LocalDateTime}.
+	 *
+	 * @since 7.0
+	 */
+	String NATIVE_PREFER_JDBC_DATETIME_TYPES = "hibernate.query.native.prefer_jdbc_datetime_types";
 
 	/**
 	 * When {@linkplain org.hibernate.query.Query#setMaxResults(int) pagination} is used
@@ -245,7 +259,7 @@ public interface QuerySettings {
 
 	/**
 	 * For database supporting name parameters this setting allows to use named parameter is the procedure call.
-	 *
+	 * <p>
 	 * By default, this is set to false
 	 */
 	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_paramater_names";

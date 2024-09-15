@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -199,6 +200,32 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 			return cteCriteria;
 		}
 		return ( (JpaCteContainer) parent ).getCteCriteria( cteName );
+	}
+
+	@Override
+	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+		if ( !( criteria instanceof SqmSubQuery<?> ) || ( (SqmSubQuery<X>) criteria ).getParent() != parent ) {
+			throw new IllegalArgumentException(
+					"Invalid query type provided to subquery 'with' method, " +
+							"expecting a subquery with the same parent to use as CTE"
+			);
+		}
+		return super.withInternal( name, criteria );
+	}
+
+	@Override
+	protected <X> JpaCteCriteria<X> withInternal(
+			String name,
+			AbstractQuery<X> baseCriteria,
+			boolean unionDistinct,
+			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+		if ( !( baseCriteria instanceof SqmSubQuery<?> ) || ( (SqmSubQuery<X>) baseCriteria ).getParent() != parent ) {
+			throw new IllegalArgumentException(
+					"Invalid query type provided to subquery 'with' method, " +
+							"expecting a subquery with the same parent to use as CTE"
+			);
+		}
+		return super.withInternal( name, baseCriteria, unionDistinct, recursiveCriteriaProducer );
 	}
 
 	@Override
@@ -606,7 +633,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmInPredicate<?> in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
+		//noinspection unchecked
+		return nodeBuilder().in( this, (Collection<T>) values );
 	}
 
 	@Override

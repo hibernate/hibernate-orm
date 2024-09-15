@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Strong Liu
  */
-@TestForIssue( jiraKey = "HHH-4825" )
+@JiraKey( value = "HHH-4825" )
 public class SellCarTest extends BaseCoreFunctionalTestCase {
 
     @Override

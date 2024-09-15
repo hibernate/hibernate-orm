@@ -11,7 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +52,7 @@ public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5848")
+	@JiraKey(value = "HHH-5848")
 	public void testDatabaseTableNames() {
 		PersistentClass classMapping = getMetadata().getEntityBinding( Item.class.getName() );
 		Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getSelectables().get( 0 );

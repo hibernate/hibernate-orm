@@ -6,18 +6,15 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
+import java.lang.annotation.Annotation;
+import java.util.Map;
+
 import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import java.lang.annotation.Annotation;
-
-import org.hibernate.annotations.AnyDiscriminatorValues;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -49,13 +46,8 @@ public class AnyDiscriminatorValuesAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AnyDiscriminatorValuesAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				HibernateAnnotations.ANY_DISCRIMINATOR_VALUES,
-				"value",
-				modelContext
-		);
+	public AnyDiscriminatorValuesAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (AnyDiscriminatorValue[]) attributeValues.get( "value" );
 	}
 
 	@Override

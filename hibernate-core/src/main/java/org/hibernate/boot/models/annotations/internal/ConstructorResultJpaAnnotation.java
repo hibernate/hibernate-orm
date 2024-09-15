@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.ConstructorResult;
 
 import static org.hibernate.boot.models.JpaAnnotations.CONSTRUCTOR_RESULT;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -42,9 +40,11 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ConstructorResultJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.targetClass = extractJandexValue( annotation, CONSTRUCTOR_RESULT, "targetClass", modelContext );
-		this.columns = extractJandexValue( annotation, CONSTRUCTOR_RESULT, "columns", modelContext );
+	public ConstructorResultJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.targetClass = (Class<?>) attributeValues.get( "targetClass" );
+		this.columns = (jakarta.persistence.ColumnResult[]) attributeValues.get( "columns" );
 	}
 
 	@Override

@@ -19,7 +19,7 @@ import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class MappedSuperclassType2Test {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8534" )
+	@JiraKey( value = "HHH-8534" )
 	@FailureExpected( jiraKey = "HHH-8534" )
 	public void testMappedSuperclassAccessNoEntity() {
 		// stupid? yes.  tck does it? yes.

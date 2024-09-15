@@ -13,9 +13,9 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
@@ -39,9 +39,9 @@ public class BindingTypeHelper {
 	public <T> BindableType<T> resolveTemporalPrecision(
 			TemporalType precision,
 			BindableType<T> declaredParameterType,
-			SessionFactoryImplementor sessionFactory) {
+			BindingContext bindingContext) {
 		if ( precision != null ) {
-			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( sessionFactory );
+			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible(bindingContext);
 			if ( !( JavaTypeHelper.isTemporal( sqmExpressible.getExpressibleJavaType() ) ) ) {
 				throw new UnsupportedOperationException(
 						"Cannot treat non-temporal parameter type with temporal precision"
@@ -50,7 +50,7 @@ public class BindingTypeHelper {
 
 			final TemporalJavaType<T> temporalJtd = (TemporalJavaType<T>) sqmExpressible.getExpressibleJavaType();
 			if ( temporalJtd.getPrecision() != precision ) {
-				final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
+				final TypeConfiguration typeConfiguration = bindingContext.getTypeConfiguration();
 				final TemporalJavaType<T> temporalTypeForPrecision;
 				// Special case java.util.Date, because TemporalJavaType#resolveTypeForPrecision doesn't support widening,
 				// since the main purpose of that method is to determine the final java type based on the reflective type

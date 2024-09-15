@@ -16,7 +16,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -64,7 +64,7 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9642")
+	@JiraKey(value = "HHH-9642")
 	public void testOneToManyJoinFetchedInEmbeddable() {
 		Client client = new Client( 111, "steve", "ebersole" );
 		Alias alias = new Alias( "a", "guy", "work" );
@@ -115,7 +115,7 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4586")
+	@JiraKey(value = "HHH-4586")
 	public void testParameterizedFunctions() {
 		doInJPA( this::entityManagerFactory, em -> {
 					 CriteriaBuilder cb = em.getCriteriaBuilder();

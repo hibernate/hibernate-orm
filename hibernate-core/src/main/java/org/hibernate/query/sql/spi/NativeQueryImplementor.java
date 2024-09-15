@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -148,10 +149,13 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setHint(String hintName, Object value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
+	NativeQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+	@Override @Deprecated(since = "7")
 	NativeQueryImplementor<R> setFlushMode(FlushModeType flushMode);
 
 	@Override

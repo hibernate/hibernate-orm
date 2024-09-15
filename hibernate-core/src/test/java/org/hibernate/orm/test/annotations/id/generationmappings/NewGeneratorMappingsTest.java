@@ -12,8 +12,10 @@ import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity1;
+import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity2;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -127,10 +129,11 @@ public class NewGeneratorMappingsTest  {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6790")
+	@JiraKey(value = "HHH-6790")
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		// Checking first entity.
-        EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(DedicatedSequenceEntity1.class.getName());
+        EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(
+				DedicatedSequenceEntity1.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;

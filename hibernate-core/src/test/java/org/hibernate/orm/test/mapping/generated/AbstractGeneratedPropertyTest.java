@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -30,7 +30,7 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2627" )
+	@JiraKey( value = "HHH-2627" )
 	public final void testGeneratedProperty() {
 		// The following block is repeated 300 times to reproduce HHH-2627.
 		// Without the fix, Oracle will run out of cursors using 10g with

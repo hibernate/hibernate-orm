@@ -129,8 +129,10 @@ tasks.named( "compileJakartaDataJava", JavaCompile ) {
 
 check.dependsOn quarkusHrPanacheTestTask
 check.dependsOn quarkusOrmPanacheTestTask
+check.dependsOn jakartaDataTestTask
 test.dependsOn quarkusHrPanacheTestTask
 test.dependsOn quarkusOrmPanacheTestTask
+test.dependsOn jakartaDataTestTask
 
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'

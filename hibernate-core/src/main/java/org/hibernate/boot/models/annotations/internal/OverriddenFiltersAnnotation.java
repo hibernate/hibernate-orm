@@ -7,20 +7,17 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Filters;
-import org.hibernate.boot.models.DialectOverrideAnnotations;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AbstractOverrider;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_FILTERS;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 /**
@@ -32,19 +29,32 @@ public class OverriddenFiltersAnnotation
 		implements DialectOverride.Filters, DialectOverrider<Filters> {
 	private Filters override;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OverriddenFiltersAnnotation(SourceModelBuildingContext sourceModelContext) {
 	}
 
-	public OverriddenFiltersAnnotation(DialectOverride.Filters source, SourceModelBuildingContext sourceModelContext) {
-		dialect( source.dialect() );
-		before( source.before() );
-		sameOrAfter( source.sameOrAfter() );
-		override( extractJdkValue( source, DIALECT_OVERRIDE_FILTERS, "override", sourceModelContext ) );
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
+	public OverriddenFiltersAnnotation(
+			DialectOverride.Filters annotation,
+			SourceModelBuildingContext sourceModelContext) {
+		dialect( annotation.dialect() );
+		before( annotation.before() );
+		sameOrAfter( annotation.sameOrAfter() );
+		override( extractJdkValue( annotation, DIALECT_OVERRIDE_FILTERS, "override", sourceModelContext ) );
 	}
 
-	public OverriddenFiltersAnnotation(AnnotationInstance source, SourceModelBuildingContext sourceModelContext) {
-		super( source, DIALECT_OVERRIDE_FILTERS, sourceModelContext );
-		override( extractJandexValue( source, DIALECT_OVERRIDE_FILTERS, "override", sourceModelContext ) );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public OverriddenFiltersAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext sourceModelContext) {
+		super( attributeValues, DIALECT_OVERRIDE_FILTERS, sourceModelContext );
+		override( (Filters) attributeValues.get( "override" ) );
 	}
 
 	@Override

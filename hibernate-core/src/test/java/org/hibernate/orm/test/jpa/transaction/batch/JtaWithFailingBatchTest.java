@@ -10,7 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BatchSettings;
 import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gail Badner
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13050")
+@JiraKey(value = "HHH-13050")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @Jpa(
 		annotatedClasses = {

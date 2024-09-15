@@ -22,7 +22,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-11573")
+@JiraKey(value = "HHH-11573")
 public class EntityTypeQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Entity(name = "EntityA")

@@ -18,7 +18,7 @@ import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.map.MapProxy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -70,7 +70,7 @@ public class MapProxySerializationTest {
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
-	@TestForIssue(jiraKey = "HHH-7686")
+	@JiraKey(value = "HHH-7686")
 	public void testInitializedProxySerializationIfTargetInPersistenceContext(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
@@ -102,7 +102,7 @@ public class MapProxySerializationTest {
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
-	@TestForIssue(jiraKey = "HHH-7686")
+	@JiraKey(value = "HHH-7686")
 	public void testUninitializedProxySerializationIfTargetInPersistenceContext(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );
@@ -160,7 +160,7 @@ public class MapProxySerializationTest {
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
-	@TestForIssue(jiraKey = "HHH-7686")
+	@JiraKey(value = "HHH-7686")
 	public void testProxyInitializationWithoutTXAfterDeserialization(SessionFactoryScope scope) {
 		final Map<String, Object> deserializedParent = scope.fromTransaction( s -> {
 			final Map<String, Object> child = (Map<String, Object>) s.getReference( "ChildEntity", 1L );

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.pagination.hhh9965;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ import static org.junit.Assert.fail;
  *
  * @author Reda.Housni-Alaoui
  */
-@TestForIssue(jiraKey = "HHH-9965")
+@JiraKey(value = "HHH-9965")
 public class HHH9965Test extends BaseCoreFunctionalTestCase {
 
     @Test

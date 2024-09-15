@@ -8,8 +8,8 @@ package org.hibernate.query.hql.internal;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -30,18 +30,17 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * @asciidoc
- *
- * DotIdentifierHandler used to interpret paths outside of any specific
- * context.  This is the handler used at the root of the handler stack.
- *
- * It can recognize any number of types of paths -
- *
- * 		* fully-qualified class names (entity or otherwise)
- * 		* static field references, e.g. `MyClass.SOME_FIELD`
- * 		* enum value references, e.g. `Sex.MALE`
- * 		* navigable-path
- * 		* others?
+ * A {@link DotIdentifierConsumer} used to interpret paths outside any
+ * specific context. This is the handler used at the root of the handler
+ * stack.
+ * <p>
+ * It can recognize any number of types of paths:
+ * <ul>
+ * <li>fully-qualified class names (entity or otherwise)
+ * <li>static field references, e.g. {@code MyClass.SOME_FIELD}
+ * <li>enum value references, e.g. {@code Sex.MALE}
+ * <li>navigable-path
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -99,9 +98,9 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	}
 
 	private <T> Class<T> treatTarget(String typeName) {
-		final ManagedDomainType<T> managedType = creationState.getCreationContext()
-				.getJpaMetamodel()
-				.managedType( typeName );
+		final ManagedDomainType<T> managedType =
+				creationState.getCreationContext().getJpaMetamodel()
+						.managedType( typeName );
 		return managedType.getJavaType();
 	}
 
@@ -133,35 +132,23 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( isBase ) {
 				isBase = false;
 
-				final SqmPathRegistry sqmPathRegistry = creationState.getProcessingStateStack()
-						.getCurrent()
-						.getPathRegistry();
+				final SqmPathRegistry sqmPathRegistry =
+						creationState.getProcessingStateStack().getCurrent()
+								.getPathRegistry();
 
 				final SqmFrom<?,?> pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier, true );
 				if ( pathRootByAlias != null ) {
 					// identifier is an alias (identification variable)
 					validateAsRoot( pathRootByAlias );
-
-					if ( isTerminal ) {
-						return pathRootByAlias;
-					}
-					else {
-						return new DomainPathPart( pathRootByAlias );
-					}
+					return isTerminal ? pathRootByAlias : new DomainPathPart( pathRootByAlias );
 				}
 
 				final SqmFrom<?, ?> pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
 				if ( pathRootByExposedNavigable != null ) {
 					// identifier is an "unqualified attribute reference"
 					validateAsRoot( pathRootByExposedNavigable );
-
 					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier );
-					if ( isTerminal ) {
-						return sqmPath;
-					}
-					else {
-						return new DomainPathPart( sqmPath );
-					}
+					return isTerminal ? sqmPath : new DomainPathPart( sqmPath );
 				}
 			}
 
@@ -177,35 +164,31 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			//
 			// todo (6.0) : finish this logic.  and see above note in `! isTerminal` block
 
-			final SqmCreationContext creationContext = creationState.getCreationContext();
 
 			if ( ! isTerminal ) {
 				return this;
 			}
 
+			final SqmCreationContext creationContext = creationState.getCreationContext();
+			final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
 			final String path = pathSoFar.toString();
-			final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
 			final String importableName = jpaMetamodel.qualifyImportableName( path );
 			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 			if ( importableName != null ) {
 				final ManagedDomainType<?> managedType = jpaMetamodel.managedType( importableName );
-				if ( managedType instanceof EntityDomainType<?> ) {
-					return new SqmLiteralEntityType<>( (EntityDomainType<?>) managedType, nodeBuilder );
+				if ( managedType instanceof EntityDomainType<?> entityDomainType ) {
+					return new SqmLiteralEntityType<>( entityDomainType, nodeBuilder );
 				}
-				else if ( managedType instanceof EmbeddableDomainType<?> ) {
-					return new SqmLiteralEmbeddableType<>( (EmbeddableDomainType<?>) managedType, nodeBuilder );
+				else if ( managedType instanceof EmbeddableDomainType<?> embeddableDomainType ) {
+					return new SqmLiteralEmbeddableType<>( embeddableDomainType, nodeBuilder );
 				}
 			}
 
 			final SqmFunctionDescriptor functionDescriptor =
-					creationContext.getQueryEngine()
-							.getSqmFunctionRegistry()
+					creationContext.getQueryEngine().getSqmFunctionRegistry()
 							.findFunctionDescriptor( path );
 			if ( functionDescriptor != null ) {
-				return functionDescriptor.generateSqmExpression(
-						null,
-						creationContext.getQueryEngine()
-				);
+				return functionDescriptor.generateSqmExpression( null, creationContext.getQueryEngine() );
 			}
 
 			// see if it is a named field/enum reference
@@ -213,39 +196,52 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( splitPosition > 0 ) {
 				final String prefix = path.substring( 0, splitPosition );
 				final String terminal = path.substring( splitPosition + 1 );
-
 				try {
 					final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
 					if ( enumType != null ) {
-						return new SqmEnumLiteral(
-								jpaMetamodel.enumValue( enumType, terminal ),
-								enumType,
-								terminal,
-								nodeBuilder
-						);
+						return sqmEnumLiteral( jpaMetamodel, enumType, terminal, nodeBuilder );
 					}
 
 					final JavaType<?> fieldJtdTest = jpaMetamodel.getJavaConstantType( prefix, terminal );
 					if ( fieldJtdTest != null ) {
-						final Object constantValue = jpaMetamodel.getJavaConstant( prefix, terminal );
-						return new SqmFieldLiteral( constantValue, fieldJtdTest, terminal, nodeBuilder );
-
+						return sqmFieldLiteral( jpaMetamodel, prefix, terminal, fieldJtdTest, nodeBuilder );
 					}
 				}
 				catch (Exception ignore) {
 				}
 			}
 
-			throw new SemanticException(
-					String.format(
-						"Could not interpret path expression '%s'",
-						path
-					)
+			throw new SemanticException( "Could not interpret path expression '" + path + "'" );
+		}
+
+		private static <E> SqmFieldLiteral<E> sqmFieldLiteral(
+				JpaMetamodel jpaMetamodel,
+				String prefix,
+				String terminal,
+				JavaType<E> fieldJtdTest,
+				NodeBuilder nodeBuilder) {
+			return new SqmFieldLiteral<>(
+					jpaMetamodel.getJavaConstant( prefix, terminal ),
+					fieldJtdTest,
+					terminal,
+					nodeBuilder
+			);
+		}
+
+		private static <E extends Enum<E>> SqmEnumLiteral<E> sqmEnumLiteral(
+				JpaMetamodel jpaMetamodel,
+				EnumJavaType<E> enumType,
+				String terminal,
+				NodeBuilder nodeBuilder) {
+			return new SqmEnumLiteral<>(
+					jpaMetamodel.enumValue( enumType, terminal ),
+					enumType,
+					terminal,
+					nodeBuilder
 			);
 		}
 
 		protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {
-
 		}
 
 		@Override

@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JavaTypeRegistrations;
@@ -14,9 +15,6 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -41,13 +39,10 @@ public class JavaTypeRegistrationsAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JavaTypeRegistrationsAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				HibernateAnnotations.JAVA_TYPE_REGISTRATIONS,
-				"value",
-				modelContext
-		);
+	public JavaTypeRegistrationsAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.value = (JavaTypeRegistration[]) attributeValues.get( "value" );
 	}
 
 	@Override

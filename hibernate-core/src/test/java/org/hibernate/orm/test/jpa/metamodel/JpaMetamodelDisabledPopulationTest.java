@@ -6,12 +6,12 @@
  */
 package org.hibernate.orm.test.jpa.metamodel;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12871")
+@JiraKey(value = "HHH-12871")
 public class JpaMetamodelDisabledPopulationTest extends AbstractJpaMetamodelPopulationTest {
 	@Override
 	protected String getJpaMetamodelPopulationValue() {

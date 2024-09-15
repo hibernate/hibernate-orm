@@ -18,7 +18,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -35,7 +35,7 @@ public class SmallIntToShortClassMappingTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12115")
+	@JiraKey(value = "HHH-12115")
 	public void testShortType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Event event = new Event();

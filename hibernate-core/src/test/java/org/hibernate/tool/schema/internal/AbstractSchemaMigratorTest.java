@@ -17,7 +17,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.tool.schema.extract.internal.ColumnInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ForeignKeyInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.mock;
 public class AbstractSchemaMigratorTest {
 
     @Test
-    @TestForIssue(jiraKey = "HHH-13779")
+    @JiraKey(value = "HHH-13779")
     public void testForeignKeyPreExistenceDetectionIgnoresCaseForTableAndColumnName() {
         final AbstractSchemaMigrator schemaMigrator = new AbstractSchemaMigrator(null, null) {
             @Override

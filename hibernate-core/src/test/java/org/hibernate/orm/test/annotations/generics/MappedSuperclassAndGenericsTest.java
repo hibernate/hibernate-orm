@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.annotations.generics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +23,7 @@ import jakarta.persistence.MappedSuperclass;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15970")
+@JiraKey( value = "HHH-15970")
 public class MappedSuperclassAndGenericsTest {
 
 	public enum MyEnum {

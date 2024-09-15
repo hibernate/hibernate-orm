@@ -16,7 +16,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -47,7 +47,7 @@ public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase
 
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-6256")
+	@JiraKey( value = "HHH-6256")
 	public void testTimeoutHint(){
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

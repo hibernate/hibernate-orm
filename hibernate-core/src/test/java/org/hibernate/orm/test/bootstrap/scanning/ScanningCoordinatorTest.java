@@ -41,7 +41,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
 import org.hibernate.engine.config.spi.ConfigurationService;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
 import org.hibernate.testing.orm.junit.MessageKeyWatcher;
@@ -135,7 +135,7 @@ public class ScanningCoordinatorTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14473")
+	@JiraKey(value = "HHH-14473")
 	public void testApplyScanResultsToManagedResultsWhileExplicitClassNameLoadable() {
 		Class<Object> expectedClass = Object.class;
 		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenReturn( expectedClass );
@@ -153,13 +153,13 @@ public class ScanningCoordinatorTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12505")
+	@JiraKey(value = "HHH-12505")
 	public void testManagedResourcesAfterCoordinateScanWithDisabledScanner() {
 		assertManagedResourcesAfterCoordinateScanWithScanner( new DisabledScanner(), true );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12505")
+	@JiraKey(value = "HHH-12505")
 	public void testManagedResourcesAfterCoordinateScanWithCustomEnabledScanner() {
 		final Scanner scanner = new Scanner() {
 			@Override
@@ -176,7 +176,7 @@ public class ScanningCoordinatorTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10778")
+	@JiraKey(value = "HHH-10778")
 	public void testManagedResourcesAfterCoordinateScanWithConverterScanner() {
 
 		when( classLoaderService.classForName( "converter" ) ).thenReturn( (Class) IntegerToVarcharConverter.class );

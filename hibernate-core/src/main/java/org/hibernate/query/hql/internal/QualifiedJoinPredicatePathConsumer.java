@@ -53,8 +53,8 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 					final SqmCreationProcessingState processingState = getCreationState().getCurrentProcessingState();
 					// First, we need to find out if the current join is part of current processing query
 					final SqmQuery<?> currentProcessingQuery = processingState.getProcessingQuery();
-					if ( currentProcessingQuery instanceof SqmSelectQuery<?> ) {
-						final SqmQuerySpec<?> querySpec = ( (SqmSelectQuery<?>) currentProcessingQuery ).getQuerySpec();
+					if ( currentProcessingQuery instanceof SqmSelectQuery<?> selectQuery ) {
+						final SqmQuerySpec<?> querySpec = selectQuery.getQuerySpec();
 						final SqmFromClause fromClause = querySpec.getFromClause();
 						// If the current processing query contains the root of the current join,
 						// then the root of the processing path must be a root of one of the parent queries
@@ -96,8 +96,8 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 					SqmCreationProcessingState processingState) {
 				while ( processingState != null ) {
 					final SqmQuery<?> processingQuery = processingState.getProcessingQuery();
-					if ( processingQuery instanceof SqmSelectQuery<?> ) {
-						final SqmQuerySpec<?> querySpec = ( (SqmSelectQuery<?>) processingQuery ).getQuerySpec();
+					if ( processingQuery instanceof SqmSelectQuery<?> selectQuery ) {
+						final SqmQuerySpec<?> querySpec = selectQuery.getQuerySpec();
 						final SqmFromClause fromClause = querySpec.getFromClause();
 						// If we are in a subquery, the "foreign" from element could be one of the subquery roots,
 						// which is totally fine. The aim of this check is to prevent uses of different "spaces"

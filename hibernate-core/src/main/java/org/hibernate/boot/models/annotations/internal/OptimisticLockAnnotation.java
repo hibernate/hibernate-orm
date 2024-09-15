@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,13 +33,8 @@ public class OptimisticLockAnnotation implements OptimisticLock {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OptimisticLockAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.excluded = extractJandexValue(
-				annotation,
-				HibernateAnnotations.OPTIMISTIC_LOCK,
-				"excluded",
-				modelContext
-		);
+	public OptimisticLockAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.excluded = (boolean) attributeValues.get( "excluded" );
 	}
 
 	@Override

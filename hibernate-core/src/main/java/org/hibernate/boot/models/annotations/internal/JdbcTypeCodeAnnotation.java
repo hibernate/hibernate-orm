@@ -7,14 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -37,8 +33,8 @@ public class JdbcTypeCodeAnnotation implements JdbcTypeCode {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JdbcTypeCodeAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, HibernateAnnotations.JDBC_TYPE_CODE, "value", modelContext );
+	public JdbcTypeCodeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (int) attributeValues.get( "value" );
 	}
 
 	@Override

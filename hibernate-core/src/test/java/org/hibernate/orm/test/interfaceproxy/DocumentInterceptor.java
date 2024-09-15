@@ -35,7 +35,7 @@ public class DocumentInterceptor implements Interceptor {
 		}
 	}
 
-	public boolean onSave(
+	public boolean onPersist(
 			Object entity,
 			Object id,
 			Object[] state,

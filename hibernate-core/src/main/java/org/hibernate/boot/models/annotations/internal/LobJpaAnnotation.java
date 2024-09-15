@@ -7,10 +7,9 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
 
 import jakarta.persistence.Lob;
 
@@ -33,7 +32,7 @@ public class LobJpaAnnotation implements Lob {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public LobJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
+	public LobJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 	}
 
 	@Override

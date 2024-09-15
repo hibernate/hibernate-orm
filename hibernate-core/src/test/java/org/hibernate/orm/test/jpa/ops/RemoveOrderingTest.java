@@ -17,7 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 public class RemoveOrderingTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8550")
+	@JiraKey(value = "HHH-8550")
 	@FailureExpected(jiraKey = "HHH-8550")
 	public void testManyToOne(EntityManagerFactoryScope scope) {
 		scope.inTransaction(

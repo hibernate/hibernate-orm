@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -35,8 +36,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -123,7 +122,6 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatemen
 public class QuerySqmImpl<R>
 		extends AbstractSqmSelectionQuery<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
 	private final String hql;
 	private SqmStatement<R> sqm;
@@ -704,26 +702,26 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public <T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
-		applyTupleTransformer( transformer );
+		getQueryOptions().setTupleTransformer( transformer );
 		//noinspection unchecked
 		return (SqmQueryImplementor<T>) this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer) {
-		applyResultListTransformer( transformer );
+		getQueryOptions().setResultListTransformer( transformer );
 		return this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setMaxResults(int maxResult) {
-		applyMaxResults( maxResult );
+		super.setMaxResults( maxResult );
 		return this;
 	}
 
 	@Override
 	public SqmQueryImplementor<R> setFirstResult(int startPosition) {
-		applyFirstResult( startPosition );
+		super.setFirstResult( startPosition );
 		return this;
 	}
 
@@ -734,8 +732,14 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	public SqmQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+		super.setQueryFlushMode( queryFlushMode );
+		return this;
+	}
+
+	@Override
 	public SqmQueryImplementor<R> setFlushMode(FlushModeType flushMode) {
-		applyJpaFlushMode( flushMode );
+		super.setFlushMode( flushMode );
 		return this;
 	}
 
@@ -755,11 +759,6 @@ public class QuerySqmImpl<R>
 		verifySelect();
 		getSession().checkOpen( false );
 		return getLockOptions().getLockMode().toJpaLockMode();
-	}
-
-	@Override
-	public FlushModeType getFlushMode() {
-		return getJpaFlushMode();
 	}
 
 	@Override
@@ -815,7 +814,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public SqmQueryImplementor<R> setHint(String hintName, Object value) {
-		applyHint( hintName, value );
+		super.setHint( hintName, value );
 		return this;
 	}
 
@@ -909,7 +908,7 @@ public class QuerySqmImpl<R>
 					isCacheable(),
 					getCacheRegion(),
 					getCacheMode(),
-					getHibernateFlushMode(),
+					getQueryOptions().getFlushMode(),
 					isReadOnly(),
 					getLockOptions(),
 					getTimeout(),
@@ -929,7 +928,7 @@ public class QuerySqmImpl<R>
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getHibernateFlushMode(),
+				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getLockOptions(),
 				getTimeout(),

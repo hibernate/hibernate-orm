@@ -10,7 +10,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
@@ -19,7 +19,7 @@ import org.junit.Test;
 public class AttributePathTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10863")
+	@JiraKey(value = "HHH-10863")
 	public void testCollectionElement() {
 		AttributePath attributePath = AttributePath.parse( "items.{element}.name" );
 

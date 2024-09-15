@@ -18,6 +18,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 /**
  * An {@link Exporter} for {@linkplain ForeignKey foreign key constraints}.
  *
@@ -78,10 +80,14 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				);
 
 		if ( dialect.supportsCascadeDelete() ) {
-			OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
+			final OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
 			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
 				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
 			}
+		}
+
+		if ( isNotEmpty( foreignKey.getOptions() ) ) {
+			buffer.append( " " ).append( foreignKey.getOptions() );
 		}
 
 		return new String[] { buffer.toString() };

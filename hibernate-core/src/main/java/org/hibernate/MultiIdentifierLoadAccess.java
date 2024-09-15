@@ -52,6 +52,15 @@ public interface MultiIdentifierLoadAccess<T> {
 	MultiIdentifierLoadAccess<T> with(CacheMode cacheMode);
 
 	/**
+	 * Specify whether the entities should be loaded in read-only mode.
+	 *
+	 * @see Session#setDefaultReadOnly(boolean)
+	 *
+	 * @since 7.0
+	 */
+	MultiIdentifierLoadAccess<T> withReadOnly(boolean readOnly);
+
+	/**
 	 * Override the associations fetched by default by specifying
 	 * the complete list of associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
@@ -87,6 +96,30 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
 	 */
 	MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be enabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 7.0
+	 */
+	MultiIdentifierLoadAccess<T> enableFetchProfile(String profileName);
+
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be disabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 7.0
+	 */
+	MultiIdentifierLoadAccess<T> disableFetchProfile(String profileName);
 
 	/**
 	 * Specify a batch size, that is, how many entities should be
@@ -126,8 +159,8 @@ public interface MultiIdentifierLoadAccess<T> {
 
 	/**
 	 * Should {@link #multiLoad} return entity instances that have been
-	 * {@link Session#remove(Object) marked for removal} in the current
-	 * session, but not yet {@code delete}d in the database?
+	 * {@linkplain Session#remove(Object) marked for removal} in the
+	 * current session, but not yet {@code delete}d in the database?
 	 * <p>
 	 * By default, instances marked for removal are replaced by null in
 	 * the returned list of entities when {@link #enableOrderedReturn}

@@ -14,7 +14,7 @@ import java.util.Set;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -43,7 +43,7 @@ public class FlushTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "EJBTHREE-722")
+	@JiraKey(value = "EJBTHREE-722")
 	public void testFlushOnDetached(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

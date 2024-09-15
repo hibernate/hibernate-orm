@@ -83,7 +83,7 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		else {
 			expression = (SqmExpression) nodeBuilder().value( value );
 		}
-		assertAssignable( null, sqmPath, expression, nodeBuilder().getSessionFactory() );
+		assertAssignable( null, sqmPath, expression, nodeBuilder() );
 		applyAssignment( sqmPath, expression );
 		return this;
 	}

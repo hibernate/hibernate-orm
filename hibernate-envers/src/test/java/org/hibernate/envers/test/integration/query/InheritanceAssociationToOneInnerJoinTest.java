@@ -20,7 +20,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.hibernate.envers.query.AuditEntity.disjunction;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-11383")
+@JiraKey(value = "HHH-11383")
 public class InheritanceAssociationToOneInnerJoinTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

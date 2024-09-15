@@ -19,7 +19,7 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@link GenerationType#IDENTITY}
  * @see <a href='https://hibernate.atlassian.net/browse/HHH-4848'>HHH-4848</a> introduced the regression
  */
-@TestForIssue(jiraKey = "HHH-10956")
+@JiraKey(value = "HHH-10956")
 @DomainModel(
 		annotatedClasses = {
 				CompositeIdFkGeneratedValueTest.Head.class,

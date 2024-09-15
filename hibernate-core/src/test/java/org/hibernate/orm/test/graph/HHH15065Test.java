@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import org.hibernate.graph.RootGraph;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -22,7 +22,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-@TestForIssue(jiraKey = "HHH-15065")
+@JiraKey(value = "HHH-15065")
 @DomainModel(
 	annotatedClasses = {
 		HHH15065Test.Book.class,

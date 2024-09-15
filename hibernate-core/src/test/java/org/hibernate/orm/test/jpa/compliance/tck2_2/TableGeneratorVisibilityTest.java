@@ -15,7 +15,7 @@ import jakarta.persistence.TableGenerator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
@@ -23,7 +23,7 @@ import org.junit.Test;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-12157")
+@JiraKey(value = "HHH-12157")
 public class TableGeneratorVisibilityTest extends BaseCoreFunctionalTestCase {
 
 	@Override

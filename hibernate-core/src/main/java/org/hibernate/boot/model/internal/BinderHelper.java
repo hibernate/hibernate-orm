@@ -449,8 +449,7 @@ public class BinderHelper {
 		// Now, for each column find the properties of the target entity
 		// which are mapped to that column. (There might be multiple such
 		// properties for each column.)
-		if ( columnOwner instanceof PersistentClass ) {
-			final PersistentClass persistentClass = (PersistentClass) columnOwner;
+		if ( columnOwner instanceof PersistentClass persistentClass ) {
 			// Process ToOne associations after Components, Basic and Id properties
 			final List<Property> toOneProperties = new ArrayList<>();
 			for ( Property property : persistentClass.getReferenceableProperties() ) {
@@ -969,22 +968,14 @@ public class BinderHelper {
 	}
 
 	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
-		switch ( cascade ) {
-			case ALL:
-				return CascadeType.ALL;
-			case PERSIST:
-				return CascadeType.PERSIST;
-			case MERGE:
-				return CascadeType.MERGE;
-			case REMOVE:
-				return CascadeType.REMOVE;
-			case REFRESH:
-				return CascadeType.REFRESH;
-			case DETACH:
-				return CascadeType.DETACH;
-			default:
-				throw new AssertionFailure("unknown cascade type: " + cascade);
-		}
+		return switch (cascade) {
+			case ALL -> CascadeType.ALL;
+			case PERSIST -> CascadeType.PERSIST;
+			case MERGE -> CascadeType.MERGE;
+			case REMOVE -> CascadeType.REMOVE;
+			case REFRESH -> CascadeType.REFRESH;
+			case DETACH -> CascadeType.DETACH;
+		};
 	}
 
 	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {

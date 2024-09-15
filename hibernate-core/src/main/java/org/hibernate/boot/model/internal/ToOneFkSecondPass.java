@@ -6,20 +6,17 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.Map;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
 
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -66,8 +63,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		if ( entityClassName == null ) {
 			return false;
 		}
-		final PersistentClass persistentClass = buildingContext.getMetadataCollector()
-				.getEntityBinding( entityClassName );
+		final PersistentClass persistentClass =
+				buildingContext.getMetadataCollector().getEntityBinding( entityClassName );
 		final Property property = persistentClass.getIdentifierProperty();
 		if ( path == null ) {
 			return false;
@@ -78,8 +75,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		}
 		//try the embedded property
 		else {
-			final KeyValue valueIdentifier = persistentClass.getIdentifier();
-			if ( valueIdentifier instanceof Component ) {
+			if ( persistentClass.getIdentifier() instanceof Component component ) {
 				// Embedded property starts their path with 'id.'
 				// See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
 				String localPath = path;
@@ -87,7 +83,6 @@ public class ToOneFkSecondPass extends FkSecondPass {
 					localPath = path.substring( 3 );
 				}
 
-				final Component component = (Component) valueIdentifier;
 				for ( Property idProperty : component.getProperties() ) {
 					if ( localPath.equals( idProperty.getName() ) || localPath.startsWith( idProperty.getName() + "." ) ) {
 						return true;
@@ -116,13 +111,10 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			final String propertyRef = columns.getReferencedProperty();
 			if ( propertyRef != null ) {
 				handlePropertyRef(
-						columns,
 						targetEntity,
-						persistentClass,
 						manyToOne,
 						path,
 						propertyRef,
-						persistentClasses,
 						buildingContext
 				);
 			}
@@ -151,25 +143,17 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	}
 
 	private void handlePropertyRef(
-			AnnotatedJoinColumns columns,
 			PersistentClass targetEntity,
-			PersistentClass persistentClass,
 			ManyToOne manyToOne,
 			String path,
 			String referencedPropertyName,
-			Map<String, PersistentClass> persistentClasses,
 			MetadataBuildingContext buildingContext) {
 		manyToOne.setReferencedPropertyName( referencedPropertyName );
 		manyToOne.setReferenceToPrimaryKey( false );
 
-		buildingContext.getMetadataCollector().addUniquePropertyReference(
-				targetEntity.getEntityName(),
-				referencedPropertyName
-		);
-		buildingContext.getMetadataCollector().addPropertyReferencedAssociation(
-				targetEntity.getEntityName(),
-				path,
-				referencedPropertyName
-		);
+		final String entityName = targetEntity.getEntityName();
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		metadataCollector.addUniquePropertyReference( entityName, referencedPropertyName );
+		metadataCollector.addPropertyReferencedAssociation( entityName, path, referencedPropertyName );
 	}
 }

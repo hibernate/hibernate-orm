@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.annotations.BatchSize;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		,
 		useCollectingStatementInspector = true
 )
-@TestForIssue( jiraKey = "HHH-16005")
+@JiraKey( value = "HHH-16005")
 public class BatchPaginationTest {
 
 	@BeforeAll

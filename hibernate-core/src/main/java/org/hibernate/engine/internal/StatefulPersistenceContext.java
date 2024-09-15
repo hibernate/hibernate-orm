@@ -699,6 +699,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return e;
 	}
 
+	@Override
 	public EntityEntry addReferenceEntry(
 			final Object entity,
 			final Status status) {
@@ -885,11 +886,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private Object removeProxyByKey(final EntityKey key) {
-		final EntityHolderImpl entityHolder;
-		if ( entitiesByKey != null && ( entityHolder = entitiesByKey.get( key ) ) != null ) {
-			final Object proxy = entityHolder.proxy;
-			entityHolder.proxy = null;
-			return proxy;
+		if ( entitiesByKey != null ) {
+			final EntityHolderImpl entityHolder = entitiesByKey.get( key );
+			if ( entityHolder != null ) {
+				final Object proxy = entityHolder.proxy;
+				entityHolder.proxy = null;
+				return proxy;
+			}
 		}
 		return null;
 	}
@@ -909,11 +912,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public Object proxyFor(Object impl) throws HibernateException {
 		final EntityEntry e = getEntry( impl );
 		return e == null ? impl : proxyFor( e.getPersister(), e.getEntityKey(), impl );
-	}
-
-	@Override
-	public Object proxyFor(EntityHolder holder) throws HibernateException {
-		return proxyFor( holder, holder.getDescriptor() );
 	}
 
 	@Override
@@ -2089,7 +2087,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public boolean containsNullifiableEntityKey(Supplier<EntityKey> sek) {
 		return nullifiableEntityKeys != null
-			&& nullifiableEntityKeys.size() != 0
+			&& !nullifiableEntityKeys.isEmpty()
 			&& nullifiableEntityKeys.contains( sek.get() );
 	}
 
@@ -2104,7 +2102,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public boolean isNullifiableEntityKeysEmpty() {
 		return nullifiableEntityKeys == null
-			|| nullifiableEntityKeys.size() == 0;
+			|| nullifiableEntityKeys.isEmpty();
 	}
 
 	@Override

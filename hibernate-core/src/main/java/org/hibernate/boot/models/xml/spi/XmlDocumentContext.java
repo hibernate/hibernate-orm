@@ -20,6 +20,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedMapping;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
@@ -137,9 +138,10 @@ public interface XmlDocumentContext {
 			// <embedded/>, <embedded-id/>
 			final String target = jaxbEmbeddedMapping.getTarget();
 			if ( isNotEmpty( target ) ) {
-				return (MutableClassDetails) getModelBuildingContext().getClassDetailsRegistry().resolveClassDetails(
+				return (MutableClassDetails) ModelsHelper.resolveClassDetails(
 						target,
-						(name) -> new DynamicClassDetails( target, getModelBuildingContext() )
+						getModelBuildingContext().getClassDetailsRegistry(),
+						() -> new DynamicClassDetails( target, getModelBuildingContext() )
 				);
 			}
 			// fall through to exception
@@ -148,9 +150,10 @@ public interface XmlDocumentContext {
 		if ( jaxbPersistentAttribute instanceof JaxbAssociationAttribute jaxbAssociationAttribute ) {
 			final String target = jaxbAssociationAttribute.getTargetEntity();
 			if ( isNotEmpty( target ) ) {
-				return (MutableClassDetails) getModelBuildingContext().getClassDetailsRegistry().resolveClassDetails(
+				return (MutableClassDetails) ModelsHelper.resolveClassDetails(
 						target,
-						(name) -> new DynamicClassDetails(
+						getModelBuildingContext().getClassDetailsRegistry(),
+						() -> new DynamicClassDetails(
 								target,
 								null,
 								false,

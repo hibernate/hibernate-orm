@@ -10,7 +10,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 
@@ -63,7 +63,7 @@ public class MutableNaturalIdTest extends AbstractJPATest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7304")
+	@JiraKey(value = "HHH-7304")
 	public void testInLineSynchWithIdentityColumn() {
 		inTransaction(
 				session -> {

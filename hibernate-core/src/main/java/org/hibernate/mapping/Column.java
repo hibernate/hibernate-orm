@@ -351,8 +351,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	private static Type getUnderlyingType(Mapping mapping, Type type, int typeIndex) {
-		if ( type instanceof ComponentType ) {
-			final ComponentType componentType = (ComponentType) type;
+		if ( type instanceof ComponentType componentType ) {
 			int cols = 0;
 			for ( Type subtype : componentType.getSubtypes() ) {
 				int columnSpan = subtype.getColumnSpan( mapping );
@@ -363,8 +362,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			}
 			throw new IndexOutOfBoundsException();
 		}
-		else if ( type instanceof EntityType ) {
-			final EntityType entityType = (EntityType) type;
+		else if ( type instanceof EntityType entityType ) {
 			final Type idType = entityType.getIdentifierOrUniqueKeyType( mapping );
 			return getUnderlyingType( mapping, idType, typeIndex );
 		}
@@ -454,8 +452,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		if ( type instanceof ComponentType ) {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
-		if ( type instanceof BasicType ) {
-			final BasicType<?> basicType = (BasicType<?>) type;
+		if ( type instanceof BasicType<?> basicType ) {
 			if ( isTemporal( basicType.getExpressibleJavaType() ) ) {
 				precisionToUse = getTemporalPrecision();
 				lengthToUse = null;
@@ -510,12 +507,11 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	private Type getTypeForEntityValue(Mapping mapping, Type type, int typeIndex) {
 		int index = 0;
-		if ( type instanceof EntityType ) {
-			final EntityType entityType = (EntityType) type;
+		if ( type instanceof EntityType entityType ) {
 			return getTypeForEntityValue( mapping, entityType.getIdentifierOrUniqueKeyType( mapping ), typeIndex );
 		}
-		else if ( type instanceof ComponentType ) {
-			for ( Type subtype : ((ComponentType) type).getSubtypes() ) {
+		else if ( type instanceof ComponentType componentType ) {
+			for ( Type subtype : componentType.getSubtypes() ) {
 				final Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
 				if ( result != null ) {
 					return result;
@@ -672,7 +668,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	@Override
 	public String getWriteExpr() {
-		return customWrite != null && customWrite.length() > 0 ? customWrite : "?";
+		return customWrite != null && !customWrite.isEmpty() ? customWrite : "?";
 	}
 
 	@Override

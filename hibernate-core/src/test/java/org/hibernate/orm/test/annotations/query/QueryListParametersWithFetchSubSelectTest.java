@@ -14,7 +14,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -82,7 +82,7 @@ public class QueryListParametersWithFetchSubSelectTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14439")
+	@JiraKey(value = "HHH-14439")
 	public void reusingQueryWithFewerNamedParameters(SessionFactoryScope scope) {
 		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 
@@ -117,7 +117,7 @@ public class QueryListParametersWithFetchSubSelectTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14439")
+	@JiraKey(value = "HHH-14439")
 	public void reusingQueryWithFewerOrdinalParameters(SessionFactoryScope scope) {
 		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 

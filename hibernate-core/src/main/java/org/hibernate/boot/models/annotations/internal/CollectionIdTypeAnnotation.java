@@ -7,14 +7,12 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.CollectionIdType;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import static org.hibernate.boot.models.HibernateAnnotations.COLLECTION_ID_TYPE;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -41,14 +39,9 @@ public class CollectionIdTypeAnnotation implements CollectionIdType {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionIdTypeAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, COLLECTION_ID_TYPE, "value", modelContext );
-		this.parameters = extractJandexValue(
-				annotation,
-				COLLECTION_ID_TYPE,
-				"parameters",
-				modelContext
-		);
+	public CollectionIdTypeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.value = (Class<? extends org.hibernate.usertype.UserType<?>>) attributeValues.get( "value" );
+		this.parameters = (org.hibernate.annotations.Parameter[]) attributeValues.get( "parameters" );
 	}
 
 	@Override

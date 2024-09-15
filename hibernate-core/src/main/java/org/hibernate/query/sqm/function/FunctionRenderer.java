@@ -27,7 +27,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
  * @since 6.4
  */
 @FunctionalInterface
-public interface FunctionRenderer extends FunctionRenderingSupport {
+public interface FunctionRenderer {
 	/**
 	 * @deprecated Use {@link #render(SqlAppender, List, ReturnableType, SqlAstTranslator)} instead
 	 */

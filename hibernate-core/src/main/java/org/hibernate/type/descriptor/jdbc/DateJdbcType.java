@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.Calendar;
 
 import jakarta.persistence.TemporalType;
@@ -54,7 +55,9 @@ public class DateJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Date.class );
+		return typeConfiguration.getCurrentBaseSqlTypeIndicators().preferJdbcDatetimeTypes()
+				? typeConfiguration.getJavaTypeRegistry().getDescriptor( Date.class )
+				: typeConfiguration.getJavaTypeRegistry().getDescriptor( LocalDate.class );
 	}
 
 	@Override

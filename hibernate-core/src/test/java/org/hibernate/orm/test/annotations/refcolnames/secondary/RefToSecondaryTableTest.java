@@ -1,13 +1,13 @@
 package org.hibernate.orm.test.annotations.refcolnames.secondary;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-15933")
+@JiraKey(value = "HHH-15933")
 @SessionFactory
 @DomainModel(annotatedClasses = { Split.class, Reference.class })
 public class RefToSecondaryTableTest {

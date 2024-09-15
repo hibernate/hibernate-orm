@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -16,12 +17,9 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
 import static org.hibernate.boot.models.JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -58,32 +56,14 @@ public class PrimaryKeyJoinColumnJpaAnnotation implements PrimaryKeyJoinColumn, 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public PrimaryKeyJoinColumnJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, PRIMARY_KEY_JOIN_COLUMN, "name", modelContext );
-		this.referencedColumnName = extractJandexValue(
-				annotation,
-				PRIMARY_KEY_JOIN_COLUMN,
-				"referencedColumnName",
-				modelContext
-		);
-		this.columnDefinition = extractJandexValue(
-				annotation,
-				PRIMARY_KEY_JOIN_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJandexValue(
-				annotation,
-				PRIMARY_KEY_JOIN_COLUMN,
-				"options",
-				modelContext
-		);
-		this.foreignKey = extractJandexValue(
-				annotation,
-				PRIMARY_KEY_JOIN_COLUMN,
-				"foreignKey",
-				modelContext
-		);
+	public PrimaryKeyJoinColumnJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.referencedColumnName = (String) attributeValues.get( "referencedColumnName" );
+		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
+		this.options = (String) attributeValues.get( "options" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
 	}
 
 	@Override

@@ -8,14 +8,14 @@ package org.hibernate.orm.test.annotations.id.sequences;
 
 import org.hibernate.mapping.Column;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.orm.test.annotations.id.generationmappings.DedicatedSequenceEntity1;
-import org.hibernate.orm.test.annotations.id.generationmappings.DedicatedSequenceEntity2;
+import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity1;
+import org.hibernate.orm.test.annotations.id.generationmappings.sub.DedicatedSequenceEntity2;
 import org.hibernate.orm.test.annotations.id.sequences.entities.Ball;
 import org.hibernate.orm.test.annotations.id.sequences.entities.BreakDance;
 import org.hibernate.orm.test.annotations.id.sequences.entities.Computer;
@@ -289,7 +289,7 @@ public class IdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6790")
+	@JiraKey(value = "HHH-6790")
 	public void testSequencePerEntity(SessionFactoryScope scope) {
 		DedicatedSequenceEntity1 entity1 = new DedicatedSequenceEntity1();
 		DedicatedSequenceEntity2 entity2 = new DedicatedSequenceEntity2();

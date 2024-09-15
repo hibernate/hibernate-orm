@@ -22,7 +22,10 @@ import org.hibernate.annotations.Mutability;
 public class Immutability implements MutabilityPlan<Object> {
 	/**
 	 * Singleton access
+	 *
+	 * @deprecated in favor of {@link #instance()}
 	 */
+	@Deprecated( forRemoval = true )
 	public static final Immutability INSTANCE = new Immutability();
 
 	public static <X> MutabilityPlan<X> instance() {

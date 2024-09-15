@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.SemanticException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
@@ -71,7 +71,7 @@ public class SetOperationTest {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-14704")
+    @JiraKey( value = "HHH-14704")
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
     public void testUnionAllWithManyToOne(SessionFactoryScope scope) {
         scope.inSession(
@@ -88,7 +88,7 @@ public class SetOperationTest {
     }
 
     @Test
-    @TestForIssue( jiraKey = "HHH-14704")
+    @JiraKey( value = "HHH-14704")
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
     public void testUnionAllWithManyToOneFetch(SessionFactoryScope scope) {
         scope.inSession(

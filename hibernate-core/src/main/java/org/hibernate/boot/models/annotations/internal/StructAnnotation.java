@@ -7,15 +7,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.Struct;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -45,11 +40,11 @@ public class StructAnnotation implements Struct {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public StructAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "name", modelContext );
-		this.catalog = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "schema", modelContext );
-		this.attributes = extractJandexValue( annotation, HibernateAnnotations.STRUCT, "attributes", modelContext );
+	public StructAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.catalog = (String) attributeValues.get( "catalog" );
+		this.schema = (String) attributeValues.get( "schema" );
+		this.attributes = (String[]) attributeValues.get( "attributes" );
 	}
 
 	@Override

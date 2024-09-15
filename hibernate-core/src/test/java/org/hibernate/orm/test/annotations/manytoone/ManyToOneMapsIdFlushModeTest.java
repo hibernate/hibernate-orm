@@ -23,7 +23,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.junit.Assert.assertEquals;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-13044")
+@JiraKey(value = "HHH-13044")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class ManyToOneMapsIdFlushModeTest extends BaseEntityManagerFunctionalTestCase {
 	@Override

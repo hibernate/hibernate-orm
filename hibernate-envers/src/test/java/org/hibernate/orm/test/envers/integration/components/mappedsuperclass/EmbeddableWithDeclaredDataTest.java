@@ -16,7 +16,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,7 +24,7 @@ import org.junit.Test;
  * @author Jakob Braeuchi.
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-9193")
+@JiraKey(value = "HHH-9193")
 public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
 	private long id;
 

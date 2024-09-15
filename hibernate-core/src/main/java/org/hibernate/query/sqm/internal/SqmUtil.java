@@ -19,12 +19,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.function.Function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -90,7 +89,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -187,8 +185,7 @@ public class SqmUtil {
 				else {
 					modelPart = modelPartContainer;
 				}
-				if ( modelPart instanceof EntityAssociationMapping ) {
-					final EntityAssociationMapping association = (EntityAssociationMapping) modelPart;
+				if ( modelPart instanceof EntityAssociationMapping association ) {
 					// If the path is one of the association's target key properties,
 					// we need to render the target side if in group/order by
 					if ( association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() )
@@ -227,8 +224,7 @@ public class SqmUtil {
 	 */
 	@Deprecated(forRemoval = true, since = "6.6.1")
 	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath) {
-		if ( sqmPath instanceof SqmJoin<?, ?> ) {
-			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
+		if ( sqmPath instanceof SqmJoin<?, ?> sqmJoin ) {
 			switch ( sqmJoin.getSqmJoinType() ) {
 				case LEFT:
 					final EntityAssociationMapping associationMapping = resolveAssociationMapping( sqmJoin );
@@ -252,8 +248,7 @@ public class SqmUtil {
 	 * or one that has an explicit on clause predicate.
 	 */
 	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath, EntityAssociationMapping associationMapping) {
-		if ( sqmPath instanceof SqmJoin<?, ?> ) {
-			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
+		if ( sqmPath instanceof SqmJoin<?, ?> sqmJoin ) {
 			switch ( sqmJoin.getSqmJoinType() ) {
 				case LEFT:
 					if ( isFiltered( associationMapping ) ) {
@@ -278,8 +273,7 @@ public class SqmUtil {
 	}
 
 	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmJoin<?, ?> sqmJoin) {
-		if ( sqmJoin instanceof SqmSingularJoin<?, ?> ) {
-			final SqmSingularJoin<?, ?> singularJoin = (SqmSingularJoin<?, ?>) sqmJoin;
+		if ( sqmJoin instanceof SqmSingularJoin<?, ?> singularJoin ) {
 			if ( singularJoin.getAttribute().getSqmPathType() instanceof EntityDomainType<?> ) {
 				return resolveAssociationMapping( singularJoin );
 			}
@@ -293,7 +287,7 @@ public class SqmUtil {
 		if ( declaringType.getPersistenceType() != Type.PersistenceType.ENTITY ) {
 			final StringBuilder pathBuilder = new StringBuilder();
 			do {
-				if ( pathBuilder.length() > 0 ) {
+				if ( !pathBuilder.isEmpty() ) {
 					pathBuilder.insert(0, '.');
 				}
 				pathBuilder.insert( 0, attribute.getName() );
@@ -307,17 +301,15 @@ public class SqmUtil {
 			} while (declaringType.getPersistenceType() != Type.PersistenceType.ENTITY );
 			pathBuilder.insert(0, '.');
 			pathBuilder.insert( 0, attribute.getName() );
-			final EntityPersister entityDescriptor = sqmJoin.nodeBuilder()
-					.getSessionFactory()
-					.getMappingMetamodel()
-					.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
+			final EntityPersister entityDescriptor =
+					sqmJoin.nodeBuilder().getMappingMetamodel()
+							.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
 			return (EntityAssociationMapping) entityDescriptor.findByPath( pathBuilder.toString() );
 		}
 		else {
-			final EntityPersister entityDescriptor = sqmJoin.nodeBuilder()
-					.getSessionFactory()
-					.getMappingMetamodel()
-					.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
+			final EntityPersister entityDescriptor =
+					sqmJoin.nodeBuilder().getMappingMetamodel()
+							.getEntityDescriptor( ( (EntityDomainType<?>) declaringType ).getHibernateEntityName() );
 			return (EntityAssociationMapping) entityDescriptor.findAttributeMapping( attribute.getName() );
 		}
 	}
@@ -490,8 +482,6 @@ public class SqmUtil {
 			QueryParameterBindings domainParamBindings,
 			DomainParameterXref domainParameterXref,
 			Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamXref,
-			MappingMetamodel domainModel,
-			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
@@ -507,8 +497,8 @@ public class SqmUtil {
 
 			final Map<SqmParameter<?>, List<JdbcParametersList>> jdbcParamMap = jdbcParamXref.get( queryParam );
 			for ( SqmParameter<?> sqmParameter : sqmParameters ) {
-				final MappingModelExpressible resolvedMappingModelType = mappingModelResolutionAccess
-						.getResolvedMappingModelType( sqmParameter );
+				final MappingModelExpressible resolvedMappingModelType =
+						mappingModelResolutionAccess.getResolvedMappingModelType( sqmParameter );
 				if ( resolvedMappingModelType != null ) {
 					domainParamBinding.setType( resolvedMappingModelType );
 				}
@@ -530,12 +520,9 @@ public class SqmUtil {
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
 						parameterType.forEachJdbcType(
-								(position, jdbcMapping) -> {
-									jdbcParameterBindings.addBinding(
-											jdbcParams.get( position ),
-											new JdbcParameterBindingImpl( jdbcMapping, null )
-									);
-								}
+								(position, jdbcMapping) ->
+										jdbcParameterBindings.addBinding( jdbcParams.get( position ),
+												new JdbcParameterBindingImpl( jdbcMapping, null ) )
 						);
 					}
 				}
@@ -554,7 +541,6 @@ public class SqmUtil {
 								parameterType,
 								jdbcParams,
 								firstValue,
-								tableGroupLocator,
 								session
 						);
 					}
@@ -579,7 +565,6 @@ public class SqmUtil {
 										parameterType,
 										expansionJdbcParams,
 										expandedValue,
-										tableGroupLocator,
 										session
 								);
 							}
@@ -627,7 +612,6 @@ public class SqmUtil {
 							}
 						}
 						else {
-
 							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 								final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
 								createValueBindings(
@@ -637,7 +621,6 @@ public class SqmUtil {
 										parameterType,
 										jdbcParams,
 										bindValue,
-										tableGroupLocator,
 										session
 								);
 							}
@@ -657,7 +640,6 @@ public class SqmUtil {
 			Bindable parameterType,
 			JdbcParametersList jdbcParams,
 			Object bindValue,
-			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SharedSessionContractImplementor session) {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
@@ -667,8 +649,7 @@ public class SqmUtil {
 			parameterType = ( (PluralAttributeMapping) parameterType ).getElementDescriptor();
 		}
 
-		if ( parameterType instanceof EntityIdentifierMapping ) {
-			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
+		if ( parameterType instanceof EntityIdentifierMapping identifierMapping ) {
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
 				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
@@ -682,8 +663,7 @@ public class SqmUtil {
 				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
 			}
 		}
-		else if ( parameterType instanceof EntityAssociationMapping ) {
-			EntityAssociationMapping association = (EntityAssociationMapping) parameterType;
+		else if ( parameterType instanceof EntityAssociationMapping association ) {
 			if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 				// If the association is the target, we must use the identifier of the EntityMappingType
 				bindValue = association.getAssociatedEntityMappingType().getIdentifierMapping()
@@ -764,12 +744,12 @@ public class SqmUtil {
 			return null;
 		}
 		//There's a high chance that we're dealing with a BasicTypeImpl, or a subclass of it.
-		else if ( o instanceof BasicTypeImpl ) {
-			return (BasicTypeImpl) o;
+		else if ( o instanceof BasicTypeImpl<?> basicType ) {
+			return basicType;
 		}
 		//Alternatively, chances are good that we're dealing with an ConvertedBasicTypeImpl.
-		else if ( o instanceof ConvertedBasicTypeImpl ) {
-			return (ConvertedBasicTypeImpl) o;
+		else if ( o instanceof ConvertedBasicTypeImpl<?> convertedBasicType ) {
+			return convertedBasicType;
 		}
 		else {
 			//Eventually fallback to the standard check for completeness:
@@ -827,8 +807,7 @@ public class SqmUtil {
 		else {
 			// ordering by an attribute of the returned entity
 			if ( items.size() == 1) {
-				if ( selected instanceof SqmRoot) {
-					final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
+				if ( selected instanceof SqmFrom<?, ?> root ) {
 					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
 					}
@@ -885,12 +864,11 @@ public class SqmUtil {
 				sqmParameters = new LinkedHashSet<>();
 			}
 
-			if ( parameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
+			if ( parameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
 				if ( jpaCriteriaParamResolutions == null ) {
 					jpaCriteriaParamResolutions = new IdentityHashMap<>();
 				}
 
-				final SqmJpaCriteriaParameterWrapper<?> wrapper = (SqmJpaCriteriaParameterWrapper<?>) parameter;
 				final JpaCriteriaParameter<?> criteriaParameter = wrapper.getJpaCriteriaParameter();
 
 				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
@@ -999,7 +977,7 @@ public class SqmUtil {
 	}
 
 	private static void checkQueryReturnType(SqmQuerySpec<?> querySpec, Class<?> expectedResultClass) {
-		final SessionFactoryImplementor sessionFactory = querySpec.nodeBuilder().getSessionFactory();
+		final JpaCompliance jpaCompliance = querySpec.nodeBuilder().getJpaCompliance();
 		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 		if ( selections == null || selections.isEmpty() ) {
 			// make sure there is at least one root
@@ -1009,7 +987,7 @@ public class SqmUtil {
 			}
 			// if there is a single root, use that as the selection
 			if ( sqmRoots.size() == 1 ) {
-				verifySingularSelectionType( expectedResultClass, sessionFactory, sqmRoots.get( 0 ) );
+				verifySingularSelectionType( expectedResultClass, jpaCompliance, sqmRoots.get( 0 ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Criteria has multiple query roots" );
@@ -1023,17 +1001,17 @@ public class SqmUtil {
 						? expectedResultClass.getComponentType()
 						: expectedResultClass;
 				for ( JpaSelection<?> selection : selectableNode.getSelectionItems() ) {
-					verifySelectionType( expectedSelectItemType, sessionFactory, (SqmSelectableNode<?>) selection );
+					verifySelectionType( expectedSelectItemType, jpaCompliance, (SqmSelectableNode<?>) selection );
 				}
 			}
 			else {
-				verifySingularSelectionType( expectedResultClass, sessionFactory, sqmSelection.getSelectableNode() );
+				verifySingularSelectionType( expectedResultClass, jpaCompliance, sqmSelection.getSelectableNode() );
 			}
 		}
 		else if ( expectedResultClass.isArray() ) {
 			final Class<?> componentType = expectedResultClass.getComponentType();
 			for ( SqmSelection<?> selection : selections ) {
-				verifySelectionType( componentType, sessionFactory, selection.getSelectableNode() );
+				verifySelectionType( componentType, jpaCompliance, selection.getSelectableNode() );
 			}
 		}
 	}
@@ -1050,19 +1028,18 @@ public class SqmUtil {
 	 */
 	private static void verifySingularSelectionType(
 			Class<?> expectedResultClass,
-			SessionFactoryImplementor sessionFactory,
+			JpaCompliance jpaCompliance,
 			SqmSelectableNode<?> selectableNode) {
 		try {
-			verifySelectionType( expectedResultClass, sessionFactory, selectableNode );
+			verifySelectionType( expectedResultClass, jpaCompliance, selectableNode );
 		}
 		catch (QueryTypeMismatchException mismatchException) {
 			// Check for special case of a single selection item and implicit instantiation.
 			// See if the selected type can be used to instantiate the expected-type
 			final JavaType<?> javaTypeDescriptor = selectableNode.getJavaTypeDescriptor();
 			if ( javaTypeDescriptor != null ) {
-				final Class<?> selectedJavaType = javaTypeDescriptor.getJavaTypeClass();
 				// ignore the exception if the expected type has a constructor accepting the selected item type
-				if ( hasMatchingConstructor( expectedResultClass, selectedJavaType ) ) {
+				if ( hasMatchingConstructor( expectedResultClass, javaTypeDescriptor.getJavaTypeClass() ) ) {
 					// ignore it
 				}
 				else {
@@ -1084,11 +1061,10 @@ public class SqmUtil {
 
 	private static <T> void verifySelectionType(
 			Class<T> expectedResultClass,
-			SessionFactoryImplementor sessionFactory,
+			JpaCompliance jpaCompliance,
 			SqmSelectableNode<?> selection) {
 		// special case for parameters in the select list
-		if ( selection instanceof SqmParameter ) {
-			final SqmParameter<?> sqmParameter = (SqmParameter<?>) selection;
+		if ( selection instanceof SqmParameter<?> sqmParameter ) {
 			final SqmExpressible<?> nodeType = sqmParameter.getExpressible();
 			// we may not yet know a selection type
 			if ( nodeType == null || nodeType.getExpressibleJavaType() == null ) {
@@ -1097,18 +1073,18 @@ public class SqmUtil {
 			}
 		}
 
-		if ( !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( !jpaCompliance.isJpaQueryComplianceEnabled() ) {
 			verifyResultType( expectedResultClass, selection.getExpressible() );
 		}
 	}
 
 	public static boolean isResultTypeAlwaysAllowed(Class<?> expectedResultClass) {
 		return expectedResultClass == null
-				|| expectedResultClass == Object.class
-				|| expectedResultClass == Object[].class
-				|| expectedResultClass == List.class
-				|| expectedResultClass == Map.class
-				|| expectedResultClass == Tuple.class;
+			|| expectedResultClass == Object.class
+			|| expectedResultClass == Object[].class
+			|| expectedResultClass == List.class
+			|| expectedResultClass == Map.class
+			|| expectedResultClass == Tuple.class;
 	}
 
 	protected static void verifyResultType(Class<?> resultClass, @Nullable SqmExpressible<?> selectionExpressible) {
@@ -1121,17 +1097,13 @@ public class SqmUtil {
 		assert selectionExpressibleJavaType != null;
 
 		final Class<?> selectionExpressibleJavaTypeClass = selectionExpressibleJavaType.getJavaTypeClass();
-		if ( selectionExpressibleJavaTypeClass == Object.class ) {
-
-		}
 		if ( selectionExpressibleJavaTypeClass != Object.class ) {
 			// performs a series of opt-out checks for validity... each if branch and return indicates a valid case
 			if ( resultClass.isAssignableFrom( selectionExpressibleJavaTypeClass ) ) {
 				return;
 			}
 
-			if ( selectionExpressibleJavaType instanceof PrimitiveJavaType ) {
-				final PrimitiveJavaType<?> primitiveJavaType = (PrimitiveJavaType<?>) selectionExpressibleJavaType;
+			if ( selectionExpressibleJavaType instanceof PrimitiveJavaType<?> primitiveJavaType ) {
 				if ( primitiveJavaType.getPrimitiveClass() == resultClass ) {
 					return;
 				}
@@ -1150,13 +1122,11 @@ public class SqmUtil {
 	}
 
 	private static boolean isEntityIdType(SqmExpressible<?> selectionExpressible, Class<?> resultClass) {
-		if ( selectionExpressible instanceof IdentifiableDomainType ) {
-			final IdentifiableDomainType<?> identifiableDomainType = (IdentifiableDomainType<?>) selectionExpressible;
+		if ( selectionExpressible instanceof IdentifiableDomainType<?> identifiableDomainType ) {
 			final SimpleDomainType<?> idType = identifiableDomainType.getIdType();
 			return resultClass.isAssignableFrom( idType.getBindableJavaType() );
 		}
-		else if ( selectionExpressible instanceof EntitySqmPathSource ) {
-			final EntitySqmPathSource<?> entityPath = (EntitySqmPathSource<?>) selectionExpressible;
+		else if ( selectionExpressible instanceof EntitySqmPathSource<?> entityPath ) {
 			final EntityDomainType<?> entityType = entityPath.getSqmPathType();
 			final SimpleDomainType<?> idType = entityType.getIdType();
 			return resultClass.isAssignableFrom( idType.getBindableJavaType() );
@@ -1179,8 +1149,7 @@ public class SqmUtil {
 		if ( sqmExpressible instanceof BasicDomainType<?> ) {
 			return ( (BasicDomainType<?>) sqmExpressible).getJdbcType();
 		}
-		else if ( sqmExpressible instanceof SqmPathSource<?> ) {
-			final SqmPathSource<?> pathSource = (SqmPathSource<?>) sqmExpressible;
+		else if ( sqmExpressible instanceof SqmPathSource<?> pathSource ) {
 			final DomainType<?> domainType = pathSource.getSqmPathType();
 			if ( domainType instanceof BasicDomainType<?> ) {
 				return ( (BasicDomainType<?>) domainType ).getJdbcType();
@@ -1191,16 +1160,12 @@ public class SqmUtil {
 
 	private static boolean isMatchingDateJdbcType(Class<?> resultClass, JdbcType jdbcType) {
 		if ( jdbcType != null ) {
-			switch ( jdbcType.getDefaultSqlTypeCode() ) {
-				case Types.DATE:
-					return resultClass.isAssignableFrom( java.sql.Date.class );
-				case Types.TIME:
-					return resultClass.isAssignableFrom( java.sql.Time.class );
-				case Types.TIMESTAMP:
-					return resultClass.isAssignableFrom( java.sql.Timestamp.class );
-				default:
-					return false;
-			}
+			return switch ( jdbcType.getDefaultSqlTypeCode() ) {
+				case Types.DATE -> resultClass.isAssignableFrom(java.sql.Date.class);
+				case Types.TIME -> resultClass.isAssignableFrom(java.sql.Time.class);
+				case Types.TIMESTAMP -> resultClass.isAssignableFrom(java.sql.Timestamp.class);
+				default -> false;
+			};
 		}
 		else {
 			return false;

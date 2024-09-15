@@ -6,7 +6,7 @@ import java.util.Set;
 import org.hibernate.query.SemanticException;
 import org.hibernate.type.descriptor.java.CoercionException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Assertions;
@@ -32,7 +32,7 @@ import jakarta.persistence.criteria.Subquery;
 				QueryPredicateAndParameterComparableTest.Submission.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15802")
+@JiraKey(value = "HHH-15802")
 public class QueryPredicateAndParameterComparableTest {
 
 	@Test

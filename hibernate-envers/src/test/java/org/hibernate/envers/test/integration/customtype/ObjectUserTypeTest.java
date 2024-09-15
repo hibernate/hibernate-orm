@@ -14,14 +14,14 @@ import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7870")
+@JiraKey(value = "HHH-7870")
 public class ObjectUserTypeTest extends BaseEnversJPAFunctionalTestCase {
 	private int id;
 

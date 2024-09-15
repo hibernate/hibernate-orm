@@ -8,7 +8,7 @@ package org.hibernate.orm.test.hql.joinedSubclass;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,7 +41,7 @@ import jakarta.persistence.Table;
 public class JoinedSubclassSubQueryTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11182")
+	@JiraKey(value = "HHH-11182")
 	public void testSubQueryConstraintPropertyInSuperclassTable(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -58,7 +58,7 @@ public class JoinedSubclassSubQueryTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11182")
+	@JiraKey(value = "HHH-11182")
 	public void testSubQueryConstraintPropertyInEntityTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

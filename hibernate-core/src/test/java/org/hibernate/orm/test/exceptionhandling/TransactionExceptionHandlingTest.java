@@ -15,13 +15,13 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-12666")
+@JiraKey(value = "HHH-12666")
 @RequiresDialect(H2Dialect.class)
 public class TransactionExceptionHandlingTest extends BaseExceptionHandlingTest {
 

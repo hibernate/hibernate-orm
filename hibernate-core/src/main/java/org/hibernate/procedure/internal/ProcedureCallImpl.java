@@ -25,12 +25,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -96,6 +94,9 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
 
+import static java.lang.Boolean.parseBoolean;
+import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
@@ -163,9 +164,9 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = new HashSet<>();
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultClasses );
+		final String mappingId = procedureName + ":" + join( ",", resultClasses );
 
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappingClasses(
 				resultClasses,
@@ -197,8 +198,8 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = new HashSet<>();
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultSetMappingNames );
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		final String mappingId = procedureName + ":" + join( ",", resultSetMappingNames );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappingNames(
 				resultSetMappingNames,
@@ -224,7 +225,7 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( memento.getRegistrationName(), session.getSessionFactory() );
+		this.resultSetMapping = resolveResultSetMapping( memento.getRegistrationName(), session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				memento.getResultSetMappingNames(),
@@ -256,15 +257,15 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultTypes );
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		final String mappingId = procedureName + ":" + join( ",", resultTypes );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				null,
 				resultTypes,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				() -> getSession().getFactory()
+				getSession()::getFactory
 		);
 
 		applyOptions( memento );
@@ -283,8 +284,8 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultSetMappingNames );
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		final String mappingId = procedureName + ":" + join( ",", resultSetMappingNames );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				resultSetMappingNames,
@@ -302,7 +303,7 @@ public class ProcedureCallImpl<R>
 
 		if ( memento.getHints() != null ) {
 			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );
-			if ( callableFunction != null && Boolean.parseBoolean( callableFunction.toString() ) ) {
+			if ( callableFunction != null && parseBoolean( callableFunction.toString() ) ) {
 				applyCallableFunctionHint();
 			}
 		}
@@ -313,13 +314,19 @@ public class ProcedureCallImpl<R>
 		resultSetMapping.visitResultBuilders(
 				(index, resultBuilder) -> resultTypes.add( resultBuilder.getJavaType() )
 		);
-		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
-		final BasicType<?> type;
-		if ( resultTypes.size() != 1 || ( type = typeConfiguration.getBasicTypeForJavaType( resultTypes.get( 0 ) ) ) == null ) {
-			markAsFunctionCall( Types.REF_CURSOR );
+		if ( resultTypes.size() == 1 ) {
+			final BasicType<?> type =
+					getSessionFactory().getTypeConfiguration()
+							.getBasicTypeForJavaType( resultTypes.get(0) );
+			if ( type != null ) {
+				markAsFunctionCall( type );
+			}
+			else {
+				markAsFunctionCallRefRefCursor();
+			}
 		}
 		else {
-			markAsFunctionCall( type );
+			markAsFunctionCallRefRefCursor();
 		}
 	}
 
@@ -363,6 +370,10 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
+	private void markAsFunctionCallRefRefCursor() {
+		functionReturn = new FunctionReturnImpl<>( this, Types.REF_CURSOR );
+	}
+
 	@Override
 	public ProcedureCallImpl<R> markAsFunctionCall(Class<?> resultType) {
 		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
@@ -370,7 +381,8 @@ public class ProcedureCallImpl<R>
 		if ( basicType == null ) {
 			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + resultType.getName() );
 		}
-		return markAsFunctionCall( basicType );
+		markAsFunctionCall( basicType );
+		return this;
 	}
 
 	@Override
@@ -381,10 +393,11 @@ public class ProcedureCallImpl<R>
 		if ( basicType == null ) {
 			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + typeReference.getName() );
 		}
-		return markAsFunctionCall( basicType );
+		markAsFunctionCall( basicType );
+		return this;
 	}
 
-	private ProcedureCallImpl<R> markAsFunctionCall(BasicType<?> basicType) {
+	private void markAsFunctionCall(BasicType<?> basicType) {
 		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
@@ -394,16 +407,11 @@ public class ProcedureCallImpl<R>
 		}
 		//noinspection unchecked
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<R>) basicType );
-		return this;
 	}
 
 	@Override
 	public QueryParameterBindings getParameterBindings() {
 		return paramBindings;
-	}
-
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
 	}
 
 	@Override
@@ -801,7 +809,7 @@ public class ProcedureCallImpl<R>
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getHibernateFlushMode(),
+				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getTimeout(),
 				getFetchSize(),
@@ -814,7 +822,7 @@ public class ProcedureCallImpl<R>
 			ProcedureParameterMetadataImpl parameterMetadata) {
 		if ( parameterMetadata.getParameterStrategy() == ParameterStrategy.UNKNOWN ) {
 			// none...
-			return Collections.emptyList();
+			return emptyList();
 		}
 
 		final List<NamedCallableQueryMemento.ParameterMemento> mementos = new ArrayList<>();
@@ -922,8 +930,8 @@ public class ProcedureCallImpl<R>
 			if ( rtn == null ) {
 				return -1;
 			}
-			else if ( rtn instanceof UpdateCountOutput ) {
-				return ( (UpdateCountOutput) rtn ).getUpdateCount();
+			else if ( rtn instanceof UpdateCountOutput updateCount ) {
+				return updateCount.getUpdateCount();
 			}
 			else {
 				return -1;
@@ -944,7 +952,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	protected List<R> doList() {
 		if ( getMaxResults() == 0 ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 		try {
 			final Output rtn = outputs().getCurrent();
@@ -1127,7 +1135,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
 		if ( HINT_CALLABLE_FUNCTION.equals( hintName ) ) {
-			if ( value != null && Boolean.parseBoolean( value.toString() ) ) {
+			if ( value != null && parseBoolean( value.toString() ) ) {
 				applyCallableFunctionHint();
 			}
 		}
@@ -1249,7 +1257,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public Stream stream() {
+	public Stream<R> stream() {
 		return getResultStream();
 	}
 

@@ -7,18 +7,14 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbStoredProcedureParameterImpl;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.StoredProcedureParameter;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -50,11 +46,11 @@ public class StoredProcedureParameterJpaAnnotation implements StoredProcedurePar
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public StoredProcedureParameterJpaAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.STORED_PROCEDURE_PARAMETER, "name", modelContext );
-		this.mode = extractJandexValue( annotation, JpaAnnotations.STORED_PROCEDURE_PARAMETER, "mode", modelContext );
-		this.type = extractJandexValue( annotation, JpaAnnotations.STORED_PROCEDURE_PARAMETER, "type", modelContext );
+		this.name = (String) attributeValues.get( "name" );
+		this.mode = (jakarta.persistence.ParameterMode) attributeValues.get( "mode" );
+		this.type = (Class<?>) attributeValues.get( "type" );
 	}
 
 	@Override

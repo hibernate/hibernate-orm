@@ -17,11 +17,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.LockModeType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
@@ -115,6 +120,33 @@ public class EntityResultTests extends AbstractUsageTest {
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
 					session.createStoredProcedureCall( "abc", "entity-none" );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(
+			value = H2Dialect.class,
+			comment = "We don't really care about the execution on the database, just how the result-set is handled.  Some databases (mssql) don't like this query"
+	)
+	public void testImplicitAttributeMappingWithLockMode(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// make sure it is in the repository
+					final NamedResultSetMappingMemento mappingMemento = session.getSessionFactory()
+							.getQueryEngine()
+							.getNamedObjectRepository()
+							.getResultSetMappingMemento(
+									"entity-lockmode" );
+					assertThat( mappingMemento, notNullValue() );
+
+					// apply it to a native-query
+					final String qryString = "select id, name, notes from SimpleEntityWithNamedMappings for update";
+					final List<SimpleEntityWithNamedMappings> results = session
+							.createNativeQuery( qryString, "entity-lockmode" )
+							.list();
+					assertThat( results.size(), is( 1 ) );
+					assertThat( session.getLockMode(results.get(0)), is(LockModeType.PESSIMISTIC_WRITE));
 				}
 		);
 	}

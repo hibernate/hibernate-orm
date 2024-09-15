@@ -7,17 +7,13 @@
 package org.hibernate.boot.models.annotations.spi;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
-import org.hibernate.boot.models.DialectOverrideAnnotations;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 /**
  * Base support for {@linkplain DialectOverrider} annotations
@@ -33,12 +29,12 @@ public abstract class AbstractOverrider<O extends Annotation> implements Dialect
 	}
 
 	public AbstractOverrider(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			AnnotationDescriptor<?> descriptor,
 			SourceModelBuildingContext modelContext) {
-		dialect( extractJandexValue( annotation, descriptor, "dialect", modelContext ) );
-		before( extractJandexValue( annotation, descriptor, "before", modelContext ) );
-		sameOrAfter( extractJandexValue( annotation, descriptor, "sameOrAfter", modelContext ) );
+		dialect( (Class<? extends Dialect>) attributeValues.get( "dialect" ) );
+		before( (DialectOverride.Version) attributeValues.get( "before" ) );
+		sameOrAfter( (DialectOverride.Version) attributeValues.get( "sameOrAfter" ) );
 	}
 
 	@Override

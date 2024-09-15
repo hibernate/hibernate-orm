@@ -169,7 +169,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
+import static org.hibernate.boot.model.internal.GeneratorBinder.visitIdGeneratorDefinitions;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
@@ -178,6 +178,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.mapping.MappingHelper.createLocalUserCollectionTypeBean;
 
 /**
@@ -262,7 +263,6 @@ public abstract class CollectionBinder {
 			PropertyHolder propertyHolder,
 			Nullability nullability,
 			PropertyData inferredData,
-			Map<String, IdentifierGeneratorDefinition> classGenerators,
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
@@ -357,9 +357,26 @@ public abstract class CollectionBinder {
 
 		if ( property.hasAnnotationUsage( CollectionId.class, sourceModelContext ) ) {
 			//do not compute the generators unless necessary
-			final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>(classGenerators);
-			localGenerators.putAll( buildGenerators( property, context ) );
-			collectionBinder.setLocalGenerators( localGenerators );
+			final HashMap<String, IdentifierGeneratorDefinition> availableGenerators = new HashMap<>();
+			visitIdGeneratorDefinitions(
+					property.getDeclaringType(),
+					definition -> {
+						if ( !definition.getName().isEmpty() ) {
+							availableGenerators.put( definition.getName(), definition );
+						}
+					},
+					context
+			);
+			visitIdGeneratorDefinitions(
+					property,
+					definition -> {
+						if ( !definition.getName().isEmpty() ) {
+							availableGenerators.put( definition.getName(), definition );
+						}
+					},
+					context
+			);
+			collectionBinder.setLocalGenerators( availableGenerators );
 
 		}
 		collectionBinder.bind();
@@ -392,7 +409,7 @@ public abstract class CollectionBinder {
 			MemberDetails property) {
 //			Comment comment) {
 		return buildJoinColumnsWithDefaultColumnSuffix(
-				mapKeyJoinColumnAnnotations( propertyHolder, inferredData, property, context ),
+				mapKeyJoinColumnAnnotations( property, context ),
 //				comment,
 				null,
 				entityBinder.getSecondaryTables(),
@@ -560,13 +577,8 @@ public abstract class CollectionBinder {
 	}
 
 	private static boolean isToManyAssociationWithinEmbeddableCollection(PropertyHolder propertyHolder) {
-		if ( propertyHolder instanceof ComponentPropertyHolder ) {
-			ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
-			return componentPropertyHolder.isWithinElementCollection();
-		}
-		else {
-			return false;
-		}
+		return propertyHolder instanceof ComponentPropertyHolder componentPropertyHolder
+			&& componentPropertyHolder.isWithinElementCollection();
 	}
 
 	private static AnnotatedColumns elementColumns(
@@ -626,8 +638,6 @@ public abstract class CollectionBinder {
 	}
 
 	private static JoinColumn[] mapKeyJoinColumnAnnotations(
-			PropertyHolder propertyHolder,
-			PropertyData inferredData,
 			MemberDetails property,
 			MetadataBuildingContext context) {
 		final MapKeyJoinColumn[] mapKeyJoinColumns = property.getRepeatedAnnotationUsages(
@@ -635,7 +645,7 @@ public abstract class CollectionBinder {
 				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
 
-		if ( CollectionHelper.isEmpty( mapKeyJoinColumns ) ) {
+		if ( isEmpty( mapKeyJoinColumns ) ) {
 			return null;
 		}
 
@@ -945,7 +955,7 @@ public abstract class CollectionBinder {
 			MemberDetails property,
 			CollectionType typeAnnotation,
 			MetadataBuildingContext buildingContext) {
-		determineSemanticJavaType( property, buildingContext );
+		determineSemanticJavaType( property );
 		final ManagedBean<? extends UserCollectionType> customTypeBean = resolveCustomType(
 				property,
 				typeAnnotation,
@@ -1014,7 +1024,7 @@ public abstract class CollectionBinder {
 		final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
 
 		if ( !property.hasAnnotationUsage( Bag.class, sourceModelContext ) ) {
-			return determineCollectionClassification( determineSemanticJavaType( property, buildingContext ), property, buildingContext );
+			return determineCollectionClassification( determineSemanticJavaType( property ), property, buildingContext );
 		}
 
 		if ( property.hasAnnotationUsage( OrderColumn.class, sourceModelContext ) ) {
@@ -1126,7 +1136,7 @@ public abstract class CollectionBinder {
 		return null;
 	}
 
-	private static Class<?> determineSemanticJavaType(MemberDetails property, MetadataBuildingContext buildingContext) {
+	private static Class<?> determineSemanticJavaType(MemberDetails property) {
 		if ( property.isPlural() ) {
 			final ClassDetails collectionClassDetails = property.getType().determineRawClass();
 			final Class<?> collectionClass = collectionClassDetails.toJavaClass();
@@ -1536,25 +1546,23 @@ public abstract class CollectionBinder {
 
 	private void setHibernateFetchMode(org.hibernate.annotations.FetchMode fetchMode) {
 		switch ( fetchMode ) {
-			case JOIN -> {
+			case JOIN :
 				collection.setFetchMode( FetchMode.JOIN );
 				collection.setLazy( false );
-			}
-			case SELECT -> {
+				break;
+			case SELECT:
 				collection.setFetchMode( FetchMode.SELECT );
-			}
-			case SUBSELECT -> {
+				break;
+			case SUBSELECT:
 				collection.setFetchMode( FetchMode.SELECT );
 				collection.setSubselectLoadable( true );
 				collection.getOwner().setSubselectLoadableCollections( true );
-			}
-			default -> {
+				break;
+			default:
 				throw new AssertionFailure( "unknown fetch type" );
-			}
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	private void handleLazy() {
 		final FetchType jpaFetchType = getJpaFetchType();
 		collection.setLazy( jpaFetchType == LAZY );
@@ -1877,7 +1885,6 @@ public abstract class CollectionBinder {
 	}
 
 	private String getWhereOnClassClause() {
-		final TypeDetails elementType = property.getElementType();
 		final SQLRestriction restrictionOnClass = getOverridableAnnotation(
 				property.getAssociatedType().determineRawClass(),
 				SQLRestriction.class,
@@ -2010,7 +2017,7 @@ public abstract class CollectionBinder {
 	public static String adjustUserSuppliedValueCollectionOrderingFragment(String orderByFragment) {
 		if ( orderByFragment != null ) {
 			orderByFragment = orderByFragment.trim();
-			if ( orderByFragment.length() == 0 || orderByFragment.equalsIgnoreCase( "asc" ) ) {
+			if ( orderByFragment.isEmpty() || orderByFragment.equalsIgnoreCase( "asc" ) ) {
 				// This indicates something like either:
 				//		`@OrderBy()`
 				//		`@OrderBy("asc")
@@ -2068,14 +2075,15 @@ public abstract class CollectionBinder {
 				else {
 					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					key.setForeignKeyOptions( foreignKey.options() );
 					if ( key.getForeignKeyName() == null
 							&& key.getForeignKeyDefinition() == null
 							&& collectionTableAnn.joinColumns().length == 1 ) {
-						//noinspection unchecked
 						final JoinColumn joinColumn = collectionTableAnn.joinColumns()[0];
 						final ForeignKey nestedForeignKey = joinColumn.foreignKey();
 						key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
 						key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
+						key.setForeignKeyOptions( nestedForeignKey.options() );
 					}
 				}
 			}
@@ -2085,6 +2093,7 @@ public abstract class CollectionBinder {
 					final ForeignKey foreignKey = joinTableAnn.foreignKey();
 					String foreignKeyName = foreignKey.name();
 					String foreignKeyDefinition = foreignKey.foreignKeyDefinition();
+					String foreignKeyOptions = foreignKey.options();
 					ConstraintMode foreignKeyValue = foreignKey.value();
 					final JoinColumn[] joinColumnAnnotations = joinTableAnn.joinColumns();
 					if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
@@ -2093,6 +2102,7 @@ public abstract class CollectionBinder {
 						if ( foreignKeyName.isEmpty() ) {
 							foreignKeyName = joinColumnForeignKey.name();
 							foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
+							foreignKeyOptions = joinColumnForeignKey.options();
 						}
 						if ( foreignKeyValue != NO_CONSTRAINT ) {
 							foreignKeyValue = joinColumnForeignKey.value();
@@ -2105,6 +2115,7 @@ public abstract class CollectionBinder {
 					else {
 						key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
 						key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
+						key.setForeignKeyOptions( foreignKeyOptions );
 					}
 				}
 				else {
@@ -2149,6 +2160,7 @@ public abstract class CollectionBinder {
 		else {
 			key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 			key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+			key.setForeignKeyOptions( foreignKey.options() );
 		}
 	}
 
@@ -2237,12 +2249,13 @@ public abstract class CollectionBinder {
 				buildingContext
 		);
 
-		final Class<? extends CompositeUserType<?>> compositeUserType = resolveCompositeUserType( property, elementClass, buildingContext );
-		boolean isComposite = classType == EMBEDDABLE || compositeUserType != null;
+		final Class<? extends CompositeUserType<?>> compositeUserType =
+				resolveCompositeUserType( property, elementClass, buildingContext );
+		final boolean isComposite = classType == EMBEDDABLE || compositeUserType != null;
 		holder.prepare( property, isComposite );
 
 		if ( isComposite ) {
-			handleCompositeCollectionElement( hqlOrderBy, elementType, elementClass, holder, compositeUserType );
+			handleCompositeCollectionElement( hqlOrderBy, elementType, holder, compositeUserType );
 		}
 		else {
 			handleCollectionElement( elementType, hqlOrderBy, elementClass, holder );
@@ -2283,7 +2296,6 @@ public abstract class CollectionBinder {
 	private void handleCompositeCollectionElement(
 			String hqlOrderBy,
 			TypeDetails elementType,
-			ClassDetails elementClass,
 			CollectionPropertyHolder holder,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		//TODO be smart with isNullable
@@ -2419,6 +2431,7 @@ public abstract class CollectionBinder {
 			final ForeignKey inverseForeignKey = joinTableAnn.inverseForeignKey();
 			String foreignKeyName = inverseForeignKey.name();
 			String foreignKeyDefinition = inverseForeignKey.foreignKeyDefinition();
+			String foreignKeyOptions = inverseForeignKey.options();
 
 			final JoinColumn[] inverseJoinColumns = joinTableAnn.inverseJoinColumns();
 			if ( !ArrayHelper.isEmpty( inverseJoinColumns ) ) {
@@ -2427,6 +2440,7 @@ public abstract class CollectionBinder {
 					final ForeignKey inverseJoinColumnForeignKey = joinColumnAnn.foreignKey();
 					foreignKeyName = inverseJoinColumnForeignKey.name();
 					foreignKeyDefinition = inverseJoinColumnForeignKey.foreignKeyDefinition();
+					foreignKeyOptions = inverseJoinColumnForeignKey.options();
 				}
 			}
 
@@ -2439,6 +2453,7 @@ public abstract class CollectionBinder {
 			else {
 				element.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
 				element.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
+				element.setForeignKeyOptions( foreignKeyOptions );
 			}
 		}
 		return element;
@@ -2555,7 +2570,7 @@ public abstract class CollectionBinder {
 	private void processSoftDeletes() {
 		assert collection.getCollectionTable() != null;
 
-		final SoftDelete softDelete = extractSoftDelete( property, propertyHolder, buildingContext );
+		final SoftDelete softDelete = extractSoftDelete( property, buildingContext );
 		if ( softDelete == null ) {
 			return;
 		}
@@ -2568,20 +2583,18 @@ public abstract class CollectionBinder {
 		);
 	}
 
-	private static SoftDelete extractSoftDelete(
-			MemberDetails property,
-			PropertyHolder propertyHolder,
-			MetadataBuildingContext context) {
+	private static SoftDelete extractSoftDelete(MemberDetails property, MetadataBuildingContext context) {
 		final SoftDelete fromProperty = property.getDirectAnnotationUsage( SoftDelete.class );
 		if ( fromProperty != null ) {
 			return fromProperty;
 		}
-
-		return extractFromPackage(
-				SoftDelete.class,
-				property.getDeclaringType(),
-				context
-		);
+		else {
+			return extractFromPackage(
+					SoftDelete.class,
+					property.getDeclaringType(),
+					context
+			);
+		}
 	}
 
 	private void handleUnownedManyToMany(

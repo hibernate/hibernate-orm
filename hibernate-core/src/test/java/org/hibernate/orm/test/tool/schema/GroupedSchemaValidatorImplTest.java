@@ -13,12 +13,12 @@ import org.hibernate.tool.schema.internal.GroupedSchemaValidatorImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10332")
+@JiraKey(value = "HHH-10332")
 @RequiresDialect(H2Dialect.class)
 public class GroupedSchemaValidatorImplTest extends IndividuallySchemaValidatorImplTest {
 	@Override

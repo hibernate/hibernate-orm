@@ -15,7 +15,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.models.DialectOverrideAnnotations;
@@ -23,13 +22,13 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.models.AnnotationAccessException;
+import org.hibernate.models.jandex.spi.JandexModelBuildingContext;
+import org.hibernate.models.jandex.spi.JandexValueExtractor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AttributeDescriptor;
-import org.hibernate.models.spi.JandexValueExtractor;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
 
 /**
  * @author Steve Ebersole
@@ -76,7 +75,8 @@ public class OrmAnnotationHelper {
 	}
 
 	public static <V> V extractJandexValue(AnnotationInstance jandexAnnotation, AttributeDescriptor<V> attributeDescriptor, SourceModelBuildingContext modelContext) {
-		final JandexValueExtractor<V> extractor = attributeDescriptor.getTypeDescriptor().createJandexValueExtractor( modelContext );
+		final JandexValueExtractor<V> extractor = modelContext.as( JandexModelBuildingContext.class )
+				.getJandexValueExtractor( attributeDescriptor.getTypeDescriptor() );
 		return extractor.extractValue( jandexAnnotation, attributeDescriptor, modelContext );
 //		final AnnotationValue value = jandexAnnotation.value( attributeDescriptor.getName() );
 //		return attributeDescriptor

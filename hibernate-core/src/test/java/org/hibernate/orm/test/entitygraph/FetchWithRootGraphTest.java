@@ -8,7 +8,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.graph.RootGraph;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -54,7 +54,7 @@ public class FetchWithRootGraphTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13312")
+	@JiraKey(value = "HHH-13312")
 	void hhh13312Test(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

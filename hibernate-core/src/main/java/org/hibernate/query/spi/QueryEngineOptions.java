@@ -9,6 +9,7 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -73,9 +74,16 @@ public interface QueryEngineOptions {
 
 	ValueHandlingMode getCriteriaValueHandlingMode();
 
+	default ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
+	}
+
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
 	 */
 	boolean isPortableIntegerDivisionEnabled();
 
+	String getSessionFactoryName();
+
+	String getUuid();
 }

@@ -15,7 +15,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -56,37 +56,37 @@ public class SelectNewEmbeddedIdTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewListEntity() {
 		assertQueryRowCount( "select new list(e) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewListEmbeddedIdValue() {
 		assertQueryRowCount( "select new list(e.simpleId) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewMapEntity() {
 		assertQueryRowCount( "select new map(e.id, e) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewMapEmbeddedIdValue() {
 		assertQueryRowCount( "select new map(e.simpleId, e.simpleId) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewObjectEntity() {
 		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewObjectEmbeddedIdValue() {
 		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e.simpleId) FROM Simple e", 1 );
 	}

@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-13760")
+@JiraKey(value = "HHH-13760")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class ManyToOneLazyFetchTest extends BaseEnversFunctionalTestCase {
     private Long shipmentId;

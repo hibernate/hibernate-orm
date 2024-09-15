@@ -126,7 +126,7 @@ public class H2Dialect extends Dialect {
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 
 	public H2Dialect(DialectResolutionInfo info) {
-		this( parseVersion( info ) );
+		this( staticDetermineDatabaseVersion( info ) );
 		registerKeywords( info );
 	}
 
@@ -151,7 +151,13 @@ public class H2Dialect extends Dialect {
 		this.optionalTableUpdateStrategy = H2Dialect::usingMerge;
 	}
 
-	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return staticDetermineDatabaseVersion(info);
+	}
+
+	// Static version necessary to call from constructor
+	private static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
 		DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
 		if ( info.getDatabaseVersion() != null ) {
 			version = DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) );
@@ -998,6 +1004,11 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsCaseInsensitiveLike(){
+		return true;
+	}
+
+	@Override
+	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
 	}
 

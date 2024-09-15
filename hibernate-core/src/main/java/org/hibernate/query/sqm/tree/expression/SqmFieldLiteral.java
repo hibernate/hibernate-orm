@@ -196,7 +196,8 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 
 	@Override
 	public SqmPredicate in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
+		//noinspection unchecked
+		return nodeBuilder().in( this, (Collection<T>) values );
 	}
 
 	@Override

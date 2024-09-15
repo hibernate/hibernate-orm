@@ -17,7 +17,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
@@ -32,7 +32,7 @@ import static org.hamcrest.core.Is.is;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "10495")
+@JiraKey(value = "10495")
 @RequiresDialects(
 		value = {
 				@RequiresDialect(value = OracleDialect.class),

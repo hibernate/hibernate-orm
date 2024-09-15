@@ -15,8 +15,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
@@ -54,13 +54,10 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	private CastType getBooleanCastType(int preferredSqlTypeCodeForBoolean) {
-		switch ( preferredSqlTypeCodeForBoolean ) {
-			case Types.BIT:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-				return CastType.INTEGER_BOOLEAN;
-		}
-		return CastType.BOOLEAN;
+		return switch (preferredSqlTypeCodeForBoolean) {
+			case Types.BIT, Types.SMALLINT, Types.TINYINT -> CastType.INTEGER_BOOLEAN;
+			default -> CastType.BOOLEAN;
+		};
 	}
 
 	@Override
@@ -94,12 +91,12 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			Dialect dialect,
 			SqlAstTranslator<?> walker) {
 		final SessionFactoryImplementor sessionFactory = walker.getSessionFactory();
-		final BasicType<?> stringType = sessionFactory.getTypeConfiguration()
-				.getBasicTypeForJavaType( String.class );
-		final SqmFunctionRegistry functionRegistry = sessionFactory.getQueryEngine()
-				.getSqmFunctionRegistry();
-		final SqmFunctionDescriptor concatDescriptor = functionRegistry.findFunctionDescriptor( "concat" );
-		final SqmFunctionDescriptor arrayToStringDescriptor = functionRegistry.findFunctionDescriptor( "array_to_string" );
+		final BasicType<?> stringType = sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( String.class );
+		final SqmFunctionRegistry functionRegistry = sessionFactory.getQueryEngine().getSqmFunctionRegistry();
+		final FunctionRenderer concatDescriptor =
+				(FunctionRenderer) functionRegistry.findFunctionDescriptor( "concat" );
+		final FunctionRenderer arrayToStringDescriptor =
+				(FunctionRenderer) functionRegistry.findFunctionDescriptor( "array_to_string" );
 		final boolean caseWhen = dialect.isEmptyStringTreatedAsNull();
 		if ( caseWhen ) {
 			sqlAppender.append( "case when " );
@@ -107,13 +104,13 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			sqlAppender.append( " is null then null else " );
 		}
 
-		( (AbstractSqmSelfRenderingFunctionDescriptor) concatDescriptor ).render(
+		concatDescriptor.render(
 				sqlAppender,
 				List.of(
 						new QueryLiteral<>( "[", stringType ),
 						new SelfRenderingFunctionSqlAstExpression(
 								"array_to_string",
-								( (AbstractSqmSelfRenderingFunctionDescriptor) arrayToStringDescriptor ),
+								arrayToStringDescriptor,
 								List.of(
 										arrayArgument,
 										new QueryLiteral<>( ",", stringType ),

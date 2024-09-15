@@ -222,8 +222,6 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * function descriptors that wish to customize creation of the node.
 	 *
 	 * @param arguments         the arguments of the function invocation
-	 * @param respectNulls
-	 * @param fromFirst
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected <T> SelfRenderingSqmWindowFunction<T> generateSqmWindowFunctionExpression(

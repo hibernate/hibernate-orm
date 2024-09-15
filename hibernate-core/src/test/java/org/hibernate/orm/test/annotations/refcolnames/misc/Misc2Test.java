@@ -8,7 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = {Misc2Test.A.class, Misc2Test.B.class})
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15277")
+@JiraKey(value = "HHH-15277")
 public class Misc2Test {
     @Test
     public void test(SessionFactoryScope scope) {

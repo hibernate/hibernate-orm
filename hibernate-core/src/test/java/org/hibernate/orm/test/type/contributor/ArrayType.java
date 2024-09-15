@@ -6,8 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.BindingContext;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -35,7 +35,7 @@ public class ArrayType implements UserType<Array>, BindableType<Array>, BasicVal
     }
 
     @Override
-    public SqmExpressible<Array> resolveExpressible(SessionFactoryImplementor sessionFactory) {
+    public SqmExpressible<Array> resolveExpressible(BindingContext bindingContext) {
         // really a UserType should not implement BindableType
         throw new UnsupportedOperationException();
     }

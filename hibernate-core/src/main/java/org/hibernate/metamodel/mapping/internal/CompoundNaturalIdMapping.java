@@ -61,6 +61,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	private final List<SingularAttributeMapping> attributes;
 
 	private List<JdbcMapping> jdbcMappings;
+	/*
+		This value is used to determine the size of the array used to create the ImmutableFetchList (see org.hibernate.sql.results.graph.internal.ImmutableFetchList#Builder)
+		The Fetch is inserted into the array at a position corresponding to its Fetchable key value.
+	 */
+	private final int maxFetchableKeyIndex;
 
 	public CompoundNaturalIdMapping(
 			EntityMappingType declaringType,
@@ -68,6 +73,14 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, isMutable( attributes ) );
 		this.attributes = attributes;
+
+		int maxIndex = 0;
+		for ( SingularAttributeMapping attribute : attributes ) {
+			if ( attribute.getFetchableKey() > maxIndex ) {
+				maxIndex = attribute.getFetchableKey();
+			}
+		}
+		this.maxFetchableKeyIndex = maxIndex + 1;
 
 		creationProcess.registerInitializationCallback(
 				"Determine compound natural-id JDBC mappings ( " + declaringType.getEntityName() + ")",
@@ -531,6 +544,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		attributes.forEach( consumer );
 	}
 
+	@Override
+	public int getNumberOfFetchableKeys() {
+		return maxFetchableKeyIndex;
+	}
 
 	public static class DomainResultImpl implements DomainResult<Object[]>, FetchParent {
 		private final NavigablePath navigablePath;

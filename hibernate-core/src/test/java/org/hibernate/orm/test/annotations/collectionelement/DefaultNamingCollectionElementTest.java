@@ -19,7 +19,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -301,7 +301,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameNoOverrides(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -311,7 +311,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerPrimaryTableOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -321,7 +321,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerEntityNameAndPKColumnOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -332,7 +332,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerPrimaryTableAndEntityNamesOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -355,7 +355,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnNoOverrides(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -365,7 +365,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerPrimaryTableOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -375,7 +375,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9389")
+	@JiraKey(value = "HHH-9389")
 	public void testDefaultJoinColumnOwnerEntityNameAndPKColumnOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).
@@ -386,7 +386,7 @@ public class DefaultNamingCollectionElementTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9387")
+	@JiraKey(value = "HHH-9387")
 	public void testDefaultTableNameOwnerPrimaryTableAndEntityNamesOverride(SessionFactoryScope scope) {
 		// NOTE: expected JPA entity names are explicit here (rather than just getting them from the PersistentClass)
 		//       to ensure that entity names/tables are not changed (which would invalidate these test cases).

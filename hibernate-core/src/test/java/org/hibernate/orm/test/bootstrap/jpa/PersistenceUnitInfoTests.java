@@ -23,7 +23,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jdbc.DataSourceStub;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
 import org.junit.Test;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 @RequiresDialect( H2Dialect.class )
 public class PersistenceUnitInfoTests extends BaseUnitTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-13432" )
+	@JiraKey( value = "HHH-13432" )
 	public void testNonJtaDataExposedAsProperty() {
 		final DataSource puDataSource = new DataSourceStub( "puDataSource" );
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
@@ -73,7 +73,7 @@ public class PersistenceUnitInfoTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13432" )
+	@JiraKey( value = "HHH-13432" )
 	public void testJtaDataExposedAsProperty() {
 		final DataSource puDataSource = new DataSourceStub( "puDataSource" );
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {

@@ -14,7 +14,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,7 +23,7 @@ import jakarta.persistence.EntityManager;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-6825")
+@JiraKey(value = "HHH-6825")
 public class OneToOneWithPrimaryKeyJoinTest extends BaseEnversJPAFunctionalTestCase {
 	private Long personId = null;
 	private Long accountId = null;

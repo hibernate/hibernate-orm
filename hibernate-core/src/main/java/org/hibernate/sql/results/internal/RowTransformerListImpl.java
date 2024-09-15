@@ -19,9 +19,11 @@ public class RowTransformerListImpl<T> implements RowTransformer<List<Object>> {
 	/**
 	 * Singleton access
 	 */
-	public static final RowTransformerListImpl INSTANCE = new RowTransformerListImpl();
+	@SuppressWarnings( "rawtypes" )
+	private static final RowTransformerListImpl INSTANCE = new RowTransformerListImpl();
 
-	public static RowTransformerListImpl instance() {
+	@SuppressWarnings( "unchecked" )
+	public static <X> RowTransformerListImpl<X> instance() {
 		return INSTANCE;
 	}
 

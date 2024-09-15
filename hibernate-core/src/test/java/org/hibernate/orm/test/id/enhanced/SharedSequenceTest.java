@@ -17,7 +17,7 @@ import jakarta.persistence.MappedSuperclass;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Yanming Zhou
  */
-@TestForIssue(jiraKey = "HHH-14219")
+@JiraKey(value = "HHH-14219")
 @DomainModel(
 		annotatedClasses = {
 				SharedSequenceTest.BaseEntity.class,

@@ -18,7 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterAll;
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeAll;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = "HHH-15257" )
+@JiraKey( value = "HHH-15257" )
 @Jpa(
 		annotatedClasses = {
 				NonWhereQueryTest.TestUser.class

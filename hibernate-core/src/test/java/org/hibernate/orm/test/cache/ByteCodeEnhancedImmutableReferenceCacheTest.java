@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -98,7 +98,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10795")
+	@JiraKey( value = "HHH-10795")
 	public void testAssociatedWithMultiplePersistenceContexts() {
 		MyEnhancedReferenceData myReferenceData = new MyEnhancedReferenceData( 1, "first item", "abc" );
 		MyEnhancedReferenceData myOtherReferenceData = new MyEnhancedReferenceData( 2, "second item", "def" );

@@ -7,15 +7,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.AssociationOverrides;
 
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -39,8 +37,10 @@ public class AssociationOverridesJpaAnnotation implements AssociationOverrides {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AssociationOverridesJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue( annotation, JpaAnnotations.ASSOCIATION_OVERRIDES, "value", modelContext );
+	public AssociationOverridesJpaAnnotation(
+			Map<String, Object> attributeValues,
+			SourceModelBuildingContext modelContext) {
+		this.value = (jakarta.persistence.AssociationOverride[]) attributeValues.get( "value" );
 	}
 
 	@Override

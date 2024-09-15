@@ -7,20 +7,16 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.MapKeyColumn;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -80,23 +76,18 @@ public class MapKeyColumnJpaAnnotation implements MapKeyColumn,
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public MapKeyColumnJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "name", modelContext );
-		this.unique = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "unique", modelContext );
-		this.nullable = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "nullable", modelContext );
-		this.insertable = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "insertable", modelContext );
-		this.updatable = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "updatable", modelContext );
-		this.columnDefinition = extractJandexValue(
-				annotation,
-				JpaAnnotations.MAP_KEY_COLUMN,
-				"columnDefinition",
-				modelContext
-		);
-		this.options = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "options", modelContext );
-		this.table = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "table", modelContext );
-		this.length = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "length", modelContext );
-		this.precision = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "precision", modelContext );
-		this.scale = extractJandexValue( annotation, JpaAnnotations.MAP_KEY_COLUMN, "scale", modelContext );
+	public MapKeyColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.unique = (boolean) attributeValues.get( "unique" );
+		this.nullable = (boolean) attributeValues.get( "nullable" );
+		this.insertable = (boolean) attributeValues.get( "insertable" );
+		this.updatable = (boolean) attributeValues.get( "updatable" );
+		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );
+		this.options = (String) attributeValues.get( "options" );
+		this.table = (String) attributeValues.get( "table" );
+		this.length = (int) attributeValues.get( "length" );
+		this.precision = (int) attributeValues.get( "precision" );
+		this.scale = (int) attributeValues.get( "scale" );
 	}
 
 	@Override

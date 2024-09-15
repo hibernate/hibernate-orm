@@ -17,7 +17,7 @@ import jakarta.persistence.CascadeType;
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.SpecHints;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				IdClassEntityGraphTest.Child.class
 		}
 )
-@TestForIssue( jiraKey = "HHH-15607")
+@JiraKey( value = "HHH-15607")
 public class IdClassEntityGraphTest {
 
 	@BeforeEach

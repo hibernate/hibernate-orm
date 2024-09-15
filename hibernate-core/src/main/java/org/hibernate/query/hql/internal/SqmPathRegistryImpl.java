@@ -15,9 +15,9 @@ import java.util.function.Function;
 
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.query.criteria.JpaCrossJoin;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -254,6 +254,15 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			}
 		}
 
+		final boolean onlyOneFrom = sqmFromByPath.size() == 1;
+		if ( onlyOneFrom && localAlias.equals( "this" ) ) {
+			final SqmRoot<?> root = (SqmRoot<?>) sqmFromByPath.entrySet().iterator().next().getValue();
+			if (  root.getAlias() == null ) {
+				//noinspection unchecked
+				return (X) root;
+			}
+		}
+
 		return null;
 	}
 
@@ -331,7 +340,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				&& containerType.findSubPathSource( name, getJpaMetamodel() ) != null;
 	}
 
-	private JpaMetamodelImplementor getJpaMetamodel() {
+	private JpaMetamodel getJpaMetamodel() {
 		return associatedProcessingState.getCreationState().getCreationContext().getJpaMetamodel();
 	}
 

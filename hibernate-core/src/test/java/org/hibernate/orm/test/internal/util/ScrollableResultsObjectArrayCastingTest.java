@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
  * @author Dragoş Haiduc
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-14231" )
+@JiraKey( value = "HHH-14231" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class )
 @Jpa( annotatedClasses = ScrollableResultsObjectArrayCastingTest.Product.class )
 public class ScrollableResultsObjectArrayCastingTest {

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.envers.integration.ids.idclass;
 import junit.framework.Assert;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.EntityManager;
@@ -18,7 +18,7 @@ import java.util.Arrays;
 /**
  * @author Matthew Morrissette (yinzara at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-10667")
+@JiraKey(value = "HHH-10667")
 public class IdClassReferenceIdentifierTest extends BaseEnversJPAFunctionalTestCase {
 	private ReferenceIdentifierClassId entityId = null;
 	private Integer typeId = null;

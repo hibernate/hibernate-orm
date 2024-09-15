@@ -20,7 +20,7 @@ import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ public class MapJoinEntryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12945")
+	@JiraKey(value = "HHH-12945")
 	public void testMapJoinEntryCriteria() {
 		doInJPA( this::entityManagerFactory, em -> {
 			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();

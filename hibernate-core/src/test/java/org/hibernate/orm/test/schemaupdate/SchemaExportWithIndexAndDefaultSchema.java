@@ -22,7 +22,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.CustomRunner;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-9866")
+@JiraKey(value = "HHH-9866")
 @RunWith(CustomRunner.class)
 @RequiresDialect(PostgreSQLDialect.class)
 public class SchemaExportWithIndexAndDefaultSchema {

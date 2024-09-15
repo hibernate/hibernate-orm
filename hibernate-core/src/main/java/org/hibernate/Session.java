@@ -9,6 +9,7 @@ package org.hibernate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import jakarta.persistence.FindOption;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
@@ -198,7 +199,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void flush();
 
 	/**
-	 * Set the current {@link FlushModeType JPA flush mode} for this session.
+	 * Set the current {@linkplain FlushModeType JPA flush mode} for this session.
 	 * <p>
 	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory. The current flush mode determines
@@ -692,6 +693,29 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void clear();
 
 	/**
+	 * Return the persistent instances of the given entity class with the given identifiers
+	 * as a list. The position of an instance in the list matches the position of its identifier
+	 * in the given array, and the list contains a null value if there is no persistent instance
+	 * matching a given identifier. If an instance is already associated with the session, that
+	 * instance is returned. This method never returns an uninitialized instance.
+	 * <p>
+	 * Every object returned by {@code findAll()} is either an unproxied instance of the given
+	 * entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
+	 * {@link MultiIdentifierLoadAccess}.
+	 *
+	 * @param entityType the entity type
+	 * @param ids        the identifiers
+	 * @param options    options, if any
+	 * @return an ordered list of persistent instances, with null elements representing missing
+	 *         entities
+	 * @see #byMultipleIds(Class)
+	 * @since 7.0
+	 */
+	<E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options);
+
+	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized
@@ -699,8 +723,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * This operation is very similar to {@link #find(Class, Object)}.
 	 * <p>
-	 * The object returned by {@code get()} or {@code find() } is either an unproxied instance
-	 * of the given entity class, of a fully-fetched proxy object.
+	 * The object returned by {@code get()} or {@code find()} is either an unproxied instance
+	 * of the given entity class, or a fully-fetched proxy object.
 	 * <p>
 	 * This operation requests {@link LockMode#NONE}, that is, no lock, allowing the object
 	 * to be retrieved from the cache without the cost of database access. However, if it is
@@ -899,6 +923,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
+	 *
+	 * @see #findAll(Class, List, FindOption...)
 	 */
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 

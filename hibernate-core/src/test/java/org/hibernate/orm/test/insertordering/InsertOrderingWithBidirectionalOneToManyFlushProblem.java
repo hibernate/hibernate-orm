@@ -16,13 +16,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.GenerationType.SEQUENCE;
 
-@TestForIssue(jiraKey = "HHH-12074")
+@JiraKey(value = "HHH-12074")
 public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseInsertOrderingTest {
 
 	@Test
@@ -81,7 +81,7 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseIn
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12086")
+	@JiraKey(value = "HHH-12086")
 	public void testBatchingWithFlush2() {
 		sessionFactoryScope().inTransaction(
 				session -> {

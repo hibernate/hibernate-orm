@@ -73,9 +73,9 @@ public class StandardRowReader<T> implements RowReader<T> {
 		this.sortedForResolveInstance = (Initializer<InitializerData>[]) sortedForResolveInitializers;
 		this.sortedForResolveInstanceData = new InitializerData[sortedForResolveInstance.length];
 		this.hasCollectionInitializers = hasCollectionInitializers;
-		this.rowTransformer = rowTransformer == RowTransformerArrayImpl.INSTANCE && resultAssemblers.length != 1
-				|| rowTransformer == RowTransformerStandardImpl.INSTANCE
-				|| rowTransformer == RowTransformerSingularReturnImpl.INSTANCE && resultAssemblers.length == 1
+		this.rowTransformer = rowTransformer == RowTransformerArrayImpl.instance() && resultAssemblers.length != 1
+				|| rowTransformer == RowTransformerStandardImpl.instance()
+				|| rowTransformer == RowTransformerSingularReturnImpl.instance() && resultAssemblers.length == 1
 				? null
 				: rowTransformer;
 		this.domainResultJavaType = domainResultJavaType;

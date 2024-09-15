@@ -175,8 +175,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			final Value value = referencedPropertyName == null
 					? entityBinding.getIdentifier()
 					: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
-			if ( value instanceof Component ) {
-				final Component component = (Component) value;
+			if ( value instanceof Component component ) {
 				final int[] originalPropertyOrder = component.sortProperties();
 				if ( !sorted ) {
 					if ( originalPropertyOrder != null ) {
@@ -201,15 +200,15 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			if ( isConstrained() ) {
 				final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 				final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
-				if ( owner instanceof Join ) {
+				if ( owner instanceof Join join ) {
 					// Here we handle the case of a foreign key that refers to the
 					// primary key of a secondary table of the referenced entity
-					final Join join = (Join) owner;
 					final ForeignKey foreignKey = getTable().createForeignKey(
 							getForeignKeyName(),
 							getConstraintColumns(),
 							referencedEntity.getEntityName(),
 							getForeignKeyDefinition(),
+							getForeignKeyOptions(),
 							join.getKey().getColumns()
 					);
 					foreignKey.setOnDeleteAction( getOnDeleteAction() );

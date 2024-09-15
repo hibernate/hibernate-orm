@@ -14,7 +14,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.onetomany.ListRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.ListRefIngEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.orm.test.envers.tools.TestTools.extractRevisionNumbers;
@@ -80,7 +80,7 @@ public class HasChangedMergeTest extends AbstractModifiedFlagsEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7948")
+	@JiraKey(value = "HHH-7948")
 	public void testOneToManyInsertChildUpdateParent() {
 		List list = queryForPropertyHasChanged( ListRefEdEntity.class, parent1Id, "data" );
 		assertEquals( 2, list.size() );
@@ -96,7 +96,7 @@ public class HasChangedMergeTest extends AbstractModifiedFlagsEntityTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7948")
+	@JiraKey(value = "HHH-7948")
 	public void testOneToManyUpdateParentInsertChild() {
 		List list = queryForPropertyHasChanged( ListRefEdEntity.class, parent2Id, "data" );
 		assertEquals( 2, list.size() );

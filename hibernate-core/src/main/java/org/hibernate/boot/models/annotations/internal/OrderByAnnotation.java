@@ -7,30 +7,35 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.OrderBy;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class OrderByAnnotation implements OrderBy {
 	private String clause;
 
+	/**
+	 * Used in creating dynamic annotation instances (e.g. from XML)
+	 */
 	public OrderByAnnotation(SourceModelBuildingContext modelContext) {
 		this.clause = "";
 	}
 
+	/**
+	 * Used in creating annotation instances from JDK variant
+	 */
 	public OrderByAnnotation(OrderBy annotation, SourceModelBuildingContext modelContext) {
 		clause = annotation.clause();
 	}
 
-	public OrderByAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		clause = extractJandexValue( annotation, HibernateAnnotations.ORDER_BY, "clause", modelContext );
+	/**
+	 * Used in creating annotation instances from Jandex variant
+	 */
+	public OrderByAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		clause = (String) attributeValues.get( "clause" );
 	}
 
 	@Override

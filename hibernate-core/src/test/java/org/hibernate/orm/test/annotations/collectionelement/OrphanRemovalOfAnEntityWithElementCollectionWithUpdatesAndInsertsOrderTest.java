@@ -13,7 +13,7 @@ import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,7 +44,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				@Setting(name = AvailableSettings.ORDER_UPDATES, value = "true")
 		}
 )
-@TestForIssue(jiraKey = "HHH-15159")
+@JiraKey(value = "HHH-15159")
 public class OrphanRemovalOfAnEntityWithElementCollectionWithUpdatesAndInsertsOrderTest {
 
 	@Test

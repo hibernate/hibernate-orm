@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -16,12 +17,9 @@ import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import jakarta.persistence.CollectionTable;
 
 import static org.hibernate.boot.models.JpaAnnotations.COLLECTION_TABLE;
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCatalog;
 import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyOptionalString;
@@ -73,25 +71,15 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionTableJpaAnnotation(AnnotationInstance annotation, SourceModelBuildingContext modelContext) {
-		this.name = extractJandexValue( annotation, COLLECTION_TABLE, "name", modelContext );
-		this.catalog = extractJandexValue( annotation, COLLECTION_TABLE, "catalog", modelContext );
-		this.schema = extractJandexValue( annotation, COLLECTION_TABLE, "schema", modelContext );
-		this.joinColumns = extractJandexValue(
-				annotation,
-				COLLECTION_TABLE,
-				"joinColumns",
-				modelContext
-		);
-		this.foreignKey = extractJandexValue( annotation, COLLECTION_TABLE, "foreignKey", modelContext );
-		this.uniqueConstraints = extractJandexValue(
-				annotation,
-				COLLECTION_TABLE,
-				"uniqueConstraints",
-				modelContext
-		);
-		this.indexes = extractJandexValue( annotation, COLLECTION_TABLE, "indexes", modelContext );
-		this.options = extractJandexValue( annotation, COLLECTION_TABLE, "options", modelContext );
+	public CollectionTableJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+		this.name = (String) attributeValues.get( "name" );
+		this.catalog = (String) attributeValues.get( "catalog" );
+		this.schema = (String) attributeValues.get( "schema" );
+		this.joinColumns = (jakarta.persistence.JoinColumn[]) attributeValues.get( "joinColumns" );
+		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
+		this.uniqueConstraints = (jakarta.persistence.UniqueConstraint[]) attributeValues.get( "uniqueConstraints" );
+		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
+		this.options = (String) attributeValues.get( "options" );
 	}
 
 	@Override

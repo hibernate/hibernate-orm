@@ -55,4 +55,6 @@ public interface GlobalRegistrations {
 	Map<String, NamedStoredProcedureQueryRegistration> getNamedStoredProcedureQueryRegistrations();
 
 	// todo : named entity graphs
+
+	<T> T as(Class<T> type);
 }

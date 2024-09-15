@@ -7,6 +7,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import org.hibernate.annotations.CompositeTypeRegistration;
 import org.hibernate.annotations.CompositeTypeRegistrations;
@@ -14,9 +15,6 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJandexValue;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -49,14 +47,9 @@ public class CompositeTypeRegistrationsAnnotation
 	 * Used in creating annotation instances from Jandex variant
 	 */
 	public CompositeTypeRegistrationsAnnotation(
-			AnnotationInstance annotation,
+			Map<String, Object> attributeValues,
 			SourceModelBuildingContext modelContext) {
-		this.value = extractJandexValue(
-				annotation,
-				HibernateAnnotations.COMPOSITE_TYPE_REGISTRATIONS,
-				"value",
-				modelContext
-		);
+		this.value = (CompositeTypeRegistration[]) attributeValues.get( "value" );
 	}
 
 	@Override

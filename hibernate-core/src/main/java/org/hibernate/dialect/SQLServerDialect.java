@@ -174,11 +174,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public SQLServerDialect(DialectResolutionInfo info) {
-		this( determineDatabaseVersion( info ) );
+		this( staticDetermineDatabaseVersion( info ) );
 		registerKeywords( info );
 	}
 
-	private static DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return staticDetermineDatabaseVersion(info);
+	}
+
+	// Static version necessary to call from constructor
+	private static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
 		final Integer compatibilityLevel = getCompatibilityLevel( info );
 		if ( compatibilityLevel != null ) {
 			final int majorVersion = compatibilityLevel / 10;
@@ -1129,5 +1135,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
 		return isNotEmpty( checkConstraint.getOptions() ) ? checkConstraint.getOptions() + " " : "";
+	}
+
+	@Override
+	public boolean supportsBindingNullForSetObject() {
+		return true;
 	}
 }

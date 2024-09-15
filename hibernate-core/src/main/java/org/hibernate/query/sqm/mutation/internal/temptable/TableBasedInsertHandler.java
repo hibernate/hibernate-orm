@@ -334,7 +334,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 			JdbcParameter sessionUidParameter,
 			DomainQueryExecutionContext executionContext) {
 		return new InsertExecutionDelegate(
-				sqmInsertStatement,
 				sqmConverter,
 				entityTable,
 				afterUseAction,

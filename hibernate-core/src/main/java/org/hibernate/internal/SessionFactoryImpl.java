@@ -227,7 +227,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
 		deprecationCheck( settings );
-		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings);
+		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -280,7 +280,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			// created, then we can split creation of QueryEngine
 			// and SqmFunctionRegistry, instantiating just the
 			// registry here, and doing the engine later
-			queryEngine = QueryEngineImpl.from( this, bootMetamodel );
+			queryEngine = QueryEngineImpl.from( bootMetamodel, options, this, serviceRegistry, settings, name );
 
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
@@ -458,8 +458,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private static SessionFactoryServiceRegistry getServiceRegistry(
 			SessionFactoryOptions options,
 			SessionFactoryImplementor self) {
-		return options
-				.getServiceRegistry()
+		return options.getServiceRegistry()
 				.requireService( SessionFactoryServiceRegistryFactory.class )
 				// it is not great how we pass in an instance to
 				// an incompletely-initialized instance here:
@@ -1702,6 +1701,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public SchemaManager getSchemaManager() {
 		return schemaManager;
+	}
+
+	@Override
+	public Class<?> classForName(String className) {
+		return serviceRegistry.requireService( ClassLoaderService.class )
+				.classForName( className );
 	}
 
 	private enum Status {

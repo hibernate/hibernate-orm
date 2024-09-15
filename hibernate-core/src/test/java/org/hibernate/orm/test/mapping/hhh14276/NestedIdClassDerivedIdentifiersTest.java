@@ -16,11 +16,11 @@ import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 
 import org.hibernate.orm.test.mapping.hhh14276.entity.PlayerStat;
 import org.hibernate.orm.test.mapping.hhh14276.entity.Score;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-14276")
+@JiraKey(value = "HHH-14276")
 public class NestedIdClassDerivedIdentifiersTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

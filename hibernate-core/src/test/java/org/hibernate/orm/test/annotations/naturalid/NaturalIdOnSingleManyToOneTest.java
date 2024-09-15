@@ -10,7 +10,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"))
-@TestForIssue(jiraKey = "HHH-14943")
+@JiraKey(value = "HHH-14943")
 public class NaturalIdOnSingleManyToOneTest {
 
 	@AfterEach

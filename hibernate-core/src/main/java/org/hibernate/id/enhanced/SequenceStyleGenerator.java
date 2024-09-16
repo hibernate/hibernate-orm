@@ -16,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
@@ -27,6 +28,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -164,6 +166,8 @@ public class SequenceStyleGenerator
 	private Optimizer optimizer;
 	private Type identifierType;
 
+	private PhysicalNamingStrategy physicalNamingStrategy;
+
 	/**
 	 * Getter for property 'databaseStructure'.
 	 *
@@ -196,7 +200,16 @@ public class SequenceStyleGenerator
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	public void create(GeneratorCreationContext creationContext) throws MappingException {
+		physicalNamingStrategy = creationContext.getDatabase().getPhysicalNamingStrategy();
+	}
+
+	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+		if ( physicalNamingStrategy == null ) {
+			throw new IllegalStateException( "Expecting prior call to #create" );
+		}
+
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
@@ -217,8 +230,7 @@ public class SequenceStyleGenerator
 				physicalSequence,
 				optimizationStrategy,
 				serviceRegistry,
-				determineContributor( parameters ),
-				(ObjectNameNormalizer) parameters.get( IDENTIFIER_NORMALIZER )
+				determineContributor( parameters )
 		);
 
 		if ( physicalSequence
@@ -244,6 +256,9 @@ public class SequenceStyleGenerator
 				getInt( INITIAL_PARAM, parameters, -1 )
 		);
 		this.databaseStructure.configure( optimizer );
+
+		// we don't want or need this after initialization is complete
+		physicalNamingStrategy = null;
 	}
 
 	private int adjustIncrementSize(
@@ -253,8 +268,7 @@ public class SequenceStyleGenerator
 			boolean physicalSequence,
 			OptimizerDescriptor optimizationStrategy,
 			ServiceRegistry serviceRegistry,
-			String contributor,
-			ObjectNameNormalizer normalizer) {
+			String contributor) {
 		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
@@ -265,8 +279,7 @@ public class SequenceStyleGenerator
 		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
-			final String databaseSequenceName = normalizer.database()
-					.getPhysicalNamingStrategy()
+			final String databaseSequenceName = physicalNamingStrategy
 					.toPhysicalSequenceName( sequenceName.getObjectName(), jdbcEnvironment )
 					.getText();
 			final Number databaseIncrementValue = isSchemaToBeRecreated( contributor, configurationService ) ? null : getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );

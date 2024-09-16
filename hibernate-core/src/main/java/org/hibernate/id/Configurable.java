@@ -8,6 +8,7 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -18,6 +19,11 @@ import org.hibernate.type.Type;
 /**
  * A {@link org.hibernate.generator.Generator} that supports "configuration".
  *
+ * @apiNote Prefer instead using either<ul>
+ *     <li>{@linkplain org.hibernate.annotations.IdGeneratorType}</li>, or
+ *     <li>{@linkplain org.hibernate.generator.AnnotationBasedGenerator} (in either implementation or constructor-injection form)</li>
+ * </ul>
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
@@ -27,7 +33,11 @@ public interface Configurable {
 	 * with an instance of {@link GeneratorCreationContext}.
 	 *
 	 * @since 6.6
+	 * @deprecated Added in 6.6 as a short-term work-around, but should really use on
+	 * of the alternatives discussed at {@linkplain Configurable}.
+	 * See <a href="https://hibernate.atlassian.net/browse/HHH-18615">HHH-18615</a>.
 	 */
+	@Deprecated(forRemoval = true)
 	default void create(GeneratorCreationContext creationContext) throws MappingException {}
 
 	/**

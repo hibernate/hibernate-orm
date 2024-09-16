@@ -1443,14 +1443,6 @@ public class PropertyBinder {
 							? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
 							: null;
 			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator( idProperty, annotation, beanContainer ) );
-			final Map<String,Object> parameters = new HashMap<>();
-			parameters.put( PersistentIdentifierGenerator.TABLE, idValue.getTable().getName() );
-			if ( idValue.getColumnSpan() == 1 ) {
-				parameters.put( PersistentIdentifierGenerator.PK, idValue.getColumns().get(0).getName() );
-			}
-			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
-			parameters.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, context.getObjectNameNormalizer() );
-			idValue.setIdentifierGeneratorParameters( parameters );
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idProperty, generatorAnnotation ) );

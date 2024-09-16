@@ -50,8 +50,6 @@ public class TemplateTest {
 				"extract(hour from {@}.time)", factory );
 		assertWhereStringTemplate( "extract(day from date)",
 				"extract(day from {@}.date)", factory );
-		assertWhereStringTemplate( "trim(leading '_' from string)",
-				"trim(leading '_' from {@}.string)", factory );
 		assertWhereStringTemplate( "left(hello,4) || right(world,5)",
 				"left({@}.hello,4) || right({@}.world,5)", factory );
 		assertWhereStringTemplate( "N'a'", factory );

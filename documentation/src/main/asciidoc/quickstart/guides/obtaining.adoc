@@ -101,13 +101,15 @@ To apply the platform (BOM) in Maven
 </dependency>
 
 <dependencyManagement>
-  <dependency>
-    <groupId>org.hibernate.orm</groupId>
-    <artifactId>hibernate-platform</artifactId>
-    <version>{fullVersion}</version>
-    <type>pom</type>
-    <scope>import</scope>
-  </dependency>
+  <dependencies>
+    <dependency>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-platform</artifactId>
+      <version>{fullVersion}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
 </dependencyManagement>
 ----
 

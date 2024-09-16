@@ -5581,4 +5581,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath) {
+		return jsonRemove( jsonDocument, value( jsonPath ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_remove" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath ),
+				null,
+				queryEngine
+		);
+	}
 }

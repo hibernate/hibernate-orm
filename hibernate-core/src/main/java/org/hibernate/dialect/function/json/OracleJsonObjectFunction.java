@@ -9,11 +9,14 @@ package org.hibernate.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.dialect.function.CastFunction;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -49,6 +52,11 @@ public class OracleJsonObjectFunction extends JsonObjectFunction {
 		}
 		else {
 			value.accept( walker );
+			final JdbcMappingContainer expressionType = ( (Expression) value ).getExpressionType();
+			if ( expressionType != null && expressionType.getSingleJdbcMapping().getJdbcType().isJson()
+					&& !SqlTypes.isJsonType( expressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) ) {
+				sqlAppender.appendSql( " format json" );
+			}
 		}
 	}
 }

@@ -646,6 +646,7 @@ public class MySQLDialect extends Dialect {
 		functionFactory.jsonArrayAgg_mysql();
 		functionFactory.jsonObjectAgg_mysql();
 		functionFactory.jsonSet_mysql();
+		functionFactory.jsonRemove_mysql();
 	}
 
 	@Override

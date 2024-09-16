@@ -13,46 +13,50 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Oracle json_array function.
+ * Oracle json_objectagg function.
  */
-public class OracleJsonArrayFunction extends JsonArrayFunction {
+public class OracleJsonObjectAggFunction extends JsonObjectAggFunction {
 
 	private final CastTarget stringCastTarget;
 	private CastFunction castFunction;
 
-	public OracleJsonArrayFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration );
+	public OracleJsonObjectAggFunction(TypeConfiguration typeConfiguration) {
+		super( " value ", false, typeConfiguration );
 		this.stringCastTarget = new CastTarget( typeConfiguration.getBasicTypeForJavaType( String.class ) );
 	}
 
 	@Override
-	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
-		if ( ExpressionTypeHelper.isNonNativeBoolean( value ) ) {
+	protected void renderArgument(
+			SqlAppender sqlAppender,
+			Expression arg,
+			JsonNullBehavior nullBehavior,
+			SqlAstTranslator<?> translator) {
+		if ( ExpressionTypeHelper.isNonNativeBoolean( arg ) ) {
 			CastFunction castFunction = this.castFunction;
 			if ( castFunction == null ) {
-				castFunction = this.castFunction = (CastFunction) walker.getSessionFactory()
+				castFunction = this.castFunction = (CastFunction) translator.getSessionFactory()
 						.getQueryEngine()
 						.getSqmFunctionRegistry()
 						.findFunctionDescriptor( "cast" );
 			}
 			castFunction.render(
 					sqlAppender,
-					List.of( value, stringCastTarget ),
+					List.of( arg, stringCastTarget ),
 					(ReturnableType<?>) stringCastTarget.getJdbcMapping(),
-					walker
+					translator
 			);
 			sqlAppender.appendSql( " format json" );
 		}
 		else {
-			value.accept( walker );
-			final JdbcMappingContainer expressionType = ( (Expression) value ).getExpressionType();
+			arg.accept( translator );
+			final JdbcMappingContainer expressionType = arg.getExpressionType();
 			if ( expressionType != null && expressionType.getSingleJdbcMapping().getJdbcType().isJson()
 					&& !SqlTypes.isJsonType( expressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) ) {
 				sqlAppender.appendSql( " format json" );

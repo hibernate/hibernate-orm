@@ -3547,4 +3547,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
 		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath) {
+		return criteriaBuilder.jsonRemove( jsonDocument, jsonPath );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return criteriaBuilder.jsonRemove( jsonDocument, jsonPath );
+	}
 }

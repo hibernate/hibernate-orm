@@ -126,8 +126,11 @@ public class SequenceStyleConfigUnitTest {
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			GeneratorCreationContextImpl generatorCreationContext = new GeneratorCreationContextImpl( database );
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
+			generator.create( generatorCreationContext );
 			generator.configure(
 					new TypeConfiguration().getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.LONG ),
@@ -135,7 +138,6 @@ public class SequenceStyleConfigUnitTest {
 					serviceRegistry
 			);
 
-			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
@@ -276,17 +278,19 @@ public class SequenceStyleConfigUnitTest {
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			GeneratorCreationContextImpl generatorCreationContext = new GeneratorCreationContextImpl( database );
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
+			generator.create( generatorCreationContext );
 			generator.configure(
 					new TypeConfiguration().getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.LONG ),
 					props,
 					serviceRegistry
 			);
-			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 

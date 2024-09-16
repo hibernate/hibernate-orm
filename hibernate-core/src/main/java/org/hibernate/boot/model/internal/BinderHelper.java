@@ -33,7 +33,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
@@ -882,9 +881,10 @@ public class BinderHelper {
 		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
 				.getSourceModelBuildingContext()
 				.getClassDetailsRegistry();
-		final String name = StringHelper.isEmpty( propertyHolder.getPersistentClass().getClassName() )
-				? propertyHolder.getPersistentClass().getEntityName()
-				: propertyHolder.getPersistentClass().getClassName();
+		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
+		final String name = isEmpty( persistentClass.getClassName() )
+				? persistentClass.getEntityName()
+				: persistentClass.getClassName();
 		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( name );
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {

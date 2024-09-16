@@ -63,15 +63,15 @@ public class NativeGenerator
 
 	@Override
 	public void registerExportables(Database database) {
-		if ( generator instanceof ExportableProducer ) {
-			((ExportableProducer) generator).registerExportables(database);
+		if ( generator instanceof ExportableProducer exportableProducer ) {
+			exportableProducer.registerExportables(database);
 		}
 	}
 
 	@Override
 	public void initialize(SqlStringGenerationContext context) {
-		if ( generator instanceof Configurable ) {
-			((Configurable) generator).initialize(context);
+		if ( generator instanceof Configurable configurable ) {
+			configurable.initialize(context);
 		}
 	}
 

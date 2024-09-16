@@ -242,9 +242,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	private void collectAggregatedColumns(List<Column> aggregatedColumns, Component component) {
 		for ( Property property : component.getProperties() ) {
-			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			if ( property.getValue() instanceof Component subComponent ) {
 				final AggregateColumn subAggregate = subComponent.getAggregateColumn();
 				if ( subAggregate != null ) {
 					aggregatedColumns.add( subAggregate );
@@ -254,7 +252,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				}
 			}
 			else {
-				aggregatedColumns.addAll( value.getColumns() );
+				aggregatedColumns.addAll( property.getValue().getColumns() );
 			}
 		}
 		if ( component.isPolymorphic() ) {
@@ -267,17 +265,16 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			// Let the BasicValue of every sub-column know about the aggregate,
 			// which is needed in type resolution
 			final Value value = property.getValue();
-			if ( value instanceof BasicValue ) {
-				assert ( (BasicValue) value ).getResolution() == null;
-				( (BasicValue) value ).setAggregateColumn( aggregateColumn );
+			if ( value instanceof BasicValue basicValue ) {
+				assert basicValue.getResolution() == null;
+				basicValue.setAggregateColumn( aggregateColumn );
 			}
-			else if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			else if ( value instanceof Component subComponent ) {
 				if ( subComponent.getAggregateColumn() == null ) {
 					subComponent.notifyPropertiesAboutAggregateColumn( aggregateColumn, subComponent );
 				}
 				else {
-					( (Component) value ).setParentAggregateColumn( aggregateColumn );
+					subComponent.setParentAggregateColumn( aggregateColumn );
 				}
 			}
 		}

@@ -30,7 +30,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
 
 /**

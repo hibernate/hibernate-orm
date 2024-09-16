@@ -206,10 +206,6 @@ public class SequenceStyleGenerator
 
 	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		if ( physicalNamingStrategy == null ) {
-			throw new IllegalStateException( "Expecting prior call to #create" );
-		}
-
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
@@ -279,9 +275,9 @@ public class SequenceStyleGenerator
 		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE
 				&& optimizationStrategy.isPooled()
 				&& physicalSequence ) {
-			final String databaseSequenceName = physicalNamingStrategy
-					.toPhysicalSequenceName( sequenceName.getObjectName(), jdbcEnvironment )
-					.getText();
+			final String databaseSequenceName = physicalNamingStrategy != null
+					? physicalNamingStrategy.toPhysicalSequenceName( sequenceName.getObjectName(), jdbcEnvironment ).getText()
+					: sequenceName.getObjectName().getText();
 			final Number databaseIncrementValue = isSchemaToBeRecreated( contributor, configurationService ) ? null : getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 			if ( databaseIncrementValue != null && databaseIncrementValue.intValue() != incrementSize) {
 				final int dbIncrementValue = databaseIncrementValue.intValue();

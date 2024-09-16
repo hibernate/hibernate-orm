@@ -19,30 +19,30 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @Jpa(annotatedClasses = {
-        EntityWithCompositeId.class,
-        CompositeId.class
+		EntityWithCompositeId.class,
+		CompositeId.class
 })
 public class CountEntityWithCompositeIdTest {
 
-    @Test
-    public void shouldCount(EntityManagerFactoryScope scope) {
-        scope.inTransaction(
-                entityManager -> {
-                    CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-                    CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-                    Root<EntityWithCompositeId> r = cq.from(EntityWithCompositeId.class);
-                    cq.multiselect(cb.count(r));
-                    assertThat(entityManager.createQuery(cq).getSingleResult().intValue(), is(0));
-                }
-        );
-        scope.inTransaction(
-                entityManager -> {
-                    HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
-                    CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-                    cq.from(EntityWithCompositeId.class);
-                    cq.select(cb.count());
-                    assertThat(entityManager.createQuery(cq).getSingleResult().intValue(), is(0));
-                }
-        );
-    }
+	@Test
+	public void shouldCount(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+					Root<EntityWithCompositeId> r = cq.from(EntityWithCompositeId.class);
+					cq.multiselect(cb.count(r));
+					assertThat(entityManager.createQuery(cq).getSingleResult().intValue(), is(0));
+				}
+		);
+		scope.inTransaction(
+				entityManager -> {
+					HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
+					CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+					cq.from(EntityWithCompositeId.class);
+					cq.select(cb.count());
+					assertThat(entityManager.createQuery(cq).getSingleResult().intValue(), is(0));
+				}
+		);
+	}
 }

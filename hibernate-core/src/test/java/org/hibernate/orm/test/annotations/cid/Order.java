@@ -17,6 +17,6 @@ import jakarta.persistence.Table;
 @Table(name = "OrderTableFoobar")
 public class Order {
 	@Id
-    @GeneratedValue
-    public Integer id;
+	@GeneratedValue
+	public Integer id;
 }

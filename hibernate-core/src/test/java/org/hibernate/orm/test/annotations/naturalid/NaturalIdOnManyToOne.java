@@ -23,13 +23,13 @@ import org.hibernate.annotations.NaturalIdCache;
  */
 class NaturalIdOnManyToOne {
 
-    @Id
-    @GeneratedValue
-    int id;
+	@Id
+	@GeneratedValue
+	int id;
 
-    @NaturalId
-    @ManyToOne
-    Citizen citizen;
+	@NaturalId
+	@ManyToOne
+	Citizen citizen;
 
 	public int getId() {
 		return id;

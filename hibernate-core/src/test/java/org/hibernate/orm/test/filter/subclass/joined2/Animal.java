@@ -22,10 +22,10 @@ import static jakarta.persistence.InheritanceType.JOINED;
 public class Animal {
 	@Id
 	@Column(name = "id_animal")
-    private int id;
+	private int id;
 
-    private String name;
+	private String name;
 
 	@Column(name = "id_company")
-    private long company;
+	private long company;
 }

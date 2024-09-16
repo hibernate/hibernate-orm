@@ -157,7 +157,7 @@ public class EagerProxyNotFoundTest {
 						employeeLazy.getId();
 						employeeLazy.getName();
 						fail( "ObjectNotFoundException should have been thrown because Task.employeeLazy.location is not found " +
-									  "and is not mapped with @NotFound(IGNORE)" );
+									"and is not mapped with @NotFound(IGNORE)" );
 					}
 					catch (ObjectNotFoundException expected) {
 					}
@@ -190,7 +190,7 @@ public class EagerProxyNotFoundTest {
 						session.createQuery( "from Task", Task.class ).getSingleResult();
 					} );
 			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
@@ -212,7 +212,7 @@ public class EagerProxyNotFoundTest {
 		try {
 			scope.inTransaction( session -> session.get( Employee.class, 1 ) );
 			fail( "EntityNotFoundException should have been thrown because Employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
@@ -224,7 +224,7 @@ public class EagerProxyNotFoundTest {
 					Employee.class
 			).getSingleResult() );
 			fail( "EntityNotFoundException should have been thrown because Employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
@@ -288,7 +288,7 @@ public class EagerProxyNotFoundTest {
 						session.createQuery( "from Employee", Employee.class ).getSingleResult();
 					} );
 			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}

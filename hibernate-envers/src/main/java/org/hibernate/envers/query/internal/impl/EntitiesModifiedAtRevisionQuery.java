@@ -56,12 +56,12 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 	@Override
 	public List list() {
 		/*
-         * The query that we need to create:
-         *   SELECT new list(e) FROM versionsReferencedEntity e
-         *   WHERE
-         * (all specified conditions, transformed, on the "e" entity) AND
-         * e.revision = :revision
-         */
+		 * The query that we need to create:
+		 *   SELECT new list(e) FROM versionsReferencedEntity e
+		 *   WHERE
+		 * (all specified conditions, transformed, on the "e" entity) AND
+		 * e.revision = :revision
+		 */
 		String revisionPropertyPath = enversService.getConfig().getRevisionNumberPath();
 		qb.getRootParameters().addWhereWithParam( revisionPropertyPath, "=", revision );
 

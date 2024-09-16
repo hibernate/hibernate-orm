@@ -22,51 +22,51 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Phone {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Person person;
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Person person;
 
-    @Column(name = "phone_number")
-    private String number;
+	@Column(name = "phone_number")
+	private String number;
 
-    private boolean valid;
+	private boolean valid;
 
-    @ElementCollection
-    private List<Date> repairTimestamps = new ArrayList<>(  );
+	@ElementCollection
+	private List<Date> repairTimestamps = new ArrayList<>(  );
 
-    public Phone() {}
+	public Phone() {}
 
-    public Phone(String number) {
-        this.number = number;
-    }
+	public Phone(String number) {
+		this.number = number;
+	}
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getNumber() {
-        return number;
-    }
+	public String getNumber() {
+		return number;
+	}
 
-    public Person getPerson() {
-        return person;
-    }
+	public Person getPerson() {
+		return person;
+	}
 
-    public void setPerson(Person person) {
-        this.person = person;
-    }
+	public void setPerson(Person person) {
+		this.person = person;
+	}
 
-    public boolean isValid() {
-        return valid;
-    }
+	public boolean isValid() {
+		return valid;
+	}
 
-    public void setValid(boolean valid) {
-        this.valid = valid;
-    }
+	public void setValid(boolean valid) {
+		this.valid = valid;
+	}
 }

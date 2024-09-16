@@ -14,12 +14,12 @@ import jakarta.persistence.Id;
 @Entity
 public class Panel implements Serializable {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    private Long clientId;
+	private Long clientId;
 
-    private String deltaStamp;
+	private String deltaStamp;
 
 	public Long getId() {
 		return id;

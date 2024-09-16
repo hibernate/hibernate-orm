@@ -110,7 +110,7 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Parent me = new Parent( "Steve", 192837465 );
 		me.getChildren().add( new Child( "Joe" ) );
-  		s.persist( me );
+		s.persist( me );
 		s.getTransaction().commit();
 		s.close();
 

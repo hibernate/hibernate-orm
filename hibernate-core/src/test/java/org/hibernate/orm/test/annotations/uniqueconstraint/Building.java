@@ -15,24 +15,24 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public class Building {
 
-    public Long height;
+	public Long height;
 
-    private Room room;
+	private Room room;
 
-    public Long getHeight() {
-        return height;
-    }
+	public Long getHeight() {
+		return height;
+	}
 
-    public void setHeight(Long height) {
-        this.height = height;
-    }
+	public void setHeight(Long height) {
+		this.height = height;
+	}
 
-    @ManyToOne(optional = false)
-    public Room getRoom() {
-        return room;
-    }
+	@ManyToOne(optional = false)
+	public Room getRoom() {
+		return room;
+	}
 
-    public void setRoom(Room room) {
-        this.room = room;
-    }
+	public void setRoom(Room room) {
+		this.room = room;
+	}
 }

@@ -577,7 +577,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected boolean supportsBulkInsertIdGeneration(Class entityClass) {
-        EntityPersister persister = sessionFactory()
+		EntityPersister persister = sessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(entityClass.getName());
 		Generator generator = persister.getGenerator();

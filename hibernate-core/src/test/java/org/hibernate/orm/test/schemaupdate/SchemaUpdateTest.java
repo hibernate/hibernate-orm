@@ -233,8 +233,8 @@ public class SchemaUpdateTest {
 		String match;
 
 		@ElementCollection
- 		@CollectionTable
- 		private Map<Integer, Integer> timeline = new TreeMap<>();
+		@CollectionTable
+		private Map<Integer, Integer> timeline = new TreeMap<>();
 	}
 
 	@Entity(name = "InheritanceRootEntity")

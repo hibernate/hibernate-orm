@@ -365,8 +365,8 @@ public final class Hibernate {
 		}
 	}
 
-    /**
-     * If the given object is not a proxy, return it. But, if it is a proxy, ensure
+	/**
+	 * If the given object is not a proxy, return it. But, if it is a proxy, ensure
 	 * that the proxy is initialized, and return a direct reference to its proxied
 	 * entity object.
 	 *
@@ -375,7 +375,7 @@ public final class Hibernate {
 	 *
 	 * @throws LazyInitializationException if this operation is called on an
 	 * uninitialized proxy that is not associated with an open session.
-     */
+	 */
 	public static Object unproxy(Object proxy) {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
 		return lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;

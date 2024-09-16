@@ -19,23 +19,23 @@ import org.hibernate.annotations.NaturalId;
 @Entity
 class Town {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
-    Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "id", nullable = false)
+	Integer id;
 
-    String name;
+	String name;
 
-    @NaturalId
-    @Embedded
-    TownCode townCode;
+	@NaturalId
+	@Embedded
+	TownCode townCode;
 
-    @Column(name = "region_id", nullable = false)
-    int regionId;
+	@Column(name = "region_id", nullable = false)
+	int regionId;
 
-    @ManyToOne
-    @JoinColumn(name = "region_id", referencedColumnName = "id", nullable = false, insertable = false, updatable = false)
-    @JoinColumn(name = "country_code", referencedColumnName = "country_code", nullable = false, insertable = false, updatable = false)
-    @JoinColumn(name = "zip_code", referencedColumnName = "zip_code", nullable = false, insertable = false, updatable = false)
-    Region region;
+	@ManyToOne
+	@JoinColumn(name = "region_id", referencedColumnName = "id", nullable = false, insertable = false, updatable = false)
+	@JoinColumn(name = "country_code", referencedColumnName = "country_code", nullable = false, insertable = false, updatable = false)
+	@JoinColumn(name = "zip_code", referencedColumnName = "zip_code", nullable = false, insertable = false, updatable = false)
+	Region region;
 }

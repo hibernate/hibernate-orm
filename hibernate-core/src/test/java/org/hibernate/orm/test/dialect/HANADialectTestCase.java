@@ -64,8 +64,8 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 	@Entity( name = "EntityWithIdentity" )
 	@Table( name = "EntityWithIdentity" )
 	public static class EntityWithIdentity {
-	    @Id @GeneratedValue( strategy = GenerationType.IDENTITY )
-	    private Integer id;
+		@Id @GeneratedValue( strategy = GenerationType.IDENTITY )
+		private Integer id;
 
 		private EntityWithIdentity() {
 			// for use by Hibernate

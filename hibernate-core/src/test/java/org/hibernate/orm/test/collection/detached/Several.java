@@ -17,10 +17,10 @@ import java.util.Set;
 
 @Entity @Table(name="DCSeveral")
 public class Several {
-    @GeneratedValue
-    @Id
-    long id;
+	@GeneratedValue
+	@Id
+	long id;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    Set<Many> many;
+	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	Set<Many> many;
 }

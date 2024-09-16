@@ -223,15 +223,15 @@ public class PersistentMapTest {
 						session.getTransaction().begin();
 /*
 select
-        userdatas0_.userId as userid2_8_0_,
-        userdatas0_.id as id1_8_0_,
-        userdatas0_.name as name3_0_,
-        userdatas0_.id as id1_8_1_,
-        userdatas0_.userId as userid2_8_1_
-    from
-        UserData userdatas0_
-    where
-        userdatas0_.userId=1
+		userdatas0_.userId as userid2_8_0_,
+		userdatas0_.id as id1_8_0_,
+		userdatas0_.name as name3_0_,
+		userdatas0_.id as id1_8_1_,
+		userdatas0_.userId as userid2_8_1_
+	from
+		UserData userdatas0_
+	where
+		userdatas0_.userId=1
  */
 						assertEquals( 0, session.get( User.class, user.id ).userDatas.size() );
 						assertEquals( 0, session.createQuery( "FROM " + UserData.class.getName() ).list().size() );

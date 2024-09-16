@@ -66,9 +66,9 @@ public class EntityAttributeMutabilityTest {
 	@Entity( name = "Employee" )
 	@Table( name = "Employee" )
 	public static class Employee {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@ManyToOne
 		@JoinColumn( name = "manager_fk" )

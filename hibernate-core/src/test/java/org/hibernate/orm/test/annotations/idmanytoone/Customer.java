@@ -22,11 +22,11 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "Bs")
 public class Customer implements Serializable {
-    @Id @GeneratedValue
+	@Id @GeneratedValue
 	public Integer id;
 
-    @OneToMany(mappedBy = "customer")
-    public Set<StoreCustomer> stores;
+	@OneToMany(mappedBy = "customer")
+	public Set<StoreCustomer> stores;
 
-    private static final long serialVersionUID = 3818501706063039923L;
+	private static final long serialVersionUID = 3818501706063039923L;
 }

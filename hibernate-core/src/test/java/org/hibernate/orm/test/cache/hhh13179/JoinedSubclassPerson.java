@@ -8,13 +8,13 @@ package org.hibernate.orm.test.cache.hhh13179;
 
 public abstract class JoinedSubclassPerson {
 
-   private Long oid;
+private Long oid;
 
-   public Long getOid() {
-      return oid;
-   }
+public Long getOid() {
+	return oid;
+}
 
-   public void setOid(Long oid) {
-      this.oid = oid;
-   }
+public void setOid(Long oid) {
+	this.oid = oid;
+}
 }

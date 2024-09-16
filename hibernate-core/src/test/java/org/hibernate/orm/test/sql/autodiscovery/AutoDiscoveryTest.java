@@ -132,8 +132,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 							Assert.assertFalse( "bad dialect.getColumnAliasExtractor impl", column1Alias.equals( column2Alias ) );
 						}
 						finally {
-                            sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
-                            sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
+							sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
+							sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 						}
 					}
 				}

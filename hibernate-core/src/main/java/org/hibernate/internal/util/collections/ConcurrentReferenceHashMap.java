@@ -1639,9 +1639,9 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	/*
-		  * This class is needed for JDK5 compatibility.
-		  */
+	/**
+	 * This class is needed for JDK5 compatibility.
+	 */
 	static class SimpleEntry<K, V> implements Entry<K, V>, Serializable {
 		private static final long serialVersionUID = -8499721149061103585L;
 

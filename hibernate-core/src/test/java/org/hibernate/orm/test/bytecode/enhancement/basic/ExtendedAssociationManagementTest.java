@@ -27,58 +27,58 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @BytecodeEnhanced
 public class ExtendedAssociationManagementTest {
 
-    @Test
-    public void test() {
-        User user = new User();
-        user.login = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
+	@Test
+	public void test() {
+		User user = new User();
+		user.login = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 
-        Customer customer = new Customer();
-        customer.user = user;
+		Customer customer = new Customer();
+		customer.user = user;
 
-        assertEquals( customer, getFieldByReflection( user, "customer" ) );
+		assertEquals( customer, getFieldByReflection( user, "customer" ) );
 
-        // check dirty tracking is set automatically with bi-directional association management
-        EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
+		// check dirty tracking is set automatically with bi-directional association management
+		EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
 
-        User anotherUser = new User();
-        anotherUser.login = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
+		User anotherUser = new User();
+		anotherUser.login = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 
-        customer.user = anotherUser;
+		customer.user = anotherUser;
 
-        assertNull( user.customer );
-        assertEquals( customer, getFieldByReflection( anotherUser, "customer" ) );
+		assertNull( user.customer );
+		assertEquals( customer, getFieldByReflection( anotherUser, "customer" ) );
 
-        user.customer = new Customer();
-        assertEquals( user, user.customer.user );
-    }
+		user.customer = new Customer();
+		assertEquals( user, user.customer.user );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    private static class Customer {
+	@Entity
+	private static class Customer {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String firstName;
+		String firstName;
 
-        String lastName;
+		String lastName;
 
-        @OneToOne( fetch = FetchType.LAZY )
-        User user;
-    }
+		@OneToOne( fetch = FetchType.LAZY )
+		User user;
+	}
 
-    @Entity
-    private static class User {
+	@Entity
+	private static class User {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String login;
+		String login;
 
-        String password;
+		String password;
 
-        @OneToOne( mappedBy = "user", fetch = FetchType.LAZY )
-        Customer customer;
-    }
+		@OneToOne( mappedBy = "user", fetch = FetchType.LAZY )
+		Customer customer;
+	}
 }

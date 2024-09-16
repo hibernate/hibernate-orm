@@ -9,17 +9,17 @@ package org.hibernate.orm.test.id;
 
 public class Person {
 
-    private long id;
+	private long id;
 
-    public Person() {
-    }
+	public Person() {
+	}
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public void setId(final long id) {
-        this.id = id;
-    }
+	public void setId(final long id) {
+		this.id = id;
+	}
 
 }

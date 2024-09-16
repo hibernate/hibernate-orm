@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Publisher {
-    @Id Long id;
-    String name;
-    Address address;
+	@Id Long id;
+	String name;
+	Address address;
 }

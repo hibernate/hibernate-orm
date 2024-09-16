@@ -14,10 +14,10 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public interface FlushEventListener {
-    /**
+	/**
 	 * Handle the given flush event.
-     *
-     * @param event The flush event to be handled.
-     */
+	 *
+	 * @param event The flush event to be handled.
+	 */
 	void onFlush(FlushEvent event) throws HibernateException;
 }

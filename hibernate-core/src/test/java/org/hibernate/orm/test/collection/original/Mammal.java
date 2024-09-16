@@ -8,9 +8,9 @@ package org.hibernate.orm.test.collection.original;
 
 
 public class Mammal extends Animal {
-    private String mammalName;
-    private String mammalName2;
-    private String mammalName3;
+	private String mammalName;
+	private String mammalName2;
+	private String mammalName3;
 
 	public String getMammalName() {
 		return mammalName;

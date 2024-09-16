@@ -335,7 +335,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
- 	public void testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly(SessionFactoryScope scope) {
+	public void testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(

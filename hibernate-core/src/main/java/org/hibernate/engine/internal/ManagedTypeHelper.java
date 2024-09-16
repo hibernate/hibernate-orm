@@ -226,8 +226,8 @@ public final class ManagedTypeHelper {
 		}
 	}
 
-	 // Not using Consumer<SelfDirtinessTracker> because of JDK-8180450:
-	 // use a custom functional interface with explicit type.
+	// Not using Consumer<SelfDirtinessTracker> because of JDK-8180450:
+	// use a custom functional interface with explicit type.
 	@FunctionalInterface
 	public interface SelfDirtinessTrackerConsumer {
 		void accept(SelfDirtinessTracker tracker);

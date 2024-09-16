@@ -14,23 +14,23 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(
-    name = "paid_invoice")
+	name = "paid_invoice")
 public class PaidInvoiceBE {
 
-  @Id
+@Id
 //  @GeneratedValue
-  private long id;
+private long id;
 
-  @ManyToOne(optional = false, fetch = FetchType.LAZY)
-  private InvoiceBE invoice;
+@ManyToOne(optional = false, fetch = FetchType.LAZY)
+private InvoiceBE invoice;
 
-  public PaidInvoiceBE setId(long id) {
-    this.id = id;
-    return this;
-  }
+public PaidInvoiceBE setId(long id) {
+	this.id = id;
+	return this;
+}
 
-  public PaidInvoiceBE setInvoice(InvoiceBE invoice) {
-    this.invoice = invoice;
-    return this;
-  }
+public PaidInvoiceBE setInvoice(InvoiceBE invoice) {
+	this.invoice = invoice;
+	return this;
+}
 }

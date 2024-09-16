@@ -19,41 +19,41 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Phone {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @Column(name = "`number`")
-    private String number;
+	@Column(name = "`number`")
+	private String number;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Person owner;
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Person owner;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 //end::pc-cascade-domain-model-example[]
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getNumber() {
-        return number;
-    }
+	public String getNumber() {
+		return number;
+	}
 
-    public void setNumber(String number) {
-        this.number = number;
-    }
+	public void setNumber(String number) {
+		this.number = number;
+	}
 
-    public Person getOwner() {
-        return owner;
-    }
+	public Person getOwner() {
+		return owner;
+	}
 
-    public void setOwner(Person owner) {
-        this.owner = owner;
-    }
+	public void setOwner(Person owner) {
+		this.owner = owner;
+	}
 //tag::pc-cascade-domain-model-example[]
 }
 //end::pc-cascade-domain-model-example[]

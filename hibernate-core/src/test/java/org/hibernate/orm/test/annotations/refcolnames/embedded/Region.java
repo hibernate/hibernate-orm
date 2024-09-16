@@ -17,15 +17,15 @@ import org.hibernate.annotations.NaturalId;
 @Entity
 class Region {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
-    int id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "id", nullable = false)
+	int id;
 
-    String name;
+	String name;
 
-    @NaturalId
-    @Embedded
-    PostalCode postalCode;
+	@NaturalId
+	@Embedded
+	PostalCode postalCode;
 
 }

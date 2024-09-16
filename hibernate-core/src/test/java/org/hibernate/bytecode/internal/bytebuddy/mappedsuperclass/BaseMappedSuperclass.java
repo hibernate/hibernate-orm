@@ -12,8 +12,8 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class BaseMappedSuperclass {
 
-  @Id
-  protected Long id;
+@Id
+protected Long id;
 
-  protected long value;
+protected long value;
 }

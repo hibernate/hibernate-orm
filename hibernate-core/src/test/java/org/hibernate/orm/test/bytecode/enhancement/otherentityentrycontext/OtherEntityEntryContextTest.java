@@ -28,56 +28,56 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-        annotatedClasses = {
-            OtherEntityEntryContextTest.Parent.class
-        }
+		annotatedClasses = {
+			OtherEntityEntryContextTest.Parent.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class OtherEntityEntryContextTest {
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        // Create a Parent
-        scope.inTransaction( s -> {
-            s.persist( new Parent( 1L, "first" ) );
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		// Create a Parent
+		scope.inTransaction( s -> {
+			s.persist( new Parent( 1L, "first" ) );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Parent p = s.get( Parent.class, 1L );
-            p.name = "third";
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Parent p = s.get( Parent.class, 1L );
+			p.name = "third";
 
-            s.merge( p );
-            assertTrue( s.contains( p ) );
-            s.evict( p );
-            assertFalse( s.contains( p ) );
+			s.merge( p );
+			assertTrue( s.contains( p ) );
+			s.evict( p );
+			assertFalse( s.contains( p ) );
 
-            p = s.get( Parent.class, p.id );
+			p = s.get( Parent.class, p.id );
 
-            assertEquals( "first", p.name );
-        } );
-    }
+			assertEquals( "first", p.name );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "PARENT" )
-    static class Parent {
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String name;
+		String name;
 
-        Parent() {
-        }
+		Parent() {
+		}
 
-        Parent(Long id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-    }
+		Parent(Long id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
 }

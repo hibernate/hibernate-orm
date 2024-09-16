@@ -13,21 +13,21 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class StringCompositeKey implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
- private String substation;
+private String substation;
 
-    private String deviceType;
+	private String deviceType;
 
-    private String device;
+	private String device;
 
-    private String analog;
+	private String analog;
 
-    // For some dialects, the sum of a primary key column lengths cannot
-    // be larger than 255 (DB2).  Restrict them to a sufficiently
-    // small size.  See HHH-8085.
+	// For some dialects, the sum of a primary key column lengths cannot
+	// be larger than 255 (DB2).  Restrict them to a sufficiently
+	// small size.  See HHH-8085.
 
-    @Column( length = 50 )
+	@Column( length = 50 )
 	public String getSubstation() {
 		return substation;
 	}

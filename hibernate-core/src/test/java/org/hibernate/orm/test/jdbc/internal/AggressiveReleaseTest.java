@@ -130,7 +130,7 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 						ps.setLong( 1, 1 );
 						ps.setString( 2, "name" );
 						jdbcCoord.getResultSetReturn().execute( ps, sql );
-                        assertTrue( jdbcCoord.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
+						assertTrue( jdbcCoord.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
 						resourceRegistry.release( ps );

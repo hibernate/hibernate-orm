@@ -109,8 +109,8 @@ public class OneToManyBidirectionalTest {
 
 					/*
 						select l1_0."order_id", l1_0.id
-    					from Item as l1_0
-   	 					where l1_0."order_id" = ?
+						from Item as l1_0
+							where l1_0."order_id" = ?
 					 */
 
 					sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -178,10 +178,10 @@ public class OneToManyBidirectionalTest {
 			List<Item> results = session.createQuery( "select i from Item i", Item.class ).list();
 			/*
 				1) select i1_0.id, i1_0."order_id"
-    				from Item as i1_0
-    			2) 	select o1_0.id, o1_0.name
-    				from "Order" as o1_0
-    				where o1_0.id = ?
+					from Item as i1_0
+				2) 	select o1_0.id, o1_0.name
+					from "Order" as o1_0
+					where o1_0.id = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -198,8 +198,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -221,11 +221,11 @@ public class OneToManyBidirectionalTest {
 			List<Item> results = session.createQuery( "select i from Item i join i.order", Item.class ).list();
 			/*
 				1)	select i1_0.id, i1_0."order_id"
-    				from Item as i1_0
-    				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
-    			2) select o1_0.id, o1_0.name
-    				from "Order" as o1_0
-   					 where o1_0.id = ?
+					from Item as i1_0
+					inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+				2) select o1_0.id, o1_0.name
+					from "Order" as o1_0
+						where o1_0.id = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -241,8 +241,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -265,8 +265,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select i1_0.id, o1_0.id, o1_0.name
-    			from Item as i1_0
-    			inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+				from Item as i1_0
+				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -282,8 +282,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -311,10 +311,10 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				1)	select i1_0.id, i1_0."order_id"
-    				from Item as i1_0
-    				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
-   					inner join Item as l1_0  on l1_0."order_id" = o1_0.id
-   				2)	select o1_0.id, o1_0.name
+					from Item as i1_0
+					inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+					inner join Item as l1_0  on l1_0."order_id" = o1_0.id
+				2)	select o1_0.id, o1_0.name
 					from "Order" as o1_0
 					where o1_0.id = ?
 			 */
@@ -333,8 +333,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -358,9 +358,9 @@ public class OneToManyBidirectionalTest {
 			Order order = session.find( Order.class, 3L );
 
 			/*
-				 select o1_0.id, o1_0.name
-    			from "Order" as o1_0
-    			where o1_0.id = ?
+				select o1_0.id, o1_0.name
+				from "Order" as o1_0
+				where o1_0.id = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -374,8 +374,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -399,7 +399,7 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select o1_0.id, o1_0.name
-    			from "Order" as o1_0
+				from "Order" as o1_0
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -415,8 +415,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -439,8 +439,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select o1_0.id, o1_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -456,8 +456,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -481,8 +481,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
@@ -512,10 +512,10 @@ public class OneToManyBidirectionalTest {
 			).list();
 
 			/*
-			    select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
-    			inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
+				select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
@@ -532,8 +532,8 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select l1_0."order_id", l1_0.id
-    			from Item as l1_0
-    			where l1_0."order_id" = ?
+				from Item as l1_0
+				where l1_0."order_id" = ?
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
@@ -557,10 +557,10 @@ public class OneToManyBidirectionalTest {
 			).list();
 
 			/*
-			    select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
-    			from "Order" as o1_0
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
-    			inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
+				select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
+				from "Order" as o1_0
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
@@ -597,9 +597,9 @@ public class OneToManyBidirectionalTest {
 
 			/*
 				select i1_0.id, o1_0.id, l1_0."order_id", l1_0.id, o1_0.name
-    			from Item as i1_0
-    			inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
-    			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+				from Item as i1_0
+				inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
+				inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );

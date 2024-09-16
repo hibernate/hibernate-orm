@@ -14,23 +14,23 @@ import jakarta.persistence.Id;
  */
 @Entity
 public class Product {
-    private int proId;
-    private String proName;
+	private int proId;
+	private String proName;
 
-    @Id
-    public int getProId() {
-        return proId;
-    }
+	@Id
+	public int getProId() {
+		return proId;
+	}
 
-    public void setProId(int proId) {
-        this.proId = proId;
-    }
+	public void setProId(int proId) {
+		this.proId = proId;
+	}
 
-    public String getProName() {
-        return proName;
-    }
+	public String getProName() {
+		return proName;
+	}
 
-    public void setProName(String proName) {
-        this.proName = proName;
-    }
+	public void setProName(String proName) {
+		this.proName = proName;
+	}
 }

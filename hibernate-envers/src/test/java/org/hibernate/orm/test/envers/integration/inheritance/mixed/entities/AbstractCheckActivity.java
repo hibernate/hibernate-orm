@@ -32,9 +32,9 @@ public abstract class AbstractCheckActivity extends AbstractActivity {
 	private Integer durationInMinutes;
 	@ManyToOne(targetEntity = AbstractActivity.class, cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
 	@JoinColumns({
-						 @JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id"),
-						 @JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id2")
-				 })
+						@JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id"),
+						@JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id2")
+				})
 	private Activity relatedActivity;
 
 	public Integer getDurationInMinutes() {

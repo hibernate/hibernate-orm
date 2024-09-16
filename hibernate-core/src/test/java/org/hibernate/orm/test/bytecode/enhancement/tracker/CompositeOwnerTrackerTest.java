@@ -17,53 +17,53 @@ import static org.junit.Assert.assertEquals;
  */
 public class CompositeOwnerTrackerTest {
 
-    private int counter = 0;
+	private int counter = 0;
 
-    @Test
-    public void testCompositeOwnerTracker() {
+	@Test
+	public void testCompositeOwnerTracker() {
 
-        CompositeOwnerTracker tracker = new CompositeOwnerTracker();
-        tracker.add( "foo", new TestCompositeOwner() );
+		CompositeOwnerTracker tracker = new CompositeOwnerTracker();
+		tracker.add( "foo", new TestCompositeOwner() );
 
-        tracker.callOwner( ".street1" );
-        assertEquals( 1, counter );
-        tracker.add( "bar", new TestCompositeOwner() );
-        tracker.callOwner( ".city" );
-        assertEquals( 3, counter );
+		tracker.callOwner( ".street1" );
+		assertEquals( 1, counter );
+		tracker.add( "bar", new TestCompositeOwner() );
+		tracker.callOwner( ".city" );
+		assertEquals( 3, counter );
 
-        tracker.removeOwner( "foo" );
+		tracker.removeOwner( "foo" );
 
-        tracker.callOwner( ".country" );
-        assertEquals( 4, counter );
-        tracker.removeOwner( "bar" );
+		tracker.callOwner( ".country" );
+		assertEquals( 4, counter );
+		tracker.removeOwner( "bar" );
 
-        tracker.callOwner( ".country" );
+		tracker.callOwner( ".country" );
 
-        tracker.add( "moo", new TestCompositeOwner() );
-        tracker.callOwner( ".country" );
-        assertEquals( 5, counter );
-    }
+		tracker.add( "moo", new TestCompositeOwner() );
+		tracker.callOwner( ".country" );
+		assertEquals( 5, counter );
+	}
 
-    class TestCompositeOwner implements CompositeOwner {
+	class TestCompositeOwner implements CompositeOwner {
 
-        @Override
-        public void $$_hibernate_trackChange(String attributeName) {
-            if ( counter == 0 ) {
-                assertEquals( "foo.street1", attributeName );
-            }
-            if ( counter == 1 ) {
-                assertEquals( "foo.city", attributeName );
-            }
-            if ( counter == 2 ) {
-                assertEquals( "bar.city", attributeName );
-            }
-            if ( counter == 3 ) {
-                assertEquals( "bar.country", attributeName );
-            }
-            if ( counter == 4 ) {
-                assertEquals( "moo.country", attributeName );
-            }
-            counter++;
-        }
-    }
+		@Override
+		public void $$_hibernate_trackChange(String attributeName) {
+			if ( counter == 0 ) {
+				assertEquals( "foo.street1", attributeName );
+			}
+			if ( counter == 1 ) {
+				assertEquals( "foo.city", attributeName );
+			}
+			if ( counter == 2 ) {
+				assertEquals( "bar.city", attributeName );
+			}
+			if ( counter == 3 ) {
+				assertEquals( "bar.country", attributeName );
+			}
+			if ( counter == 4 ) {
+				assertEquals( "moo.country", attributeName );
+			}
+			counter++;
+		}
+	}
 }

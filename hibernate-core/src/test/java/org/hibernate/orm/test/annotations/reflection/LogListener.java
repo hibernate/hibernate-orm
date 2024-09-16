@@ -21,10 +21,10 @@ public class LogListener {
 	@PrePersist
 	@PostPersist
 	public void log(Object entity) {
-        log.debug("Logging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
+		log.debug("Logging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
 	}
 
 	public void noLog(Object entity) {
-        log.debug("NoLogging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
+		log.debug("NoLogging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
 	}
 }

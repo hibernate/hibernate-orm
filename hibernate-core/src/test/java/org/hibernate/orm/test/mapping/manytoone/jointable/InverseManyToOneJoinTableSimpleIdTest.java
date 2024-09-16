@@ -116,9 +116,9 @@ public class InverseManyToOneJoinTableSimpleIdTest {
 	@Entity( name = "Book" )
 	@Table( name = "books" )
 	public static class Book {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@ManyToOne
 		@JoinTable(name = "book_authors",
@@ -152,9 +152,9 @@ public class InverseManyToOneJoinTableSimpleIdTest {
 	@Entity( name = "Author" )
 	@Table( name = "authors" )
 	public static class Author {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "author")

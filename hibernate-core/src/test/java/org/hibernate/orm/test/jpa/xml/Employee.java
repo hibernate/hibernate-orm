@@ -13,58 +13,58 @@ import jakarta.persistence.Id;
  */
 @Entity
 public class Employee {
-    @Id
+	@Id
 	Long id;
-    String name;
+	String name;
 /*
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "street", column = @Column(name = "HA_street")),
-        @AttributeOverride(name = "city", column = @Column(name = "HA_city")),
-        @AttributeOverride(name = "state", column = @Column(name = "HA_state")),
-        @AttributeOverride(name = "zip", column = @Column(name = "HA_zip")) })
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "street", column = @Column(name = "HA_street")),
+		@AttributeOverride(name = "city", column = @Column(name = "HA_city")),
+		@AttributeOverride(name = "state", column = @Column(name = "HA_state")),
+		@AttributeOverride(name = "zip", column = @Column(name = "HA_zip")) })
 */
-    Address homeAddress;
+	Address homeAddress;
 
 /*
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "street", column = @Column(name = "MA_street")),
-        @AttributeOverride(name = "city", column = @Column(name = "MA_city")),
-        @AttributeOverride(name = "state", column = @Column(name = "MA_state")),
-        @AttributeOverride(name = "zip", column = @Column(name = "MA_zip")) })
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "street", column = @Column(name = "MA_street")),
+		@AttributeOverride(name = "city", column = @Column(name = "MA_city")),
+		@AttributeOverride(name = "state", column = @Column(name = "MA_state")),
+		@AttributeOverride(name = "zip", column = @Column(name = "MA_zip")) })
 */
-    Address mailAddress;
+	Address mailAddress;
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Address getHomeAddress() {
-        return homeAddress;
-    }
+	public Address getHomeAddress() {
+		return homeAddress;
+	}
 
-    public void setHomeAddress(Address homeAddress) {
-        this.homeAddress = homeAddress;
-    }
+	public void setHomeAddress(Address homeAddress) {
+		this.homeAddress = homeAddress;
+	}
 
-    public Address getMailAddress() {
-        return mailAddress;
-    }
+	public Address getMailAddress() {
+		return mailAddress;
+	}
 
-    public void setMailAddress(Address mailAddress) {
-        this.mailAddress = mailAddress;
-    }
+	public void setMailAddress(Address mailAddress) {
+		this.mailAddress = mailAddress;
+	}
 }

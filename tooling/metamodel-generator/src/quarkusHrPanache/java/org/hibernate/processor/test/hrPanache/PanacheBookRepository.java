@@ -17,9 +17,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class PanacheBookRepository implements PanacheRepository<PanacheBook> {
-    @Find
-    public native Uni<List<PanacheBook>> findBook(String isbn);
+	@Find
+	public native Uni<List<PanacheBook>> findBook(String isbn);
 
-    @HQL("WHERE isbn = :isbn")
-    public native Uni<List<PanacheBook>> hqlBook(String isbn);
+	@HQL("WHERE isbn = :isbn")
+	public native Uni<List<PanacheBook>> hqlBook(String isbn);
 }

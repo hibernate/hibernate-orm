@@ -13,7 +13,7 @@ import jakarta.persistence.Embeddable;
  */
 @Embeddable
 public class SizeImpl implements Size {
-    @Column(name = "name", nullable = false)
+	@Column(name = "name", nullable = false)
 	private String name;
 
 	public String getName() {

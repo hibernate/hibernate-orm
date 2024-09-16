@@ -143,9 +143,9 @@ public class EnumCheckTests {
 	@Entity( name = "SimpleEntity" )
 	@Table( name = "SimpleEntity" )
 	public static class SimpleEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Enumerated(EnumType.STRING)
 		RetentionPolicy retentionPolicy;

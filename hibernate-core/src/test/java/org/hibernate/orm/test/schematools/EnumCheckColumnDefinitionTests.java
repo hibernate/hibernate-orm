@@ -137,9 +137,9 @@ public class EnumCheckColumnDefinitionTests {
 	@Entity( name = "SimpleEntity" )
 	@Table( name = "SimpleEntity" )
 	public static class SimpleEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Column(columnDefinition = "enum ('SOURCE','CLASS','RUNTIME')")
 		@Enumerated(EnumType.STRING)

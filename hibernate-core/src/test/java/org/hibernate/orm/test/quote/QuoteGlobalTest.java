@@ -50,8 +50,8 @@ public class QuoteGlobalTest {
 	@Test
 	@JiraKey(value = "HHH-7890")
 	public void testQuotedUniqueConstraint(SessionFactoryScope scope) {
-        Iterator<UniqueKey> itr = scope.getMetadataImplementor().getEntityBinding(Person.class.getName())
-                .getTable().getUniqueKeys().values().iterator();
+		Iterator<UniqueKey> itr = scope.getMetadataImplementor().getEntityBinding(Person.class.getName())
+				.getTable().getUniqueKeys().values().iterator();
 		while ( itr.hasNext() ) {
 			UniqueKey uk = itr.next();
 			assertEquals( 1, uk.getColumns().size() );
@@ -106,7 +106,7 @@ public class QuoteGlobalTest {
 	private void doTestHbmQuoting(Class clazz, MetadataImplementor metadataImplementor) {
 		Table table = metadataImplementor.getEntityBinding( clazz.getName() ).getTable();
 		assertTrue( table.isQuoted() );
-        Iterator itr = table.getColumns().iterator();
+		Iterator itr = table.getColumns().iterator();
 		while ( itr.hasNext() ) {
 			Column column = (Column) itr.next();
 			assertTrue( column.isQuoted() );

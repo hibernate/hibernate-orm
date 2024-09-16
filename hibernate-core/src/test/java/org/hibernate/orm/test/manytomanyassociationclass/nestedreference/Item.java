@@ -33,20 +33,20 @@ public class Item {
 	}
 
 	public String getDescription() {
-		  return description;
-	 }
+		return description;
+	}
 
 	public void setDescription(String description) {
-		  this.description = description;
-	 }
+		this.description = description;
+	}
 
 	public Long getId() {
-		  return id;
-	 }
+		return id;
+	}
 
 	public void setId(Long id) {
-		  this.id = id;
-	 }
+		this.id = id;
+	}
 
 	public long getVersion() {
 		return version;
@@ -57,12 +57,12 @@ public class Item {
 	}
 
 	public String getName() {
-		  return name;
-	 }
+		return name;
+	}
 
 	public void setName(String name) {
-		  this.name = name;
-	 }
+		this.name = name;
+	}
 
 	public Item getOwner() {
 		return owner;

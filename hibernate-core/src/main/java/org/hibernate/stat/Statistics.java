@@ -51,7 +51,7 @@ public interface Statistics {
 	void logSummary();
 
 
-    /**
+	/**
 	 * Obtain the statistics for the entity with the given name.
 	 *
 	 * @param entityName the entity name
@@ -125,39 +125,39 @@ public interface Statistics {
 	 */
 	@Nullable CacheRegionStatistics getCacheRegionStatistics(String regionName);
 
-    /**
-     * The global number of entity deletes.
+	/**
+	 * The global number of entity deletes.
 	 */
 	long getEntityDeleteCount();
 
-    /**
-     * The global number of entity inserts.
+	/**
+	 * The global number of entity inserts.
 	 */
 	long getEntityInsertCount();
 
-    /**
-     * The global number of entity loads.
+	/**
+	 * The global number of entity loads.
 	 */
 	long getEntityLoadCount();
 
 	/**
-     * The global number of entity fetches.
+	 * The global number of entity fetches.
 	 */
 	long getEntityFetchCount();
 
 	/**
-     * The global number of entity updates.
+	 * The global number of entity updates.
 	 */
 	long getEntityUpdateCount();
 
-    /**
-     * The global number of executed queries.
+	/**
+	 * The global number of executed queries.
 	 */
 	long getQueryExecutionCount();
 
-    /**
-     * The time in milliseconds of the slowest query.
-     */
+	/**
+	 * The time in milliseconds of the slowest query.
+	 */
 	long getQueryExecutionMaxTime();
 
 	/**
@@ -165,21 +165,21 @@ public interface Statistics {
 	 */
 	@Nullable String getQueryExecutionMaxTimeQueryString();
 
-    /**
-     * The global number of cached queries successfully retrieved from
+	/**
+	 * The global number of cached queries successfully retrieved from
 	 * the cache.
-     */
+	 */
 	long getQueryCacheHitCount();
 
-    /**
-     * The global number of cached queries <em>not</em>not found in the
+	/**
+	 * The global number of cached queries <em>not</em>not found in the
 	 * cache.
-     */
+	 */
 	long getQueryCacheMissCount();
 
-    /**
-     * The global number of cacheable queries put in cache.
-     */
+	/**
+	 * The global number of cacheable queries put in cache.
+	 */
 	long getQueryCachePutCount();
 
 	/**
@@ -204,43 +204,43 @@ public interface Statistics {
 	 */
 	@Nullable String getNaturalIdQueryExecutionMaxTimeEntity();
 
-    /**
-     * The global number of cached natural id lookups successfully
+	/**
+	 * The global number of cached natural id lookups successfully
 	 * retrieved from the cache.
-     */
+	 */
 	long getNaturalIdCacheHitCount();
 
-    /**
-     * The global number of cached natural id lookups <em>not</em> found
+	/**
+	 * The global number of cached natural id lookups <em>not</em> found
 	 * in the cache.
-     */
+	 */
 	long getNaturalIdCacheMissCount();
 
-    /**
-     * The global number of cacheable natural id lookups put in cache.
-     */
+	/**
+	 * The global number of cacheable natural id lookups put in cache.
+	 */
 	long getNaturalIdCachePutCount();
 
-    /**
-     * The global number of timestamps successfully retrieved from cache.
-     */
+	/**
+	 * The global number of timestamps successfully retrieved from cache.
+	 */
 	long getUpdateTimestampsCacheHitCount();
 
-    /**
-     * The global number of timestamp requests that were not found in the
+	/**
+	 * The global number of timestamp requests that were not found in the
 	 * cache.
-     */
+	 */
 	long getUpdateTimestampsCacheMissCount();
 
-    /**
-     * The global number of timestamps put in cache.
-     */
+	/**
+	 * The global number of timestamps put in cache.
+	 */
 	long getUpdateTimestampsCachePutCount();
 
 	/**
-     * The global number of flush operations executed, including automatic
+	 * The global number of flush operations executed, including automatic
 	 * (either manual or automatic).
-     */
+	 */
 	long getFlushCount();
 
 	/**
@@ -252,15 +252,15 @@ public interface Statistics {
 	long getConnectCount();
 
 	/**
-     * The global number of cacheable entities and collections successfully
+	 * The global number of cacheable entities and collections successfully
 	 * retrieved from the cache.
-     */
+	 */
 	long getSecondLevelCacheHitCount();
 
 	/**
-     * The global number of cacheable entities collections not found in the
+	 * The global number of cacheable entities collections not found in the
 	 * cache and loaded from the database.
-     */
+	 */
 	long getSecondLevelCacheMissCount();
 
 	/**
@@ -297,7 +297,7 @@ public interface Statistics {
 	/**
 	 * The global number of collections removed.
 	 */
-    //even on inverse="true"
+	//even on inverse="true"
 	long getCollectionRemoveCount();
 
 	/**

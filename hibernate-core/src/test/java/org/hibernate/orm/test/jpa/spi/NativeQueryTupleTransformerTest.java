@@ -20,24 +20,24 @@ import org.junit.Test;
  */
 public class NativeQueryTupleTransformerTest {
 
-    private final NativeQueryTupleTransformer nativeQueryTupleTransformer = new NativeQueryTupleTransformer();
+	private final NativeQueryTupleTransformer nativeQueryTupleTransformer = new NativeQueryTupleTransformer();
 
-    @Test
-    public void nullValueIsExtractedFromTuple() {
-        final Tuple tuple = (Tuple) nativeQueryTupleTransformer.transformTuple(
-            new Object[] { 1L, null },
-            new String[] { "id", "value" }
-        );
-        assertEquals(1L, tuple.get("id"));
-        assertNull(tuple.get("value"));
-    }
+	@Test
+	public void nullValueIsExtractedFromTuple() {
+		final Tuple tuple = (Tuple) nativeQueryTupleTransformer.transformTuple(
+			new Object[] { 1L, null },
+			new String[] { "id", "value" }
+		);
+		assertEquals(1L, tuple.get("id"));
+		assertNull(tuple.get("value"));
+	}
 
-    @Test(expected = IllegalArgumentException.class)
-    public void missingAliasCausesExceptionWhenIsExtractedFromTuple() {
-        final Tuple tuple = (Tuple) nativeQueryTupleTransformer.transformTuple(
-            new Object[] { 1L, null },
-            new String[] { "id", "value" }
-        );
-        tuple.get("unknownAlias");
-    }
+	@Test(expected = IllegalArgumentException.class)
+	public void missingAliasCausesExceptionWhenIsExtractedFromTuple() {
+		final Tuple tuple = (Tuple) nativeQueryTupleTransformer.transformTuple(
+			new Object[] { 1L, null },
+			new String[] { "id", "value" }
+		);
+		tuple.get("unknownAlias");
+	}
 }

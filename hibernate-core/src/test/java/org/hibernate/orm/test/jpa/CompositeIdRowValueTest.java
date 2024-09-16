@@ -19,23 +19,23 @@ import static org.hamcrest.core.Is.is;
 
 @JiraKey( value = "HHH-9029")
 @Jpa(annotatedClasses = {
-        EntityWithCompositeId.class,
-        CompositeId.class
+		EntityWithCompositeId.class,
+		CompositeId.class
 })
 public class CompositeIdRowValueTest {
 
-    @Test
-    public void testTupleAfterSubQuery(EntityManagerFactoryScope scope) {
-        scope.inTransaction(
-                entityManager -> {
-                    Query q = entityManager.createQuery("SELECT e FROM EntityWithCompositeId e "
-                                                     + "WHERE EXISTS (SELECT 1 FROM EntityWithCompositeId) "
-                                                     + "AND e.id = :id");
+	@Test
+	public void testTupleAfterSubQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Query q = entityManager.createQuery("SELECT e FROM EntityWithCompositeId e "
+													+ "WHERE EXISTS (SELECT 1 FROM EntityWithCompositeId) "
+													+ "AND e.id = :id");
 
-                    q.setParameter("id", new CompositeId(1, 2));
+					q.setParameter("id", new CompositeId(1, 2));
 
-                    assertThat(q.getResultList().size(), is(0));
-                }
-        );
-    }
+					assertThat(q.getResultList().size(), is(0));
+				}
+		);
+	}
 }

@@ -89,21 +89,21 @@ public class XmlDefinedNamespaceTests {
 				domainModel,
 				serviceRegistry,
 				new TargetDescriptor() {
-					  @Override
-					  public EnumSet<TargetType> getTargetTypes() {
-						  return EnumSet.of( TargetType.SCRIPT );
-					  }
+					@Override
+					public EnumSet<TargetType> getTargetTypes() {
+						return EnumSet.of( TargetType.SCRIPT );
+					}
 
-					  @Override
-					  public ScriptTargetOutput getScriptTargetOutput() {
-						  return new ScriptTargetOutputToWriter( writer ) {
-							  @Override
-							  public void accept(String command) {
-								  super.accept( command );
-							  }
-						  };
-					  }
-				  }
+					@Override
+					public ScriptTargetOutput getScriptTargetOutput() {
+						return new ScriptTargetOutputToWriter( writer ) {
+							@Override
+							public void accept(String command) {
+								super.accept( command );
+							}
+						};
+					}
+				}
 		);
 		return writer.toString();
 	}

@@ -137,8 +137,8 @@ public class EmbeddableCollectionElementWithLazyManyToOneTest {
 				session ->
 						assertFalse( session.createQuery(
 								"from Parent p join p.containedChildren c where c.child.id is not null", Parent.class )
-											 .getResultList()
-											 .isEmpty() )
+											.getResultList()
+											.isEmpty() )
 
 		);
 

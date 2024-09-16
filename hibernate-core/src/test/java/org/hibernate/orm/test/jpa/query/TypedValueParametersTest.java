@@ -69,22 +69,22 @@ public class TypedValueParametersTest {
 	@Test
 	public void testNative(EntityManagerFactoryScope scope) {
 		test(scope,
-			 q -> {
-				  final CustomType<List<String>> customType = new CustomType<>(
-						  TagUserType.INSTANCE,
-						  scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
-				  );
+			q -> {
+				final CustomType<List<String>> customType = new CustomType<>(
+						TagUserType.INSTANCE,
+						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
+				);
 
-				  org.hibernate.query.Query hibernateQuery = q.unwrap( org.hibernate.query.Query.class );
-				  hibernateQuery.setParameter( "tags", Arrays.asList( "important", "business" ), customType );
-			  }
+				org.hibernate.query.Query hibernateQuery = q.unwrap( org.hibernate.query.Query.class );
+				hibernateQuery.setParameter( "tags", Arrays.asList( "important", "business" ), customType );
+			}
 		);
 	}
 
 	@Test
 	public void testJpa(EntityManagerFactoryScope scope) {
 		test(scope,
-			 q -> {
+			q -> {
 				final CustomType<List<String>> customType = new CustomType<>(
 						TagUserType.INSTANCE,
 						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()

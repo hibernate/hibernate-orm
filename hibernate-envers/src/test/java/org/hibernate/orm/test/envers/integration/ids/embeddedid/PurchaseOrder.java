@@ -29,10 +29,10 @@ public class PurchaseOrder implements Serializable {
 
 	@ManyToOne
 	@JoinColumns({
-						 @JoinColumn(name = "model", referencedColumnName = "model", nullable = true),
-						 @JoinColumn(name = "version", referencedColumnName = "version", nullable = true),
-						 @JoinColumn(name = "producer", referencedColumnName = "producer", nullable = true)
-				 })
+						@JoinColumn(name = "model", referencedColumnName = "model", nullable = true),
+						@JoinColumn(name = "version", referencedColumnName = "version", nullable = true),
+						@JoinColumn(name = "producer", referencedColumnName = "producer", nullable = true)
+				})
 	private Item item;
 
 	@Column(name = "NOTE")

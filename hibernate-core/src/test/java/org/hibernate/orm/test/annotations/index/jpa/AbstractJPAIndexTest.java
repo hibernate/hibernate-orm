@@ -51,7 +51,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 	@Test
 	public void testTableIndex() {
 		PersistentClass entity = metadata().getEntityBinding( Car.class.getName() );
-        Iterator itr = entity.getTable().getUniqueKeys().values().iterator();
+		Iterator itr = entity.getTable().getUniqueKeys().values().iterator();
 		assertTrue( itr.hasNext() );
 		UniqueKey uk = (UniqueKey) itr.next();
 		assertFalse( itr.hasNext() );
@@ -70,7 +70,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		assertFalse( itr.hasNext() );
 		assertEquals( "Car_idx", index.getName() );
 		assertEquals( 1, index.getColumnSpan() );
-        column = index.getColumns().iterator().next();
+		column = index.getColumns().iterator().next();
 		assertEquals( "since", column.getName() );
 		assertSame( entity.getTable(), index.getTable() );
 	}
@@ -86,7 +86,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 2, index.getColumnSpan() );
-        Iterator<Column> columnIterator = index.getColumns().iterator();
+		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
 		assertEquals( "dealer_name", column.getName() );
 		column = columnIterator.next();
@@ -108,7 +108,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 1, index.getColumnSpan() );
-        Iterator<Column> columnIterator = index.getColumns().iterator();
+		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
 		assertEquals( "name", column.getName() );
 		assertSame( collectionTable, index.getTable() );
@@ -128,7 +128,7 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 		assertFalse( itr.hasNext() );
 		assertTrue( "index name is not generated", StringHelper.isNotEmpty( index.getName() ) );
 		assertEquals( 1, index.getColumnSpan() );
-        Iterator<Column> columnIterator = index.getColumns().iterator();
+		Iterator<Column> columnIterator = index.getColumns().iterator();
 		Column column = columnIterator.next();
 		assertEquals( "importers_id", column.getName() );
 		assertSame( collectionTable, index.getTable() );

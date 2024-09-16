@@ -36,158 +36,158 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @ServiceRegistry
 @SessionFactory
 public class SetOperationJpaCriteriaTest {
-    @BeforeEach
-    public void createTestData(SessionFactoryScope scope) {
-        scope.inTransaction(
-                session -> {
-                    session.persist( new EntityOfLists( 1, "first" ) );
-                    session.persist( new EntityOfLists( 2, "second" ) );
-                    session.persist( new EntityOfLists( 3, "third" ) );
-                }
-        );
-    }
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist( new EntityOfLists( 1, "first" ) );
+					session.persist( new EntityOfLists( 2, "second" ) );
+					session.persist( new EntityOfLists( 3, "third" ) );
+				}
+		);
+	}
 
-    @AfterEach
-    public void dropTestData(SessionFactoryScope scope) {
-        scope.inTransaction(
-                session -> {
-                    session.createQuery( "delete from EntityOfLists" ).executeUpdate();
-                    session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-                }
-        );
-    }
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from EntityOfLists" ).executeUpdate();
+					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
+				}
+		);
+	}
 
-    @Test
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
-    public void testUnionAll(SessionFactoryScope scope) {
-        scope.inSession(
-                session -> {
-                    HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	public void testUnionAll(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 
-                    JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
-                    query1.where( cb.equal( root1.get( "id" ), 1 ) );
+					JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
+					query1.where( cb.equal( root1.get( "id" ), 1 ) );
 
-                    JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
-                    query2.where( cb.equal( root2.get( "id" ), 2 ) );
+					JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
+					query2.where( cb.equal( root2.get( "id" ), 2 ) );
 
-                    List<EntityOfLists> list = session.createQuery(
-                            cb.unionAll( query1, query2 )
-                    ).list();
-                    assertThat( list.size(), is( 2 ) );
-                }
-        );
-    }
+					List<EntityOfLists> list = session.createQuery(
+							cb.unionAll( query1, query2 )
+					).list();
+					assertThat( list.size(), is( 2 ) );
+				}
+		);
+	}
 
-    @Test
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
-    public void testUnionAllLimit(SessionFactoryScope scope) {
-        scope.inSession(
-                session -> {
-                    HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	public void testUnionAllLimit(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 
-                    JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
-                    query1.where( cb.equal( root1.get( "id" ), 1 ) );
+					JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
+					query1.where( cb.equal( root1.get( "id" ), 1 ) );
 
-                    JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
-                    query2.where( cb.equal( root2.get( "id" ), 2 ) );
+					JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
+					query2.where( cb.equal( root2.get( "id" ), 2 ) );
 
-                    List<EntityOfLists> list = session.createQuery(
-                            cb.unionAll( query1, query2 )
-                                .orderBy( cb.asc( cb.literal( 1 ) ) )
-                                .fetch( 1 )
-                    ).list();
-                    assertThat( list.size(), is( 1 ) );
-                }
-        );
-    }
+					List<EntityOfLists> list = session.createQuery(
+							cb.unionAll( query1, query2 )
+								.orderBy( cb.asc( cb.literal( 1 ) ) )
+								.fetch( 1 )
+					).list();
+					assertThat( list.size(), is( 1 ) );
+				}
+		);
+	}
 
-    @Test
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
-    public void testUnionAllLimitSubquery(SessionFactoryScope scope) {
-        scope.inSession(
-                session -> {
-                    HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+	public void testUnionAllLimitSubquery(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 
-                    JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
-                    query1.where( cb.equal( root1.get( "id" ), 1 ) );
+					JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
+					query1.where( cb.equal( root1.get( "id" ), 1 ) );
 
-                    JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
-                    query2.where( cb.equal( root2.get( "id" ), 2 ) );
+					JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
+					query2.where( cb.equal( root2.get( "id" ), 2 ) );
 
-                    List<EntityOfLists> list = session.createQuery(
-                            cb.unionAll(
-                                    query1,
-                                    query2.orderBy( cb.asc( cb.literal( 1 ) ) )
-                                            .fetch( 1 )
-                            )
-                    ).list();
-                    assertThat( list.size(), is( 2 ) );
-                }
-        );
-    }
+					List<EntityOfLists> list = session.createQuery(
+							cb.unionAll(
+									query1,
+									query2.orderBy( cb.asc( cb.literal( 1 ) ) )
+											.fetch( 1 )
+							)
+					).list();
+					assertThat( list.size(), is( 2 ) );
+				}
+		);
+	}
 
-    @Test
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
-    public void testUnionAllLimitNested(SessionFactoryScope scope) {
-        scope.inSession(
-                session -> {
-                    HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+	public void testUnionAllLimitNested(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 
-                    JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
-                    query1.where( cb.equal( root1.get( "id" ), 1 ) );
+					JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
+					query1.where( cb.equal( root1.get( "id" ), 1 ) );
 
-                    JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
-                    query2.where( cb.equal( root2.get( "id" ), 2 ) );
+					JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
+					query2.where( cb.equal( root2.get( "id" ), 2 ) );
 
-                    List<EntityOfLists> list = session.createQuery(
-                            cb.unionAll(
-                                    query1,
-                                    query2.orderBy( cb.asc( cb.literal( 1 ) ) )
-                                            .fetch( 1 )
-                            ).orderBy( cb.asc( cb.literal( 1 ) ) )
-                                    .fetch( 1 )
-                    ).list();
-                    assertThat( list.size(), is( 1 ) );
-                }
-        );
-    }
+					List<EntityOfLists> list = session.createQuery(
+							cb.unionAll(
+									query1,
+									query2.orderBy( cb.asc( cb.literal( 1 ) ) )
+											.fetch( 1 )
+							).orderBy( cb.asc( cb.literal( 1 ) ) )
+									.fetch( 1 )
+					).list();
+					assertThat( list.size(), is( 1 ) );
+				}
+		);
+	}
 
-    @Test
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
-    @Jira( "https://hibernate.atlassian.net/browse/HHH-16754" )
-    public void testUnionAllSubqueryOrderByPath(SessionFactoryScope scope) {
-        scope.inSession(
-                session -> {
-                    HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16754" )
+	public void testUnionAllSubqueryOrderByPath(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 
-                    JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
-                    query1.where( cb.equal( root1.get( "id" ), 1 ) );
+					JpaCriteriaQuery<EntityOfLists> query1 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root1 = query1.from( EntityOfLists.class );
+					query1.where( cb.equal( root1.get( "id" ), 1 ) );
 
-                    JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
-                    JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
-                    query2.where( cb.equal( root2.get( "id" ), 2 ) );
+					JpaCriteriaQuery<EntityOfLists> query2 = cb.createQuery( EntityOfLists.class );
+					JpaRoot<EntityOfLists> root2 = query2.from( EntityOfLists.class );
+					query2.where( cb.equal( root2.get( "id" ), 2 ) );
 
-                    List<EntityOfLists> list = session.createQuery(
-                            cb.unionAll(
-                                    query1,
-                                    query2.orderBy( cb.asc( root2.get("name") ) )
-                                            .fetch( 1 )
-                            )
-                    ).list();
-                    assertThat( list.size(), is( 2 ) );
-                }
-        );
-    }
+					List<EntityOfLists> list = session.createQuery(
+							cb.unionAll(
+									query1,
+									query2.orderBy( cb.asc( root2.get("name") ) )
+											.fetch( 1 )
+							)
+					).list();
+					assertThat( list.size(), is( 2 ) );
+				}
+		);
+	}
 }

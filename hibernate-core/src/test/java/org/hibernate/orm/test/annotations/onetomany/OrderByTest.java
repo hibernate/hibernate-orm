@@ -288,7 +288,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-5732")
 	public void testInverseIndex() {
-        final CollectionPersister transactionsPersister = sessionFactory().getRuntimeMetamodels()
+		final CollectionPersister transactionsPersister = sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor( BankAccount.class.getName() + ".transactions" );
 		assertTrue( transactionsPersister.isInverse() );

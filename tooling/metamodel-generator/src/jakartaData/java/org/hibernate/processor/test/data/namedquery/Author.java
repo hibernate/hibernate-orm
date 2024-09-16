@@ -14,13 +14,13 @@ import java.util.Set;
 
 @Entity
 public class Author {
-    @Id
-    String ssn;
-    String name;
+	@Id
+	String ssn;
+	String name;
 
 //    @Embedded
 //    Address address;
 
-    @ManyToMany
-    Set<Book> books;
+	@ManyToMany
+	Set<Book> books;
 }

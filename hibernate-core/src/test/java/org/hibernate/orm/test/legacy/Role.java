@@ -14,40 +14,40 @@ import java.util.Set;
  */
 public class Role {
 
-   long id;
-   String name;
-   Set interventions = new HashSet();
+long id;
+String name;
+Set interventions = new HashSet();
 private List bunchOfStrings;
 
-  long getId() {
-    return id;
-  }
+long getId() {
+	return id;
+}
 
-  void  setId(long newValue) {
-    id = newValue;
-  }
+void  setId(long newValue) {
+	id = newValue;
+}
 
-  String getName() {
-    return name;
-  }
+String getName() {
+	return name;
+}
 
-  void  setName(String newValue) {
-    name = newValue;
-  }
+void  setName(String newValue) {
+	name = newValue;
+}
 
-  public Set getInterventions() {
-  	return interventions;
-  }
+public Set getInterventions() {
+	return interventions;
+}
 
-  public void setInterventions(Set iv) {
-  	interventions = iv;
-  }
+public void setInterventions(Set iv) {
+	interventions = iv;
+}
 
-  List getBunchOfStrings() {
-  	return bunchOfStrings;
-  }
+List getBunchOfStrings() {
+	return bunchOfStrings;
+}
 
-  void setBunchOfStrings(List s) {
-  	bunchOfStrings = s;
-  }
+void setBunchOfStrings(List s) {
+	bunchOfStrings = s;
+}
 }

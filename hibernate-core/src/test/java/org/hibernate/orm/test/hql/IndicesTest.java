@@ -30,89 +30,89 @@ import static org.junit.Assert.assertThat;
 @JiraKey(value = "HHH-14475")
 public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
 
-    @Override
-    protected Class[] getAnnotatedClasses() {
-        return new Class[] {Project.class, Role.class, Person.class};
-    }
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {Project.class, Role.class, Person.class};
+	}
 
-    @Before
-    public void setUp() {
-        doInHibernate( this::sessionFactory, session -> {
+	@Before
+	public void setUp() {
+		doInHibernate( this::sessionFactory, session -> {
 
-            Project project = new Project(1);
-            Role role = new Role(1);
+			Project project = new Project(1);
+			Role role = new Role(1);
 
-            session.persist( project );
-            session.persist( role );
+			session.persist( project );
+			session.persist( role );
 
-            Person person = new Person(1, project, role);
+			Person person = new Person(1, project, role);
 
-            session.persist( person );
-        });
-    }
+			session.persist( person );
+		});
+	}
 
-    @Test
-    public void testSelectIndices() {
-        doInHibernate( this::sessionFactory, session -> {
+	@Test
+	public void testSelectIndices() {
+		doInHibernate( this::sessionFactory, session -> {
 
-            List<Object> result = session.createQuery(
-                    "select indices(p.roles) from Person p"
-            ).list();
+			List<Object> result = session.createQuery(
+					"select indices(p.roles) from Person p"
+			).list();
 
-            assertThat( result.size(), is( 1 ) );
-        });
-    }
+			assertThat( result.size(), is( 1 ) );
+		});
+	}
 
-    @Entity(name = "Person")
-    public static class Person {
+	@Entity(name = "Person")
+	public static class Person {
 
-        @Id
-        private Integer id;
+		@Id
+		private Integer id;
 
-        @OneToMany
-        @JoinTable(name = "person_to_role",
-                joinColumns = @JoinColumn(name = "person_id"),
-                inverseJoinColumns = @JoinColumn(name = "role_id")
-        )
-        @MapKeyJoinColumn(name = "project_id")
-        private Map<Project, Role> roles;
+		@OneToMany
+		@JoinTable(name = "person_to_role",
+				joinColumns = @JoinColumn(name = "person_id"),
+				inverseJoinColumns = @JoinColumn(name = "role_id")
+		)
+		@MapKeyJoinColumn(name = "project_id")
+		private Map<Project, Role> roles;
 
-        public Person() {
-        }
+		public Person() {
+		}
 
-        public Person(Integer id, Project project, Role role) {
-            this.id = id;
-            roles = new HashMap<>();
-            roles.put(project, role);
-        }
-    }
+		public Person(Integer id, Project project, Role role) {
+			this.id = id;
+			roles = new HashMap<>();
+			roles.put(project, role);
+		}
+	}
 
-    @Entity(name = "Project")
-    public static class Project {
+	@Entity(name = "Project")
+	public static class Project {
 
-        @Id
-        private Integer id;
+		@Id
+		private Integer id;
 
-        public Project() {
-        }
+		public Project() {
+		}
 
-        public Project(Integer id) {
-            this.id = id;
-        }
-    }
+		public Project(Integer id) {
+			this.id = id;
+		}
+	}
 
-    @Entity(name = "Role")
-    @Table(name = "proj_role")
-    public static class Role {
+	@Entity(name = "Role")
+	@Table(name = "proj_role")
+	public static class Role {
 
-        @Id
-        private Integer id;
+		@Id
+		private Integer id;
 
-        public Role() {
-        }
+		public Role() {
+		}
 
-        public Role(Integer id) {
-            this.id = id;
-        }
-    }
+		public Role(Integer id) {
+			this.id = id;
+		}
+	}
 }

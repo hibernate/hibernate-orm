@@ -296,7 +296,7 @@ public class Parameters {
 	 * @param op The operator.
 	 * @param right Right property name.
 	 * @param addAliasRight Whether to add the alias to the right property.
-     */
+	 */
 	public void addWhereOrNullRestriction(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
 		if ( "=".equals( op ) ) {
 			addWhere( left, addAliasLeft, " is not distinct from ", right, addAliasRight );

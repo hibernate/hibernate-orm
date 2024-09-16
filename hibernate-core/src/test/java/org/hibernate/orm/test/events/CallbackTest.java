@@ -46,12 +46,12 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	private TestingListener listener = new TestingListener();
 
 	@Override
-    public String[] getMappings() {
+	public String[] getMappings() {
 		return NO_MAPPINGS;
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		cfg.setSessionFactoryObserver( observer );
 	}
 

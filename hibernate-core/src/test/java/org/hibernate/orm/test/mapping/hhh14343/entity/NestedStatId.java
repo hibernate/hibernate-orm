@@ -10,33 +10,33 @@ import java.io.Serializable;
 
 public class NestedStatId implements Serializable
 {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private Integer period;
+	private Integer period;
 
-    private NestedPlayerStatId playerStat;
+	private NestedPlayerStatId playerStat;
 
-    public NestedStatId()
-    {
-    }
+	public NestedStatId()
+	{
+	}
 
-    public Integer getPeriod()
-    {
-        return period;
-    }
+	public Integer getPeriod()
+	{
+		return period;
+	}
 
-    public void setPeriod(Integer period)
-    {
-        this.period = period;
-    }
+	public void setPeriod(Integer period)
+	{
+		this.period = period;
+	}
 
-    public NestedPlayerStatId getPlayerStat()
-    {
-        return playerStat;
-    }
+	public NestedPlayerStatId getPlayerStat()
+	{
+		return playerStat;
+	}
 
-    public void setPlayerStat(NestedPlayerStatId playerStat)
-    {
-        this.playerStat = playerStat;
-    }
+	public void setPlayerStat(NestedPlayerStatId playerStat)
+	{
+		this.playerStat = playerStat;
+	}
 }

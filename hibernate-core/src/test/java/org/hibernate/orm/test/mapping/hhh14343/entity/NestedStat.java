@@ -22,40 +22,40 @@ import jakarta.persistence.Table;
 @IdClass(NestedStatId.class)
 public class NestedStat implements Serializable
 {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @Column
-    private Integer period;
+	@Id
+	@Column
+	private Integer period;
 
-    @Id
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumn(name = "game_id", referencedColumnName = "game_id")
-    @JoinColumn(name = "is_home", referencedColumnName = "is_home")
-    @JoinColumn(name = "player_id", referencedColumnName = "player_id")
-    private NestedPlayerStat playerStat;
+	@Id
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@JoinColumn(name = "game_id", referencedColumnName = "game_id")
+	@JoinColumn(name = "is_home", referencedColumnName = "is_home")
+	@JoinColumn(name = "player_id", referencedColumnName = "player_id")
+	private NestedPlayerStat playerStat;
 
-    public NestedStat()
-    {
-    }
+	public NestedStat()
+	{
+	}
 
-    public Integer getPeriod()
-    {
-        return period;
-    }
+	public Integer getPeriod()
+	{
+		return period;
+	}
 
-    public void setPeriod(Integer period)
-    {
-        this.period = period;
-    }
+	public void setPeriod(Integer period)
+	{
+		this.period = period;
+	}
 
-    public NestedPlayerStat getPlayerStat()
-    {
-        return playerStat;
-    }
+	public NestedPlayerStat getPlayerStat()
+	{
+		return playerStat;
+	}
 
-    public void setPlayerStat(NestedPlayerStat playerStat)
-    {
-        this.playerStat = playerStat;
-    }
+	public void setPlayerStat(NestedPlayerStat playerStat)
+	{
+		this.playerStat = playerStat;
+	}
 }

@@ -19,26 +19,26 @@ import java.util.Set;
 @Entity
 public class Component {
 
-    @Id
+	@Id
 	private Long id;
 
-    @Embedded
+	@Embedded
 	private Component.Emb emb;
 
-    @Access(AccessType.FIELD)
-    @Embeddable
-    public static class Emb {
+	@Access(AccessType.FIELD)
+	@Embeddable
+	public static class Emb {
 
-        @OneToMany(targetEntity = Stuff.class)
-        Set<Stuff> stuffs = new HashSet<Stuff>();
+		@OneToMany(targetEntity = Stuff.class)
+		Set<Stuff> stuffs = new HashSet<Stuff>();
 
-        @Entity
-        @Table(name = "stuff")
-        public static class Stuff {
-            @Id
-            private Long id;
-        }
-    }
+		@Entity
+		@Table(name = "stuff")
+		public static class Stuff {
+			@Id
+			private Long id;
+		}
+	}
 
 
 }

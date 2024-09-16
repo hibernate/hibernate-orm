@@ -46,157 +46,157 @@ public class JpaConstructorInitializationTest {
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-					 Person person = new Person( 1l, "Henry" );
-					 LoginAccount loginAccount = new LoginAccount();
-					 loginAccount.setOwner( person );
-					 person.setLoginAccount( loginAccount );
-					 em.persist( person );
-				 }
+					Person person = new Person( 1l, "Henry" );
+					LoginAccount loginAccount = new LoginAccount();
+					loginAccount.setOwner( person );
+					person.setLoginAccount( loginAccount );
+					em.persist( person );
+				}
 		);
 
 		scope.inTransaction( em -> {
-					 List<LoginAccount> accounts = em.createQuery(
-							 "select la from LoginAccount la",
-							 LoginAccount.class
-					 ).getResultList();
-					 assertThat( accounts.size() ).isEqualTo( 1 );
+					List<LoginAccount> accounts = em.createQuery(
+							"select la from LoginAccount la",
+							LoginAccount.class
+					).getResultList();
+					assertThat( accounts.size() ).isEqualTo( 1 );
 
-					 List<AccountPreferences> preferences = em.createQuery(
-							 "select ap from AccountPreferences ap",
-							 AccountPreferences.class
-					 ).getResultList();
-					 assertThat( preferences.size() ).isEqualTo( 1 );
-				 }
+					List<AccountPreferences> preferences = em.createQuery(
+							"select ap from AccountPreferences ap",
+							AccountPreferences.class
+					).getResultList();
+					assertThat( preferences.size() ).isEqualTo( 1 );
+				}
 		);
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-					 em.createQuery( "delete from Person" ).executeUpdate();
-					 em.createQuery( "delete from LoginAccount" ).executeUpdate();
-					 em.createQuery( "delete from AccountPreferences" ).executeUpdate();
-				 }
+					em.createQuery( "delete from Person" ).executeUpdate();
+					em.createQuery( "delete from LoginAccount" ).executeUpdate();
+					em.createQuery( "delete from AccountPreferences" ).executeUpdate();
+				}
 		);
 	}
 
 	@Test
 	public void findTest(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-					 em.clear();
-					 Person person = em.find( Person.class, 1L );
-					 person.setFirstName( "Liza" );
-				 }
+					em.clear();
+					Person person = em.find( Person.class, 1L );
+					person.setFirstName( "Liza" );
+				}
 		);
 
 		scope.inTransaction( em -> {
-					 List<LoginAccount> accounts = em.createQuery(
-							 "select la from LoginAccount la",
-							 LoginAccount.class
-					 ).getResultList();
-					 assertThat( accounts.size() ).isEqualTo( 1 );
+					List<LoginAccount> accounts = em.createQuery(
+							"select la from LoginAccount la",
+							LoginAccount.class
+					).getResultList();
+					assertThat( accounts.size() ).isEqualTo( 1 );
 
-					 List<AccountPreferences> preferences = em.createQuery(
-							 "select ap from AccountPreferences ap",
-							 AccountPreferences.class
-					 ).getResultList();
-					 assertThat( preferences.size() ).isEqualTo( 1 );
-				 }
+					List<AccountPreferences> preferences = em.createQuery(
+							"select ap from AccountPreferences ap",
+							AccountPreferences.class
+					).getResultList();
+					assertThat( preferences.size() ).isEqualTo( 1 );
+				}
 		);
 	}
 
 	@Test
 	public void getReferenceTest(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-					 em.clear();
-					 Person person = em.getReference( Person.class, 1L );
-					 person.setFirstName( "Liza" );
-				 }
+					em.clear();
+					Person person = em.getReference( Person.class, 1L );
+					person.setFirstName( "Liza" );
+				}
 		);
 
 		scope.inTransaction( em -> {
-					 List<LoginAccount> accounts = em.createQuery(
-							 "select la from LoginAccount la",
-							 LoginAccount.class
-					 ).getResultList();
-					 assertThat( accounts.size() ).isEqualTo( 1 );
+					List<LoginAccount> accounts = em.createQuery(
+							"select la from LoginAccount la",
+							LoginAccount.class
+					).getResultList();
+					assertThat( accounts.size() ).isEqualTo( 1 );
 
-					 List<AccountPreferences> preferences = em.createQuery(
-							 "select ap from AccountPreferences ap",
-							 AccountPreferences.class
-					 ).getResultList();
-					 assertThat( preferences.size() ).isEqualTo( 1 );
-				 }
+					List<AccountPreferences> preferences = em.createQuery(
+							"select ap from AccountPreferences ap",
+							AccountPreferences.class
+					).getResultList();
+					assertThat( preferences.size() ).isEqualTo( 1 );
+				}
 		);
 	}
 
 	@Test
 	public void findTest2(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-					 em.clear();
-					 Person person = em.find( Person.class, 1L );
-					 person.setFirstName( "Liza" );
+					em.clear();
+					Person person = em.find( Person.class, 1L );
+					person.setFirstName( "Liza" );
 
-					 LoginAccount loginAccount = person.getLoginAccount();
-					 loginAccount.setName( "abc" );
-				 }
+					LoginAccount loginAccount = person.getLoginAccount();
+					loginAccount.setName( "abc" );
+				}
 		);
 
 		scope.inTransaction( em -> {
-					 Person person = em.find( Person.class, 1L );
-					 assertThat( person.getFirstName() ).isEqualTo( "Liza" );
+					Person person = em.find( Person.class, 1L );
+					assertThat( person.getFirstName() ).isEqualTo( "Liza" );
 
-					 LoginAccount loginAccount = person.getLoginAccount();
-					 assertThat( loginAccount ).isNotNull();
-					 assertThat( loginAccount.getName() ).isEqualTo( "abc" );
+					LoginAccount loginAccount = person.getLoginAccount();
+					assertThat( loginAccount ).isNotNull();
+					assertThat( loginAccount.getName() ).isEqualTo( "abc" );
 
-					 List<LoginAccount> accounts = em.createQuery(
-							 "select la from LoginAccount la",
-							 LoginAccount.class
-					 ).getResultList();
-					 assertThat( accounts.size() ).isEqualTo( 1 );
+					List<LoginAccount> accounts = em.createQuery(
+							"select la from LoginAccount la",
+							LoginAccount.class
+					).getResultList();
+					assertThat( accounts.size() ).isEqualTo( 1 );
 
-					 List<AccountPreferences> preferences = em.createQuery(
-							 "select ap from AccountPreferences ap",
-							 AccountPreferences.class
-					 ).getResultList();
-					 assertThat( preferences.size() ).isEqualTo( 1 );
-				 }
+					List<AccountPreferences> preferences = em.createQuery(
+							"select ap from AccountPreferences ap",
+							AccountPreferences.class
+					).getResultList();
+					assertThat( preferences.size() ).isEqualTo( 1 );
+				}
 		);
 	}
 
 	@Test
 	public void getReferenceTest2(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-					 em.clear();
-					 Person person = em.getReference( Person.class, 1L );
-					 person.setFirstName( "Liza" );
+					em.clear();
+					Person person = em.getReference( Person.class, 1L );
+					person.setFirstName( "Liza" );
 
-					 LoginAccount loginAccount = person.getLoginAccount();
-					 loginAccount.setName( "abc" );
-				 }
+					LoginAccount loginAccount = person.getLoginAccount();
+					loginAccount.setName( "abc" );
+				}
 		);
 
 		scope.inTransaction( em -> {
-					 Person person = em.find( Person.class, 1L );
-					 assertThat( person.getFirstName() ).isEqualTo( "Liza" );
+					Person person = em.find( Person.class, 1L );
+					assertThat( person.getFirstName() ).isEqualTo( "Liza" );
 
-					 LoginAccount loginAccount = person.getLoginAccount();
-					 assertThat( loginAccount ).isNotNull();
-					 assertThat( loginAccount.getName() ).isEqualTo( "abc" );
+					LoginAccount loginAccount = person.getLoginAccount();
+					assertThat( loginAccount ).isNotNull();
+					assertThat( loginAccount.getName() ).isEqualTo( "abc" );
 
-					 List<LoginAccount> accounts = em.createQuery(
-							 "select la from LoginAccount la",
-							 LoginAccount.class
-					 ).getResultList();
-					 assertThat( accounts.size() ).isEqualTo( 1 );
+					List<LoginAccount> accounts = em.createQuery(
+							"select la from LoginAccount la",
+							LoginAccount.class
+					).getResultList();
+					assertThat( accounts.size() ).isEqualTo( 1 );
 
-					 List<AccountPreferences> preferences = em.createQuery(
-							 "select ap from AccountPreferences ap",
-							 AccountPreferences.class
-					 ).getResultList();
-					 assertThat( preferences.size() ).isEqualTo( 1 );
-				 }
+					List<AccountPreferences> preferences = em.createQuery(
+							"select ap from AccountPreferences ap",
+							AccountPreferences.class
+					).getResultList();
+					assertThat( preferences.size() ).isEqualTo( 1 );
+				}
 		);
 	}
 

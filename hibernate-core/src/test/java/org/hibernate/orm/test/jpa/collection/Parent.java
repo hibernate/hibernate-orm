@@ -20,37 +20,37 @@ import jakarta.persistence.Transient;
 @Entity
 public class Parent {
 
-    private Integer id;
-    private Set<Child> children = new HashSet<Child>();
-    private int nrOfChildren;
+	private Integer id;
+	private Set<Child> children = new HashSet<Child>();
+	private int nrOfChildren;
 
-    public Parent() {
+	public Parent() {
 
-    }
+	}
 
-    @Id
-    public Integer getId() {
-        return id;
-    }
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	@Id
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    @OneToMany(mappedBy="daddy", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
-    public Set<Child> getChildren() {
-        return children;
-    }
-    public void setChildren(Set<Child> children) {
-        this.children = children;
-    }
+	@OneToMany(mappedBy="daddy", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
+	public Set<Child> getChildren() {
+		return children;
+	}
+	public void setChildren(Set<Child> children) {
+		this.children = children;
+	}
 
-    @PostLoad
-    public void postLoad() {
-       nrOfChildren = children.size();
-    }
+	@PostLoad
+	public void postLoad() {
+	nrOfChildren = children.size();
+	}
 
-    @Transient
-    public int getNrOfChildren() {
-        return nrOfChildren;
-    }
+	@Transient
+	public int getNrOfChildren() {
+		return nrOfChildren;
+	}
 }

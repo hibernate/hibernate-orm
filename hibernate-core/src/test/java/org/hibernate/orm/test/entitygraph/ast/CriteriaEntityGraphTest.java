@@ -114,7 +114,7 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 					// Check the domain-result graph
 					assertDomainResult( sqlAst, Cat.class,
 							fetch -> {
-						        if (graphSemantic == GraphSemantic.LOAD) {
+								if (graphSemantic == GraphSemantic.LOAD) {
 									assertThat( fetch, instanceOf( BiDirectionalFetch.class ) );
 								} else {
 									assertThat( fetch, instanceOf( EntityFetch.class ) );

@@ -20,5 +20,5 @@ public class WorkOrder implements Serializable {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "workOrder")
 	@OrderBy("operation, bomItemNumber")
 	private Set<WorkOrderComponent> components;
-  /* other stuffs */
+/* other stuffs */
 }

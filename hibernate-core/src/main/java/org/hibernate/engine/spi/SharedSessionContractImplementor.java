@@ -242,7 +242,7 @@ public interface SharedSessionContractImplementor
 	 * This method is primarily for internal or integrator use.
 	 *
 	 * @return the {@link Transaction}
-     */
+	 */
 	Transaction accessTransaction();
 
 	/**

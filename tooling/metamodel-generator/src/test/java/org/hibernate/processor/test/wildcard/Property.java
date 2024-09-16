@@ -8,7 +8,7 @@ package org.hibernate.processor.test.wildcard;
 
 public interface Property<T> {
 
-    String getName();
+	String getName();
 
-    T getValue();
+	T getValue();
 }

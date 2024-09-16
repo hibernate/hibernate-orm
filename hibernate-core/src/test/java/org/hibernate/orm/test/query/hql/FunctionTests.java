@@ -1666,30 +1666,30 @@ public class FunctionTests {
 							session.createQuery("select local date + 1 week", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.MONTHS),
-								  session.createQuery("select local date + 1 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.YEARS),
-								  session.createQuery("select local date + 1 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.now().plus(3, ChronoUnit.MONTHS),
-								  session.createQuery("select local date + 1 quarter", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 quarter", LocalDate.class)
+										.getSingleResult() );
 					// Some explicit 'special' cases:
 					assertEquals( LocalDate.of(2024, 02, 29),
-								  session.createQuery("select {2024-01-31} + 1 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-01-31} + 1 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2025, 02, 28),
-								  session.createQuery("select {2024-02-29} + 1 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 1 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2028, 02, 29),
-								  session.createQuery("select {2024-02-29} + 4 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 4 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2025, 03, 29),
-								  session.createQuery("select {2024-02-29} + 13 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 13 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2024, 02, 29),
-								  session.createQuery("select {2023-11-30} + 1 quarter", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2023-11-30} + 1 quarter", LocalDate.class)
+										.getSingleResult() );
 
 					session.createQuery("select e.theTimestamp - 21 second from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
@@ -1714,7 +1714,7 @@ public class FunctionTests {
 	@SkipForDialect( dialectClass = TiDBDialect.class,
 			reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
 	@SkipForDialect( dialectClass = AltibaseDialect.class,
-	        reason = "exceeds timestampadd limit in Altibase")
+			reason = "exceeds timestampadd limit in Altibase")
 	public void testDurationArithmeticOverflowing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2488,7 +2488,7 @@ public class FunctionTests {
 					s.createQuery("select coalesce(:word, null)", String.class)
 							.setParameter("word", "hello")
 							.getSingleResultOrNull());
-        });
+		});
 	}
 
 	@Test

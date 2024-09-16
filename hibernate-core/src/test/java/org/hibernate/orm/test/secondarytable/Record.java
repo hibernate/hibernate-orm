@@ -24,9 +24,9 @@ import jakarta.persistence.Table;
 @SecondaryRow(table = "Optional", optional = true)
 @SequenceGenerator(name="RecordSeq", sequenceName = "RecordId", allocationSize = 1)
 public class Record {
-    @Id @GeneratedValue(generator = "RecordSeq")  long id;
-    String name;
-    @Column(table = "NonOptional") String text;
-    @Column(table = "NonOptional") boolean enabled;
-    @Column(table = "Optional", name="`comment`") String comment;
+	@Id @GeneratedValue(generator = "RecordSeq")  long id;
+	String name;
+	@Column(table = "NonOptional") String text;
+	@Column(table = "NonOptional") boolean enabled;
+	@Column(table = "Optional", name="`comment`") String comment;
 }

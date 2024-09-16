@@ -13,8 +13,8 @@ import java.sql.Date;
 
 @Embeddable
 public class ShelfLife implements java.io.Serializable {
-    private Date inceptionDate;
-    private Date soldDate;
+	private Date inceptionDate;
+	private Date soldDate;
 
 	public ShelfLife() {
 	}

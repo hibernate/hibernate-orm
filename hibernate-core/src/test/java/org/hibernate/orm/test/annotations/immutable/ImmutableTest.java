@@ -123,7 +123,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			fail();
 		} catch (PersistenceException e) {
 			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
-            log.debug("success");
+			log.debug("success");
 		}
 		s.close();
 
@@ -239,7 +239,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-    protected Class[] getAnnotatedClasses() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Country.class, State.class, Photo.class };
 	}
 }

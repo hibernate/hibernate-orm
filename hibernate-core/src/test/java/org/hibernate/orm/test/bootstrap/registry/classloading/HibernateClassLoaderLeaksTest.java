@@ -35,7 +35,7 @@ public class HibernateClassLoaderLeaksTest {
 	public static void prepareForClassLoaderLeakTest() {
 		final String property = System.getProperty( "log4j2.disableJmx" );
 		Assert.assertEquals( "To be able to test against leaks, the system property 'log4j2.disableJmx' must be set to true",
-							 "true", property );
+							"true", property );
 
 		//Attempt to workaround the mess of DriverManager leaks by clearing it before the test;
 		//it will most certainly re-register all drivers again within the test running context,

@@ -69,7 +69,7 @@ public class TimePropertyTest {
 
 		final String queryString;
 
-        if ( SQLServerDialect.class.isAssignableFrom( scope.getSessionFactory().getJdbcServices().getDialect().getClass() ) ) {
+		if ( SQLServerDialect.class.isAssignableFrom( scope.getSessionFactory().getJdbcServices().getDialect().getClass() ) ) {
 			queryString = "from TimePropertyTest$Entity where tAsDate = cast ( ?1 as time )";
 		}
 		else {

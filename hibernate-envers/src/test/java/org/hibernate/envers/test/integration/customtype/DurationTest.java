@@ -33,12 +33,12 @@ public class DurationTest extends BaseEnversJPAFunctionalTestCase{
 
 		private Duration duration;
 
-                DurationTestEntity(){
+				DurationTestEntity(){
 
-                }
+				}
 
 		DurationTestEntity(Duration aDuration) {
-                    this.duration = aDuration;
+					this.duration = aDuration;
 		}
 
 		public Integer getId() {

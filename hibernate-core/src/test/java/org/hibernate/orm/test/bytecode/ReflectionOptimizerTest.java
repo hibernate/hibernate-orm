@@ -43,9 +43,9 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	public void testReflectionOptimization() {
 		ReflectionOptimizer optimizer = provider.getReflectionOptimizer(
 				Bean.class,
-		        BeanReflectionHelper.getGetterNames(),
-		        BeanReflectionHelper.getSetterNames(),
-		        BeanReflectionHelper.getTypes()
+				BeanReflectionHelper.getGetterNames(),
+				BeanReflectionHelper.getSetterNames(),
+				BeanReflectionHelper.getTypes()
 		);
 		assertNotNull( optimizer );
 		assertNotNull( optimizer.getInstantiationOptimizer() );

@@ -12,26 +12,26 @@ package org.hibernate.orm.test.sql;
 //tag::sql-hibernate-dto-query-example[]
 public class PersonSummaryDTO {
 
-    private Number id;
+	private Number id;
 
-    private String name;
+	private String name;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
-    public Number getId() {
-        return id;
-    }
+	public Number getId() {
+		return id;
+	}
 
-    public void setId(Number id) {
-        this.id = id;
-    }
+	public void setId(Number id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 }
 //end::sql-hibernate-dto-query-example[]

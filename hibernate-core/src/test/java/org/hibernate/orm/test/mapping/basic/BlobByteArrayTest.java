@@ -22,71 +22,71 @@ import static org.junit.Assert.assertArrayEquals;
  */
 public class BlobByteArrayTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            Product.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+			Product.class
+		};
+	}
 
-    @Test
-    public void test() {
-        Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
-            final Product product = new Product();
-            product.setId(1);
-            product.setName("Mobile phone");
-            product.setImage(new byte[] {1, 2, 3});
+	@Test
+	public void test() {
+		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+			final Product product = new Product();
+			product.setId(1);
+			product.setName("Mobile phone");
+			product.setImage(new byte[] {1, 2, 3});
 
-            entityManager.persist(product);
-            return product.getId();
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Product product = entityManager.find(Product.class, productId);
+			entityManager.persist(product);
+			return product.getId();
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Product product = entityManager.find(Product.class, productId);
 
-            assertArrayEquals(new byte[] {1, 2, 3}, product.getImage());
-        });
-    }
+			assertArrayEquals(new byte[] {1, 2, 3}, product.getImage());
+		});
+	}
 
-    //tag::basic-blob-byte-array-example[]
-    @Entity(name = "Product")
-    public static class Product {
+	//tag::basic-blob-byte-array-example[]
+	@Entity(name = "Product")
+	public static class Product {
 
-        @Id
-        private Integer id;
+		@Id
+		private Integer id;
 
-        private String name;
+		private String name;
 
-        @Lob
-        private byte[] image;
+		@Lob
+		private byte[] image;
 
-        //Getters and setters are omitted for brevity
+		//Getters and setters are omitted for brevity
 
-    //end::basic-blob-byte-array-example[]
-        public Integer getId() {
-            return id;
-        }
+	//end::basic-blob-byte-array-example[]
+		public Integer getId() {
+			return id;
+		}
 
-        public void setId(Integer id) {
-            this.id = id;
-        }
+		public void setId(Integer id) {
+			this.id = id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public byte[] getImage() {
-            return image;
-        }
+		public byte[] getImage() {
+			return image;
+		}
 
-        public void setImage(byte[] image) {
-            this.image = image;
-        }
+		public void setImage(byte[] image) {
+			this.image = image;
+		}
 
-        //tag::basic-blob-byte-array-example[]
-    }
-    //end::basic-blob-byte-array-example[]
+		//tag::basic-blob-byte-array-example[]
+	}
+	//end::basic-blob-byte-array-example[]
 }

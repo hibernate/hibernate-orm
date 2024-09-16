@@ -14,14 +14,14 @@ import jakarta.persistence.OneToOne;
  */
 @MappedSuperclass
 public class SubjectAdvertisement {
-    @OneToOne
-    private Advertisement advertisement;
+	@OneToOne
+	private Advertisement advertisement;
 
-    public Advertisement getAdvertisement() {
-        return advertisement;
-    }
+	public Advertisement getAdvertisement() {
+		return advertisement;
+	}
 
-    public void setAdvertisement(Advertisement advertisement) {
-        this.advertisement = advertisement;
-    }
+	public void setAdvertisement(Advertisement advertisement) {
+		this.advertisement = advertisement;
+	}
 }

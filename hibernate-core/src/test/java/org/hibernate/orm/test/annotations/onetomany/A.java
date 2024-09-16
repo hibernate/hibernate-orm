@@ -31,8 +31,8 @@ public class A {
 	@NotNull
 	String name;
 
-    @OneToMany( cascade = CascadeType.ALL)
-    @Cascade(org.hibernate.annotations.CascadeType.ALL)
+	@OneToMany( cascade = CascadeType.ALL)
+	@Cascade(org.hibernate.annotations.CascadeType.ALL)
 	@OrderBy("name")
 	java.util.List<B> bs = new ArrayList<B>();
 

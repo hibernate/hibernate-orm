@@ -15,26 +15,26 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name="department")
 public class Department implements java.io.Serializable {
-    private Integer deptNo;
-    private String deptName;
+	private Integer deptNo;
+	private String deptName;
 
-    @Id
-    @GeneratedValue
-    @Column(name="id_dep")
-    public Integer getDeptNo() {
-        return this.deptNo;
-    }
+	@Id
+	@GeneratedValue
+	@Column(name="id_dep")
+	public Integer getDeptNo() {
+		return this.deptNo;
+	}
 
-    public void setDeptNo(Integer deptNo) {
-        this.deptNo = deptNo;
-    }
+	public void setDeptNo(Integer deptNo) {
+		this.deptNo = deptNo;
+	}
 
-    public String getDeptName() {
-        return this.deptName;
-    }
+	public String getDeptName() {
+		return this.deptName;
+	}
 
-    public void setDeptName(String deptName) {
-        this.deptName = deptName;
-    }
+	public void setDeptName(String deptName) {
+		this.deptName = deptName;
+	}
 
 }

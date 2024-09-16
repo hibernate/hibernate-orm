@@ -118,7 +118,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s1 = openSession();
 		s1.beginTransaction();
 		myReferenceData = s1.get( MyEnhancedReferenceData.class, myReferenceData.getId() );
-	    myOtherReferenceData = s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() );
+		myOtherReferenceData = s1.get( MyEnhancedReferenceData.class, myOtherReferenceData.getId() );
 		assertTrue( s1.contains( myReferenceData ) );
 		assertTrue( s1.contains( myOtherReferenceData ) );
 		// prev/next references should be null; entityEntry should be non-null;

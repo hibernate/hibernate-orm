@@ -84,9 +84,9 @@ public class CommaDelimitedStringsConverterTests {
 //tag::ex-csv-converter-model[]
 	@Entity( name = "Person" )
 	public static class Person {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Basic
 		@Convert( converter = CommaDelimitedStringsConverter.class )

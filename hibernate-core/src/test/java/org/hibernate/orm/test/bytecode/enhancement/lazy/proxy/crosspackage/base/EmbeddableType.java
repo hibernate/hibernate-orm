@@ -12,14 +12,14 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class EmbeddableType {
 
-    @Column
-    private String field;
+	@Column
+	private String field;
 
-    public String getField() {
-        return field;
-    }
+	public String getField() {
+		return field;
+	}
 
-    public void setField(final String field) {
-        this.field = field;
-    }
+	public void setField(final String field) {
+		this.field = field;
+	}
 }

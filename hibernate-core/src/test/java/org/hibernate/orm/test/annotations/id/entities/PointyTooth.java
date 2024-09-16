@@ -32,7 +32,7 @@ public class PointyTooth implements Serializable {
 	private BigDecimal id;
 
 	@ManyToOne
-    @JoinColumn(name = "bunny_id")
+	@JoinColumn(name = "bunny_id")
 	Bunny bunny;
 
 	public void setBunny(Bunny bunny) {

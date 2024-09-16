@@ -25,7 +25,7 @@ public class IntTestPrivSeqEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "IntTestPrivSeq")
 	@SequenceGenerator(name = "IntTestPrivSeq", sequenceName = "INTTESTPRIV_SEQ",
-					   allocationSize = 1, initialValue = 1)
+					allocationSize = 1, initialValue = 1)
 	private Integer id;
 
 	@Audited

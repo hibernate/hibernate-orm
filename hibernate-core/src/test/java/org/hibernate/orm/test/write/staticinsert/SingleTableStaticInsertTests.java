@@ -85,9 +85,9 @@ public class SingleTableStaticInsertTests {
 	@Entity( name = "SimpleEntity" )
 	@Table( name = "SimpleEntity" )
 	public static class SimpleEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		private SimpleEntity() {

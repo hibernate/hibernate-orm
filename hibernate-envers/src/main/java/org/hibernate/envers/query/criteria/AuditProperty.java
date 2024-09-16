@@ -91,9 +91,9 @@ public class AuditProperty<T> implements AuditProjection {
 		return new SimpleAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ), " like " );
 	}
 
-    /**
-     *  Apply an "ilike" constraint
-     */
+	/**
+	 *  Apply an "ilike" constraint
+	 */
 	public AuditCriterion ilike(T value) {
 		return new IlikeAuditExpression( alias, propertyNameGetter, value.toString() );
 	}

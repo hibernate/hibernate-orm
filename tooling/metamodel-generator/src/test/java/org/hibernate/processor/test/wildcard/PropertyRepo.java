@@ -17,10 +17,10 @@ import java.util.List;
 
 @Entity
 public class PropertyRepo {
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @ManyToAny
-    @AnyDiscriminator(DiscriminatorType.STRING)
-    private List<Property<?>> properties = new ArrayList<>();
+	@ManyToAny
+	@AnyDiscriminator(DiscriminatorType.STRING)
+	private List<Property<?>> properties = new ArrayList<>();
 }

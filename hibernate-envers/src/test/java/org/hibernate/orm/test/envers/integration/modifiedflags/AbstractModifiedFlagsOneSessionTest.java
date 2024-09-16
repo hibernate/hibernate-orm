@@ -16,7 +16,7 @@ import org.hibernate.orm.test.envers.AbstractOneSessionTest;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public abstract class AbstractModifiedFlagsOneSessionTest extends
-														  AbstractOneSessionTest {
+														AbstractOneSessionTest {
 
 	@Override
 	protected void addProperties(Configuration configuration) {

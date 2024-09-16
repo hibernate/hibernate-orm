@@ -42,12 +42,12 @@ import org.jboss.logging.Logger;
  */
 public class AggregatedCollectionEventListener
 		implements InitializeCollectionEventListener,
-				   PreCollectionRecreateEventListener,
-				   PostCollectionRecreateEventListener,
-				   PreCollectionRemoveEventListener,
-				   PostCollectionRemoveEventListener,
-				   PreCollectionUpdateEventListener,
-				   PostCollectionUpdateEventListener {
+				PreCollectionRecreateEventListener,
+				PostCollectionRecreateEventListener,
+				PreCollectionRemoveEventListener,
+				PostCollectionRemoveEventListener,
+				PreCollectionUpdateEventListener,
+				PostCollectionUpdateEventListener {
 
 	private static final Logger log = Logger.getLogger( AggregatedCollectionEventListener.class );
 

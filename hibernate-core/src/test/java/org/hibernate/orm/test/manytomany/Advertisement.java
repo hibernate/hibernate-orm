@@ -21,28 +21,28 @@ import java.util.Set;
  */
 @Entity
 public class Advertisement {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @SQLRestriction("deleted <> 'true'")
-    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "advertisements")
-    @OrderBy("id asc")
-    private Set<Attachment> attachments;
+	@SQLRestriction("deleted <> 'true'")
+	@ManyToMany(fetch = FetchType.EAGER, mappedBy = "advertisements")
+	@OrderBy("id asc")
+	private Set<Attachment> attachments;
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public Set<Attachment> getAttachments() {
-        return attachments;
-    }
+	public Set<Attachment> getAttachments() {
+		return attachments;
+	}
 
-    public void setAttachments(Set<Attachment> attachments) {
-        this.attachments = attachments;
-    }
+	public void setAttachments(Set<Attachment> attachments) {
+		this.attachments = attachments;
+	}
 }

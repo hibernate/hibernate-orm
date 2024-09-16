@@ -132,9 +132,9 @@ public class EntityTableMappingsTests {
 	@Entity( name = "UnionRoot" )
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static abstract class UnionRoot {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		private UnionRoot() {

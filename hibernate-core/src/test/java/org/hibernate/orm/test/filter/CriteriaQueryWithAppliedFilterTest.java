@@ -71,7 +71,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			student2.setAge( 27 );
 			student2.setAddress( new Address( "London", "Oxford St" ) );
 			session.persist( student2 );
-	   });
+	});
 	}
 
 	@AfterEach
@@ -108,7 +108,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 //			query.add( Property.forName( "age" ).eq( inner ) );
 
 			assertThat( list.size(), is( 1 ) );
-	   	});
+		});
 
 		scope.inTransaction( session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "deleted" );
@@ -133,7 +133,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			final List<Student> list = session.createQuery( query ).getResultList();
 
 			assertThat( list.size(), is( 0 ) );
-	   	});
+		});
 	}
 
 	@ParameterizedTest

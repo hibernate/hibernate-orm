@@ -777,7 +777,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					session.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getInternalIdentifier(), persister );
-		  	// any earlier proxy takes precedence
+			// any earlier proxy takes precedence
 			final Map<EntityKey, EntityHolderImpl> entityHolderMap = getOrInitializeEntitiesByKey();
 			final EntityHolderImpl oldHolder = entityHolderMap.get( key );
 			if ( oldHolder != null ) {
@@ -1463,7 +1463,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
 		final CollectionPersister collectionPersister = mappingMetamodel.getCollectionDescriptor( collectionRole );
 
-	    // try cache lookup first
+		// try cache lookup first
 		final Object parent = getParentsByChild( childEntity );
 		if ( parent != null ) {
 			final EntityEntry entityEntry = entityEntryContext.getEntityEntry( parent );

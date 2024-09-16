@@ -166,8 +166,8 @@ public final class Environment implements AvailableSettings {
 
 		try {
 			Properties systemProperties = System.getProperties();
-		    // Must be thread-safe in case an application changes System properties during Hibernate initialization.
-		    // See HHH-8383.
+			// Must be thread-safe in case an application changes System properties during Hibernate initialization.
+			// See HHH-8383.
 			synchronized (systemProperties) {
 				GLOBAL_PROPERTIES.putAll(systemProperties);
 			}

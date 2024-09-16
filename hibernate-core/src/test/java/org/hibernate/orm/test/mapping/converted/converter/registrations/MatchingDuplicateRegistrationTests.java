@@ -35,8 +35,8 @@ public class MatchingDuplicateRegistrationTests {
 	@ConverterRegistration( converter = Thing1Converter.class )
 	@ConverterRegistration( converter = Thing1Converter.class )
 	public static class DupRegEntity {
-	    @Id
-	    private Integer id;
+		@Id
+		private Integer id;
 		private String name;
 		private Thing1 thing1;
 

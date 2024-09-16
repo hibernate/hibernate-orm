@@ -142,8 +142,8 @@ public class EntityGraphNativeQueryTest {
 		);
 	}
 
-    @Entity(name = "Foo")
-    public static class Foo {
+	@Entity(name = "Foo")
+	public static class Foo {
 
 		@Id
 		@GeneratedValue
@@ -163,19 +163,19 @@ public class EntityGraphNativeQueryTest {
 		@GeneratedValue
 		public Integer id;
 
-        @OneToMany(mappedBy = "bar")
-        public Set<Foo> foos = new HashSet<>();
+		@OneToMany(mappedBy = "bar")
+		public Set<Foo> foos = new HashSet<>();
 	}
 
 	@Entity(name = "Baz")
-    public static class Baz {
+	public static class Baz {
 
 		@Id
 		@GeneratedValue
-        public Integer id;
+		public Integer id;
 
-        @OneToMany(mappedBy = "baz")
-        public Set<Foo> foos = new HashSet<>();
+		@OneToMany(mappedBy = "baz")
+		public Set<Foo> foos = new HashSet<>();
 
 	}
 

@@ -33,155 +33,155 @@ import java.util.Set;
 
 @JiraKey(value = "HHH-16979")
 @Jpa(annotatedClasses = {
-        JoinedInheritanceImplicitJoinTest.MasterEntity.class,
-        JoinedInheritanceImplicitJoinTest.ChildEntity.class,
-        JoinedInheritanceImplicitJoinTest.RelatedEntity.class
+		JoinedInheritanceImplicitJoinTest.MasterEntity.class,
+		JoinedInheritanceImplicitJoinTest.ChildEntity.class,
+		JoinedInheritanceImplicitJoinTest.RelatedEntity.class
 }, properties = {
-        @Setting(name = AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true")
+		@Setting(name = AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true")
 })
 public class JoinedInheritanceImplicitJoinTest {
 
-    @BeforeEach
-    public void setup(EntityManagerFactoryScope scope) {
-        scope.inTransaction(entityManager -> {
-            final var childEntity = new ChildEntity();
-            childEntity.setMasterField("masterValue001");
-            childEntity.setChildField("childValue001");
+	@BeforeEach
+	public void setup(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			final var childEntity = new ChildEntity();
+			childEntity.setMasterField("masterValue001");
+			childEntity.setChildField("childValue001");
 
-            RelatedEntity relatedEntity = new RelatedEntity();
-            relatedEntity.setRelatedField("relatedValue001");
-            relatedEntity.setChildEntity(childEntity);
+			RelatedEntity relatedEntity = new RelatedEntity();
+			relatedEntity.setRelatedField("relatedValue001");
+			relatedEntity.setChildEntity(childEntity);
 
-            RelatedEntity relatedEntity2 = new RelatedEntity();
-            relatedEntity2.setRelatedField("relatedValue002");
-            relatedEntity2.setChildEntity(childEntity);
+			RelatedEntity relatedEntity2 = new RelatedEntity();
+			relatedEntity2.setRelatedField("relatedValue002");
+			relatedEntity2.setChildEntity(childEntity);
 
-            Set<RelatedEntity> relatedEntityHashSet = Set.of(relatedEntity, relatedEntity2);
+			Set<RelatedEntity> relatedEntityHashSet = Set.of(relatedEntity, relatedEntity2);
 
-            childEntity.setRelatedEntitySet(relatedEntityHashSet);
+			childEntity.setRelatedEntitySet(relatedEntityHashSet);
 
-            entityManager.persist(childEntity);
-            entityManager.persist(relatedEntity);
-            entityManager.persist(relatedEntity2);
-        });
-    }
+			entityManager.persist(childEntity);
+			entityManager.persist(relatedEntity);
+			entityManager.persist(relatedEntity2);
+		});
+	}
 
-    @Test
-    public void testImplicitJoinWithoutRelatedEntity(EntityManagerFactoryScope scope) {
-        scope.inTransaction(entityManager -> {
-            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<Tuple> query = cb.createQuery(Tuple.class);
-            Root<ChildEntity> root = query.from(ChildEntity.class);
+	@Test
+	public void testImplicitJoinWithoutRelatedEntity(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Tuple> query = cb.createQuery(Tuple.class);
+			Root<ChildEntity> root = query.from(ChildEntity.class);
 
-            query.multiselect(
-                    root.get("masterField"),
-                    root.get("childField")
-            );
+			query.multiselect(
+					root.get("masterField"),
+					root.get("childField")
+			);
 
-            TypedQuery<Tuple> result = entityManager.createQuery(query);
-            List<Tuple> resultList = result.getResultList();
+			TypedQuery<Tuple> result = entityManager.createQuery(query);
+			List<Tuple> resultList = result.getResultList();
 
-            Assertions.assertFalse(resultList.isEmpty());
-        });
-    }
+			Assertions.assertFalse(resultList.isEmpty());
+		});
+	}
 
-    @Test
-    public void testImplicitJoinWithRelatedEntity(EntityManagerFactoryScope scope) {
-        scope.inTransaction(entityManager -> {
-            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<Tuple> query = cb.createQuery(Tuple.class);
-            Root<ChildEntity> root = query.from(ChildEntity.class);
-            Join<ChildEntity, RelatedEntity> relatedEntityJoin = root.join("relatedEntitySet");
+	@Test
+	public void testImplicitJoinWithRelatedEntity(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Tuple> query = cb.createQuery(Tuple.class);
+			Root<ChildEntity> root = query.from(ChildEntity.class);
+			Join<ChildEntity, RelatedEntity> relatedEntityJoin = root.join("relatedEntitySet");
 
-            query.multiselect(
-                    root.get("masterField"),
-                    root.get("childField"),
-                    relatedEntityJoin.get("relatedField")
-            );
+			query.multiselect(
+					root.get("masterField"),
+					root.get("childField"),
+					relatedEntityJoin.get("relatedField")
+			);
 
-            TypedQuery<Tuple> result = entityManager.createQuery(query);
-            List<Tuple> resultList = result.getResultList();
+			TypedQuery<Tuple> result = entityManager.createQuery(query);
+			List<Tuple> resultList = result.getResultList();
 
-            Assertions.assertFalse(resultList.isEmpty());
-        });
-    }
+			Assertions.assertFalse(resultList.isEmpty());
+		});
+	}
 
-    @Entity(name = "MasterEntity")
-    @Inheritance(strategy = InheritanceType.JOINED)
-    public static class MasterEntity {
-        @Id
-        @GeneratedValue
-        public Long id;
+	@Entity(name = "MasterEntity")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class MasterEntity {
+		@Id
+		@GeneratedValue
+		public Long id;
 
-        public String masterField;
+		public String masterField;
 
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public String getMasterField() {
-            return masterField;
-        }
+		public String getMasterField() {
+			return masterField;
+		}
 
-        public void setMasterField(final String masterField) {
-            this.masterField = masterField;
-        }
-    }
+		public void setMasterField(final String masterField) {
+			this.masterField = masterField;
+		}
+	}
 
-    @Entity(name = "ChildEntity")
-    public static class ChildEntity extends MasterEntity {
-        private String childField;
+	@Entity(name = "ChildEntity")
+	public static class ChildEntity extends MasterEntity {
+		private String childField;
 
-        @OneToMany(mappedBy = "childEntity")
-        public Set<RelatedEntity> relatedEntitySet;
+		@OneToMany(mappedBy = "childEntity")
+		public Set<RelatedEntity> relatedEntitySet;
 
-        public String getChildField() {
-            return childField;
-        }
+		public String getChildField() {
+			return childField;
+		}
 
-        public void setChildField(final String childField) {
-            this.childField = childField;
-        }
+		public void setChildField(final String childField) {
+			this.childField = childField;
+		}
 
-        public Set<RelatedEntity> getRelatedEntitySet() {
-            return relatedEntitySet;
-        }
+		public Set<RelatedEntity> getRelatedEntitySet() {
+			return relatedEntitySet;
+		}
 
-        public void setRelatedEntitySet(final Set<RelatedEntity> relatedEntitySet) {
-            this.relatedEntitySet = relatedEntitySet;
-        }
-    }
+		public void setRelatedEntitySet(final Set<RelatedEntity> relatedEntitySet) {
+			this.relatedEntitySet = relatedEntitySet;
+		}
+	}
 
-    @Entity(name = "RelatedEntity")
-    public static class RelatedEntity {
-        @Id
-        @GeneratedValue
-        public Long id;
+	@Entity(name = "RelatedEntity")
+	public static class RelatedEntity {
+		@Id
+		@GeneratedValue
+		public Long id;
 
-        public String relatedField;
+		public String relatedField;
 
-        @ManyToOne
-        public ChildEntity childEntity;
+		@ManyToOne
+		public ChildEntity childEntity;
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public String getRelatedField() {
-            return relatedField;
-        }
+		public String getRelatedField() {
+			return relatedField;
+		}
 
-        public void setRelatedField(final String relatedField) {
-            this.relatedField = relatedField;
-        }
+		public void setRelatedField(final String relatedField) {
+			this.relatedField = relatedField;
+		}
 
-        public ChildEntity getChildEntity() {
-            return childEntity;
-        }
+		public ChildEntity getChildEntity() {
+			return childEntity;
+		}
 
-        public void setChildEntity(final ChildEntity childEntity) {
-            this.childEntity = childEntity;
-        }
-    }
+		public void setChildEntity(final ChildEntity childEntity) {
+			this.childEntity = childEntity;
+		}
+	}
 }

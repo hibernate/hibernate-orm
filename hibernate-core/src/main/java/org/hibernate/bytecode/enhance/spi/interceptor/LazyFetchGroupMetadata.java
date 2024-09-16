@@ -7,7 +7,7 @@
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 /**
-  * Information about a particular bytecode lazy attribute grouping.
+ * Information about a particular bytecode lazy attribute grouping.
  *
  * @author Steve Ebersole
  */

@@ -134,14 +134,14 @@ public final class Collections {
 
 	}
 
-    /**
-     * Initialize the role of the collection.
-     *
-     * @param collection The collection to be updated by reachability.
-     * @param type The type of the collection.
-     * @param entity The owner of the collection.
+	/**
+	 * Initialize the role of the collection.
+	 *
+	 * @param collection The collection to be updated by reachability.
+	 * @param type The type of the collection.
+	 * @param entity The owner of the collection.
 	 * @param session The session from which this request originates
-     */
+	 */
 	public static void processReachableCollection(
 			PersistentCollection<?> collection,
 			CollectionType type,

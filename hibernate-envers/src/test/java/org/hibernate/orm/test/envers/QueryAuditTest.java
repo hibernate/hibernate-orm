@@ -77,7 +77,7 @@ public class QueryAuditTest {
 		});
 
 		List<Number> revisions = scope.fromTransaction( entityManager -> {
-			 return AuditReaderFactory.get(entityManager).getRevisions(
+			return AuditReaderFactory.get(entityManager).getRevisions(
 				Customer.class,
 				1L
 			);

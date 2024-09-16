@@ -11,7 +11,7 @@ package org.hibernate.orm.test.annotations.cascade.multicircle.jpa.sequence;
  */
 @jakarta.persistence.Entity
 public class E extends AbstractEntity {
-    private static final long serialVersionUID = 1226955558L;
+	private static final long serialVersionUID = 1226955558L;
 
 	@jakarta.persistence.OneToMany(mappedBy = "e")
 	private java.util.Set<D> dCollection = new java.util.HashSet<D>();
@@ -26,10 +26,10 @@ public class E extends AbstractEntity {
 		this.dCollection = dCollection;
 	}
 
-    public F getF() {
-        return f;
-    }
-    public void setF(F parameter) {
-        this.f = parameter;
-    }
+	public F getF() {
+		return f;
+	}
+	public void setF(F parameter) {
+		this.f = parameter;
+	}
 }

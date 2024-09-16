@@ -24,22 +24,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 @DomainModel(annotatedClasses = PrePersistIdTest.GeneratedIdInCallback.class)
 public class PrePersistIdTest {
-    @Test void test(SessionFactoryScope scope) {
-        scope.inTransaction(s -> {
-            GeneratedIdInCallback entity = new GeneratedIdInCallback();
-            s.persist(entity);
-            assertTrue(entity.success);
-            assertNotNull(entity.uuid);
-        });
-    }
+	@Test void test(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			GeneratedIdInCallback entity = new GeneratedIdInCallback();
+			s.persist(entity);
+			assertTrue(entity.success);
+			assertNotNull(entity.uuid);
+		});
+	}
 
-    @Entity(name = "GeneratedIdInCallback")
-    static class GeneratedIdInCallback {
-        @Transient boolean success;
-        @Id @GeneratedValue UUID uuid;
-        @PrePersist void checkId() {
-            success = uuid != null;
-            assertNotNull(uuid);
-        }
-    }
+	@Entity(name = "GeneratedIdInCallback")
+	static class GeneratedIdInCallback {
+		@Transient boolean success;
+		@Id @GeneratedValue UUID uuid;
+		@PrePersist void checkId() {
+			success = uuid != null;
+			assertNotNull(uuid);
+		}
+	}
 }

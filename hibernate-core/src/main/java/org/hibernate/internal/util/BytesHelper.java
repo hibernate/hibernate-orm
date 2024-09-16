@@ -77,7 +77,7 @@ public final class BytesHelper {
 	 *
 	 * @param longValue The long to interpret to binary
 	 * @param dest the destination array.
-     * @param destPos starting position in the destination array.
+	 * @param destPos starting position in the destination array.
 	 */
 	public static void fromLong(long longValue, byte[] dest, int destPos) {
 

@@ -40,7 +40,7 @@ public class MonotonicRevisionNumberTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	public void testOracleSequenceOrder() {
-        EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SequenceIdRevisionEntity.class.getName());
+		EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SequenceIdRevisionEntity.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		Assert.assertTrue( OrderedSequenceGenerator.class.isInstance( generator ) );
 

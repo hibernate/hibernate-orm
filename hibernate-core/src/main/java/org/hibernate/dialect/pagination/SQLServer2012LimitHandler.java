@@ -24,7 +24,7 @@ public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 	// ORDER BY ...
 	// [
 	//   OFFSET m {ROW|ROWS}
-    //   [FETCH {FIRST|NEXT} n {ROW|ROWS} ONLY]
+	//   [FETCH {FIRST|NEXT} n {ROW|ROWS} ONLY]
 	// ]
 
 	public static final SQLServer2012LimitHandler INSTANCE = new SQLServer2012LimitHandler();

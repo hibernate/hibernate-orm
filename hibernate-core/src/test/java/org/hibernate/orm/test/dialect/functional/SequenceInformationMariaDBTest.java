@@ -73,31 +73,31 @@ public class SequenceInformationMariaDBTest {
 			catch (SQLException e) {
 			}
 			statement.execute( "CREATE TABLE `TBL_BOOK` ( " +
-							   "  `ID` int(11) NOT NULL, " +
-							   "  `TITLE` varchar(255) DEFAULT NULL, " +
-							   "   PRIMARY KEY (`ID`) " +
-							   ") ENGINE=InnoDB" );
+							"  `ID` int(11) NOT NULL, " +
+							"  `TITLE` varchar(255) DEFAULT NULL, " +
+							"   PRIMARY KEY (`ID`) " +
+							") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE TABLE `TBL_AUTHOR` ( " +
-									   "  `ID` int(11) NOT NULL, " +
-									   "  `firstName` varchar(255) DEFAULT NULL, " +
-									   "  `lastName` varchar(255) DEFAULT NULL, " +
-									   "   PRIMARY KEY (`ID`) " +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int(11) NOT NULL, " +
+									"  `firstName` varchar(255) DEFAULT NULL, " +
+									"  `lastName` varchar(255) DEFAULT NULL, " +
+									"   PRIMARY KEY (`ID`) " +
+									") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE SEQUENCE book_sequence " +
-							   "  START WITH 1 " +
-							   "  INCREMENT BY 1 " +
-							   "  MAXVALUE 2999999999 " +
-							   "  MINVALUE 0 " +
-							   "  CACHE 10" );
+							"  START WITH 1 " +
+							"  INCREMENT BY 1 " +
+							"  MAXVALUE 2999999999 " +
+							"  MINVALUE 0 " +
+							"  CACHE 10" );
 
 			statement.execute( "CREATE SEQUENCE author_sequence " +
-							   "  START WITH 1 " +
-							   "  INCREMENT BY 1 " +
-							   "  MAXVALUE 2999999999 " +
-							   "  MINVALUE 0 " +
-							   "  CACHE 10" );
+							"  START WITH 1 " +
+							"  INCREMENT BY 1 " +
+							"  MAXVALUE 2999999999 " +
+							"  MINVALUE 0 " +
+							"  CACHE 10" );
 		}
 		catch (SQLException e) {
 			fail(e.getMessage());

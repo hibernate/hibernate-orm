@@ -21,27 +21,27 @@ import java.util.Set;
 
 @Entity
 public class Parent {
-    @GeneratedValue
-    @Id
-    private long id;
-    @Version
-    private int version;
+	@GeneratedValue
+	@Id
+	private long id;
+	@Version
+	private int version;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.PERSIST)
-    private Set<Child> children = new HashSet<>();
+	@OneToMany(mappedBy = "parent", cascade = CascadeType.PERSIST)
+	private Set<Child> children = new HashSet<>();
 
-    @ElementCollection
-    private List<String> words = new ArrayList<>();
+	@ElementCollection
+	private List<String> words = new ArrayList<>();
 
-    public Set<Child> getChildren() {
-        return children;
-    }
+	public Set<Child> getChildren() {
+		return children;
+	}
 
-    public List<String> getWords() {
-        return words;
-    }
+	public List<String> getWords() {
+		return words;
+	}
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 }

@@ -11,6 +11,6 @@ import org.hibernate.annotations.processing.Find;
 
 @Repository
 public interface Repo extends SuperRepo {
-    @Find
+	@Find
 	Book get(String isbn);
 }

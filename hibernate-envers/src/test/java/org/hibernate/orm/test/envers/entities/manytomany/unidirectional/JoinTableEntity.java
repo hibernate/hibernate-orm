@@ -33,8 +33,8 @@ public class JoinTableEntity implements Serializable {
 
 	@ManyToMany
 	@JoinTable(name = "test_join_table",
-			   joinColumns = @JoinColumn(name = "assoc_id1"),
-			   inverseJoinColumns = @JoinColumn(name = "assoc_id2")
+			joinColumns = @JoinColumn(name = "assoc_id1"),
+			inverseJoinColumns = @JoinColumn(name = "assoc_id2")
 	)
 	private Set<StrTestEntity> references = new HashSet<StrTestEntity>();
 

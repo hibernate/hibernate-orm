@@ -152,7 +152,7 @@ public class Boy {
 
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
-    @Column(name = "`characters`")
+	@Column(name = "`characters`")
 	public Set<CharacterTrait> getCharacters() {
 		return characters;
 	}

@@ -70,9 +70,9 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 		);
 	}
 
-    @Test
-    @JiraKey( value = "HHH-10360")
-    public void checkingMapping(SessionFactoryScope scope) {
+	@Test
+	@JiraKey( value = "HHH-10360")
+	public void checkingMapping(SessionFactoryScope scope) {
 
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
 		final EntityMappingType childMapping = runtimeMetamodels.getEntityMappingType( Child.class.getName() );
@@ -130,11 +130,11 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 					}
 				}
 		);
-    }
+	}
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-    public void testSaveParentWithDetachedChildren(SessionFactoryScope scope) {
+	public void testSaveParentWithDetachedChildren(SessionFactoryScope scope) {
 		final Parent p = scope.fromTransaction(
 				(session) -> session.createQuery( "from Parent p join fetch p.children where p.name = 'alex'", Parent.class )
 						.setCacheable( true )
@@ -148,10 +148,10 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 
 		// todo (6.0) : ^^ this test has nothing to do with (im)mutability...
 
-        Child c2 = new Child( 2, "joey", p );
-        p.getChildren().add( c2 );
+		Child c2 = new Child( 2, "joey", p );
+		p.getChildren().add( c2 );
 
-        scope.inTransaction( (session) -> session.merge( p ) );
-    }
+		scope.inTransaction( (session) -> session.merge( p ) );
+	}
 
 }

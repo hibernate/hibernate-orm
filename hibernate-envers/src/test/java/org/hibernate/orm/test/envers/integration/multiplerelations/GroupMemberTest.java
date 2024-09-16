@@ -43,10 +43,10 @@ public class GroupMemberTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer uniqueGroupId;
 	private Integer groupMemberId;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-    	return new Class[] { GroupMember.class, MultiGroup.class, UniqueGroup.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { GroupMember.class, MultiGroup.class, UniqueGroup.class };
+	}
 
 	@Test
 	@Priority(10)

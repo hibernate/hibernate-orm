@@ -645,8 +645,8 @@ public class MultiLoadTest {
 
 					assertEquals( 56, list.size() );
 					assertFalse( session.getPersistenceContext()
-										 .getBatchFetchQueue()
-										 .containsEntityKey( entityKey ) );
+										.getBatchFetchQueue()
+										.containsEntityKey( entityKey ) );
 
 				}
 		);

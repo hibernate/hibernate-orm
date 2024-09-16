@@ -16,21 +16,21 @@ import jakarta.persistence.ManyToOne;
 public class StoreCustomerPK implements Serializable {
 	StoreCustomerPK() {}
 	@Id
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "idA")
-    public Store store;
-
-    @Id
 	@ManyToOne(optional = false)
-    @JoinColumn(name = "idB")
-    public Customer customer;
+	@JoinColumn(name = "idA")
+	public Store store;
+
+	@Id
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "idB")
+	public Customer customer;
 
 
-    public StoreCustomerPK(Store store, Customer customer) {
+	public StoreCustomerPK(Store store, Customer customer) {
 	this.store = store;
 	this.customer = customer;
-    }
+	}
 
 
-    private static final long serialVersionUID = -1102111921432271459L;
+	private static final long serialVersionUID = -1102111921432271459L;
 }

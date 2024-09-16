@@ -40,9 +40,9 @@ public class PostLoadLazyListenerTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-						   session.createQuery( "delete from Tag" ).executeUpdate();
-						   session.createQuery( "delete from Person" ).executeUpdate();
-					   }
+						session.createQuery( "delete from Tag" ).executeUpdate();
+						session.createQuery( "delete from Person" ).executeUpdate();
+					}
 		);
 	}
 

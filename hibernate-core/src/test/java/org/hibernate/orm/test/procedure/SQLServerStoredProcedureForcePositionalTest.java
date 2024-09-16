@@ -69,7 +69,7 @@ public class SQLServerStoredProcedureForcePositionalTest {
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
 			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-														  .toInstant( ZoneOffset.UTC ) ) );
+														.toInstant( ZoneOffset.UTC ) ) );
 
 			entityManager.persist( person1 );
 

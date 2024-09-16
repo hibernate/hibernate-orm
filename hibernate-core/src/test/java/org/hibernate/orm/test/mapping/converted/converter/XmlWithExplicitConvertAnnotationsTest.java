@@ -98,7 +98,7 @@ public class XmlWithExplicitConvertAnnotationsTest extends BaseNonConfigCoreFunc
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-        final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,

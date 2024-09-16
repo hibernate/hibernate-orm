@@ -90,7 +90,7 @@ public class ForeignKeyConstraintMapsIdTest extends BaseNonConfigCoreFunctionalT
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.getName().equals( "Post" ) ) {
-                    Iterator<org.hibernate.mapping.ForeignKey> foreignKeyIterator = table.getForeignKeys().values().iterator();
+					Iterator<org.hibernate.mapping.ForeignKey> foreignKeyIterator = table.getForeignKeys().values().iterator();
 					while ( foreignKeyIterator.hasNext() ) {
 						org.hibernate.mapping.ForeignKey foreignKey = foreignKeyIterator.next();
 						if ( foreignKey.getColumn( 0 ).getName().equals( "PD_ID" ) ) {

@@ -19,40 +19,40 @@ import jakarta.persistence.OneToOne;
 public class Tranchenmodell {
 
 
-    private Long id;
+	private Long id;
 
-    private List<Tranche> tranchen = new ArrayList<Tranche>();
-
-
-    private Preisregelung preisregelung;
+	private List<Tranche> tranchen = new ArrayList<Tranche>();
 
 
-    @Id
-    public Long getId() {
-        return id;
-    }
+	private Preisregelung preisregelung;
+
+
+	@Id
+	public Long getId() {
+		return id;
+	}
 
 	public void setId(Long id) {
 		this.id = id;
 	}
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
-    public List<Tranche> getTranchen() {
-        return tranchen;
-    }
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
+	public List<Tranche> getTranchen() {
+		return tranchen;
+	}
 
-    public void setTranchen(List<Tranche> tranchen) {
-        this.tranchen = tranchen;
-    }
+	public void setTranchen(List<Tranche> tranchen) {
+		this.tranchen = tranchen;
+	}
 
-    @OneToOne(mappedBy="tranchenmodell", optional = true, fetch = FetchType.LAZY)
-    public Preisregelung getPreisregelung() {
-        return preisregelung;
-    }
+	@OneToOne(mappedBy="tranchenmodell", optional = true, fetch = FetchType.LAZY)
+	public Preisregelung getPreisregelung() {
+		return preisregelung;
+	}
 
-    public void setPreisregelung(Preisregelung preisregelung) {
-        this.preisregelung = preisregelung;
-    }
+	public void setPreisregelung(Preisregelung preisregelung) {
+		this.preisregelung = preisregelung;
+	}
 
 
 }

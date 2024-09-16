@@ -136,7 +136,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 */
 	void cancelLastQuery();
 
-    /**
+	/**
 	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
 	 *
 	 * @return The number of seconds remaining until a transaction timeout occurs.  A negative value indicates

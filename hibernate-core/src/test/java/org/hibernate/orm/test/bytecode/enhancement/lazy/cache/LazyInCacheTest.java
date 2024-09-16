@@ -40,94 +40,94 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Luis Barreiro
  */
 @DomainModel(
-        annotatedClasses = {
-               LazyInCacheTest.Order.class, LazyInCacheTest.Product.class, LazyInCacheTest.Tag.class
-        }
+		annotatedClasses = {
+			LazyInCacheTest.Order.class, LazyInCacheTest.Product.class, LazyInCacheTest.Tag.class
+		}
 )
 @ServiceRegistry(
-        settings = {
-                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
-                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
-        }
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class LazyInCacheTest {
 
-    private Long orderId;
+	private Long orderId;
 
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        Order order = new Order();
-        Product product = new Product();
-        order.products.add( product );
-        order.data = "some data".getBytes( Charset.defaultCharset() );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		Order order = new Order();
+		Product product = new Product();
+		order.products.add( product );
+		order.data = "some data".getBytes( Charset.defaultCharset() );
 
-        scope.inTransaction( em -> {
-            em.persist( product );
-            em.persist( order );
-        } );
+		scope.inTransaction( em -> {
+			em.persist( product );
+			em.persist( order );
+		} );
 
-        orderId = order.id;
-    }
+		orderId = order.id;
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( em -> {
-            Order order = em.find( Order.class, orderId );
-            assertEquals( 1, order.products.size() );
-        } );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Order order = em.find( Order.class, orderId );
+			assertEquals( 1, order.products.size() );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity(name = "Order")
-    @Table( name = "ORDER_TABLE" )
-    @Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
-    static class Order {
+	@Entity(name = "Order")
+	@Table( name = "ORDER_TABLE" )
+	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
+	static class Order {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @OneToMany
-        List<Product> products = new ArrayList<>();
+		@OneToMany
+		List<Product> products = new ArrayList<>();
 
-        @OneToMany
-        List<Tag> tags = new ArrayList<>();
+		@OneToMany
+		List<Tag> tags = new ArrayList<>();
 
-        @Basic( fetch = FetchType.LAZY )
-        @Type( BinaryCustomType.class )
+		@Basic( fetch = FetchType.LAZY )
+		@Type( BinaryCustomType.class )
 //        @JdbcTypeCode(Types.LONGVARBINARY)
-        byte[] data;
-    }
+		byte[] data;
+	}
 
-    @Entity(name = "Product")
-    @Table( name = "PRODUCT" )
-    static class Product {
+	@Entity(name = "Product")
+	@Table( name = "PRODUCT" )
+	static class Product {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        String name;
-    }
+		String name;
+	}
 
-    @Entity(name = "Tag")
-    @Table( name = "TAG" )
-    static class Tag {
+	@Entity(name = "Tag")
+	@Table( name = "TAG" )
+	static class Tag {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        String name;
-    }
+		String name;
+	}
 
-    public static class BinaryCustomType extends UserTypeLegacyBridge {
-        public BinaryCustomType() {
-            super( "binary" );
-        }
-    }
+	public static class BinaryCustomType extends UserTypeLegacyBridge {
+		public BinaryCustomType() {
+			super( "binary" );
+		}
+	}
 }

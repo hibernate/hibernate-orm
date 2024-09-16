@@ -71,7 +71,7 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		assertEquals( Starred.OK, bid.getNote() );
 		assertEquals( Starred.GOOD, bid.getEditorsNote() );
 		bid = (Bid)s.createQuery( "select b from Bid b where b.note = :note" +
-				 " and b.editorsNote = :editorNote " +
+				" and b.editorsNote = :editorNote " +
 				" and b.id = :id")
 				.setParameter( "id", bid.getId() )
 				.setParameter( "note", Starred.OK )

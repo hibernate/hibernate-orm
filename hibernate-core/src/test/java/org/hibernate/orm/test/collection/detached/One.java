@@ -17,15 +17,15 @@ import java.util.List;
 
 @Entity @Table(name="DCOne")
 public class One {
-    @GeneratedValue
-    @Id
-    long id;
+	@GeneratedValue
+	@Id
+	long id;
 
-    @OneToMany(mappedBy = "one",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    List<Many> many;
+	@OneToMany(mappedBy = "one",
+			cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	List<Many> many;
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 }

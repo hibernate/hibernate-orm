@@ -30,8 +30,8 @@ public class DetachedNamingTestEntity {
 	@Audited
 	@OneToMany
 	@JoinTable(name = "UNI_NAMING_TEST",
-			   joinColumns = @JoinColumn(name = "ID_1"),
-			   inverseJoinColumns = @JoinColumn(name = "ID_2"))
+			joinColumns = @JoinColumn(name = "ID_1"),
+			inverseJoinColumns = @JoinColumn(name = "ID_2"))
 	private Set<StrTestEntity> collection;
 
 	public DetachedNamingTestEntity() {

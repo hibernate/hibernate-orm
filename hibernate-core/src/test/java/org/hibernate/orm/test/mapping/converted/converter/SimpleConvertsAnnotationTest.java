@@ -41,7 +41,7 @@ public class SimpleConvertsAnnotationTest extends BaseNonConfigCoreFunctionalTes
 
 	@Test
 	public void testSimpleConvertsUsage() throws MalformedURLException {
-        final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type websitePropertyType = ep.getPropertyType( "website" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,

@@ -35,9 +35,9 @@ import org.junit.jupiter.api.Test;
  * @author Emmanuel Bernard
  */
 public class DataSourceInjectionTest {
-    @Test
+	@Test
 	public void testDatasourceInjection() throws Exception {
-    	withPuRoot(
+		withPuRoot(
 				puRootUrl -> {
 					final PersistenceUnitInfoAdapter persistenceUnitInfo = createPuDescriptor( puRootUrl, new FakeDataSource() );
 

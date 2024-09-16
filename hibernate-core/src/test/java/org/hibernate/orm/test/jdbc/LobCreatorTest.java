@@ -76,7 +76,7 @@ public class LobCreatorTest {
 		connection.close();
 	}
 
-    @Test
+	@Test
 	public void testJdbc3LobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 3, new JdbcLobBuilderImpl() );
 		final H2Dialect dialect = new H2Dialect();
@@ -97,7 +97,7 @@ public class LobCreatorTest {
 
 		connection.close();
 	}
-    @Test
+	@Test
 	public void testJdbc4UnsupportedLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl() );
 		final H2Dialect dialect = new H2Dialect();
@@ -118,7 +118,7 @@ public class LobCreatorTest {
 
 		connection.close();
 	}
-    @Test
+	@Test
 	public void testConfiguredNonContextualLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( LobTypes.BLOB, LobTypes.CLOB, LobTypes.NCLOB ) );
 		final H2Dialect dialect = new H2Dialect();

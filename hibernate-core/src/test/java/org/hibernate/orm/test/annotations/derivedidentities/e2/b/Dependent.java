@@ -22,7 +22,7 @@ public class Dependent {
 
 	@MapsId("empPK")
 
-    @ManyToOne
-    @JoinColumns( { @JoinColumn(nullable = false), @JoinColumn(nullable = false) })
-    Employee emp;
+	@ManyToOne
+	@JoinColumns( { @JoinColumn(nullable = false), @JoinColumn(nullable = false) })
+	Employee emp;
 }

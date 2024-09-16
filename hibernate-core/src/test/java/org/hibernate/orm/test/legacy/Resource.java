@@ -12,34 +12,34 @@ package org.hibernate.orm.test.legacy;
  */
 public class Resource {
 
-   String id;
-   String name;
-   String userCode;
+String id;
+String name;
+String userCode;
 
 
-  String getId() {
-    return id;
-  }
+String getId() {
+	return id;
+}
 
-  void  setId(String newValue) {
-    id = newValue;
-  }
+void  setId(String newValue) {
+	id = newValue;
+}
 
-  String getName() {
-    return name;
-  }
+String getName() {
+	return name;
+}
 
-  void  setName(String newValue) {
-    name = newValue;
-  }
+void  setName(String newValue) {
+	name = newValue;
+}
 
-  String getUserCode() {
-    return userCode;
-  }
+String getUserCode() {
+	return userCode;
+}
 
-  void  setUserCode(String newValue) {
-    userCode = newValue;
-  }
+void  setUserCode(String newValue) {
+	userCode = newValue;
+}
 
 
 }

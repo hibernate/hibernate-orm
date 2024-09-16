@@ -18,14 +18,14 @@ import jakarta.persistence.Entity;
 @Entity
 public class PanacheBook extends PanacheEntity {
 	public @NaturalId String isbn;
-    public @NaturalId String title;
-    public @NaturalId String author;
-    public String text;
-    public int pages;
+	public @NaturalId String title;
+	public @NaturalId String author;
+	public String text;
+	public int pages;
 
-    @Find
-    public static native List<PanacheBook> findBook(String isbn);
+	@Find
+	public static native List<PanacheBook> findBook(String isbn);
 
-    @HQL("WHERE isbn = :isbn")
-    public static native List<PanacheBook> hqlBook(String isbn);
+	@HQL("WHERE isbn = :isbn")
+	public static native List<PanacheBook> hqlBook(String isbn);
 }

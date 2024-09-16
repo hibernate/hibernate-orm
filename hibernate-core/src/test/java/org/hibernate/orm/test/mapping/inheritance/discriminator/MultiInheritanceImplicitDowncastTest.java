@@ -68,9 +68,9 @@ public class MultiInheritanceImplicitDowncastTest {
 		}
 		catch (IllegalArgumentException ex) {
 			Assertions.assertTrue( ex.getCause()
-										   .getCause()
-										   .getMessage()
-										   .contains( "Could not resolve attribute 'base' " ) );
+										.getCause()
+										.getMessage()
+										.contains( "Could not resolve attribute 'base' " ) );
 		}
 	}
 

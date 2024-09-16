@@ -12,16 +12,16 @@ package org.hibernate.orm.test.legacy;
  */
 public class Medication extends Intervention {
 
-   Drug prescribedDrug;
+Drug prescribedDrug;
 
 
-  Drug getPrescribedDrug() {
-    return prescribedDrug;
-  }
+Drug getPrescribedDrug() {
+	return prescribedDrug;
+}
 
-  void  setPrescribedDrug(Drug newValue) {
-    prescribedDrug = newValue;
-  }
+void  setPrescribedDrug(Drug newValue) {
+	prescribedDrug = newValue;
+}
 
 
 }

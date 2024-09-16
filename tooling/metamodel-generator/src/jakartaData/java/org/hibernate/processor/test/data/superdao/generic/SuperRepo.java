@@ -21,30 +21,30 @@ import java.util.stream.Stream;
 
 public interface SuperRepo<T,K> {
 
-    @Save
-    <S extends T> S save(S entity);
+	@Save
+	<S extends T> S save(S entity);
 
-    @Save
-    <S extends T> List<S> saveAll(List<S> entities);
+	@Save
+	<S extends T> List<S> saveAll(List<S> entities);
 
-    @Find
-    Optional<T> findById(@By("#id") K id);
+	@Find
+	Optional<T> findById(@By("#id") K id);
 
-    @Find
-    Optional<T> findById2(@By("id(this)") K id);
+	@Find
+	Optional<T> findById2(@By("id(this)") K id);
 
-    @Find
-    Stream<T> findAll();
+	@Find
+	Stream<T> findAll();
 
-    @Find
-    Page<T> findAll(PageRequest pageRequest, Order<T> order);
+	@Find
+	Page<T> findAll(PageRequest pageRequest, Order<T> order);
 
 //    @Delete
 //    void deleteById(@By("#id") K id);
 
-    @Delete
-    void delete(T entity);
+	@Delete
+	void delete(T entity);
 
-    @Delete
-    void deleteAll(List<? extends T> entities);
+	@Delete
+	void deleteAll(List<? extends T> entities);
 }

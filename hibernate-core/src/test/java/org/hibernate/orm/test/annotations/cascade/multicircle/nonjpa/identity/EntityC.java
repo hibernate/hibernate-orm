@@ -13,7 +13,7 @@ import java.util.Set;
  */
 @jakarta.persistence.Entity
 public class EntityC extends AbstractEntity {
-    private static final long serialVersionUID = 1226955752L;
+	private static final long serialVersionUID = 1226955752L;
 
 	@jakarta.persistence.OneToMany(mappedBy = "c")
 	private Set<EntityB> bCollection = new java.util.HashSet<EntityB>();

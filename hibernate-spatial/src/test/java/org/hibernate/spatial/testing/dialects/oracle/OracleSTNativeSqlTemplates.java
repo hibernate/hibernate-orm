@@ -67,7 +67,7 @@ public class OracleSTNativeSqlTemplates extends NativeSQLTemplates {
 				"select id, ST_GEOMETRY(t.GEOM).ST_DISJOINT(ST_GEOMETRY.FROM_WKT(:filter, 4326)) as result from %s t"
 		);
 		sqls.put( ST_RELATE,
-				  "select id, ST_GEOMETRY(t.GEOM).st_relate(st_geometry.from_wkt(:filter, 4326), 'DETERMINE') as result from %s t" );
+				"select id, ST_GEOMETRY(t.GEOM).st_relate(st_geometry.from_wkt(:filter, 4326), 'DETERMINE') as result from %s t" );
 		sqls.put(
 				ST_TOUCHES,
 				"select id, ST_GEOMETRY(t.GEOM).ST_TOUCHES(ST_GEOMETRY.FROM_WKT(:filter, 4326)) as result from %s t"

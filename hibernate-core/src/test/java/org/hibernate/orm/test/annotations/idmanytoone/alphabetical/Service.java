@@ -12,6 +12,6 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Service {
-    @Id
-    private BigInteger idpk;
+	@Id
+	private BigInteger idpk;
 }

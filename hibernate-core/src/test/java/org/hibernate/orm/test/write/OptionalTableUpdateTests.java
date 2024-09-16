@@ -99,9 +99,9 @@ public class OptionalTableUpdateTests {
 	@Table( name = "entities" )
 	@SecondaryTable( name = "supplements" )
 	public static class TheEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Basic
 		@Column( table = "supplements" )

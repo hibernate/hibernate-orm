@@ -54,9 +54,9 @@ public class ImmutabilityConverterTests {
 	@Entity( name = "TestEntity" )
 	@Table( name = "TestEntity" )
 	public static class TestEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Convert( converter = ImmutabilityDateConverter.class )
 		private Date theDate;

@@ -150,7 +150,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-    public Class<?>[] getAnnotatedClasses() {
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { ImageHolder.class };
 	}
 

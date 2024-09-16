@@ -18,21 +18,21 @@ import java.util.UUID;
 
 @Entity
 public class Client {
-    @Id
-    @GeneratedValue
-    Long id;
+	@Id
+	@GeneratedValue
+	Long id;
 
-    String name;
+	String name;
 
-    @TenantId
-    UUID tenantId;
+	@TenantId
+	UUID tenantId;
 
-    @OneToMany(mappedBy = "client")
-    Set<Account> accounts = new HashSet<>();
+	@OneToMany(mappedBy = "client")
+	Set<Account> accounts = new HashSet<>();
 
-    public Client(String name) {
-        this.name = name;
-    }
+	public Client(String name) {
+		this.name = name;
+	}
 
-    Client() {}
+	Client() {}
 }

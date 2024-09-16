@@ -151,7 +151,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 	private void releaseStatement(Session session, PreparedStatement ps) {
 		if ( ps != null ) {
 			try {
-                ((SessionImplementor) session).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
+				((SessionImplementor) session).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 			}
 			catch ( Throwable ignore ) {
 				// ignore...

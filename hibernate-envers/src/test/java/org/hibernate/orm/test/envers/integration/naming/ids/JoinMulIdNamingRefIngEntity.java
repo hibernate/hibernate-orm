@@ -37,9 +37,9 @@ public class JoinMulIdNamingRefIngEntity {
 	@Audited
 	@ManyToOne
 	@JoinColumns({
-						 @JoinColumn(name = "ID2_reference", referencedColumnName = "ID_2"),
-						 @JoinColumn(name = "ID1_reference", referencedColumnName = "ID_1")
-				 })
+						@JoinColumn(name = "ID2_reference", referencedColumnName = "ID_2"),
+						@JoinColumn(name = "ID1_reference", referencedColumnName = "ID_1")
+				})
 	private JoinMulIdNamingRefEdEntity reference;
 
 	public JoinMulIdNamingRefIngEntity() {

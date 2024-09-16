@@ -53,7 +53,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();
-            fail("The entity persister should be overridden");
+			fail("The entity persister should be overridden");
 		}
 		catch ( MappingException e ) {
 			// expected
@@ -75,7 +75,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();
-            fail("The collection persister should be overridden but not the entity persister");
+			fail("The collection persister should be overridden but not the entity persister");
 		}
 		catch ( MappingException e ) {
 			// expected
@@ -86,7 +86,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		}
 
 
-        cfg = new Configuration();
+		cfg = new Configuration();
 		cfg.addAnnotatedClass( Tree.class );
 		cfg.addAnnotatedClass( Palmtree.class );
 		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
@@ -96,7 +96,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();
-            fail("The entity persisters should be overridden in a class hierarchy");
+			fail("The entity persisters should be overridden in a class hierarchy");
 		}
 		catch ( MappingException e ) {
 			// expected

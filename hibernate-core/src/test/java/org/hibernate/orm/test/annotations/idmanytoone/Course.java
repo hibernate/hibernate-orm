@@ -21,39 +21,39 @@ import jakarta.persistence.Table;
 @Table(name = "idmanytoone_course")
 public class Course implements Serializable {
 
-    @Id
-    @GeneratedValue
-    private int id;
+	@Id
+	@GeneratedValue
+	private int id;
 
-    private String name;
+	private String name;
 
-    @OneToMany(mappedBy = "course")
-    private Set<CourseStudent> students;
+	@OneToMany(mappedBy = "course")
+	private Set<CourseStudent> students;
 
-    public Course() {
-    }
+	public Course() {
+	}
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Set<CourseStudent> getStudents() {
-        return students;
-    }
+	public Set<CourseStudent> getStudents() {
+		return students;
+	}
 
-    public void setStudents(Set<CourseStudent> students) {
-        this.students = students;
-    }
+	public void setStudents(Set<CourseStudent> students) {
+		this.students = students;
+	}
 }

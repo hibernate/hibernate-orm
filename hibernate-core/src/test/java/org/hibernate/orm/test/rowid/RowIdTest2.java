@@ -51,7 +51,7 @@ public class RowIdTest2 {
 									st,
 									"create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )"
 							);
-                            session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						}
 				)
 		);

@@ -41,7 +41,7 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 	protected ServiceRegistry serviceRegistry;
 
 	@Before
-    public void setUp() {
+	public void setUp() {
 		Map<String, Object> properties = PropertiesHelper.map( Environment.getProperties() );
 		properties.put( AvailableSettings.HBM2DDL_CHARSET_NAME, charsetName() );
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( properties );
@@ -50,12 +50,12 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 	protected abstract String charsetName();
 
 	@After
-    public void tearDown() {
-        if ( serviceRegistry != null ) {
+	public void tearDown() {
+		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
-    @Test
+	@Test
 	public void testWithCustomNamingStrategy() throws Exception {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass(Address.class)
@@ -64,14 +64,14 @@ public abstract class AbstractCharsetNamingStrategyTest extends BaseUnitTestCase
 				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
 				.build();
 
-        UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
+		UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
 		assertEquals( expectedUniqueKeyName(), uniqueKey.getName() );
 
 		org.hibernate.mapping.ForeignKey foreignKey =
 				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeys().values().iterator().next();
 		assertEquals( expectedForeignKeyName(), foreignKey.getName() );
 
-        org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
+		org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
 		assertEquals( expectedIndexName(), index.getName() );
 	}
 

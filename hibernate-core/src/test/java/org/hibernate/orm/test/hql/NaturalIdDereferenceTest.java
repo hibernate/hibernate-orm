@@ -277,7 +277,7 @@ public class NaturalIdDereferenceTest {
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT b.normalBook FROM BookRefRef a " +
-															   "JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn" );
+															"JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn" );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );

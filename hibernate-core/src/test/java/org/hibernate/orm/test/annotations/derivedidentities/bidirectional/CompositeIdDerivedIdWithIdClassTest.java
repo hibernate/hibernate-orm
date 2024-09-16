@@ -74,7 +74,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 
 		// assertion for HHH-11274 - checking for exception
 		final Object identifier = new PersistenceUnitUtilImpl( scope.getSessionFactory() ).getIdentifier( transientCart.getLineItems()
-																												  .get( 0 ) );
+																												.get( 0 ) );
 
 		// merge ID with transient many-to-one
 		scope.inTransaction(

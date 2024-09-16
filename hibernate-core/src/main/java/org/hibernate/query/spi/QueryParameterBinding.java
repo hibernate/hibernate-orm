@@ -16,7 +16,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- /**
  * The value/type binding information for a particular query parameter.  Supports
  * both single-valued and multivalued binds
  *

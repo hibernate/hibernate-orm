@@ -97,7 +97,7 @@ public class LocateTest {
 
 					final Expression<Integer> locate = criteriaBuilder.locate(
 							personRoot.get( "name" ),
-							 "nd" ,
+							"nd" ,
 							1
 					);
 

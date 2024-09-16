@@ -55,10 +55,10 @@ public class DeleteEvent extends AbstractEvent {
 	}
 
 	/**
-     * Returns the encapsulated entity to be deleted.
-     *
-     * @return The entity to be deleted.
-     */
+	 * Returns the encapsulated entity to be deleted.
+	 *
+	 * @return The entity to be deleted.
+	 */
 	public Object getObject() {
 		return object;
 	}

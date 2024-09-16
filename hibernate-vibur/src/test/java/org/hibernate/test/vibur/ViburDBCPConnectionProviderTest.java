@@ -44,133 +44,133 @@ import static org.vibur.dbcp.stcache.StatementHolder.State.AVAILABLE;
 @RunWith(MockitoJUnitRunner.class)
 public class ViburDBCPConnectionProviderTest extends BaseCoreFunctionalTestCase {
 
-    private int poolMaxSize;
-    private int statementCacheMaxSize;
+	private int poolMaxSize;
+	private int statementCacheMaxSize;
 
-    @Override
-    protected void configure(Configuration configuration) {
-        Properties properties = configuration.getProperties();
-        properties.put(CONNECTION_PROVIDER, ViburDBCPConnectionProvider.class);
-        properties.put(SHOW_SQL, Boolean.TRUE);
-        properties.put(FORMAT_SQL, Boolean.TRUE);
+	@Override
+	protected void configure(Configuration configuration) {
+		Properties properties = configuration.getProperties();
+		properties.put(CONNECTION_PROVIDER, ViburDBCPConnectionProvider.class);
+		properties.put(SHOW_SQL, Boolean.TRUE);
+		properties.put(FORMAT_SQL, Boolean.TRUE);
 
-        properties.put("hibernate.vibur.poolInitialSize", "1");
-        properties.put("hibernate.vibur.poolMaxSize", Integer.toString(poolMaxSize));
-        properties.put("hibernate.vibur.logQueryExecutionLongerThanMs", "100");
-        properties.put("hibernate.vibur.statementCacheMaxSize", Integer.toString(statementCacheMaxSize));
-    }
+		properties.put("hibernate.vibur.poolInitialSize", "1");
+		properties.put("hibernate.vibur.poolMaxSize", Integer.toString(poolMaxSize));
+		properties.put("hibernate.vibur.logQueryExecutionLongerThanMs", "100");
+		properties.put("hibernate.vibur.statementCacheMaxSize", Integer.toString(statementCacheMaxSize));
+	}
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] { Actor.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Actor.class };
+	}
 
-    public void setUpPoolAndDatabase(int poolMaxSize, int statementCacheMaxSize) {
-        this.poolMaxSize = poolMaxSize;
-        this.statementCacheMaxSize = statementCacheMaxSize;
-        buildSessionFactory();
+	public void setUpPoolAndDatabase(int poolMaxSize, int statementCacheMaxSize) {
+		this.poolMaxSize = poolMaxSize;
+		this.statementCacheMaxSize = statementCacheMaxSize;
+		buildSessionFactory();
 
-        doInHibernate(this::sessionFactory, session -> {
-            addDbRecord(session, 1L, "CHRISTIAN", "GABLE");
-            addDbRecord(session, 2L, "CHRISTIAN", "AKROYD");
-            addDbRecord(session, 3L, "CHRISTIAN", "NEESON");
-            addDbRecord(session, 4L, "CAMERON", "NEESON");
-            addDbRecord(session, 5L, "RAY", "JOHANSSON");
-        });
-    }
+		doInHibernate(this::sessionFactory, session -> {
+			addDbRecord(session, 1L, "CHRISTIAN", "GABLE");
+			addDbRecord(session, 2L, "CHRISTIAN", "AKROYD");
+			addDbRecord(session, 3L, "CHRISTIAN", "NEESON");
+			addDbRecord(session, 4L, "CAMERON", "NEESON");
+			addDbRecord(session, 5L, "RAY", "JOHANSSON");
+		});
+	}
 
-    private static void addDbRecord(Session session, Long id, String firstName, String lastName) {
-        Actor actor = new Actor();
-        actor.setId( id );
-        actor.setFirstName(firstName);
-        actor.setLastName(lastName);
-        session.persist(actor);
-    }
+	private static void addDbRecord(Session session, Long id, String firstName, String lastName) {
+		Actor actor = new Actor();
+		actor.setId( id );
+		actor.setFirstName(firstName);
+		actor.setLastName(lastName);
+		session.persist(actor);
+	}
 
-    @After
-    public void tearDown() {
-        releaseSessionFactory();
-    }
+	@After
+	public void tearDown() {
+		releaseSessionFactory();
+	}
 
-    @Captor
-    private ArgumentCaptor<StatementMethod> key1, key2;
-    @Captor
-    private ArgumentCaptor<StatementHolder> val1;
+	@Captor
+	private ArgumentCaptor<StatementMethod> key1, key2;
+	@Captor
+	private ArgumentCaptor<StatementHolder> val1;
 
-    @Test
-    public void testSelectStatementNoStatementsCache() {
-        setUpPoolAndDatabase(2, 0 /* disables the statements cache */ );
+	@Test
+	public void testSelectStatementNoStatementsCache() {
+		setUpPoolAndDatabase(2, 0 /* disables the statements cache */ );
 
-        doInHibernate(this::sessionFactory, ViburDBCPConnectionProviderTest::executeAndVerifySelect);
-    }
+		doInHibernate(this::sessionFactory, ViburDBCPConnectionProviderTest::executeAndVerifySelect);
+	}
 
-    @Test
-    public void testSelectStatementWithStatementsCache() {
-        setUpPoolAndDatabase(1, 10 /* statement cache is enabled */ );
+	@Test
+	public void testSelectStatementWithStatementsCache() {
+		setUpPoolAndDatabase(1, 10 /* statement cache is enabled */ );
 
-        ConnectionProvider cp = sessionFactory().getServiceRegistry().getService(ConnectionProvider.class);
-        ViburDBCPDataSource ds = ((ViburDBCPConnectionProvider) cp).getDataSource();
+		ConnectionProvider cp = sessionFactory().getServiceRegistry().getService(ConnectionProvider.class);
+		ViburDBCPDataSource ds = ((ViburDBCPConnectionProvider) cp).getDataSource();
 
-        ConcurrentMap<StatementMethod, StatementHolder> mockedStatementCache = mockStatementCache(ds);
+		ConcurrentMap<StatementMethod, StatementHolder> mockedStatementCache = mockStatementCache(ds);
 
-        doInHibernate(this::sessionFactory, ViburDBCPConnectionProviderTest::executeAndVerifySelect);
+		doInHibernate(this::sessionFactory, ViburDBCPConnectionProviderTest::executeAndVerifySelect);
 
-        // We set above the poolMaxSize = 1, that's why the second session will get and use the same underlying connection.
-        doInHibernate(this::sessionFactory, ViburDBCPConnectionProviderTest::executeAndVerifySelect);
+		// We set above the poolMaxSize = 1, that's why the second session will get and use the same underlying connection.
+		doInHibernate(this::sessionFactory, ViburDBCPConnectionProviderTest::executeAndVerifySelect);
 
-        InOrder inOrder = inOrder(mockedStatementCache);
-        inOrder.verify(mockedStatementCache).get(key1.capture());
-        inOrder.verify(mockedStatementCache).putIfAbsent(same(key1.getValue()), val1.capture());
-        inOrder.verify(mockedStatementCache).get(key2.capture());
+		InOrder inOrder = inOrder(mockedStatementCache);
+		inOrder.verify(mockedStatementCache).get(key1.capture());
+		inOrder.verify(mockedStatementCache).putIfAbsent(same(key1.getValue()), val1.capture());
+		inOrder.verify(mockedStatementCache).get(key2.capture());
 
-        assertEquals(1, mockedStatementCache.size());
-        assertTrue(mockedStatementCache.containsKey(key1.getValue()));
-        assertEquals(key1.getValue(), key2.getValue());
-        assertEquals(AVAILABLE, val1.getValue().state().get());
-    }
+		assertEquals(1, mockedStatementCache.size());
+		assertTrue(mockedStatementCache.containsKey(key1.getValue()));
+		assertEquals(key1.getValue(), key2.getValue());
+		assertEquals(AVAILABLE, val1.getValue().state().get());
+	}
 
-    @SuppressWarnings("unchecked")
-    private static void executeAndVerifySelect(Session session) {
-        List<Actor> list = session.createQuery("from Actor where firstName = ?1")
-                .setParameter(1, "CHRISTIAN").list();
+	@SuppressWarnings("unchecked")
+	private static void executeAndVerifySelect(Session session) {
+		List<Actor> list = session.createQuery("from Actor where firstName = ?1")
+				.setParameter(1, "CHRISTIAN").list();
 
-        Set<String> expectedLastNames = new HashSet<>(Arrays.asList("GABLE", "AKROYD", "NEESON"));
-        assertEquals(expectedLastNames.size(), list.size());
-        for (Actor actor : list) {
-            assertTrue(expectedLastNames.remove(actor.getLastName()));
-        }
-    }
+		Set<String> expectedLastNames = new HashSet<>(Arrays.asList("GABLE", "AKROYD", "NEESON"));
+		assertEquals(expectedLastNames.size(), list.size());
+		for (Actor actor : list) {
+			assertTrue(expectedLastNames.remove(actor.getLastName()));
+		}
+	}
 
-    @Entity(name="Actor")
-    public static class Actor {
-        @Id
-        private Long id;
+	@Entity(name="Actor")
+	public static class Actor {
+		@Id
+		private Long id;
 
-        private String firstName;
-        private String lastName;
+		private String firstName;
+		private String lastName;
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public void setId(Long id) {
-            this.id = id;
-        }
+		public void setId(Long id) {
+			this.id = id;
+		}
 
-        public String getFirstName() {
-            return firstName;
-        }
+		public String getFirstName() {
+			return firstName;
+		}
 
-        public void setFirstName(String firstName) {
-            this.firstName = firstName;
-        }
+		public void setFirstName(String firstName) {
+			this.firstName = firstName;
+		}
 
-        public String getLastName() {
-            return lastName;
-        }
+		public String getLastName() {
+			return lastName;
+		}
 
-        public void setLastName(String lastName) {
-            this.lastName = lastName;
-        }
-    }
+		public void setLastName(String lastName) {
+			this.lastName = lastName;
+		}
+	}
 }

@@ -791,23 +791,23 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 	}
 
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 ParentWithCollection parent,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							ParentWithCollection parent,
+							int index) {
 		checkResult( listeners, listenerExpected, parent, parent.getChildren(), index );
 	}
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 ChildWithBidirectionalManyToMany child,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							ChildWithBidirectionalManyToMany child,
+							int index) {
 		checkResult( listeners, listenerExpected, child, child.getParents(), index );
 	}
 
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 Entity ownerExpected,
-							 Collection collExpected,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							Entity ownerExpected,
+							Collection collExpected,
+							int index) {
 		assertSame( listenerExpected, listeners.getListenersCalled().get( index ) );
 		assertSame(
 				ownerExpected,

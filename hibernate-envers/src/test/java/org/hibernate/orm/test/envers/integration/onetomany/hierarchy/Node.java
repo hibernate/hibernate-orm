@@ -39,8 +39,8 @@ public class Node implements Serializable {
 	@AuditJoinTable(name = "NODES_JOIN_TABLE_AUD",
 					inverseJoinColumns = {@JoinColumn(name = "PARENT_ID", nullable = true, updatable = false)})
 	@JoinTable(name = "NODES_JOIN_TABLE",
-			   joinColumns = {@JoinColumn(name = "CHILD_ID", nullable = true, updatable = false)},
-			   inverseJoinColumns = {@JoinColumn(name = "PARENT_ID", nullable = true, updatable = false)})
+			joinColumns = {@JoinColumn(name = "CHILD_ID", nullable = true, updatable = false)},
+			inverseJoinColumns = {@JoinColumn(name = "PARENT_ID", nullable = true, updatable = false)})
 	private Node parent;
 
 	@OneToMany(mappedBy = "parent")

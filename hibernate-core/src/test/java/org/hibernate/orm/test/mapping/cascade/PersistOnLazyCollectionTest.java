@@ -108,8 +108,8 @@ public class PersistOnLazyCollectionTest {
 			// load invoice, invoiceLines should not be loaded
 			Invoice invoice = session.get( Invoice.class, _invoice.getId() );
 			assertEquals( 1,
-						  stats.getEntityCount(),
-						  "Invoice lines should not be initialized while loading the invoice, because of the lazy association."
+						stats.getEntityCount(),
+						"Invoice lines should not be initialized while loading the invoice, because of the lazy association."
 			);
 
 			Receipt receipt = new Receipt( RECEIPT_A );

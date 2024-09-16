@@ -14,21 +14,21 @@ import jakarta.persistence.EntityManager;
 
 public interface Dao2 {
 
-    EntityManager getEntityManager();
+	EntityManager getEntityManager();
 
-    // Simple name
-    @HQL("from Book b where b.type = Magazine")
-    List<Book> findMagazines1();
+	// Simple name
+	@HQL("from Book b where b.type = Magazine")
+	List<Book> findMagazines1();
 
-    // Simple qualified name
-    @HQL("from Book b where b.type = Type.Magazine")
-    List<Book> findMagazines2();
+	// Simple qualified name
+	@HQL("from Book b where b.type = Type.Magazine")
+	List<Book> findMagazines2();
 
-    // Canonical FQN
-    @HQL("from Book b where b.type = org.hibernate.processor.test.dao.Book.Type.Magazine")
-    List<Book> findMagazines3();
+	// Canonical FQN
+	@HQL("from Book b where b.type = org.hibernate.processor.test.dao.Book.Type.Magazine")
+	List<Book> findMagazines3();
 
-    // Binary FQN
-    @HQL("from Book b where b.type = org.hibernate.processor.test.dao.Book$Type.Magazine")
-    List<Book> findMagazines4();
+	// Binary FQN
+	@HQL("from Book b where b.type = org.hibernate.processor.test.dao.Book$Type.Magazine")
+	List<Book> findMagazines4();
 }

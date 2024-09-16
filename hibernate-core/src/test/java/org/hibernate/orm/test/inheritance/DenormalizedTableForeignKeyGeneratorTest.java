@@ -24,78 +24,78 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @JiraKey("HHH-18470")
 @Jpa(
-        annotatedClasses = {
-                DenormalizedTableForeignKeyGeneratorTest.Employee.class,
-                DenormalizedTableForeignKeyGeneratorTest.Manager.class,
-                DenormalizedTableForeignKeyGeneratorTest.Address.class,
-                DenormalizedTableForeignKeyGeneratorTest.Territory.class
-        }
+		annotatedClasses = {
+				DenormalizedTableForeignKeyGeneratorTest.Employee.class,
+				DenormalizedTableForeignKeyGeneratorTest.Manager.class,
+				DenormalizedTableForeignKeyGeneratorTest.Address.class,
+				DenormalizedTableForeignKeyGeneratorTest.Territory.class
+		}
 )
 
 @RequiresDialect(H2Dialect.class)
 public class DenormalizedTableForeignKeyGeneratorTest {
 
-    @Test
-    public void shouldCreateForeignKeyForSubclasses(EntityManagerFactoryScope scope) {
-        scope.inTransaction(
-                entityManager -> {
-                    String managerQuery = "select CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                            "WHERE TABLE_NAME='MANAGER' " +
-                            "AND CONSTRAINT_TYPE='FOREIGN KEY'";
-                    List<String> managerForeignKeyNames = entityManager.createNativeQuery(managerQuery).getResultList();
+	@Test
+	public void shouldCreateForeignKeyForSubclasses(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					String managerQuery = "select CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+							"WHERE TABLE_NAME='MANAGER' " +
+							"AND CONSTRAINT_TYPE='FOREIGN KEY'";
+					List<String> managerForeignKeyNames = entityManager.createNativeQuery(managerQuery).getResultList();
 
-                    String employeeQuery = "select CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
-                            "WHERE TABLE_NAME='EMPLOYEE' " +
-                            "AND CONSTRAINT_TYPE='FOREIGN KEY'";
-                    String employeeForeignKeyName = entityManager.createNativeQuery(employeeQuery).getSingleResult().toString();
+					String employeeQuery = "select CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS " +
+							"WHERE TABLE_NAME='EMPLOYEE' " +
+							"AND CONSTRAINT_TYPE='FOREIGN KEY'";
+					String employeeForeignKeyName = entityManager.createNativeQuery(employeeQuery).getSingleResult().toString();
 
-                    assertThat(employeeForeignKeyName).isNotNull();
-                    assertThat(managerForeignKeyNames).isNotNull().hasSize(2);
-                    assertThat(managerForeignKeyNames).doesNotContain(employeeForeignKeyName);
-                }
-        );
-    }
+					assertThat(employeeForeignKeyName).isNotNull();
+					assertThat(managerForeignKeyNames).isNotNull().hasSize(2);
+					assertThat(managerForeignKeyNames).doesNotContain(employeeForeignKeyName);
+				}
+		);
+	}
 
-    @Entity(name = "Employee")
-    @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-    static class Employee implements Serializable {
+	@Entity(name = "Employee")
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	static class Employee implements Serializable {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-        private Address address;
+		@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+		private Address address;
 
-    }
+	}
 
-    @Entity(name = "Manager")
-    static class Manager extends Employee {
+	@Entity(name = "Manager")
+	static class Manager extends Employee {
 
-        @OneToOne(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
-        private Territory territory;
-    }
+		@OneToOne(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
+		private Territory territory;
+	}
 
-    @Entity(name = "Address")
-    static class Address {
+	@Entity(name = "Address")
+	static class Address {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @Column(nullable = false, columnDefinition = "TEXT")
-        private String address = "";
-    }
+		@Column(nullable = false, columnDefinition = "TEXT")
+		private String address = "";
+	}
 
-    @Entity(name = "Territory")
-    static class Territory {
+	@Entity(name = "Territory")
+	static class Territory {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @Column
-        private String location = "";
-    }
+		@Column
+		private String location = "";
+	}
 
 }

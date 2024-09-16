@@ -48,11 +48,11 @@ public class AccessMappingTest {
 		}
 	}
 
-    @Test
-    public void testInconsistentAnnotationPlacement() {
-        Configuration cfg = new Configuration();
-        cfg.addAnnotatedClass( Course1.class );
-        cfg.addAnnotatedClass( Student.class );
+	@Test
+	public void testInconsistentAnnotationPlacement() {
+		Configuration cfg = new Configuration();
+		cfg.addAnnotatedClass( Course1.class );
+		cfg.addAnnotatedClass( Student.class );
 		SessionFactory sf = null;
 		try {
 			sf = cfg.buildSessionFactory( serviceRegistry );
@@ -76,7 +76,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-            final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
@@ -99,7 +99,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-            final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
@@ -122,7 +122,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-            final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
@@ -165,7 +165,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-            final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
@@ -193,7 +193,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-            final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
@@ -222,7 +222,7 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Being.class );
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-            final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			final EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(classUnderTest.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
@@ -245,7 +245,7 @@ public class AccessMappingTest {
 
 		SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-            EntityPersister entityPersister = factory.getRuntimeMetamodels()
+			EntityPersister entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(Animal.class.getName());
 			final BasicEntityIdentifierMappingImpl identifierMapping = (BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
@@ -255,7 +255,7 @@ public class AccessMappingTest {
 					identifierMapping.getPropertyAccess().getGetter() instanceof GetterMethodImpl
 			);
 
-            entityPersister = factory.getRuntimeMetamodels()
+			entityPersister = factory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor(Horse.class.getName());
 

@@ -36,7 +36,7 @@ public class OneToOneSchemaTest {
 
 			Table childTable = metadata.getDatabase().getDefaultNamespace().locateTable( Identifier.toIdentifier(
 					"CHILD" ) );
-            assertFalse( childTable.getUniqueKeys().values().iterator().hasNext(), "UniqueKey was generated when it should not" );
+			assertFalse( childTable.getUniqueKeys().values().iterator().hasNext(), "UniqueKey was generated when it should not" );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

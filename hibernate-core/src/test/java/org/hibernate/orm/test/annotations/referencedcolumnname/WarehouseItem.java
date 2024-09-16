@@ -58,7 +58,7 @@ public class WarehouseItem {
 		this.vendor = vendor;
 	}
 
-    @ManyToOne
+	@ManyToOne
 	@JoinColumn(name="vendor_id", referencedColumnName="vendor_id", insertable=false, updatable=false)
 	@JoinColumn(name="item_id", referencedColumnName="item_id", insertable=false, updatable=false)
 	public ItemCost getDefaultCost() {

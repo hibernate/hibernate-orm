@@ -74,22 +74,22 @@ public final class Nullability {
 		 */
 		if ( checkNullability ) {
 			/*
-			  * Algorithm
-			  * Check for any level one nullability breaks
-			  * Look at non-null components to
-			  *   recursively check next level of nullability breaks
-			  * Look at Collections containing components to
-			  *   recursively check next level of nullability breaks
-			  *
-			  *
-			  * In the previous implementation, not-null stuffs where checked
-			  * filtering by level one only updatable
-			  * or insertable columns. So setting a subcomponent as update="false"
-			  * has no effect on not-null check if the main component had good checkability
-			  * In this implementation, we keep this feature.
-			  * However, I never see any documentation mentioning that, but it's for
-			  * sure a limitation.
-			  */
+			 * Algorithm
+			 * Check for any level one nullability breaks
+			 * Look at non-null components to
+			 *   recursively check next level of nullability breaks
+			 * Look at Collections containing components to
+			 *   recursively check next level of nullability breaks
+			 *
+			 *
+			 * In the previous implementation, not-null stuffs where checked
+			 * filtering by level one only updatable
+			 * or insertable columns. So setting a subcomponent as update="false"
+			 * has no effect on not-null check if the main component had good checkability
+			 * In this implementation, we keep this feature.
+			 * However, I never see any documentation mentioning that, but it's for
+			 * sure a limitation.
+			 */
 
 			final boolean[] nullability = persister.getPropertyNullability();
 			final boolean[] checkability = checkType == NullabilityCheckType.CREATE

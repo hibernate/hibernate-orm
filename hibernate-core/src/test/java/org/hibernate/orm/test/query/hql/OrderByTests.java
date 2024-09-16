@@ -71,7 +71,7 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		stateProvince = new StateProvince();
 		stateProvince.setName( "IL" );
 
-	    zoo1 = new Zoo();
+		zoo1 = new Zoo();
 		zoo1.setName( "Zoo" );
 		Address address1 = new Address();
 		address1.setStreet( "1313 Mockingbird Lane" );

@@ -76,7 +76,7 @@ public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctional
 	}
 
 	@Override
-    protected Class[] getAnnotatedClasses() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				ContainingEntity.class,
 				ContainedEntity.class

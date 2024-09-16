@@ -11,7 +11,7 @@ package org.hibernate.orm.test.annotations.cascade.multicircle.nonjpa.sequence;
  */
 @jakarta.persistence.Entity
 public class D extends AbstractEntity {
-    private static final long serialVersionUID = 2417176961L;
+	private static final long serialVersionUID = 2417176961L;
 
 	@jakarta.persistence.OneToMany(mappedBy = "d")
 	private java.util.Set<B> bCollection = new java.util.HashSet<B>();
@@ -22,13 +22,13 @@ public class D extends AbstractEntity {
 	@jakarta.persistence.ManyToOne(optional = false)
 	private E e;
 
-    @jakarta.persistence.OneToMany(mappedBy = "d")
+	@jakarta.persistence.OneToMany(mappedBy = "d")
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
 			org.hibernate.annotations.CascadeType.MERGE,
 			org.hibernate.annotations.CascadeType.REFRESH
 	})
-    private java.util.Set<F> fCollection = new java.util.HashSet<F>();
+	private java.util.Set<F> fCollection = new java.util.HashSet<F>();
 
 	public java.util.Set<B> getBCollection() {
 		return bCollection;
@@ -52,12 +52,12 @@ public class D extends AbstractEntity {
 		this.e = e;
 	}
 
-    public java.util.Set<F> getFCollection() {
-        return fCollection;
-    }
-    public void setFCollection(
+	public java.util.Set<F> getFCollection() {
+		return fCollection;
+	}
+	public void setFCollection(
 			java.util.Set<F> parameter) {
-        this.fCollection = parameter;
-    }
+		this.fCollection = parameter;
+	}
 
 }

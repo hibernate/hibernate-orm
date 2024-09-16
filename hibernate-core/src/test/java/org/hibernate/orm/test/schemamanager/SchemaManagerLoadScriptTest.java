@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = {SchemaManagerLoadScriptTest.Book.class, SchemaManagerLoadScriptTest.Author.class})
 @SessionFactory(exportSchema = false)
 @ServiceRegistry(settings = @Setting(name = JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE,
-			                    	value = "org/hibernate/orm/test/schemamanager/data.sql"))
+									value = "org/hibernate/orm/test/schemamanager/data.sql"))
 @RequiresDialectFeature(feature= DialectFeatureChecks.SupportsTruncateTable.class)
 public class SchemaManagerLoadScriptTest {
 

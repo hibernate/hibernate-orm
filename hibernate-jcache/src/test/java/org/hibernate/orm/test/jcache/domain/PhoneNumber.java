@@ -44,7 +44,7 @@ public class PhoneNumber implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-						 + ((numberType == null) ? 0 : numberType.hashCode());
+						+ ((numberType == null) ? 0 : numberType.hashCode());
 		result = prime * result + (int)(personId ^ (personId >>> 32));
 		result = prime * result + (int)(phone ^ (phone >>> 32));
 		return result;

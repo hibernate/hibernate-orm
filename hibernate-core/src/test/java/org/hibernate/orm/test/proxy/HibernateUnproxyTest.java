@@ -50,7 +50,7 @@ public class HibernateUnproxyTest {
 		p.setChild( c );
 
 		scope.inTransaction( entityManager ->
-									 entityManager.persist( p )
+									entityManager.persist( p )
 		);
 
 		scope.inTransaction( entityManager -> {
@@ -84,7 +84,7 @@ public class HibernateUnproxyTest {
 		p.setChild( c );
 
 		scope.inTransaction( entityManager ->
-									 entityManager.persist( p )
+									entityManager.persist( p )
 		);
 
 		scope.inTransaction( entityManager -> {
@@ -121,7 +121,7 @@ public class HibernateUnproxyTest {
 		p.setChild( c );
 
 		scope.inTransaction( entityManager ->
-									 entityManager.persist( p )
+									entityManager.persist( p )
 		);
 
 		scope.inTransaction( entityManager -> {

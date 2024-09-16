@@ -45,6 +45,6 @@ public class Company implements Serializable {
 
 	//should be treated as getter
 	private int[] getWorkingHoursPerWeek(Set<Date> holidayDays) {
-        return null;
-    }
+		return null;
+	}
 }

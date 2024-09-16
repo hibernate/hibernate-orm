@@ -15,8 +15,8 @@ import jakarta.persistence.IdClass;
 @Entity
 @IdClass(OrderLinePk.class)
 public class OrderLine {
-    @Id
-    public Order order;
-    @Id
-    public Product product;
+	@Id
+	public Order order;
+	@Id
+	public Product product;
 }

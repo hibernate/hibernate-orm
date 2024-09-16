@@ -106,7 +106,7 @@ public class IdMapManyToOneSpecjTest extends BaseNonConfigCoreFunctionalTestCase
 
 
 		Customer customer2 = new Customer(
-                "foo2", "bar2", "contact12", "1002", new BigDecimal( 10002 ), new BigDecimal( 10002 ), new BigDecimal( 1000 ));
+				"foo2", "bar2", "contact12", "1002", new BigDecimal( 10002 ), new BigDecimal( 10002 ), new BigDecimal( 1000 ));
 		customer2.setId(2);
 		s.persist(customer2);
 

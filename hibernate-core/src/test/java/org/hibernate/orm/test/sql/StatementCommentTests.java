@@ -86,11 +86,11 @@ public class StatementCommentTests {
 	@Entity( name = "VersionedEntity" )
 	@Table( name = "entity_table" )
 	public static class VersionedEntity {
-	    @Id
-	    private Integer id;
+		@Id
+		private Integer id;
 		@Version
 		private Integer version;
-	    @Basic
+		@Basic
 		private String name;
 
 		protected VersionedEntity() {

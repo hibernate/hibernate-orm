@@ -19,12 +19,12 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "`As`")
 public class Store implements Serializable {
-    @Id @GeneratedValue
+	@Id @GeneratedValue
 	public Integer id;
 
-    @OneToMany(mappedBy = "store")
-    public Set<StoreCustomer> customers;
+	@OneToMany(mappedBy = "store")
+	public Set<StoreCustomer> customers;
 
 
-    private static final long serialVersionUID = 1748046699322502790L;
+	private static final long serialVersionUID = 1748046699322502790L;
 }

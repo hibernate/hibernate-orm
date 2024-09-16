@@ -43,7 +43,7 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 
 	/**
 	 * For Hibernate Reactive
- 	 */
+	 */
 	protected AbstractAttributeMapping(AbstractAttributeMapping original) {
 		this(
 				original.name,

@@ -15,5 +15,5 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface DefaultableList extends List {
-    public String getDefaultValue();
+	public String getDefaultValue();
 }

@@ -26,6 +26,6 @@ public class TvMagazin {
 	@EmbeddedId
 	public TvMagazinPk id;
 	@Temporal(TemporalType.TIME)
-    @Column(name="`time`")
+	@Column(name="`time`")
 	Date time;
 }

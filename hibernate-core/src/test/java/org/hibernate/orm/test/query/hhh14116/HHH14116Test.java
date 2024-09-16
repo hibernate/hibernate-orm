@@ -39,10 +39,10 @@ public class HHH14116Test extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNoExceptionThrown() {
 		doInJPA( this::sessionFactory, em -> {
-				 em.createQuery(
-						 "SELECT g FROM User u JOIN u.groups g JOIN FETCH g.permissions JOIN FETCH g.tenant where u.id = ?1", Group.class )
-						 .setParameter(1, 1L )
-						 .getResultList();
+				em.createQuery(
+						"SELECT g FROM User u JOIN u.groups g JOIN FETCH g.permissions JOIN FETCH g.tenant where u.id = ?1", Group.class )
+						.setParameter(1, 1L )
+						.getResultList();
 			}
 		);
 	}

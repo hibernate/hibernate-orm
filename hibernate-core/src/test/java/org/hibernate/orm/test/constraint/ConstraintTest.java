@@ -71,7 +71,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 		int foundCount = 0;
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-                Iterator fkItr = table.getForeignKeys().values().iterator();
+				Iterator fkItr = table.getForeignKeys().values().iterator();
 				while (fkItr.hasNext()) {
 					ForeignKey fk = (ForeignKey) fkItr.next();
 					assertTrue( fk.getName().length() <= MAX_NAME_LENGTH );
@@ -89,7 +89,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 					}
 				}
 
-                Iterator ukItr = table.getUniqueKeys().values().iterator();
+				Iterator ukItr = table.getUniqueKeys().values().iterator();
 				while (ukItr.hasNext()) {
 					UniqueKey uk = (UniqueKey) ukItr.next();
 					assertTrue( uk.getName().length() <= MAX_NAME_LENGTH );

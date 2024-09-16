@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 @Table(name = "dogs")
 @PrimaryKeyJoinColumn(name = "id_dog", referencedColumnName = "id_animal")
 public class Dog extends Animal {
-    private String breed;
+	private String breed;
 	@ManyToOne @JoinColumn(name = "id_owner")
-    private Owner owner;
+	private Owner owner;
 }

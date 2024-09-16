@@ -20,24 +20,24 @@ import jakarta.validation.constraints.NotNull;
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uniqueWithInherited", columnNames = {"room_id", "cost"} )})
 public class House extends Building {
 	@Column(nullable = false)
-    public Long id;
+	public Long id;
 	@NotNull
-    public Integer cost;
+	public Integer cost;
 
-    @Id
-    public Long getId() {
-        return id;
-    }
+	@Id
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public Integer getCost() {
-        return cost;
-    }
+	public Integer getCost() {
+		return cost;
+	}
 
-    public void setCost(Integer cost) {
-        this.cost = cost;
-    }
+	public void setCost(Integer cost) {
+		this.cost = cost;
+	}
 }

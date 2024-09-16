@@ -21,7 +21,7 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 public class DuplicateTest  {
-    @Test
+	@Test
 	public void testDuplicateEntityName() {
 		Configuration cfg = new Configuration();
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
@@ -35,7 +35,7 @@ public class DuplicateTest  {
 			cfg.addResource( "org/hibernate/orm/test/annotations/duplicatedgenerator/orm.xml" );
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 			sf = cfg.buildSessionFactory( serviceRegistry );
-            Assert.fail( "Should not be able to map the same entity name twice" );
+			Assert.fail( "Should not be able to map the same entity name twice" );
 		}
 		catch (DuplicateMappingException ae) {
 			//success

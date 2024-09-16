@@ -40,9 +40,9 @@ public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCa
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			try {
 				entityManager.createNativeQuery(
-                    "select 1 " +
+					"select 1 " +
 					"from pg_sleep(2) "
-                )
+				)
 				.getResultList();
 
 				fail("Should have thrown lock timeout exception!");

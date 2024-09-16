@@ -17,31 +17,31 @@ import jakarta.persistence.OneToOne;
 @Entity
 public class Tranche {
 
-    @Id
+	@Id
 	@GeneratedValue
 	private Long id;
 
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    private Tranchenmodell tranchenmodell;
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	private Tranchenmodell tranchenmodell;
 
 	@OneToOne(mappedBy = "tranche", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private Y y;
 
 	public Long getId() {
-        return id;
-    }
+		return id;
+	}
 
 	public void setId(Long id) {
 		this.id = id;
 	}
 
-    public Tranchenmodell getTranchenmodell() {
-        return tranchenmodell;
-    }
+	public Tranchenmodell getTranchenmodell() {
+		return tranchenmodell;
+	}
 
-    public void setTranchenmodell(Tranchenmodell tranchenmodell) {
-        this.tranchenmodell = tranchenmodell;
-    }
+	public void setTranchenmodell(Tranchenmodell tranchenmodell) {
+		this.tranchenmodell = tranchenmodell;
+	}
 
 	public Y getY() {
 		return y;

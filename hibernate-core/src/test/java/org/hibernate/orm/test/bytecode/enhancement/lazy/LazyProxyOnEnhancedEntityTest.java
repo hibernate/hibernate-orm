@@ -36,101 +36,101 @@ import jakarta.persistence.Table;
  */
 @JiraKey( "HHH-10922" )
 @DomainModel(
-        annotatedClasses = {
-                LazyProxyOnEnhancedEntityTest.Parent.class, LazyProxyOnEnhancedEntityTest.Child.class
-        }
+		annotatedClasses = {
+				LazyProxyOnEnhancedEntityTest.Parent.class, LazyProxyOnEnhancedEntityTest.Child.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 @CustomEnhancementContext( {EnhancerTestContext.class, LazyProxyOnEnhancedEntityTest.NoLazyLoadingContext.class} )
 public class LazyProxyOnEnhancedEntityTest {
 
-    private Long parentID;
+	private Long parentID;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( em -> {
-            Child c = new Child();
-            em.persist( c );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Child c = new Child();
+			em.persist( c );
 
-            Parent parent = new Parent();
-            parent.setChild( c );
-            em.persist( parent );
-            parentID = parent.getId();
-        } );
-    }
+			Parent parent = new Parent();
+			parent.setChild( c );
+			em.persist( parent );
+			parentID = parent.getId();
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        EventListenerRegistry registry = scope.getSessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
-        registry.prependListeners( EventType.LOAD, new ImmediateLoadTrap() );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		EventListenerRegistry registry = scope.getSessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		registry.prependListeners( EventType.LOAD, new ImmediateLoadTrap() );
 
-        scope.inTransaction( em -> {
+		scope.inTransaction( em -> {
 
-            em.find( Parent.class, parentID );
+			em.find( Parent.class, parentID );
 
-            // unwanted lazy load occurs on flush
-        } );
-    }
+			// unwanted lazy load occurs on flush
+		} );
+	}
 
-    private static class ImmediateLoadTrap implements LoadEventListener {
-        @Override
-        public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException {
-            if ( IMMEDIATE_LOAD == loadType ) {
-                String msg = loadType + ":" + event.getEntityClassName() + "#" + event.getEntityId();
-                throw new RuntimeException( msg );
-            }
-        }
-    }
+	private static class ImmediateLoadTrap implements LoadEventListener {
+		@Override
+		public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException {
+			if ( IMMEDIATE_LOAD == loadType ) {
+				String msg = loadType + ":" + event.getEntityClassName() + "#" + event.getEntityId();
+				throw new RuntimeException( msg );
+			}
+		}
+	}
 
-    // --- //
+	// --- //
 
-    @Entity(name = "Parent")
-    @Table( name = "PARENT" )
-    static class Parent {
+	@Entity(name = "Parent")
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @OneToOne( fetch = FetchType.LAZY
-        )
-        Child child;
+		@OneToOne( fetch = FetchType.LAZY
+		)
+		Child child;
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public Child getChild() {
-            return child;
-        }
+		public Child getChild() {
+			return child;
+		}
 
-        public void setChild(Child child) {
-            this.child = child;
-        }
-    }
+		public void setChild(Child child) {
+			this.child = child;
+		}
+	}
 
-    @Entity(name = "Child")
-    @Table( name = "CHILD" )
-    static class Child {
+	@Entity(name = "Child")
+	@Table( name = "CHILD" )
+	static class Child {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        String name;
+		String name;
 
-        Child() {
-            // No-arg constructor necessary for proxy factory
-        }
-    }
+		Child() {
+			// No-arg constructor necessary for proxy factory
+		}
+	}
 
-    // --- //
+	// --- //
 
-    public static class NoLazyLoadingContext extends EnhancerTestContext {
-        @Override
-        public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
-            return false;
-        }
-    }
+	public static class NoLazyLoadingContext extends EnhancerTestContext {
+		@Override
+		public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
+			return false;
+		}
+	}
 }

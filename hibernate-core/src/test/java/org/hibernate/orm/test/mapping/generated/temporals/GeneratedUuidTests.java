@@ -115,17 +115,17 @@ public class GeneratedUuidTests {
 	@Entity( name = "GeneratedUuidEntity" )
 	@Table( name = "t_gen_uuid" )
 	public static class GeneratedUuidEntity {
-	    @Id
-	    public Integer id;
-	    @Basic
-	    public String name;
+		@Id
+		public Integer id;
+		@Basic
+		public String name;
 
 		//tag::mapping-generated-custom-ex1[]
 		@GeneratedUuidValue( timing = INSERT )
 		public UUID createdUuid;
 
 		@GeneratedUuidValue( timing = {INSERT, UPDATE} )
-	    public UUID updatedUuid;
+		public UUID updatedUuid;
 		//end::mapping-generated-custom-ex1[]
 
 		public GeneratedUuidEntity() {

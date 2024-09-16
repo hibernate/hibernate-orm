@@ -16,15 +16,15 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class TrtPanel implements Serializable {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Panel panel;
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Panel panel;
 
-    private Long clientId;
+	private Long clientId;
 
-    private String deltaStamp;
+	private String deltaStamp;
 
 	public Long getId() {
 		return id;

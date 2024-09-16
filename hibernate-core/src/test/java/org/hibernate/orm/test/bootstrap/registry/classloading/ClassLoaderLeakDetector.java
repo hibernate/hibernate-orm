@@ -30,7 +30,7 @@ public final class ClassLoaderLeakDetector {
 	 */
 	public static void assertNotLeakingAction(String fullClassnameOfRunnableAction) {
 		Assert.assertTrue( "It seems the action might have leaked the classloader",
-						   ClassLoaderLeakDetector.verifyActionNotLeakingClassloader( fullClassnameOfRunnableAction ) );
+						ClassLoaderLeakDetector.verifyActionNotLeakingClassloader( fullClassnameOfRunnableAction ) );
 	}
 
 	static boolean verifyActionNotLeakingClassloader(String fullClassnameOfRunnableAction) {

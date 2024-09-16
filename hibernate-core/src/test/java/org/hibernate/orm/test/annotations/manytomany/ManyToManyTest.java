@@ -756,7 +756,7 @@ public class ManyToManyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-    protected Class[] getAnnotatedClasses() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Friend.class,
 				Employer.class,

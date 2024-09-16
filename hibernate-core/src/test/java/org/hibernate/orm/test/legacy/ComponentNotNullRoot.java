@@ -66,8 +66,8 @@ public class ComponentNotNullRoot {
 
 		public String toString() {
 			return name +  " = " + simple.getCount() +
-			 "/"  + ( one==null ? "nil" : one.getKey().toString() ) +
-			 "/"  + ( many==null ? "nil" : many.getKey().toString() );
+			"/"  + ( one==null ? "nil" : one.getKey().toString() ) +
+			"/"  + ( many==null ? "nil" : many.getKey().toString() );
 		}
 
 		public One getOne() {

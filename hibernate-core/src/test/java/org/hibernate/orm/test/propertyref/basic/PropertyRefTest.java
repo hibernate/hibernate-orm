@@ -269,7 +269,7 @@ public class PropertyRefTest {
 	public void testForeignKeyCreation(SessionFactoryScope scope) {
 		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Account.class.getName() );
 
-        Iterator foreignKeyIterator = classMapping.getTable().getForeignKeys().values().iterator();
+		Iterator foreignKeyIterator = classMapping.getTable().getForeignKeys().values().iterator();
 		boolean found = false;
 		while ( foreignKeyIterator.hasNext() ) {
 			ForeignKey element = (ForeignKey) foreignKeyIterator.next();

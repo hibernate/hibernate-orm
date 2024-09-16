@@ -45,156 +45,156 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @JiraKey("HHH-10851" )
 @DomainModel(
-        annotatedClasses = {
-                MixedAccessTest.TestEntity.class, MixedAccessTest.TestOtherEntity.class,
-        }
+		annotatedClasses = {
+				MixedAccessTest.TestEntity.class, MixedAccessTest.TestOtherEntity.class,
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 @CustomEnhancementContext(MixedAccessTest.NoDirtyCheckingContext.class)
 public class MixedAccessTest {
 
-    private static final Pattern PARAM_PATTERN = Pattern.compile( "\\{\\\"(.*)\\\"\\:\\\"(.*)\\\"\\}" );
-    private static final Function<Map.Entry, String> MAPPING_FUNCTION = e -> "\"" + e.getKey() + "\":\"" + e.getValue() + "\"";
-    private static final String ID = "foo", PARAM_KEY = "paramName", PARAM_VAL = "paramValue", PARAMS_AS_STR = "{\"" + PARAM_KEY + "\":\"" + PARAM_VAL + "\"}";
+	private static final Pattern PARAM_PATTERN = Pattern.compile( "\\{\\\"(.*)\\\"\\:\\\"(.*)\\\"\\}" );
+	private static final Function<Map.Entry, String> MAPPING_FUNCTION = e -> "\"" + e.getKey() + "\":\"" + e.getValue() + "\"";
+	private static final String ID = "foo", PARAM_KEY = "paramName", PARAM_VAL = "paramValue", PARAMS_AS_STR = "{\"" + PARAM_KEY + "\":\"" + PARAM_VAL + "\"}";
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            TestEntity testEntity = new TestEntity( ID );
-            testEntity.setParamsAsString( PARAMS_AS_STR );
-            s.persist( testEntity );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			TestEntity testEntity = new TestEntity( ID );
+			testEntity.setParamsAsString( PARAMS_AS_STR );
+			s.persist( testEntity );
 
-            TestOtherEntity testOtherEntity = new TestOtherEntity( ID );
-            testOtherEntity.setParamsAsString( PARAMS_AS_STR );
-            s.persist( testOtherEntity );
-        } );
-    }
+			TestOtherEntity testOtherEntity = new TestOtherEntity( ID );
+			testOtherEntity.setParamsAsString( PARAMS_AS_STR );
+			s.persist( testOtherEntity );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            TestEntity testEntity = s.get( TestEntity.class, ID );
-            assertEquals( PARAMS_AS_STR, testEntity.getParamsAsString() );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			TestEntity testEntity = s.get( TestEntity.class, ID );
+			assertEquals( PARAMS_AS_STR, testEntity.getParamsAsString() );
 
-            TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
-            assertEquals( PARAMS_AS_STR, testOtherEntity.getParamsAsString() );
+			TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
+			assertEquals( PARAMS_AS_STR, testOtherEntity.getParamsAsString() );
 
-            // Clean parameters
-            testEntity.setParamsAsString( "{}" );
-            testOtherEntity.setParamsAsString( "{}" );
-        } );
-    }
+			// Clean parameters
+			testEntity.setParamsAsString( "{}" );
+			testOtherEntity.setParamsAsString( "{}" );
+		} );
+	}
 
-    @AfterEach
-    public void cleanup(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            TestEntity testEntity = s.get( TestEntity.class, ID );
-            assertTrue( testEntity.getParams().isEmpty() );
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			TestEntity testEntity = s.get( TestEntity.class, ID );
+			assertTrue( testEntity.getParams().isEmpty() );
 
-            TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
-            assertTrue( testOtherEntity.getParams().isEmpty() );
-        } );
-    }
+			TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
+			assertTrue( testOtherEntity.getParams().isEmpty() );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "TEST_ENTITY" )
-    static class TestEntity {
+	@Entity
+	@Table( name = "TEST_ENTITY" )
+	static class TestEntity {
 
-        @Id
-        String name;
+		@Id
+		String name;
 
-        @Transient
-        Map<String, String> params = new LinkedHashMap<>();
+		@Transient
+		Map<String, String> params = new LinkedHashMap<>();
 
-        TestEntity(String name) {
-            this();
-            this.name = name;
-        }
+		TestEntity(String name) {
+			this();
+			this.name = name;
+		}
 
-        TestEntity() {
-        }
+		TestEntity() {
+		}
 
-        Map<String, String> getParams() {
-            return Collections.unmodifiableMap( params );
-        }
+		Map<String, String> getParams() {
+			return Collections.unmodifiableMap( params );
+		}
 
-        void setParams(Map<String, String> params) {
-            this.params.clear();
-            this.params.putAll( params );
-        }
+		void setParams(Map<String, String> params) {
+			this.params.clear();
+			this.params.putAll( params );
+		}
 
-        @Column( name = "params", length = 4000 )
-        @Access( AccessType.PROPERTY )
-        String getParamsAsString() {
-            return "{" + params.entrySet().stream().map( MAPPING_FUNCTION ).collect( joining( "," ) ) + "}";
-        }
+		@Column( name = "params", length = 4000 )
+		@Access( AccessType.PROPERTY )
+		String getParamsAsString() {
+			return "{" + params.entrySet().stream().map( MAPPING_FUNCTION ).collect( joining( "," ) ) + "}";
+		}
 
-        @SuppressWarnings( "unchecked" )
-        void setParamsAsString(String string) {
-            Matcher matcher = PARAM_PATTERN.matcher( string );
+		@SuppressWarnings( "unchecked" )
+		void setParamsAsString(String string) {
+			Matcher matcher = PARAM_PATTERN.matcher( string );
 
-            params.clear();
-            if ( matcher.matches() && matcher.groupCount() > 1 ) {
-                params.put( matcher.group( 1 ), matcher.group( 2 ) );
-            }
-        }
-    }
+			params.clear();
+			if ( matcher.matches() && matcher.groupCount() > 1 ) {
+				params.put( matcher.group( 1 ), matcher.group( 2 ) );
+			}
+		}
+	}
 
-    @Entity
-    @Table( name = "OTHER_ENTITY" )
-    @Access( AccessType.FIELD )
-    static class TestOtherEntity {
+	@Entity
+	@Table( name = "OTHER_ENTITY" )
+	@Access( AccessType.FIELD )
+	static class TestOtherEntity {
 
-        @Id
-        String name;
+		@Id
+		String name;
 
-        @Transient
-        Map<String, String> params = new LinkedHashMap<>();
+		@Transient
+		Map<String, String> params = new LinkedHashMap<>();
 
-        TestOtherEntity(String name) {
-            this();
-            this.name = name;
-        }
+		TestOtherEntity(String name) {
+			this();
+			this.name = name;
+		}
 
-        TestOtherEntity() {
-        }
+		TestOtherEntity() {
+		}
 
-        Map<String, String> getParams() {
-            return Collections.unmodifiableMap( params );
-        }
+		Map<String, String> getParams() {
+			return Collections.unmodifiableMap( params );
+		}
 
-        void setParams(Map<String, String> params) {
-            this.params.clear();
-            this.params.putAll( params );
-        }
+		void setParams(Map<String, String> params) {
+			this.params.clear();
+			this.params.putAll( params );
+		}
 
-        @Column( name = "params", length = 4000 )
-        @Access( AccessType.PROPERTY )
-        String getParamsAsString() {
-            return "{" + params.entrySet().stream().map( MAPPING_FUNCTION ).collect( joining( "," ) ) + "}";
-        }
+		@Column( name = "params", length = 4000 )
+		@Access( AccessType.PROPERTY )
+		String getParamsAsString() {
+			return "{" + params.entrySet().stream().map( MAPPING_FUNCTION ).collect( joining( "," ) ) + "}";
+		}
 
-        @SuppressWarnings( "unchecked" )
-        void setParamsAsString(String string) {
-            Matcher matcher = PARAM_PATTERN.matcher( string );
+		@SuppressWarnings( "unchecked" )
+		void setParamsAsString(String string) {
+			Matcher matcher = PARAM_PATTERN.matcher( string );
 
-            params.clear();
-            if ( matcher.matches() && matcher.groupCount() > 1 ) {
-                params.put( matcher.group( 1 ), matcher.group( 2 ) );
-            }
-        }
-    }
+			params.clear();
+			if ( matcher.matches() && matcher.groupCount() > 1 ) {
+				params.put( matcher.group( 1 ), matcher.group( 2 ) );
+			}
+		}
+	}
 
-    // --- //
+	// --- //
 
-    public static class NoDirtyCheckingContext extends EnhancerTestContext {
+	public static class NoDirtyCheckingContext extends EnhancerTestContext {
 
-        @Override
-        public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
-            return false;
-        }
-    }
+		@Override
+		public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
+			return false;
+		}
+	}
 }

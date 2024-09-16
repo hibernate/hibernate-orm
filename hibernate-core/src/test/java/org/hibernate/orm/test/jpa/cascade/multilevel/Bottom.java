@@ -15,25 +15,25 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "BOTTOM")
 public class Bottom {
-    @Id
-    @GeneratedValue
-    private Long id;
-    @OneToOne(mappedBy = "bottom")
-    private Middle middle;
+	@Id
+	@GeneratedValue
+	private Long id;
+	@OneToOne(mappedBy = "bottom")
+	private Middle middle;
 
-    Long getId() {
-        return id;
-    }
+	Long getId() {
+		return id;
+	}
 
-    void setId(Long id) {
-        this.id = id;
-    }
+	void setId(Long id) {
+		this.id = id;
+	}
 
-    Middle getMiddle() {
-        return middle;
-    }
+	Middle getMiddle() {
+		return middle;
+	}
 
-    void setMiddle(Middle middle) {
-        this.middle = middle;
-    }
+	void setMiddle(Middle middle) {
+		this.middle = middle;
+	}
 }

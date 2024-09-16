@@ -130,7 +130,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			testNumericLiterals(
 				entityManager,
-			 	"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
+				"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
 			);
 		} );
 	}
@@ -140,7 +140,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			testNumericLiterals(
 				entityManager,
-			 	"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
+				"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
 			);
 		} );
 	}

@@ -20,38 +20,38 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory
 public class AvgFunctionTest {
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction(
-                session -> {
-                    session.persist( new Score(0) );
-                    session.persist( new Score(1) );
-                    session.persist( new Score(2) );
-                    session.persist( new Score(3) );
-                    assertThat(
-                            session.createQuery("select avg(doubleValue) from ScoreForAvg", Double.class)
-                                    .getSingleResult(),
-                            is(1.5)
-                    );
-                    assertThat(
-                            session.createQuery("select avg(integerValue) from ScoreForAvg", Double.class)
-                                    .getSingleResult(),
-                            is(1.5)
-                    );
-                }
-        );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist( new Score(0) );
+					session.persist( new Score(1) );
+					session.persist( new Score(2) );
+					session.persist( new Score(3) );
+					assertThat(
+							session.createQuery("select avg(doubleValue) from ScoreForAvg", Double.class)
+									.getSingleResult(),
+							is(1.5)
+					);
+					assertThat(
+							session.createQuery("select avg(integerValue) from ScoreForAvg", Double.class)
+									.getSingleResult(),
+							is(1.5)
+					);
+				}
+		);
+	}
 
-    @Entity(name="ScoreForAvg")
-    public static class Score {
-        public Score() {}
-        public Score(int value) {
-            this.doubleValue = value;
-            this.integerValue = value;
-        }
-        @Id
-        double doubleValue;
-        int integerValue;
-    }
+	@Entity(name="ScoreForAvg")
+	public static class Score {
+		public Score() {}
+		public Score(int value) {
+			this.doubleValue = value;
+			this.integerValue = value;
+		}
+		@Id
+		double doubleValue;
+		int integerValue;
+	}
 
 }

@@ -115,7 +115,7 @@ public class JpaSpecVersionValueUpdatingTest extends BaseCoreFunctionalTestCase 
 		session.beginTransaction();
 		customer = session.getReference( Customer.class, 1L );
 		assertEquals( initial, customer.version );
- 		session.remove( customer );
+		session.remove( customer );
 		session.getTransaction().commit();
 		session.close();
 	}

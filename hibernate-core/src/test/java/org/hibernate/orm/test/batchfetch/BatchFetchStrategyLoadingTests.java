@@ -94,9 +94,9 @@ public class BatchFetchStrategyLoadingTests {
 	@Entity( name = "Thing1" )
 	@Table( name = "Thing1" )
 	public static class Thing1 {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@ManyToOne
 		@JoinColumn( name = "thing2_fk" )
@@ -137,9 +137,9 @@ public class BatchFetchStrategyLoadingTests {
 	@Table( name = "Thing2" )
 	@BatchSize( size = 64 )
 	public static class Thing2 {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		protected Thing2() {

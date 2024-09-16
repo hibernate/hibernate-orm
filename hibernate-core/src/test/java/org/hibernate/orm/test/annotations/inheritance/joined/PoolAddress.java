@@ -11,14 +11,14 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class PoolAddress {
-    @Column(table = "POOL_ADDRESS")
-    private String address;
+	@Column(table = "POOL_ADDRESS")
+	private String address;
 
-    public String getAddress() {
-        return address;
-    }
+	public String getAddress() {
+		return address;
+	}
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+	public void setAddress(String address) {
+		this.address = address;
+	}
 }

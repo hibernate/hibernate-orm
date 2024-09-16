@@ -13,8 +13,8 @@ import jakarta.persistence.Entity;
 
 @Entity
 class Region {
-    @EmbeddedId
-    @AttributeOverride(name = "countryCode", column=@Column(name="region_country_code"))
-    @AttributeOverride(name = "zipCode", column=@Column(name="region_zip_code"))
-    PostalCode postalCode;
+	@EmbeddedId
+	@AttributeOverride(name = "countryCode", column=@Column(name="region_country_code"))
+	@AttributeOverride(name = "zipCode", column=@Column(name="region_zip_code"))
+	PostalCode postalCode;
 }

@@ -105,7 +105,7 @@ public class Cat implements Serializable {
 
 	@PostUpdate
 	private void someLateUpdateWorking() {
-        log.debug("PostUpdate for: " + this.toString());
+		log.debug("PostUpdate for: " + this.toString());
 		postVersion++;
 	}
 
@@ -156,25 +156,25 @@ public class Cat implements Serializable {
 	 * of this object.
 	 */
 	@Override
-    public String toString()
+	public String toString()
 	{
-	    final String TAB = "    ";
+		final String TAB = "    ";
 
-	    String retValue = "";
+		String retValue = "";
 
-	    retValue = "Cat ( "
-	        + super.toString() + TAB
-	        + "id = " + this.id + TAB
-	        + "name = " + this.name + TAB
-	        + "dateOfBirth = " + this.dateOfBirth + TAB
-	        + "age = " + this.age + TAB
-	        + "length = " + this.length + TAB
-	        + "lastUpdate = " + this.lastUpdate + TAB
-	        + "manualVersion = " + this.manualVersion + TAB
-	        + "postVersion = " + Cat.postVersion + TAB
-	        + "kittens = " + this.kittens + TAB
-	        + " )";
+		retValue = "Cat ( "
+			+ super.toString() + TAB
+			+ "id = " + this.id + TAB
+			+ "name = " + this.name + TAB
+			+ "dateOfBirth = " + this.dateOfBirth + TAB
+			+ "age = " + this.age + TAB
+			+ "length = " + this.length + TAB
+			+ "lastUpdate = " + this.lastUpdate + TAB
+			+ "manualVersion = " + this.manualVersion + TAB
+			+ "postVersion = " + Cat.postVersion + TAB
+			+ "kittens = " + this.kittens + TAB
+			+ " )";
 
-	    return retValue;
+		return retValue;
 	}
 }

@@ -50,7 +50,7 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 
 	@Test
 	public void metadataAssertions(SessionFactoryScope scope) {
-        EntityPersister p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
+		EntityPersister p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals(
@@ -63,7 +63,7 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 		);
 		assertEquals( "Dog", dogPersister.getDiscriminatorValue() );
 
-        p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
+		p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals(

@@ -42,93 +42,93 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @BaseUnitTest
 public class CacheKeySerializationTest {
-   private SessionFactoryImplementor getSessionFactory(String cacheKeysFactory) {
-      Configuration configuration = new Configuration()
-            .setProperty(Environment.USE_SECOND_LEVEL_CACHE, true)
-            .setProperty(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class)
-            .setProperty(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, CacheConcurrencyStrategy.TRANSACTIONAL)
-            .setProperty(Environment.JPA_SHARED_CACHE_MODE, SharedCacheMode.ALL)
-            .setProperty(Environment.HBM2DDL_AUTO, Action.ACTION_CREATE_THEN_DROP);
-      ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
-      if (cacheKeysFactory != null) {
-         configuration.setProperty(Environment.CACHE_KEYS_FACTORY, cacheKeysFactory);
-      }
-      configuration.addAnnotatedClass( WithSimpleId.class );
-      configuration.addAnnotatedClass( WithEmbeddedId.class );
-      return (SessionFactoryImplementor) configuration.buildSessionFactory();
-   }
+private SessionFactoryImplementor getSessionFactory(String cacheKeysFactory) {
+	Configuration configuration = new Configuration()
+			.setProperty(Environment.USE_SECOND_LEVEL_CACHE, true)
+			.setProperty(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class)
+			.setProperty(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, CacheConcurrencyStrategy.TRANSACTIONAL)
+			.setProperty(Environment.JPA_SHARED_CACHE_MODE, SharedCacheMode.ALL)
+			.setProperty(Environment.HBM2DDL_AUTO, Action.ACTION_CREATE_THEN_DROP);
+	ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
+	if (cacheKeysFactory != null) {
+		configuration.setProperty(Environment.CACHE_KEYS_FACTORY, cacheKeysFactory);
+	}
+	configuration.addAnnotatedClass( WithSimpleId.class );
+	configuration.addAnnotatedClass( WithEmbeddedId.class );
+	return (SessionFactoryImplementor) configuration.buildSessionFactory();
+}
 
-   @Test
-   @JiraKey(value = "HHH-11202")
-   public void testSimpleCacheKeySimpleId() throws Exception {
-      testId( SimpleCacheKeysFactory.INSTANCE, WithSimpleId.class.getName(), 1L );
-   }
+@Test
+@JiraKey(value = "HHH-11202")
+public void testSimpleCacheKeySimpleId() throws Exception {
+	testId( SimpleCacheKeysFactory.INSTANCE, WithSimpleId.class.getName(), 1L );
+}
 
-   @Test
-   @JiraKey(value = "HHH-11202")
-   public void testSimpleCacheKeyEmbeddedId() throws Exception {
-      testId( SimpleCacheKeysFactory.INSTANCE, WithEmbeddedId.class.getName(), new PK( 1L ) );
-   }
+@Test
+@JiraKey(value = "HHH-11202")
+public void testSimpleCacheKeyEmbeddedId() throws Exception {
+	testId( SimpleCacheKeysFactory.INSTANCE, WithEmbeddedId.class.getName(), new PK( 1L ) );
+}
 
-   @Test
-   @JiraKey(value = "HHH-11202")
-   public void testDefaultCacheKeySimpleId() throws Exception {
-      testId( DefaultCacheKeysFactory.INSTANCE, WithSimpleId.class.getName(), 1L  );
-   }
+@Test
+@JiraKey(value = "HHH-11202")
+public void testDefaultCacheKeySimpleId() throws Exception {
+	testId( DefaultCacheKeysFactory.INSTANCE, WithSimpleId.class.getName(), 1L  );
+}
 
-   @Test
-   @JiraKey(value = "HHH-11202")
-   public void testDefaultCacheKeyEmbeddedId() throws Exception {
-      testId( DefaultCacheKeysFactory.INSTANCE, WithEmbeddedId.class.getName(), new PK( 1L ) );
-   }
+@Test
+@JiraKey(value = "HHH-11202")
+public void testDefaultCacheKeyEmbeddedId() throws Exception {
+	testId( DefaultCacheKeysFactory.INSTANCE, WithEmbeddedId.class.getName(), new PK( 1L ) );
+}
 
-   private void testId(CacheKeysFactory cacheKeysFactory, String entityName, Object id) throws Exception {
-      final SessionFactoryImplementor sessionFactory = getSessionFactory(cacheKeysFactory.getClass().getName());
-      final EntityPersister persister = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(entityName);
-      final Object key = cacheKeysFactory.createEntityKey(
-            id,
-            persister,
-            sessionFactory,
-            null
-      );
+private void testId(CacheKeysFactory cacheKeysFactory, String entityName, Object id) throws Exception {
+	final SessionFactoryImplementor sessionFactory = getSessionFactory(cacheKeysFactory.getClass().getName());
+	final EntityPersister persister = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(entityName);
+	final Object key = cacheKeysFactory.createEntityKey(
+			id,
+			persister,
+			sessionFactory,
+			null
+	);
 
-      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      final ObjectOutputStream oos = new ObjectOutputStream(baos);
-      oos.writeObject( key );
+	final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	final ObjectOutputStream oos = new ObjectOutputStream(baos);
+	oos.writeObject( key );
 
-      final ObjectInputStream ois = new ObjectInputStream( new ByteArrayInputStream( baos.toByteArray() ) );
-      final Object keyClone = ois.readObject();
+	final ObjectInputStream ois = new ObjectInputStream( new ByteArrayInputStream( baos.toByteArray() ) );
+	final Object keyClone = ois.readObject();
 
-      try {
-         assertEquals( key, keyClone );
-         assertEquals( keyClone, key );
+	try {
+		assertEquals( key, keyClone );
+		assertEquals( keyClone, key );
 
-         assertEquals( key.hashCode(), keyClone.hashCode() );
+		assertEquals( key.hashCode(), keyClone.hashCode() );
 
-         final Object idClone;
-         if ( cacheKeysFactory == SimpleCacheKeysFactory.INSTANCE ) {
-            idClone = cacheKeysFactory.getEntityId( keyClone );
-         }
-         else {
-            // DefaultCacheKeysFactory#getEntityId will return a disassembled version
-            try (Session session = sessionFactory.openSession()) {
-               idClone = persister.getIdentifierType().assemble(
-                       (Serializable) cacheKeysFactory.getEntityId( keyClone ),
-                       (SharedSessionContractImplementor) session,
-                       null
-               );
-            }
-         }
+		final Object idClone;
+		if ( cacheKeysFactory == SimpleCacheKeysFactory.INSTANCE ) {
+			idClone = cacheKeysFactory.getEntityId( keyClone );
+		}
+		else {
+			// DefaultCacheKeysFactory#getEntityId will return a disassembled version
+			try (Session session = sessionFactory.openSession()) {
+			idClone = persister.getIdentifierType().assemble(
+					(Serializable) cacheKeysFactory.getEntityId( keyClone ),
+					(SharedSessionContractImplementor) session,
+					null
+			);
+			}
+		}
 
-         assertEquals( id.hashCode(), idClone.hashCode() );
-         assertEquals( id, idClone );
-         assertEquals( idClone, id );
-         assertTrue( persister.getIdentifierType().isEqual( id, idClone, sessionFactory ) );
-         assertTrue( persister.getIdentifierType().isEqual( idClone, id, sessionFactory ) );
-         sessionFactory.close();
-      }
-      finally {
-         sessionFactory.close();
-      }
-   }
+		assertEquals( id.hashCode(), idClone.hashCode() );
+		assertEquals( id, idClone );
+		assertEquals( idClone, id );
+		assertTrue( persister.getIdentifierType().isEqual( id, idClone, sessionFactory ) );
+		assertTrue( persister.getIdentifierType().isEqual( idClone, id, sessionFactory ) );
+		sessionFactory.close();
+	}
+	finally {
+		sessionFactory.close();
+	}
+}
 }

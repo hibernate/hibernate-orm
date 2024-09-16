@@ -83,7 +83,7 @@ public class ArrayConverter<T, S, E, F> implements BasicValueConverter<T, S> {
 	}
 
 	private S convertFrom(E[] domainArray, Class<F> elementClass) {
-		 //TODO: the following implementation only handles conversion between non-primitive arrays!
+		//TODO: the following implementation only handles conversion between non-primitive arrays!
 		//noinspection unchecked
 		final F[] relationalArray = (F[]) Array.newInstance( elementClass, domainArray.length );
 		for ( int i = 0; i < domainArray.length; i++ ) {

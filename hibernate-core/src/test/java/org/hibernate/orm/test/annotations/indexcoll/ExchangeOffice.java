@@ -35,8 +35,8 @@ public class ExchangeOffice {
 	}
 
 	@jakarta.persistence.OneToMany(mappedBy = "parent")
-    @jakarta.persistence.MapKey(name="key")
-    private Map<ExchangeRateKey, ExchangeRate> exchangeRates = new java.util.HashMap<ExchangeRateKey, ExchangeRate>();
+	@jakarta.persistence.MapKey(name="key")
+	private Map<ExchangeRateKey, ExchangeRate> exchangeRates = new java.util.HashMap<ExchangeRateKey, ExchangeRate>();
 
 	public Map<ExchangeRateKey,ExchangeRate> getExchangeRates() {
 		return exchangeRates;

@@ -30,59 +30,59 @@ import org.junit.jupiter.api.Test;
  * @author Luis Barreiro
  */
 @DomainModel(
-        annotatedClasses = {
-                CompositeNullTest.ParentEntity.class, CompositeNullTest.Address.class
-        }
+		annotatedClasses = {
+				CompositeNullTest.ParentEntity.class, CompositeNullTest.Address.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true, inlineDirtyChecking = true)
 public class CompositeNullTest {
 
-    private long entityId;
+	private long entityId;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        ParentEntity parent = new ParentEntity();
-        parent.description = "Test";
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		ParentEntity parent = new ParentEntity();
+		parent.description = "Test";
 
-        scope.inTransaction( s -> {
-            s.persist( parent );
-        } );
+		scope.inTransaction( s -> {
+			s.persist( parent );
+		} );
 
-        entityId = parent.id;
-    }
+		entityId = parent.id;
+	}
 
-    @Test
-    @JiraKey("HHH-15730")
-    public void testNullComposite(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            ParentEntity parentEntity = s.find( ParentEntity.class, entityId );
-            assertNull( parentEntity.address );
-        } );
-    }
+	@Test
+	@JiraKey("HHH-15730")
+	public void testNullComposite(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			ParentEntity parentEntity = s.find( ParentEntity.class, entityId );
+			assertNull( parentEntity.address );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity(name = "Parent")
-    @Table( name = "PARENT_ENTITY" )
-    static class ParentEntity {
+	@Entity(name = "Parent")
+	@Table( name = "PARENT_ENTITY" )
+	static class ParentEntity {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        String description;
+		String description;
 
-        @Embedded
-        Address address;
-    }
+		@Embedded
+		Address address;
+	}
 
-    @Embeddable
-    @Table( name = "ADDRESS" )
-    static class Address {
+	@Embeddable
+	@Table( name = "ADDRESS" )
+	static class Address {
 
-        String street;
+		String street;
 
-    }
+	}
 }

@@ -70,9 +70,9 @@ public class EmbIdSecondary extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testTableNames() {
 		Assert.assertEquals( "sec_embid_versions",
-				 metadata().getEntityBinding(
-			 "org.hibernate.orm.test.envers.integration.secondary.ids.SecondaryEmbIdTestEntity_AUD"
-				 ).getJoins().get( 0 ).getTable().getName()
+				metadata().getEntityBinding(
+			"org.hibernate.orm.test.envers.integration.secondary.ids.SecondaryEmbIdTestEntity_AUD"
+				).getJoins().get( 0 ).getTable().getName()
 		);
 	}
 }

@@ -26,23 +26,23 @@ import static org.junit.Assert.assertTrue;
  */
 public class BasicCollectionJavaTypeDescriptorTest {
 
-    private static final BasicCollectionJavaType<Set<String>, String> stringSetJavaType = createJavaType();
+	private static final BasicCollectionJavaType<Set<String>, String> stringSetJavaType = createJavaType();
 
-    @Test
-    @JiraKey( "HHH-18073" )
-    public void wrapShouldRetainOrderOfSet() {
-        assertTrue("BasicCollectionJavaType.wrap() should retain order of Set",
-                stringSetJavaType.wrap(Set.of( "foo", "bar" ), null) instanceof LinkedHashSet);
-    }
+	@Test
+	@JiraKey( "HHH-18073" )
+	public void wrapShouldRetainOrderOfSet() {
+		assertTrue("BasicCollectionJavaType.wrap() should retain order of Set",
+				stringSetJavaType.wrap(Set.of( "foo", "bar" ), null) instanceof LinkedHashSet);
+	}
 
-    @Test
-    public void deepCopyShouldRetainOrderOfSet() {
-        assertTrue("BasicCollectionJavaType.getMutabilityPlan().deepCopy() should retain order of Set",
-                stringSetJavaType.getMutabilityPlan().deepCopy(Set.of( "foo", "bar" )) instanceof LinkedHashSet);
-    }
+	@Test
+	public void deepCopyShouldRetainOrderOfSet() {
+		assertTrue("BasicCollectionJavaType.getMutabilityPlan().deepCopy() should retain order of Set",
+				stringSetJavaType.getMutabilityPlan().deepCopy(Set.of( "foo", "bar" )) instanceof LinkedHashSet);
+	}
 
-    @SuppressWarnings("unchecked")
-    private static BasicCollectionJavaType<Set<String>, String> createJavaType() {
+	@SuppressWarnings("unchecked")
+	private static BasicCollectionJavaType<Set<String>, String> createJavaType() {
 		ParameterizedType type;
 		try {
 			type = (ParameterizedType) TestEntity.class.getDeclaredField("tags").getGenericType();
@@ -50,19 +50,19 @@ public class BasicCollectionJavaTypeDescriptorTest {
 			throw new RuntimeException(e);
 		}
 		return new BasicCollectionJavaType<>(
-                type,
-                StringJavaType.INSTANCE,
-                (StandardSetSemantics<String>) StandardSetSemantics.INSTANCE
-        );
-    }
+				type,
+				StringJavaType.INSTANCE,
+				(StandardSetSemantics<String>) StandardSetSemantics.INSTANCE
+		);
+	}
 
-    @Entity
-    static class TestEntity {
+	@Entity
+	static class TestEntity {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        Set<String> tags;
-    }
+		Set<String> tags;
+	}
 }

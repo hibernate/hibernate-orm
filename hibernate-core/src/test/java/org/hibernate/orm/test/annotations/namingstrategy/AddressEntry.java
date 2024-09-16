@@ -17,7 +17,7 @@ public class AddressEntry implements java.io.Serializable {
 	public AddressEntry() {
 	}
 
- 	public AddressEntry( String street, String city, String state, String zip) {
+	public AddressEntry( String street, String city, String state, String zip) {
 		this.street = street;
 		this.city = city;
 		this.state = state;

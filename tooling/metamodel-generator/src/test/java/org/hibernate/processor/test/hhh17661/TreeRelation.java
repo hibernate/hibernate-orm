@@ -12,9 +12,9 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class TreeRelation<T extends Tree<T, ? extends TreeRelation<T>>> extends Entity {
 
-    @ManyToOne(optional = false)
-    private T parent;
+	@ManyToOne(optional = false)
+	private T parent;
 
-    @ManyToOne(optional = false)
-    private T child;
+	@ManyToOne(optional = false)
+	private T child;
 }

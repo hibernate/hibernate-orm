@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Book {
-    @Id String isbn;
-    String title;
-    String text;
+	@Id String isbn;
+	String title;
+	String text;
 }

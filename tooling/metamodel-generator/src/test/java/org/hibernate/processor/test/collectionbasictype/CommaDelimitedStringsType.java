@@ -15,7 +15,7 @@ import org.hibernate.usertype.UserTypeSupport;
  * @author Vlad Mihalcea
  */
 public class CommaDelimitedStringsType extends UserTypeSupport<List<String>> {
-    public CommaDelimitedStringsType() {
-        super( List.class, Types.VARCHAR );
-    }
+	public CommaDelimitedStringsType() {
+		super( List.class, Types.VARCHAR );
+	}
 }

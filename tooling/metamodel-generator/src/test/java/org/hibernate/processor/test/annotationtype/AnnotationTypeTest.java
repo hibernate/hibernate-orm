@@ -19,11 +19,11 @@ import org.junit.Test;
 @TestForIssue(jiraKey = "HHH-13145")
 public class AnnotationTypeTest extends CompilationTest {
 
-    @Test
-    @WithClasses({ Entity.class })
-    @WithMappingFiles("orm.xml")
-    public void testXmlConfiguredEntityGenerated() {
-        TestUtil.assertMetamodelClassGeneratedFor( Entity.class );
-    }
+	@Test
+	@WithClasses({ Entity.class })
+	@WithMappingFiles("orm.xml")
+	public void testXmlConfiguredEntityGenerated() {
+		TestUtil.assertMetamodelClassGeneratedFor( Entity.class );
+	}
 
 }

@@ -21,65 +21,65 @@ import org.hibernate.usertype.UserCollectionType;
 
 //tag::collections-custom-collection-mapping-example[]
 public class QueueType implements UserCollectionType {
-    @Override
-    public CollectionClassification getClassification() {
-        return CollectionClassification.BAG;
-    }
+	@Override
+	public CollectionClassification getClassification() {
+		return CollectionClassification.BAG;
+	}
 
-    @Override
-    public Class<?> getCollectionClass() {
-        return Queue.class;
-    }
+	@Override
+	public Class<?> getCollectionClass() {
+		return Queue.class;
+	}
 
-    @Override
-    public PersistentCollection instantiate(
-            SharedSessionContractImplementor session,
-            CollectionPersister persister) throws HibernateException {
-        return new PersistentQueue(session);
-    }
+	@Override
+	public PersistentCollection instantiate(
+			SharedSessionContractImplementor session,
+			CollectionPersister persister) throws HibernateException {
+		return new PersistentQueue(session);
+	}
 
-    @Override
-    public PersistentCollection wrap(
-            SharedSessionContractImplementor session,
-            Object collection) {
-        return new PersistentQueue(session, (List) collection);
-    }
+	@Override
+	public PersistentCollection wrap(
+			SharedSessionContractImplementor session,
+			Object collection) {
+		return new PersistentQueue(session, (List) collection);
+	}
 
-    @Override
-    public Iterator getElementsIterator(Object collection) {
-        return ((Queue) collection).iterator();
-    }
+	@Override
+	public Iterator getElementsIterator(Object collection) {
+		return ((Queue) collection).iterator();
+	}
 
-    @Override
-    public boolean contains(Object collection, Object entity) {
-        return ((Queue) collection).contains(entity);
-    }
+	@Override
+	public boolean contains(Object collection, Object entity) {
+		return ((Queue) collection).contains(entity);
+	}
 
-    @Override
-    public Object indexOf(Object collection, Object entity) {
-        int i = ((List) collection).indexOf(entity);
-        return (i < 0) ? null : i;
-    }
+	@Override
+	public Object indexOf(Object collection, Object entity) {
+		int i = ((List) collection).indexOf(entity);
+		return (i < 0) ? null : i;
+	}
 
-    @Override
-    public Object replaceElements(
-            Object original,
-            Object target,
-            CollectionPersister persister,
-            Object owner,
-            Map copyCache,
-            SharedSessionContractImplementor session)
-            throws HibernateException {
-        Queue result = (Queue) target;
-        result.clear();
-        result.addAll((Queue) original);
-        return result;
-    }
+	@Override
+	public Object replaceElements(
+			Object original,
+			Object target,
+			CollectionPersister persister,
+			Object owner,
+			Map copyCache,
+			SharedSessionContractImplementor session)
+			throws HibernateException {
+		Queue result = (Queue) target;
+		result.clear();
+		result.addAll((Queue) original);
+		return result;
+	}
 
-    @Override
-    public Object instantiate(int anticipatedSize) {
-        return new LinkedList<>();
-    }
+	@Override
+	public Object instantiate(int anticipatedSize) {
+		return new LinkedList<>();
+	}
 
 }
 //end::collections-custom-collection-mapping-example[]

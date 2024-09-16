@@ -182,7 +182,7 @@ public class Customer implements Serializable {
 	}
 
 	public CustomerInventory addInventory(Item item, int quantity,
-										  BigDecimal totalValue) {
+										BigDecimal totalValue) {
 
 		CustomerInventory inventory = new CustomerInventory(
 				this, item,

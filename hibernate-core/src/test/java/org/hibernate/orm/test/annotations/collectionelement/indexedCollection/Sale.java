@@ -30,10 +30,10 @@ import jakarta.persistence.JoinTable;
 public class Sale {
 	@Id @GeneratedValue private Integer id;
 	@ElementCollection
-    @JoinTable(
-        name = "contact",
-        joinColumns = @JoinColumn(name = "n_key_person"))
-    @CollectionId( column = @Column(name = "n_key_contact"), generator = "increment" )
+	@JoinTable(
+		name = "contact",
+		joinColumns = @JoinColumn(name = "n_key_person"))
+	@CollectionId( column = @Column(name = "n_key_contact"), generator = "increment" )
 	@CollectionIdJdbcTypeCode( Types.BIGINT )
 	private List<Contact> contacts = new ArrayList<Contact>();
 

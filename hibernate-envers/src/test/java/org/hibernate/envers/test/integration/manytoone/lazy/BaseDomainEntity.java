@@ -19,38 +19,38 @@ import jakarta.persistence.MappedSuperclass;
  */
 @MappedSuperclass
 public abstract class BaseDomainEntity extends BaseDomainEntityMetadata {
-    private static final long serialVersionUID = 1023010094948580516L;
+	private static final long serialVersionUID = 1023010094948580516L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected long id = 0;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	protected long id = 0;
 
-    BaseDomainEntity() {
+	BaseDomainEntity() {
 
-    }
+	}
 
-    BaseDomainEntity(Instant timestamp, String who) {
-        super( timestamp, who );
-    }
+	BaseDomainEntity(Instant timestamp, String who) {
+		super( timestamp, who );
+	}
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if ( this == o ) {
-            return true;
-        }
-        if ( o == null || getClass() != o.getClass() ) {
-            return false;
-        }
-        BaseDomainEntity that = (BaseDomainEntity) o;
-        return id == that.id;
-    }
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		BaseDomainEntity that = (BaseDomainEntity) o;
+		return id == that.id;
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash( id );
-    }
+	@Override
+	public int hashCode() {
+		return Objects.hash( id );
+	}
 }

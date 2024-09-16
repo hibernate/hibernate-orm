@@ -191,9 +191,9 @@ public class BasicSelectionQueryTests {
 	@Entity( name = "DummyEntity" )
 	@Table( name = "DummyEntity" )
 	public static class DummyEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		private DummyEntity() {

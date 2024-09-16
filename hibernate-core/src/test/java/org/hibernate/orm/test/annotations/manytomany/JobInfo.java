@@ -11,7 +11,7 @@ import jakarta.persistence.ManyToOne;
 
 @Embeddable
 public class JobInfo {
-   String jobDescription;
+String jobDescription;
 	ProgramManager pm; // Bidirectional
 
 	public String getJobDescription() {

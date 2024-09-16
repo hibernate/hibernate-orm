@@ -23,7 +23,7 @@ import org.hibernate.annotations.Formula;
 						@FieldResult(name = "tableName", column = "t_name"),
 						@FieldResult(name = "daysOld", column = "t_time")
 				}))
- public class AllTables {
+public class AllTables {
 
 	@Id
 	@Column(name = "table_name", nullable = false)
@@ -48,4 +48,4 @@ import org.hibernate.annotations.Formula;
 	public void setDaysOld(String daysOld) {
 		this.daysOld = daysOld;
 	}
- }
+}

@@ -53,7 +53,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	 * {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, JdbcType, ColumnTypeInformation)} and
 	 * {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, BasicType, ColumnTypeInformation)} in a single
 	 * map.
- 	 */
+	 */
 	private final ConcurrentHashMap<TypeConstructedJdbcTypeKey, JdbcType> typeConstructorDescriptorMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, SqlTypedJdbcType> sqlTypedDescriptorMap = new ConcurrentHashMap<>();
 

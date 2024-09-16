@@ -48,10 +48,10 @@ public class InsertSelectTests {
 	@Entity( name = "AnEntity" )
 	@Table( name = "AnEntity" )
 	public static class AnEntity {
-	    @Id
+		@Id
 		@GeneratedValue
-	    private Integer id;
-	    @Basic
+		private Integer id;
+		@Basic
 		private String name;
 
 		private AnEntity() {

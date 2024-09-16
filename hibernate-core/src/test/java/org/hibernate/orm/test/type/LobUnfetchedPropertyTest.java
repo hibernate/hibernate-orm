@@ -125,15 +125,15 @@ public class LobUnfetchedPropertyTest {
 			NClob nClob = file.getClob();
 			assertTrue( Hibernate.isPropertyInitialized( file, "clob" ) );
 			try {
-			   final char[] chars = new char[(int) file.getClob().length()];
-			   nClob.getCharacterStream().read( chars );
+			final char[] chars = new char[(int) file.getClob().length()];
+			nClob.getCharacterStream().read( chars );
 				assertArrayEquals( "TEST CASE".toCharArray(), chars );
 			}
 			catch (SQLException ex ) {
-			   fail( "could not determine Lob length" );
+			fail( "could not determine Lob length" );
 			}
 			catch (IOException ex) {
-			   fail( "could not read Lob" );
+			fail( "could not read Lob" );
 			}
 		});
 	}

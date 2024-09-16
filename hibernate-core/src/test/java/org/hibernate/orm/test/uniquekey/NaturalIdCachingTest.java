@@ -25,24 +25,24 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 public class NaturalIdCachingTest extends BaseCoreFunctionalTestCase {
 
-    @Override
-    protected Class[] getAnnotatedClasses() {
-        return new Class[]{
-                PropertyHolder.class,
-                Property.class
-        };
-    }
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[]{
+				PropertyHolder.class,
+				Property.class
+		};
+	}
 
-    @Override
-    protected void configure(Configuration configuration) {
-        super.configure(configuration);
-        configuration.setProperty(AvailableSettings.SHOW_SQL, true);
-        configuration.setProperty(AvailableSettings.GENERATE_STATISTICS, true);
-    }
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure(configuration);
+		configuration.setProperty(AvailableSettings.SHOW_SQL, true);
+		configuration.setProperty(AvailableSettings.GENERATE_STATISTICS, true);
+	}
 
 
-    @Test
-    public void test() throws Exception {
+	@Test
+	public void test() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			Property property = new Property( 1, 1, 1 );
 			session.persist( property );
@@ -50,7 +50,7 @@ public class NaturalIdCachingTest extends BaseCoreFunctionalTestCase {
 			session.persist( new PropertyHolder( 2, property ) );
 		} );
 
-        assertThat(sessionFactory().getStatistics().getEntityInsertCount(), is(3L));
+		assertThat(sessionFactory().getStatistics().getEntityInsertCount(), is(3L));
 		sessionFactory().getStatistics().clear();
 
 		doInHibernate( this::sessionFactory, session -> {
@@ -60,9 +60,9 @@ public class NaturalIdCachingTest extends BaseCoreFunctionalTestCase {
 
 		assertThat( sessionFactory().getStatistics().getEntityLoadCount(), is(3L) );
 		assertThat( sessionFactory().getStatistics().getPrepareStatementCount(), is(3L) );
-    }
+	}
 
-    @Entity(name = "PropertyHolder")
+	@Entity(name = "PropertyHolder")
 	public static class PropertyHolder implements Serializable {
 
 		@Id

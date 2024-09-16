@@ -14,9 +14,9 @@ import jakarta.persistence.ManyToOne;
  */
 public class OrderLinePk implements Serializable {
 	@ManyToOne
-    @JoinColumn(name = "foo", nullable = false)
-    public Order order;
+	@JoinColumn(name = "foo", nullable = false)
+	public Order order;
 	@ManyToOne
-    @JoinColumn(name = "bar", nullable = false)
-    public Product product;
+	@JoinColumn(name = "bar", nullable = false)
+	public Product product;
 }

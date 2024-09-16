@@ -59,7 +59,7 @@ public class PowerFunctionTest {
 
 					if ( getDialect( scope ) instanceof DerbyDialect ) {
 						/**
-						 for Derby dialect we are emulating the power function see {@link CommonFunctionFactory#power_expLn()}.
+						for Derby dialect we are emulating the power function see {@link CommonFunctionFactory#power_expLn()}.
 						 */
 						assertThat( results.get( 0 ) ).isEqualTo( 2500D, Offset.offset( 0.000000000001 ) );
 					}

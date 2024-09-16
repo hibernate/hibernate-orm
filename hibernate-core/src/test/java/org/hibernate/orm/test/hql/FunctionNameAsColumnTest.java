@@ -298,7 +298,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					assertTrue( Hibernate.isInitialized( holder.getEntityWithNoArgFunctionAsColumns() ) );
 					assertTrue( Hibernate.isInitialized( holder.getNextHolder() ) );
 					assertTrue( Hibernate.isInitialized( holder.getNextHolder()
-																 .getEntityWithNoArgFunctionAsColumns() ) );
+																.getEntityWithNoArgFunctionAsColumns() ) );
 					assertEquals( 1, holder.getEntityWithNoArgFunctionAsColumns().size() );
 					EntityWithNoArgFunctionAsColumn e1 = (EntityWithNoArgFunctionAsColumn) holder.getEntityWithNoArgFunctionAsColumns()
 							.iterator()

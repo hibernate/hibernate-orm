@@ -17,16 +17,16 @@ import java.util.UUID;
 @Entity
 public class Account {
 
-    @Id @GeneratedValue Long id;
+	@Id @GeneratedValue Long id;
 
-    @TenantId UUID tenantId;
+	@TenantId UUID tenantId;
 
-    @ManyToOne(optional = false)
-    Client client;
+	@ManyToOne(optional = false)
+	Client client;
 
-    public Account(Client client) {
-        this.client = client;
-    }
+	public Account(Client client) {
+		this.client = client;
+	}
 
-    Account() {}
+	Account() {}
 }

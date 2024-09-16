@@ -288,7 +288,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test_hql_multiple_root_reference_jpql_example() {
-		 doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-multiple-root-reference-jpql-example[]
 			List<Object[]> persons = entityManager.createQuery(
 				"select distinct pr, ph " +

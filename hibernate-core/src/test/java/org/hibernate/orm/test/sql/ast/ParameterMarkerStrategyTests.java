@@ -205,9 +205,9 @@ public class ParameterMarkerStrategyTests {
 	)
 	@Filter( name = "region" )
 	public static class EntityWithFilters {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Basic
 		private String region;
@@ -246,9 +246,9 @@ public class ParameterMarkerStrategyTests {
 	@Entity( name = "EntityWithVersion" )
 	@Table( name = "versioned_entity" )
 	public static class EntityWithVersion {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Version
 		private int version;

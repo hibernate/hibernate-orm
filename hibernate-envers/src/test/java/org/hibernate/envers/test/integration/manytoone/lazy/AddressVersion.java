@@ -23,39 +23,39 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "address_version")
 public class AddressVersion extends BaseDomainEntityVersion {
-    private static final long serialVersionUID = 1100389518057335117L;
+	private static final long serialVersionUID = 1100389518057335117L;
 
-    @Id
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "id", referencedColumnName = "id", updatable = false, nullable = false)
-    private Address id;
+	@Id
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
+	@JoinColumn(name = "id", referencedColumnName = "id", updatable = false, nullable = false)
+	private Address id;
 
-    @Column(name = "description", updatable = false)
-    private String description;
+	@Column(name = "description", updatable = false)
+	private String description;
 
-    AddressVersion() {
-    }
+	AddressVersion() {
+	}
 
-    AddressVersion(Instant when, String who, Address id, long version, String description) {
-        setCreatedAt( when );
-        setCreatedBy( who );
-        setVersion( version );
-        this.id = Objects.requireNonNull(id );
-        this.description = description;
-    }
+	AddressVersion(Instant when, String who, Address id, long version, String description) {
+		setCreatedAt( when );
+		setCreatedBy( who );
+		setVersion( version );
+		this.id = Objects.requireNonNull(id );
+		this.description = description;
+	}
 
-    @Override
-    public Address getId() {
-        return id;
-    }
+	@Override
+	public Address getId() {
+		return id;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public AddressVersion update(Instant when, String who, String description) {
-        AddressVersion version = new AddressVersion( when, who, id, getVersion() + 1, description );
-        id.versions.add( version );
-        return version;
-    }
+	public AddressVersion update(Instant when, String who, String description) {
+		AddressVersion version = new AddressVersion( when, who, id, getVersion() + 1, description );
+		id.versions.add( version );
+		return version;
+	}
 }

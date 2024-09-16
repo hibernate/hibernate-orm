@@ -59,9 +59,9 @@ public class WrapperArrayHandlingTests {
 	@Entity( name = "TheEntity" )
 	@Table( name = "TheEntity" )
 	public static class TheEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Basic
 		private Character[] characters;

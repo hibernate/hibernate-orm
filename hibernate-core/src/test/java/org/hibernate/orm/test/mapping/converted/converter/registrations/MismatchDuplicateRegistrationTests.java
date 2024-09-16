@@ -38,8 +38,8 @@ public class MismatchDuplicateRegistrationTests {
 	@ConverterRegistration( converter = Thing1Converter.class )
 	@ConverterRegistration( converter = Thing1Converter.class, autoApply = false )
 	public static class TroublesomeEntity {
-	    @Id
-	    private Integer id;
+		@Id
+		private Integer id;
 		private String name;
 		private Thing1 thing1;
 

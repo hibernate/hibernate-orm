@@ -118,9 +118,9 @@ public interface RegionFactory extends Service, Stoppable {
 	 */
 	QueryResultsRegion buildQueryResultsRegion(String regionName, SessionFactoryImplementor sessionFactory);
 
-	 /**
-	  * Create a named {@link Region} for holding timestamps used to
-	  * determine when a cached query result set is stale.
-	  */
+	/**
+	 * Create a named {@link Region} for holding timestamps used to
+	 * determine when a cached query result set is stale.
+	 */
 	TimestampsRegion buildTimestampsRegion(String regionName, SessionFactoryImplementor sessionFactory);
 }

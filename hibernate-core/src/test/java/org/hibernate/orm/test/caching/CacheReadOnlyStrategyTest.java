@@ -98,8 +98,8 @@ public class CacheReadOnlyStrategyTest {
 		scope.inTransaction(
 				entityManager -> {
 					assertFalse( scope.getEntityManagerFactory()
-										 .getCache()
-										 .contains( TestEntity.class, testEntityId ) );
+										.getCache()
+										.contains( TestEntity.class, testEntityId ) );
 					List<TestEntity> results = entityManager.createQuery(
 							"select t from TestEntity t where t.id = :id",
 							TestEntity.class

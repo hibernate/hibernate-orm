@@ -11,16 +11,16 @@ package org.hibernate.orm.test.legacy;
  */
 public class Drug extends Resource {
 
-   String id;
+String id;
 
 
-  String getId() {
-    return id;
-  }
+String getId() {
+	return id;
+}
 
-  void  setId(String newValue) {
-    id = newValue;
-  }
+void  setId(String newValue) {
+	id = newValue;
+}
 
 
 }

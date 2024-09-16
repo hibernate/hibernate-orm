@@ -189,8 +189,8 @@ public class StandardDialectResolverTest extends BaseUnitTestCase {
 		// Make sure to test that the actual dialect class is as expected
 		// (not just an instance of the expected dialect.
 		assertEquals( "Dialect for " + dbms + " should be " + expectedDialect.getSimpleName(),
-					  expectedDialect,
-					  dialect.getClass()
+					expectedDialect,
+					dialect.getClass()
 		);
 	}
 }

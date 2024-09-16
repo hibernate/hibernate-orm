@@ -110,8 +110,8 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 			List<String> pkColumnNames = new ArrayList<>();
 			primaryKey.getColumns().forEach( columnInformation -> {
 				pkColumnNames.add( columnInformation.getColumnIdentifier()
-										   .getCanonicalName()
-										   .toLowerCase( Locale.ROOT ) );
+										.getCanonicalName()
+										.toLowerCase( Locale.ROOT ) );
 			} );
 
 			assertThat( pkColumnNames.size() ).isEqualTo( 2 );

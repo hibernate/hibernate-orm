@@ -240,8 +240,8 @@ public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
 		String match;
 
 		@ElementCollection
- 		@CollectionTable(catalog = "hibernate_orm_test_collation", schema = "dbo")
- 		private Map<Integer, Integer> timeline = new TreeMap<>();
+		@CollectionTable(catalog = "hibernate_orm_test_collation", schema = "dbo")
+		private Map<Integer, Integer> timeline = new TreeMap<>();
 	}
 
 	@Entity(name = "InheritanceRootEntity")

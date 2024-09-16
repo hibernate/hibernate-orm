@@ -197,10 +197,10 @@ public class ImmutableConvertedBaselineTests {
 	@Entity( name = "TheEntity" )
 	@Table( name = "TheEntity" )
 	public static class TheEntity {
-	    @Id
-	    private Integer id;
+		@Id
+		private Integer id;
 
-	    @Basic
+		@Basic
 		private String name;
 
 		@Immutable

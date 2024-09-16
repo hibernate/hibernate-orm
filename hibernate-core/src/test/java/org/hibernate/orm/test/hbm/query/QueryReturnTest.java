@@ -35,20 +35,20 @@ public class QueryReturnTest extends BaseUnitTestCase {
 
 	private static String QUERY_RETURN_HBM_XML =
 			"<hibernate-mapping package='org.hibernate.orm.test.hbm.query'>          "+
-		    "    <class name='QueryReturnTest$Bar'>                                  "+
+			"    <class name='QueryReturnTest$Bar'>                                  "+
 			"        <id name='id'>                                                  "+
-		    "            <generator class='sequence'/>                               "+
-		    "        </id>                                                           "+
-		    "        <property name='foo' type='string'/>                            "+
+			"            <generator class='sequence'/>                               "+
+			"        </id>                                                           "+
+			"        <property name='foo' type='string'/>                            "+
 			"    </class>                                                            "+
-		    "    <sql-query name='myQuery'>                                          "+
+			"    <sql-query name='myQuery'>                                          "+
 			"        <synchronize table='myTable'/>                                  "+
-		    "        <return                                                         "+
+			"        <return                                                         "+
 			"                alias='e'                                               "+
-		    "                class='org.hibernate.orm.test.hbm.query.QueryReturnTest$Bar'"+
+			"                class='org.hibernate.orm.test.hbm.query.QueryReturnTest$Bar'"+
 			"        />                                                              "+
-		    "        <![CDATA[from elephant as {e} where {e.age} > 50]]>             "+
-		    "    </sql-query>                                                        "+
+			"        <![CDATA[from elephant as {e} where {e.age} > 50]]>             "+
+			"    </sql-query>                                                        "+
 			"</hibernate-mapping>                                                    ";
 
 	@Test

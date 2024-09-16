@@ -15,8 +15,8 @@ package org.hibernate.orm.test.legacy;
 public class ComponentNotNull {
 	/*
 	 * I've flatten several components in one class, this is kind of ugly but
- 	 * I don't have to write tons of classes
- 	 */
+	* I don't have to write tons of classes
+	*/
 	private String prop1Nullable;
 	private String prop2Nullable;
 	private ComponentNotNull supercomp;

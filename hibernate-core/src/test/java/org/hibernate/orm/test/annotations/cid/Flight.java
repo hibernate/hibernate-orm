@@ -14,32 +14,32 @@ import java.util.List;
 @Table(name = "flight")
 public class Flight {
 
-    @Id
-    @Column(name = "id")
-    private Integer id;
+	@Id
+	@Column(name = "id")
+	private Integer id;
 
-    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<FlightSegment> segments;
+	@OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<FlightSegment> segments;
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public List<FlightSegment> getSegments() {
-        return segments;
-    }
+	public List<FlightSegment> getSegments() {
+		return segments;
+	}
 
-    public void setSegments(List<FlightSegment> segments) {
-        this.segments = segments;
-    }
+	public void setSegments(List<FlightSegment> segments) {
+		this.segments = segments;
+	}
 
-    public void addSegment(FlightSegment segment) {
-        segment.setFlight(this);
-        segments.add(segment);
-    }
+	public void addSegment(FlightSegment segment) {
+		segment.setFlight(this);
+		segments.add(segment);
+	}
 
 }

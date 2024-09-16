@@ -474,6 +474,7 @@ spotless {
 	java {
 		licenseHeaderFile rootProject.file('spotless.license.java')
 		removeUnusedImports()
+		indentWithTabs(4)
 		trimTrailingWhitespace()
 		endWithNewline()
 	}

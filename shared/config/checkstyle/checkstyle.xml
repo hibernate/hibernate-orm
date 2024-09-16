@@ -11,8 +11,8 @@
     <!-- Only defines "fatal" violations; there are additional "non-fatal" rules in checkstyle-non-fatal.xml -->
 
     <module name="RegexpHeader">
-        <property name="header" value="\/\*\n \* Hibernate, Relational Persistence for Idiomatic Java\n \*\n \* License: GNU Lesser General Public License \(LGPL\), version 2\.1 or later[\.]?\n \* See the lgpl\.txt file in the root directory or [&lt;]?http:\/\/www\.gnu\.org\/licenses\/lgpl-2\.1\.html[&gt;]?[\.]?\n \*\/"/>
-        <property name="fileExtensions" value="java,gradle,groovy"/>
+        <property name="header" value=""/>
+        <property name="fileExtensions" value="\/\*\n * SPDX-License-Identifier: LGPL-2.1-or-later\n \* Copyright Red Hat Inc. and Hibernate Authors\n \*\/java"/>
     </module>
 
     <module name="RegexpHeader">

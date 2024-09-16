@@ -544,6 +544,69 @@ public class JsonFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonReplace.class)
+	public void testJsonReplaceNonExisting(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_replace('{}', '$.a', 123)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 0, object.size() );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonReplace.class)
+	public void testJsonReplace(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_replace('{\"a\":456}', '$.a', 123)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( 123, object.get( "a" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonInsert.class)
+	public void testJsonInsert(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_insert('{}', '$.a', 123)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( 123, object.get( "a" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonInsert.class)
+	public void testJsonInsertWithExisting(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_insert('{\"a\":456}', '$.a', 123)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( 456, object.get( "a" ) );
+				}
+		);
+	}
+
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private static Map<String, Object> parseObject(String json) {

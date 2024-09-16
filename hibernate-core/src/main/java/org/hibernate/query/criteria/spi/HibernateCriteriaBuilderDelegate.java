@@ -3559,4 +3559,58 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath) {
 		return criteriaBuilder.jsonRemove( jsonDocument, jsonPath );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
+	}
 }

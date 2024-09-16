@@ -1640,6 +1640,7 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` confi
 | `json_arrayagg()` | Creates a JSON array by aggregating values
 | `json_objectagg()` | Creates a JSON object by aggregating values
 | `json_set()` | Inserts/Replaces a value by JSON path within a JSON document
+| `json_remove()` | Removes a value by JSON path within a JSON document
 |===
 
 
@@ -2025,6 +2026,22 @@ The function takes 3 arguments, the json document, the json path and the new val
 [source, java, indent=0]
 ----
 include::{json-example-dir-hql}/JsonSetTest.java[tags=hql-json-set-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-remove-function]]
+===== `json_remove()`
+
+Removes a value by JSON path within a JSON document.
+The function takes 2 arguments, the json document and the json path representing what to remove.
+
+[[hql-json-remove-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonRemoveTest.java[tags=hql-json-remove-example]
 ----
 ====
 

@@ -3943,6 +3943,22 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
 
+	/**
+	 * Removes a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Removes a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

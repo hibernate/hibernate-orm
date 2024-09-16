@@ -117,7 +117,9 @@ import org.hibernate.dialect.function.json.MySQLJsonQueryFunction;
 import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
+import org.hibernate.dialect.function.json.OracleJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
+import org.hibernate.dialect.function.json.OracleJsonRemoveFunction;
 import org.hibernate.dialect.function.json.OracleJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
@@ -125,6 +127,7 @@ import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonQueryFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonRemoveFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction;
@@ -133,6 +136,7 @@ import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonQueryFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonRemoveFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -3754,6 +3758,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * Oracle json_objectagg() function
+	 */
+	public void jsonObjectAgg_oracle() {
+		functionRegistry.register( "json_objectagg", new OracleJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
 	 * json_objectagg() function for H2 and HSQLDB
 	 */
 	public void jsonObjectAgg_h2() {
@@ -3838,5 +3849,42 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonSet_sqlserver() {
 		functionRegistry.register( "json_set", new SQLServerJsonSetFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_remove() function
+	 */
+	public void jsonRemove_postgresql() {
+		functionRegistry.register( "json_remove", new PostgreSQLJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_remove() function
+	 */
+	public void jsonRemove_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_remove" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 2 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_remove() function
+	 */
+	public void jsonRemove_oracle() {
+		functionRegistry.register( "json_remove", new OracleJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_remove() function
+	 */
+	public void jsonRemove_sqlserver() {
+		functionRegistry.register( "json_remove", new SQLServerJsonRemoveFunction( typeConfiguration ) );
 	}
 }

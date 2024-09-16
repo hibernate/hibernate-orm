@@ -1639,6 +1639,7 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` confi
 | `json_query()` | Queries non-scalar values by JSON path in a JSON document
 | `json_arrayagg()` | Creates a JSON array by aggregating values
 | `json_objectagg()` | Creates a JSON object by aggregating values
+| `json_set()` | Inserts/Replaces a value by JSON path within a JSON document
 |===
 
 
@@ -2012,6 +2013,22 @@ include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objec
 ====
 
 WARNING: Some databases like e.g. MySQL, SAP HANA, DB2 and SQL Server do not support raising an error on duplicate keys.
+
+[[hql-json-set-function]]
+===== `json_set()`
+
+Inserts/Replaces a value by JSON path within a JSON document.
+The function takes 3 arguments, the json document, the json path and the new value to set/insert.
+
+[[hql-json-set-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonSetTest.java[tags=hql-json-set-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

@@ -608,6 +608,7 @@ public class PostgreSQLDialect extends Dialect {
 				functionFactory.jsonObjectAgg_postgresql( false );
 			}
 		}
+		functionFactory.jsonSet_postgresql();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions

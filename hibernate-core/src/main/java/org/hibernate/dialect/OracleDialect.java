@@ -407,6 +407,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.jsonObject_oracle();
 		functionFactory.jsonArray_oracle();
 		functionFactory.jsonArrayAgg_oracle();
+		functionFactory.jsonSet_oracle();
 	}
 
 	@Override

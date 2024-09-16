@@ -118,12 +118,14 @@ import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
+import org.hibernate.dialect.function.json.OracleJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonQueryFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
@@ -131,15 +133,18 @@ import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonQueryFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -3795,5 +3800,43 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonObjectAgg_db2() {
 		functionRegistry.register( "json_objectagg", new DB2JsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_set() function
+	 */
+	public void jsonSet_postgresql() {
+		functionRegistry.register( "json_set", new PostgreSQLJsonSetFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_set() function
+	 */
+	public void jsonSet_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_set" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_set() function
+	 */
+	public void jsonSet_oracle() {
+		functionRegistry.register( "json_set", new OracleJsonSetFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_set() function
+	 */
+	public void jsonSet_sqlserver() {
+		functionRegistry.register( "json_set", new SQLServerJsonSetFunction( typeConfiguration ) );
 	}
 }

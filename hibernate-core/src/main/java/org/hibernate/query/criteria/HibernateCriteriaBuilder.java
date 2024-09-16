@@ -3959,6 +3959,70 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath);
 
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	/**
+	 * Inserts a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	/**
+	 * Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

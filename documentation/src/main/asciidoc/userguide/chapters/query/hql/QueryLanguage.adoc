@@ -2047,6 +2047,42 @@ include::{json-example-dir-hql}/JsonRemoveTest.java[tags=hql-json-remove-example
 
 WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
 
+[[hql-json-replace-function]]
+===== `json_replace()`
+
+Replaces a value by JSON path within a JSON document.
+The function takes 3 arguments, the json document, the json path and the new value to set.
+A value will not be inserted if the key is missing, only the values of existing keys are replaced.
+
+[[hql-json-replace-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonReplaceTest.java[tags=hql-json-replace-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-insert-function]]
+===== `json_insert()`
+
+Inserts a value by JSON path in a JSON document.
+The function takes 3 arguments, the json document, the json path and the value to insert.
+When the JSON document contains a value for a JSON path, no insertion happens,
+unless the value is an array, in which case the value will be appended to that array.
+If no value exists for a JSON path, the value will be inserted under the key as specified through the JSON path.
+
+[[hql-json-insert-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonInsertTest.java[tags=hql-json-insert-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions
 

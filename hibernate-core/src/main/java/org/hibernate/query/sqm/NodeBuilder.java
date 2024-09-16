@@ -721,6 +721,30 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	SqmExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath);
 
+	@Override
+	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
+	@Override
+	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	@Override
+	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	@Override
+	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
+	@Override
+	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
+	@Override
+	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	@Override
+	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	@Override
+	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 

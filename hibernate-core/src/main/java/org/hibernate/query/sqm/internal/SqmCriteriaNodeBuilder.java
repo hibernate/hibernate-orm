@@ -5595,4 +5595,60 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return jsonInsert( jsonDocument, jsonPath, value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return jsonInsert( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return jsonInsert( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_insert" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath, value ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return jsonReplace( jsonDocument, jsonPath, value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return jsonReplace( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return jsonReplace( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_replace" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath, value ),
+				null,
+				queryEngine
+		);
+	}
 }

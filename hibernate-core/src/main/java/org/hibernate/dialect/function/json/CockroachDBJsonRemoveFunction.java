@@ -16,15 +16,14 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * PostgreSQL json_remove function.
+ * CockroachDB json_remove function.
  */
-public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
+public class CockroachDBJsonRemoveFunction extends AbstractJsonRemoveFunction {
 
-	public PostgreSQLJsonRemoveFunction(TypeConfiguration typeConfiguration) {
+	public CockroachDBJsonRemoveFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
 	}
 
@@ -36,7 +35,7 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			SqlAstTranslator<?> translator) {
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
-		sqlAppender.appendSql( "jsonb_set_lax(" );
+		sqlAppender.appendSql( "json_remove_path(" );
 		final boolean needsCast = !isJsonType( json ) && json instanceof JdbcParameter;
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
@@ -61,12 +60,12 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			}
 			else {
 				sqlAppender.appendSql( '\'' );
-				sqlAppender.appendSql( ( (JsonPathHelper.JsonIndexAccess) pathElement ).index() );
+				sqlAppender.appendSql( ( (JsonPathHelper.JsonIndexAccess) pathElement ).index() + 1 );
 				sqlAppender.appendSql( '\'' );
 			}
 			separator = ',';
 		}
-		sqlAppender.appendSql( "]::text[],null,true,'delete_key')" );
+		sqlAppender.appendSql( "]::text[])" );
 	}
 
 	private boolean isJsonType(Expression expression) {

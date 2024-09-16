@@ -78,6 +78,7 @@ import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
 import org.hibernate.dialect.function.json.CockroachDBJsonExistsFunction;
 import org.hibernate.dialect.function.json.CockroachDBJsonQueryFunction;
+import org.hibernate.dialect.function.json.CockroachDBJsonRemoveFunction;
 import org.hibernate.dialect.function.json.CockroachDBJsonValueFunction;
 import org.hibernate.dialect.function.json.DB2JsonArrayAggFunction;
 import org.hibernate.dialect.function.json.DB2JsonArrayFunction;
@@ -117,26 +118,32 @@ import org.hibernate.dialect.function.json.MySQLJsonQueryFunction;
 import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
+import org.hibernate.dialect.function.json.OracleJsonInsertFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
 import org.hibernate.dialect.function.json.OracleJsonRemoveFunction;
+import org.hibernate.dialect.function.json.OracleJsonReplaceFunction;
 import org.hibernate.dialect.function.json.OracleJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonInsertFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonQueryFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonRemoveFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonReplaceFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonInsertFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonQueryFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonRemoveFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonReplaceFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -3859,6 +3866,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * CockroachDB json_remove() function
+	 */
+	public void jsonRemove_cockroachdb() {
+		functionRegistry.register( "json_remove", new CockroachDBJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
 	 * MySQL json_remove() function
 	 */
 	public void jsonRemove_mysql() {
@@ -3886,5 +3900,81 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonRemove_sqlserver() {
 		functionRegistry.register( "json_remove", new SQLServerJsonRemoveFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_replace() function
+	 */
+	public void jsonReplace_postgresql() {
+		functionRegistry.register( "json_replace", new PostgreSQLJsonReplaceFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_replace() function
+	 */
+	public void jsonReplace_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_replace" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_replace() function
+	 */
+	public void jsonReplace_oracle() {
+		functionRegistry.register( "json_replace", new OracleJsonReplaceFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_replace() function
+	 */
+	public void jsonReplace_sqlserver() {
+		functionRegistry.register( "json_replace", new SQLServerJsonReplaceFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_insert() function
+	 */
+	public void jsonInsert_postgresql() {
+		functionRegistry.register( "json_insert", new PostgreSQLJsonInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_insert() function
+	 */
+	public void jsonInsert_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_insert" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_insert() function
+	 */
+	public void jsonInsert_oracle() {
+		functionRegistry.register( "json_insert", new OracleJsonInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_insert() function
+	 */
+	public void jsonInsert_sqlserver() {
+		functionRegistry.register( "json_insert", new SQLServerJsonInsertFunction( typeConfiguration ) );
 	}
 }

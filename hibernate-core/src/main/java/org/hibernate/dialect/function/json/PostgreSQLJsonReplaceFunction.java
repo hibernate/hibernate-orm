@@ -20,11 +20,11 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * PostgreSQL json_remove function.
+ * PostgreSQL json_replace function.
  */
-public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
+public class PostgreSQLJsonReplaceFunction extends AbstractJsonReplaceFunction {
 
-	public PostgreSQLJsonRemoveFunction(TypeConfiguration typeConfiguration) {
+	public PostgreSQLJsonReplaceFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
 	}
 
@@ -36,7 +36,8 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			SqlAstTranslator<?> translator) {
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
-		sqlAppender.appendSql( "jsonb_set_lax(" );
+		final SqlAstNode value = arguments.get( 2 );
+		sqlAppender.appendSql( "jsonb_set(" );
 		final boolean needsCast = !isJsonType( json ) && json instanceof JdbcParameter;
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
@@ -66,7 +67,20 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			}
 			separator = ',';
 		}
-		sqlAppender.appendSql( "]::text[],null,true,'delete_key')" );
+		sqlAppender.appendSql( "]::text[]," );
+		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+			sqlAppender.appendSql( "null::jsonb" );
+		}
+		else {
+			sqlAppender.appendSql( "to_jsonb(" );
+			value.accept( translator );
+			if ( value instanceof Literal literal && literal.getJdbcMapping().getJdbcType().isString() ) {
+				// PostgreSQL until version 16 is not smart enough to infer the type of a string literal
+				sqlAppender.appendSql( "::text" );
+			}
+			sqlAppender.appendSql( ')' );
+		}
+		sqlAppender.appendSql( ",false)" );
 	}
 
 	private boolean isJsonType(Expression expression) {

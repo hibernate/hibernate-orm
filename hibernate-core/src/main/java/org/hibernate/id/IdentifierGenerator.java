@@ -94,8 +94,11 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 * @param parameters param values, keyed by parameter name
 	 * @param serviceRegistry Access to service that may be needed.
 	 * @throws MappingException If configuration fails.
+	 *
+	 * @deprecated since it overrides a deprecated method
 	 */
-	@Override
+	@SuppressWarnings("removal")
+	@Override @Deprecated( since = "7.0", forRemoval = true )
 	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {}
 
 	/**

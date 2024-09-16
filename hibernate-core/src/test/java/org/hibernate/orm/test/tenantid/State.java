@@ -14,7 +14,7 @@ import java.time.Instant;
 
 @Embeddable
 public class State {
-    public boolean deleted;
-    public @TenantId String tenantId;
-    public @UpdateTimestamp Instant updated;
+	public boolean deleted;
+	public @TenantId String tenantId;
+	public @UpdateTimestamp Instant updated;
 }

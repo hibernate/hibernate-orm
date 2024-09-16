@@ -54,7 +54,7 @@ public class SqlServerNativeSqlTemplates extends NativeSQLTemplates {
 				"select id, geom.STIntersects(geometry::::STGeomFromText(:filter, 4326)) as result from %s"
 		);
 		sqls.put( ST_CROSSES,
-				  "select id, geom.STCrosses(geometry::::STGeomFromText(:filter, 4326)) as result from %s"
+				"select id, geom.STCrosses(geometry::::STGeomFromText(:filter, 4326)) as result from %s"
 		);
 		sqls.put( ST_CONTAINS, "select id, geom.STContains(geometry::::STGeomFromText(:filter, 4326)) as result from %s" );
 

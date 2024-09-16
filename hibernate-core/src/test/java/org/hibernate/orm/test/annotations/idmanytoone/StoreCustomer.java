@@ -22,21 +22,21 @@ import jakarta.persistence.Table;
 public class StoreCustomer implements Serializable {
 	StoreCustomer() {}
 	@Id
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "idA")
-    public Store store;
-
-    @Id
 	@ManyToOne(optional = false)
-    @JoinColumn(name = "idB")
-    public Customer customer;
+	@JoinColumn(name = "idA")
+	public Store store;
+
+	@Id
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "idB")
+	public Customer customer;
 
 
-    public StoreCustomer(Store store, Customer customer) {
+	public StoreCustomer(Store store, Customer customer) {
 	this.store = store;
 	this.customer = customer;
-    }
+	}
 
 
-    private static final long serialVersionUID = -8295955012787627232L;
+	private static final long serialVersionUID = -8295955012787627232L;
 }

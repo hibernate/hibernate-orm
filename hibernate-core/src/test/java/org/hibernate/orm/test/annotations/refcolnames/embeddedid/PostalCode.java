@@ -12,8 +12,8 @@ import jakarta.persistence.MappedSuperclass;
 
 @Embeddable @MappedSuperclass
 class PostalCode {
-    @Column(name="country_code")
-    String countryCode;
-    @Column(name="zip_code")
-    int zipCode;
+	@Column(name="country_code")
+	String countryCode;
+	@Column(name="zip_code")
+	int zipCode;
 }

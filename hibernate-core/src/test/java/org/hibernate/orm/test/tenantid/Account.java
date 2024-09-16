@@ -16,15 +16,15 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Account {
 
-    @Id @GeneratedValue Long id;
+	@Id @GeneratedValue Long id;
 
-    @TenantId String tenantId;
+	@TenantId String tenantId;
 
-    @ManyToOne(optional = false) Client client;
+	@ManyToOne(optional = false) Client client;
 
-    public Account(Client client) {
-        this.client = client;
-    }
+	public Account(Client client) {
+		this.client = client;
+	}
 
-    Account() {}
+	Account() {}
 }

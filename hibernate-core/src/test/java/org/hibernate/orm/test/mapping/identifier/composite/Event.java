@@ -17,41 +17,41 @@ import jakarta.persistence.Id;
 @Entity
 class Event {
 
-    @Id
-    private EventId id;
+	@Id
+	private EventId id;
 
-    @Column(name = "event_key")
-    private String key;
+	@Column(name = "event_key")
+	private String key;
 
-    @Column(name = "event_value")
-    private String value;
+	@Column(name = "event_value")
+	private String value;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 //end::identifiers-composite-generated-mapping-example[]
 
-    public EventId getId() {
-        return id;
-    }
+	public EventId getId() {
+		return id;
+	}
 
-    public void setId(EventId id) {
-        this.id = id;
-    }
+	public void setId(EventId id) {
+		this.id = id;
+	}
 
-    public String getKey() {
-        return key;
-    }
+	public String getKey() {
+		return key;
+	}
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+	public void setKey(String key) {
+		this.key = key;
+	}
 
-    public String getValue() {
-        return value;
-    }
+	public String getValue() {
+		return value;
+	}
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+	public void setValue(String value) {
+		this.value = value;
+	}
 //tag::identifiers-composite-generated-mapping-example[]
 }
 //end::identifiers-composite-generated-mapping-example[]

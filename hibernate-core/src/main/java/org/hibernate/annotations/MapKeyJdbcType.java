@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface MapKeyJdbcType {
-	 /**
+	/**
 	 * The descriptor to use for the map-key column
 	 *
 	 * @see org.hibernate.annotations.JdbcType#value

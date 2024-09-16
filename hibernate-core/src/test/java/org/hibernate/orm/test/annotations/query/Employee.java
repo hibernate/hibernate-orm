@@ -13,15 +13,15 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Employee {
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-    @ManyToOne
-    private Employeegroup employeegroup;
+	@ManyToOne
+	private Employeegroup employeegroup;
 
-    @ManyToOne
-    private Attrset attrset;
+	@ManyToOne
+	private Attrset attrset;
 
 	public Long getId() {
 		return id;

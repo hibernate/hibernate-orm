@@ -60,9 +60,9 @@ public class ImplicitListAsListSemanticsTests {
 	@Entity( name = "AnEntity" )
 	@Table( name = "t_entity" )
 	public static class AnEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		@ElementCollection

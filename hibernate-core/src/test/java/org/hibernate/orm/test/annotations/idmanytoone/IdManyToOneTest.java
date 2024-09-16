@@ -52,9 +52,9 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 		//TODO test Customers / ShoppingBaskets / BasketItems testIdClassManyToOneWithReferenceColumn
 	}
 
-    @Test
+	@Test
 	@JiraKey( value = "HHH-7767" )
-    public void testCriteriaRestrictionOnIdManyToOne() {
+	public void testCriteriaRestrictionOnIdManyToOne() {
 		inTransaction( s -> {
 			s.createQuery( "from Course c join c.students cs join cs.student s where s.name = 'Foo'", Object[].class ).list();
 
@@ -78,7 +78,7 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 //        criteria2.add( Restrictions.eq( "s.name", "Foo" ) );
 //        criteria2.list();
 		} );
-    }
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -90,9 +90,9 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 				CardField.class,
 				Card.class,
 				Project.class,
-                Course.class,
-                Student.class,
-                CourseStudent.class,
+				Course.class,
+				Student.class,
+				CourseStudent.class,
 
 				//tested only through deployment
 				//ANN-590 testIdClassManyToOneWithReferenceColumn

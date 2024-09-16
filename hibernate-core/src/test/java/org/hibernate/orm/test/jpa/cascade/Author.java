@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
  */
 @Entity
 public class Author {
- @Id @GeneratedValue
- private Long id;
+@Id @GeneratedValue
+private Long id;
 
 }

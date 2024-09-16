@@ -120,8 +120,8 @@ public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
 							subquery.select( subtask )
 									.where(
 											builder.or(
-												   patient.isNull(),
-												   site.in( validSites )
+												patient.isNull(),
+												site.in( validSites )
 											)
 									)
 					)

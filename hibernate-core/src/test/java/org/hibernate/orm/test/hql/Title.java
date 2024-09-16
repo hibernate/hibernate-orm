@@ -17,25 +17,25 @@ import jakarta.persistence.Table;
 @Table(name="title")
 public class Title implements Serializable {
 
-    @Id
-    @GeneratedValue
-    @Column(name="id_title")
-    private Integer id;
+	@Id
+	@GeneratedValue
+	@Column(name="id_title")
+	private Integer id;
 
-    private String description;
+	private String description;
 
-    public Integer getId() {
-        return id;
-    }
-    public void setId(Integer id) {
-        this.id = id;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
 
 

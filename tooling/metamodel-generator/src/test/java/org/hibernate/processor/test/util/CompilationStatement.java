@@ -94,7 +94,7 @@ public class CompilationStatement extends Statement {
 			for ( String source : sources ) {
 				javaFiles.add(
 						new File( resourcesBaseDir,
-										 source.replace( PACKAGE_SEPARATOR, File.separator ) + ".java" ) );
+										source.replace( PACKAGE_SEPARATOR, File.separator ) + ".java" ) );
 			}
 
 		}

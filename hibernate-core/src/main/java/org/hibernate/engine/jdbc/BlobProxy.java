@@ -33,8 +33,8 @@ import org.hibernate.type.descriptor.java.DataHelper;
  */
 @Internal
 public final class BlobProxy implements Blob, BlobImplementer {
-    // In previous versions this used to be implemented by using a java.lang.reflect.Proxy to deal with
-    // incompatibilities across various JDBC versions, hence the class name, but using a real Proxy is
+	// In previous versions this used to be implemented by using a java.lang.reflect.Proxy to deal with
+	// incompatibilities across various JDBC versions, hence the class name, but using a real Proxy is
 	// no longer necessary. The class name could be updated to reflect this but that would break APIs.
 
 	private final BinaryStream binaryStream;

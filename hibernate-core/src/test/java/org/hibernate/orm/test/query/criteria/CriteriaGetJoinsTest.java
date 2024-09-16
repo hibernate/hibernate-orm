@@ -50,8 +50,8 @@ public class CriteriaGetJoinsTest {
 					root.join( MyEntity.class, SqmJoinType.LEFT );
 					Set<Join<MyEntity, ?>> joins = root.getJoins();
 					/*
-					 	SqmEntityJoin does not implement jakarta.persistence.criteria.Join, iterating through the
-					 	result would cause a ClassCastException
+						SqmEntityJoin does not implement jakarta.persistence.criteria.Join, iterating through the
+						result would cause a ClassCastException
 
 					 */
 					assertThat( joins.size() ).isEqualTo( 1 );

@@ -101,8 +101,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test(timeout = 5 * 1000) //5 seconds
 	@JiraKey( value = "HHH-7252" )
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
-		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
-                              jiraKey = "HHH-7252" )
+							comment = "Test verifies proper exception throwing when a lock timeout is specified.",
+							jiraKey = "HHH-7252" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testFindWithPessimisticWriteLockTimeoutException() {
@@ -186,8 +186,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					}
 					catch (PersistenceException pe) {
 						log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
-										 "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
-										 "See HHH-7251 for an example of one such situation.", pe);
+										"This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
+										"See HHH-7251 for an example of one such situation.", pe);
 						fail( "EntityManager should be throwing LockTimeoutException." );
 					}
 				} );
@@ -852,7 +852,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect(OracleDialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
-    @RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
 		final CountDownLatch latch = new CountDownLatch( 1 );

@@ -201,7 +201,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-	 	// Do duration arithmetic in a seconds, but
+		// Do duration arithmetic in a seconds, but
 		// with the fractional part
 		return 1_000_000_000; //seconds!!
 	}

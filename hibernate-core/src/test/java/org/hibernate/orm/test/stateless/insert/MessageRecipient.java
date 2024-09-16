@@ -11,31 +11,31 @@ package org.hibernate.orm.test.stateless.insert;
  */
 public class MessageRecipient {
 
-    private String id;
-    private String email;
-    private Message message;
+	private String id;
+	private String email;
+	private Message message;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public String getEmail() {
-        return email;
-    }
+	public String getEmail() {
+		return email;
+	}
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
-    public Message getMessage() {
-        return message;
-    }
+	public Message getMessage() {
+		return message;
+	}
 
-    public void setMessage(Message message) {
-        this.message = message;
-    }
+	public void setMessage(Message message) {
+		this.message = message;
+	}
 }

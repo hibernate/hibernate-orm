@@ -37,7 +37,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class JpaXsdVersionsTest {
-    @Test
+	@Test
 	public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-1_0.xml" );
@@ -63,7 +63,7 @@ public class JpaXsdVersionsTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testOrm21() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.1" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_1.xml" );
@@ -73,7 +73,7 @@ public class JpaXsdVersionsTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testOrm22() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.2")
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_2.xml" );
@@ -83,7 +83,7 @@ public class JpaXsdVersionsTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/invalid-orm-1_0.xml" );

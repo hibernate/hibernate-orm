@@ -25,7 +25,7 @@ public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
 	 * @param id The id of the entity to use for updating.
 	 * @param state The state to be updated.
 	 * @param oldState The state of the entity at the time it was loaded from
-     *                 the database.
+	 *                 the database.
 	 * @param persister The entity's persister.
 	 * @param source The session from which the event originated.
 	 */

@@ -8941,10 +8941,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public boolean isRegisteringVisitedAssociationKeys() {
 		/*
-			 We need to avoid loops in case of eager self-referencing associations
+			We need to avoid loops in case of eager self-referencing associations
 
-			 	E.g.
-			 	@NamedEntityGraphs({
+				E.g.
+				@NamedEntityGraphs({
 				@NamedEntityGraph(
 						name = "User.overview",
 						attributeNodes = { @NamedAttributeNode("name") })

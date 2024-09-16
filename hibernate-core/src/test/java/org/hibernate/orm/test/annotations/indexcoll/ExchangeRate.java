@@ -44,7 +44,7 @@ public class ExchangeRate {
 	}
 
 	@Embedded
-    private ExchangeRateKey key = new ExchangeRateKey();
+	private ExchangeRateKey key = new ExchangeRateKey();
 
 	public ExchangeRateKey getKey() {
 		return key;
@@ -55,7 +55,7 @@ public class ExchangeRate {
 	}
 
 	@jakarta.persistence.ManyToOne(fetch = FetchType.LAZY )
-    private ExchangeOffice parent = null;
+	private ExchangeOffice parent = null;
 
 
 	public ExchangeOffice getParent() {

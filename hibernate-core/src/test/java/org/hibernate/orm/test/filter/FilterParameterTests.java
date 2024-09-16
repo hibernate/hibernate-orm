@@ -309,9 +309,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@Entity( name = "EntityOne" )
 	@Table( name = "EntityOne" )
 	public static class EntityOne {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Column( name = "yes_no" )
 		@JdbcTypeCode( Types.CHAR )
@@ -364,9 +364,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@Entity( name = "EntityTwo" )
 	@Table( name = "EntityTwo" )
 	public static class EntityTwo {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Column( name = "zero_one" )
 		@JdbcTypeCode( Types.TINYINT )
@@ -412,9 +412,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@Entity( name = "EntityThree" )
 	@Table( name = "EntityThree" )
 	public static class EntityThree {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Column( name = "mismatch" )
 		@JdbcTypeCode( Types.TINYINT )

@@ -28,7 +28,7 @@ public class Account implements Serializable {
 	@Column(name = "ACCOUNT_ID")
 	@GeneratedValue(generator = "AccountForeignKeyGenerator")
 	@GenericGenerator(name = "AccountForeignKeyGenerator", strategy = "foreign",
-					  parameters = {@Parameter(name = "property", value = "owner")})
+					parameters = {@Parameter(name = "property", value = "owner")})
 	private Long accountId;
 
 	private String type;

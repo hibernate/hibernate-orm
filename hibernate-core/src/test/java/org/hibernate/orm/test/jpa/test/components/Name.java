@@ -20,10 +20,10 @@ import jakarta.persistence.OneToMany;
  */
 @Embeddable
 public class Name implements Serializable {
-    private static final long serialVersionUID = 8381969086665589013L;
+	private static final long serialVersionUID = 8381969086665589013L;
 
-    private String firstName;
-    private String lastName;
+	private String firstName;
+	private String lastName;
 	private Set<Alias> aliases = new HashSet<Alias>(  );
 
 	public Name() {

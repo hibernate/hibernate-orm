@@ -23,36 +23,36 @@ import jakarta.persistence.Table;
 @Table(name = "property_holder")
 public class PropertyHolder {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @Any
-    @AnyDiscriminator(DiscriminatorType.STRING)
-    @AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
-    @AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
-    @AnyKeyJavaClass(Long.class)
-    @Column(name = "property_type")
-    @JoinColumn(name = "property_id")
-    private Property property;
+	@Any
+	@AnyDiscriminator(DiscriminatorType.STRING)
+	@AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
+	@AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
+	@AnyKeyJavaClass(Long.class)
+	@Column(name = "property_type")
+	@JoinColumn(name = "property_id")
+	private Property property;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
 //end::associations-any-example[]
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public Property getProperty() {
-        return property;
-    }
+	public Property getProperty() {
+		return property;
+	}
 
-    public void setProperty(Property property) {
-        this.property = property;
-    }
+	public void setProperty(Property property) {
+		this.property = property;
+	}
 //tag::associations-any-example[]
 }
 //end::associations-any-example[]

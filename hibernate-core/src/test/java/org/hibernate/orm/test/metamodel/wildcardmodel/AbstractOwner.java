@@ -25,7 +25,7 @@ public abstract class AbstractOwner {
 	@GeneratedValue
 	private Long id;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "owner", targetEntity = AbstractEntity.class)
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "owner", targetEntity = AbstractEntity.class)
 	private List<? extends AbstractEntity> entities = new ArrayList<>();
 
 	public Long getId() {

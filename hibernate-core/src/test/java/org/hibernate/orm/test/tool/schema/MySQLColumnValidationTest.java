@@ -88,23 +88,23 @@ public class MySQLColumnValidationTest {
 			}
 
 			statement.execute( "CREATE TABLE `TEST_DATA1` ( " +
-									   "  `ID` int unsigned NOT NULL, " +
-									   "  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
-									   "  `INTEGRAL2` tinyint unsigned DEFAULT '0', " +
-									   "   PRIMARY KEY (`ID`)" +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int unsigned NOT NULL, " +
+									"  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
+									"  `INTEGRAL2` tinyint unsigned DEFAULT '0', " +
+									"   PRIMARY KEY (`ID`)" +
+									") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE TABLE `TEST_DATA2` ( " +
-									   "  `ID` int unsigned NOT NULL, " +
-									   "  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
-									   "   PRIMARY KEY (`ID`)" +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int unsigned NOT NULL, " +
+									"  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
+									"   PRIMARY KEY (`ID`)" +
+									") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE TABLE `TEST_DATA3` ( " +
-									   "  `ID` int unsigned NOT NULL, " +
-									   "  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
-									   "   PRIMARY KEY (`ID`)" +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int unsigned NOT NULL, " +
+									"  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
+									"   PRIMARY KEY (`ID`)" +
+									") ENGINE=InnoDB" );
 
 		}
 		catch (SQLException e) {
@@ -171,9 +171,9 @@ public class MySQLColumnValidationTest {
 
 		try {
 			schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
-										  contributed -> {
+										contributed -> {
 											return "test_data1".equalsIgnoreCase( contributed.getExportIdentifier() );
-										  } );
+										} );
 		}
 		catch (SchemaManagementException e) {
 			fail( e.getMessage() );
@@ -181,9 +181,9 @@ public class MySQLColumnValidationTest {
 
 		try {
 			schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
-										  contributed -> {
-											  return "test_data2".equalsIgnoreCase( contributed.getExportIdentifier() );
-										  } );
+										contributed -> {
+											return "test_data2".equalsIgnoreCase( contributed.getExportIdentifier() );
+										} );
 			fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
@@ -195,9 +195,9 @@ public class MySQLColumnValidationTest {
 
 		try {
 			schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
-										  contributed -> {
-											  return "test_data3".equalsIgnoreCase( contributed.getExportIdentifier() );
-										  } );
+										contributed -> {
+											return "test_data3".equalsIgnoreCase( contributed.getExportIdentifier() );
+										} );
 			fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {

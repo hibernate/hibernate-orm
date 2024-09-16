@@ -40,7 +40,7 @@ public class RevisionEndNumericTypeTest extends BaseEnversJPAFunctionalTestCase 
 		return new Class[] { StrTestEntity.class };
 	}
 
-    @Override
+	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, "true" );

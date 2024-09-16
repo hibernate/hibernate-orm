@@ -14,5 +14,5 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class WorkOrderComponentId extends AbstractWorkOrderId {
 	private Long lineNumber;
-    /* other stuffs */
+	/* other stuffs */
 }

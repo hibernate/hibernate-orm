@@ -30,48 +30,48 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
  */
 public class SessionFactoryInterceptorTransactionTest extends BaseEnversJPAFunctionalTestCase {
 
-    private TestInterceptor interceptor;
-    private TransactionManager tm;
+	private TestInterceptor interceptor;
+	private TransactionManager tm;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] { StrTestEntity.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { StrTestEntity.class };
+	}
 
-    @Override
-    protected void addConfigOptions(Map options) {
-        super.addConfigOptions( options );
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
 
-        TestInterceptor.reset();
+		TestInterceptor.reset();
 
-        this.interceptor = new TestInterceptor();
-        options.put( AvailableSettings.INTERCEPTOR, interceptor );
-        options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, true );
+		this.interceptor = new TestInterceptor();
+		options.put( AvailableSettings.INTERCEPTOR, interceptor );
+		options.put( AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS, true );
 
-        TestingJtaBootstrap.prepare( options );
-        tm = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-    }
+		TestingJtaBootstrap.prepare( options );
+		tm = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() throws Exception {
-        // Revision 1
-        EntityManager em = getEntityManager();
-        // Explicitly use manual flush to trigger separate temporary session write via Envers
-        em.unwrap( SessionImpl.class ).setHibernateFlushMode( FlushMode.MANUAL );
-        tm.begin();
-        StrTestEntity entity = new StrTestEntity( "Test" );
-        em.persist( entity );
-        em.flush();
-        tm.commit();
-    }
+	@Test
+	@Priority(10)
+	public void initData() throws Exception {
+		// Revision 1
+		EntityManager em = getEntityManager();
+		// Explicitly use manual flush to trigger separate temporary session write via Envers
+		em.unwrap( SessionImpl.class ).setHibernateFlushMode( FlushMode.MANUAL );
+		tm.begin();
+		StrTestEntity entity = new StrTestEntity( "Test" );
+		em.persist( entity );
+		em.flush();
+		tm.commit();
+	}
 
-    @Test
-    public void testInterceptorInvocations() throws Exception {
-        // Expect the interceptor to have been created once and invoked twice, once for the original session
-        // and follow-up for the Envers temporary session.
-        final Map<TestInterceptor, Integer> invocationMap = TestInterceptor.getBeforeCompletionCallbacks();
-        assertEquals( 1, invocationMap.size() );
-        assertEquals( invocationMap.values().stream().filter( v -> v == 2 ).count(), 1 );
-    }
+	@Test
+	public void testInterceptorInvocations() throws Exception {
+		// Expect the interceptor to have been created once and invoked twice, once for the original session
+		// and follow-up for the Envers temporary session.
+		final Map<TestInterceptor, Integer> invocationMap = TestInterceptor.getBeforeCompletionCallbacks();
+		assertEquals( 1, invocationMap.size() );
+		assertEquals( invocationMap.values().stream().filter( v -> v == 2 ).count(), 1 );
+	}
 }

@@ -13,14 +13,14 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name="`Printer`")
 public class Printer {
-    private Long id;
+	private Long id;
 
-    @Id
-    public Long getId() {
-        return id;
-    }
+	@Id
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 }

@@ -474,9 +474,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( lazyInitializer != null ) {
 			/*
 				If the value is a Proxy and the property access is field, the value returned by
-			 	`attributeMapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object )`
-			 	is always null except for the id, we need the to use the proxy implementation to
-			 	extract the property value.
+				`attributeMapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object )`
+				is always null except for the id, we need the to use the proxy implementation to
+				extract the property value.
 			 */
 				value = lazyInitializer.getImplementation();
 			}

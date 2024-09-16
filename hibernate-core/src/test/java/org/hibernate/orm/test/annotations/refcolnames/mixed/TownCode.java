@@ -10,5 +10,5 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 class TownCode extends PostalCode {
-    String town;
+	String town;
 }

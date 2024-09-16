@@ -735,10 +735,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;
 		}
 
-        @Override
-        public int[] resolveAttributeIndexes(String[] attributeNames) {
-            return null;
-        }
+		@Override
+		public int[] resolveAttributeIndexes(String[] attributeNames) {
+			return null;
+		}
 
 		@Override
 		public boolean canUseReferenceCacheEntries() {

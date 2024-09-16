@@ -20,52 +20,52 @@ import org.hibernate.envers.Audited;
 @Audited
 public abstract class AbstractAuditedEmbeddable {
 
-    /**
-     * Initial Value
-     */
-    protected static final int UNDEFINED = -1;
+	/**
+	 * Initial Value
+	 */
+	protected static final int UNDEFINED = -1;
 
-    private int code = UNDEFINED;
+	private int code = UNDEFINED;
 
 
-    protected AbstractAuditedEmbeddable() {
-        this( UNDEFINED );
-    }
+	protected AbstractAuditedEmbeddable() {
+		this( UNDEFINED );
+	}
 
-    /**
-     * Constructor with code
-     */
-    public AbstractAuditedEmbeddable(int code) {
-        this.code = code;
-    }
+	/**
+	 * Constructor with code
+	 */
+	public AbstractAuditedEmbeddable(int code) {
+		this.code = code;
+	}
 
-    public int getCode() {
-        return code;
-    }
+	public int getCode() {
+		return code;
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + code;
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + code;
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if ( this == obj ) {
-            return true;
-        }
-        if ( obj == null ) {
-            return false;
-        }
-        if ( getClass() != obj.getClass() ) {
-            return false;
-        }
-        AbstractAuditedEmbeddable other = (AbstractAuditedEmbeddable) obj;
-        if ( code != other.code ) {
-            return false;
-        }
-        return true;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) {
+			return true;
+		}
+		if ( obj == null ) {
+			return false;
+		}
+		if ( getClass() != obj.getClass() ) {
+			return false;
+		}
+		AbstractAuditedEmbeddable other = (AbstractAuditedEmbeddable) obj;
+		if ( code != other.code ) {
+			return false;
+		}
+		return true;
+	}
 }

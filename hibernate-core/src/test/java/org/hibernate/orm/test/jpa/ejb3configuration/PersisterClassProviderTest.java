@@ -109,7 +109,7 @@ public class PersisterClassProviderTest {
 			entityManagerFactory.close();
 		}
 		catch ( PersistenceException e ) {
-            Assertions.assertNotNull( e.getCause() );
+			Assertions.assertNotNull( e.getCause() );
 			Assertions.assertNotNull( e.getCause().getCause() );
 			Assertions.assertEquals( GoofyException.class, e.getCause().getCause().getClass() );
 
@@ -390,7 +390,7 @@ public class PersisterClassProviderTest {
 			return false;
 		}
 
-        @Override
+		@Override
 		public int[] getNaturalIdentifierProperties() {
 			return new int[0];
 		}
@@ -407,16 +407,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-        public boolean hasNaturalIdCache() {
-            return false;
-        }
+		public boolean hasNaturalIdCache() {
+			return false;
+		}
 
-        @Override
-        public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
-            return null;
-        }
+		@Override
+		public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
+			return null;
+		}
 
-        @Override
+		@Override
 		public IdentifierGenerator getIdentifierGenerator() {
 			return null;
 		}

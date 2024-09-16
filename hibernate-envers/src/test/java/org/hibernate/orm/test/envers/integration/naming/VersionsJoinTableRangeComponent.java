@@ -35,7 +35,7 @@ public final class VersionsJoinTableRangeComponent<T extends VersionsJoinTableRa
 //			org.hibernate.DuplicateMappingException:
 //			Duplicate class/entity mapping JOIN_TABLE_COMPONENT_1_AUD
 	@org.hibernate.envers.AuditJoinTable(name = "JOIN_TABLE_COMPONENT_1_AUD",
-										 inverseJoinColumns = @JoinColumn(name = "VJTRTE_ID"))
+										inverseJoinColumns = @JoinColumn(name = "VJTRTE_ID"))
 	private List<T> range = new ArrayList<T>();
 
 	// ********************** Accessor Methods ********************** //

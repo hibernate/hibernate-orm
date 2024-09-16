@@ -42,7 +42,7 @@ public class SerialNumber {
 		this.id = id;
 	}
 
-    @Column(name="`value`")
+	@Column(name="`value`")
 	public String getValue() {
 		return value;
 	}

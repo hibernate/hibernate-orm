@@ -41,7 +41,7 @@ public class CriteriaStringInlineLiteralTest extends BaseEntityManagerFunctional
 		CriteriaBuilder.Case<String> sCase = cb.selectCase();
 		Expression<String> caseSelect =
 				sCase.when( cb.equal( animalRoot.get( "name" ), cb.literal( "kitty" ) ), cb.literal( "Cat" ) )
-				      .otherwise("escapez'moi" );
+					.otherwise("escapez'moi" );
 		criteriaQuery.multiselect( caseSelect );
 		criteriaQuery.where( cb.equal( animalRoot.get( "name" ), "myFavoriteAnimal" ) );
 		entityManager.createQuery( criteriaQuery); // would throw exception for unescaped otherwise literal in HHH-13889

@@ -19,8 +19,8 @@ package org.hibernate.metamodel.mapping;
  */
 public interface DiscriminatorValueDetails {
 	/**
-     * The discriminator value
-     */
+	 * The discriminator value
+	 */
 	Object getValue();
 
 	/**
@@ -32,6 +32,6 @@ public interface DiscriminatorValueDetails {
 
 	/**
 	 * Form of {@link #getIndicatedEntityName()} returning the matched {@link EntityMappingType}
-     */
+	 */
 	EntityMappingType getIndicatedEntity();
 }

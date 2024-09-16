@@ -46,7 +46,7 @@ import org.junit.jupiter.api.Test;
 @DomainModel(
 		annotatedClasses = {
 				JoinFetchedManyToOneAllowProxyTests.Customer.class,
-				 JoinFetchedManyToOneAllowProxyTests.Order.class
+				JoinFetchedManyToOneAllowProxyTests.Order.class
 		}
 )
 @SessionFactory

@@ -12,25 +12,25 @@ package org.hibernate.orm.test.legacy;
  */
 public class Company extends Party {
 
-   String id;
-   String president;
+String id;
+String president;
 
 
-  String getId() {
-    return id;
-  }
+String getId() {
+	return id;
+}
 
-  void  setId(String newValue) {
-    id = newValue;
-  }
+void  setId(String newValue) {
+	id = newValue;
+}
 
-  String getPresident() {
-    return president;
-  }
+String getPresident() {
+	return president;
+}
 
-  void  setPresident(String newValue) {
-    president = newValue;
-  }
+void  setPresident(String newValue) {
+	president = newValue;
+}
 
 
 }

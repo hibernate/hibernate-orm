@@ -89,7 +89,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCachedValueAfterEviction() {
-        CollectionPersister persister = sessionFactory().getRuntimeMetamodels()
+		CollectionPersister persister = sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor(Company.class.getName() + ".users");
 

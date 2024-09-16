@@ -20,27 +20,27 @@ import jakarta.persistence.Lob;
 @Entity
 public class LobEntity {
 	public static final int BLOB_LENGTH = 100000000;
-    private Long id;
+	private Long id;
 
-    @Id
-    @GeneratedValue
-    public Long getId() {
-        return id;
-    }
+	@Id
+	@GeneratedValue
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    @Lob
-    @Column(length = BLOB_LENGTH)
-    private Blob blob;
+	@Lob
+	@Column(length = BLOB_LENGTH)
+	private Blob blob;
 
-    public Blob getBlob() {
-        return blob;
-    }
+	public Blob getBlob() {
+		return blob;
+	}
 
-    public void setBlob(Blob blob) {
-        this.blob = blob;
-    }
+	public void setBlob(Blob blob) {
+		this.blob = blob;
+	}
 }

@@ -17,21 +17,21 @@ import java.util.Set;
 
 @Entity
 public class Client {
-    @Id
-    @GeneratedValue
-    Long id;
+	@Id
+	@GeneratedValue
+	Long id;
 
-    String name;
+	String name;
 
-    @TenantId
-    String tenantId;
+	@TenantId
+	String tenantId;
 
-    @OneToMany(mappedBy = "client")
-    Set<Account> accounts = new HashSet<>();
+	@OneToMany(mappedBy = "client")
+	Set<Account> accounts = new HashSet<>();
 
-    public Client(String name) {
-        this.name = name;
-    }
+	public Client(String name) {
+		this.name = name;
+	}
 
-    Client() {}
+	Client() {}
 }

@@ -30,69 +30,69 @@ import java.util.Set;
 
 @JiraKey( "HHH-10708" )
 @DomainModel(
-        annotatedClasses = {
-               UnexpectedDeleteTest2.Foo.class, UnexpectedDeleteTest2.Bar.class
-        }
+		annotatedClasses = {
+			UnexpectedDeleteTest2.Foo.class, UnexpectedDeleteTest2.Bar.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class UnexpectedDeleteTest2 {
 
-    private Bar myBar;
+	private Bar myBar;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Bar bar = new Bar();
-            Foo foo1 = new Foo();
-            Foo foo2 = new Foo();
-            s.persist( bar );
-            s.persist( foo1 );
-            s.persist( foo2 );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Bar bar = new Bar();
+			Foo foo1 = new Foo();
+			Foo foo2 = new Foo();
+			s.persist( bar );
+			s.persist( foo1 );
+			s.persist( foo2 );
 
-            bar.foos.add( foo1 );
-            bar.foos.add( foo2 );
+			bar.foos.add( foo1 );
+			bar.foos.add( foo2 );
 
-            myBar = bar;
-        } );
-    }
+			myBar = bar;
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            s.refresh( myBar );
-            assertFalse( myBar.foos.isEmpty() );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			s.refresh( myBar );
+			assertFalse( myBar.foos.isEmpty() );
 
-            // The issue is that currently, for some unknown reason, foos are deleted on flush
-        } );
+			// The issue is that currently, for some unknown reason, foos are deleted on flush
+		} );
 
-        scope.inTransaction( s -> {
-            Bar bar = s.get( Bar.class, myBar.id );
-            assertFalse( bar.foos.isEmpty() );
-        } );
-    }
+		scope.inTransaction( s -> {
+			Bar bar = s.get( Bar.class, myBar.id );
+			assertFalse( bar.foos.isEmpty() );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity(name = "Bar")
-    @Table( name = "BAR" )
-    static class Bar {
+	@Entity(name = "Bar")
+	@Table( name = "BAR" )
+	static class Bar {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @ManyToMany( fetch = FetchType.LAZY, targetEntity = Foo.class )
-        Set<Foo> foos = new HashSet<>();
-    }
+		@ManyToMany( fetch = FetchType.LAZY, targetEntity = Foo.class )
+		Set<Foo> foos = new HashSet<>();
+	}
 
-    @Entity(name = "Foo")
-    @Table( name = "FOO" )
-    static class Foo {
+	@Entity(name = "Foo")
+	@Table( name = "FOO" )
+	static class Foo {
 
-        @Id
-        @GeneratedValue
-        Long id;
-    }
+		@Id
+		@GeneratedValue
+		Long id;
+	}
 }

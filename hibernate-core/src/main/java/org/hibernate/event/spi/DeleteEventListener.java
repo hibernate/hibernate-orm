@@ -16,11 +16,11 @@ import org.hibernate.HibernateException;
  */
 public interface DeleteEventListener {
 
-    /**
+	/**
 	 * Handle the given delete event.
-     *
-     * @param event The delete event to be handled.
-     */
+	 *
+	 * @param event The delete event to be handled.
+	 */
 	void onDelete(DeleteEvent event) throws HibernateException;
 
 	void onDelete(DeleteEvent event, DeleteContext transientEntities) throws HibernateException;

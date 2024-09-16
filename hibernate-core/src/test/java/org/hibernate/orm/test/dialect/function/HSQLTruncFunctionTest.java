@@ -19,7 +19,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
-  @author Vlad Mihalcea
+@author Vlad Mihalcea
  */
 @RequiresDialect( HSQLDialect.class )
 public class HSQLTruncFunctionTest extends BaseEntityManagerFunctionalTestCase {

@@ -12,9 +12,9 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.persister.entity.EntityPersister;
 
- /**
+/**
  * A locking strategy where an optimistic lock is obtained via a select
-  * statement.
+ * statement.
  * <p>
  * Differs from {@link PessimisticWriteSelectLockingStrategy} and
  * {@link PessimisticReadSelectLockingStrategy} in throwing

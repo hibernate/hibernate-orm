@@ -62,9 +62,9 @@ public class AdvancedFollowOnLockingTest {
 	public void testNoFollowonLockingOnGroupBy(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
-								 final Department engineering = new Department( 1, "Engineering" );
-								 session.persist( engineering );
-							 }
+								final Department engineering = new Department( 1, "Engineering" );
+								session.persist( engineering );
+							}
 		);
 
 		scope.inTransaction(

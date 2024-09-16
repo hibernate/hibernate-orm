@@ -31,7 +31,7 @@ public class MyGenericType implements UserType<Object>, DynamicParameterizedType
 	@Override
 	public void setParameterValues(Properties params) {
 		parameterType = (ParameterType) params.get(PARAMETER_TYPE);
-    }
+	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)

@@ -25,53 +25,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey("HHH-17189")
 public class AuditedEmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestCase {
 
-    private long id;
+	private long id;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[] {
-                EntityWithAuditedEmbeddableWithDeclaredData.class,
-                AbstractAuditedEmbeddable.class,
-                AuditedEmbeddableWithDeclaredData.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithAuditedEmbeddableWithDeclaredData.class,
+				AbstractAuditedEmbeddable.class,
+				AuditedEmbeddableWithDeclaredData.class
+		};
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        this.id = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-          final EntityWithAuditedEmbeddableWithDeclaredData entity = new EntityWithAuditedEmbeddableWithDeclaredData();
-          entity.setName( "Entity 1" );
-          entity.setValue( new AuditedEmbeddableWithDeclaredData( 42, "Data" ) );
+	@Test
+	@Priority(10)
+	public void initData() {
+		this.id = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+		final EntityWithAuditedEmbeddableWithDeclaredData entity = new EntityWithAuditedEmbeddableWithDeclaredData();
+		entity.setName( "Entity 1" );
+		entity.setValue( new AuditedEmbeddableWithDeclaredData( 42, "Data" ) );
 
-          entityManager.persist(entity);
-          return entity.getId();
-        } );
-    }
+		entityManager.persist(entity);
+		return entity.getId();
+		} );
+	}
 
-    @Test
-    public void testEmbeddableThatExtendsAuditedMappedSuperclass() {
-        TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-            final EntityWithAuditedEmbeddableWithDeclaredData entity = entityManager.find(
-                    EntityWithAuditedEmbeddableWithDeclaredData.class,
-                    id
-            );
+	@Test
+	public void testEmbeddableThatExtendsAuditedMappedSuperclass() {
+		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+			final EntityWithAuditedEmbeddableWithDeclaredData entity = entityManager.find(
+					EntityWithAuditedEmbeddableWithDeclaredData.class,
+					id
+			);
 
-            final AuditReader auditReader = AuditReaderFactory.get( entityManager );
+			final AuditReader auditReader = AuditReaderFactory.get( entityManager );
 
-            final List<Number> revisions = auditReader.getRevisions( EntityWithAuditedEmbeddableWithDeclaredData.class, id );
-            assertThat( revisions ).hasSize( 1 );
+			final List<Number> revisions = auditReader.getRevisions( EntityWithAuditedEmbeddableWithDeclaredData.class, id );
+			assertThat( revisions ).hasSize( 1 );
 
-            final EntityWithAuditedEmbeddableWithDeclaredData entityRevision1 = auditReader.find(
-                    EntityWithAuditedEmbeddableWithDeclaredData.class,
-                    id,
-                    revisions.get( 0 )
-            );
-            assertThat( entityRevision1.getName() ).isEqualTo( entity.getName() );
+			final EntityWithAuditedEmbeddableWithDeclaredData entityRevision1 = auditReader.find(
+					EntityWithAuditedEmbeddableWithDeclaredData.class,
+					id,
+					revisions.get( 0 )
+			);
+			assertThat( entityRevision1.getName() ).isEqualTo( entity.getName() );
 
-            // All fields should be audited because the mapped superclass is annotated
-            assertThat( entity.getValue().getCodeart() ).isEqualTo( entityRevision1.getValue().getCodeart() );
-            assertThat( entityRevision1.getValue().getCode() ).isEqualTo( 42 );
-        } );
-    }
+			// All fields should be audited because the mapped superclass is annotated
+			assertThat( entity.getValue().getCodeart() ).isEqualTo( entityRevision1.getValue().getCodeart() );
+			assertThat( entityRevision1.getValue().getCode() ).isEqualTo( 42 );
+		} );
+	}
 }

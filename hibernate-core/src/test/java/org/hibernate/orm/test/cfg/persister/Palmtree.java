@@ -13,13 +13,13 @@ import jakarta.persistence.Entity;
  */
 @Entity
 public class Palmtree extends Tree {
-    private double leaveSize;
+	private double leaveSize;
 
-    public double getLeaveSize() {
-        return leaveSize;
-    }
+	public double getLeaveSize() {
+		return leaveSize;
+	}
 
-    public void setLeaveSize(double leaveSize) {
-        this.leaveSize = leaveSize;
-    }
+	public void setLeaveSize(double leaveSize) {
+		this.leaveSize = leaveSize;
+	}
 }

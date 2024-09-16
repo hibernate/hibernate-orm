@@ -37,7 +37,7 @@ public class Component3 {
 								@AttributeOverride(name = "key", column = @Column(name = "notAudComp_key")),
 								@AttributeOverride(name = "value", column = @Column(name = "notAudComp_value")),
 								@AttributeOverride(name = "description",
-												   column = @Column(name = "notAudComp_description"))
+												column = @Column(name = "notAudComp_description"))
 						})
 	private Component4 nonAuditedComponent;
 

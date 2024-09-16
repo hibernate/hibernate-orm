@@ -17,11 +17,11 @@ import org.hibernate.envers.Audited;
 @Audited
 public class AuditedEmbeddableWithNoDeclaredData extends AbstractAuditedEmbeddable {
 
-    public AuditedEmbeddableWithNoDeclaredData(int code) {
-        super( code );
-    }
+	public AuditedEmbeddableWithNoDeclaredData(int code) {
+		super( code );
+	}
 
-    // Needed for @Embeddable
-    protected AuditedEmbeddableWithNoDeclaredData() {
-    }
+	// Needed for @Embeddable
+	protected AuditedEmbeddableWithNoDeclaredData() {
+	}
 }

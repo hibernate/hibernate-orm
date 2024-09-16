@@ -23,72 +23,72 @@ import static org.junit.Assert.assertArrayEquals;
  */
 public class NClobCharArrayTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            Product.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+			Product.class
+		};
+	}
 
-    @Test
-    public void test() {
-        Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
-            final Product product = new Product();
-            product.setId(1);
-            product.setName("Mobile phone");
-            product.setWarranty("My product warranty".toCharArray());
+	@Test
+	public void test() {
+		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+			final Product product = new Product();
+			product.setId(1);
+			product.setName("Mobile phone");
+			product.setWarranty("My product warranty".toCharArray());
 
-            entityManager.persist(product);
-            return product.getId();
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Product product = entityManager.find(Product.class, productId);
+			entityManager.persist(product);
+			return product.getId();
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Product product = entityManager.find(Product.class, productId);
 
-            assertArrayEquals("My product warranty".toCharArray(), product.getWarranty());
-        });
-    }
+			assertArrayEquals("My product warranty".toCharArray(), product.getWarranty());
+		});
+	}
 
-    //tag::basic-nclob-char-array-example[]
-    @Entity(name = "Product")
-    public static class Product {
+	//tag::basic-nclob-char-array-example[]
+	@Entity(name = "Product")
+	public static class Product {
 
-        @Id
-        private Integer id;
+		@Id
+		private Integer id;
 
-        private String name;
+		private String name;
 
-        @Lob
-        @Nationalized
-        private char[] warranty;
+		@Lob
+		@Nationalized
+		private char[] warranty;
 
-        //Getters and setters are omitted for brevity
+		//Getters and setters are omitted for brevity
 
-    //end::basic-nclob-char-array-example[]
-        public Integer getId() {
-            return id;
-        }
+	//end::basic-nclob-char-array-example[]
+		public Integer getId() {
+			return id;
+		}
 
-        public void setId(Integer id) {
-            this.id = id;
-        }
+		public void setId(Integer id) {
+			this.id = id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public char[] getWarranty() {
-            return warranty;
-        }
+		public char[] getWarranty() {
+			return warranty;
+		}
 
-        public void setWarranty(char[] warranty) {
-            this.warranty = warranty;
-        }
+		public void setWarranty(char[] warranty) {
+			this.warranty = warranty;
+		}
 
-        //tag::basic-nclob-char-array-example[]
-    }
-    //end::basic-nclob-char-array-example[]
+		//tag::basic-nclob-char-array-example[]
+	}
+	//end::basic-nclob-char-array-example[]
 }

@@ -109,7 +109,7 @@ public class ExceptionTest {
 			fail( "Non existent entity should raise an exception when state is accessed" );
 		}
 		catch ( EntityNotFoundException e ) {
-            //"success"
+			//"success"
 		}
 		finally {
 			em.close();

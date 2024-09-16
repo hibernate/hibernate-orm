@@ -115,7 +115,7 @@ public class DirtyCheckingTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void checkConverterMutabilityPlans() {
-        final EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SomeEntity.class.getName());
+		final EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SomeEntity.class.getName());
 		final AttributeMapping numberMapping = persister.findAttributeMapping( "number" );
 		final AttributeMapping nameMapping = persister.findAttributeMapping( "name" );
 

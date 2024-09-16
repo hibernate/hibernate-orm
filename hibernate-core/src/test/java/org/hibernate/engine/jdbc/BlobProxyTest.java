@@ -17,10 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @JiraKey("HHH-17770")
 class BlobProxyTest {
 
-    @Test
-    void testLengthIsNotTruncated() throws SQLException {
-        long THREE_GB = 3 * 1024 * 1024 * 1024L;
-        Blob blob = BlobProxy.generateProxy(null, THREE_GB);
-        assertEquals(THREE_GB, blob.length());
-    }
+	@Test
+	void testLengthIsNotTruncated() throws SQLException {
+		long THREE_GB = 3 * 1024 * 1024 * 1024L;
+		Blob blob = BlobProxy.generateProxy(null, THREE_GB);
+		assertEquals(THREE_GB, blob.length());
+	}
 }

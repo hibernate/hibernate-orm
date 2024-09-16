@@ -37,7 +37,7 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	@ElementCollection(targetClass = Role.class, fetch = FetchType.LAZY)
 	@JoinTable(name = "user_role",
-			   joinColumns = {@JoinColumn(name = "user_id")})
+			joinColumns = {@JoinColumn(name = "user_id")})
 	@Column(name = "role_name", nullable = false)
 	public Set<Role> getRoles() {
 		return roles;

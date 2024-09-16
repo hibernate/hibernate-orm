@@ -13,21 +13,21 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Child {
-    @GeneratedValue
-    @Id
-    private long id;
-    @ManyToOne
-    private Parent parent;
+	@GeneratedValue
+	@Id
+	private long id;
+	@ManyToOne
+	private Parent parent;
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 
-    public Parent getParent() {
-        return parent;
-    }
+	public Parent getParent() {
+		return parent;
+	}
 
-    public void setParent(Parent parent) {
-        this.parent = parent;
-    }
+	public void setParent(Parent parent) {
+		this.parent = parent;
+	}
 }

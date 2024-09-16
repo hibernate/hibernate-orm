@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 
-    @Test
+	@Test
 	public void testCaseClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -55,10 +55,10 @@ public class SearchedCaseExpressionTest extends BaseCoreFunctionalTestCase {
 
 			Assert.assertNotNull(resultList);
 		} );
-    }
+	}
 
-    @Test
-    public void testEqualClause() {
+	@Test
+	public void testEqualClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
 

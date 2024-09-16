@@ -14,11 +14,11 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "PARENT1")
 public class Parent1 {
-    @Id
-    @Column(name = "ID")
-    Long id;
+	@Id
+	@Column(name = "ID")
+	Long id;
 
-    public Long getId() {
-        return this.id;
-    }
+	public Long getId() {
+		return this.id;
+	}
 }

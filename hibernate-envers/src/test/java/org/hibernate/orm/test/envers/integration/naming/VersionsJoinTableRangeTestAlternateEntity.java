@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 @Table(name = "RANGE_TEST_ALTERNATE_ENT")
 @org.hibernate.envers.Audited
 public class VersionsJoinTableRangeTestAlternateEntity extends
-													   VersionsJoinTableRangeTestEntitySuperClass {
+													VersionsJoinTableRangeTestEntitySuperClass {
 
 	private String alternateValue;
 

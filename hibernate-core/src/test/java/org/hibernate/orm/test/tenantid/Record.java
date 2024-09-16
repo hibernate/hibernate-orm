@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Record {
-    @Id @GeneratedValue
-    public Long id;
-    public State state = new State();
+	@Id @GeneratedValue
+	public Long id;
+	public State state = new State();
 }

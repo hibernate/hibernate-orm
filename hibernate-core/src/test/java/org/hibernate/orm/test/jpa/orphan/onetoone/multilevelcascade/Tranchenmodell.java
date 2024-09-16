@@ -20,39 +20,39 @@ import jakarta.persistence.OrderColumn;
 @Entity
 public class Tranchenmodell {
 
-    @Id
+	@Id
 	@GeneratedValue
 	private Long id;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
 	@OrderColumn
-    private List<Tranche> tranchen = new ArrayList<Tranche>();
+	private List<Tranche> tranchen = new ArrayList<Tranche>();
 
-    @OneToOne(optional = true, fetch = FetchType.LAZY)
-    private Preisregelung preisregelung;
+	@OneToOne(optional = true, fetch = FetchType.LAZY)
+	private Preisregelung preisregelung;
 
 	@OneToOne(mappedBy = "tranchenmodell", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private X x;
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
 	public void setId(Long id) {
 		this.id = id;
 	}
 
-    public List<Tranche> getTranchen() {
-        return tranchen;
-    }
+	public List<Tranche> getTranchen() {
+		return tranchen;
+	}
 
-    public Preisregelung getPreisregelung() {
-        return preisregelung;
-    }
+	public Preisregelung getPreisregelung() {
+		return preisregelung;
+	}
 
-    public void setPreisregelung(Preisregelung preisregelung) {
-        this.preisregelung = preisregelung;
-    }
+	public void setPreisregelung(Preisregelung preisregelung) {
+		this.preisregelung = preisregelung;
+	}
 
 	public X getX() {
 		return x;

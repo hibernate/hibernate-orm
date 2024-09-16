@@ -34,8 +34,8 @@ public class Person implements Serializable {
 
 	@ManyToMany(cascade = {CascadeType.PERSIST})
 	@JoinTable(name = "PERSON_ADDRESS",
-			   joinColumns = {@JoinColumn(name = "personId", nullable = false)},
-			   inverseJoinColumns = {@JoinColumn(name = "addressId", nullable = false)})
+			joinColumns = {@JoinColumn(name = "personId", nullable = false)},
+			inverseJoinColumns = {@JoinColumn(name = "addressId", nullable = false)})
 	private Set<Address> addresses = new HashSet<Address>();
 
 	@OneToMany(mappedBy = "landlord", cascade = {CascadeType.PERSIST}, orphanRemoval = true)

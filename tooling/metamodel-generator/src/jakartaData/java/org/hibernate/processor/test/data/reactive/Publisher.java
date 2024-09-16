@@ -15,11 +15,11 @@ import java.util.Set;
 
 @Entity
 public class Publisher {
-    @Id long id;
+	@Id long id;
 
-    @Basic(optional = false)
-    String name;
+	@Basic(optional = false)
+	String name;
 
-    @OneToMany(mappedBy = "publisher")
-    Set<Book> books;
+	@OneToMany(mappedBy = "publisher")
+	Set<Book> books;
 }

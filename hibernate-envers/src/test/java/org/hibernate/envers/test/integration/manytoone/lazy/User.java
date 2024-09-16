@@ -25,18 +25,18 @@ import java.util.List;
 @Table(name = "user_tbl")
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected long id = 0;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	protected long id = 0;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
-    @NotAudited
-    private List<Shipment> shipmentList;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+	@NotAudited
+	private List<Shipment> shipmentList;
 
-    User() {
-    }
+	User() {
+	}
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 }

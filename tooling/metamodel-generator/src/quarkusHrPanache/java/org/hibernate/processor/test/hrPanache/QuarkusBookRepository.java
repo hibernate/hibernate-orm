@@ -14,15 +14,15 @@ import org.hibernate.annotations.processing.HQL;
 import io.smallrye.mutiny.Uni;
 
 public interface QuarkusBookRepository {
-    @Find
-    public Uni<List<PanacheBook>> findBook(String isbn);
+	@Find
+	public Uni<List<PanacheBook>> findBook(String isbn);
 
-    @HQL("WHERE isbn = :isbn")
-    public Uni<List<PanacheBook>> hqlBook(String isbn);
+	@HQL("WHERE isbn = :isbn")
+	public Uni<List<PanacheBook>> hqlBook(String isbn);
 
-    @HQL("DELETE FROM PanacheBook")
-    public Uni<Void> deleteAllBooksVoid();
+	@HQL("DELETE FROM PanacheBook")
+	public Uni<Void> deleteAllBooksVoid();
 
-    @HQL("DELETE FROM PanacheBook")
-    public Uni<Integer> deleteAllBooksInt();
+	@HQL("DELETE FROM PanacheBook")
+	public Uni<Integer> deleteAllBooksInt();
 }

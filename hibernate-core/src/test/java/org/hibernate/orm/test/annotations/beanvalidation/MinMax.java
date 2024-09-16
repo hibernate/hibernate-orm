@@ -24,7 +24,7 @@ public class MinMax {
 
 	@Max(10)
 	@Min(2)
-    @Column(name = "`value`")
+	@Column(name = "`value`")
 	private Integer value;
 
 	private MinMax() {

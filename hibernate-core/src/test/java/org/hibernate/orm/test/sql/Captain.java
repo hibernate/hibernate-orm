@@ -16,20 +16,20 @@ import jakarta.persistence.Entity;
 @Entity
 public class Captain {
 
-    @EmbeddedId
-    private Identity id;
+	@EmbeddedId
+	private Identity id;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
 //end::sql-composite-key-entity-associations_named-query-example[]
 
-    public Identity getId() {
-        return id;
-    }
+	public Identity getId() {
+		return id;
+	}
 
-    public void setId(Identity id) {
-        this.id = id;
-    }
+	public void setId(Identity id) {
+		this.id = id;
+	}
 //tag::sql-composite-key-entity-associations_named-query-example[]
 }
 //end::sql-composite-key-entity-associations_named-query-example[]

@@ -79,9 +79,9 @@ public class NestedEmbeddableDefaultAccessTests {
 	@Entity( name = "MyEntity" )
 	@Table( name = "MyEntity" )
 	public static class MyEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Embedded
 		private OuterEmbeddable outerEmbeddable;

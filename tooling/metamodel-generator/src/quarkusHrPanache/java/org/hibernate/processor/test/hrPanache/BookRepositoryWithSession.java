@@ -20,6 +20,6 @@ public interface BookRepositoryWithSession {
 		return SessionOperations.getSession();
 	}
 
-    @Find
-    public Uni<List<PanacheBook>> findBook(String isbn);
+	@Find
+	public Uni<List<PanacheBook>> findBook(String isbn);
 }

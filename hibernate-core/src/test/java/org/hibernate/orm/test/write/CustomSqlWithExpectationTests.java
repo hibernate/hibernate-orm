@@ -78,9 +78,9 @@ public class CustomSqlWithExpectationTests {
 	@SQLDelete( sql = "delete from custom_entity where id = ?", verify = Custom.class )
 	@SQLUpdate( sql = "update custom_entity set name = ? where id = ? ", verify = Custom.class )
 	public static class CustomEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		CustomEntity() {

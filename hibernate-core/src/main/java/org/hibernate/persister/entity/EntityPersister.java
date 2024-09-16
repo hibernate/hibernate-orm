@@ -154,7 +154,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
+	// stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -1131,8 +1131,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
-    /**
-     * Inject the identifier value into the given entity.
+	/**
+	 * Inject the identifier value into the given entity.
 	 */
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 

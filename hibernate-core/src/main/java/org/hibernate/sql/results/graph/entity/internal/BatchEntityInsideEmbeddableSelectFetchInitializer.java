@@ -189,11 +189,11 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 					final Object[] loadedState = parentEntityEntry.getLoadedState();
 					if ( loadedState != null ) {
 						/*
-						 E.g.
+						E.g.
 
-						 ParentEntity -> RootEmbeddable -> ParentEmbeddable -> toOneAttributeMapping
+						ParentEntity -> RootEmbeddable -> ParentEmbeddable -> toOneAttributeMapping
 
-						 The value of RootEmbeddable is needed to update the ParentEntity loaded state
+						The value of RootEmbeddable is needed to update the ParentEntity loaded state
 						 */
 						final int parentEntitySubclassId = parentInfo.parentEntitySubclassId;
 						final Object rootEmbeddable = rootEmbeddableGetters[parentEntitySubclassId].get( parentEntityInstance );

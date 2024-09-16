@@ -25,68 +25,68 @@ import org.junit.jupiter.api.Test;
  */
 @BytecodeEnhanced
 public class ManyToManyAssociationListTest {
-    @Test
-    public void testBidirectionalExisting() {
-        Group group = new Group();
-        Group anotherGroup = new Group();
+	@Test
+	public void testBidirectionalExisting() {
+		Group group = new Group();
+		Group anotherGroup = new Group();
 
-        User user = new User();
-        anotherGroup.users.add( user );
+		User user = new User();
+		anotherGroup.users.add( user );
 
-        user.setGroups( new ArrayList<>( Collections.singleton( group ) ) );
-        user.setGroups( new ArrayList<>( Arrays.asList( group, anotherGroup ) ) );
+		user.setGroups( new ArrayList<>( Collections.singleton( group ) ) );
+		user.setGroups( new ArrayList<>( Arrays.asList( group, anotherGroup ) ) );
 
-        assertEquals( 1, group.getUsers().size() );
-        assertEquals( 1, anotherGroup.getUsers().size() );
-    }
+		assertEquals( 1, group.getUsers().size() );
+		assertEquals( 1, anotherGroup.getUsers().size() );
+	}
 
-    // -- //
+	// -- //
 
-    @Entity
-    private static class Group {
+	@Entity
+	private static class Group {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @Column
-        String name;
+		@Column
+		String name;
 
-        @ManyToMany( mappedBy = "groups" )
-        List<User> users = new ArrayList<>();
+		@ManyToMany( mappedBy = "groups" )
+		List<User> users = new ArrayList<>();
 
-        List<User> getUsers() {
-            return Collections.unmodifiableList( users );
-        }
+		List<User> getUsers() {
+			return Collections.unmodifiableList( users );
+		}
 
-        void resetUsers() {
-            // this wouldn't trigger association management: users.clear();
-            users = new ArrayList<>();
-        }
-    }
+		void resetUsers() {
+			// this wouldn't trigger association management: users.clear();
+			users = new ArrayList<>();
+		}
+	}
 
-    @Entity
-    private static class User {
+	@Entity
+	private static class User {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String password;
+		String password;
 
-        @ManyToMany
-        List<Group> groups;
+		@ManyToMany
+		List<Group> groups;
 
-        void addGroup(Group group) {
-            List<Group> groups = this.groups == null ? new ArrayList<>() : this.groups;
-            groups.add( group );
-            this.groups = groups;
-        }
+		void addGroup(Group group) {
+			List<Group> groups = this.groups == null ? new ArrayList<>() : this.groups;
+			groups.add( group );
+			this.groups = groups;
+		}
 
-        List<Group> getGroups() {
-            return Collections.unmodifiableList( groups );
-        }
+		List<Group> getGroups() {
+			return Collections.unmodifiableList( groups );
+		}
 
-        void setGroups(List<Group> groups) {
-            this.groups = groups;
-        }
-    }
+		void setGroups(List<Group> groups) {
+			this.groups = groups;
+		}
+	}
 }

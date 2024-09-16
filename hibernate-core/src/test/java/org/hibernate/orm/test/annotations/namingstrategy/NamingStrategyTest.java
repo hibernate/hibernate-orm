@@ -37,18 +37,18 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
 
 	@Before
-    public void setUp() {
+	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@After
-    public void tearDown() {
-        if ( serviceRegistry != null ) {
+	public void tearDown() {
+		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
-    @Test
+	@Test
 	public void testWithCustomNamingStrategy() throws Exception {
 		new MetadataSources( serviceRegistry )
 				.addAnnotatedClass(Address.class)
@@ -74,12 +74,12 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 
 		PersistentClass entityBinding = metadata.getEntityBinding( A.class.getName() );
 		assertEquals("NAME",
-					 ((Selectable) entityBinding.getProperty( "name" ).getSelectables().get( 0 ) ).getText());
+					((Selectable) entityBinding.getProperty( "name" ).getSelectables().get( 0 ) ).getText());
 		assertEquals("VALUE",
-					 ((Selectable) entityBinding.getProperty( "value" ).getSelectables().get( 0 ) ).getText());
+					((Selectable) entityBinding.getProperty( "value" ).getSelectables().get( 0 ) ).getText());
 	}
 
-    @Test
+	@Test
 	public void testWithJpaCompliantNamingStrategy() throws Exception {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( A.class )
@@ -96,7 +96,7 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 		);
 	}
 
-    @Test
+	@Test
 	public void testWithoutCustomNamingStrategy() throws Exception {
 		new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( Address.class )

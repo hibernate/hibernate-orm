@@ -216,13 +216,13 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 				return first;
 			}
 
-            /*
+			/*
 			 * The merging rules are the following (revision types of the first and second changes):
-             * - DEL, DEL - return any (the work units are the same)
-             * - DEL, ADD - return ADD (points to new owner)
-             * - ADD, DEL - return ADD (points to new owner)
-             * - ADD, ADD - return second (points to newer owner)
-             */
+			 * - DEL, DEL - return any (the work units are the same)
+			 * - DEL, ADD - return ADD (points to new owner)
+			 * - ADD, DEL - return ADD (points to new owner)
+			 * - ADD, ADD - return second (points to newer owner)
+			 */
 			if ( first.getRevisionType() == RevisionType.DEL || second.getRevisionType() == RevisionType.ADD ) {
 				return second;
 			}

@@ -90,8 +90,8 @@ public class MergeContext implements Map<Object,Object> {
 	// TODO: merge mergeEntityToOperatedOnFlagMap into mergeToManagedEntityXref, since they have the same key.
 	//       need to check if this would hurt performance.
 	private final Map<Object,Boolean> mergeEntityToOperatedOnFlagMap = new IdentityHashMap<>( 10 );
-	    // key is a merge entity;
-	    // value is a flag indicating if the merge entity is currently in the merge process.
+		// key is a merge entity;
+		// value is a flag indicating if the merge entity is currently in the merge process.
 
 	public MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
 		this.session = session;

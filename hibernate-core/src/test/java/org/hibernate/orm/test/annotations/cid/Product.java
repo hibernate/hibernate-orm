@@ -14,5 +14,5 @@ import jakarta.persistence.Id;
 @Entity
 public class Product {
 	@Id
-    public String name;
+	public String name;
 }

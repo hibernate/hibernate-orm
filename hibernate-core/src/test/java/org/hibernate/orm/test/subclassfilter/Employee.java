@@ -16,7 +16,7 @@ import java.util.Set;
  */
 public class Employee extends Person {
 	@Column(name="`title`")
-    private String title;
+	private String title;
 	private String department;
 	private Employee manager;
 	private Set minions = new HashSet();

@@ -43,8 +43,8 @@ import org.junit.jupiter.api.BeforeEach;
 public class DeleteSharedOneToManyOrphansTest {
 
 	/*
-	 A value of DEFAULT_BATCH_FETCH_SIZE > 1 along with the initialization of the Item#higherItemRelations
-	 collection causes the issue
+	A value of DEFAULT_BATCH_FETCH_SIZE > 1 along with the initialization of the Item#higherItemRelations
+	collection causes the issue
 	 */
 
 	@BeforeEach

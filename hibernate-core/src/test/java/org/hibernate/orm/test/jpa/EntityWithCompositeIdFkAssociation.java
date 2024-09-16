@@ -20,24 +20,24 @@ import jakarta.persistence.Table;
 @Table(name = "entity_composite_fk")
 public class EntityWithCompositeIdFkAssociation implements Serializable {
 
-    @Id
-    private int id;
-    @ManyToOne
-    private EntityWithCompositeId association;
+	@Id
+	private int id;
+	@ManyToOne
+	private EntityWithCompositeId association;
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public EntityWithCompositeId getAssociation() {
-        return association;
-    }
+	public EntityWithCompositeId getAssociation() {
+		return association;
+	}
 
-    public void setAssociation(EntityWithCompositeId association) {
-        this.association = association;
-    }
+	public void setAssociation(EntityWithCompositeId association) {
+		this.association = association;
+	}
 }

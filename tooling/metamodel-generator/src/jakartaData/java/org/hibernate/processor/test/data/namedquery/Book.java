@@ -20,34 +20,34 @@ import java.util.Set;
 @Entity
 @Table(name = "books")
 public class Book {
-    public enum Type { Book, Magazine, Journal }
+	public enum Type { Book, Magazine, Journal }
 
-    @Id
-    String isbn;
+	@Id
+	String isbn;
 
-    @NaturalId
-    @Basic(optional = false)
-    String title;
+	@NaturalId
+	@Basic(optional = false)
+	String title;
 
-    @Basic(optional = false)
-    String text;
+	@Basic(optional = false)
+	String text;
 
-    @NaturalId
-    LocalDate publicationDate;
+	@NaturalId
+	LocalDate publicationDate;
 
-    @ManyToMany(mappedBy = "books")
-    Set<Author> authors;
+	@ManyToMany(mappedBy = "books")
+	Set<Author> authors;
 
-    BigDecimal price;
+	BigDecimal price;
 
-    int pages;
+	int pages;
 
-    Type type;
+	Type type;
 
-    public Book(String isbn, String title, String text) {
-        this.isbn = isbn;
-        this.title = title;
-        this.text = text;
-    }
-    Book() {}
+	public Book(String isbn, String title, String text) {
+		this.isbn = isbn;
+		this.title = title;
+		this.text = text;
+	}
+	Book() {}
 }

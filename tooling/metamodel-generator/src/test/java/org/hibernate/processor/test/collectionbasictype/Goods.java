@@ -18,35 +18,35 @@ import java.util.List;
  */
 @Entity
 public class Goods {
-    private Long id;
-    private List<Product> productList;
-    private List<String> tags;
+	private Long id;
+	private List<Product> productList;
+	private List<String> tags;
 
-    @Id
-    public Long getId() {
-        return id;
-    }
+	@Id
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    @OneToMany
-    public List<Product> getProductList() {
-        return productList;
-    }
+	@OneToMany
+	public List<Product> getProductList() {
+		return productList;
+	}
 
-    public void setProductList(List<Product> productList) {
-        this.productList = productList;
-    }
+	public void setProductList(List<Product> productList) {
+		this.productList = productList;
+	}
 
-    @NotNull
-    @Convert(converter = StringToListConverter.class)
-    public List<String> getTags() {
-        return tags;
-    }
+	@NotNull
+	@Convert(converter = StringToListConverter.class)
+	public List<String> getTags() {
+		return tags;
+	}
 
-    public void setTags(List<String> tags) {
-        this.tags = tags;
-    }
+	public void setTags(List<String> tags) {
+		this.tags = tags;
+	}
 }

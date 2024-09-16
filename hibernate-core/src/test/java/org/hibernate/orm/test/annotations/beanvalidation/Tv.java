@@ -64,7 +64,7 @@ public class Tv {
 	@Embeddable
 	public static class Recorder {
 		@NotNull
-        @Column(name = "`time`")
+		@Column(name = "`time`")
 		public BigDecimal time;
 	}
 }

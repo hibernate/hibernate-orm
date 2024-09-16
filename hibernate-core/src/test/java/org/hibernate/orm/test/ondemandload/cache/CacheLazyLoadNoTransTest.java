@@ -162,7 +162,7 @@ public class CacheLazyLoadNoTransTest {
 		Object value = scope.fromSession(
 				session -> {
 					final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-                    CollectionPersister persister = sessionFactory.getMappingMetamodel().getCollectionDescriptor( entityClass.getName() + "." + attr);
+					CollectionPersister persister = sessionFactory.getMappingMetamodel().getCollectionDescriptor( entityClass.getName() + "." + attr);
 					CollectionDataAccess cache = persister.getCacheAccessStrategy();
 					Object key = cache.generateCacheKey( id, persister, sessionFactory, session.getTenantIdentifier() );
 					Object cachedValue = cache.get( session, key );

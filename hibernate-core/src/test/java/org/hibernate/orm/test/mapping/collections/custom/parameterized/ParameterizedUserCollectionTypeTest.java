@@ -39,7 +39,7 @@ public abstract class ParameterizedUserCollectionTypeTest extends BaseCoreFuncti
 		entity = s.get( Entity.class, "tester" );
 		assertTrue( Hibernate.isInitialized( entity.getValues() ) );
 		assertEquals( 1, entity.getValues().size() );
-        assertEquals( "Hello", ( ( DefaultableList ) entity.getValues() ).getDefaultValue() );
+		assertEquals( "Hello", ( ( DefaultableList ) entity.getValues() ).getDefaultValue() );
 		s.remove( entity );
 		t.commit();
 		s.close();

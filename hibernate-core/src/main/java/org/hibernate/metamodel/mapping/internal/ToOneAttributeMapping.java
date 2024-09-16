@@ -140,19 +140,19 @@ public class ToOneAttributeMapping
 	private final boolean isNullable;
 	private final boolean isLazy;
 	/*
-	 The nullability of the table on which the FK column is located
-	 Note that this can be null although the FK column is not nullable e.g. in the case of a join table
+	The nullability of the table on which the FK column is located
+	Note that this can be null although the FK column is not nullable e.g. in the case of a join table
 
-	 @Entity
-	 public class Entity1 {
-	     @OneToOne
-	     @JoinTable(name = "key_table")
-	     Entity2 association;
-	 }
+	@Entity
+	public class Entity1 {
+		@OneToOne
+		@JoinTable(name = "key_table")
+		Entity2 association;
+	}
 
-	 Here the join to "key_table" is nullable, but the FK column is not null.
-	 Choosing an inner join for the association would be wrong though, because of the nullability of the key table,
-	 hence this flag is also controlling the default join type.
+	Here the join to "key_table" is nullable, but the FK column is not null.
+	Choosing an inner join for the association would be wrong though, because of the nullability of the key table,
+	hence this flag is also controlling the default join type.
 	 */
 	private final boolean isKeyTableNullable;
 	private final boolean isInternalLoadNullable;
@@ -168,8 +168,8 @@ public class ToOneAttributeMapping
 	private final Cardinality cardinality;
 	private final boolean hasJoinTable;
 	/*
-	 Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
-	 It may be null if the referenced property is a non-entity.
+	Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
+	It may be null if the referenced property is a non-entity.
 	 */
 	private final SelectablePath bidirectionalAttributePath;
 	private final TableGroupProducer declaringTableGroupProducer;
@@ -379,9 +379,9 @@ public class ToOneAttributeMapping
 			hasJoinTable = false;
 
 			/*
-		 		The otherSidePropertyName value is used to determine bidirectionality based on the navigablePath string
+				The otherSidePropertyName value is used to determine bidirectionality based on the navigablePath string
 
-		 		e.g.
+				e.g.
 
 				class Card{
 					@OneToMany( mappedBy = "card")
@@ -420,7 +420,7 @@ public class ToOneAttributeMapping
 				in such case the mappedBy is "primaryKey.card"
 				the navigable path is NavigablePath(Card.fields.{element}.{id}.card) and it does not contain the "primaryKey" part,
 				so in order to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
-		 	*/
+			 */
 			final OneToOne oneToOne = (OneToOne) bootValue;
 			if ( oneToOne.getMappedByProperty() == null ) {
 				this.bidirectionalAttributePath = SelectablePath.parse( referencedPropertyName );
@@ -1476,20 +1476,20 @@ public class ToOneAttributeMapping
 					DerivedLevel2 level2Child;
 				}
 
-				 class Level2 {
-				 	@OneToOne(mappedBy = "level2Parent")
+				class Level2 {
+					@OneToOne(mappedBy = "level2Parent")
 					Level3 level3Child;
-				 }
+				}
 
-				 class DerivedLevel2 extends Level2 {
-				 	@OneToOne
+				class DerivedLevel2 extends Level2 {
+					@OneToOne
 					Level1 level1Parent;
-				 }
+				}
 
-				 class Level3 {
-				 	@OneToOne
+				class Level3 {
+					@OneToOne
 					Level2 level2Parent;
-				 }
+				}
 
 				We have Level1->leve2Child->level3Child->level2Parent
 
@@ -1532,15 +1532,15 @@ public class ToOneAttributeMapping
 				&& parentNavigablePath.equals( fetchParent.getNavigablePath().getRealParent() );
 
 		/*
-		 In case of selected we are going to add a fetch for the `fetchablePath` only if there is not already a `TableGroupJoin`.
+		In case of selected we are going to add a fetch for the `fetchablePath` only if there is not already a `TableGroupJoin`.
 
-		 e.g. given :
-		 	public static class EntityA {
+		e.g. given :
+			public static class EntityA {
 				...
 
 			@ManyToOne(fetch = FetchType.EAGER)
 			private EntityB entityB;
-		 	}
+			}
 
 			@Entity(name = "EntityB")
 			public static class EntityB {
@@ -1549,11 +1549,11 @@ public class ToOneAttributeMapping
 				private String name;
 			}
 
-		 and the HQL query :
+		and the HQL query :
 
-		 `Select a From EntityA a Left Join a.entityB b Where ( b.name IS NOT NULL )`
+		`Select a From EntityA a Left Join a.entityB b Where ( b.name IS NOT NULL )`
 
-		 having the left join we don't want to add an extra implicit join that will be translated into an SQL inner join (see HHH-15342)
+		having the left join we don't want to add an extra implicit join that will be translated into an SQL inner join (see HHH-15342)
 		*/
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
 			final TableGroup tableGroup = determineTableGroupForFetch(

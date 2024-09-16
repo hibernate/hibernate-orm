@@ -38,7 +38,7 @@ public class PreUpdateEventListenerVetoTest extends BaseSessionFactoryFunctional
 
 	@Override
 	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {
-        factory.getServiceRegistry().requireService( EventListenerRegistry.class )
+		factory.getServiceRegistry().requireService( EventListenerRegistry.class )
 				.appendListeners( EventType.PRE_UPDATE, event -> true );
 	}
 

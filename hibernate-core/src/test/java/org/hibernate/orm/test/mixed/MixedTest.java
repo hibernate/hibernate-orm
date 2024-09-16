@@ -66,7 +66,7 @@ public class MixedTest {
 		Long did = doc.getId();
 		Long d2id = doc2.getId();
 
-        if ( !scope.getSessionFactory().getJdbcServices().getDialect().supportsExpectedLobUsagePattern() ) {
+		if ( !scope.getSessionFactory().getJdbcServices().getDialect().supportsExpectedLobUsagePattern() ) {
 			SkipLog.reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
 			return;
 		}

@@ -8,24 +8,24 @@ package org.hibernate.orm.test.collection.original;
 
 
 public class Animal {
-    long id;
-    String name;
-    boolean boolvar;
-    Zoo zoo;
+	long id;
+	String name;
+	boolean boolvar;
+	Zoo zoo;
 
-    public long getId() {
-        return id;
-    }
-    public void setId( long id ) {
-        this.id = id;
-    }
-    public String getName() {
-        return name;
-    }
-    public void setName( String name ) {
-        this.name = name;
-    }
-    public boolean isBoolvar() {
+	public long getId() {
+		return id;
+	}
+	public void setId( long id ) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName( String name ) {
+		this.name = name;
+	}
+	public boolean isBoolvar() {
 		return boolvar;
 	}
 	public void setBoolvar(boolean boolvar) {

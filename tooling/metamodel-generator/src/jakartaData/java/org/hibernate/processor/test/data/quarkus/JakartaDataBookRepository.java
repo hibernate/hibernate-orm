@@ -16,9 +16,9 @@ import jakarta.data.repository.Repository;
 
 @Repository
 public interface JakartaDataBookRepository extends CrudRepository<PanacheBook, Long> {
-    @Find
-    public List<PanacheBook> findBook(String isbn);
+	@Find
+	public List<PanacheBook> findBook(String isbn);
 
-    @Query("WHERE isbn = :isbn")
-    public List<PanacheBook> hqlBook(String isbn);
+	@Query("WHERE isbn = :isbn")
+	public List<PanacheBook> hqlBook(String isbn);
 }

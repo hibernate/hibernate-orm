@@ -18,6 +18,6 @@ import jakarta.persistence.SecondaryTable;
 @SecondaryTable(name = "`View`")
 @SecondaryRow(table = "`View`", owned = false)
 public class SpecialRecord extends Record {
-    @Column(table = "`View`", name="`timestamp`")
-    Instant timestamp;
+	@Column(table = "`View`", name="`timestamp`")
+	Instant timestamp;
 }

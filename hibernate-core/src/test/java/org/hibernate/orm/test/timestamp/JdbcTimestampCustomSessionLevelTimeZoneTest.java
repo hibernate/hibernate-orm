@@ -103,7 +103,7 @@ public class JdbcTimestampCustomSessionLevelTimeZoneTest
 									.getOffset( 0 ) - TIME_ZONE.getOffset( 0 );
 							assertEquals(
 									Math.abs( Long.valueOf( offsetDiff )
-													  .longValue() ),
+													.longValue() ),
 									Math.abs( timestamp.getTime() )
 							);
 						}

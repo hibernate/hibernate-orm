@@ -9,15 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Zoo {
-    long id;
-    List animals = new ArrayList();
+	long id;
+	List animals = new ArrayList();
 
-    public long getId() {
-        return id;
-    }
-    public void setId( long id ) {
-        this.id = id;
-    }
+	public long getId() {
+		return id;
+	}
+	public void setId( long id ) {
+		this.id = id;
+	}
 	public List getAnimals() {
 		return animals;
 	}

@@ -37,209 +37,209 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isInitia
  * @author Oliver Breidenbach
  */
 @DomainModel(
-        annotatedClasses = {
-                InheritedEntityGraphTest.Foo2.class,
-                InheritedEntityGraphTest.Foo.class,
-                InheritedEntityGraphTest.Bar.class
-        }
+		annotatedClasses = {
+				InheritedEntityGraphTest.Foo2.class,
+				InheritedEntityGraphTest.Foo.class,
+				InheritedEntityGraphTest.Bar.class
+		}
 )
 @SessionFactory
 public class InheritedEntityGraphTest {
 
 	@Test
-    @JiraKey(value = "HHH-10261")
-    void singleAttributeNodeInheritanceTest(SessionFactoryScope scope) {
+	@JiraKey(value = "HHH-10261")
+	void singleAttributeNodeInheritanceTest(SessionFactoryScope scope) {
 
-	    MutableLong fooId = new MutableLong();
+		MutableLong fooId = new MutableLong();
 
-	    scope.inTransaction(
-	            session -> {
-                    Bar bar = new Bar();
-                    session.persist(bar);
+		scope.inTransaction(
+				session -> {
+					Bar bar = new Bar();
+					session.persist(bar);
 
-                    Foo foo = new Foo();
-                    foo.bar = bar;
-                    session.persist( foo );
+					Foo foo = new Foo();
+					foo.bar = bar;
+					session.persist( foo );
 
-                    fooId.set( foo.id );
-                }
-        );
+					fooId.set( foo.id );
+				}
+		);
 
-	    scope.inTransaction(
-	            session -> {
-	                EntityManager em = session.unwrap( EntityManager.class );
-                    EntityGraph<Foo> entityGraph = em.createEntityGraph( Foo.class );
-                    entityGraph.addSubgraph( "bar" );
+		scope.inTransaction(
+				session -> {
+					EntityManager em = session.unwrap( EntityManager.class );
+					EntityGraph<Foo> entityGraph = em.createEntityGraph( Foo.class );
+					entityGraph.addSubgraph( "bar" );
 
-                    Map<String, Object> properties = Collections.singletonMap(
-                            GraphSemantic.LOAD.getJpaHintName(), entityGraph
-                    );
+					Map<String, Object> properties = Collections.singletonMap(
+							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+					);
 
-                    Foo result = em.find( Foo.class, fooId.get(), properties );
+					Foo result = em.find( Foo.class, fooId.get(), properties );
 
-                    assertThat( result, isInitialized() );
-                    assertThat( result.bar, isInitialized() );
-                }
-        );
-    }
+					assertThat( result, isInitialized() );
+					assertThat( result.bar, isInitialized() );
+				}
+		);
+	}
 
-    @Test
-    @JiraKey(value = "HHH-10261")
-    void collectionAttributeNodeInheritanceTest(SessionFactoryScope scope) {
+	@Test
+	@JiraKey(value = "HHH-10261")
+	void collectionAttributeNodeInheritanceTest(SessionFactoryScope scope) {
 
-	    MutableLong fooId = new MutableLong();
+		MutableLong fooId = new MutableLong();
 
-	    scope.inTransaction(
-	            session -> {
-                    Bar bar = new Bar();
-                    session.persist(bar);
+		scope.inTransaction(
+				session -> {
+					Bar bar = new Bar();
+					session.persist(bar);
 
-                    Foo foo = new Foo();
-                    foo.bar = bar;
-                    session.persist( foo );
+					Foo foo = new Foo();
+					foo.bar = bar;
+					session.persist( foo );
 
-                    fooId.set( foo.id );
-                }
-        );
+					fooId.set( foo.id );
+				}
+		);
 
-	    scope.inTransaction(
-	            session -> {
-	                EntityManager em = session.unwrap( EntityManager.class );
-                    EntityGraph<Foo> entityGraph = em.createEntityGraph( Foo.class );
-                    entityGraph.addSubgraph( "bars" );
+		scope.inTransaction(
+				session -> {
+					EntityManager em = session.unwrap( EntityManager.class );
+					EntityGraph<Foo> entityGraph = em.createEntityGraph( Foo.class );
+					entityGraph.addSubgraph( "bars" );
 
-                    Map<String, Object> properties = Collections.singletonMap(
-                            GraphSemantic.LOAD.getJpaHintName(), entityGraph
-                    );
+					Map<String, Object> properties = Collections.singletonMap(
+							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+					);
 
-                    Foo result = em.find( Foo.class, fooId.get(), properties );
+					Foo result = em.find( Foo.class, fooId.get(), properties );
 
-                    assertThat( result, isInitialized() );
-                    assertThat( result.bars, isInitialized() );
-                }
-        );
-    }
+					assertThat( result, isInitialized() );
+					assertThat( result.bars, isInitialized() );
+				}
+		);
+	}
 
 
-    @Test
-    @JiraKey(value = "HHH-10261")
-    void singleAttributeSubgraphInheritanceTest(SessionFactoryScope scope) {
+	@Test
+	@JiraKey(value = "HHH-10261")
+	void singleAttributeSubgraphInheritanceTest(SessionFactoryScope scope) {
 
-	    MutableLong foo2Id = new MutableLong();
+		MutableLong foo2Id = new MutableLong();
 
-	    scope.inTransaction(
-	            session -> {
-                    Bar bar = new Bar();
-                    session.persist(bar);
+		scope.inTransaction(
+				session -> {
+					Bar bar = new Bar();
+					session.persist(bar);
 
-                    Foo foo = new Foo();
-                    foo.bar = bar;
-                    session.persist( foo );
+					Foo foo = new Foo();
+					foo.bar = bar;
+					session.persist( foo );
 
-                    Foo2 foo2 = new Foo2();
-                    foo2.foo = foo;
-                    session.persist( foo2 );
+					Foo2 foo2 = new Foo2();
+					foo2.foo = foo;
+					session.persist( foo2 );
 
-                    foo2Id.set( foo2.id );
-                }
-        );
+					foo2Id.set( foo2.id );
+				}
+		);
 
-	    scope.inTransaction(
-	            session -> {
-	                EntityManager em = session.unwrap( EntityManager.class );
-                    EntityGraph<Foo2> entityGraph = em.createEntityGraph( Foo2.class );
-                    Subgraph<Foo> subgraphFoo = entityGraph.addSubgraph( "foo" );
-                    subgraphFoo.addSubgraph( "bar" );
+		scope.inTransaction(
+				session -> {
+					EntityManager em = session.unwrap( EntityManager.class );
+					EntityGraph<Foo2> entityGraph = em.createEntityGraph( Foo2.class );
+					Subgraph<Foo> subgraphFoo = entityGraph.addSubgraph( "foo" );
+					subgraphFoo.addSubgraph( "bar" );
 
-                    Map<String, Object> properties = Collections.singletonMap(
-                            GraphSemantic.LOAD.getJpaHintName(), entityGraph
-                    );
+					Map<String, Object> properties = Collections.singletonMap(
+							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+					);
 
-                    Foo2 result = em.find( Foo2.class, foo2Id.get(), properties );
+					Foo2 result = em.find( Foo2.class, foo2Id.get(), properties );
 
-                    assertThat( result, isInitialized() );
-                    assertThat( result.foo, isInitialized() );
-                    assertThat( result.foo.bar, isInitialized() );
-                }
-        );
-    }
+					assertThat( result, isInitialized() );
+					assertThat( result.foo, isInitialized() );
+					assertThat( result.foo.bar, isInitialized() );
+				}
+		);
+	}
 
-    @Test
-    @JiraKey(value = "HHH-10261")
-    void collectionAttributeSubgraphInheritanceTest(SessionFactoryScope scope) {
+	@Test
+	@JiraKey(value = "HHH-10261")
+	void collectionAttributeSubgraphInheritanceTest(SessionFactoryScope scope) {
 
-	    MutableLong foo2Id = new MutableLong();
+		MutableLong foo2Id = new MutableLong();
 
-	    scope.inTransaction(
-	            session -> {
-                    Bar bar = new Bar();
-                    session.persist(bar);
+		scope.inTransaction(
+				session -> {
+					Bar bar = new Bar();
+					session.persist(bar);
 
-                    Foo foo = new Foo();
-                    foo.bar = bar;
-                    session.persist( foo );
+					Foo foo = new Foo();
+					foo.bar = bar;
+					session.persist( foo );
 
-                    Foo2 foo2 = new Foo2();
-                    foo2.foo = foo;
-                    session.persist( foo2 );
+					Foo2 foo2 = new Foo2();
+					foo2.foo = foo;
+					session.persist( foo2 );
 
-                    foo2Id.set( foo2.id );
-                }
-        );
+					foo2Id.set( foo2.id );
+				}
+		);
 
-	    scope.inTransaction(
-	            session -> {
-	                EntityManager em = session.unwrap( EntityManager.class );
-                    EntityGraph<Foo2> entityGraph = em.createEntityGraph( Foo2.class );
-                    Subgraph<Foo> subgraphFoo = entityGraph.addSubgraph( "foo" );
-                    subgraphFoo.addSubgraph( "bars" );
+		scope.inTransaction(
+				session -> {
+					EntityManager em = session.unwrap( EntityManager.class );
+					EntityGraph<Foo2> entityGraph = em.createEntityGraph( Foo2.class );
+					Subgraph<Foo> subgraphFoo = entityGraph.addSubgraph( "foo" );
+					subgraphFoo.addSubgraph( "bars" );
 
-                    Map<String, Object> properties = Collections.singletonMap(
-                            GraphSemantic.LOAD.getJpaHintName(), entityGraph
-                    );
+					Map<String, Object> properties = Collections.singletonMap(
+							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+					);
 
-                    Foo2 result = em.find( Foo2.class, foo2Id.get(), properties );
+					Foo2 result = em.find( Foo2.class, foo2Id.get(), properties );
 
-                    assertThat( result, isInitialized() );
-                    assertThat( result.foo, isInitialized() );
-                    assertThat( result.foo.bars, isInitialized() );
-                }
-        );
-    }
+					assertThat( result, isInitialized() );
+					assertThat( result.foo, isInitialized() );
+					assertThat( result.foo.bars, isInitialized() );
+				}
+		);
+	}
 
-    @MappedSuperclass
-    public static class MappedSupperclass {
-        @Id
-        @GeneratedValue
-        public long id;
+	@MappedSuperclass
+	public static class MappedSupperclass {
+		@Id
+		@GeneratedValue
+		public long id;
 
-        @OneToOne(fetch = FetchType.LAZY)
-        public Bar bar;
+		@OneToOne(fetch = FetchType.LAZY)
+		public Bar bar;
 
-        @OneToMany
-        public Set<Bar> bars = new HashSet<Bar>();
+		@OneToMany
+		public Set<Bar> bars = new HashSet<Bar>();
 
-    }
+	}
 
-    @Entity(name = "Bar")
-    public static class Bar {
-        @Id @GeneratedValue
-        public long id;
+	@Entity(name = "Bar")
+	public static class Bar {
+		@Id @GeneratedValue
+		public long id;
 
-    }
+	}
 
-    @Entity(name = "Foo")
-    public static class Foo extends MappedSupperclass {
+	@Entity(name = "Foo")
+	public static class Foo extends MappedSupperclass {
 
-    }
+	}
 
-    @Entity(name = "Foo2")
-    public static class Foo2 {
-        @Id @GeneratedValue
-        public long id;
+	@Entity(name = "Foo2")
+	public static class Foo2 {
+		@Id @GeneratedValue
+		public long id;
 
-        @OneToOne(fetch = FetchType.LAZY)
-        public Foo foo;
+		@OneToOne(fetch = FetchType.LAZY)
+		public Foo foo;
 
-    }
+	}
 }

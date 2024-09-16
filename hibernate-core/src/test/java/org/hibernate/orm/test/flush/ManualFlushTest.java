@@ -30,137 +30,137 @@ import static org.junit.Assert.assertTrue;
  */
 public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{
-                Person.class,
-                Phone.class,
-                Advertisement.class,
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[]{
+				Person.class,
+				Phone.class,
+				Advertisement.class,
+		};
+	}
 
-    @Test
-    public void testFlushSQL() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            entityManager.createNativeQuery("delete from Person").executeUpdate();
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            log.info("testFlushSQL");
-            //tag::flushing-manual-flush-example[]
-            Person person = new Person("John Doe");
-            entityManager.persist(person);
+	@Test
+	public void testFlushSQL() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.createNativeQuery("delete from Person").executeUpdate();
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("testFlushSQL");
+			//tag::flushing-manual-flush-example[]
+			Person person = new Person("John Doe");
+			entityManager.persist(person);
 
-            Session session = entityManager.unwrap(Session.class);
-            session.setHibernateFlushMode(FlushMode.MANUAL);
+			Session session = entityManager.unwrap(Session.class);
+			session.setHibernateFlushMode(FlushMode.MANUAL);
 
-            assertTrue(((Number) entityManager
-                .createQuery("select count(id) from Person")
-                .getSingleResult()).intValue() == 0);
+			assertTrue(((Number) entityManager
+				.createQuery("select count(id) from Person")
+				.getSingleResult()).intValue() == 0);
 
-            assertTrue(((Number) session
-                .createNativeQuery("select count(*) from Person", Integer.class)
-                .uniqueResult()).intValue() == 0);
-            //end::flushing-manual-flush-example[]
-        });
-    }
+			assertTrue(((Number) session
+				.createNativeQuery("select count(*) from Person", Integer.class)
+				.uniqueResult()).intValue() == 0);
+			//end::flushing-manual-flush-example[]
+		});
+	}
 
-    @Entity(name = "Person")
-    public static class Person {
+	@Entity(name = "Person")
+	public static class Person {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        private String name;
+		private String name;
 
-        @OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
-        private List<Phone> phones = new ArrayList<>();
+		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
+		private List<Phone> phones = new ArrayList<>();
 
-        public Person() {
-        }
+		public Person() {
+		}
 
-        public Person(String name) {
-            this.name = name;
-        }
+		public Person(String name) {
+			this.name = name;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public List<Phone> getPhones() {
-            return phones;
-        }
+		public List<Phone> getPhones() {
+			return phones;
+		}
 
-        public void addPhone(Phone phone) {
-            phones.add(phone);
-            phone.setPerson(this);
-        }
-    }
+		public void addPhone(Phone phone) {
+			phones.add(phone);
+			phone.setPerson(this);
+		}
+	}
 
-    @Entity(name = "Phone")
-    public static class Phone {
+	@Entity(name = "Phone")
+	public static class Phone {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @ManyToOne
-        private Person person;
+		@ManyToOne
+		private Person person;
 
-        @Column(name = "`number`")
-        private String number;
+		@Column(name = "`number`")
+		private String number;
 
-        public Phone() {
-        }
+		public Phone() {
+		}
 
-        public Phone(String number) {
-            this.number = number;
-        }
+		public Phone(String number) {
+			this.number = number;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public String getNumber() {
-            return number;
-        }
+		public String getNumber() {
+			return number;
+		}
 
-        public Person getPerson() {
-            return person;
-        }
+		public Person getPerson() {
+			return person;
+		}
 
-        public void setPerson(Person person) {
-            this.person = person;
-        }
-    }
+		public void setPerson(Person person) {
+			this.person = person;
+		}
+	}
 
-    @Entity(name = "Advertisement")
-    public static class Advertisement {
+	@Entity(name = "Advertisement")
+	public static class Advertisement {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        private String title;
+		private String title;
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public void setId(Long id) {
-            this.id = id;
-        }
+		public void setId(Long id) {
+			this.id = id;
+		}
 
-        public String getTitle() {
-            return title;
-        }
+		public String getTitle() {
+			return title;
+		}
 
-        public void setTitle(String title) {
-            this.title = title;
-        }
-    }
+		public void setTitle(String title) {
+			this.title = title;
+		}
+	}
 }

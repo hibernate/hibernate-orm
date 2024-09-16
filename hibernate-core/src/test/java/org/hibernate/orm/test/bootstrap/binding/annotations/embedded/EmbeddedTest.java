@@ -233,8 +233,8 @@ public class EmbeddedTest {
 
 		scope.inTransaction( session -> {
 			Query query = session.createQuery( "from Person p " +
-																  "where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
-																  "( p.bornIn.name is null or p.bornIn.name = :n )"
+																"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
+																"( p.bornIn.name is null or p.bornIn.name = :n )"
 			);
 			query.setParameter( "i", person.bornIn.getIso2() );
 			query.setParameter( "n", person.bornIn.getName() );

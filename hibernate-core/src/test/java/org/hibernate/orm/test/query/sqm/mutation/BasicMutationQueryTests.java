@@ -112,9 +112,9 @@ public class BasicMutationQueryTests {
 			resultClass = BasicMutationQueryTests.SillyEntity.class
 	)
 	public static class SillyEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		private SillyEntity() {

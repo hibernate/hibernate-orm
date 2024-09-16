@@ -140,7 +140,7 @@ public class CriteriaJoinFetchTest {
 					final Fetch<Customer, Address> fetch = customer.fetch( address, JoinType.INNER );
 
 					fetch.fetch( entityManager.getMetamodel()
-										 .entity( Address.class ).getSingularAttribute( "note" ), JoinType.INNER );
+										.entity( Address.class ).getSingularAttribute( "note" ), JoinType.INNER );
 					criteriaQuery.select( customer );
 
 					final TypedQuery<Customer> query = entityManager.createQuery( criteriaQuery );

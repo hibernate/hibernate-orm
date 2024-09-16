@@ -28,7 +28,7 @@ public class FormulaTemplateSchemaSubstitutionTest extends AbstractSchemaSubstit
 	@Override
 	void validate(String formula) {
 		assertEquals( "Formula should not contain {} characters",
-					  4, formula.split( CUSTOM_SCHEMA + ".", -1 ).length - 1
+					4, formula.split( CUSTOM_SCHEMA + ".", -1 ).length - 1
 		);
 	}
 }

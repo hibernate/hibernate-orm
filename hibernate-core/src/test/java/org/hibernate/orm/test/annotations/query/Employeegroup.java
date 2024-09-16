@@ -18,15 +18,15 @@ import jakarta.persistence.OneToMany;
 
 @Entity
 public class Employeegroup {
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "employeegroup")
-    private List<Employee> employees = new ArrayList<Employee>();
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "employeegroup")
+	private List<Employee> employees = new ArrayList<Employee>();
 
-    @ManyToOne
-    private Attrset attrset;
+	@ManyToOne
+	private Attrset attrset;
 
 	public Long getId() {
 		return id;

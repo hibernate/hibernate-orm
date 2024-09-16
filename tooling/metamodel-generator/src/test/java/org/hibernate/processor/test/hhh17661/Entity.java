@@ -14,7 +14,7 @@ import java.io.Serializable;
 @MappedSuperclass
 public abstract class Entity implements Serializable {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
 }

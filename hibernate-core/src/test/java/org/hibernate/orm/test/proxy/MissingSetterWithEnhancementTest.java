@@ -37,25 +37,25 @@ import static org.junit.jupiter.api.Assertions.fail;
 @JiraKey("HHH-14460")
 @BytecodeEnhanced
 public class MissingSetterWithEnhancementTest {
-    private ServiceRegistry serviceRegistry;
+	private ServiceRegistry serviceRegistry;
 
-    @BeforeEach
-    public void setUp() {
+	@BeforeEach
+	public void setUp() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		builder.applyClassLoader( getClass().getClassLoader() );
 		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder( builder.build() )
 				.applySettings( Environment.getProperties() )
 				.build();
-    }
+	}
 
-    @AfterEach
-    public void tearDown() {
-        if ( serviceRegistry != null ) {
-            ServiceRegistryBuilder.destroy( serviceRegistry );
-        }
-    }
+	@AfterEach
+	public void tearDown() {
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
 
-    @Test
+	@Test
 	public void testEnhancedClassMissesSetterForProperty() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( EntityWithMissingSetter.class );
@@ -74,12 +74,12 @@ public class MissingSetterWithEnhancementTest {
 	@Entity
 	@Access(AccessType.PROPERTY)
 	public static class EntityWithMissingSetter {
-    	private Long id;
-    	@Column
+		private Long id;
+		@Column
 		@Access(AccessType.FIELD)
 		private int someInt;
 
-    	@Id
+		@Id
 		public Long getId() {
 			return id;
 		}

@@ -28,15 +28,15 @@ public class NamedQueryTest extends BaseUnitTestCase {
 
 	private static String NAMED_QUERY_HBM_XML =
 		"<hibernate-mapping package='org.hibernate.orm.test.hbm.query'> "+
-	    "	<class name='NamedQueryTest$Bar'>                   "+
+		"	<class name='NamedQueryTest$Bar'>                   "+
 		"		<id name='id'>                                  "+
-	    "			<generator class='sequence'/>               "+
-	    "		</id>                                           "+
+		"			<generator class='sequence'/>               "+
+		"		</id>                                           "+
 		"       <property name='foo'/>                          "+
-	    "		<query name='findByFoo'>                        "+
-	    "			<query-param name='foo' type='string'/>     "+
-	    "			from NamedQueryTest$Bar where foo like :foo "+
-	    "		</query>                                        "+
+		"		<query name='findByFoo'>                        "+
+		"			<query-param name='foo' type='string'/>     "+
+		"			from NamedQueryTest$Bar where foo like :foo "+
+		"		</query>                                        "+
 		"	</class>                                            "+
 		"</hibernate-mapping>                                   ";
 

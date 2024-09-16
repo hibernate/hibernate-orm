@@ -79,8 +79,8 @@ public class CriteriaInheritanceJoinTest {
 			final Root<Address> addressRoot = cq.from( Address.class );
 			cq.select( addressRoot ).where(
 					cb.equal( cb.treat( addressRoot, StreetAddress.class )
-									  .get( "street" )
-									  .get( "name" ), "Via Roma" )
+									.get( "street" )
+									.get( "name" ), "Via Roma" )
 			);
 			final Address result = session.createQuery( cq ).getSingleResult();
 			assertThat( result ).isInstanceOf( StreetAddress.class );

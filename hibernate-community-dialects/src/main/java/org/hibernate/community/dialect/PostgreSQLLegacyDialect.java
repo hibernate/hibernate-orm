@@ -1349,7 +1349,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			tableTypesList.add( "MATERIALIZED VIEW" );
 
 			/*
-			 	PostgreSQL 10 and later adds support for Partition table.
+				PostgreSQL 10 and later adds support for Partition table.
 			 */
 			if ( getVersion().isSameOrAfter( 10 ) ) {
 				tableTypesList.add( "PARTITIONED TABLE" );

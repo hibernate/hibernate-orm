@@ -73,18 +73,18 @@ public class PlanetCheatSheet {
 	 */
 	public String toString()
 	{
-	    final String TAB = "    ";
+		final String TAB = "    ";
 
-	    String retValue = "";
+		String retValue = "";
 
-	    retValue = "PlanetCheatSheet ( "
-	        + super.toString() + TAB
-	        + "planet = " + this.planet + TAB
-	        + "mass = " + this.mass + TAB
-	        + "radius = " + this.radius + TAB
-	        + "numberOfInhabitants = " + this.numberOfInhabitants + TAB
-	        + " )";
+		retValue = "PlanetCheatSheet ( "
+			+ super.toString() + TAB
+			+ "planet = " + this.planet + TAB
+			+ "mass = " + this.mass + TAB
+			+ "radius = " + this.radius + TAB
+			+ "numberOfInhabitants = " + this.numberOfInhabitants + TAB
+			+ " )";
 
-	    return retValue;
+		return retValue;
 	}
 }

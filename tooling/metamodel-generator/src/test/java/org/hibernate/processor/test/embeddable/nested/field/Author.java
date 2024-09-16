@@ -12,13 +12,13 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Author {
-    @Id
-    String ssn;
+	@Id
+	String ssn;
 
-    @Basic(optional = false)
-    String name;
+	@Basic(optional = false)
+	String name;
 
-    Address address;
+	Address address;
 
-    Boolean deceased;
+	Boolean deceased;
 }

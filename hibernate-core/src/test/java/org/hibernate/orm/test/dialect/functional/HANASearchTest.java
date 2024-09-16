@@ -50,7 +50,7 @@ public class HANASearchTest {
 				session -> session.doWork(
 						connection -> {
 							try (PreparedStatement ps = connection.prepareStatement( "CREATE COLUMN TABLE " + ENTITY_NAME
-																							 + " (key INTEGER, t TEXT, c NVARCHAR(255), PRIMARY KEY (key))" )) {
+																							+ " (key INTEGER, t TEXT, c NVARCHAR(255), PRIMARY KEY (key))" )) {
 								ps.execute();
 							}
 							try (PreparedStatement ps = connection
@@ -99,7 +99,7 @@ public class HANASearchTest {
 					session.flush();
 
 					Query<Object[]> legacyQuery = session.createQuery( "select b, snippets(t), highlighted(t), score() from "
-																		 + ENTITY_NAME + " b where contains(b.t, 'text')", Object[].class );
+																		+ ENTITY_NAME + " b where contains(b.t, 'text')", Object[].class );
 
 					Object[] result = legacyQuery.getSingleResult();
 					SearchEntity retrievedEntity = (SearchEntity) result[0];
@@ -131,7 +131,7 @@ public class HANASearchTest {
 					session.flush();
 
 					Query<Object[]> legacyQuery = session.createQuery( "select b, snippets(t), highlighted(t), score() from " + ENTITY_NAME
-																		 + " b where not contains(b.t, 'string')", Object[].class );
+																		+ " b where not contains(b.t, 'string')", Object[].class );
 
 					Object[] result = legacyQuery.getSingleResult();
 					SearchEntity retrievedEntity = (SearchEntity) result[0];
@@ -241,7 +241,7 @@ public class HANASearchTest {
 					session.beginTransaction();
 
 					Query<Object[]> legacyQuery = session.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
-																		 + " b where contains(b.c, 'string', FUZZY(0.7))", Object[].class );
+																		+ " b where contains(b.c, 'string', FUZZY(0.7))", Object[].class );
 
 					Object[] result = legacyQuery.getSingleResult();
 					SearchEntity retrievedEntity = (SearchEntity) result[0];

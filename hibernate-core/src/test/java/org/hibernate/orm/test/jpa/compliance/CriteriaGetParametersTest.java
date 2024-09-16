@@ -93,7 +93,7 @@ public class CriteriaGetParametersTest {
 					final EntityType<Person> Person_ = entityManager.getMetamodel().entity( Person.class );
 					Join<Person, Address> a = customer.join( Person_.getCollection( "addresses", Address.class ) );
 					cquery.where( cbuilder.like( a.get( "street" ), "sh\\_ll",
-												 cbuilder.literal( '\\' )
+												cbuilder.literal( '\\' )
 					) );
 					cquery.select( customer );
 					TypedQuery<Person> tquery = entityManager.createQuery( cquery );

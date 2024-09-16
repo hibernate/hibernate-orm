@@ -13,12 +13,12 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Attrvalue {
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
 	@Column(name = "val")
-    private String value;
+	private String value;
 
 	public Long getId() {
 		return id;

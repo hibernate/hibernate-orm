@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  */
 public class FkCircularityTest {
 
-    @Test
+	@Test
 	public void testJoinedSublcassesInPK() {
 		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 			.addAnnotatedClass(A.class)
@@ -39,7 +39,7 @@ public class FkCircularityTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testDeepJoinedSuclassesHierachy() {
 		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass(ClassA.class)

@@ -30,7 +30,7 @@ public class ManyToOneOwning implements Serializable {
 
 	@ManyToOne
 	@JoinTable(name = "many_to_one_join_table", joinColumns = @JoinColumn(name = "owning_id"),
-			   inverseJoinColumns = @JoinColumn(name = "owned_id"))
+			inverseJoinColumns = @JoinColumn(name = "owned_id"))
 	private OneToManyOwned references;
 
 	public ManyToOneOwning() {

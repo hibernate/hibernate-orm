@@ -19,13 +19,13 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "sys_mod")
 public class SysModule2 {
-    @Id
-    private Integer id;
+	@Id
+	private Integer id;
 
-    @Column(name = "name")
-    private String name;
+	@Column(name = "name")
+	private String name;
 
-    @OneToMany( cascade = CascadeType.PERSIST, fetch = FetchType.EAGER )
-    @JoinColumn( name = "target_mod_fk" )
-    private Set<SysModule2> targetModules;
+	@OneToMany( cascade = CascadeType.PERSIST, fetch = FetchType.EAGER )
+	@JoinColumn( name = "target_mod_fk" )
+	private Set<SysModule2> targetModules;
 }

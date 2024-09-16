@@ -130,14 +130,14 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	public List list() throws AuditException {
 		Configuration configuration = enversService.getConfig();
 
-        /*
+		/*
 		The query that should be executed in the versions table:
-        SELECT e (unless another projection is specified) FROM ent_ver e, rev_entity r WHERE
-          e.revision_type != DEL (if selectDeletedEntities == false) AND
-          e.revision = r.revision AND
-          (all specified conditions, transformed, on the "e" entity)
-          ORDER BY e.revision ASC (unless another order or projection is specified)
-         */
+		SELECT e (unless another projection is specified) FROM ent_ver e, rev_entity r WHERE
+		e.revision_type != DEL (if selectDeletedEntities == false) AND
+		e.revision = r.revision AND
+		(all specified conditions, transformed, on the "e" entity)
+		ORDER BY e.revision ASC (unless another order or projection is specified)
+		 */
 		if ( !selectDeletedEntities ) {
 			// e.revision_type != DEL AND
 			qb.getRootParameters().addWhereWithParam( configuration.getRevisionTypePropertyName(), "<>", RevisionType.DEL );

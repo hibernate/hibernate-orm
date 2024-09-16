@@ -154,7 +154,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-            s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
+			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
 		}
 		catch (Exception e) {
 			// ignore
@@ -166,7 +166,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 			return;
 		}
 		try {
-            s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( resultSet, statement );
+			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( resultSet, statement );
 		}
 		catch (Exception e) {
 			// ignore

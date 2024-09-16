@@ -25,7 +25,7 @@ import jakarta.persistence.EntityManagerFactory;
  * @author Emmanuel Bernard
  */
 public class SessionFactoryObserverTest {
-    @Test
+	@Test
 	public void testSessionFactoryObserverProperty() {
 
 		Map<String, Object> settings = ServiceRegistryUtil.createBaseSettings();

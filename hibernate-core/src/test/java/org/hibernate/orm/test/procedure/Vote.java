@@ -21,26 +21,26 @@ import jakarta.persistence.Table;
 @Table(name = "vote")
 public class Vote {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @Column(name = "vote_choice")
-    @Convert( converter = YesNoConverter.class )
-    private boolean voteChoice;
+	@Column(name = "vote_choice")
+	@Convert( converter = YesNoConverter.class )
+	private boolean voteChoice;
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public boolean isVoteChoice() {
-        return voteChoice;
-    }
+	public boolean isVoteChoice() {
+		return voteChoice;
+	}
 
-    public void setVoteChoice(boolean voteChoice) {
-        this.voteChoice = voteChoice;
-    }
+	public void setVoteChoice(boolean voteChoice) {
+		this.voteChoice = voteChoice;
+	}
 }

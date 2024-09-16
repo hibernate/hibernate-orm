@@ -28,56 +28,56 @@ import org.junit.jupiter.api.Test;
 @JiraKey(value = "HHH-14687")
 public class Misc3Test {
 
-    @Test
-    void test(SessionFactoryScope scope) {
-        scope.inTransaction(x -> {});
-    }
+	@Test
+	void test(SessionFactoryScope scope) {
+		scope.inTransaction(x -> {});
+	}
 
-    @Entity
-    @Table(name = "A")
-    public static final class A {
-        @Id
-        @GeneratedValue
-        private Long id;
-        @Basic
-        private String name;
-    }
+	@Entity
+	@Table(name = "A")
+	public static final class A {
+		@Id
+		@GeneratedValue
+		private Long id;
+		@Basic
+		private String name;
+	}
 
-    @Entity
-    @Table(name = "B", uniqueConstraints = {@UniqueConstraint(columnNames = {"a_id", "uniqueName"})})
-    public static final class B {
-        @Id
-        @GeneratedValue
-        private Long id;
+	@Entity
+	@Table(name = "B", uniqueConstraints = {@UniqueConstraint(columnNames = {"a_id", "uniqueName"})})
+	public static final class B {
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @Basic
-        private String uniqueName;
-        @ManyToOne
-        @JoinColumn(name="a_id", referencedColumnName="id")
-        private A a;
-    }
+		@Basic
+		private String uniqueName;
+		@ManyToOne
+		@JoinColumn(name="a_id", referencedColumnName="id")
+		private A a;
+	}
 
-    @Entity
-    @Table(name = "C", uniqueConstraints = {@UniqueConstraint(columnNames = {"a_id", "uniqueName"})})
-    public static final class C {
-        @Id
-        @GeneratedValue
-        private Long id;
+	@Entity
+	@Table(name = "C", uniqueConstraints = {@UniqueConstraint(columnNames = {"a_id", "uniqueName"})})
+	public static final class C {
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @Basic
-        private String uniqueName;
+		@Basic
+		private String uniqueName;
 
-        @ManyToOne
-        @JoinColumn(name="a_id", referencedColumnName="id")
-        private A a;
-        @ManyToOne
-        @JoinColumns(
-                value = {
-                        @JoinColumn(name = "uniqueName", referencedColumnName = "uniqueName", insertable = false, updatable = false),
-                        @JoinColumn(name = "a_id", referencedColumnName = "a_id", insertable = false, updatable = false)
-                },
-                foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
-        )
-        private B b;
-    }
+		@ManyToOne
+		@JoinColumn(name="a_id", referencedColumnName="id")
+		private A a;
+		@ManyToOne
+		@JoinColumns(
+				value = {
+						@JoinColumn(name = "uniqueName", referencedColumnName = "uniqueName", insertable = false, updatable = false),
+						@JoinColumn(name = "a_id", referencedColumnName = "a_id", insertable = false, updatable = false)
+				},
+				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
+		)
+		private B b;
+	}
 }

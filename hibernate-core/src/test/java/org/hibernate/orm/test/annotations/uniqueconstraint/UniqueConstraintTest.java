@@ -28,43 +28,43 @@ import static org.junit.Assert.fail;
 @DomainModel( annotatedClasses = { Room.class, Building.class, House.class } )
 @SessionFactory
 @SkipForDialect( dialectClass = SybaseDialect.class,
-        matchSubTypes = true,
-        reason = "Sybase does not properly support unique constraints on nullable columns" )
+		matchSubTypes = true,
+		reason = "Sybase does not properly support unique constraints on nullable columns" )
 public class UniqueConstraintTest {
 
 	@Test
 	public void testUniquenessConstraintWithSuperclassProperty(SessionFactoryScope scope) {
-        scope.inTransaction( (s) -> {
-            Room livingRoom = new Room();
-            livingRoom.setId(1l);
-            livingRoom.setName("livingRoom");
-            s.persist(livingRoom);
-            s.flush();
-            House house = new House();
-            house.setId(1l);
-            house.setCost(100);
-            house.setHeight(1000l);
-            house.setRoom(livingRoom);
-            s.persist(house);
-            s.flush();
-            House house2 = new House();
-            house2.setId(2l);
-            house2.setCost(100);
-            house2.setHeight(1001l);
-            house2.setRoom(livingRoom);
-            s.persist(house2);
-            try {
-                s.flush();
-                fail( "Database constraint non-existent" );
-            }
-            catch (PersistenceException e) {
-                assertTyping( JDBCException.class, e );
-                //success
-            }
-            finally {
-                s.getTransaction().markRollbackOnly();
-            }
-        } );
-    }
+		scope.inTransaction( (s) -> {
+			Room livingRoom = new Room();
+			livingRoom.setId(1l);
+			livingRoom.setName("livingRoom");
+			s.persist(livingRoom);
+			s.flush();
+			House house = new House();
+			house.setId(1l);
+			house.setCost(100);
+			house.setHeight(1000l);
+			house.setRoom(livingRoom);
+			s.persist(house);
+			s.flush();
+			House house2 = new House();
+			house2.setId(2l);
+			house2.setCost(100);
+			house2.setHeight(1001l);
+			house2.setRoom(livingRoom);
+			s.persist(house2);
+			try {
+				s.flush();
+				fail( "Database constraint non-existent" );
+			}
+			catch (PersistenceException e) {
+				assertTyping( JDBCException.class, e );
+				//success
+			}
+			finally {
+				s.getTransaction().markRollbackOnly();
+			}
+		} );
+	}
 
 }

@@ -184,14 +184,14 @@ public class ManyToOneWithFormulaTest {
 
 			session.getTransaction().markRollbackOnly();
 		} );
-    }
+	}
 
-    @Test
+	@Test
 	@DomainModel( annotatedClasses = ProductSqlServer.class )
 	@SessionFactory
 	@RequiresDialect( SQLServerDialect.class )
-    public void testManyToOneFromNonPkToNonPkSqlServer(SessionFactoryScope scope) {
-        // also tests usage of the stand-alone @JoinFormula annotation
+	public void testManyToOneFromNonPkToNonPkSqlServer(SessionFactoryScope scope) {
+		// also tests usage of the stand-alone @JoinFormula annotation
 		// (i.e. not wrapped within @JoinColumnsOrFormulas)
 
 		scope.inTransaction( (session) -> {
@@ -221,6 +221,6 @@ public class ManyToOneWithFormulaTest {
 
 			session.getTransaction().markRollbackOnly();
 		} );
-    }
+	}
 
 }

@@ -90,7 +90,7 @@ public class BooleanArrayTest {
 	@Test
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testQueryById(SessionFactoryScope scope) {
-      scope.inSession( em -> {
+	scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getById", TableWithBooleanArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithBooleanArrays tableRecord = tq.getSingleResult();
@@ -100,8 +100,8 @@ public class BooleanArrayTest {
 
 	@Test
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
-    public void testQuery(SessionFactoryScope scope) {
-      scope.inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+	scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );
 			tq.setParameter( "data", new Boolean[]{} );
 			TableWithBooleanArrays tableRecord = tq.getSingleResult();

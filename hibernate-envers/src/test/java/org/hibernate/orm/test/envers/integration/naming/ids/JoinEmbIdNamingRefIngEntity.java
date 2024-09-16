@@ -32,9 +32,9 @@ public class JoinEmbIdNamingRefIngEntity {
 	@Audited
 	@ManyToOne
 	@JoinColumns({
-						 @JoinColumn(name = "XX_reference", referencedColumnName = "XX"),
-						 @JoinColumn(name = "YY_reference", referencedColumnName = "YY")
-				 })
+						@JoinColumn(name = "XX_reference", referencedColumnName = "XX"),
+						@JoinColumn(name = "YY_reference", referencedColumnName = "YY")
+				})
 	private JoinEmbIdNamingRefEdEntity reference;
 
 	public JoinEmbIdNamingRefIngEntity() {

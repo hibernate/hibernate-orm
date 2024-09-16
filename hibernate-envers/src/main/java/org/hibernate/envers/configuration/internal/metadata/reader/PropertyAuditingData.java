@@ -90,7 +90,7 @@ public class PropertyAuditingData {
 	 * @param accessType the access type
 	 * @param relationTargetNotFoundAction the relation target not found action
 	 * @param forceInsertable whether the property is forced insertable
- 	 * @param synthetic whether the property is a synthetic, non-logic column-based property
+	 * @param synthetic whether the property is a synthetic, non-logic column-based property
 	 * @param value the mapping model's value
 	 */
 	public PropertyAuditingData(

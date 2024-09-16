@@ -52,7 +52,7 @@ public class UnionSubclassFilterTest {
 					s.clear();
 
 					results = new ArrayList( new HashSet( s.createQuery( "from Person as p left join fetch p.minions" )
-																  .list() ) );
+																.list() ) );
 					assertEquals( 4, results.size(), "Incorrect qry result count" );
 					itr = results.iterator();
 					while ( itr.hasNext() ) {
@@ -67,7 +67,7 @@ public class UnionSubclassFilterTest {
 					s.clear();
 
 					results = new ArrayList( new HashSet( s.createQuery( "from Employee as p left join fetch p.minions" )
-																  .list() ) );
+																.list() ) );
 					assertEquals( 2, results.size(), "Incorrect qry result count" );
 					itr = results.iterator();
 					while ( itr.hasNext() ) {

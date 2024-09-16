@@ -55,11 +55,11 @@ public abstract class AbstractPerformanceTest extends AbstractEntityManagerTest 
 
 			newEntityManager();
 
-            /*System.gc();
+			/*System.gc();
 			System.gc();
-            System.gc();
-            System.out.println(Runtime.getRuntime().freeMemory() + ", " + Runtime.getRuntime().totalMemory() + ", "
-                    + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()));*/
+			System.gc();
+			System.out.println(Runtime.getRuntime().freeMemory() + ", " + Runtime.getRuntime().totalMemory() + ", "
+					+ (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()));*/
 		}
 
 		return total;

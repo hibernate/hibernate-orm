@@ -37,15 +37,15 @@ public class BlobTest {
 		Long readerId = scope.fromTransaction(
 				entityManager -> {
 					try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-						 ObjectOutputStream oos = new ObjectOutputStream( baos )) {
+						ObjectOutputStream oos = new ObjectOutputStream( baos )) {
 						Map<String, String> image = new HashMap<>();
 						image.put( "meta", "metadata" );
 						image.put( "data", "imagedata" );
 						ImageReader reader = new ImageReader();
 						oos.writeObject( image );
 						reader.setImage( entityManager.unwrap( Session.class )
-												 .getLobHelper()
-												 .createBlob( baos.toByteArray() ) );
+												.getLobHelper()
+												.createBlob( baos.toByteArray() ) );
 						entityManager.persist( reader );
 						return reader.getId();
 					}

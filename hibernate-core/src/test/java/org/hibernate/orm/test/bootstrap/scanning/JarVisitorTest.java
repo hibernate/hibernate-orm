@@ -284,17 +284,17 @@ public class JarVisitorTest extends PackagingTestCase {
 
 		//setting URL to accept vfs based protocol
 		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
-										   public URLStreamHandler createURLStreamHandler(String protocol) {
-											   if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
-												   return new URLStreamHandler() {
-													   protected URLConnection openConnection(URL u)
-															   throws IOException {
-														   return null;
-													   }
-												   };
-											   return null;
-										   }
-									   });
+										public URLStreamHandler createURLStreamHandler(String protocol) {
+											if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
+												return new URLStreamHandler() {
+													protected URLConnection openConnection(URL u)
+															throws IOException {
+														return null;
+													}
+												};
+											return null;
+										}
+									});
 
 		URL jarUrl = defaultPar.toURL();
 		ArchiveDescriptor descriptor = StandardArchiveDescriptorFactory.INSTANCE.buildArchiveDescriptor( jarUrl );

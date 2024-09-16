@@ -120,7 +120,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * Does this dialect require a one-based offset to be specified in the offset clause?
 	 *
 	 * @implNote The value passed into {@link AbstractLimitHandler#processSql(String, Limit)}
-     *           has a zero-based offset. Handlers which do not {@link #supportsVariableLimit}
+	 *           has a zero-based offset. Handlers which do not {@link #supportsVariableLimit}
 	 *           should take care to perform any needed first-row-conversion calls prior to
 	 *           injecting the limit values into the SQL string.
 	 *

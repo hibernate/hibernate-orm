@@ -91,7 +91,7 @@ public class QueryAndSQLTest {
 
 	@Test
 	public void testNativeQueryWithFormulaAttribute(SessionFactoryScope scope) {
-        final String dateFunctionRendered = scope.getSessionFactory().getJdbcServices().getDialect()
+		final String dateFunctionRendered = scope.getSessionFactory().getJdbcServices().getDialect()
 				.currentDate();
 
 		String sql = String.format(
@@ -125,7 +125,7 @@ public class QueryAndSQLTest {
 	public void testNativeQueryWithFormulaAttributeWithoutAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-                    String sql = "select table_name , " + scope.getSessionFactory().getJdbcServices().getDialect()
+					String sql = "select table_name , " + scope.getSessionFactory().getJdbcServices().getDialect()
 							.currentDate() + " as days_old from ALL_TABLES  where table_name = 'AUDIT_ACTIONS' ";
 					session.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
 				}

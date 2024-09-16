@@ -480,29 +480,29 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	public void testCollectionSizeLoadedWithGraph() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 
-			 Student student1 = new Student();
-			 student1.setId( 1 );
-			 student1.setName( "Student 1" );
-			 Student student2 = new Student();
-			 student2.setId( 2 );
-			 student2.setName( "Student 2" );
+			Student student1 = new Student();
+			student1.setId( 1 );
+			student1.setName( "Student 1" );
+			Student student2 = new Student();
+			student2.setId( 2 );
+			student2.setName( "Student 2" );
 
-			 Course course1 = new Course();
-			 course1.setName( "Full Time" );
-			 Course course2 = new Course();
-			 course2.setName( "Part Time" );
+			Course course1 = new Course();
+			course1.setName( "Full Time" );
+			Course course2 = new Course();
+			course2.setName( "Part Time" );
 
-			 Set<Course> std1Courses = new HashSet<Course>();
-			 std1Courses.add( course1 );
-			 std1Courses.add( course2 );
-			 student1.setCourses( std1Courses );
+			Set<Course> std1Courses = new HashSet<Course>();
+			std1Courses.add( course1 );
+			std1Courses.add( course2 );
+			student1.setCourses( std1Courses );
 
-			 Set<Course> std2Courses = new HashSet<Course>();
-			 std2Courses.add( course2 );
-			 student2.setCourses( std2Courses );
+			Set<Course> std2Courses = new HashSet<Course>();
+			std2Courses.add( course2 );
+			student2.setCourses( std2Courses );
 
-			 entityManager.persist( student1 );
-			 entityManager.persist( student2 );
+			entityManager.persist( student1 );
+			entityManager.persist( student2 );
 
 		});
 

@@ -17,17 +17,17 @@ import jakarta.persistence.OneToOne;
 @Entity
 public class ParentEntity {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @OneToOne(targetEntity = ChildEntity.class, optional = false)
-    @JoinColumnOrFormula(column = @JoinColumn(name = "ID", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
-    @JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "NAME", value = "'Tom'"))
-    private ChildEntity tom;
+	@OneToOne(targetEntity = ChildEntity.class, optional = false)
+	@JoinColumnOrFormula(column = @JoinColumn(name = "ID", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
+	@JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "NAME", value = "'Tom'"))
+	private ChildEntity tom;
 
-    @OneToOne(targetEntity = ChildEntity.class, optional = false)
-    @JoinColumnOrFormula(column = @JoinColumn(name = "ID", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
-    @JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "NAME", value = "'Ben'"))
-    private ChildEntity ben;
+	@OneToOne(targetEntity = ChildEntity.class, optional = false)
+	@JoinColumnOrFormula(column = @JoinColumn(name = "ID", referencedColumnName = "PARENT_ID", insertable = false, updatable = false))
+	@JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "NAME", value = "'Ben'"))
+	private ChildEntity ben;
 
 }

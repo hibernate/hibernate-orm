@@ -70,12 +70,12 @@ public class PartitionKeyTests {
 	@Entity( name = "PartitionedEntity" )
 	@Table( name = "entity_table" )
 	public static class PartitionedEntity {
-	    @Id
-	    private Integer id;
+		@Id
+		private Integer id;
 		@PartitionKey
 		@Column(name = "tenant_id", updatable = false)
 		private Integer tenantId;
-	    @Basic
+		@Basic
 		private String name;
 
 		protected PartitionedEntity() {

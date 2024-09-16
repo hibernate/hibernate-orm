@@ -15,10 +15,10 @@ import java.util.Set;
 
 @Entity
 public class Generic<T extends Number> {
-    @Id Long id;
-    @ManyToOne Generic<T> parent;
-    @OneToMany Set<Generic<T>> children;
-    @ElementCollection List<T> list;
-    @ElementCollection Map<T,T> map;
-    @ManyToAny Set<T> set;
+	@Id Long id;
+	@ManyToOne Generic<T> parent;
+	@OneToMany Set<Generic<T>> children;
+	@ElementCollection List<T> list;
+	@ElementCollection Map<T,T> map;
+	@ManyToAny Set<T> set;
 }

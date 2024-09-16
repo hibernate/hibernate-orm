@@ -20,14 +20,14 @@ import java.util.List;
 @Entity
 public class ChildUser extends User {
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
-    @NotAudited
-    private List<Shipment> shipmentList;
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.REMOVE)
+	@NotAudited
+	private List<Shipment> shipmentList;
 
-    ChildUser() {
-    }
+	ChildUser() {
+	}
 
-    public long getId() {
-        return id;
-    }
+	public long getId() {
+		return id;
+	}
 }

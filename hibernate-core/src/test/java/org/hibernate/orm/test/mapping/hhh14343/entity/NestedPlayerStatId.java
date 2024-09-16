@@ -10,33 +10,33 @@ import java.io.Serializable;
 
 public class NestedPlayerStatId implements Serializable
 {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private Integer playerId;
+	private Integer playerId;
 
-    private NestedScoreId score;
+	private NestedScoreId score;
 
-    public NestedPlayerStatId()
-    {
-    }
+	public NestedPlayerStatId()
+	{
+	}
 
-    public Integer getPlayerId()
-    {
-        return playerId;
-    }
+	public Integer getPlayerId()
+	{
+		return playerId;
+	}
 
-    public void setPlayerId(Integer playerId)
-    {
-        this.playerId = playerId;
-    }
+	public void setPlayerId(Integer playerId)
+	{
+		this.playerId = playerId;
+	}
 
-    public NestedScoreId getScore()
-    {
-        return score;
-    }
+	public NestedScoreId getScore()
+	{
+		return score;
+	}
 
-    public void setScore(NestedScoreId score)
-    {
-        this.score = score;
-    }
+	public void setScore(NestedScoreId score)
+	{
+		this.score = score;
+	}
 }

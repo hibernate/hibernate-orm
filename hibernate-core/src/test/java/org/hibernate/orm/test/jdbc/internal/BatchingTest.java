@@ -74,7 +74,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch( jdbcValueBindings, null );
 		assertThat( batchObserver.getExplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( batchObserver.getImplicitExecutionCount() ).isEqualTo( 0 );
-        assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
+		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
 
 		// bind values for #2 - again, nothing at JDBC level (we have statement from earlier)
 		jdbcValueBindings.bindValue( 2, SANDBOX_TBL, "ID", ParameterUsage.SET );

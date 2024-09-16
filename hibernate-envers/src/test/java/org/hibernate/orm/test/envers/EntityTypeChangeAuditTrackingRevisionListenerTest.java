@@ -238,10 +238,10 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 
 		@Override
 		public void entityChanged(Class entityClass,
-								  String entityName,
-								  Object entityId,
-								  RevisionType revisionType,
-								  Object revisionEntity) {
+								String entityName,
+								Object entityId,
+								RevisionType revisionType,
+								Object revisionEntity) {
 			String type = entityClass.getName();
 			((CustomTrackingRevisionEntity) revisionEntity).addModifiedEntityType(type);
 		}

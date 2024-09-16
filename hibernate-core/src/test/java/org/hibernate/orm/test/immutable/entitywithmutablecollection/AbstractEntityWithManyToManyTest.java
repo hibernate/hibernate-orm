@@ -63,8 +63,8 @@ public abstract class AbstractEntityWithManyToManyTest {
 		catch (IllegalArgumentException ex) {
 			isPlanContractsBidirectional = false;
 		}
-        isPlanVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Plan.class.getName()).isVersioned();
-        isContractVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Contract.class.getName()).isVersioned();
+		isPlanVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Plan.class.getName()).isVersioned();
+		isContractVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Contract.class.getName()).isVersioned();
 		sessionFactory.getStatistics().clear();
 	}
 

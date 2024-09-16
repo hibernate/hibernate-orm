@@ -525,28 +525,28 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 			inTransaction( s2 -> {
 				// Force connection acquisition
 				s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
-							   // Check same assertions for s2 as was done for s1.
+							// Check same assertions for s2 as was done for s1.
 				assertTrue( s2.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
-							   assertEquals(
-									   PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
-									   s2.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
-							   );
+							assertEquals(
+									PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
+									s2.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
+							);
 
-							   // Get the Connection s2 will use.
-							   Connection connection2 = s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
+							// Get the Connection s2 will use.
+							Connection connection2 = s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 
-							   // Assert that connection2 is not the same as connection1
-							   assertNotSame( connection1, connection2 );
+							// Assert that connection2 is not the same as connection1
+							assertNotSame( connection1, connection2 );
 
-							   // Execute a bulk operation on s2 (using connection2)
-							   assertEquals(
-									   1,
-									   s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate()
-							   );
+							// Execute a bulk operation on s2 (using connection2)
+							assertEquals(
+									1,
+									s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate()
+							);
 
-							   // Assert the Connection has not changed
-							   assertSame( connection2, s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
-						   }
+							// Assert the Connection has not changed
+							assertSame( connection2, s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
+						}
 			);
 
 			// Assert that the Connection used by s1 has hot changed.

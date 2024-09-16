@@ -18,7 +18,7 @@ public class Doctor extends Person implements IDoctor {
 		super( name );
 	}
 
-    public String operate() {
-        return "Dr. " + getName() + " is in";
-    }
+	public String operate() {
+		return "Dr. " + getName() + " is in";
+	}
 }

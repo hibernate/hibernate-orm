@@ -14,26 +14,26 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Tranche {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    private Tranchenmodell tranchenmodell;
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	private Tranchenmodell tranchenmodell;
 
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
 	public void setId(Long id) {
 		this.id = id;
 	}
 
-    public Tranchenmodell getTranchenmodell() {
-        return tranchenmodell;
-    }
+	public Tranchenmodell getTranchenmodell() {
+		return tranchenmodell;
+	}
 
-    public void setTranchenmodell(Tranchenmodell tranchenmodell) {
-        this.tranchenmodell = tranchenmodell;
-    }
+	public void setTranchenmodell(Tranchenmodell tranchenmodell) {
+		this.tranchenmodell = tranchenmodell;
+	}
 }

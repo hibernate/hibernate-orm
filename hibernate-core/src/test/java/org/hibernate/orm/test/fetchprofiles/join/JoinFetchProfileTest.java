@@ -134,8 +134,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 									assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 									assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 									assertFalse( Hibernate.isInitialized( section.getCourse()
-																				  .getCode()
-																				  .getDepartment() ) );
+																				.getCode()
+																				.getDepartment() ) );
 									assertTrue( Hibernate.isInitialized( section.getCourse() ) );
 									assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 								}
@@ -160,8 +160,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 									assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 									assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 									assertFalse( Hibernate.isInitialized( section.getCourse()
-																				  .getCode()
-																				  .getDepartment() ) );
+																				.getCode()
+																				.getDepartment() ) );
 									assertTrue( Hibernate.isInitialized( section.getCourse() ) );
 									assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 								}

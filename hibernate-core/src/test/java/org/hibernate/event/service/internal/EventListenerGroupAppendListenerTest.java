@@ -63,7 +63,7 @@ public class EventListenerGroupAppendListenerTest extends BaseSessionFactoryFunc
 			DefaultMergeEventListener mergeEventListener) {
 		inTransaction( session -> {
 
-            EventListenerGroup<MergeEventListener> group =
+			EventListenerGroup<MergeEventListener> group =
 					sessionFactory().getServiceRegistry()
 							.requireService( EventListenerRegistry.class )
 							.getEventListenerGroup( EventType.MERGE );

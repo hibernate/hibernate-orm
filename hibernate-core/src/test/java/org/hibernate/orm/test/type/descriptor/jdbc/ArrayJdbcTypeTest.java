@@ -19,15 +19,15 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ArrayJdbcTypeTest {
-    @Test
-    @JiraKey(value = "HHH-17662")
-    public void testEquality() {
-        Map<JdbcType, String> typeMap = new HashMap<>();
-        JdbcType bigInt = new BigIntJdbcType();
-        typeMap.put(new ArrayJdbcType(bigInt), "bees");
-        typeMap.put(new ArrayJdbcType(bigInt), "bees");
-        typeMap.put(new ArrayJdbcType(bigInt), "bees");
-        typeMap.put(new ArrayJdbcType(new IntegerJdbcType()), "waffles");
-        assertThat("A map of arrays only contains non duplicate entries", typeMap.size() == 2);
-    }
+	@Test
+	@JiraKey(value = "HHH-17662")
+	public void testEquality() {
+		Map<JdbcType, String> typeMap = new HashMap<>();
+		JdbcType bigInt = new BigIntJdbcType();
+		typeMap.put(new ArrayJdbcType(bigInt), "bees");
+		typeMap.put(new ArrayJdbcType(bigInt), "bees");
+		typeMap.put(new ArrayJdbcType(bigInt), "bees");
+		typeMap.put(new ArrayJdbcType(new IntegerJdbcType()), "waffles");
+		assertThat("A map of arrays only contains non duplicate entries", typeMap.size() == 2);
+	}
 }

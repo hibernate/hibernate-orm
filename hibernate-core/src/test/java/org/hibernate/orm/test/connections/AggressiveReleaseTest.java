@@ -151,7 +151,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		}
 
 		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
-			 ScrollableResults sr2 = s.createQuery( "from Silly where name = 'silly'" ).scroll()) {
+			ScrollableResults sr2 = s.createQuery( "from Silly where name = 'silly'" ).scroll()) {
 			assertTrue( sr.next() );
 			assertEquals( silly, sr.get() );
 			assertTrue( sr2.next() );

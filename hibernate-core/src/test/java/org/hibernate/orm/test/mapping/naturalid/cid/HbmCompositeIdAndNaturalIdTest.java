@@ -19,11 +19,11 @@ import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
  * @author Donnchadh O Donnabhain
  */
 @ServiceRegistry(
-        settings = {
-                @Setting( name = USE_SECOND_LEVEL_CACHE, value = "false" ),
-                @Setting( name = USE_QUERY_CACHE, value = "false" ),
-                @Setting( name = GENERATE_STATISTICS, value = "false" )
-        }
+		settings = {
+				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = USE_QUERY_CACHE, value = "false" ),
+				@Setting( name = GENERATE_STATISTICS, value = "false" )
+		}
 )
 @DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/naturalid/cid/Account.hbm.xml" )
 @SessionFactory

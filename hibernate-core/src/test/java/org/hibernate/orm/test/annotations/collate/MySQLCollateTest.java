@@ -27,21 +27,21 @@ import org.junit.jupiter.api.Test;
 @SkipForDialect(dialectClass = TiDBDialect.class)
 public class MySQLCollateTest {
 
-    @Test void test(SessionFactoryScope scope) {
-        scope.inTransaction(session -> session.persist(new Message("Hello, world!")));
-    }
+	@Test void test(SessionFactoryScope scope) {
+		scope.inTransaction(session -> session.persist(new Message("Hello, world!")));
+	}
 
-    @Entity(name = "msgs")
-    static class Message {
-        @Id @GeneratedValue
-        Long id;
-        @Basic(optional = false)
-        @Collate("utf8mb4_spanish2_ci")
-        @Column(length = 200)
-        String text;
+	@Entity(name = "msgs")
+	static class Message {
+		@Id @GeneratedValue
+		Long id;
+		@Basic(optional = false)
+		@Collate("utf8mb4_spanish2_ci")
+		@Column(length = 200)
+		String text;
 
-        public Message(String text) {
-            this.text = text;
-        }
-    }
+		public Message(String text) {
+			this.text = text;
+		}
+	}
 }

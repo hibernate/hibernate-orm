@@ -49,7 +49,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 				.build();
 
 		//end::transactions-api-jdbc-example[]
-        */
+		*/
 
 		//tag::transactions-api-jdbc-example[]
 		Metadata metadata = new MetadataSources(serviceRegistry)

@@ -55,9 +55,9 @@ public class CustomSqlTests {
 	@SQLDelete( sql = "delete from custom_entity where id = ?" )
 	@SQLUpdate( sql = "update custom_entity set name = ? where id = ? " )
 	public static class CustomEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		private CustomEntity() {

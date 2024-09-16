@@ -15,29 +15,29 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class Dimensions {
 
-    private int length;
+	private int length;
 
-    private int width;
+	private int width;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
 //end::sql-composite-key-entity-associations_named-query-example[]
 
-    public int getLength() {
-        return length;
-    }
+	public int getLength() {
+		return length;
+	}
 
-    public void setLength(int length) {
-        this.length = length;
-    }
+	public void setLength(int length) {
+		this.length = length;
+	}
 
-    public int getWidth() {
-        return width;
-    }
+	public int getWidth() {
+		return width;
+	}
 
-    public void setWidth(int width) {
-        this.width = width;
-    }
+	public void setWidth(int width) {
+		this.width = width;
+	}
 //tag::sql-composite-key-entity-associations_named-query-example[]
 }
 //end::sql-composite-key-entity-associations_named-query-example[]

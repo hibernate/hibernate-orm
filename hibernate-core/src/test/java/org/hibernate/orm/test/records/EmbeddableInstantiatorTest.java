@@ -86,7 +86,7 @@ public class EmbeddableInstantiatorTest {
 			@Override
 			public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
 				return new MyRecord( valueAccess.getValue( 2, Integer.class ), valueAccess.getValue( 1, String.class ),
-									 valueAccess.getValue( 0, LocalDate.class )
+									valueAccess.getValue( 0, LocalDate.class )
 				);
 			}
 		}

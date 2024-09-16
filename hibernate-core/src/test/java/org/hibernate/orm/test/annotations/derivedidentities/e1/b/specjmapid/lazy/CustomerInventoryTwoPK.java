@@ -10,40 +10,40 @@ import java.io.Serializable;
 
 public class CustomerInventoryTwoPK implements Serializable {
 
-   private Integer id;
-   private int custId;
+private Integer id;
+private int custId;
 
-   public CustomerInventoryTwoPK() {
-   }
+public CustomerInventoryTwoPK() {
+}
 
-   public CustomerInventoryTwoPK(Integer id, int custId) {
-      this.id = id;
-      this.custId = custId;
-   }
+public CustomerInventoryTwoPK(Integer id, int custId) {
+	this.id = id;
+	this.custId = custId;
+}
 
-   public boolean equals(Object other) {
-      if ( other == this ) {
-         return true;
-      }
-      if ( other == null || getClass() != other.getClass() ) {
-         return false;
-      }
-      CustomerInventoryTwoPK cip = ( CustomerInventoryTwoPK ) other;
-      return ( custId == cip.custId && ( id == cip.id ||
-            ( id != null && id.equals( cip.id ) ) ) );
-   }
+public boolean equals(Object other) {
+	if ( other == this ) {
+		return true;
+	}
+	if ( other == null || getClass() != other.getClass() ) {
+		return false;
+	}
+	CustomerInventoryTwoPK cip = ( CustomerInventoryTwoPK ) other;
+	return ( custId == cip.custId && ( id == cip.id ||
+			( id != null && id.equals( cip.id ) ) ) );
+}
 
-   public int hashCode() {
-      return ( id == null ? 0 : id.hashCode() ) ^ custId;
-   }
+public int hashCode() {
+	return ( id == null ? 0 : id.hashCode() ) ^ custId;
+}
 
-   public Integer getId() {
-      return id;
-   }
+public Integer getId() {
+	return id;
+}
 
-   public int getCustId() {
-      return custId;
-   }
+public int getCustId() {
+	return custId;
+}
 
 
 }

@@ -17,5 +17,5 @@ import jakarta.persistence.MappedSuperclass;
 public class AbstractWorkOrderId implements Serializable {
 	private String workOrder;
 	private Long plantId;
-    /* other stuffs */
+	/* other stuffs */
 }

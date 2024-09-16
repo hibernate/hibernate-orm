@@ -31,9 +31,9 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory
 public class ImmutableManyToOneNaturalIdAnnotationTest {
 
-    @Test
-    @JiraKey( value = "HHH-10360")
-    public void testNaturalIdNullability(SessionFactoryScope scope) {
+	@Test
+	@JiraKey( value = "HHH-10360")
+	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		// nullability is not specified for either properties making up
 		// the natural ID, so they should be nullable by annotation-specific default
 

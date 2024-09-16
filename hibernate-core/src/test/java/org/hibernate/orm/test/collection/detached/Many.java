@@ -14,10 +14,10 @@ import jakarta.persistence.Table;
 
 @Entity @Table(name="DCMany")
 public class Many {
-    @GeneratedValue
-    @Id
-    long id;
+	@GeneratedValue
+	@Id
+	long id;
 
-    @ManyToOne
-    One one;
+	@ManyToOne
+	One one;
 }

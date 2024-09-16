@@ -11,8 +11,8 @@ package org.hibernate.orm.test.subclassProxyInterface;
  * @author Steve Ebersole
  */
 public class Person {
-    private Long id;
-    private String name;
+	private Long id;
+	private String name;
 
 	public Person() {
 	}

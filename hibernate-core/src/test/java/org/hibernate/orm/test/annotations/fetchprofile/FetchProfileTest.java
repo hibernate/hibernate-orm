@@ -40,13 +40,13 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
 
 	@Before
-    public void setUp() {
+	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@After
-    public void tearDown() {
-        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
+	public void tearDown() {
+		if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
 	@Test
@@ -83,7 +83,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-            log.trace("success");
+			log.trace("success");
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
@@ -105,7 +105,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-            log.trace("success");
+			log.trace("success");
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();

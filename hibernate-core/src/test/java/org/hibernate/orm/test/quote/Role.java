@@ -19,8 +19,8 @@ import jakarta.persistence.Table;
 @Table(name = "`Role`")
 public class Role implements Serializable {
 
-   @Id
-   @GeneratedValue(strategy = GenerationType.AUTO)
-   private long id;
+@Id
+@GeneratedValue(strategy = GenerationType.AUTO)
+private long id;
 
 }

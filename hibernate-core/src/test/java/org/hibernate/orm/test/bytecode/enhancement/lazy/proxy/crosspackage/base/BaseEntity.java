@@ -14,26 +14,26 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class BaseEntity {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-    @Embedded
-    protected EmbeddableType embeddedField;
+	@Embedded
+	protected EmbeddableType embeddedField;
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
+	public void setId(final Long id) {
+		this.id = id;
+	}
 
-    public EmbeddableType getEmbeddedField() {
-        return embeddedField;
-    }
+	public EmbeddableType getEmbeddedField() {
+		return embeddedField;
+	}
 
-    public void setEmbeddedField(final EmbeddableType embeddedField) {
-        this.embeddedField = embeddedField;
-    }
+	public void setEmbeddedField(final EmbeddableType embeddedField) {
+		this.embeddedField = embeddedField;
+	}
 }

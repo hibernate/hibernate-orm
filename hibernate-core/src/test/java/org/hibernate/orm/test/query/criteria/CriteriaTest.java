@@ -53,7 +53,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class<?>[] {
 			Person.class,
 			Partner.class,
-            Phone.class,
+			Phone.class,
 			Call.class,
 			CreditCardPayment.class,
 			WireTransferPayment.class,
@@ -131,7 +131,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_typedquery_entity_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::criteria-typedquery-entity-example[]
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
@@ -149,7 +149,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_typedquery_expression_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::criteria-typedquery-expression-example[]
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
@@ -167,7 +167,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_typedquery_multiselect_explicit_array_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::criteria-typedquery-multiselect-array-explicit-example[]
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
@@ -189,7 +189,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_typedquery_multiselect_implicit_array_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::criteria-typedquery-multiselect-array-implicit-example[]
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
@@ -211,7 +211,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_typedquery_wrapper_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::criteria-typedquery-wrapper-example[]
 
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -234,7 +234,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_tuple_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::criteria-tuple-example[]
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
@@ -267,7 +267,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_from_root_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::criteria-from-root-example[]
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
@@ -280,7 +280,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_criteria_from_multiple_root_example() {
 
-        doInJPA(this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			String address = "Earth";
 			String prefix = "J%";
 			//tag::criteria-from-multiple-root-example[]

@@ -15,12 +15,12 @@ import java.util.List;
 
 public interface SuperDao {
 
-    EntityManager em();
+	EntityManager em();
 
 
-    @Find
-    List<Book> books1(@Pattern String title);
+	@Find
+	List<Book> books1(@Pattern String title);
 
-    @HQL("where title like :title")
-    List<Book> books2(String title);
+	@HQL("where title like :title")
+	List<Book> books2(String title);
 }

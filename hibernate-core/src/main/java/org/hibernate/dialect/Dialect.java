@@ -1646,7 +1646,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <p>
 	 * An implementation may set configuration properties from
 	 * {@link #initDefaultProperties()}, though it is discouraged.
-	 the
 	 * @return the Hibernate configuration properties
 	 *
 	 * @see #initDefaultProperties()

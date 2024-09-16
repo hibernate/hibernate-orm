@@ -28,24 +28,24 @@ public class ProductSqlServer implements Serializable
 	private static final long serialVersionUID = 6956478993159505828L;
 
 	@Id
-    public Integer id;
+	public Integer id;
 
-    @Column(name="product_idnf", length=18, nullable=false, unique=true,
-        columnDefinition="char(18)")
-    public String productIdnf;
+	@Column(name="product_idnf", length=18, nullable=false, unique=true,
+		columnDefinition="char(18)")
+	public String productIdnf;
 
-    @Column(name="description", nullable=false)
-    public String description;
+	@Column(name="description", nullable=false)
+	public String description;
 
-    @ManyToOne
+	@ManyToOne
 	@JoinFormula(value="{fn substring(product_idnf, 1, 3)}",
-				 referencedColumnName="product_idnf")
+				referencedColumnName="product_idnf")
 	@Fetch(FetchMode.JOIN)
-    private ProductSqlServer productFamily;
+	private ProductSqlServer productFamily;
 
-    public ProductSqlServer getProductFamily()
-    {
-        return productFamily;
-    }
+	public ProductSqlServer getProductFamily()
+	{
+		return productFamily;
+	}
 
 }

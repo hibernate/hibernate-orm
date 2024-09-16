@@ -8,22 +8,22 @@ package org.hibernate.orm.test.bootstrap.binding.mixed;
 
 public class HBMEntity {
 
-    private long _id;
-    private AnnotationEntity _association;
+	private long _id;
+	private AnnotationEntity _association;
 
-    public long getId() {
-        return _id;
-    }
+	public long getId() {
+		return _id;
+	}
 
-    public void setId(long id) {
-        _id = id;
-    }
+	public void setId(long id) {
+		_id = id;
+	}
 
-    public AnnotationEntity getAssociation() {
-        return _association;
-    }
+	public AnnotationEntity getAssociation() {
+		return _association;
+	}
 
-    public void setAssociation(AnnotationEntity association) {
-        _association = association;
-    }
+	public void setAssociation(AnnotationEntity association) {
+		_association = association;
+	}
 }

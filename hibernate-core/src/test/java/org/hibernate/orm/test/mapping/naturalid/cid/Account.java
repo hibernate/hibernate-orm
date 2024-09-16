@@ -19,24 +19,24 @@ import org.hibernate.annotations.NaturalId;
 @Entity
 @Table( name = "t_acct" )
 public class Account {
-    @EmbeddedId
-    private AccountId accountId;
+	@EmbeddedId
+	private AccountId accountId;
 
-    @Basic( optional = false )
-    @NaturalId
-    private String shortCode;
+	@Basic( optional = false )
+	@NaturalId
+	private String shortCode;
 
-    protected Account() {
-    }
+	protected Account() {
+	}
 
-    public Account(AccountId accountId, String shortCode) {
-        this.accountId = accountId;
-        this.shortCode = shortCode;
-    }
-    public String getShortCode() {
-        return shortCode;
-    }
-    public AccountId getAccountId() {
-        return accountId;
-    }
+	public Account(AccountId accountId, String shortCode) {
+		this.accountId = accountId;
+		this.shortCode = shortCode;
+	}
+	public String getShortCode() {
+		return shortCode;
+	}
+	public AccountId getAccountId() {
+		return accountId;
+	}
 }

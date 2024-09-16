@@ -17,10 +17,10 @@ import org.hibernate.boot.model.source.spi.AttributePath;
  */
 public interface ImplicitCollectionTableNameSource extends ImplicitNameSource {
 	/**
-	  * Access to the physical name of the owning entity's table.
-	  *
-	  * @return Owning entity's table name.
-	  */
+	 * Access to the physical name of the owning entity's table.
+	 *
+	 * @return Owning entity's table name.
+	 */
 	Identifier getOwningPhysicalTableName();
 
 	/**

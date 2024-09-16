@@ -46,19 +46,19 @@ public class ImplicitPropertyList<T extends Property> {
 	@ManyToAny
 	@Column(name = "property_type")
 	@AnyKeyJavaClass( Integer.class )
-    @Cascade( CascadeType.ALL )
-    @JoinTable(name = "list_properties",
+	@Cascade( CascadeType.ALL )
+	@JoinTable(name = "list_properties",
 			joinColumns = @JoinColumn(name = "obj_id"),
 			inverseJoinColumns = @JoinColumn(name = "property_id")
 	)
-    @OrderColumn(name = "prop_index")
-    public List<T> getGeneralProperties() {
-        return generalProperties;
-    }
+	@OrderColumn(name = "prop_index")
+	public List<T> getGeneralProperties() {
+		return generalProperties;
+	}
 
-    public void setGeneralProperties(List<T> generalProperties) {
-        this.generalProperties = generalProperties;
-    }
+	public void setGeneralProperties(List<T> generalProperties) {
+		this.generalProperties = generalProperties;
+	}
 
 	@Id
 	@GeneratedValue
@@ -78,7 +78,7 @@ public class ImplicitPropertyList<T extends Property> {
 		this.name = name;
 	}
 
-    @Any
+	@Any
 	@Column(name = "property_type")
 	@JoinColumn(name = "property_id")
 	@AnyKeyJavaClass( Integer.class )
@@ -88,8 +88,8 @@ public class ImplicitPropertyList<T extends Property> {
 	@AnyDiscriminatorValue( discriminator = "L", entity = LongProperty.class)
 	@Cascade( CascadeType.ALL )
 	public T getSomeProperty() {
-        return someProperty;
-    }
+		return someProperty;
+	}
 
 	public void setSomeProperty(T someProperty) {
 		this.someProperty = someProperty;

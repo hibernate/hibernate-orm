@@ -17,11 +17,11 @@ import org.junit.Test;
 @TestForIssue(jiraKey = "HHH-17253")
 public class CircularTypeVariableTest extends CompilationTest {
 
-    @Test
-    @WithClasses({ RoleAccess.class, User.class })
-    public void testCircularTypeVariable() {
-        TestUtil.assertMetamodelClassGeneratedFor( RoleAccess.class );
-        TestUtil.assertMetamodelClassGeneratedFor( User.class );
-    }
+	@Test
+	@WithClasses({ RoleAccess.class, User.class })
+	public void testCircularTypeVariable() {
+		TestUtil.assertMetamodelClassGeneratedFor( RoleAccess.class );
+		TestUtil.assertMetamodelClassGeneratedFor( User.class );
+	}
 
 }

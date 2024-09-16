@@ -47,7 +47,7 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseNonConfigCoreFu
 	 */
 	@Test
 	public void testSimpleConvertOverrides() {
-        final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Person.class.getName());
+		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Person.class.getName());
 		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );

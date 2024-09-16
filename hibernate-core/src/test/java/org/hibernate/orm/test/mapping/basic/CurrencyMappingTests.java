@@ -193,7 +193,7 @@ public class CurrencyMappingTests {
 		@ElementCollection
 		private Set<Currency> currencies;
 
-        public EntityWithCurrency() {
+		public EntityWithCurrency() {
 			//
 		}
 
@@ -201,7 +201,7 @@ public class CurrencyMappingTests {
 			this.id         = id;
 			this.currency   = currency;
 			this.currencies = currencies;
-        }
+		}
 	}
 
 }

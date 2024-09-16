@@ -15,27 +15,27 @@ import jakarta.persistence.OneToOne;
 
 @Entity
 public class Preisregelung {
-    @Id
+	@Id
 	@GeneratedValue
-    private Long id;
+	private Long id;
 
-    @OneToOne(mappedBy = "preisregelung", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Tranchenmodell tranchenmodell;
+	@OneToOne(mappedBy = "preisregelung", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	private Tranchenmodell tranchenmodell;
 
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
 	public void setId(Long id) {
 		this.id = id;
 	}
 
-    public Tranchenmodell getTranchenmodell() {
-        return tranchenmodell;
-    }
+	public Tranchenmodell getTranchenmodell() {
+		return tranchenmodell;
+	}
 
-    public void setTranchenmodell(Tranchenmodell tranchenmodell) {
-        this.tranchenmodell = tranchenmodell;
-    }
+	public void setTranchenmodell(Tranchenmodell tranchenmodell) {
+		this.tranchenmodell = tranchenmodell;
+	}
 }

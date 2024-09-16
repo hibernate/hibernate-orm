@@ -16,29 +16,29 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class BaseEntity {
 
-    private Timestamp createdOn;
+	private Timestamp createdOn;
 
-    private Timestamp updatedOn;
+	private Timestamp updatedOn;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
 //end::events-default-listener-mapping-example[]
 
-    public Timestamp getCreatedOn() {
-        return createdOn;
-    }
+	public Timestamp getCreatedOn() {
+		return createdOn;
+	}
 
-    void setCreatedOn(Timestamp createdOn) {
-        this.createdOn = createdOn;
-    }
+	void setCreatedOn(Timestamp createdOn) {
+		this.createdOn = createdOn;
+	}
 
-    public Timestamp getUpdatedOn() {
-        return updatedOn;
-    }
+	public Timestamp getUpdatedOn() {
+		return updatedOn;
+	}
 
-    void setUpdatedOn(Timestamp updatedOn) {
-        this.updatedOn = updatedOn;
-    }
+	void setUpdatedOn(Timestamp updatedOn) {
+		this.updatedOn = updatedOn;
+	}
 //tag::events-default-listener-mapping-example[]
 }
 //end::events-default-listener-mapping-example[]

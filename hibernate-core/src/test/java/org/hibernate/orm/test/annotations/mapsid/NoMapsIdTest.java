@@ -31,96 +31,96 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @DomainModel(annotatedClasses = {NoMapsIdTest.Loan.class, NoMapsIdTest.Extension.class})
 public class NoMapsIdTest {
 
-    @Test void test(SessionFactoryScope scope) {
-        ExtensionId eid = scope.fromTransaction( s -> {
-            Loan loan = new Loan();
-            loan.id = 999L;
-            Extension extension = new Extension();
-            extension.loan = loan;
-            extension.exNo = 1;
-            extension.exExtensionDays = 30;
-            loan.extensions.add(extension);
-            extension = new Extension();
-            extension.loan = loan;
-            extension.exNo = 2;
-            extension.exExtensionDays = 14;
-            loan.extensions.add(extension);
-            s.persist(loan);
-            return new ExtensionId(extension.loan.id, extension.exNo );
-        });
-        scope.inSession( s -> {
-            List<Extension> extensions = s.createQuery("from Extension", Extension.class).getResultList();
-            assertEquals(2, extensions.size());
-        } );
-        scope.inSession( s -> {
-            Extension extension = s.find(Extension.class, eid);
-            assertEquals(14, extension.exExtensionDays);
-            assertEquals(2, extension.exNo);
-            assertEquals(999L, extension.loan.id);
-            assertNotNull( extension.loan );
-        });
-        scope.inSession( s -> {
-            Loan loan = s.find(Loan.class, eid.loan);
-            Extension extension = loan.extensions.get(0);
-            assertEquals(1, extension.exNo);
-            assertEquals(30, extension.exExtensionDays);
-            assertEquals(999L, extension.loan.id);
-            assertEquals(loan, extension.loan);
-        });
-    }
+	@Test void test(SessionFactoryScope scope) {
+		ExtensionId eid = scope.fromTransaction( s -> {
+			Loan loan = new Loan();
+			loan.id = 999L;
+			Extension extension = new Extension();
+			extension.loan = loan;
+			extension.exNo = 1;
+			extension.exExtensionDays = 30;
+			loan.extensions.add(extension);
+			extension = new Extension();
+			extension.loan = loan;
+			extension.exNo = 2;
+			extension.exExtensionDays = 14;
+			loan.extensions.add(extension);
+			s.persist(loan);
+			return new ExtensionId(extension.loan.id, extension.exNo );
+		});
+		scope.inSession( s -> {
+			List<Extension> extensions = s.createQuery("from Extension", Extension.class).getResultList();
+			assertEquals(2, extensions.size());
+		} );
+		scope.inSession( s -> {
+			Extension extension = s.find(Extension.class, eid);
+			assertEquals(14, extension.exExtensionDays);
+			assertEquals(2, extension.exNo);
+			assertEquals(999L, extension.loan.id);
+			assertNotNull( extension.loan );
+		});
+		scope.inSession( s -> {
+			Loan loan = s.find(Loan.class, eid.loan);
+			Extension extension = loan.extensions.get(0);
+			assertEquals(1, extension.exNo);
+			assertEquals(30, extension.exExtensionDays);
+			assertEquals(999L, extension.loan.id);
+			assertEquals(loan, extension.loan);
+		});
+	}
 
-    @Entity(name = "Loan")
-    static class Loan {
-        @Id
-        @Column(name = "LOAN_ID")
-        private Long id;
+	@Entity(name = "Loan")
+	static class Loan {
+		@Id
+		@Column(name = "LOAN_ID")
+		private Long id;
 
-        private BigDecimal amount = BigDecimal.ZERO;
+		private BigDecimal amount = BigDecimal.ZERO;
 
-        @OneToMany(cascade = CascadeType.ALL, mappedBy = "loan")
-        private List<Extension> extensions = new ArrayList<>();
-    }
+		@OneToMany(cascade = CascadeType.ALL, mappedBy = "loan")
+		private List<Extension> extensions = new ArrayList<>();
+	}
 
-    static class ExtensionId {
-        private Long loan;
-        private int exNo;
+	static class ExtensionId {
+		private Long loan;
+		private int exNo;
 
-        public ExtensionId(Long loan, int exNo) {
-            this.loan = loan;
-            this.exNo = exNo;
-        }
+		public ExtensionId(Long loan, int exNo) {
+			this.loan = loan;
+			this.exNo = exNo;
+		}
 
-        public ExtensionId() {
-        }
+		public ExtensionId() {
+		}
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ExtensionId)) return false;
-            ExtensionId that = (ExtensionId) o;
-            return exNo == that.exNo && Objects.equals(loan, that.loan);
-        }
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (!(o instanceof ExtensionId)) return false;
+			ExtensionId that = (ExtensionId) o;
+			return exNo == that.exNo && Objects.equals(loan, that.loan);
+		}
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(loan, exNo);
-        }
-    }
+		@Override
+		public int hashCode() {
+			return Objects.hash(loan, exNo);
+		}
+	}
 
-    @Entity(name = "Extension")
-    @IdClass(ExtensionId.class)
-    static class Extension {
+	@Entity(name = "Extension")
+	@IdClass(ExtensionId.class)
+	static class Extension {
 
-        @Id
-        @Column(name = "EX_NO")
-        private int exNo;
+		@Id
+		@Column(name = "EX_NO")
+		private int exNo;
 
-        @Column(name = "EX_EXTENSION_DAYS")
-        private int exExtensionDays;
+		@Column(name = "EX_EXTENSION_DAYS")
+		private int exExtensionDays;
 
-        @ManyToOne
-        @Id
-        @JoinColumn(name = "EX_LOAN_ID")
-        private Loan loan;
-    }
+		@ManyToOne
+		@Id
+		@JoinColumn(name = "EX_LOAN_ID")
+		private Loan loan;
+	}
 }

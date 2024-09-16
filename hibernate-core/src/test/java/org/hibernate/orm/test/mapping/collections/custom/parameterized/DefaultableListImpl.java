@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * @author Steve Ebersole
  */
 public class DefaultableListImpl extends ArrayList implements DefaultableList {
-    private String defaultValue;
+	private String defaultValue;
 
 	public DefaultableListImpl() {
 	}
@@ -25,10 +25,10 @@ public class DefaultableListImpl extends ArrayList implements DefaultableList {
 	}
 
 	public String getDefaultValue() {
-        return defaultValue;
-    }
+		return defaultValue;
+	}
 
-    public void setDefaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
-    }
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
 }

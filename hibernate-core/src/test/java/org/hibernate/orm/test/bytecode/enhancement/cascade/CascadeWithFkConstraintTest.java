@@ -32,89 +32,89 @@ import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
  */
 @JiraKey( "HHH-10252" )
 @DomainModel(
-        annotatedClasses = {
-            CascadeWithFkConstraintTest.Garage.class, CascadeWithFkConstraintTest.Car.class
-        }
+		annotatedClasses = {
+			CascadeWithFkConstraintTest.Garage.class, CascadeWithFkConstraintTest.Car.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class CascadeWithFkConstraintTest  {
 
-    private String garageId, car1Id, car2Id;
+	private String garageId, car1Id, car2Id;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        // Create garage, add 2 cars to garage
-        scope.inTransaction( em -> {
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		// Create garage, add 2 cars to garage
+		scope.inTransaction( em -> {
 
-            Garage garage = new Garage();
-            Car car1 = new Car();
-            Car car2 = new Car();
-            garage.insert( car1 );
-            garage.insert( car2 );
+			Garage garage = new Garage();
+			Car car1 = new Car();
+			Car car2 = new Car();
+			garage.insert( car1 );
+			garage.insert( car2 );
 
-            em.persist( garage );
-            em.persist( car1 );
-            em.persist( car2 );
+			em.persist( garage );
+			em.persist( car1 );
+			em.persist( car2 );
 
-            garageId = garage.id;
-            car1Id = car1.id;
-            car2Id = car2.id;
-        } );
-    }
+			garageId = garage.id;
+			car1Id = car1.id;
+			car2Id = car2.id;
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        // Remove garage
-        scope.inTransaction( em -> {
-            Garage toRemoveGarage = em.find( Garage.class, garageId );
-            em.remove( toRemoveGarage );
-        } );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		// Remove garage
+		scope.inTransaction( em -> {
+			Garage toRemoveGarage = em.find( Garage.class, garageId );
+			em.remove( toRemoveGarage );
+		} );
 
-        // Check if there is no garage but cars are still present
-        scope.inTransaction( em -> {
-            Garage foundGarage = em.find( Garage.class, garageId );
-            assertNull( foundGarage );
+		// Check if there is no garage but cars are still present
+		scope.inTransaction( em -> {
+			Garage foundGarage = em.find( Garage.class, garageId );
+			assertNull( foundGarage );
 
-            Car foundCar1 = em.find( Car.class, car1Id );
-            assertEquals( car1Id, foundCar1.id );
+			Car foundCar1 = em.find( Car.class, car1Id );
+			assertEquals( car1Id, foundCar1.id );
 
-            Car foundCar2 = em.find( Car.class, car2Id );
-            assertEquals( car2Id, foundCar2.id );
-        } );
-    }
+			Car foundCar2 = em.find( Car.class, car2Id );
+			assertEquals( car2Id, foundCar2.id );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "GARAGE" )
-    static class Garage {
+	@Entity
+	@Table( name = "GARAGE" )
+	static class Garage {
 
-        @Id
-        String id;
+		@Id
+		String id;
 
-        @OneToMany
-        @JoinColumn( name = "GARAGE_ID" )
-        Set<Car> cars = new HashSet<>();
+		@OneToMany
+		@JoinColumn( name = "GARAGE_ID" )
+		Set<Car> cars = new HashSet<>();
 
-        Garage() {
-            id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
-        }
+		Garage() {
+			id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
+		}
 
-        void insert(Car aCar) {
-            cars.add( aCar );
-        }
-    }
+		void insert(Car aCar) {
+			cars.add( aCar );
+		}
+	}
 
-    @Entity
-    @Table( name = "CAR" )
-    public static class Car {
+	@Entity
+	@Table( name = "CAR" )
+	public static class Car {
 
-        @Id
-        String id;
+		@Id
+		String id;
 
-        Car() {
-            id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
-        }
-    }
+		Car() {
+			id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
+		}
+	}
 }

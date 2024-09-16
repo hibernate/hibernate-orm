@@ -21,7 +21,7 @@ import jakarta.persistence.Table;
 @Table(name = "RANGE_TEST_ENTITY")
 @org.hibernate.envers.Audited
 public class VersionsJoinTableRangeTestEntity extends
-											  VersionsJoinTableRangeTestEntitySuperClass {
+											VersionsJoinTableRangeTestEntitySuperClass {
 
 	@Column(name = "val")
 	private String value;

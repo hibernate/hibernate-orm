@@ -17,7 +17,7 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 public class ConfigurationTest  {
-    @Test
+	@Test
 	public void testMixPackageAndResourceOrdering() throws Exception {
 		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
 			Configuration config = new Configuration( serviceRegistry );
@@ -25,7 +25,7 @@ public class ConfigurationTest  {
 			config.addPackage( "org.hibernate.orm/test.annotations.configuration" );
 		}
 		catch( Exception e ) {
-            Assert.fail( "Processing package first when ORM.xml is used should not fail" );
+			Assert.fail( "Processing package first when ORM.xml is used should not fail" );
 		}
 	}
 }

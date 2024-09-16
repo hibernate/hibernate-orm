@@ -17,43 +17,43 @@ import jakarta.persistence.Table;
 @Table(name="integer_property")
 public class IntegerProperty implements Property<Integer> {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @Column(name = "`name`")
-    private String name;
+	@Column(name = "`name`")
+	private String name;
 
-    @Column(name = "`value`")
-    private Integer value;
+	@Column(name = "`value`")
+	private Integer value;
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public Integer getValue() {
-        return value;
-    }
+	@Override
+	public Integer getValue() {
+		return value;
+	}
 
-    //Getters and setters omitted for brevity
+	//Getters and setters omitted for brevity
 //end::associations-any-property-example[]
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setValue(Integer value) {
-        this.value = value;
-    }
+	public void setValue(Integer value) {
+		this.value = value;
+	}
 //tag::associations-any-property-example[]
 }
 //end::associations-any-property-example[]

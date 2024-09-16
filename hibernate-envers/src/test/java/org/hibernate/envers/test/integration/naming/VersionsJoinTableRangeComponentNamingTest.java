@@ -30,7 +30,7 @@ import org.junit.Test;
  * @author Erik-Berndt Scheper
  */
 public class VersionsJoinTableRangeComponentNamingTest extends
-													   BaseEnversJPAFunctionalTestCase {
+													BaseEnversJPAFunctionalTestCase {
 	private Integer vjrcte_id;
 	private Integer vjtrte_id;
 	private Integer vjtrtae_id1;

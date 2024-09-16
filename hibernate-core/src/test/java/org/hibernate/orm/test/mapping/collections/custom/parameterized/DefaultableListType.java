@@ -26,7 +26,7 @@ import org.hibernate.usertype.UserCollectionType;
  * @author Steve Ebersole
  */
 public class DefaultableListType implements UserCollectionType, ParameterizedType {
-    private String defaultValue;
+	private String defaultValue;
 
 	@Override
 	public CollectionClassification getClassification() {
@@ -88,6 +88,6 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 
 	@Override
 	public void setParameterValues(Properties parameters) {
-        defaultValue = parameters.getProperty( "default" );
+		defaultValue = parameters.getProperty( "default" );
 	}
 }

@@ -12,36 +12,36 @@ package org.hibernate.orm.test.legacy;
  * @author emmanuel
  */
 public class SubComponent {
-    private String _subName;
+	private String _subName;
 
-    private String _subName1;
+	private String _subName1;
 
-    /**
-     * @return
-     */
-    public String getSubName() {
-        return _subName;
-    }
+	/**
+	 * @return
+	 */
+	public String getSubName() {
+		return _subName;
+	}
 
-    /**
-     * @param string
-     */
-    public void setSubName(String string) {
-        _subName = string;
-    }
+	/**
+	 * @param string
+	 */
+	public void setSubName(String string) {
+		_subName = string;
+	}
 
-    /**
-     * @return
-     */
-    public String getSubName1() {
-        return _subName1;
-    }
+	/**
+	 * @return
+	 */
+	public String getSubName1() {
+		return _subName1;
+	}
 
-    /**
-     * @param string
-     */
-    public void setSubName1(String string) {
-        _subName1 = string;
-    }
+	/**
+	 * @param string
+	 */
+	public void setSubName1(String string) {
+		_subName1 = string;
+	}
 
 }

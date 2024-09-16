@@ -105,10 +105,10 @@ public class CustomNamingStrategyTests {
 	@Entity( name = "TheEntity" )
 	@Table( name = "ents" )
 	public static class TheEntity {
-	    @Id
+		@Id
 		@GeneratedValue( strategy = GenerationType.SEQUENCE )
-	    private Integer id;
-	    @Basic
+		private Integer id;
+		@Basic
 		private String name;
 
 		private TheEntity() {

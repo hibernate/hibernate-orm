@@ -75,8 +75,8 @@ public class TupleInListAlternativeTests {
 							.setParameter(
 									"subs",
 									Arrays.asList( new EntityWithEmbeddedSubEntity.Sub( "ZH2", "HDS" ),
-												   new EntityWithEmbeddedSubEntity.Sub( "GXZ", "HDS" ),
-												   new EntityWithEmbeddedSubEntity.Sub( "KAZ", "TST" )
+												new EntityWithEmbeddedSubEntity.Sub( "GXZ", "HDS" ),
+												new EntityWithEmbeddedSubEntity.Sub( "KAZ", "TST" )
 									)
 							)
 							.setParameter( "present", "Y" ).list();

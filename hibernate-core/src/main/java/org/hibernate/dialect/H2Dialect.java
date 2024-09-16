@@ -343,11 +343,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	/**
-     * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
-     * due to <a href="https://github.com/h2database/h2database/issues/1815">issue 1815</a>.
-     * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
-     * but requires that {@code system_range} is fed with a "maximum array size".
-     */
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to <a href="https://github.com/h2database/h2database/issues/1815">issue 1815</a>.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
+	 */
 	protected int getMaximumArraySize() {
 		return 1000;
 	}

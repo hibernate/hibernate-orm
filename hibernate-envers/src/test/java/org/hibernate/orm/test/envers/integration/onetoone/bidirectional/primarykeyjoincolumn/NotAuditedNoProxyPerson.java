@@ -27,7 +27,7 @@ public class NotAuditedNoProxyPerson implements Serializable {
 	@Column(name = "PERSON_ID")
 	@GeneratedValue(generator = "NotAuditedNoProxyKeyGenerator")
 	@GenericGenerator(name = "NotAuditedNoProxyKeyGenerator", strategy = "foreign",
-					  parameters = {@Parameter(name = "property", value = "account")})
+					parameters = {@Parameter(name = "property", value = "account")})
 	private Long personId;
 
 	private String name;

@@ -86,8 +86,8 @@ public class PropertiesTest {
 	/*
 		All the StandardServiceRegistryBuilder public constructors populate the settings reading from hibernate.properties file,
 		that sets the deprecated property AvailableSettings.URL
-	 	MyStandardServiceRegistryBuilder gives access to the StandardServiceRegistryBuilder protected constructor
-	 	that does not read the hibernate.properties,
+		MyStandardServiceRegistryBuilder gives access to the StandardServiceRegistryBuilder protected constructor
+		that does not read the hibernate.properties,
 	 */
 	public static class MyStandardServiceRegistryBuilder extends StandardServiceRegistryBuilder {
 

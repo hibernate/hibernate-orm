@@ -19,6 +19,6 @@ import jakarta.persistence.Id;
 @Entity
 @Cacheable
 public class WithSimpleId {
-   @Id
-   private Long id;
+@Id
+private Long id;
 }

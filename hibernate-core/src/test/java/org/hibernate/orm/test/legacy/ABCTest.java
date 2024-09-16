@@ -76,7 +76,7 @@ public class ABCTest {
 				.getDatabase()
 				.getDefaultNamespace()
 				.locateTable( Identifier.toIdentifier( "TA" ) );
-        Iterator<Index> indexItr = table.getIndexes().values().iterator();
+		Iterator<Index> indexItr = table.getIndexes().values().iterator();
 		boolean found = false;
 		while ( indexItr.hasNext() ) {
 			final Index index = indexItr.next();

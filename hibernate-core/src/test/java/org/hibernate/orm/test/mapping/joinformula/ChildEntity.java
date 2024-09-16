@@ -13,13 +13,13 @@ import jakarta.persistence.Id;
 @Entity
 public class ChildEntity {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @Column(name = "PARENT_ID")
-    private Long parentId;
+	@Column(name = "PARENT_ID")
+	private Long parentId;
 
-    @Column
-    private String name;
+	@Column
+	private String name;
 
 }

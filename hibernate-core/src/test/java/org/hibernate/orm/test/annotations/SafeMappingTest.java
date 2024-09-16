@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class SafeMappingTest {
-    @Test
+	@Test
 	public void testDeclarativeMix() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( IncorrectEntity.class );

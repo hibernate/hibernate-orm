@@ -12,6 +12,6 @@ import org.hibernate.annotations.Formula;
 @Embeddable
 public class AddressBis {
 
-    @Formula("2")
-    Integer formula;
+	@Formula("2")
+	Integer formula;
 }

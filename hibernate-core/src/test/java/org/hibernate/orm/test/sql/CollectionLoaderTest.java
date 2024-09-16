@@ -69,10 +69,10 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 			session.doWork(connection -> {
 				try(Statement statement = connection.createStatement();) {
 					statement.executeUpdate(String.format( "ALTER TABLE person %s valid %s",
-														   getDialect().getAddColumnString(),
+														getDialect().getAddColumnString(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 					statement.executeUpdate(String.format( "ALTER TABLE Person_phones %s valid %s",
-														   getDialect().getAddColumnString(),
+														getDialect().getAddColumnString(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 				}
 			});

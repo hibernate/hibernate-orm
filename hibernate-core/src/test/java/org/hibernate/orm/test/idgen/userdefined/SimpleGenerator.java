@@ -18,23 +18,23 @@ import org.hibernate.generator.EventType;
  */
 public class SimpleGenerator implements BeforeExecutionGenerator {
 
-    private final AtomicLong sequence;
+	private final AtomicLong sequence;
 
-    public SimpleGenerator(AtomicLong sequence) {
-        this.sequence = sequence;
-    }
+	public SimpleGenerator(AtomicLong sequence) {
+		this.sequence = sequence;
+	}
 
-    @Override
-    public Object generate(
-            SharedSessionContractImplementor session,
-            Object owner,
-            Object currentValue,
-            EventType eventType) {
-        return sequence.getAndIncrement();
-    }
+	@Override
+	public Object generate(
+			SharedSessionContractImplementor session,
+			Object owner,
+			Object currentValue,
+			EventType eventType) {
+		return sequence.getAndIncrement();
+	}
 
-    @Override
-    public EnumSet<EventType> getEventTypes() {
-        return EnumSet.of( EventType.INSERT );
-    }
+	@Override
+	public EnumSet<EventType> getEventTypes() {
+		return EnumSet.of( EventType.INSERT );
+	}
 }

@@ -56,7 +56,7 @@ public class MonetaryAmount implements Serializable {
 
 	public String toString() {
 		return "Value: '" + getValue() + "', " +
-		        "Currency: '" + getCurrency() + "'";
+				"Currency: '" + getCurrency() + "'";
 	}
 
 	public int compareTo(Object o) {
@@ -71,11 +71,11 @@ public class MonetaryAmount implements Serializable {
 
 	public static MonetaryAmount fromString(String amount, String currencyCode) {
 		return new MonetaryAmount(new BigDecimal(amount),
-								  Currency.getInstance(currencyCode));
+								Currency.getInstance(currencyCode));
 	}
 
 	public static MonetaryAmount convert(MonetaryAmount amount,
-										 Currency toConcurrency) {
+										Currency toConcurrency) {
 		// TODO: This requires some conversion magic and is therefore broken
 		return new MonetaryAmount(amount.getValue(), toConcurrency);
 	}

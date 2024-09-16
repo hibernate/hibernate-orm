@@ -155,10 +155,10 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 
 			final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 			assertEquals( 2 ,
-						  sqlLines
-						  .stream()
-						  .filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start with 1 increment by 1;" ) )
-						  .count()
+						sqlLines
+						.stream()
+						.filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start with 1 increment by 1;" ) )
+						.count()
 			);
 		}
 		catch (IOException e) {

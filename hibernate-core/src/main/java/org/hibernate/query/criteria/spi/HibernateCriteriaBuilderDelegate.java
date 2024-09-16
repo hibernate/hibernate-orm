@@ -3523,4 +3523,28 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Predicate filter) {
 		return criteriaBuilder.jsonObjectAggWithUniqueKeysAndNulls( key, value, filter );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
+	}
 }

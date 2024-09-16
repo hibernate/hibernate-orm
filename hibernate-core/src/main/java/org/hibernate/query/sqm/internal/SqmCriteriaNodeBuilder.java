@@ -5555,4 +5555,29 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 		return list;
 	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return jsonSet( jsonDocument, jsonPath, value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return jsonSet( jsonDocument, value( jsonPath ), value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return jsonSet( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_set" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath, value ),
+				null,
+				queryEngine
+		);
+	}
 }

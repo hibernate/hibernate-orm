@@ -3911,6 +3911,38 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value, Predicate filter);
 
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value);
+
+	/**
+	 * Inserts/Replaces a value by JSON path within a JSON document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

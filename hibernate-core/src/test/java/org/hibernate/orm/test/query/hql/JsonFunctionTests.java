@@ -466,6 +466,38 @@ public class JsonFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonSet.class)
+	public void testJsonSet(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_set('{}', '$.a', 123)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( 123, object.get( "a" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonSet.class)
+	public void testJsonSetReplace(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_set('{\"a\":456}', '$.a', 123)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( 123, object.get( "a" ) );
+				}
+		);
+	}
+
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private static Map<String, Object> parseObject(String json) {

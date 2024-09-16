@@ -163,6 +163,11 @@ public class CockroachDialect extends Dialect {
 		this.driverKind = driverKind;
 	}
 
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return fetchDataBaseVersion( info );
+	}
+
 	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {

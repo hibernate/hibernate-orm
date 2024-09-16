@@ -149,7 +149,13 @@ public class CockroachLegacyDialect extends Dialect {
 		super(version);
 		this.driverKind = driverKind;
 	}
-	protected static DatabaseVersion fetchDataBaseVersion( DialectResolutionInfo info ) {
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return fetchDataBaseVersion( info );
+	}
+
+	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info ) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {
 			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {

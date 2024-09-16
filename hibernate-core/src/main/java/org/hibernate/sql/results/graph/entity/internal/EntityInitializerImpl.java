@@ -25,6 +25,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -77,6 +78,7 @@ import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -609,6 +611,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	protected void resolveInstanceSubInitializers(EntityInitializerData data) {
 		final int subclassId = data.concreteDescriptor.getSubclassId();
 		final EntityEntry entityEntry = data.entityHolder.getEntityEntry();
+		assert entityEntry != null : "This method should only be called if the entity is already initialized";
+
 		final Initializer<?>[] initializers;
 		final ImmutableBitSet maybeLazySet;
 		if ( data.entityHolder.getEntityInitializer() == this ) {
@@ -964,11 +968,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			registerLoadingEntity( data, data.entityInstanceForNotify );
 		}
 		else {
-			data.setState( State.INITIALIZED );
 			data.entityInstanceForNotify = lazyInitializer.getImplementation();
 			data.concreteDescriptor = session.getEntityPersister( null, data.entityInstanceForNotify );
 			resolveEntityKey( data, lazyInitializer.getIdentifier() );
 			data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
+			// Even though the lazyInitializer reports it is initialized, check if the entity holder reports initialized,
+			// because in a nested initialization scenario, this nested initializer must initialize the entity
+			data.setState( data.entityHolder.isInitialized() ? State.INITIALIZED : State.RESOLVED );
 		}
 		if ( identifierAssembler != null ) {
 			final Initializer<?> initializer = identifierAssembler.getInitializer();
@@ -1564,11 +1570,22 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			// one used here, which it will be
 
 			if ( resolvedEntityState[index] != null ) {
+				final Object key;
+				if ( type instanceof ManyToOneType ) {
+					key = ForeignKeys.getEntityIdentifierIfNotUnsaved(
+							( (ManyToOneType) type ).getAssociatedEntityName(),
+							resolvedEntityState[index],
+							session
+					);
+				}
+				else {
+					key = resolvedEntityState[index];
+				}
 				final EntityUniqueKey entityUniqueKey = new EntityUniqueKey(
 						data.concreteDescriptor.getRootEntityDescriptor().getEntityName(),
 						//polymorphism comment above
 						ukName,
-						resolvedEntityState[index],
+						key,
 						type,
 						session.getFactory()
 				);

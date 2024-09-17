@@ -662,6 +662,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.jsonRemove_postgresql();
 		functionFactory.jsonReplace_postgresql();
 		functionFactory.jsonInsert_postgresql();
+		functionFactory.jsonMergepatch_postgresql();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();

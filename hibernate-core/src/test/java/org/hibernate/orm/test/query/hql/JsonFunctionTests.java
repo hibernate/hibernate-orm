@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -603,6 +601,41 @@ public class JsonFunctionTests {
 					Map<String, Object> object = parseObject( json );
 					assertEquals( 1, object.size() );
 					assertEquals( 456, object.get( "a" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
+	public void testJsonMergepatch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_mergepatch('{\"a\":456, \"b\":[1,2], \"c\":{\"a\":1}}', '{\"a\":null, \"b\":[4,5], \"c\":{\"b\":1}}')",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 2, object.size() );
+					assertEquals( Arrays.asList( parseArray( "[4,5]" ) ), object.get( "b" ) );
+					assertEquals( parseObject( "{\"a\":1,\"b\":1}" ), object.get( "c" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
+	public void testJsonMergepatchVarargs(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_mergepatch('{\"a\":456, \"b\":[1,2], \"c\":{\"a\":1}}', '{\"a\":null, \"b\":[4,5], \"c\":{\"b\":1}}', '{\"d\":1}')",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 3, object.size() );
+					assertEquals( Arrays.asList( parseArray( "[4,5]" ) ), object.get( "b" ) );
+					assertEquals( parseObject( "{\"a\":1,\"b\":1}" ), object.get( "c" ) );
+					assertEquals( 1, object.get( "d" ) );
 				}
 		);
 	}

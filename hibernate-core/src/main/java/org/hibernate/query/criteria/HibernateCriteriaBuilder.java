@@ -4023,6 +4023,30 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
 
+	/**
+	 * Applies the patch JSON document onto the other JSON document and returns that.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch);
+
+	/**
+	 * Applies the patch JSON document onto the other JSON document and returns that.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonMergepatch(Expression<?> document, String patch);
+
+	/**
+	 * Applies the patch JSON document onto the other JSON document and returns that.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> jsonMergepatch(String document, Expression<?> patch);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

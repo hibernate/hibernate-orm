@@ -623,6 +623,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.jsonRemove_postgresql();
 		functionFactory.jsonReplace_postgresql();
 		functionFactory.jsonInsert_postgresql();
+		functionFactory.jsonMergepatch_postgresql();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions

@@ -125,6 +125,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 			// Just always return true because SQL Server doesn't support the FOR UPDATE clause
 			return true;
 		}
+		super.renderNamedTableReference( tableReference, lockMode );
 		return false;
 	}
 

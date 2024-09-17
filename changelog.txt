@@ -3,6 +3,58 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.1.Final (September 17, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32340
+
+** Bug
+    * [HHH-18571] - Entities and collections with batch size 1 are treated as batchable
+    * [HHH-18560] - DB2iDialect executes incompatible query in combination with @AuditJoinTable mapping
+    * [HHH-18558] - Informix UUID type support
+    * [HHH-18556] - Expressions.nullExpresion() in querydsl result in NPE in SqmExpressible
+    * [HHH-18531] - Informix timestamp literal error
+    * [HHH-18524] - @IdClass and composite key generation not working with meta-annotated @IdGenerationType
+    * [HHH-18518] - MySQLDialect fails to detect version on azure flexible server
+    * [HHH-18511] - ArrayIndexOutOfBoundsException in ImmutableFetchList
+    * [HHH-18506] - Flush performance degradation due to itable stubs
+    * [HHH-18503] - ID select criteria query fails with joined + discriminator inheritance when entity has subtypes
+    * [HHH-18502] - Type conversion error due to surprising javac method selection in SqmSubQuery#in
+    * [HHH-18493] - Resolving already initialized collection elements leads to assertion error
+    * [HHH-18490] - Static metamodel contains wrong type for Embeddable with generic attribute extending from mapped superclass
+    * [HHH-18489] - Lazy, unowned one-to-one associations get loaded eagerly in queries - even with bytecode enhancement
+    * [HHH-18487] - Error: Detached entity wiht id X has an uninitialized version value '1''
+    * [HHH-18486] - Unable to add Persist the object because of EntityNameResolver being ignored
+    * [HHH-18484] - Update fails when a many-to-one property on an entity with a generated value is changed
+    * [HHH-18480] - ClassCastException when updating a Blob with Oracle
+    * [HHH-18478] - Cannot invoke "org.hibernate.persister.entity.EntityPersister.getSubclassId()" because "data.concreteDescriptor" is null when reloading entity from query cache
+    * [HHH-18476] - Fetchable scrolling with KeyToOne leads to assertion error
+    * [HHH-18472] - Fix memory issues for release job
+    * [HHH-18470] - Duplicate foreign key names generated for inheritance type TABLE_PER_CLASS
+    * [HHH-18469] - Assertion Error when fetch joining complex entities structure
+    * [HHH-18466] - Regression from 5.6.15.Final where a mutable natural IDs query cannot find an entity
+    * [HHH-18447] - cast as boolean broken in Hibernate 6
+    * [HHH-18445] - Embeddable as Java Record has wrong order of columns
+    * [HHH-18439] - NullPointerException when access data from query cache
+    * [HHH-18436] - Wrong order-by rendering order for nested collections if loaded with entity graph
+    * [HHH-18414] - Duplicated filter applied to 'find()' method
+    * [HHH-18400] - AttributeConverter causing type-check failure when comparing Date field to parameter
+    * [HHH-18353] - ArrayConstructorFunction comparing argument types by reference causes FunctionArgumentException
+    * [HHH-18337] - SequenceStyleGenerator not respecting physical naming strategy
+    * [HHH-18282] - generate error sql in case of @DiscriminatorValue("not null") and the entity is superclass of other entity
+    * [HHH-18174] - Hibernate polymorphic join in complex subquery not using discriminator
+    * [HHH-18103] - MappedSuperclass handling for Embeddable is broken in metamodel
+
+** Improvement
+    * [HHH-18625] - Add Configurable#create(GeneratorCreationContext)
+    * [HHH-18507] - allow overwriting the default db image with environment variable in docker_db.sh
+    * [HHH-18459] - Add SingleStore community dialect
+    * [HHH-17646] - JOINED @Inheritance leads to bad performance in Hibernate 6
+
+** Task
+    * [HHH-18612] - Avoid writing files to classpath in tests to avoid spurious failures
+
+
 Changes in 6.6.0.Final (August 08, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

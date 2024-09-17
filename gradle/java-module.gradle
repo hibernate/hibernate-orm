@@ -472,9 +472,10 @@ spotless {
 	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
 	enforceCheck false
 	java {
-		licenseHeaderFile rootProject.file('spotless.license.java')
+		targetExclude( "**/target/**/*.java" )
+		licenseHeaderFile rootProject.file( 'spotless.license.java' )
 		removeUnusedImports()
-		indentWithTabs(4)
+		indentWithTabs( 4 )
 		trimTrailingWhitespace()
 		endWithNewline()
 	}

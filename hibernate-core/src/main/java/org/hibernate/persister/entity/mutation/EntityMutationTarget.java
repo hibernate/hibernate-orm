@@ -51,20 +51,6 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 	String getAttributeMutationTableName(int i);
 
 	/**
-	 * Whether this target defines any potentially skippable tables.
-	 * <p>
-	 * A table is considered potentially skippable if it is defined
-	 * as inverse or as optional.
-	 *
-	 * @see org.hibernate.annotations.SecondaryRow#owned
-	 * @see org.hibernate.annotations.SecondaryRow#optional
-	 *
-	 * @deprecated No longer called
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	boolean hasSkippableTables();
-
-	/**
 	 * The delegate for executing inserts against the root table for
 	 * targets defined using post-insert id generation
 	 *

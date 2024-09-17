@@ -880,11 +880,6 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public boolean hasSkippableTables() {
-			return false;
-		}
-
-		@Override
 		public GeneratedValuesMutationDelegate getInsertDelegate() {
 			return null;
 		}

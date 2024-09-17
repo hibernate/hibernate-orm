@@ -697,12 +697,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public boolean hasSkippableTables() {
-		// todo (6.x) : cache this?
-		return hasAnySkippableTables( isNullableTable, isInverseTable );
-	}
-
-	@Override
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}

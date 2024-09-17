@@ -1587,8 +1587,7 @@ public class ToOneAttributeMapping
 							}
 						}
 						else if ( hasNotFoundAction()
-								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null
-								|| affectedByEnabledFilters ) {
+								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
 							// For the target side only add keyResult when a not-found action is present
 							keyResult = foreignKeyDescriptor.createTargetDomainResult(
 									fetchablePath,

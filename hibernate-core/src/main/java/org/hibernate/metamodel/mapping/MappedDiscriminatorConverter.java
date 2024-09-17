@@ -13,7 +13,9 @@ import org.hibernate.metamodel.mapping.internal.DiscriminatorValueDetailsImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 
 import java.util.List;
 import java.util.Map;
@@ -111,6 +113,23 @@ public class MappedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,
 		final DiscriminatorValueDetails notNullMatch = discriminatorValueToEntityNameMap.get( NOT_NULL_DISCRIMINATOR );
 		if ( notNullMatch != null ) {
 			return notNullMatch;
+		}
+
+		if ( value.getClass().isEnum() ) {
+			final Object enumValue;
+			if ( getRelationalJavaType() instanceof StringJavaType ) {
+				enumValue = ( (Enum) value ).name();
+			}
+			else if ( getRelationalJavaType() instanceof CharacterJavaType ) {
+				enumValue = ( (Enum) value ).name().charAt( 0 );
+			}
+			else {
+				enumValue = ( (Enum) value ).ordinal();
+			}
+			final DiscriminatorValueDetails enumMatch = discriminatorValueToEntityNameMap.get( enumValue );
+			if ( enumMatch != null ) {
+				return enumMatch;
+			}
 		}
 
 		throw new HibernateException( "Unrecognized discriminator value: " + value );

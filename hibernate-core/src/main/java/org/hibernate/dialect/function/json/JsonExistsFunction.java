@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
@@ -16,7 +14,6 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -31,7 +28,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.IMPLICIT_JSON;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.JSON;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;

@@ -4,7 +4,6 @@
  */
 package org.hibernate.internal.util;
 
-import org.hibernate.sql.ast.spi.SqlAppender;
 
 public final class QuotingHelper {
 

@@ -97,10 +97,8 @@ import org.hibernate.dialect.function.json.HANAJsonObjectFunction;
 import org.hibernate.dialect.function.json.HSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.HSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.HSQLJsonObjectFunction;
-import org.hibernate.dialect.function.json.JsonArrayAggFunction;
 import org.hibernate.dialect.function.json.JsonArrayFunction;
 import org.hibernate.dialect.function.json.JsonExistsFunction;
-import org.hibernate.dialect.function.json.JsonObjectAggFunction;
 import org.hibernate.dialect.function.json.JsonObjectFunction;
 import org.hibernate.dialect.function.json.JsonQueryFunction;
 import org.hibernate.dialect.function.json.JsonValueFunction;
@@ -119,6 +117,7 @@ import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
 import org.hibernate.dialect.function.json.OracleJsonInsertFunction;
+import org.hibernate.dialect.function.json.OracleJsonMergepatchFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
 import org.hibernate.dialect.function.json.OracleJsonRemoveFunction;
@@ -128,6 +127,7 @@ import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonInsertFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonMergepatchFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonQueryFunction;
@@ -3976,5 +3976,35 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonInsert_sqlserver() {
 		functionRegistry.register( "json_insert", new SQLServerJsonInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_mergepatch() function
+	 */
+	public void jsonMergepatch_postgresql() {
+		functionRegistry.register( "json_mergepatch", new PostgreSQLJsonMergepatchFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_mergepatch() function
+	 */
+	public void jsonMergepatch_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_mergepatch", "json_merge_patch" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.min( 2 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.IMPLICIT_JSON
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_mergepatch() function
+	 */
+	public void jsonMergepatch_oracle() {
+		functionRegistry.register( "json_mergepatch", new OracleJsonMergepatchFunction( typeConfiguration ) );
 	}
 }

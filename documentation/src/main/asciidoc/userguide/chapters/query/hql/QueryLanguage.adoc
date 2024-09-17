@@ -1641,6 +1641,7 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` confi
 | `json_objectagg()` | Creates a JSON object by aggregating values
 | `json_set()` | Inserts/Replaces a value by JSON path within a JSON document
 | `json_remove()` | Removes a value by JSON path within a JSON document
+| `json_mergepatch()` | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
 |===
 
 
@@ -2082,6 +2083,35 @@ include::{json-example-dir-hql}/JsonInsertTest.java[tags=hql-json-insert-example
 ====
 
 WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-mergepatch-function]]
+===== `json_mergepatch()`
+
+Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge, which is
+
+* When the first JSON value is not an object, the result is as if the first argument was an empty object
+* When the second JSON value is not an object, the result is the second argument
+* When both JSON values are objects, members are merged
+** Retain first JSON object members when the second JSON object has no members with matching keys
+** Retain second JSON object members when the first JSON object has no members with matching keys and the value is not equal to the JSON `null` literal
+** Recursively merge values that exist in both JSON objects, except if the second JSON object member is a JSON `null`
+
+In simple terms this means
+
+* The second JSON overrides members of the first, with JSON `null` values causing members to be removed
+* JSON objects are merged recursively
+
+NOTE: Arrays and hence objects within arrays are not merged, but replaced.
+
+[[hql-json-mergepatch-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonMergepatchTest.java[tags=hql-json-mergepatch-example]
+----
+====
+
+WARNING: SAP HANA, DB2, SQL Server, H2 and HSQLDB do not support this function. On PostgreSQL, this function is emulated.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

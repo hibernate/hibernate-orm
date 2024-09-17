@@ -3613,4 +3613,22 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
 		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch) {
+		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonMergepatch(Expression<?> document, String patch) {
+		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> jsonMergepatch(String document, Expression<?> patch) {
+		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
 }

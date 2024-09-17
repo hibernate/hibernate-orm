@@ -5652,4 +5652,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> jsonMergepatch(String document, Expression<?> patch) {
+		return jsonMergepatch( value( document ), patch );
+	}
+
+	@Override
+	public SqmExpression<String> jsonMergepatch(Expression<?> document, String patch) {
+		return jsonMergepatch( document, value( patch ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_mergepatch" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( document, patch ),
+				null,
+				queryEngine
+		);
+	}
 }

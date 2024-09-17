@@ -40,8 +40,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.internal.SoftDeleteHelper;
@@ -120,7 +118,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
@@ -270,7 +267,6 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
@@ -2620,42 +2616,6 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected boolean check(
-			int rows,
-			Object id,
-			int tableNumber,
-			Expectation expectation,
-			PreparedStatement statement,
-			String statementSQL) throws HibernateException {
-		try {
-			expectation.verifyOutcome( rows, statement, -1, statementSQL );
-		}
-		catch ( StaleStateException e ) {
-			if ( !isNullableTable( tableNumber ) ) {
-				final StatisticsImplementor statistics = getFactory().getStatistics();
-				if ( statistics.isStatisticsEnabled() ) {
-					statistics.optimisticFailure( getEntityName() );
-				}
-				throw new StaleObjectStateException( getEntityName(), id, e );
-			}
-			return false;
-		}
-		catch ( TooManyRowsAffectedException e ) {
-			throw new HibernateException(
-					"Duplicate identifier in table for: " +
-							infoString( this, id, getFactory() )
-			);
-		}
-		catch ( Throwable t ) {
-			return false;
-		}
-		return true;
-	}
-
-	public final boolean checkVersion(final boolean[] includeProperty) {
-		return includeProperty[getVersionProperty()] || isVersionGeneratedOnExecution();
-	}
-
 	@Override
 	public String getIdentitySelectString() {
 		return identitySelectString;
@@ -2755,28 +2715,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public ModelPart getIdentifierDescriptor() {
 		return identifierMapping;
-	}
-
-	@Override
-	public boolean hasSkippableTables() {
-		return false;
-	}
-
-	protected boolean hasAnySkippableTables(boolean[] optionalTables, boolean[] inverseTables) {
-		// todo (6.x) : cache this?
-		for ( int i = 0; i < optionalTables.length; i++ ) {
-			if ( optionalTables[i] ) {
-				return true;
-			}
-		}
-
-		for ( int i = 0; i < inverseTables.length; i++ ) {
-			if ( inverseTables[i] ) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	protected void logStaticSQL() {

@@ -849,11 +849,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public boolean hasSkippableTables() {
-			return false;
-		}
-
-		@Override
 		public GeneratedValuesMutationDelegate getInsertDelegate() {
 			return null;
 		}

@@ -536,12 +536,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public boolean hasSkippableTables() {
-		// todo (6.x) : cache this?
-		return hasAnySkippableTables( isNullableTable, isInverseTable );
-	}
-
-	@Override
 	protected boolean isNullableSubclassTable(int j) {
 		return isNullableSubclassTable[j];
 	}

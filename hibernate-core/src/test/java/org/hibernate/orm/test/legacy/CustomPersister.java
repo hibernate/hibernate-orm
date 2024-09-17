@@ -988,11 +988,6 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public boolean hasSkippableTables() {
-		return false;
-	}
-
-	@Override
 	public GeneratedValuesMutationDelegate getInsertDelegate() {
 		return null;
 	}

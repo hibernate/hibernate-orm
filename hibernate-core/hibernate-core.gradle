@@ -282,8 +282,3 @@ tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'
-
-tasks.spotlessJava.dependsOn ':hibernate-core:generateGraphParser'
-tasks.spotlessJava.dependsOn ':hibernate-core:generateHqlParser'
-tasks.spotlessJava.dependsOn ':hibernate-core:generateSqlScriptParser'
-tasks.spotlessJava.dependsOn ':hibernate-core:generateOrderingParser'

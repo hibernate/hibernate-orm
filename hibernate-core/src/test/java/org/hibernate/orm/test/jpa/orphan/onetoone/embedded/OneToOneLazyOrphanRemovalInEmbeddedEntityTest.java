@@ -113,7 +113,7 @@ public class OneToOneLazyOrphanRemovalInEmbeddedEntityTest {
 	@Embeddable
 	public static class Car {
 
-		@Id
+		@Column(insertable = false, updatable = false)
 		private Integer id;
 
 		// represents a unidirectional one-to-one

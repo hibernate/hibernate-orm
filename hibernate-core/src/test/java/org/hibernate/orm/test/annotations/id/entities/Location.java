@@ -8,7 +8,6 @@ import java.io.Serializable;
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("serial")
 public class Location implements Serializable {
 	public double longitude;
 	public double latitude;

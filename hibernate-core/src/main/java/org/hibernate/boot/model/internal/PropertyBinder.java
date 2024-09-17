@@ -781,6 +781,12 @@ public class PropertyBinder {
 		propertyBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		propertyBinder.setId( !entityBinder.isIgnoreIdAnnotations() && hasIdAnnotation( property ) );
 
+		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
+				&& property.hasDirectAnnotationUsage(Id.class)) {
+			throw new AnnotationException("Member '" + property.getName()
+					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
+		}
+
 		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
 			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
@@ -803,6 +809,12 @@ public class PropertyBinder {
 				propertyBinder
 		);
 		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
+	}
+
+	private static boolean isPropertyOfRegularEmbeddable(PropertyHolder propertyHolder, boolean isComponentEmbedded) {
+		return propertyHolder.isComponent() // it's a field of some sort of composite value
+			&& !propertyHolder.isInIdClass() // it's not a field of an id class
+			&& !isComponentEmbedded; // it's not an entity field matching a field of the id class
 	}
 
 	private static AnnotatedColumns bindProperty(

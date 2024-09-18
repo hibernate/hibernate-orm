@@ -9,7 +9,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.14') _
+@Library('hibernate-jenkins-pipeline-helpers@1.17') _
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
@@ -48,8 +48,8 @@ if ( !manualRelease && !RELEASE_ON_PUSH ) {
 def checkoutReleaseScripts() {
 	dir('.release/scripts') {
 		checkout scmGit(branches: [[name: '*/main']], extensions: [],
-				userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
-									 url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
+						userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
+											 url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
 	}
 }
 
@@ -107,11 +107,11 @@ pipeline {
 						echo "Release was requested manually"
 
 						if ( !params.RELEASE_VERSION ) {
-						        throw new IllegalArgumentException( 'Missing value for parameter RELEASE_VERSION. This parameter must be set explicitly to prevent mistakes.' )
+							throw new IllegalArgumentException( 'Missing value for parameter RELEASE_VERSION. This parameter must be set explicitly to prevent mistakes.' )
 						}
 						releaseVersion = Version.parseReleaseVersion( params.RELEASE_VERSION )
 
-						if ( releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
+						if ( !releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
 							throw new IllegalArgumentException( "RELEASE_VERSION = $releaseVersion, which is different from the family of CURRENT_VERSION = $currentVersion. Did you make a mistake?" )
 						}
 					}
@@ -147,12 +147,10 @@ pipeline {
 
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
-					def versionBasis = releaseVersion.unqualified
-
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
 
 					// Determine version id to check if Jira version exists
-					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${versionBasis}"
+					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"
 				}
 			}
 		}
@@ -166,17 +164,23 @@ pipeline {
 							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
 					]) {
 						withCredentials([
-							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
-							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
-							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
-							string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE')
+								usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
+								usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
+								file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
+								string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE')
 						]) {
 							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
 								// set release version
 								// update changelog from JIRA
 								// tags the version
 								// changes the version to the provided development version
-								sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+								withEnv([
+										"BRANCH=${env.GIT_BRANCH}",
+										// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
+										"GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
+								]) {
+									sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+								}
 							}
 						}
 					}
@@ -193,16 +197,16 @@ pipeline {
 							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
 					]) {
 						withCredentials([
-							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
-							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
-							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
-							string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE'),
-							gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+								usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
+								usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
+								file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
+								string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE'),
+								gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
 						]) {
 							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
 								// performs documentation upload and Sonatype release
 								// push to github
-								sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+								sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
 							}
 						}
 					}
@@ -247,11 +251,11 @@ pipeline {
 			}
 		}
 	}
- 	post {
- 		always {
- 			configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
- 				notifyBuildResult maintainers: (String) readYaml(file: env.JOB_CONFIGURATION_FILE).notification?.email?.recipients
- 			}
- 		}
- 	}
+	post {
+		always {
+			configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
+				notifyBuildResult maintainers: (String) readYaml(file: env.JOB_CONFIGURATION_FILE).notification?.email?.recipients
+			}
+		}
+	}
 }

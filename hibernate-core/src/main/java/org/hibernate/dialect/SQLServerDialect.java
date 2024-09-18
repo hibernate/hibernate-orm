@@ -429,6 +429,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			functionFactory.jsonReplace_sqlserver();
 			functionFactory.jsonInsert_sqlserver();
 			functionFactory.jsonArrayAppend_sqlserver();
+			functionFactory.jsonArrayInsert_sqlserver();
 		}
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );

@@ -829,6 +829,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJsonArrayInsert implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_array_insert" );
+		}
+	}
+
 	public static class IsJtds implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;

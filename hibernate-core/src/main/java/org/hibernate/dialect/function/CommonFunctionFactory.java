@@ -118,6 +118,7 @@ import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayAppendFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
+import org.hibernate.dialect.function.json.OracleJsonArrayInsertFunction;
 import org.hibernate.dialect.function.json.OracleJsonInsertFunction;
 import org.hibernate.dialect.function.json.OracleJsonMergepatchFunction;
 import org.hibernate.dialect.function.json.OracleJsonObjectAggFunction;
@@ -128,6 +129,7 @@ import org.hibernate.dialect.function.json.OracleJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAppendFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonArrayInsertFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonInsertFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonMergepatchFunction;
@@ -141,6 +143,7 @@ import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayAppendFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonArrayInsertFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonInsertFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonObjectAggFunction;
@@ -4055,5 +4058,43 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayAppend_sqlserver() {
 		functionRegistry.register( "json_array_append", new SQLServerJsonArrayAppendFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_array_insert() function
+	 */
+	public void jsonArrayInsert_postgresql() {
+		functionRegistry.register( "json_array_insert", new PostgreSQLJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_array_insert() function
+	 */
+	public void jsonArrayInsert_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_array_insert" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * Oracle json_array_insert() function
+	 */
+	public void jsonArrayInsert_oracle() {
+		functionRegistry.register( "json_array_insert", new OracleJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_array_insert() function
+	 */
+	public void jsonArrayInsert_sqlserver() {
+		functionRegistry.register( "json_array_insert", new SQLServerJsonArrayInsertFunction( typeConfiguration ) );
 	}
 }

@@ -17,11 +17,11 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * PostgreSQL json_insert function.
+ * PostgreSQL json_array_insert function.
  */
-public class PostgreSQLJsonInsertFunction extends AbstractJsonInsertFunction {
+public class PostgreSQLJsonArrayInsertFunction extends AbstractJsonArrayInsertFunction {
 
-	public PostgreSQLJsonInsertFunction(TypeConfiguration typeConfiguration) {
+	public PostgreSQLJsonArrayInsertFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
 	}
 
@@ -34,20 +34,7 @@ public class PostgreSQLJsonInsertFunction extends AbstractJsonInsertFunction {
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
 		final SqlAstNode value = arguments.get( 2 );
-		sqlAppender.appendSql( "(select case when (t.d)#>>t.p is not null then t.d else jsonb_insert(t.d,t.p," );
-		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
-			sqlAppender.appendSql( "null::jsonb" );
-		}
-		else {
-			sqlAppender.appendSql( "to_jsonb(" );
-			value.accept( translator );
-			if ( value instanceof Literal literal && literal.getJdbcMapping().getJdbcType().isString() ) {
-				// PostgreSQL until version 16 is not smart enough to infer the type of a string literal
-				sqlAppender.appendSql( "::text" );
-			}
-			sqlAppender.appendSql( ')' );
-		}
-		sqlAppender.appendSql( ",true) end from (values(" );
+		sqlAppender.appendSql( "jsonb_insert(" );
 		final boolean needsCast = !isJsonType( json );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
@@ -77,8 +64,20 @@ public class PostgreSQLJsonInsertFunction extends AbstractJsonInsertFunction {
 			}
 			separator = ',';
 		}
-		sqlAppender.appendSql( "]::text[]" );
-		sqlAppender.appendSql( ")) t(d,p))" );
+		sqlAppender.appendSql( "]::text[]," );
+		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+			sqlAppender.appendSql( "null::jsonb" );
+		}
+		else {
+			sqlAppender.appendSql( "to_jsonb(" );
+			value.accept( translator );
+			if ( value instanceof Literal literal && literal.getJdbcMapping().getJdbcType().isString() ) {
+				// PostgreSQL until version 16 is not smart enough to infer the type of a string literal
+				sqlAppender.appendSql( "::text" );
+			}
+			sqlAppender.appendSql( ')' );
+		}
+		sqlAppender.appendSql( ')' );
 	}
 
 	private static boolean isJsonType(Expression expression) {

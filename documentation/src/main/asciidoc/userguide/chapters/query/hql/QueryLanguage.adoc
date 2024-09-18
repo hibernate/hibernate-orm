@@ -1643,6 +1643,7 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` confi
 | `json_remove()` | Removes a value by JSON path within a JSON document
 | `json_mergepatch()` | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
 | `json_array_append()` | Appends to a JSON array of a JSON document by JSON path
+| `json_array_insert()` | Inserts a value by JSON path to a JSON array within a JSON document
 |===
 
 
@@ -2129,6 +2130,29 @@ When no value exists for a JSON path, the document is not changed.
 [source, java, indent=0]
 ----
 include::{json-example-dir-hql}/JsonArrayAppendTest.java[tags=hql-json-array-append-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-array-insert-function]]
+===== `json_array_insert()`
+
+Inserts a value by JSON path to a JSON array within a JSON document.
+The function takes 3 arguments, the json document, the json path and the value to append.
+
+Although the exact behavior is database dependent, usually an error will be triggered if
+the JSON path does not end with an array index access i.e. `$.a[0]`.
+The zero based array index represents the position at which an element should be inserted in an array.
+
+If the JSON path without the index does not resolve to a JSON array within the JSON document,
+the document is not changed.
+
+[[hql-json-array-insert-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayInsertTest.java[tags=hql-json-array-insert-example]
 ----
 ====
 

@@ -79,6 +79,22 @@ public class ClassIdNativeQueryTest {
 		);
 	}
 
+	@Test
+	@JiraKey( "HHH-18629" )
+	public void testNativeQueryWithResultClassAndPlaceholders(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					NativeQuery<Book> query = session
+							.createNativeQuery(
+									"select {book.*} from BOOK_T book", Book.class );
+					query.addEntity( "book", Book.class );
+					List<Book> results = query.list();
+
+					assertEquals( 1, results.size() );
+				}
+		);
+	}
+
 	@Entity(name = "Book")
 	@IdClass(BookPK.class)
 	@Table(name = "BOOK_T")

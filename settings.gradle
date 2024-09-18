@@ -225,14 +225,14 @@ dependencyResolutionManagement {
             library( "jfrUnit", "org.moditect.jfrunit", "jfrunit-core" ).versionRef( jfrUnitVersion )
         }
         dbLibs {
-            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.2.224" )
+            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.3.232" )
 
             def db2Version = version "db2", "11.5.9.0"
             // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible
             def derbyVersion = version "derby", overrideableVersion( "gradle.libs.versions.derby", "10.15.2.0" )
             def firebirdVersion = version "firebird", "4.0.8.java11"
             def hanaVersion = version "hana", "2.19.11"
-            def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.0" )
+            def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.2" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.2" )
             def informixVersion = version "informix", "4.50.10.1"
             def mariadbVersion = version "mariadb", "3.4.0"

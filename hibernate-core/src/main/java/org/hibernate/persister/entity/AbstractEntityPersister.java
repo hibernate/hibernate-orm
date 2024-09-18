@@ -496,7 +496,7 @@ public abstract class AbstractEntityPersister
 	private final boolean implementsLifecycle;
 
 	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
-	private HashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
+	private ConcurrentHashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
 
 	@Deprecated(since = "6.0")
 	public AbstractEntityPersister(
@@ -1671,17 +1671,17 @@ public abstract class AbstractEntityPersister
 			int propertyIndex = getPropertyIndex( fieldName );
 			partsToSelect.add( getAttributeMapping( propertyIndex ) );
 			SingleIdArrayLoadPlan lazyLoanPlan;
-			if ( nonLazyPropertyLoadPlansByName == null ) {
-				nonLazyPropertyLoadPlansByName = new HashMap<>();
+			ConcurrentHashMap<String, SingleIdArrayLoadPlan> propertyLoadPlansByName = this.nonLazyPropertyLoadPlansByName;
+			if ( propertyLoadPlansByName == null ) {
+				propertyLoadPlansByName = new ConcurrentHashMap<>();
 				lazyLoanPlan = createLazyLoanPlan( partsToSelect );
-				;
-				nonLazyPropertyLoadPlansByName.put( fieldName, lazyLoanPlan );
+				propertyLoadPlansByName.put( fieldName, lazyLoanPlan );
+				this.nonLazyPropertyLoadPlansByName = propertyLoadPlansByName;
 			}
 			else {
 				lazyLoanPlan = nonLazyPropertyLoadPlansByName.get( fieldName );
 				if ( lazyLoanPlan == null ) {
 					lazyLoanPlan = createLazyLoanPlan( partsToSelect );
-					;
 					nonLazyPropertyLoadPlansByName.put( fieldName, lazyLoanPlan );
 				}
 			}

@@ -8,12 +8,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -26,10 +29,12 @@ public class NativeGenerator
 
     private final IdentifierGeneratorFactory factory;
     private final String strategy;
+    private final CustomIdGeneratorCreationContext creationContext;
 
     private Generator generator;
 
     public NativeGenerator(NativeId nativeId, Member member, CustomIdGeneratorCreationContext creationContext) {
+        this.creationContext = creationContext;
         factory = creationContext.getIdentifierGeneratorFactory();
 		strategy = creationContext.getDatabase().getDialect().getNativeIdentifierGeneratorStrategy();
         if ( "identity".equals(strategy) ) {
@@ -49,7 +54,12 @@ public class NativeGenerator
 
     @Override
     public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
-        generator = factory.createIdentifierGenerator(strategy, type, parameters);
+        generator = factory.createIdentifierGenerator(
+                strategy,
+                type,
+                creationContext,
+                parameters
+        );
         //TODO: should use this instead of the deprecated method, but see HHH-18135
 //        GenerationType generationType;
 //        switch (strategy) {

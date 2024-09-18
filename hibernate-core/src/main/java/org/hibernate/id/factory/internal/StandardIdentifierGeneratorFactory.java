@@ -225,7 +225,9 @@ public class StandardIdentifierGeneratorFactory
 
 			if ( identifierGenerator instanceof Configurable ) {
 				final Configurable configurable = (Configurable) identifierGenerator;
-				configurable.create( creationContext );
+				if ( creationContext != null ) {
+					configurable.create( creationContext );
+				}
 				configurable.configure( type, parameters, serviceRegistry );
 			}
 			return identifierGenerator;

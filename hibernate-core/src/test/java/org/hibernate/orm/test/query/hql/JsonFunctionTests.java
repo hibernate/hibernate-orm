@@ -640,6 +640,70 @@ public class JsonFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAppend.class)
+	public void testJsonArrayAppend(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_array_append('{\"b\":[2]}', '$.b', 1)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( Arrays.asList( 2, 1 ), object.get( "b" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAppend.class)
+	public void testJsonArrayAppendNonExisting(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_array_append('{\"b\":[2]}', '$.c', 1)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( List.of( 2 ), object.get( "b" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAppend.class)
+	public void testJsonArrayAppendNonArray(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_array_append('{\"b\":2}', '$.b', 1)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( Arrays.asList( 2, 1 ), object.get( "b" ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAppend.class)
+	public void testJsonArrayAppendToNull(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String json = session.createQuery(
+							"select json_array_append('{\"b\":null}', '$.b', 1)",
+							String.class
+					).getSingleResult();
+					Map<String, Object> object = parseObject( json );
+					assertEquals( 1, object.size() );
+					assertEquals( Arrays.asList( null, 1 ), object.get( "b" ) );
+				}
+		);
+	}
+
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private static Map<String, Object> parseObject(String json) {

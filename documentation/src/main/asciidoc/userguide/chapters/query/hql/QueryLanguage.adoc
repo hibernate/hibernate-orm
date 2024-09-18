@@ -1642,6 +1642,7 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` confi
 | `json_set()` | Inserts/Replaces a value by JSON path within a JSON document
 | `json_remove()` | Removes a value by JSON path within a JSON document
 | `json_mergepatch()` | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
+| `json_array_append()` | Appends to a JSON array of a JSON document by JSON path
 |===
 
 
@@ -2112,6 +2113,26 @@ include::{json-example-dir-hql}/JsonMergepatchTest.java[tags=hql-json-mergepatch
 ====
 
 WARNING: SAP HANA, DB2, SQL Server, H2 and HSQLDB do not support this function. On PostgreSQL, this function is emulated.
+
+[[hql-json-array-append-function]]
+===== `json_array_append()`
+
+Appends a value by JSON path to a JSON array within a JSON document.
+The function takes 3 arguments, the json document, the json path and the value to append.
+
+If the value within the JSON document as identified by the JSON path is not a JSON array,
+it is auto-wrapped into an array.
+When no value exists for a JSON path, the document is not changed.
+
+[[hql-json-array-append-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAppendTest.java[tags=hql-json-array-append-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

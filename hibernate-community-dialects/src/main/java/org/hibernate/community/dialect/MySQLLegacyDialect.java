@@ -665,6 +665,7 @@ public class MySQLLegacyDialect extends Dialect {
 			functionFactory.jsonReplace_mysql();
 			functionFactory.jsonInsert_mysql();
 			functionFactory.jsonMergepatch_mysql();
+			functionFactory.jsonArrayAppend_mysql();
 		}
 	}
 

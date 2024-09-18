@@ -103,6 +103,7 @@ import org.hibernate.dialect.function.json.JsonObjectFunction;
 import org.hibernate.dialect.function.json.JsonQueryFunction;
 import org.hibernate.dialect.function.json.JsonValueFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonArrayAggFunction;
+import org.hibernate.dialect.function.json.MariaDBJsonArrayAppendFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonArrayFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonObjectAggFunction;
 import org.hibernate.dialect.function.json.MariaDBJsonQueryFunction;
@@ -115,6 +116,7 @@ import org.hibernate.dialect.function.json.MySQLJsonObjectFunction;
 import org.hibernate.dialect.function.json.MySQLJsonQueryFunction;
 import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayAggFunction;
+import org.hibernate.dialect.function.json.OracleJsonArrayAppendFunction;
 import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
 import org.hibernate.dialect.function.json.OracleJsonInsertFunction;
 import org.hibernate.dialect.function.json.OracleJsonMergepatchFunction;
@@ -124,6 +126,7 @@ import org.hibernate.dialect.function.json.OracleJsonRemoveFunction;
 import org.hibernate.dialect.function.json.OracleJsonReplaceFunction;
 import org.hibernate.dialect.function.json.OracleJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
+import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAppendFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonInsertFunction;
@@ -136,6 +139,7 @@ import org.hibernate.dialect.function.json.PostgreSQLJsonReplaceFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonSetFunction;
 import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction;
+import org.hibernate.dialect.function.json.SQLServerJsonArrayAppendFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonInsertFunction;
@@ -4006,5 +4010,50 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonMergepatch_oracle() {
 		functionRegistry.register( "json_mergepatch", new OracleJsonMergepatchFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_array_append() function
+	 */
+	public void jsonArrayAppend_postgresql() {
+		functionRegistry.register( "json_array_append", new PostgreSQLJsonArrayAppendFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_array_append() function
+	 */
+	public void jsonArrayAppend_mysql() {
+		functionRegistry.namedDescriptorBuilder( "json_array_append" )
+				.setArgumentsValidator( new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						FunctionParameterType.IMPLICIT_JSON,
+						FunctionParameterType.STRING,
+						FunctionParameterType.ANY
+				) )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
+				) )
+				.register();
+	}
+
+	/**
+	 * MariaDB json_array_append() function
+	 */
+	public void jsonArrayAppend_mariadb() {
+		functionRegistry.register( "json_array_append", new MariaDBJsonArrayAppendFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_array_append() function
+	 */
+	public void jsonArrayAppend_oracle() {
+		functionRegistry.register( "json_array_append", new OracleJsonArrayAppendFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL server json_array_append() function
+	 */
+	public void jsonArrayAppend_sqlserver() {
+		functionRegistry.register( "json_array_append", new SQLServerJsonArrayAppendFunction( typeConfiguration ) );
 	}
 }

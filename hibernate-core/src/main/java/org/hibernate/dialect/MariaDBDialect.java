@@ -98,6 +98,7 @@ public class MariaDBDialect extends MySQLDialect {
 		commonFunctionFactory.jsonQuery_mariadb();
 		commonFunctionFactory.jsonArrayAgg_mariadb();
 		commonFunctionFactory.jsonObjectAgg_mariadb();
+		commonFunctionFactory.jsonArrayAppend_mariadb();
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
 				.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )

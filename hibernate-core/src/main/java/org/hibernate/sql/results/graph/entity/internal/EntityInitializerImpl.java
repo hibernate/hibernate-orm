@@ -87,7 +87,6 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.metamodel.mapping.ForeignKeyDescriptor.Nature.TARGET;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -914,12 +913,15 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			);
 			data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 			if ( data.entityHolder == null ) {
-				// Entity was most probably removed in the same session without setting the reference to null
-				resolveKey( data );
-				assert data.getState() == State.MISSING;
-				assert referencedModelPart instanceof ToOneAttributeMapping
-						&& ( (ToOneAttributeMapping) referencedModelPart ).getSideNature() == TARGET;
-				return;
+				// Entity was most probably removed in the same session without setting this association to null.
+				// Since this load request can happen through `find()` which doesn't auto-flush on association joins,
+				// the entity must be fully initialized, even if it is removed already
+				data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
+						data.entityKey,
+						data.entityInstanceForNotify,
+						rowProcessingState.getJdbcValuesSourceProcessingState(),
+						this
+				);
 			}
 			if ( data.concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 					&& isPersistentAttributeInterceptable( data.entityInstanceForNotify )

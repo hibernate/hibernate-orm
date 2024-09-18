@@ -3,6 +3,64 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.5.3.Final (September 18, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32310
+
+** Bug
+    * [HHH-18410] - Performance regression due to megamorphic calls
+    * [HHH-18406] - Oracle: schema update fails to create entity table if one of the fields is an array
+    * [HHH-18403] - DB2iDialect should not support Update Returning
+    * [HHH-18399] - Unable to persist self-referencing entity with @OneToOne and @JoinTable
+    * [HHH-18391] - EntityGraphs are not considering Embedded attributes
+    * [HHH-18390] - JoinColumn leads to `NullPointerException: Cannot invoke "Object.hashCode()" because "value" is null` on load
+    * [HHH-18378] - Avoid reusing existing joins for entity-graph fetches if they're included in the where clause
+    * [HHH-18357] - Null pointer exception in createCountQuery because Identifier descriptor is null in MappedSuperclass
+    * [HHH-18352] - Tuple comparison emulation performing bad
+    * [HHH-18347] - Casted parameter rendering broken for some DDL types when using @Column
+    * [HHH-18338] - When an embeddable object is loaded before the entity it references, hibernate fails to start
+    * [HHH-18332] - DB2 stored procedures returning REF_CURSORs are not working with the standard support
+    * [HHH-18330] - UnknownTableReferenceException in JPQL query when join fetching to-one in embedded id
+    * [HHH-18313] - NullPointerException because JdbcIsolationDelegate.sqlExceptionHelper() returns null
+    * [HHH-18309] - Oracle LimitHandler does not seem to handle maxrows correctly for native queries
+    * [HHH-18272] - UnsupportedOperationException when order / group by clause contains aliased item
+    * [HHH-18267] - Informix insert value to identity column error
+    * [HHH-18259] - Joined Inheritence with Generated wrongly resolves columns for base entity
+    * [HHH-18250] - Informix multi insert not supported
+    * [HHH-18246] - Informix nulls precedence support
+    * [HHH-18244] - Informix SelectItemReferenceStrategy error
+    * [HHH-18241] - revert change to semantics of 'null in ()'
+    * [HHH-18232] - DB2zDialect - Insert with GeneratedValue Id not working with DB2v12
+    * [HHH-18229] - "UnsupportedOperationException: Re-work support for semi-resolve " with null value in column referenced by @JoinColumn
+    * [HHH-18225] - Informix syntax error in DISTINCT clause before SKIP clause
+    * [HHH-18221] - Incomplete list of existing foreign keys - DatabaseMetaData.crossReferences(...) not used
+    * [HHH-18218] - Dynamic instantiation with generic entity attribute fails constructor argument type validation
+    * [HHH-18213] - FirebirdDialect LimitHandler produces wrong query on Firebird 2.5 and older
+    * [HHH-18202] - Error with distinct query + order by aggregate function on an association key
+    * [HHH-18177] - org.hibernate.AssertionFailure: null identifier for collection of role thrown when merging entity with generated id
+    * [HHH-18170] - Subquery randomly generating wrong SQL due to duplicate alias
+    * [HHH-18163] - Informix foreign key on cascade delete syntax
+    * [HHH-18153] - Informix unique constraints on nullness columns
+    * [HHH-18151] - Bytecode enhancement incorrectly generates code for parameterized fields
+    * [HHH-18150] - Informix float and double precision in decimal digits
+    * [HHH-18149] - Metamodel generation fails if executed from Eclipse
+    * [HHH-18147] - Hibernate fails to persist an entity when a natural id association is a proxy
+    * [HHH-18138] - String based fetchGraphs do not resolve parameterized entity associated properties from MappedSuperclass
+    * [HHH-18121] - Error when using createCountQuery() from distinct dynamic instantiation query
+    * [HHH-18117] - Character literal is not properly handled in query
+    * [HHH-18108] - Duplicate class definition regression caused by ClassTransformer
+    * [HHH-18107] - Package name in 2 classes doesn't correspond to the file path
+    * [HHH-18085] - Executing SELECT query twice in a transaction, leads to "Shared references of collection error"
+    * [HHH-18073] - BasicCollectionJavaType treat Set inconsistently
+    * [HHH-18062] - 'Could not instantiate entity ... due to argument type mismatch' with record @IdClass
+    * [HHH-18027] - Delete/Update statement with IN clause fails on second invocation
+    * [HHH-18019] - Hibernate metamodel processor and ECJ incompatibility for dependency availability
+    * [HHH-18017] - Query cache on Polymorphic entities leads to InstantiationException (Cannot instantiate abstract class)
+    * [HHH-18012] - Subclass of super generic array AttributeConverter cannot be auto applied
+    * [HHH-18007] - Creating criteria query for a generic identifier with a @MappedSuperclass leads to an exception
+
+
 Changes in 6.5.2.Final (May 20, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

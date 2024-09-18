@@ -54,7 +54,7 @@ public class NamedNativeQueryWithGenericsTest {
 	@NamedNativeQueries(value = {
 			@NamedNativeQuery(
 					name = "MyEntity.findMyEntity",
-					query = "WITH RECURSIVE all_my_entities AS " +
+					query = "WITH all_my_entities AS " +
 							"(SELECT me.* FROM my_entity me) " +
 							"SELECT {ame.*} FROM all_my_entities ame")
 	})

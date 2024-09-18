@@ -125,13 +125,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		// But with jTDS we can't use them as the driver can't handle the types
 		if ( getVersion().isSameOrAfter( 15, 5 ) && getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
-							.build()
-			);
-			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( TIME, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
+					CapacityDependentDdlType.builder( TIME, "bigtime", "bigtime", this )
+							.withTypeCapacity( 3, "time" )
 							.build()
 			);
 			ddlTypeRegistry.addDescriptor(

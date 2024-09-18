@@ -413,6 +413,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.jsonReplace_oracle();
 		functionFactory.jsonInsert_oracle();
 		functionFactory.jsonMergepatch_oracle();
+		functionFactory.jsonArrayAppend_oracle();
 	}
 
 	@Override

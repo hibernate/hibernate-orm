@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -942,6 +943,23 @@ public class NativeQueryImpl<R>
 	}
 
 	protected NativeQueryImplementor<R> registerBuilder(ResultBuilder builder) {
+		// remove implicit ResultBuilder if explicit one provided
+		if ( builder instanceof DynamicResultBuilderEntityCalculated dynamicBuilder ) {
+			ResultBuilder implicitResultBuilder = null;
+			for ( ResultBuilder existing : resultSetMapping.getResultBuilders() ) {
+				if ( existing instanceof DynamicResultBuilderEntityCalculated existingDynamicBuilder ) {
+					if ( StringHelper.isEmpty( existingDynamicBuilder.getTableAlias() ) // implicit
+							&& Objects.equals( existingDynamicBuilder.getNavigablePath(), dynamicBuilder.getNavigablePath() )
+							&& Objects.equals( existingDynamicBuilder.getEntityMapping(), dynamicBuilder.getEntityMapping() ) ) {
+						implicitResultBuilder = existingDynamicBuilder;
+						break;
+					}
+				}
+			}
+			if ( implicitResultBuilder != null ) {
+				resultSetMapping.removeResultBuilder( implicitResultBuilder );
+			}
+		}
 		resultSetMapping.addResultBuilder( builder );
 		return this;
 	}

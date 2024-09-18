@@ -138,6 +138,11 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
+	public void removeResultBuilder(ResultBuilder resultBuilder) {
+		resultBuilders.remove( resultBuilder );
+	}
+
+	@Override
 	public void addLegacyFetchBuilder(DynamicFetchBuilderLegacy fetchBuilder) {
 		final Map<String, DynamicFetchBuilderLegacy> existingFetchBuildersByOwner;
 

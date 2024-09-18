@@ -78,6 +78,11 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 	void addResultBuilder(ResultBuilder resultBuilder);
 
 	/**
+	 * Remove a builder
+	 */
+	void removeResultBuilder(ResultBuilder resultBuilder);
+
+	/**
 	 * Add a legacy fetch builder
 	 */
 	void addLegacyFetchBuilder(DynamicFetchBuilderLegacy fetchBuilder);

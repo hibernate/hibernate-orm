@@ -969,7 +969,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			query.setTupleTransformer( NativeQueryListTransformer.INSTANCE );
 		}
 		else if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
-			query.addEntity( resultClass, LockMode.READ );
+			// use empty string as tableAlias to identify it as implicit
+			query.addEntity( "", resultClass, LockMode.READ );
 		}
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
 			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {

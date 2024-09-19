@@ -79,10 +79,10 @@ public class SQLServerJsonArrayInsertFunction extends AbstractJsonArrayInsertFun
 			SqlAppender sqlAppender,
 			SqlAstNode arg,
 			SqlAstTranslator<?> translator) {
-		sqlAppender.appendSql( "substring(json_array(" );
+		sqlAppender.appendSql( "substring(json_modify('[]','append $'," );
 		arg.accept( translator );
-		sqlAppender.appendSql( " null on null),2,len(json_array(" );
+		sqlAppender.appendSql( "),2,len(json_modify('[]','append $'," );
 		arg.accept( translator );
-		sqlAppender.appendSql( " null on null))-2)" );
+		sqlAppender.appendSql( "))-2)" );
 	}
 }

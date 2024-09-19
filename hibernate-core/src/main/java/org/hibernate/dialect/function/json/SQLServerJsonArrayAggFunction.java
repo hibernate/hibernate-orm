@@ -17,6 +17,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -24,8 +26,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class SQLServerJsonArrayAggFunction extends JsonArrayAggFunction {
 
-	public SQLServerJsonArrayAggFunction(TypeConfiguration typeConfiguration) {
+	private final boolean supportsExtendedJson;
+
+	public SQLServerJsonArrayAggFunction(boolean supportsExtendedJson, TypeConfiguration typeConfiguration) {
 		super( false, typeConfiguration );
+		this.supportsExtendedJson = supportsExtendedJson;
 	}
 
 	@Override
@@ -90,10 +95,38 @@ public class SQLServerJsonArrayAggFunction extends JsonArrayAggFunction {
 			Expression arg,
 			JsonNullBehavior nullBehavior,
 			SqlAstTranslator<?> translator) {
-		sqlAppender.appendSql( "substring(json_array(" );
-		arg.accept( translator );
-		sqlAppender.appendSql( " null on null),2,len(json_array(" );
-		arg.accept( translator );
-		sqlAppender.appendSql( " null on null))-2)" );
+		if ( supportsExtendedJson ) {
+			sqlAppender.appendSql( "substring(json_array(" );
+			arg.accept( translator );
+			sqlAppender.appendSql( " null on null),2,len(json_array(" );
+			arg.accept( translator );
+			sqlAppender.appendSql( "))-2)" );
+		}
+		else {
+			sqlAppender.appendSql( "substring(json_modify('[]','append $'," );
+			final boolean needsConversion = needsConversion( arg );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( "convert(nvarchar(max)," );
+			}
+			arg.accept( translator );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( ')' );
+			}
+			sqlAppender.appendSql( "),2,len(json_modify('[]','append $'," );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( "convert(nvarchar(max)," );
+			}
+			arg.accept( translator );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( ')' );
+			}
+			sqlAppender.appendSql( "))-2)" );
+		}
+	}
+
+	static boolean needsConversion(Expression arg) {
+		final JdbcType jdbcType = ExpressionTypeHelper.getSingleJdbcType( arg );
+		// json_modify() doesn't seem to like UUID values
+		return jdbcType.getDdlTypeCode() == SqlTypes.UUID;
 	}
 }

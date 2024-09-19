@@ -18,8 +18,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class SQLServerJsonArrayAppendFunction extends AbstractJsonArrayAppendFunction {
 
-	public SQLServerJsonArrayAppendFunction(TypeConfiguration typeConfiguration) {
+	private final boolean supportsExtendedJson;
+
+	public SQLServerJsonArrayAppendFunction(boolean supportsExtendedJson, TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
+		this.supportsExtendedJson = supportsExtendedJson;
 	}
 
 	@Override
@@ -33,7 +36,31 @@ public class SQLServerJsonArrayAppendFunction extends AbstractJsonArrayAppendFun
 		final SqlAstNode value = arguments.get( 2 );
 		sqlAppender.appendSql( "(select coalesce(" );
 		sqlAppender.appendSql("case when json_modify(json_query(t.d,t.p),'append $',t.v) is not null then json_modify(t.d,t.p,json_modify(json_query(t.d,t.p),'append $',t.v)) end,");
-		sqlAppender.appendSql("json_modify(t.d,t.p,json_query('['+coalesce(json_value(t.d,t.p),case when json_path_exists(t.d,t.p)=1 then 'null' end)+stuff(json_array(t.v),1,1,','))),");
+		sqlAppender.appendSql("json_modify(t.d,t.p,json_query('['+coalesce(json_value(t.d,t.p),case when ");
+		if ( supportsExtendedJson ) {
+			sqlAppender.appendSql( "json_path_exists(t.d,t.p)=1" );
+		}
+		else {
+			final List<JsonPathHelper.JsonPathElement> pathElements =
+					JsonPathHelper.parseJsonPathElements( translator.getLiteralValue( jsonPath ) );
+			final JsonPathHelper.JsonPathElement lastPathElement = pathElements.get( pathElements.size() - 1 );
+			final String prefix = JsonPathHelper.toJsonPath( pathElements, 0, pathElements.size() - 1 );
+			final String terminalKey;
+			if ( lastPathElement instanceof JsonPathHelper.JsonIndexAccess indexAccess ) {
+				terminalKey = String.valueOf( indexAccess.index() );
+			}
+			else {
+				assert lastPathElement instanceof JsonPathHelper.JsonAttribute;
+				terminalKey = ( (JsonPathHelper.JsonAttribute) lastPathElement ).attribute();
+			}
+
+			sqlAppender.appendSql( "(select 1 from openjson(t.d," );
+			sqlAppender.appendSingleQuoteEscapedString( prefix );
+			sqlAppender.appendSql( ") t where t.[key]=" );
+			sqlAppender.appendSingleQuoteEscapedString( terminalKey );
+			sqlAppender.appendSql( ")=1" );
+		}
+		sqlAppender.appendSql( " then 'null' end)+stuff(json_modify('[]','append $',t.v),1,1,','))),");
 		sqlAppender.appendSql( "t.d) from (values (" );
 		json.accept( translator );
 		sqlAppender.appendSql( ',' );
@@ -48,6 +75,11 @@ public class SQLServerJsonArrayAppendFunction extends AbstractJsonArrayAppendFun
 			sqlAppender.appendSql( "cast(" );
 			value.accept( translator );
 			sqlAppender.appendSql( " as bit)" );
+		}
+		else if ( ExpressionTypeHelper.isJson( value ) ) {
+			sqlAppender.appendSql( "json_query(" );
+			value.accept( translator );
+			sqlAppender.appendSql( ')' );
 		}
 		else {
 			value.accept( translator );

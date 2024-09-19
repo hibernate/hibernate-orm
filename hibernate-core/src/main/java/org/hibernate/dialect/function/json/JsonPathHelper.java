@@ -204,6 +204,51 @@ public class JsonPathHelper {
 		return i + 1;
 	}
 
+	public static void inlinePassingClause(
+			List<JsonPathElement> jsonPathElements,
+			JsonPathPassingClause passingClause,
+			SqlAstTranslator<?> walker) {
+		for ( int i = 0; i < jsonPathElements.size(); i++ ) {
+			final JsonPathElement jsonPathElement = jsonPathElements.get( i );
+			if ( jsonPathElement instanceof JsonParameterIndexAccess parameterIndexAccess ) {
+				final Expression expression = passingClause.getPassingExpressions()
+						.get( parameterIndexAccess.parameterName() );
+				if ( expression == null ) {
+					throw new QueryException( "JSON path [" + toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterIndexAccess.parameterName() + "] that is not passed" );
+				}
+				jsonPathElements.set( i, new JsonIndexAccess( walker.getLiteralValue( expression ) ) );
+			}
+		}
+	}
+
+	public static String toJsonPath(List<JsonPathElement> pathElements) {
+		return toJsonPath( pathElements, 0, pathElements.size() );
+	}
+
+	public static String toJsonPath(List<JsonPathElement> pathElements, int start, int end) {
+		final StringBuilder jsonPath = new StringBuilder();
+		jsonPath.append( "$" );
+		for ( int i = start; i < end; i++ ) {
+			final JsonPathElement jsonPathElement = pathElements.get( i );
+			if ( jsonPathElement instanceof JsonAttribute pathAttribute ) {
+				jsonPath.append( '.' );
+				jsonPath.append( pathAttribute.attribute() );
+			}
+			else if ( jsonPathElement instanceof JsonParameterIndexAccess parameterIndexAccess ) {
+				jsonPath.append( "[$" );
+				jsonPath.append( parameterIndexAccess.parameterName() );
+				jsonPath.append( "]" );
+			}
+			else {
+				assert jsonPathElement instanceof JsonIndexAccess;
+				jsonPath.append( "[" );
+				jsonPath.append( ( (JsonIndexAccess) jsonPathElement ).index() );
+				jsonPath.append( "]" );
+			}
+		}
+		return jsonPath.toString();
+	}
+
 	public sealed interface JsonPathElement {}
 	public record JsonAttribute(String attribute) implements JsonPathElement {}
 	public record JsonIndexAccess(int index) implements JsonPathElement {}

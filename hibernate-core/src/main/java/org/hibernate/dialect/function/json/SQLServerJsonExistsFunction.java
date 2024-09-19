@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function.json;
 
+import java.util.List;
+
 import org.hibernate.QueryException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -17,13 +19,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 
-	public SQLServerJsonExistsFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, true, false );
-	}
+	private final boolean supportsExtendedJson;
 
-	@Override
-	public boolean isPredicate() {
-		return false;
+	public SQLServerJsonExistsFunction(boolean supportsExtendedJson, TypeConfiguration typeConfiguration) {
+		super( typeConfiguration, true, false );
+		this.supportsExtendedJson = supportsExtendedJson;
 	}
 
 	@Override
@@ -35,35 +35,14 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 		if ( arguments.errorBehavior() == JsonExistsErrorBehavior.TRUE ) {
 			throw new QueryException( "Can't emulate json_exists(... true on error) on SQL Server" );
 		}
-		if ( arguments.errorBehavior() == JsonExistsErrorBehavior.ERROR ) {
-			sqlAppender.append( '(' );
-		}
-		sqlAppender.appendSql( "json_path_exists(" );
-		arguments.jsonDocument().accept( walker );
-		sqlAppender.appendSql( ',' );
-		final JsonPathPassingClause passingClause = arguments.passingClause();
-		if ( passingClause != null ) {
-			JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
-					sqlAppender,
-					"",
-					arguments.jsonPath(),
-					passingClause,
-					walker
-			);
-		}
-		else {
-			walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
-					sqlAppender,
-					walker.getLiteralValue( arguments.jsonPath() )
-			);
-		}
-		sqlAppender.appendSql( ')' );
-		if ( arguments.errorBehavior() == JsonExistsErrorBehavior.ERROR ) {
-			// json_path_exists returns 0 if an invalid JSON is given,
-			// so we have to run openjson to be sure the json is valid and potentially throw an error
-			sqlAppender.appendSql( "=1 or (select v from openjson(" );
+		if ( supportsExtendedJson ) {
+			if ( arguments.errorBehavior() == JsonExistsErrorBehavior.ERROR ) {
+				sqlAppender.append( '(' );
+			}
+			sqlAppender.appendSql( "json_path_exists(" );
 			arguments.jsonDocument().accept( walker );
-			sqlAppender.appendSql( ") with (v varchar(max) " );
+			sqlAppender.appendSql( ',' );
+			final JsonPathPassingClause passingClause = arguments.passingClause();
 			if ( passingClause != null ) {
 				JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
 						sqlAppender,
@@ -79,7 +58,59 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 						walker.getLiteralValue( arguments.jsonPath() )
 				);
 			}
-			sqlAppender.appendSql( ")) is null)" );
+			sqlAppender.appendSql( ")=1" );
+			if ( arguments.errorBehavior() == JsonExistsErrorBehavior.ERROR ) {
+				// json_path_exists returns 0 if an invalid JSON is given,
+				// so we have to run openjson to be sure the json is valid and potentially throw an error
+				sqlAppender.appendSql( " or (select v from openjson(" );
+				arguments.jsonDocument().accept( walker );
+				sqlAppender.appendSql( ") with (v varchar(max) " );
+				if ( passingClause != null ) {
+					JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
+							sqlAppender,
+							"",
+							arguments.jsonPath(),
+							passingClause,
+							walker
+					);
+				}
+				else {
+					walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
+							sqlAppender,
+							walker.getLiteralValue( arguments.jsonPath() )
+					);
+				}
+				sqlAppender.appendSql( ")) is null)" );
+			}
+		}
+		else {
+			if ( arguments.errorBehavior() == JsonExistsErrorBehavior.FALSE ) {
+				throw new QueryException( "Can't emulate json_exists(... false on error) on SQL Server" );
+			}
+			final String jsonPath = walker.getLiteralValue( arguments.jsonPath() );
+			final JsonPathPassingClause passingClause = arguments.passingClause();
+			final List<JsonPathHelper.JsonPathElement> pathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
+			if ( passingClause != null ) {
+				JsonPathHelper.inlinePassingClause( pathElements, passingClause, walker );
+			}
+			final JsonPathHelper.JsonPathElement lastPathElement = pathElements.get( pathElements.size() - 1 );
+			final String prefix = JsonPathHelper.toJsonPath( pathElements, 0, pathElements.size() - 1 );
+			final String terminalKey;
+			if ( lastPathElement instanceof JsonPathHelper.JsonIndexAccess indexAccess ) {
+				terminalKey = String.valueOf( indexAccess.index() );
+			}
+			else {
+				assert lastPathElement instanceof JsonPathHelper.JsonAttribute;
+				terminalKey = ( (JsonPathHelper.JsonAttribute) lastPathElement ).attribute();
+			}
+
+			sqlAppender.appendSql( "(select 1 from openjson(" );
+			arguments.jsonDocument().accept( walker );
+			sqlAppender.appendSql( ',' );
+			sqlAppender.appendSingleQuoteEscapedString( prefix );
+			sqlAppender.appendSql( ") t where t.[key]=" );
+			sqlAppender.appendSingleQuoteEscapedString( terminalKey );
+			sqlAppender.appendSql( ")=1" );
 		}
 	}
 }

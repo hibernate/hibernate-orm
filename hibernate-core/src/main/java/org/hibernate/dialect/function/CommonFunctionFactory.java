@@ -3557,8 +3557,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL Server json_exists() function
 	 */
-	public void jsonExists_sqlserver() {
-		functionRegistry.register( "json_exists", new SQLServerJsonExistsFunction( typeConfiguration ) );
+	public void jsonExists_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_exists", new SQLServerJsonExistsFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3613,8 +3613,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL Server json_object() function
 	 */
-	public void jsonObject_sqlserver() {
-		functionRegistry.register( "json_object", new SQLServerJsonObjectFunction( typeConfiguration ) );
+	public void jsonObject_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_object", new SQLServerJsonObjectFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3669,8 +3669,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL Server json_array() function
 	 */
-	public void jsonArray_sqlserver() {
-		functionRegistry.register( "json_array", new SQLServerJsonArrayFunction( typeConfiguration ) );
+	public void jsonArray_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_array", new SQLServerJsonArrayFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3739,8 +3739,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL Server json_arrayagg() function
 	 */
-	public void jsonArrayAgg_sqlserver() {
-		functionRegistry.register( "json_arrayagg", new SQLServerJsonArrayAggFunction( typeConfiguration ) );
+	public void jsonArrayAgg_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_arrayagg", new SQLServerJsonArrayAggFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3809,8 +3809,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL Server json_objectagg() function
 	 */
-	public void jsonObjectAgg_sqlserver() {
-		functionRegistry.register( "json_objectagg", new SQLServerJsonObjectAggFunction( typeConfiguration ) );
+	public void jsonObjectAgg_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_objectagg", new SQLServerJsonObjectAggFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3943,8 +3943,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL server json_replace() function
 	 */
-	public void jsonReplace_sqlserver() {
-		functionRegistry.register( "json_replace", new SQLServerJsonReplaceFunction( typeConfiguration ) );
+	public void jsonReplace_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_replace", new SQLServerJsonReplaceFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3981,8 +3981,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL server json_insert() function
 	 */
-	public void jsonInsert_sqlserver() {
-		functionRegistry.register( "json_insert", new SQLServerJsonInsertFunction( typeConfiguration ) );
+	public void jsonInsert_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_insert", new SQLServerJsonInsertFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -4056,8 +4056,8 @@ public class CommonFunctionFactory {
 	/**
 	 * SQL server json_array_append() function
 	 */
-	public void jsonArrayAppend_sqlserver() {
-		functionRegistry.register( "json_array_append", new SQLServerJsonArrayAppendFunction( typeConfiguration ) );
+	public void jsonArrayAppend_sqlserver(boolean supportsExtendedJson) {
+		functionRegistry.register( "json_array_append", new SQLServerJsonArrayAppendFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**

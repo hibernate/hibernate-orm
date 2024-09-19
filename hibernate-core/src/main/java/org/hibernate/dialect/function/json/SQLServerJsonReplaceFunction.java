@@ -18,8 +18,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class SQLServerJsonReplaceFunction extends AbstractJsonReplaceFunction {
 
-	public SQLServerJsonReplaceFunction(TypeConfiguration typeConfiguration) {
+	private final boolean supportsExtendedJson;
+
+	public SQLServerJsonReplaceFunction(boolean supportsExtendedJson, TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
+		this.supportsExtendedJson = supportsExtendedJson;
 	}
 
 	@Override
@@ -28,12 +31,37 @@ public class SQLServerJsonReplaceFunction extends AbstractJsonReplaceFunction {
 			List<? extends SqlAstNode> arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		sqlAppender.appendSql( "(select case when coalesce(json_query(t.d,t.p),json_value(t.d,t.p)) is null then t.d else json_modify(t.d,t.p," );
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
 		final SqlAstNode value = arguments.get( 2 );
+
+		sqlAppender.appendSql( "(select case when " );
+		if ( supportsExtendedJson ) {
+			sqlAppender.appendSql( "json_path_exists(t.d,t.p)=1" );
+		}
+		else {
+			final List<JsonPathHelper.JsonPathElement> pathElements =
+					JsonPathHelper.parseJsonPathElements( translator.getLiteralValue( jsonPath ) );
+			final JsonPathHelper.JsonPathElement lastPathElement = pathElements.get( pathElements.size() - 1 );
+			final String prefix = JsonPathHelper.toJsonPath( pathElements, 0, pathElements.size() - 1 );
+			final String terminalKey;
+			if ( lastPathElement instanceof JsonPathHelper.JsonIndexAccess indexAccess ) {
+				terminalKey = String.valueOf( indexAccess.index() );
+			}
+			else {
+				assert lastPathElement instanceof JsonPathHelper.JsonAttribute;
+				terminalKey = ( (JsonPathHelper.JsonAttribute) lastPathElement ).attribute();
+			}
+
+			sqlAppender.appendSql( "(select 1 from openjson(t.d," );
+			sqlAppender.appendSingleQuoteEscapedString( prefix );
+			sqlAppender.appendSql( ") t where t.[key]=" );
+			sqlAppender.appendSingleQuoteEscapedString( terminalKey );
+			sqlAppender.appendSql( ")=1" );
+		}
+		sqlAppender.appendSql( " then json_modify(t.d,t.p," );
 		renderValue( sqlAppender, value, translator );
-		sqlAppender.appendSql( ") end from (values(");
+		sqlAppender.appendSql( ") else t.d end from (values(");
 		json.accept( translator );
 		sqlAppender.appendSql( ',' );
 		jsonPath.accept( translator );

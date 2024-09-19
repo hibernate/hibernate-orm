@@ -15,13 +15,18 @@ import org.hibernate.sql.ast.tree.expression.JsonObjectAggUniqueKeysBehavior;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction.needsConversion;
+
 /**
  * SQL Server json_objectagg function.
  */
 public class SQLServerJsonObjectAggFunction extends JsonObjectAggFunction {
 
-	public SQLServerJsonObjectAggFunction(TypeConfiguration typeConfiguration) {
+	private final boolean supportsExtendedJson;
+
+	public SQLServerJsonObjectAggFunction(boolean supportsExtendedJson, TypeConfiguration typeConfiguration) {
 		super( ",", false, typeConfiguration );
+		this.supportsExtendedJson = supportsExtendedJson;
 	}
 
 	@Override
@@ -66,11 +71,33 @@ public class SQLServerJsonObjectAggFunction extends JsonObjectAggFunction {
 		if ( nullBehavior != JsonNullBehavior.NULL ) {
 			sqlAppender.appendSql( "nullif(" );
 		}
-		sqlAppender.appendSql( "substring(json_array(" );
-		arg.accept( translator );
-		sqlAppender.appendSql( " null on null),2,len(json_array(" );
-		arg.accept( translator );
-		sqlAppender.appendSql( " null on null))-2)" );
+		if ( supportsExtendedJson ) {
+			sqlAppender.appendSql( "substring(json_array(" );
+			arg.accept( translator );
+			sqlAppender.appendSql( " null on null),2,len(json_array(" );
+			arg.accept( translator );
+			sqlAppender.appendSql( " null on null))-2)" );
+		}
+		else {
+			sqlAppender.appendSql( "substring(json_modify('[]','append $'," );
+			final boolean needsConversion = needsConversion( arg );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( "convert(nvarchar(max)," );
+			}
+			arg.accept( translator );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( ')' );
+			}
+			sqlAppender.appendSql( "),2,len(json_modify('[]','append $'," );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( "convert(nvarchar(max)," );
+			}
+			arg.accept( translator );
+			if ( needsConversion ) {
+				sqlAppender.appendSql( ')' );
+			}
+			sqlAppender.appendSql( "))-2)" );
+		}
 		if ( nullBehavior != JsonNullBehavior.NULL ) {
 			sqlAppender.appendSql( ",'null')" );
 		}

@@ -9,6 +9,7 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 @Internal
 public class ExpressionTypeHelper {
@@ -32,6 +33,12 @@ public class ExpressionTypeHelper {
 		final JdbcMappingContainer expressionType = expression.getExpressionType();
 		return expressionType.getJdbcTypeCount() == 1
 				&& expressionType.getSingleJdbcMapping().getJdbcType().isJson();
+	}
+
+	public static JdbcType getSingleJdbcType(SqlAstNode node) {
+		final Expression expression = (Expression) node;
+		final JdbcMappingContainer expressionType = expression.getExpressionType();
+		return expressionType.getSingleJdbcMapping().getJdbcType();
 	}
 
 	public static boolean isBoolean(CastType castType) {

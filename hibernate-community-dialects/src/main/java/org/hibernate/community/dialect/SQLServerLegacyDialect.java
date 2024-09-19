@@ -403,20 +403,20 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isSameOrAfter( 13 ) ) {
 			functionFactory.jsonValue_sqlserver();
 			functionFactory.jsonQuery_sqlserver();
-			functionFactory.jsonExists_sqlserver();
-			functionFactory.jsonObject_sqlserver();
-			functionFactory.jsonArray_sqlserver();
+			functionFactory.jsonExists_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObject_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArray_sqlserver( getVersion().isSameOrAfter( 16 ) );
 			functionFactory.jsonSet_sqlserver();
 			functionFactory.jsonRemove_sqlserver();
-			functionFactory.jsonReplace_sqlserver();
-			functionFactory.jsonInsert_sqlserver();
-			functionFactory.jsonArrayAppend_sqlserver();
+			functionFactory.jsonReplace_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
 			functionFactory.jsonArrayInsert_sqlserver();
 		}
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
-			functionFactory.jsonArrayAgg_sqlserver();
-			functionFactory.jsonObjectAgg_sqlserver();
+			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObjectAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
 		}
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			functionFactory.leastGreatest();

@@ -26,6 +26,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -61,6 +62,7 @@ import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
+import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
@@ -371,6 +373,28 @@ public abstract class SimpleValue implements KeyValue {
 	@Internal
 	public GeneratorCreator getCustomIdGeneratorCreator() {
 		return customIdGeneratorCreator;
+	}
+
+	@Deprecated(since = "7.0", forRemoval = true)
+	@Override @SuppressWarnings("removal")
+	public Generator createGenerator(Dialect dialect, RootClass rootClass) {
+		return createGenerator( dialect, rootClass, null, new GeneratorSettings() {
+			@Override
+			public String getDefaultCatalog() {
+				return null;
+			}
+
+			@Override
+			public String getDefaultSchema() {
+				return null;
+			}
+
+			@Override
+			public SqlStringGenerationContext getSqlStringGenerationContext() {
+				final Database database = buildingContext.getMetadataCollector().getDatabase();
+				return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
+			}
+		} );
 	}
 
 	@Override
@@ -857,8 +881,7 @@ public abstract class SimpleValue implements KeyValue {
 
 			for ( int i = 0; i < columns.size(); i++ ) {
 				final Selectable selectable = columns.get(i);
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					columnNames[i] = column.getName();
 					columnLengths[i] = column.getLength();
 				}
@@ -1052,6 +1075,11 @@ public abstract class SimpleValue implements KeyValue {
 		@Override
 		public ServiceRegistry getServiceRegistry() {
 			return buildingContext.getBootstrapContext().getServiceRegistry();
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return defaults.getSqlStringGenerationContext();
 		}
 
 		@Override

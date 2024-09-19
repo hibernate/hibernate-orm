@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
@@ -35,7 +34,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
-import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -485,19 +483,8 @@ public class EntityMetamodel implements Serializable {
 									creationContext.getDialect(),
 									persistentClass.getRootClass(),
 									persistentClass.getIdentifierProperty(),
-									new GeneratorSettings() {
-										SessionFactoryOptions options() {
-											return creationContext.getSessionFactory().getSessionFactoryOptions();
-										}
-										@Override
-										public String getDefaultCatalog() {
-											return options().getDefaultCatalog();
-										}
-										@Override
-										public String getDefaultSchema() {
-											return options().getDefaultSchema();
-										}
-									} );
+									creationContext.getGeneratorSettings()
+							);
 			creationContext.getGenerators().put( rootName, idgenerator );
 			return idgenerator;
 		}

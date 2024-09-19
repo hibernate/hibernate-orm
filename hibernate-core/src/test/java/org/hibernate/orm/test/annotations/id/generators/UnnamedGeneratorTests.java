@@ -9,6 +9,8 @@ import java.util.function.Function;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -102,6 +104,11 @@ public class UnnamedGeneratorTests {
 						@Override
 						public String getDefaultSchema() {
 							return null;
+						}
+
+						@Override
+						public SqlStringGenerationContext getSqlStringGenerationContext() {
+							return SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
 						}
 					}
 			);

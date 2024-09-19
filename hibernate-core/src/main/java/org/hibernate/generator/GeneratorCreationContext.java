@@ -28,7 +28,9 @@ import static org.hibernate.boot.model.relational.internal.SqlStringGenerationCo
 @Incubating
 public interface GeneratorCreationContext {
 	/**
-	 * View of the relational database objects (tables, sequences, ...) and namespaces (catalogs and schemas).
+	 * View of the relational database objects (tables, sequences, etc.)
+	 * and namespaces (catalogs and schemas). Generators may add new
+	 * tables or sequences to the returned {@link Database}.
 	 */
 	Database getDatabase();
 
@@ -69,6 +71,9 @@ public interface GeneratorCreationContext {
 		return getProperty().getType();
 	}
 
+	/**
+	 * The {@link SqlStringGenerationContext} to use when generating SQL.
+	 */
 	default SqlStringGenerationContext getSqlStringGenerationContext() {
 		final Database database = getDatabase();
 		return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );

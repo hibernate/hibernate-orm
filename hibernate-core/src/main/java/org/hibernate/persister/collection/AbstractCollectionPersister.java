@@ -64,7 +64,6 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
@@ -596,18 +595,7 @@ public abstract class AbstractCollectionPersister
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
 		final Generator generator =
 				collection.getIdentifier()
-						.createGenerator( context.getDialect(), null, null,
-								new GeneratorSettings() {
-									@Override
-									public String getDefaultCatalog() {
-										return context.getSessionFactoryOptions().getDefaultCatalog();
-									}
-
-									@Override
-									public String getDefaultSchema() {
-										return context.getSessionFactoryOptions().getDefaultCatalog();
-									}
-								} );
+						.createGenerator( context.getDialect(), null, null, context.getGeneratorSettings() );
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}

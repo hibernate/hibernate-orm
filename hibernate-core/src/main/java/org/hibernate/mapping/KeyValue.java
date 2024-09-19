@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 
@@ -25,24 +26,9 @@ public interface KeyValue extends Value {
 
 	boolean isUpdateable();
 
-	@Deprecated(since = "7.0")
-	default Generator createGenerator(Dialect dialect, RootClass rootClass) {
-		return createGenerator( dialect, rootClass, null, new GeneratorSettings() {
-			@Override
-			public String getDefaultCatalog() {
-				return null;
-			}
+	@Deprecated(since = "7.0", forRemoval = true)
+	Generator createGenerator(Dialect dialect, RootClass rootClass);
 
-			@Override
-			public String getDefaultSchema() {
-				return null;
-			}
-		} );
-	}
-
-	Generator createGenerator(
-			Dialect dialect,
-			RootClass rootClass,
-			Property property,
-			GeneratorSettings defaults);
+	@Incubating
+	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults);
 }

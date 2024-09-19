@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.generator.Generator;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -101,78 +102,7 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 				session.getEntityPersister( null, new TestEntity() ),
 				basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
 				dialect,
-				new RuntimeModelCreationContext() {
-
-					@Override
-					public SessionFactoryImplementor getSessionFactory() {
-						return sessionFactory;
-					}
-
-					@Override
-					public BootstrapContext getBootstrapContext() {
-						return null;
-					}
-
-					@Override
-					public MetadataImplementor getBootModel() {
-						return scope.getMetadataImplementor();
-					}
-
-					@Override
-					public MappingMetamodelImplementor getDomainModel() {
-						return null;
-					}
-
-					@Override
-					public SqmFunctionRegistry getFunctionRegistry() {
-						return null;
-					}
-
-					@Override
-					public Map<String, Object> getSettings() {
-						return sessionFactory.getProperties();
-					}
-
-					@Override
-					public Dialect getDialect() {
-						return dialect;
-					}
-
-					@Override
-					public CacheImplementor getCache() {
-						return null;
-					}
-
-					@Override
-					public SessionFactoryOptions getSessionFactoryOptions() {
-						return sessionFactory.getSessionFactoryOptions();
-					}
-
-					@Override
-					public JdbcServices getJdbcServices() {
-						return jdbcServices;
-					}
-
-					@Override
-					public SqlStringGenerationContext getSqlStringGenerationContext() {
-						return SqlStringGenerationContextImpl.fromExplicit(
-								jdbcServices.getJdbcEnvironment(),
-								scope.getMetadataImplementor().getDatabase(),
-								null,
-								null
-						);
-					}
-
-					@Override
-					public org.hibernate.service.ServiceRegistry getServiceRegistry() {
-						return sessionFactory.getServiceRegistry();
-					}
-
-					@Override
-					public Map<String, Generator> getGenerators() {
-						return emptyMap();
-					}
-				}
+				new ModelCreationContext( sessionFactory, scope, dialect, jdbcServices )
 		);
 	}
 
@@ -210,5 +140,105 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 	public static class TestEntity extends ParentEntity {
 
 
+	}
+
+	private static class ModelCreationContext implements RuntimeModelCreationContext, GeneratorSettings {
+
+		private final SessionFactoryImplementor sessionFactory;
+		private final SessionFactoryScope scope;
+		private final Dialect dialect;
+		private final JdbcServices jdbcServices;
+
+		public ModelCreationContext(SessionFactoryImplementor sessionFactory, SessionFactoryScope scope, Dialect dialect, JdbcServices jdbcServices) {
+			this.sessionFactory = sessionFactory;
+			this.scope = scope;
+			this.dialect = dialect;
+			this.jdbcServices = jdbcServices;
+		}
+
+		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			return sessionFactory;
+		}
+
+		@Override
+		public BootstrapContext getBootstrapContext() {
+			return null;
+		}
+
+		@Override
+		public MetadataImplementor getBootModel() {
+			return scope.getMetadataImplementor();
+		}
+
+		@Override
+		public MappingMetamodelImplementor getDomainModel() {
+			return null;
+		}
+
+		@Override
+		public SqmFunctionRegistry getFunctionRegistry() {
+			return null;
+		}
+
+		@Override
+		public Map<String, Object> getSettings() {
+			return sessionFactory.getProperties();
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return dialect;
+		}
+
+		@Override
+		public CacheImplementor getCache() {
+			return null;
+		}
+
+		@Override
+		public SessionFactoryOptions getSessionFactoryOptions() {
+			return sessionFactory.getSessionFactoryOptions();
+		}
+
+		@Override
+		public JdbcServices getJdbcServices() {
+			return jdbcServices;
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return SqlStringGenerationContextImpl.fromExplicit(
+					jdbcServices.getJdbcEnvironment(),
+					scope.getMetadataImplementor().getDatabase(),
+					null,
+					null
+			);
+		}
+
+		@Override
+		public org.hibernate.service.ServiceRegistry getServiceRegistry() {
+			return sessionFactory.getServiceRegistry();
+		}
+
+		@Override
+		public Map<String, Generator> getGenerators() {
+			return emptyMap();
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return null;
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return null;
+		}
+
+		@Override
+		public GeneratorSettings getGeneratorSettings() {
+			return this;
+		}
 	}
 }

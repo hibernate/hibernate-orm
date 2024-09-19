@@ -68,6 +68,7 @@ import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.LpadRpadPadEmulation;
 import org.hibernate.dialect.function.SqlFunction;
 import org.hibernate.dialect.function.TrimFunction;
+import org.hibernate.dialect.function.OrdinalFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -1226,6 +1227,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		functionContributions.getFunctionRegistry().register( "str",
 				new CastStrEmulation( typeConfiguration ) );
+
+		// Function to convert enum mapped as Ordinal to their ordinal value
+
+		functionContributions.getFunctionRegistry().register( "ordinal",
+				new OrdinalFunction( typeConfiguration ) );
 
 		//format() function for datetimes, emulated on many databases using the
 		//Oracle-style to_char() function, and on others using their native

@@ -45,7 +45,7 @@ public interface Configurable {
 	 */
 	default void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		configure( creationContext.getType(), parameters, creationContext.getServiceRegistry() );
-	};
+	}
 
 	/**
 	 * Initializes this instance, pre-generating SQL if necessary.

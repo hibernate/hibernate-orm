@@ -14,8 +14,10 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
 import org.hibernate.boot.models.spi.TableGeneratorRegistration;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
@@ -31,6 +33,7 @@ import jakarta.persistence.SequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.*;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleUuidStrategy;
 import static org.hibernate.boot.model.internal.GeneratorParameters.identityTablesString;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
@@ -77,7 +80,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 		final GeneratedValue generatedValue = idMember.getDirectAnnotationUsage( GeneratedValue.class );
 		switch ( generatedValue.strategy() ) {
 			case UUID -> handleUuidStrategy( idValue, idMember, buildingContext );
-			case IDENTITY -> handleIdentityStrategy( idValue, idMember, buildingContext );
+			case IDENTITY -> handleIdentityStrategy( idValue );
 			case SEQUENCE -> handleSequenceStrategy( generatedValue );
 			case TABLE -> handleTableStrategy( generatedValue );
 			case AUTO -> handleAutoStrategy( generatedValue );
@@ -94,11 +97,12 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 	}
 
 	private void handleUnnamedSequenceGenerator() {
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+
 		// according to the spec, this should locate a generator with the same name as the entity-name
-		final SequenceGeneratorRegistration globalMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getSequenceGeneratorRegistrations()
-				.get( entityMapping.getJpaEntityName() );
+		final SequenceGeneratorRegistration globalMatch =
+				metadataCollector.getGlobalRegistrations().getSequenceGeneratorRegistrations()
+						.get( entityMapping.getJpaEntityName() );
 		if ( globalMatch != null ) {
 			handleSequenceGenerator(
 					entityMapping.getJpaEntityName(),
@@ -113,7 +117,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 
 		handleSequenceGenerator(
 				entityMapping.getJpaEntityName(),
-				new SequenceGeneratorJpaAnnotation( buildingContext.getMetadataCollector().getSourceModelBuildingContext() ),
+				new SequenceGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
 				idMember,
@@ -122,10 +126,11 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 	}
 
 	private void handleNamedSequenceGenerator(GeneratedValue generatedValue) {
-		final SequenceGeneratorRegistration globalMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getSequenceGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+
+		final SequenceGeneratorRegistration globalMatch =
+				metadataCollector.getGlobalRegistrations()
+						.getSequenceGeneratorRegistrations().get( generatedValue.generator() );
 		if ( globalMatch != null ) {
 			handleSequenceGenerator(
 					generatedValue.generator(),
@@ -140,7 +145,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 
 		handleSequenceGenerator(
 				generatedValue.generator(),
-				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), buildingContext.getMetadataCollector().getSourceModelBuildingContext() ),
+				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
 				idMember,
@@ -158,17 +163,17 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 	}
 
 	private void handleUnnamedTableGenerator() {
-		final TableGeneratorRegistration globalMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getTableGeneratorRegistrations()
-				.get( entityMapping.getJpaEntityName() );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+
+		final TableGeneratorRegistration globalMatch =
+				metadataCollector.getGlobalRegistrations().getTableGeneratorRegistrations()
+						.get( entityMapping.getJpaEntityName() );
 		if ( globalMatch != null ) {
 			handleTableGenerator(
 					entityMapping.getJpaEntityName(),
 					globalMatch.configuration(),
 					entityMapping,
 					idValue,
-					idMember,
 					buildingContext
 			);
 			return;
@@ -176,26 +181,25 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 
 		handleTableGenerator(
 				entityMapping.getJpaEntityName(),
-				new TableGeneratorJpaAnnotation( buildingContext.getMetadataCollector().getSourceModelBuildingContext() ),
+				new TableGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
-				idMember,
 				buildingContext
 		);
 	}
 
 	private void handleNamedTableGenerator(GeneratedValue generatedValue) {
-		final TableGeneratorRegistration globalMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getTableGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+
+		final TableGeneratorRegistration globalMatch =
+				metadataCollector.getGlobalRegistrations().getTableGeneratorRegistrations()
+						.get( generatedValue.generator() );
 		if ( globalMatch != null ) {
 			handleTableGenerator(
 					generatedValue.generator(),
 					globalMatch.configuration(),
 					entityMapping,
 					idValue,
-					idMember,
 					buildingContext
 			);
 
@@ -204,27 +208,22 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 
 		handleTableGenerator(
 				generatedValue.generator(),
-				new TableGeneratorJpaAnnotation( generatedValue.generator(), buildingContext.getMetadataCollector().getSourceModelBuildingContext() ),
+				new TableGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
-				idMember,
 				buildingContext
 		);
 	}
 
 	private void handleAutoStrategy(GeneratedValue generatedValue) {
-		final String globalRegistrationName;
-		if ( generatedValue.generator().isEmpty() ) {
-			globalRegistrationName = entityMapping.getJpaEntityName();
-		}
-		else {
-			globalRegistrationName = generatedValue.generator();
-		}
+		final String generator = generatedValue.generator();
+		final String globalRegistrationName = generator.isEmpty() ? entityMapping.getJpaEntityName() : generator;
 
-		final SequenceGeneratorRegistration globalSequenceMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getSequenceGeneratorRegistrations()
-				.get( globalRegistrationName );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final GlobalRegistrations globalRegistrations = metadataCollector.getGlobalRegistrations();
+
+		final SequenceGeneratorRegistration globalSequenceMatch =
+				globalRegistrations.getSequenceGeneratorRegistrations().get( globalRegistrationName );
 		if ( globalSequenceMatch != null ) {
 			handleSequenceGenerator(
 					globalRegistrationName,
@@ -237,55 +236,48 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			return;
 		}
 
-		final TableGeneratorRegistration globalTableMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getTableGeneratorRegistrations()
-				.get( globalRegistrationName );
+		final TableGeneratorRegistration globalTableMatch =
+				globalRegistrations.getTableGeneratorRegistrations().get( globalRegistrationName );
 		if ( globalTableMatch != null ) {
 			handleTableGenerator(
 					globalRegistrationName,
 					globalTableMatch.configuration(),
 					entityMapping,
 					idValue,
-					idMember,
 					buildingContext
 			);
 			return;
 		}
 
-		final GenericGeneratorRegistration globalGenericMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getGenericGeneratorRegistrations()
-				.get( globalRegistrationName );
+		final GenericGeneratorRegistration globalGenericMatch =
+				globalRegistrations.getGenericGeneratorRegistrations().get( globalRegistrationName );
 		if ( globalGenericMatch != null ) {
 			handleGenericGenerator(
 					globalRegistrationName,
 					globalGenericMatch.configuration(),
 					entityMapping,
 					idValue,
-					idMember,
 					buildingContext
 			);
 			return;
 		}
 
 		// Implicit handling of UUID generation
-		if ( idMember.getType().isImplementor( UUID.class  )
-				|| idMember.getType().isImplementor( String.class )) {
+		if ( idMember.getType().isImplementor( UUID.class )
+				|| idMember.getType().isImplementor( String.class ) ) {
 			handleUuidStrategy( idValue, idMember, buildingContext );
 			return;
 		}
 
 
 		// Handle a few legacy Hibernate generators...
-		if ( !generatedValue.generator().isEmpty() ) {
-			final Class<? extends Generator> legacyNamedGenerator = GeneratorStrategies.mapLegacyNamedGenerator( generatedValue.generator(), idValue );
+		if ( !generator.isEmpty() ) {
+			final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( generator, idValue );
 			if ( legacyNamedGenerator != null ) {
 				final Map<String,String> configuration = buildLegacyGeneratorConfig();
 				//noinspection unchecked,rawtypes
 				GeneratorBinder.createGeneratorFrom(
-						new IdentifierGeneratorDefinition( generatedValue.generator(), legacyNamedGenerator.getName(), configuration ),
-						idMember,
+						new IdentifierGeneratorDefinition( generator, legacyNamedGenerator.getName(), configuration ),
 						idValue,
 						(Map) configuration,
 						buildingContext
@@ -296,7 +288,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 
 		handleSequenceGenerator(
 				globalRegistrationName,
-				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), buildingContext.getMetadataCollector().getSourceModelBuildingContext() ),
+				new SequenceGeneratorJpaAnnotation( generator, metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
 				idMember,
@@ -348,14 +340,12 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			configuration.put( GENERATOR_NAME, generatorName );
 		}
 		else {
-			SequenceStyleGenerator.applyConfiguration( generatorConfig, idValue, configuration::put );
+			SequenceStyleGenerator.applyConfiguration( generatorConfig, configuration::put );
 		}
 
 		GeneratorBinder.createGeneratorFrom(
 				new IdentifierGeneratorDefinition( generatorName, SequenceStyleGenerator.class.getName(), configuration ),
-				idMember,
 				idValue,
-				entityMapping,
 				context
 		);
 

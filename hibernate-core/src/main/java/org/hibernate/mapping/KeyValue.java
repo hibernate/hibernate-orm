@@ -27,9 +27,12 @@ public interface KeyValue extends Value {
 
 	@Deprecated(since = "7.0")
 	default Generator createGenerator(Dialect dialect, RootClass rootClass) {
-		return createGenerator( dialect, rootClass, null );
+		return createGenerator( dialect, rootClass, null, null );
 	}
 
-	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property);
-
+	Generator createGenerator(
+			Dialect dialect,
+			RootClass rootClass,
+			Property property,
+			GeneratorSettings defaults);
 }

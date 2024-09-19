@@ -15,15 +15,14 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
 import org.hibernate.boot.models.spi.TableGeneratorRegistration;
-import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.generator.Generator;
@@ -43,7 +42,9 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 
 import static org.hibernate.boot.model.internal.GeneratorBinder.callConfigure;
+import static org.hibernate.boot.model.internal.GeneratorBinder.instantiateGenerator;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
+import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 
@@ -78,7 +79,7 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		switch ( generatedValue.strategy() ) {
 			case UUID -> GeneratorAnnotationHelper.handleUuidStrategy( idValue, idMember, buildingContext );
-			case IDENTITY -> GeneratorAnnotationHelper.handleIdentityStrategy( idValue, idMember, buildingContext );
+			case IDENTITY -> GeneratorAnnotationHelper.handleIdentityStrategy( idValue );
 			case SEQUENCE -> handleSequenceStrategy();
 			case TABLE -> handleTableStrategy();
 			case AUTO -> handleAutoStrategy();
@@ -113,62 +114,65 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	}
 
 	private void handleNamedSequenceGenerator() {
+		final String generator = generatedValue.generator();
+
 		final SequenceGenerator localizedMatch = GeneratorAnnotationHelper.findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idMember,
 				SequenceGenerator::name,
-				generatedValue.generator(),
+				generator,
 				buildingContext
 		);
 		if ( localizedMatch != null ) {
-			handleSequenceGenerator( generatedValue.generator(), localizedMatch );
+			handleSequenceGenerator( generator, localizedMatch );
 			return;
 		}
 
 		// look for the matching global registration, if one.
-		final SequenceGeneratorRegistration globalMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getSequenceGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final SequenceGeneratorRegistration globalMatch =
+				buildingContext.getMetadataCollector()
+						.getGlobalRegistrations()
+						.getSequenceGeneratorRegistrations()
+						.get( generator );
 		if ( globalMatch != null ) {
-			handleSequenceGenerator( generatedValue.generator(), globalMatch.configuration() );
+			handleSequenceGenerator( generator, globalMatch.configuration() );
 			return;
 		}
 
 		validateSequenceGeneration();
 
-		handleSequenceGenerator( generatedValue.generator(), null );
+		handleSequenceGenerator( generator, null );
 	}
 
 	private void validateSequenceGeneration() {
 		// basically, make sure there is neither a TableGenerator nor GenericGenerator with this name
 
-		final TableGeneratorRegistration globalTableMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getTableGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final GlobalRegistrations globalRegistrations =
+				buildingContext.getMetadataCollector().getGlobalRegistrations();
+		final String generator = generatedValue.generator();
+
+		final TableGeneratorRegistration globalTableMatch =
+				globalRegistrations.getTableGeneratorRegistrations().get( generator );
 		if ( globalTableMatch != null ) {
 			throw new MappingException(
 					String.format(
 							Locale.ROOT,
 							"@GeneratedValue for %s (%s) specified SEQUENCE generation, but referred to a @TableGenerator",
 							entityMapping.getEntityName(),
-							generatedValue.generator()
+							generator
 					)
 			);
 		}
 
-		final GenericGeneratorRegistration globalGenericMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getGenericGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final GenericGeneratorRegistration globalGenericMatch =
+				globalRegistrations.getGenericGeneratorRegistrations().get( generator );
 		if ( globalGenericMatch != null ) {
 			throw new MappingException(
 					String.format(
 							Locale.ROOT,
 							"@GeneratedValue for %s (%s) specified SEQUENCE generation, but referred to a @GenericGenerator",
 							entityMapping.getEntityName(),
-							generatedValue.generator()
+							generator
 					)
 			);
 		}
@@ -193,71 +197,67 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 				null,
 				buildingContext
 		);
-		if ( localizedMatch != null ) {
-			handleTableGenerator( null, localizedMatch );
-			return;
-		}
-
-		handleTableGenerator( null, null );
+		handleTableGenerator( null, localizedMatch );
 	}
 
 	private void handleNamedTableGenerator() {
+		final String generator = generatedValue.generator();
+
 		final TableGenerator localizedTableMatch = GeneratorAnnotationHelper.findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idMember,
 				TableGenerator::name,
-				generatedValue.generator(),
+				generator,
 				buildingContext
 		);
 		if ( localizedTableMatch != null ) {
-			handleTableGenerator( generatedValue.generator(), localizedTableMatch );
+			handleTableGenerator( generator, localizedTableMatch );
 			return;
 		}
 
 		// look for the matching global registration, if one.
-		final TableGeneratorRegistration globalMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getTableGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final TableGeneratorRegistration globalMatch =
+				buildingContext.getMetadataCollector().getGlobalRegistrations()
+						.getTableGeneratorRegistrations().get( generator );
 		if ( globalMatch != null ) {
-			handleTableGenerator( generatedValue.generator(), globalMatch.configuration() );
+			handleTableGenerator( generator, globalMatch.configuration() );
 			return;
 		}
 
 		validateTableGeneration();
 
-		handleTableGenerator( generatedValue.generator(), null );
+		handleTableGenerator( generator, null );
 	}
 
 	private void validateTableGeneration() {
 		// basically, make sure there is neither a SequenceGenerator nor a GenericGenerator with this name
 
-		final SequenceGeneratorRegistration globalSequenceMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getSequenceGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final GlobalRegistrations globalRegistrations =
+				buildingContext.getMetadataCollector().getGlobalRegistrations();
+		final String generator = generatedValue.generator();
+
+		final SequenceGeneratorRegistration globalSequenceMatch =
+				globalRegistrations.getSequenceGeneratorRegistrations().get( generator );
 		if ( globalSequenceMatch != null ) {
 			throw new MappingException(
 					String.format(
 							Locale.ROOT,
 							"@GeneratedValue for %s (%s) specified TABLE generation, but referred to a @SequenceGenerator",
 							entityMapping.getEntityName(),
-							generatedValue.generator()
+							generator
 					)
 			);
 		}
 
-		final GenericGeneratorRegistration globalGenericMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getGenericGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final GenericGeneratorRegistration globalGenericMatch =
+				globalRegistrations.getGenericGeneratorRegistrations().get( generator );
 		if ( globalGenericMatch != null ) {
 			throw new MappingException(
 					String.format(
 							Locale.ROOT,
 							"@GeneratedValue for %s (%s) specified TABLE generation, but referred to a @GenericGenerator",
 							entityMapping.getEntityName(),
-							generatedValue.generator()
+							generator
 					)
 			);
 		}
@@ -312,7 +312,6 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 					localizedGenericMatch,
 					entityMapping,
 					idValue,
-					idMember,
 					buildingContext
 			);
 			return;
@@ -336,34 +335,35 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			return;
 		}
 
-		final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( generatedValue.generator(), buildingContext );
+		final String generator = generatedValue.generator();
+		final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( generator, buildingContext );
 		if ( legacyNamedGenerator != null ) {
 			//generator settings
 			GeneratorBinder.createGeneratorFrom(
-					new IdentifierGeneratorDefinition( generatedValue.generator(), legacyNamedGenerator.getName() ),
-					idMember,
+					new IdentifierGeneratorDefinition( generator, legacyNamedGenerator.getName() ),
 					idValue,
-					entityMapping,
 					buildingContext
 			);
 			return;
 		}
 
-		final List<? extends Annotation> metaAnnotated = idMember.getMetaAnnotated( IdGeneratorType.class, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final List<? extends Annotation> metaAnnotated =
+				idMember.getMetaAnnotated( IdGeneratorType.class, metadataCollector.getSourceModelBuildingContext() );
 		if ( CollectionHelper.size( metaAnnotated ) > 0 ) {
 			final Annotation generatorAnnotation = metaAnnotated.get( 0 );
 			final IdGeneratorType markerAnnotation = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
 			idValue.setCustomIdGeneratorCreator( (creationContext) -> {
 
 				final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
-				final Generator identifierGenerator = GeneratorBinder.instantiateGenerator(
+				final Generator identifierGenerator = instantiateGenerator(
 						beanContainer,
 						markerAnnotation.value()
 				);
 				final Map<String,Object> configuration = new HashMap<>();
 				GeneratorParameters.collectParameters(
 						idValue,
-						buildingContext.getMetadataCollector().getDatabase().getDialect(),
+						metadataCollector.getDatabase().getDialect(),
 						entityMapping.getRootClass(),
 						configuration::put
 				);
@@ -379,21 +379,22 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			return;
 		}
 
-		handleSequenceGenerator( generatedValue.generator(), null );
+		handleSequenceGenerator(generator, null );
 	}
 
 	private boolean handleAsLocalAutoGenerator() {
-		assert !generatedValue.generator().isEmpty();
+		final String generator = generatedValue.generator();
+		assert !generator.isEmpty();
 
 		final SequenceGenerator localizedSequenceMatch = GeneratorAnnotationHelper.findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idMember,
 				SequenceGenerator::name,
-				generatedValue.generator(),
+				generator,
 				buildingContext
 		);
 		if ( localizedSequenceMatch != null ) {
-			handleSequenceGenerator( generatedValue.generator(), localizedSequenceMatch );
+			handleSequenceGenerator( generator, localizedSequenceMatch );
 			return true;
 		}
 
@@ -401,11 +402,11 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 				JpaAnnotations.TABLE_GENERATOR,
 				idMember,
 				TableGenerator::name,
-				generatedValue.generator(),
+				generator,
 				buildingContext
 		);
 		if ( localizedTableMatch != null ) {
-			handleTableGenerator( generatedValue.generator(), localizedTableMatch );
+			handleTableGenerator(generator, localizedTableMatch );
 			return true;
 		}
 
@@ -413,16 +414,15 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 				HibernateAnnotations.GENERIC_GENERATOR,
 				idMember,
 				GenericGenerator::name,
-				generatedValue.generator(),
+				generator,
 				buildingContext
 		);
 		if ( localizedGenericMatch != null ) {
 			GeneratorAnnotationHelper.handleGenericGenerator(
-					generatedValue.generator(),
+					generator,
 					localizedGenericMatch,
 					entityMapping,
 					idValue,
-					idMember,
 					buildingContext
 			);
 			return true;
@@ -432,35 +432,32 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	}
 
 	private boolean handleAsNamedGlobalAutoGenerator() {
-		final SequenceGeneratorRegistration globalSequenceMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getSequenceGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final GlobalRegistrations globalRegistrations =
+				buildingContext.getMetadataCollector().getGlobalRegistrations();
+		final String generator = generatedValue.generator();
+
+		final SequenceGeneratorRegistration globalSequenceMatch =
+				globalRegistrations.getSequenceGeneratorRegistrations().get( generator );
 		if ( globalSequenceMatch != null ) {
-			handleSequenceGenerator( generatedValue.generator(), globalSequenceMatch.configuration() );
+			handleSequenceGenerator( generator, globalSequenceMatch.configuration() );
 			return true;
 		}
 
-		final TableGeneratorRegistration globalTableMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getTableGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final TableGeneratorRegistration globalTableMatch =
+				globalRegistrations.getTableGeneratorRegistrations().get( generator );
 		if ( globalTableMatch != null ) {
-			handleTableGenerator( generatedValue.generator(), globalTableMatch.configuration() );
+			handleTableGenerator( generator, globalTableMatch.configuration() );
 			return true;
 		}
 
-		final GenericGeneratorRegistration globalGenericMatch = buildingContext.getMetadataCollector()
-				.getGlobalRegistrations()
-				.getGenericGeneratorRegistrations()
-				.get( generatedValue.generator() );
+		final GenericGeneratorRegistration globalGenericMatch =
+				globalRegistrations.getGenericGeneratorRegistrations().get( generator );
 		if ( globalGenericMatch != null ) {
 			GeneratorAnnotationHelper.handleGenericGenerator(
-					generatedValue.generator(),
+					generator,
 					globalGenericMatch.configuration(),
 					entityMapping,
 					idValue,
-					idMember,
 					buildingContext
 			);
 			return true;
@@ -470,8 +467,7 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	}
 
 	private void handleSequenceGenerator(String nameFromGeneratedValue, SequenceGenerator generator) {
-		final Map<String, Object> configuration = extractConfiguration( nameFromGeneratedValue, generator );
-		createGeneratorFrom( SequenceStyleGenerator.class, configuration );
+		createGeneratorFrom( SequenceStyleGenerator.class, extractConfiguration( nameFromGeneratedValue, generator ) );
 	}
 
 	private Map<String,Object> extractConfiguration(String nameFromGenerated, SequenceGenerator generator) {
@@ -486,7 +482,7 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		applyCommonConfiguration( configuration, generator );
 
 		if ( generator != null ) {
-			SequenceStyleGenerator.applyConfiguration( generator, idValue, configuration::put );
+			SequenceStyleGenerator.applyConfiguration( generator, configuration::put );
 		}
 
 		return configuration;
@@ -511,13 +507,11 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			// here should be 50.  As a migration aid, under the assumption that one of the legacy
 			// naming-strategies are used in such cases, we revert to the old default; otherwise we
 			// use the compliant value.
-			final StandardServiceRegistry serviceRegistry = buildingContext.getBootstrapContext().getServiceRegistry();
-			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
-			final String idNamingStrategy = configService.getSetting(
-					AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-					StandardConverters.STRING,
-					null
-			);
+			final ConfigurationService configService =
+					buildingContext.getBootstrapContext().getServiceRegistry()
+							.requireService( ConfigurationService.class );
+			final String idNamingStrategy =
+					configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
 			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
 					|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
@@ -530,8 +524,8 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	}
 
 	private void handleTableGenerator(String nameFromGeneratedValue, TableGenerator generator) {
-		final Map<String, Object> configuration = extractConfiguration( nameFromGeneratedValue, generator );
-		createGeneratorFrom( org.hibernate.id.enhanced.TableGenerator.class, configuration );
+		createGeneratorFrom( org.hibernate.id.enhanced.TableGenerator.class,
+				extractConfiguration( nameFromGeneratedValue, generator ) );
 	}
 
 	private Map<String,Object> extractConfiguration(String nameFromGenerated, TableGenerator generator) {
@@ -546,7 +540,7 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		applyCommonConfiguration( configuration, generator );
 
 		if ( generator != null ) {
-			org.hibernate.id.enhanced.TableGenerator.applyConfiguration( generator, idValue, configuration::put );
+			org.hibernate.id.enhanced.TableGenerator.applyConfiguration( generator, configuration::put );
 		}
 
 		return configuration;
@@ -557,16 +551,11 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			Map<String, Object> configuration) {
 		final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
 		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
-			final Generator identifierGenerator = GeneratorBinder.instantiateGenerator( beanContainer, generatorClass );
+			final Generator identifierGenerator = instantiateGenerator( beanContainer, generatorClass );
 			callConfigure( creationContext, identifierGenerator, configuration, idValue );
 			if ( identifierGenerator instanceof IdentityGenerator ) {
 				idValue.setColumnToIdentity();
 			}
-
-			// if we get here we have either a sequence or table generator,
-			// both of which are ExportableProducers
-			( (ExportableProducer) identifierGenerator ).registerExportables( creationContext.getDatabase() );
-
 			return identifierGenerator;
 		} );
 	}

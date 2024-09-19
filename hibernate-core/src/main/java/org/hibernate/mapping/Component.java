@@ -651,17 +651,17 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property) {
+	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
 		if ( builtIdentifierGenerator == null ) {
 			builtIdentifierGenerator =
 					getCustomIdGeneratorCreator().isAssigned()
-							? buildIdentifierGenerator( dialect, rootClass )
-							: super.createGenerator( dialect, rootClass, property );
+							? buildIdentifierGenerator( dialect, rootClass, defaults )
+							: super.createGenerator( dialect, rootClass, property, defaults );
 		}
 		return builtIdentifierGenerator;
 	}
 
-	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass) {
+	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {
 		final CompositeNestedGeneratedValueGenerator generator =
 				new CompositeNestedGeneratedValueGenerator(
 						new StandardGenerationContextLocator( rootClass.getEntityName() ),
@@ -675,7 +675,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
 					// skip any 'assigned' generators, they would have been
 					// handled by the StandardGenerationContextLocator
-					if ( value.createGenerator( dialect, rootClass, property )
+					if ( value.createGenerator( dialect, rootClass, property, defaults )
 							instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
 						generator.addGeneratedValuePlan( new ValueGenerationPlan(
 								beforeExecutionGenerator,

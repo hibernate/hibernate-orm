@@ -376,10 +376,19 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property) {
+	public Generator createGenerator(
+			Dialect dialect,
+			RootClass rootClass,
+			Property property,
+			GeneratorSettings defaults) {
 		if ( generator == null ) {
 			if ( customIdGeneratorCreator != null ) {
-				generator = customIdGeneratorCreator.createGenerator( new IdGeneratorCreationContext( rootClass, property ) );
+				final IdGeneratorCreationContext context =
+						new IdGeneratorCreationContext( rootClass, property, defaults );
+				generator = customIdGeneratorCreator.createGenerator( context );
+				if ( generator.allowAssignedIdentifiers() && getNullValue() == null ) {
+					setNullValue( "undefined" );
+				}
 			}
 		}
 		return generator;
@@ -903,8 +912,7 @@ public abstract class SimpleValue implements KeyValue {
 
 			for ( int i = 0; i < columns.size(); i++ ) {
 				final Selectable selectable = columns.get(i);
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					columnNames[i] = column.getName();
 					columnLengths[i] = column.getLength();
 				}
@@ -1029,10 +1037,12 @@ public abstract class SimpleValue implements KeyValue {
 	private class IdGeneratorCreationContext implements GeneratorCreationContext {
 		private final RootClass rootClass;
 		private final Property property;
+		private final GeneratorSettings defaults;
 
-		public IdGeneratorCreationContext(RootClass rootClass, Property property) {
+		public IdGeneratorCreationContext(RootClass rootClass, Property property, GeneratorSettings defaults) {
 			this.rootClass = rootClass;
 			this.property = property;
+			this.defaults = defaults;
 		}
 
 		@Override
@@ -1047,12 +1057,12 @@ public abstract class SimpleValue implements KeyValue {
 
 		@Override
 		public String getDefaultCatalog() {
-			return buildingContext.getEffectiveDefaults().getDefaultCatalogName();
+			return defaults.getDefaultCatalog();
 		}
 
 		@Override
 		public String getDefaultSchema() {
-			return buildingContext.getEffectiveDefaults().getDefaultSchemaName();
+			return defaults.getDefaultSchema();
 		}
 
 		@Override
@@ -1075,7 +1085,7 @@ public abstract class SimpleValue implements KeyValue {
 			return SimpleValue.this.getType();
 		}
 
-		// we could add these if it helps integrate old infrastructure
+		// we could add this if it helps integrate old infrastructure
 //		@Override
 //		public Properties getParameters() {
 //			final Value value = getProperty().getValue();
@@ -1086,10 +1096,5 @@ public abstract class SimpleValue implements KeyValue {
 //			return collectParameters( (SimpleValue) value, dialect, defaultCatalog, defaultSchema, rootClass );
 //		}
 //
-//		@Override
-//		public SqlStringGenerationContext getSqlStringGenerationContext() {
-//			final Database database = getDatabase();
-//			return fromExplicit( database.getJdbcEnvironment(), database, defaultCatalog, defaultSchema );
-//		}
 	}
 }

@@ -54,7 +54,6 @@ import org.hibernate.boot.model.internal.SetBasicValueTypeSecondPass;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
@@ -81,7 +80,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.generator.Generator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -91,6 +89,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -2204,15 +2203,22 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private void handleIdentifierValueBinding(
 			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
-		// todo : store this result (back into the entity or into the KeyValue, maybe?)
-		// 		This process of instantiating the id-generator is called multiple times.
-		//		It was done this way in the old code too, so no "regression" here; but
-		//		it could be done better
 		try {
-			final Generator generator = identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty );
-			if ( generator instanceof ExportableProducer exportableProducer ) {
-				exportableProducer.registerExportables( getDatabase() );
-			}
+			// this call typically caches the new Generator in the instance of KeyValue
+			identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty,
+					new GeneratorSettings() {
+						@Override
+						public String getDefaultCatalog() {
+							//TODO: does not have access to property-configured default
+							return persistenceUnitMetadata.getDefaultCatalog();
+						}
+
+						@Override
+						public String getDefaultSchema() {
+							//TODO: does not have access to property-configured default
+							return persistenceUnitMetadata.getDefaultSchema();
+						}
+					} );
 		}
 		catch (MappingException e) {
 			// ignore this for now.  The reasoning being "non-reflective" binding as needed

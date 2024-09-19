@@ -47,7 +47,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -65,6 +64,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
@@ -594,12 +594,22 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
-		final Generator generator = collection.getIdentifier().createGenerator( context.getDialect(), null, null );
+		final Generator generator =
+				collection.getIdentifier()
+						.createGenerator( context.getDialect(), null, null,
+								new GeneratorSettings() {
+									@Override
+									public String getDefaultCatalog() {
+										return context.getSessionFactoryOptions().getDefaultCatalog();
+									}
+
+									@Override
+									public String getDefaultSchema() {
+										return context.getSessionFactoryOptions().getDefaultCatalog();
+									}
+								} );
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
-		}
-		if ( generator instanceof Configurable ) {
-			( (Configurable) generator ).initialize( context.getSqlStringGenerationContext() );
 		}
 		return (BeforeExecutionGenerator) generator;
 	}

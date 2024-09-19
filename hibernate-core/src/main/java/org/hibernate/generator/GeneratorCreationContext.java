@@ -8,11 +8,14 @@ import java.util.Properties;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+
+import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 
 /**
  * Access to information useful during {@linkplain Generator} creation and initialization.
@@ -64,5 +67,10 @@ public interface GeneratorCreationContext {
 	 */
 	default Type getType() {
 		return getProperty().getType();
+	}
+
+	default SqlStringGenerationContext getSqlStringGenerationContext() {
+		final Database database = getDatabase();
+		return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
 	}
 }

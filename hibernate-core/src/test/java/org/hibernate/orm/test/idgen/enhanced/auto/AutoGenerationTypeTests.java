@@ -134,7 +134,7 @@ public class AutoGenerationTypeTests {
 			final Property identifierProperty = entityBinding.getRootClass().getIdentifierProperty();
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass(), identifierProperty );
+			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass(), identifierProperty, null );
 			MatcherAssert.assertThat( generator, instanceOf( UuidGenerator.class ) );
 		}
 	}

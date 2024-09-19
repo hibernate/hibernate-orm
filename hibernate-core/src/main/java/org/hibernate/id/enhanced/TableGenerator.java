@@ -45,7 +45,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
@@ -728,14 +727,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	public static void applyConfiguration(
 			jakarta.persistence.TableGenerator generatorConfig,
-			SimpleValue idValue,
-			Map<String, String> configuration) {
-		applyConfiguration( generatorConfig, idValue, configuration::put );
-	}
-
-	public static void applyConfiguration(
-			jakarta.persistence.TableGenerator generatorConfig,
-			SimpleValue idValue,
 			BiConsumer<String, String> configurationCollector) {
 		configurationCollector.accept( CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 

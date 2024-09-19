@@ -91,7 +91,8 @@ public class UnnamedGeneratorTests {
 			final Generator generator = entityBinding.getIdentifier().createGenerator(
 					metadata.getDatabase().getDialect(),
 					entityBinding,
-					entityBinding.getIdentifierProperty()
+					entityBinding.getIdentifierProperty(),
+					null
 			);
 
 			checks.accept( generator );

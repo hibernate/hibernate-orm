@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -31,7 +32,6 @@ import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.MappingContext;
@@ -129,8 +129,7 @@ public class Property implements Serializable, MetaAttributable {
 	public void resetOptional(boolean optional) {
 		setOptional( optional );
 		for ( Selectable selectable: getValue().getSelectables() ) {
-			if (selectable instanceof Column) {
-				final Column column = (Column) selectable;
+			if ( selectable instanceof Column column ) {
 				column.setNullable( optional );
 			}
 		}
@@ -152,15 +151,15 @@ public class Property implements Serializable, MetaAttributable {
 			return getCascadeStyle( cascade );
 		}
 	}
-
-	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
-		if ( compositeType instanceof AnyType ) {
-			return getCascadeStyle( cascade );
-		}
-		else {
-			return getCompositeCascadeStyle( (ComponentType) compositeType, cascade );
-		}
-	}
+//
+//	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
+//		if ( compositeType instanceof AnyType ) {
+//			return getCascadeStyle( cascade );
+//		}
+//		else {
+//			return getCompositeCascadeStyle( (ComponentType) compositeType, cascade );
+//		}
+//	}
 
 	private static CascadeStyle getCompositeCascadeStyle(ComponentType compositeType, String cascade) {
 		final int length = compositeType.getSubtypes().length;
@@ -542,6 +541,11 @@ public class Property implements Serializable, MetaAttributable {
 		@Override
 		public Property getProperty() {
 			return Property.this;
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return context.getSqlStringGenerationContext();
 		}
 	}
 }

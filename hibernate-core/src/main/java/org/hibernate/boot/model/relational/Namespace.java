@@ -364,7 +364,7 @@ public class Namespace {
 			final Name that = (Name) o;
 
 			return Objects.equals( this.catalog, that.catalog )
-					&& Objects.equals( this.schema, that.schema );
+				&& Objects.equals( this.schema, that.schema );
 		}
 
 		@Override

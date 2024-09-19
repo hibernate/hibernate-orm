@@ -73,10 +73,9 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
@@ -264,7 +263,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		try {
 			integrate( bootMetamodel, bootstrapContext, integratorObserver );
 
-			identifierGenerators = createGenerators( jdbcServices, sqlStringGenerationContext, bootMetamodel );
+			identifierGenerators = createGenerators( jdbcServices, bootMetamodel, options );
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
 
@@ -415,25 +414,33 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		};
 	}
 
-	private static Map<String, Generator> createGenerators(
-			JdbcServices jdbcServices,
-			SqlStringGenerationContext sqlStringGenerationContext,
-			MetadataImplementor bootMetamodel) {
+	private Map<String, Generator> createGenerators(
+			JdbcServices jdbcServices, MetadataImplementor metamodel, SessionFactoryOptions options) {
 		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
 		final Map<String, Generator> generators = new HashMap<>();
-		for ( PersistentClass model : bootMetamodel.getEntityBindings() ) {
-			if ( !model.isInherited() ) {
-				final KeyValue id = model.getIdentifier();
+		for ( PersistentClass model : metamodel.getEntityBindings() ) {
+			if ( model instanceof RootClass rootClass ) {
 				final Generator generator =
-						id.createGenerator( dialect, (RootClass) model, model.getIdentifierProperty() );
+						model.getIdentifier()
+								// returns the cached Generator if it was already created
+								.createGenerator( dialect, rootClass, model.getIdentifierProperty(),
+										new GeneratorSettings() {
+											@Override
+											public String getDefaultCatalog() {
+												return options.getDefaultCatalog();
+											}
+
+											@Override
+											public String getDefaultSchema() {
+												return options.getDefaultSchema();
+											}
+										} );
+				// the cached generator might have been created from
+				// InFlightMetadataCollectorImpl.handleIdentifierValueBinding,
+				// in which case it did not have access to the property-configured
+				// default catalog and schema, so re-render SQL here
 				if ( generator instanceof Configurable configurable ) {
 					configurable.initialize( sqlStringGenerationContext );
-				}
-				//TODO: this isn't a great place to do this
-				if ( generator.allowAssignedIdentifiers()
-						&& id instanceof SimpleValue simpleValue
-						&& simpleValue.getNullValue() == null ) {
-					simpleValue.setNullValue( "undefined" );
 				}
 				generators.put( model.getEntityName(), generator );
 			}

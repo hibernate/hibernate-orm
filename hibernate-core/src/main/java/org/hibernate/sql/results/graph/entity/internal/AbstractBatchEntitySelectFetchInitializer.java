@@ -149,6 +149,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 				data.entityIdentifier = lazyInitializer.getIdentifier();
 			}
 			// Resolve and potentially create the entity instance
+			data.entityKey = new EntityKey( lazyInitializer.getIdentifier(), concreteDescriptor );
 			registerToBatchFetchQueue( data );
 		}
 		else {

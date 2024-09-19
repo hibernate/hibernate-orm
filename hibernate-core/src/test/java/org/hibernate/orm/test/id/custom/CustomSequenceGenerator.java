@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
@@ -24,7 +25,6 @@ public class CustomSequenceGenerator implements IdentifierGenerator {
 //end::identifiers-IdGeneratorType-example[]
 	public static int generationCount = 0;
 
-	private final Identifier sequenceName;
 	private final String sqlSelectFrag;
 
 //tag::identifiers-IdGeneratorType-example[]
@@ -42,23 +42,26 @@ public class CustomSequenceGenerator implements IdentifierGenerator {
 		final Database database = context.getDatabase();
 		final IdentifierHelper identifierHelper = database.getJdbcEnvironment().getIdentifierHelper();
 
-		final org.hibernate.boot.model.relational.Sequence sequence = database.getDefaultNamespace().createSequence(
-				identifierHelper.toIdentifier( name ),
-				(physicalName) -> new org.hibernate.boot.model.relational.Sequence(
-						null,
-						database.getDefaultNamespace().getPhysicalName().getCatalog(),
-						database.getDefaultNamespace().getPhysicalName().getSchema(),
-						physicalName,
-						1,
-						50
-				)
-		);
-		this.sequenceName = sequence.getName().getSequenceName();
+		final Identifier identifier = identifierHelper.toIdentifier( name );
+		final Namespace defaultNamespace = database.getDefaultNamespace();
+		org.hibernate.boot.model.relational.Sequence sequence = defaultNamespace.locateSequence( identifier );
+		if ( sequence == null ) {
+			sequence = defaultNamespace.createSequence(
+					identifier,
+					(physicalName) -> new org.hibernate.boot.model.relational.Sequence(
+							null,
+							defaultNamespace.getPhysicalName().getCatalog(),
+							defaultNamespace.getPhysicalName().getSchema(),
+							physicalName,
+							1,
+							50
+					)
+			);
+		}
 
-		this.sqlSelectFrag = database
-				.getDialect()
-				.getSequenceSupport()
-				.getSequenceNextValString( sequenceName.render( database.getDialect() ) );
+		this.sqlSelectFrag =
+				database.getDialect().getSequenceSupport()
+						.getSequenceNextValString( sequence.getName().getSequenceName().render( database.getDialect() ) );
 
 //tag::identifiers-IdGeneratorType-example[]
 	}

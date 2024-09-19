@@ -103,7 +103,6 @@ public abstract class SimpleValue implements KeyValue {
 	private Type type;
 
 	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
-	private Generator generator;
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -137,7 +136,6 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
-		this.generator = original.generator;
 	}
 
 	@Override
@@ -381,17 +379,18 @@ public abstract class SimpleValue implements KeyValue {
 			RootClass rootClass,
 			Property property,
 			GeneratorSettings defaults) {
-		if ( generator == null ) {
-			if ( customIdGeneratorCreator != null ) {
-				final IdGeneratorCreationContext context =
-						new IdGeneratorCreationContext( rootClass, property, defaults );
-				generator = customIdGeneratorCreator.createGenerator( context );
-				if ( generator.allowAssignedIdentifiers() && getNullValue() == null ) {
-					setNullValue( "undefined" );
-				}
+		if ( customIdGeneratorCreator != null ) {
+			final IdGeneratorCreationContext context =
+					new IdGeneratorCreationContext( rootClass, property, defaults );
+			final Generator generator = customIdGeneratorCreator.createGenerator( context );
+			if ( generator.allowAssignedIdentifiers() && getNullValue() == null ) {
+				setNullValue( "undefined" );
 			}
+			return generator;
 		}
-		return generator;
+		else {
+			return null;
+		}
 	}
 
 	@Internal

@@ -67,13 +67,11 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.Configurable;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
@@ -185,8 +183,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private final transient CurrentSessionContext currentSessionContext;
 
-	// todo : move to MetamodelImpl
-	private final transient Map<String, Generator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient java.util.Collection<FilterDefinition> autoEnabledFilters = new HashSet<>();
 	private final transient Map<String, FetchProfile> fetchProfiles;
@@ -263,7 +259,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		try {
 			integrate( bootMetamodel, bootstrapContext, integratorObserver );
 
-			identifierGenerators = createGenerators( jdbcServices, bootMetamodel, options );
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
 
@@ -346,6 +341,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			TypeConfiguration typeConfiguration,
 			SessionFactoryOptions options) {
 		return new RuntimeModelCreationContext() {
+			final Map<String,Generator> generators = new HashMap<>();
+
 			@Override
 			public BootstrapContext getBootstrapContext() {
 				return bootstrapContext;
@@ -411,41 +408,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			public ServiceRegistry getServiceRegistry() {
 				return serviceRegistry;
 			}
-		};
-	}
 
-	private Map<String, Generator> createGenerators(
-			JdbcServices jdbcServices, MetadataImplementor metamodel, SessionFactoryOptions options) {
-		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
-		final Map<String, Generator> generators = new HashMap<>();
-		for ( PersistentClass model : metamodel.getEntityBindings() ) {
-			if ( model instanceof RootClass rootClass ) {
-				final Generator generator =
-						model.getIdentifier()
-								// returns the cached Generator if it was already created
-								.createGenerator( dialect, rootClass, model.getIdentifierProperty(),
-										new GeneratorSettings() {
-											@Override
-											public String getDefaultCatalog() {
-												return options.getDefaultCatalog();
-											}
-
-											@Override
-											public String getDefaultSchema() {
-												return options.getDefaultSchema();
-											}
-										} );
-				// the cached generator might have been created from
-				// InFlightMetadataCollectorImpl.handleIdentifierValueBinding,
-				// in which case it did not have access to the property-configured
-				// default catalog and schema, so re-render SQL here
-				if ( generator instanceof Configurable configurable ) {
-					configurable.initialize( sqlStringGenerationContext );
-				}
-				generators.put( model.getEntityName(), generator );
+			@Override
+			public Map<String, Generator> getGenerators() {
+				return generators;
 			}
-		}
-		return generators;
+		};
 	}
 
 	private static SqlStringGenerationContext createSqlStringGenerationContext(
@@ -1086,7 +1054,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override @Deprecated
 	public Generator getGenerator(String rootEntityName) {
-		return identifierGenerators.get( rootEntityName );
+		return null;
 	}
 
 	private boolean canAccessTransactionManager() {

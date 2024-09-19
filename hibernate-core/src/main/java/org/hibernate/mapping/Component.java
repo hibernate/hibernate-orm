@@ -106,8 +106,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private transient Class<?> componentClass;
 	private transient Boolean simpleRecord;
 
-	private transient Generator builtIdentifierGenerator;
-
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
 	}
@@ -652,13 +650,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
-		if ( builtIdentifierGenerator == null ) {
-			builtIdentifierGenerator =
-					getCustomIdGeneratorCreator().isAssigned()
-							? buildIdentifierGenerator( dialect, rootClass, defaults )
-							: super.createGenerator( dialect, rootClass, property, defaults );
-		}
-		return builtIdentifierGenerator;
+		return getCustomIdGeneratorCreator().isAssigned()
+				? buildIdentifierGenerator( dialect, rootClass, defaults )
+				: super.createGenerator( dialect, rootClass, property, defaults );
 	}
 
 	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {

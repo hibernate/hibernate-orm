@@ -909,15 +909,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean shouldUseShallowCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
-		switch ( queryCacheLayout( entityQueryCacheLayout, options ) ) {
-			case FULL:
-				return false;
-			case AUTO:
-				return canUseReferenceCacheEntries()
-					|| canReadFromCache();
-			default:
-				return true;
-		}
+		return switch ( queryCacheLayout( entityQueryCacheLayout, options ) ) {
+			case FULL -> false;
+			case AUTO -> canUseReferenceCacheEntries() || canReadFromCache();
+			default -> true;
+		};
 	}
 
 	private static boolean shouldStoreDiscriminatorInShallowQueryCacheLayout(

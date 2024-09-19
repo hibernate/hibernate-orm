@@ -19,6 +19,7 @@ import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -40,6 +41,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @DomainModel(
@@ -164,6 +166,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 					@Override
 					public org.hibernate.service.ServiceRegistry getServiceRegistry() {
 						return sessionFactory.getServiceRegistry();
+					}
+
+					@Override
+					public Map<String, Generator> getGenerators() {
+						return emptyMap();
 					}
 				}
 		);

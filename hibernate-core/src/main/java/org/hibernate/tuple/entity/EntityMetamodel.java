@@ -18,6 +18,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
@@ -34,6 +35,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -160,10 +162,8 @@ public class EntityMetamodel implements Serializable {
 
 		subclassId = persistentClass.getSubclassId();
 
-		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
-				persistentClass,
-				sessionFactory.getGenerator( rootName )
-		);
+		final Generator idgenerator = buildIdGenerator( persistentClass, creationContext );
+		identifierAttribute = PropertyFactory.buildIdentifierAttribute( persistentClass, idgenerator );
 
 		versioned = persistentClass.isVersioned();
 
@@ -470,6 +470,37 @@ public class EntityMetamodel implements Serializable {
 //			}
 //		}
 //		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
+	}
+
+	private Generator buildIdGenerator(PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
+		final Generator existing = creationContext.getGenerators().get( rootName );
+		if ( existing != null ) {
+			return existing;
+		}
+		else {
+			final Generator idgenerator =
+					persistentClass.getIdentifier()
+							// returns the cached Generator if it was already created
+							.createGenerator(
+									creationContext.getDialect(),
+									persistentClass.getRootClass(),
+									persistentClass.getIdentifierProperty(),
+									new GeneratorSettings() {
+										SessionFactoryOptions options() {
+											return creationContext.getSessionFactory().getSessionFactoryOptions();
+										}
+										@Override
+										public String getDefaultCatalog() {
+											return options().getDefaultCatalog();
+										}
+										@Override
+										public String getDefaultSchema() {
+											return options().getDefaultSchema();
+										}
+									} );
+			creationContext.getGenerators().put( rootName, idgenerator );
+			return idgenerator;
+		}
 	}
 
 	private void verifyNaturalIdProperty(Property property) {

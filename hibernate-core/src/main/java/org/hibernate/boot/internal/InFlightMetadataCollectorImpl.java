@@ -2204,7 +2204,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private void handleIdentifierValueBinding(
 			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
 		try {
-			// this call typically caches the new Generator in the instance of KeyValue
 			identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty,
 					new GeneratorSettings() {
 						@Override

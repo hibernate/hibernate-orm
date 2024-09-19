@@ -13,6 +13,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.generator.Generator;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.RootClass;
 
 import org.junit.jupiter.api.Test;
@@ -92,7 +93,17 @@ public class UnnamedGeneratorTests {
 					metadata.getDatabase().getDialect(),
 					entityBinding,
 					entityBinding.getIdentifierProperty(),
-					null
+					new GeneratorSettings() {
+						@Override
+						public String getDefaultCatalog() {
+							return null;
+						}
+
+						@Override
+						public String getDefaultSchema() {
+							return null;
+						}
+					}
 			);
 
 			checks.accept( generator );

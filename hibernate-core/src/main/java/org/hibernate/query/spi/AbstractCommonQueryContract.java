@@ -99,10 +99,16 @@ import static org.hibernate.jpa.internal.util.LockModeTypeHelper.interpretLockMo
  */
 public abstract class AbstractCommonQueryContract implements CommonQueryContract {
 	private final SharedSessionContractImplementor session;
-	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+	private final QueryOptionsImpl queryOptions;
 
 	public AbstractCommonQueryContract(SharedSessionContractImplementor session) {
 		this.session = session;
+		this.queryOptions = new QueryOptionsImpl();
+	}
+
+	protected AbstractCommonQueryContract(AbstractCommonQueryContract original) {
+		this.session = original.session;
+		this.queryOptions = original.queryOptions;
 	}
 
 	public SharedSessionContractImplementor getSession() {

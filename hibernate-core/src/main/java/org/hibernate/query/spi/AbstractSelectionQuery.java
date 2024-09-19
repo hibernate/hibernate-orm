@@ -36,6 +36,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.sql.exec.internal.CallbackImpl;
@@ -79,6 +80,12 @@ public abstract class AbstractSelectionQuery<R>
 
 	public AbstractSelectionQuery(SharedSessionContractImplementor session) {
 		super( session );
+	}
+
+	protected AbstractSelectionQuery(AbstractSelectionQuery<?> original) {
+		super( original );
+		this.sessionFlushMode = original.sessionFlushMode;
+		this.sessionCacheMode = original.sessionCacheMode;
 	}
 
 	protected void applyOptions(NamedQueryMemento memento) {

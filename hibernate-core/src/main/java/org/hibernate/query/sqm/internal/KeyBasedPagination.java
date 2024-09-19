@@ -118,11 +118,6 @@ public class KeyBasedPagination {
 			Expression<? extends C> key, C keyValue, SortDirection direction,
 			List<SqmPath<?>> previousKeys, List<Comparable<?>> keyValues,
 			NodeBuilder builder) {
-		// TODO: use a parameter here and create a binding for it
-//		@SuppressWarnings("unchecked")
-//		final Class<C> valueClass = (Class<C>) keyValue.getClass();
-//		final JpaParameterExpression<C> parameter = builder.parameter(valueClass);
-//		setParameter( parameter, keyValue );
 		SqmPredicate predicate;
 		switch ( direction ) {
 			case ASCENDING:

@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.NullPrecedence;
@@ -33,7 +32,6 @@ import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaWindow;
-import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -86,9 +84,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	boolean isJpaQueryComplianceEnabled();
 
 	QueryEngine getQueryEngine();
-
-	@Internal
-	ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode);
 
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,

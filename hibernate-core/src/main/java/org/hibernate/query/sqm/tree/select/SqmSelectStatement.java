@@ -140,7 +140,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 						nodeBuilder(),
 						copyCteStatements( context ),
 						resultType,
-						getQuerySource(),
+						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
 						parameters
 				)
 		);

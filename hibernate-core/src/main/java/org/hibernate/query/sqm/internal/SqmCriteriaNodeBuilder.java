@@ -46,7 +46,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
@@ -199,7 +198,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient boolean jpaComplianceEnabled;
 	private final transient QueryEngine queryEngine;
 	private final transient Supplier<SessionFactoryImplementor> sessionFactory;
-	private transient ValueHandlingMode criteriaValueHandlingMode;
+	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
@@ -226,13 +225,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			HibernateCriteriaBuilder builder = extension.extend( this );
 			extensions.put( extension.getRegistrationKey(), builder );
 		}
-	}
-
-	@Override
-	public ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
-		ValueHandlingMode current = this.criteriaValueHandlingMode;
-		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
-		return current;
 	}
 
 	@Override

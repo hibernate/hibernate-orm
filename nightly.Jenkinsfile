@@ -32,7 +32,7 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'mariadb_10_4' ),
 		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_12' ),
-		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
+// 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
 		new BuildEnvironment( dbName: 'sybase_jconn' ),

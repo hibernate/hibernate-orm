@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
+import org.hibernate.MappingException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -157,15 +158,23 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	private <E> BasicType<?> resolvedType(ArrayJdbcType arrayType, BasicPluralJavaType<E> castPluralJavaType) {
+		final BasicType<E> elementType = resolve( castPluralJavaType.getElementJavaType(), arrayType.getElementJdbcType() );
 		final BasicType<?> resolvedType = castPluralJavaType.resolveType(
 				typeConfiguration,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
-				resolve( castPluralJavaType.getElementJavaType(), arrayType.getElementJdbcType() ),
+				elementType,
 				null,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
 		);
 		if ( resolvedType instanceof BasicPluralType<?,?> ) {
 			register( resolvedType );
+		}
+		else if ( resolvedType == null ) {
+			final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
+			if ( elementJavaTypeClass != null && elementJavaTypeClass.isArray() && elementJavaTypeClass != byte[].class ) {
+				// No support for nested arrays, except for byte[][]
+				throw new MappingException( "Nested arrays (with the exception of byte[][]) are not supported" );
+			}
 		}
 		return resolvedType;
 	}

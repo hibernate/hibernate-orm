@@ -4,13 +4,8 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
@@ -19,28 +14,16 @@ import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
 import org.hibernate.boot.models.spi.TableGeneratorRegistration;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.generator.Generator;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.SequenceGenerator;
 
-import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.*;
+import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleGenericGenerator;
+import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleSequenceGenerator;
+import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleTableGenerator;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleUuidStrategy;
-import static org.hibernate.boot.model.internal.GeneratorParameters.identityTablesString;
-import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
-import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
-import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
-import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
-import static org.hibernate.id.OptimizableGenerator.IMPLICIT_NAME_BASE;
-import static org.hibernate.id.PersistentIdentifierGenerator.PK;
-import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
-import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
 
 /**
  * SecondPass implementing delayed resolution of id-generators associated with an entity
@@ -57,46 +40,18 @@ import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
  *
  * @author Steve Ebersole
  */
-public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver {
-	private final PersistentClass entityMapping;
-	private final SimpleValue idValue;
-	private final MemberDetails idMember;
-
-	private final MetadataBuildingContext buildingContext;
-
+public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorResolver {
 	public StrictIdGeneratorResolverSecondPass(
 			PersistentClass entityMapping,
 			SimpleValue idValue,
 			MemberDetails idMember,
+			GeneratedValue generatedValue,
 			MetadataBuildingContext buildingContext) {
-		this.entityMapping = entityMapping;
-		this.idValue = idValue;
-		this.idMember = idMember;
-		this.buildingContext = buildingContext;
+		super( entityMapping, idValue, idMember, generatedValue, buildingContext );
 	}
 
 	@Override
-	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		final GeneratedValue generatedValue = idMember.getDirectAnnotationUsage( GeneratedValue.class );
-		switch ( generatedValue.strategy() ) {
-			case UUID -> handleUuidStrategy( idValue, idMember, buildingContext );
-			case IDENTITY -> handleIdentityStrategy( idValue );
-			case SEQUENCE -> handleSequenceStrategy( generatedValue );
-			case TABLE -> handleTableStrategy( generatedValue );
-			case AUTO -> handleAutoStrategy( generatedValue );
-		}
-	}
-
-	private void handleSequenceStrategy(GeneratedValue generatedValue) {
-		if ( generatedValue.generator().isEmpty() ) {
-			handleUnnamedSequenceGenerator();
-		}
-		else {
-			handleNamedSequenceGenerator( generatedValue );
-		}
-	}
-
-	private void handleUnnamedSequenceGenerator() {
+	protected void handleUnnamedSequenceGenerator() {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
 		// according to the spec, this should locate a generator with the same name as the entity-name
@@ -107,7 +62,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			handleSequenceGenerator(
 					entityMapping.getJpaEntityName(),
 					globalMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -118,14 +72,14 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 		handleSequenceGenerator(
 				entityMapping.getJpaEntityName(),
 				new SequenceGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext
 		);
 	}
 
-	private void handleNamedSequenceGenerator(GeneratedValue generatedValue) {
+	@Override
+	protected void handleNamedSequenceGenerator() {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
 		final SequenceGeneratorRegistration globalMatch =
@@ -135,7 +89,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			handleSequenceGenerator(
 					generatedValue.generator(),
 					globalMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -146,23 +99,14 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 		handleSequenceGenerator(
 				generatedValue.generator(),
 				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext
 		);
 	}
 
-	private void handleTableStrategy(GeneratedValue generatedValue) {
-		if ( generatedValue.generator().isEmpty() ) {
-			handleUnnamedTableGenerator();
-		}
-		else {
-			handleNamedTableGenerator( generatedValue );
-		}
-	}
-
-	private void handleUnnamedTableGenerator() {
+	@Override
+	protected void handleUnnamedTableGenerator() {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
 		final TableGeneratorRegistration globalMatch =
@@ -174,6 +118,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 					globalMatch.configuration(),
 					entityMapping,
 					idValue,
+					idMember,
 					buildingContext
 			);
 			return;
@@ -184,11 +129,13 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 				new TableGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
+				idMember,
 				buildingContext
 		);
 	}
 
-	private void handleNamedTableGenerator(GeneratedValue generatedValue) {
+	@Override
+	protected void handleNamedTableGenerator() {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
 		final TableGeneratorRegistration globalMatch =
@@ -200,6 +147,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 					globalMatch.configuration(),
 					entityMapping,
 					idValue,
+					idMember,
 					buildingContext
 			);
 
@@ -211,14 +159,22 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 				new TableGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
+				idMember,
 				buildingContext
 		);
 	}
 
-	private void handleAutoStrategy(GeneratedValue generatedValue) {
-		final String generator = generatedValue.generator();
-		final String globalRegistrationName = generator.isEmpty() ? entityMapping.getJpaEntityName() : generator;
+	@Override
+	protected void handleUnnamedAutoGenerator() {
+		handleAutoGenerator( entityMapping.getJpaEntityName() );
+	}
 
+	@Override
+	protected void handleNamedAutoGenerator() {
+		handleAutoGenerator( generatedValue.generator() );
+	}
+
+	private void handleAutoGenerator(String globalRegistrationName) {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		final GlobalRegistrations globalRegistrations = metadataCollector.getGlobalRegistrations();
 
@@ -228,7 +184,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			handleSequenceGenerator(
 					globalRegistrationName,
 					globalSequenceMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -244,6 +199,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 					globalTableMatch.configuration(),
 					entityMapping,
 					idValue,
+					idMember,
 					buildingContext
 			);
 			return;
@@ -262,6 +218,10 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			return;
 		}
 
+		if ( handleAsMetaAnnotated() ) {
+			return;
+		}
+
 		// Implicit handling of UUID generation
 		if ( idMember.getType().isImplementor( UUID.class )
 				|| idMember.getType().isImplementor( String.class ) ) {
@@ -269,85 +229,16 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			return;
 		}
 
-
-		// Handle a few legacy Hibernate generators...
-		if ( !generator.isEmpty() ) {
-			final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( generator, idValue );
-			if ( legacyNamedGenerator != null ) {
-				final Map<String,String> configuration = buildLegacyGeneratorConfig();
-				//noinspection unchecked,rawtypes
-				GeneratorBinder.createGeneratorFrom(
-						new IdentifierGeneratorDefinition( generator, legacyNamedGenerator.getName(), configuration ),
-						idValue,
-						(Map) configuration,
-						buildingContext
-				);
-				return;
-			}
+		if ( handleAsLegacyGenerator() ) {
+			return;
 		}
 
 		handleSequenceGenerator(
 				globalRegistrationName,
-				new SequenceGeneratorJpaAnnotation( generator, metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
+				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
 				idValue,
 				idMember,
 				buildingContext
 		);
-	}
-
-	private HashMap<String, String> buildLegacyGeneratorConfig() {
-		final Database database = buildingContext.getMetadataCollector().getDatabase();
-		final Dialect dialect = database.getDialect();
-
-		final HashMap<String, String> configuration = new HashMap<>();
-
-		final String tableName = idValue.getTable().getQuotedName( dialect );
-		configuration.put( TABLE, tableName );
-
-		final Column idColumn = (Column) idValue.getSelectables().get( 0);
-		final String idColumnName = idColumn.getQuotedName( dialect );
-		configuration.put( PK, idColumnName );
-
-		configuration.put( ENTITY_NAME, entityMapping.getEntityName() );
-		configuration.put( JPA_ENTITY_NAME, entityMapping.getJpaEntityName() );
-
-		// The table name is not really a good default for subselect entities,
-		// so use the JPA entity name which is short
-		configuration.put(
-				IMPLICIT_NAME_BASE,
-				idValue.getTable().isSubselect()
-						? entityMapping.getJpaEntityName()
-						: idValue.getTable().getName()
-		);
-
-		configuration.put( TABLES, identityTablesString( dialect, entityMapping.getRootClass() ) );
-
-		return configuration;
-	}
-
-	public static void handleSequenceGenerator(
-			String generatorName,
-			SequenceGenerator generatorConfig,
-			PersistentClass entityMapping,
-			SimpleValue idValue,
-			MemberDetails idMember,
-			MetadataBuildingContext context) {
-		//generator settings
-		final Map<String, String> configuration = new HashMap<>();
-		applyBaselineConfiguration( generatorConfig, idValue, entityMapping.getRootClass(), context, configuration::put );
-		if ( generatorConfig == null ) {
-			configuration.put( GENERATOR_NAME, generatorName );
-		}
-		else {
-			SequenceStyleGenerator.applyConfiguration( generatorConfig, configuration::put );
-		}
-
-		GeneratorBinder.createGeneratorFrom(
-				new IdentifierGeneratorDefinition( generatorName, SequenceStyleGenerator.class.getName(), configuration ),
-				idValue,
-				context
-		);
-
 	}
 }

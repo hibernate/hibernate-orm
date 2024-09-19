@@ -51,6 +51,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -283,10 +284,9 @@ public class CacheDialect extends Dialect {
 		return true;
 	}
 
-
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return "identity";
+	public GenerationType getNativeValueGenerationStrategy() {
+		return GenerationType.IDENTITY;
 	}
 
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

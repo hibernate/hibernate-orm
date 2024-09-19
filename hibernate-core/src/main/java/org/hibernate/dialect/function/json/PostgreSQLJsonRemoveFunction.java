@@ -33,7 +33,6 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			SqlAstTranslator<?> translator) {
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
-		sqlAppender.appendSql( "jsonb_set_lax(" );
 		final boolean needsCast = !isJsonType( json ) && json instanceof JdbcParameter;
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
@@ -42,7 +41,7 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 		if ( needsCast ) {
 			sqlAppender.appendSql( " as jsonb)" );
 		}
-		sqlAppender.appendSql( ',' );
+		sqlAppender.appendSql( "#-" );
 		List<JsonPathHelper.JsonPathElement> jsonPathElements =
 				JsonPathHelper.parseJsonPathElements( translator.getLiteralValue( jsonPath ) );
 		sqlAppender.appendSql( "array" );
@@ -63,7 +62,7 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			}
 			separator = ',';
 		}
-		sqlAppender.appendSql( "]::text[],null,true,'delete_key')" );
+		sqlAppender.appendSql( "]::text[]" );
 	}
 
 	private boolean isJsonType(Expression expression) {

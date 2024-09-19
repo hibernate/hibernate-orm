@@ -4018,8 +4018,8 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_array_append() function
 	 */
-	public void jsonArrayAppend_postgresql() {
-		functionRegistry.register( "json_array_append", new PostgreSQLJsonArrayAppendFunction( typeConfiguration ) );
+	public void jsonArrayAppend_postgresql(boolean supportsLax) {
+		functionRegistry.register( "json_array_append", new PostgreSQLJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
 	}
 
 	/**

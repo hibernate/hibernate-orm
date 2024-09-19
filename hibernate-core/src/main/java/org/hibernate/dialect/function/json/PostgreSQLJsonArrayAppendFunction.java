@@ -21,8 +21,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class PostgreSQLJsonArrayAppendFunction extends AbstractJsonArrayAppendFunction {
 
-	public PostgreSQLJsonArrayAppendFunction(TypeConfiguration typeConfiguration) {
+	private final boolean supportsLax;
+
+	public PostgreSQLJsonArrayAppendFunction(boolean supportsLax, TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
+		this.supportsLax = supportsLax;
 	}
 
 	@Override
@@ -34,7 +37,14 @@ public class PostgreSQLJsonArrayAppendFunction extends AbstractJsonArrayAppendFu
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
 		final SqlAstNode value = arguments.get( 2 );
-		sqlAppender.appendSql( "(select jsonb_set_lax(t.d,t.p,(t.d)#>t.p||" );
+		sqlAppender.appendSql( "(select " );
+		if ( supportsLax ) {
+			sqlAppender.appendSql( "jsonb_set_lax" );
+		}
+		else {
+			sqlAppender.appendSql( "case when t.d#>t.p is not null then jsonb_set" );
+		}
+		sqlAppender.appendSql( "(t.d,t.p,(t.d)#>t.p||" );
 		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
 			sqlAppender.appendSql( "null::jsonb" );
 		}
@@ -47,7 +57,14 @@ public class PostgreSQLJsonArrayAppendFunction extends AbstractJsonArrayAppendFu
 			}
 			sqlAppender.appendSql( ')' );
 		}
-		sqlAppender.appendSql( ",false,'return_target') from (values(" );
+		sqlAppender.appendSql( ",false" );
+		if ( supportsLax ) {
+			sqlAppender.appendSql( ",'return_target')" );
+		}
+		else {
+			sqlAppender.appendSql( ") else t.d end" );
+		}
+		sqlAppender.appendSql( " from (values(" );
 		final boolean needsCast = !isJsonType( json );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );

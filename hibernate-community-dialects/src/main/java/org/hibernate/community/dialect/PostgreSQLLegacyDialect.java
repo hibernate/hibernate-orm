@@ -662,8 +662,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.jsonRemove_postgresql();
 		functionFactory.jsonReplace_postgresql();
 		functionFactory.jsonInsert_postgresql();
-		functionFactory.jsonMergepatch_postgresql();
-		functionFactory.jsonArrayAppend_postgresql();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			// Requires support for WITH clause in subquery which only 13+ provides
+			functionFactory.jsonMergepatch_postgresql();
+		}
+		functionFactory.jsonArrayAppend_postgresql( getVersion().isSameOrAfter( 13 ) );
 		functionFactory.jsonArrayInsert_postgresql();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {

@@ -512,8 +512,9 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.jsonRemove_cockroachdb();
 		functionFactory.jsonReplace_postgresql();
 		functionFactory.jsonInsert_postgresql();
-		functionFactory.jsonMergepatch_postgresql();
-		functionFactory.jsonArrayAppend_postgresql();
+		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
+//		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
 
 		// Postgres uses # instead of ^ for XOR

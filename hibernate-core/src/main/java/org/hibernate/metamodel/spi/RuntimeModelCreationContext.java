@@ -13,6 +13,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -61,4 +62,6 @@ public interface RuntimeModelCreationContext {
 	ServiceRegistry getServiceRegistry();
 
 	Map<String, Generator> getGenerators();
+
+	GeneratorSettings getGeneratorSettings();
 }

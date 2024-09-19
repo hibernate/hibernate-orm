@@ -244,6 +244,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * neither explicitly nor implicitly (see the concept of implicit catalog in XML mapping).
 	 *
 	 * @return The default catalog to use.
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_CATALOG
 	 */
 	default String getDefaultCatalog() {
 		return null;
@@ -254,6 +256,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * neither explicitly nor implicitly (see the concept of implicit schema in XML mapping).
 	 *
 	 * @return The default schema to use.
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_SCHEMA
 	 */
 	default String getDefaultSchema() {
 		return null;

@@ -56,6 +56,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
@@ -78,6 +79,8 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -120,6 +123,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
+import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
+import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
@@ -132,7 +138,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  *
  * @author Steve Ebersole
  */
-public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector, ConverterRegistry {
+public class InFlightMetadataCollectorImpl
+		implements InFlightMetadataCollector, ConverterRegistry, GeneratorSettings {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( InFlightMetadataCollectorImpl.class );
 
 	private final BootstrapContext bootstrapContext;
@@ -169,6 +176,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<>();
 
 	private Map<String, SqmFunctionDescriptor> sqlFunctionMap;
+
+	final ConfigurationService configurationService;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// All the annotation-processing-specific state :(
@@ -210,16 +219,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		bootstrapContext.getAuxiliaryDatabaseObjectList().forEach( getDatabase()::addAuxiliaryDatabaseObject );
+
+		configurationService = bootstrapContext.getServiceRegistry().requireService(ConfigurationService.class);
 	}
 
-	public InFlightMetadataCollectorImpl(
-			BootstrapContext bootstrapContext,
-			MetadataBuildingOptions options) {
-		this(
-				bootstrapContext,
-				createModelBuildingContext( bootstrapContext ),
-				options
-		);
+	public InFlightMetadataCollectorImpl(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
+		this( bootstrapContext, createModelBuildingContext( bootstrapContext ), options );
 	}
 
 	private static SourceModelBuildingContext createModelBuildingContext(BootstrapContext bootstrapContext) {
@@ -2204,20 +2209,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private void handleIdentifierValueBinding(
 			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
 		try {
-			identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty,
-					new GeneratorSettings() {
-						@Override
-						public String getDefaultCatalog() {
-							//TODO: does not have access to property-configured default
-							return persistenceUnitMetadata.getDefaultCatalog();
-						}
-
-						@Override
-						public String getDefaultSchema() {
-							//TODO: does not have access to property-configured default
-							return persistenceUnitMetadata.getDefaultSchema();
-						}
-					} );
+			identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty, this );
 		}
 		catch (MappingException e) {
 			// ignore this for now.  The reasoning being "non-reflective" binding as needed
@@ -2226,5 +2218,22 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			// exception to occur, the same exception will happen later as we build the SF.
 			log.debugf( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
 		}
+	}
+
+	@Override
+	public String getDefaultCatalog() {
+		final String defaultCatalog = configurationService.getSetting( DEFAULT_CATALOG, StandardConverters.STRING );
+		return defaultCatalog == null ? persistenceUnitMetadata.getDefaultCatalog() : defaultCatalog;
+	}
+
+	@Override
+	public String getDefaultSchema() {
+		final String defaultSchema = configurationService.getSetting( DEFAULT_SCHEMA, StandardConverters.STRING );
+		return defaultSchema == null ? persistenceUnitMetadata.getDefaultSchema() : defaultSchema;
+	}
+
+	@Override
+	public SqlStringGenerationContext getSqlStringGenerationContext() {
+		return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
 	}
 }

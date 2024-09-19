@@ -81,7 +81,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 				this,
 				new SqmInsertSelectStatement<>(
 						nodeBuilder(),
-						getQuerySource(),
+						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
 						getTarget().copy( context ),

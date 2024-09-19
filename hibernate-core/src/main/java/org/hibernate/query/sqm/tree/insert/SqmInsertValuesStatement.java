@@ -90,7 +90,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 				this,
 				new SqmInsertValuesStatement<>(
 						nodeBuilder(),
-						getQuerySource(),
+						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
 						getTarget().copy( context ),
@@ -106,7 +106,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 				this,
 				new SqmInsertValuesStatement<>(
 						nodeBuilder(),
-						getQuerySource(),
+						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
 						getTarget().copy( context ),

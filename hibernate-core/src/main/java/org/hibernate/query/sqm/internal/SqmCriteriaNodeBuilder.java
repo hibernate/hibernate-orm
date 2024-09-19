@@ -243,13 +243,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
-		ValueHandlingMode current = this.criteriaValueHandlingMode;
-		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
-		return current;
-	}
-
-	@Override
 	public JpaMetamodel getDomainModel() {
 		return bindingContext.getJpaMetamodel();
 	}

@@ -80,6 +80,12 @@ public abstract class AbstractSelectionQuery<R>
 		super( session );
 	}
 
+	protected AbstractSelectionQuery(AbstractSelectionQuery<?> original) {
+		super( original );
+		this.sessionFlushMode = original.sessionFlushMode;
+		this.sessionCacheMode = original.sessionCacheMode;
+	}
+
 	protected void applyOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::applyHint );

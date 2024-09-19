@@ -68,7 +68,7 @@ public class SqmDeleteStatement<T>
 				this,
 				new SqmDeleteStatement<>(
 						nodeBuilder(),
-						getQuerySource(),
+						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
 						getTarget().copy( context )

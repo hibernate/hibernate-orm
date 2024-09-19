@@ -28,8 +28,10 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.SourceModelContext;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
@@ -92,13 +94,9 @@ public class GeneratorAnnotationHelper {
 		}
 
 		// lastly, on the package
-		final String packageInfoFqn = StringHelper.qualifier( idMember.getDeclaringType().getClassName() ) + ".package-info";
-		try {
-			final ClassDetails packageInfo =
-					context.getMetadataCollector()
-							.getSourceModelBuildingContext()
-							.getClassDetailsRegistry()
-							.resolveClassDetails( packageInfoFqn );
+		final ClassDetails packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
+		if ( packageInfo !=
+					null ) {
 			for ( A generatorAnnotation : packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
 				if ( nameExtractor != null ) {
 					final String registrationName = nameExtractor.apply( generatorAnnotation );
@@ -118,11 +116,27 @@ public class GeneratorAnnotationHelper {
 				}
 			}
 		}
-		catch (ClassLoadingException e) {
-			// means there is no package-info
-		}
 
 		return possibleMatch;
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
+		return locatePackageInfoDetails( classDetails, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, SourceModelContext modelContext) {
+		return locatePackageInfoDetails( classDetails, modelContext.getClassDetailsRegistry() );
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ClassDetailsRegistry classDetailsRegistry) {
+		final String packageInfoFqn = StringHelper.qualifier( classDetails.getName() ) + ".package-info";
+		try {
+			return classDetailsRegistry.resolveClassDetails( packageInfoFqn );
+		}
+		catch (ClassLoadingException e) {
+			// means there is no package-info
+			return null;
+		}
 	}
 
 	public static void handleUuidStrategy(

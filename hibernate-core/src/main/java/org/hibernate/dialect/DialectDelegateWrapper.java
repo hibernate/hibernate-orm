@@ -87,6 +87,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -349,8 +350,8 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return wrapped.getNativeIdentifierGeneratorStrategy();
+	public GenerationType getNativeValueGenerationStrategy() {
+		return wrapped.getNativeValueGenerationStrategy();
 	}
 
 	@Override

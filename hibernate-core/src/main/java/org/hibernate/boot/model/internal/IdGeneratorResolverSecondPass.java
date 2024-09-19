@@ -34,6 +34,8 @@ import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 
@@ -317,6 +319,10 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			return;
 		}
 
+		if ( handleAsMetaAnnotated() ) {
+			return;
+		}
+
 		if ( idMember.getType().isImplementor( UUID.class )
 				|| idMember.getType().isImplementor( String.class ) ) {
 			GeneratorAnnotationHelper.handleUuidStrategy( idValue, idMember, buildingContext );
@@ -324,6 +330,62 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		}
 
 		handleSequenceGenerator( null, null );
+	}
+
+	private boolean handleAsMetaAnnotated() {
+		final Annotation fromMember = findGeneratorAnnotation( idMember );
+		if ( fromMember != null ) {
+			handleIdGeneratorType( fromMember );
+			return true;
+		}
+
+		final Annotation fromClass = findGeneratorAnnotation( idMember.getDeclaringType() );
+		if ( fromClass != null ) {
+			handleIdGeneratorType( fromClass );
+			return true;
+		}
+
+		final ClassDetails packageInfoDetails = GeneratorAnnotationHelper.locatePackageInfoDetails( idMember.getDeclaringType(), buildingContext );
+		if ( packageInfoDetails != null ) {
+			final Annotation fromPackage = findGeneratorAnnotation( packageInfoDetails );
+			if ( fromPackage != null ) {
+				handleIdGeneratorType( fromPackage );
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private Annotation findGeneratorAnnotation(AnnotationTarget annotationTarget) {
+		final List<? extends Annotation> metaAnnotated = annotationTarget.getMetaAnnotated( IdGeneratorType.class, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+		if ( CollectionHelper.size( metaAnnotated ) > 0 ) {
+			return metaAnnotated.get( 0 );
+		}
+
+		return null;
+	}
+
+	private void handleIdGeneratorType(Annotation generatorAnnotation) {
+		final IdGeneratorType markerAnnotation = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
+		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
+
+			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
+			final Generator identifierGenerator = GeneratorBinder.instantiateGenerator(
+					beanContainer,
+					markerAnnotation.value()
+			);
+			final Map<String,Object> configuration = new HashMap<>();
+			GeneratorParameters.collectParameters(
+					idValue,
+					buildingContext.getMetadataCollector().getDatabase().getDialect(),
+					entityMapping.getRootClass(),
+					configuration::put
+			);
+			GeneratorBinder.callInitialize( generatorAnnotation, idMember, creationContext, identifierGenerator );
+			callConfigure( creationContext, identifierGenerator, configuration, idValue );
+			return identifierGenerator;
+		} );
 	}
 
 	private void handleNamedAutoGenerator() {
@@ -347,29 +409,7 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 			return;
 		}
 
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-		final List<? extends Annotation> metaAnnotated =
-				idMember.getMetaAnnotated( IdGeneratorType.class, metadataCollector.getSourceModelBuildingContext() );
-		if ( CollectionHelper.size( metaAnnotated ) > 0 ) {
-			final Annotation generatorAnnotation = metaAnnotated.get( 0 );
-			final IdGeneratorType markerAnnotation = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
-			idValue.setCustomIdGeneratorCreator( (creationContext) -> {
-
-				final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
-				final Generator identifierGenerator = instantiateGenerator(
-						beanContainer,
-						markerAnnotation.value()
-				);
-				final Map<String,Object> configuration = new HashMap<>();
-				GeneratorParameters.collectParameters(
-						idValue,
-						metadataCollector.getDatabase().getDialect(),
-						entityMapping.getRootClass(),
-						configuration::put
-				);
-				callConfigure( creationContext, identifierGenerator, configuration, idValue );
-				return identifierGenerator;
-			} );
+		if ( handleAsMetaAnnotated() ) {
 			return;
 		}
 

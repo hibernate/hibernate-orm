@@ -637,7 +637,7 @@ public class GeneratorBinder {
 		}
 	}
 
-	private static <A extends Annotation> void callInitialize(
+	public static <A extends Annotation> void callInitialize(
 			A annotation,
 			MemberDetails memberDetails,
 			GeneratorCreationContext creationContext,

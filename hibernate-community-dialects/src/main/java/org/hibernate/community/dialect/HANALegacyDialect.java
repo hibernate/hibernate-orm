@@ -2,9 +2,40 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
-import jakarta.persistence.TemporalType;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
+import java.io.FilterReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
@@ -13,6 +44,14 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.HANAServerConfiguration;
+import org.hibernate.dialect.HANASqlAstTranslator;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
@@ -91,37 +130,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
@@ -154,41 +163,35 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * An SQL dialect for the SAP HANA Platform and Cloud.
+ * An SQL dialect for legacy versions of the SAP HANA Platform up tu and including 2.0 SPS 04.
  * <p>
- * For more information on SAP HANA Cloud, refer to the
- * <a href="https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-sql-reference-guide/sap-hana-cloud-sap-hana-database-sql-reference-guide">SAP HANA Cloud SQL Reference Guide</a>.
  * For more information on SAP HANA Platform, refer to the
  * <a href="https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/b4b0eec1968f41a099c828a4a6c8ca0f.html?locale=en-US">SAP HANA Platform SQL Reference Guide</a>.
  * <p>
  * Column tables are created by this dialect by default when using the auto-ddl feature.
- *
- * @author Andrew Clemons
- * @author Jonathan Bregler
  */
-public class HANADialect extends Dialect {
+public class HANALegacyDialect extends Dialect {
 
-	static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 0, 50 );
+	static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 1, 0, 120 );
 
-	public HANADialect(DialectResolutionInfo info) {
+	public HANALegacyDialect(DialectResolutionInfo info) {
 		this( HANAServerConfiguration.fromDialectResolutionInfo( info ), true );
 		registerKeywords( info );
 	}
 
-	public HANADialect() {
-		// SAP HANA 2.0 SPS 05 is the default
-		this( MINIMUM_VERSION );
+	public HANALegacyDialect() {
+		this( DEFAULT_VERSION );
 	}
 
-	public HANADialect(DatabaseVersion version) {
+	public HANALegacyDialect(DatabaseVersion version) {
 		this( new HANAServerConfiguration( version ), true );
 	}
 
-	public HANADialect(DatabaseVersion version, boolean defaultTableTypeColumn) {
+	public HANALegacyDialect(DatabaseVersion version, boolean defaultTableTypeColumn) {
 		this( new HANAServerConfiguration( version ), defaultTableTypeColumn );
 	}
 
-	public HANADialect(HANAServerConfiguration configuration, boolean defaultTableTypeColumn) {
+	public HANALegacyDialect(HANAServerConfiguration configuration, boolean defaultTableTypeColumn) {
 		super( configuration.getFullVersion() );
 		this.defaultTableTypeColumn = defaultTableTypeColumn;
 		this.maxLobPrefetchSize = configuration.getMaxLobPrefetchSize();
@@ -196,13 +199,8 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	protected DatabaseVersion getMinimumSupportedVersion() {
-		return MINIMUM_VERSION;
-	}
-
-	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
-		return HANAServerConfiguration.staticDetermineDatabaseVersion( info );
+		return HANALegacyServerConfiguration.staticDetermineDatabaseVersion( info );
 	}
 
 	// Use column or row tables by default
@@ -490,15 +488,19 @@ public class HANADialect extends Dialect {
 				typeConfiguration
 		);
 
-		// Introduced in 2.0 SPS 02
-		functionFactory.jsonValue_no_passing();
-		functionFactory.jsonQuery_no_passing();
-		functionFactory.jsonExists_hana();
-		// Introduced in 2.0 SPS 04
-		functionFactory.jsonObject_hana();
-		functionFactory.jsonArray_hana();
-		functionFactory.jsonArrayAgg_hana();
-		functionFactory.jsonObjectAgg_hana();
+		if ( getVersion().isSameOrAfter(2, 0, 20) ) {
+			// Introduced in 2.0 SPS 02
+			functionFactory.jsonValue_no_passing();
+			functionFactory.jsonQuery_no_passing();
+			functionFactory.jsonExists_hana();
+			if ( getVersion().isSameOrAfter(2, 0, 40) ) {
+				// Introduced in 2.0 SPS 04
+				functionFactory.jsonObject_hana();
+				functionFactory.jsonArray_hana();
+				functionFactory.jsonArrayAgg_hana();
+				functionFactory.jsonObjectAgg_hana();
+			}
+		}
 	}
 
 	@Override
@@ -1127,7 +1129,7 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
+		return getVersion().isSameOrAfter( 2, 0, 40 );
 	}
 
 	@Override
@@ -1577,7 +1579,7 @@ public class HANADialect extends Dialect {
 					if ( blob == null ) {
 						return null;
 					}
-					if ( blob.length() < HANAStreamBlobType.this.maxLobPrefetchSize ) {
+					if ( blob.length() < HANALegacyDialect.HANAStreamBlobType.this.maxLobPrefetchSize ) {
 						X result = javaType.wrap( blob, options );
 						blob.free();
 						return result;
@@ -1680,7 +1682,7 @@ public class HANADialect extends Dialect {
 						return null;
 					}
 
-					if ( clob.length() < HANAClobJdbcType.this.maxLobPrefetchSize ) {
+					if ( clob.length() < HANALegacyDialect.HANAClobJdbcType.this.maxLobPrefetchSize ) {
 						X retVal = javaType.wrap(clob, options);
 						clob.free();
 						return retVal;
@@ -1693,7 +1695,7 @@ public class HANADialect extends Dialect {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					Clob rsClob;
-					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
+					if ( HANALegacyDialect.HANAClobJdbcType.this.useUnicodeStringTypes ) {
 						rsClob = rs.getNClob( paramIndex );
 					}
 					else {
@@ -1705,7 +1707,7 @@ public class HANADialect extends Dialect {
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 					Clob rsClob;
-					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
+					if ( HANALegacyDialect.HANAClobJdbcType.this.useUnicodeStringTypes ) {
 						rsClob = statement.getNClob( index );
 					}
 					else {
@@ -1717,7 +1719,7 @@ public class HANADialect extends Dialect {
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 					Clob rsClob;
-					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
+					if ( HANALegacyDialect.HANAClobJdbcType.this.useUnicodeStringTypes ) {
 						rsClob = statement.getNClob( name );
 					}
 					else {
@@ -1989,7 +1991,7 @@ public class HANADialect extends Dialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
-		return true;
+		return getVersion().isSameOrAfter(2, 0, 30);
 	}
 
 	@Override

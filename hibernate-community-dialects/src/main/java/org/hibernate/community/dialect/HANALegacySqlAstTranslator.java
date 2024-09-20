@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.List;
 
@@ -35,15 +35,13 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
- * An SQL AST translator for HANA.
- *
- * @author Christian Beikov
+ * An SQL AST translator for the Legacy HANA dialect.
  */
-public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private boolean inLateral;
 
-	public HANASqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public HANALegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -67,7 +65,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	private boolean isHanaCloud() {
-		return ( (HANADialect) getDialect() ).isCloud();
+		return ( (HANALegacyDialect) getDialect() ).isCloud();
 	}
 
 	@Override

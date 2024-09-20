@@ -376,6 +376,13 @@ In Hibernate 7, the configuration property `hibernate.jdbc.batch_size` now has n
 Automatic batching may be enabled by explicitly calling `setJdbcBatchSize()`.
 However, the preferred approach is to explicitly batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
 
+[[criteria-implicit-treat]]
+== Criteria API and inheritance subtypes attributes
+
+It was previously possible to use the string version of the `jakarta.persistence.criteria.Path#get` and `jakarta.persistence.criteria.From#join` methods with names of attributes defined in an inheritance subtype of the type represented by the path expression. This was handled internally by implicitly treating the path as the subtype which defines said attribute. Since Hibernate 7.0, aligning with the JPA specification, the Criteria API will no longer allow retrieving subtype attributes this way, and it's going to require an explicit `jakarta.persistence.criteria.CriteriaBuilder#treat` to be called on the path first to downcast it to the subtype which defines the attribute.
+
+Implicit treats are still going to be applied when an HQL query dereferences a path belonging to an inheritance subtype.
+
 [[hbm-transform]]
 == hbm.xml Transformation
 

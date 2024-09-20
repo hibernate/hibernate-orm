@@ -18,11 +18,9 @@ import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
 /**
@@ -157,11 +155,4 @@ public class SqmSetJoin<O, E>
 		}
 		return treat;
 	}
-
-	@Override
-	public <X, Y> SqmAttributeJoin<X, Y> fetch(String attributeName) {
-		return fetch( attributeName, JoinType.INNER);
-	}
-
-
 }

@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -70,7 +69,7 @@ public class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K,
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature != null ) {
 			switch ( nature ) {
@@ -80,7 +79,7 @@ public class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K,
 					return getElementPathSource();
 			}
 		}
-		return getElementPathSource().findSubPathSource( name, metamodel );
+		return getElementPathSource().findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

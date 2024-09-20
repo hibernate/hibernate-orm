@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -248,7 +247,15 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
-		return Arrays.equals( (Object[]) one, (Object[]) other );
+		final Object[] one1 = (Object[]) one;
+		final Object[] other1 = (Object[]) other;
+		final List<SingularAttributeMapping> naturalIdAttributes = getNaturalIdAttributes();
+		for ( int i = 0; i < naturalIdAttributes.size(); i++ ) {
+			if ( !naturalIdAttributes.get( i ).areEqual( one1[i], other1[i], session ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override

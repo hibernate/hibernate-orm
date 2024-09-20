@@ -224,6 +224,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
@@ -314,6 +315,7 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -8323,6 +8325,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				(Expression) sqmExpression.getExpression().accept( this ),
 				sqmExpression.getNodeType()
 		);
+	}
+
+	@Override
+	public Object visitNamedExpression(SqmNamedExpression<?> expression) {
+		return new AliasedExpression( (Expression) expression.getExpression().accept( this ), expression.getName() );
 	}
 
 	@Override

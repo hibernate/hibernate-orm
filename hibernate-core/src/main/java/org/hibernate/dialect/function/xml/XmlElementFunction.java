@@ -60,7 +60,6 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 									throw new FunctionArgumentException(
 											String.format(
 													"Invalid XML element name passed to 'xmlelement()': %s",
-													1,
 													elementName
 											)
 									);
@@ -73,7 +72,6 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 											throw new FunctionArgumentException(
 													String.format(
 															"Invalid XML attribute name passed to 'xmlattributes()': %s",
-															1,
 															entry.getKey()
 													)
 											);

@@ -43,6 +43,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
@@ -128,6 +129,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
@@ -5692,6 +5694,40 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public SqmExpression<String> xmlcomment(String comment) {
 		return getFunctionDescriptor( "xmlcomment" ).generateSqmExpression(
 				List.of( value( comment ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> named(Expression<T> expression, String name) {
+		return new SqmNamedExpression<>( (SqmExpression<T>) expression, name );
+	}
+
+	@Override
+	public SqmExpression<String> xmlforest(Expression<?>... elements) {
+		return xmlforest( Arrays.asList( elements ) );
+	}
+
+	@Override
+	public SqmExpression<String> xmlforest(List<? extends Expression<?>> elements) {
+		final ArrayList<SqmExpression<?>> arguments = new ArrayList<>( elements.size() );
+		for ( Expression<?> expression : elements ) {
+			if ( expression instanceof SqmNamedExpression<?> ) {
+				arguments.add( (SqmNamedExpression<?>) expression );
+			}
+			else {
+				if ( !( expression instanceof SqmPath<?> path ) || !( path.getModel() instanceof PersistentAttribute<?, ?> attribute ) ) {
+					throw new SemanticException(
+							"Can't use expression '" + expression + " without explicit name in xmlforest function"+
+									", because XML element names can only be derived from path expressions."
+					);
+				}
+				arguments.add( new SqmNamedExpression<>( (SqmExpression<?>) expression, attribute.getName() ) );
+			}
+		}
+		return getFunctionDescriptor( "xmlforest" ).generateSqmExpression(
+				arguments,
 				null,
 				queryEngine
 		);

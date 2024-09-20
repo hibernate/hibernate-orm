@@ -4063,6 +4063,33 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> xmlcomment(String comment);
 
+	/**
+	 * Creates an XML forest from the given XML element expressions.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlforest(Expression<?>... elements);
+
+	/**
+	 * Creates an XML forest from the given XML element expressions.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlforest(List<? extends Expression<?>> elements);
+
+	/**
+	 * Creates a named expression. The name is important for the result of the expression,
+	 * e.g. when building an {@code xmlforest}, the name acts as the XML element name.
+	 *
+	 * @since 7.0
+	 * @see #xmlforest(Expression[])
+	 * @see #xmlforest(List)
+	 */
+	@Incubating
+	<T> JpaExpression<T> named(Expression<T> expression, String name);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

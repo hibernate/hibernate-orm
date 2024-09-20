@@ -153,6 +153,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
@@ -3002,6 +3003,33 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		xmlelement.content( visitExpressions( ctx ) );
 		return xmlelement;
+	}
+
+	@Override
+	public SqmExpression<?> visitXmlforestFunction(HqlParser.XmlforestFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final ArrayList<SqmExpression<?>> elementExpressions = new ArrayList<>( ctx.getChildCount() >> 1 );
+		for ( int i = 2; i < ctx.getChildCount(); i++ ) {
+			if ( ctx.getChild( i ) instanceof HqlParser.ExpressionOrPredicateContext exprCtx ) {
+				final SqmExpression<?> expression = (SqmExpression<?>) exprCtx.accept( this );
+				if ( i + 2 < ctx.getChildCount() && ctx.getChild( i + 2 ) instanceof HqlParser.IdentifierContext identifierContext ) {
+					final String name = visitIdentifier( identifierContext );
+					elementExpressions.add( new SqmNamedExpression<>( expression, name ) );
+					i += 2;
+				}
+				else {
+					if ( !( expression instanceof SqmPath<?> path ) || !( path.getModel() instanceof PersistentAttribute<?, ?> attribute ) ) {
+						throw new SemanticException(
+								"Can't use expression '" + exprCtx.getText() + " without explicit name in xmlforest function" +
+										", because XML element names can only be derived from path expressions.",
+								query
+						);
+					}
+					elementExpressions.add( new SqmNamedExpression<>( expression, attribute.getName() ) );
+				}
+			}
+		}
+		return creationContext.getNodeBuilder().xmlforest( elementExpressions );
 	}
 
 	private void checkXmlFunctionsEnabled(ParserRuleContext ctx) {

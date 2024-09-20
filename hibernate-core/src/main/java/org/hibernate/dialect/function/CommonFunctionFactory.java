@@ -154,8 +154,11 @@ import org.hibernate.dialect.function.json.SQLServerJsonReplaceFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
+import org.hibernate.dialect.function.xml.H2XmlForestFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
 import org.hibernate.dialect.function.xml.XmlElementFunction;
+import org.hibernate.dialect.function.xml.XmlForestFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -4134,7 +4137,7 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * Standard xmlcomment() function
+	 * SQL Server xmlcomment() function
 	 */
 	public void xmlcomment_sqlserver() {
 		functionRegistry.patternDescriptorBuilder( "xmlcomment", "cast(('<!--'+?1+'-->') AS xml)" )
@@ -4142,5 +4145,26 @@ public class CommonFunctionFactory {
 				.setParameterTypes( STRING )
 				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML ) )
 				.register();
+	}
+
+	/**
+	 * Standard xmlforest() function
+	 */
+	public void xmlforest() {
+		functionRegistry.register( "xmlforest", new XmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlforest() function
+	 */
+	public void xmlforest_h2() {
+		functionRegistry.register( "xmlforest", new H2XmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlforest() function
+	 */
+	public void xmlforest_sqlserver() {
+		functionRegistry.register( "xmlforest", new SQLServerXmlForestFunction( typeConfiguration ) );
 	}
 }

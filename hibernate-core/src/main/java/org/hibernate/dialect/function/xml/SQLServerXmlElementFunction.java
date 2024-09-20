@@ -52,6 +52,6 @@ public class SQLServerXmlElementFunction extends XmlElementFunction {
 				sqlAppender.appendSql( ']' );
 			}
 		}
-		sqlAppender.appendSql( " for xml explicit, type)" );
+		sqlAppender.appendSql( " for xml explicit,type)" );
 	}
 }

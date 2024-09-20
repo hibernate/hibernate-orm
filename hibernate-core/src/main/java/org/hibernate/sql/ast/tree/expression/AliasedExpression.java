@@ -36,4 +36,11 @@ public class AliasedExpression implements SelfRenderingExpression {
 		return expression.getExpressionType();
 	}
 
+	public Expression getExpression() {
+		return expression;
+	}
+
+	public String getAlias() {
+		return alias;
+	}
 }

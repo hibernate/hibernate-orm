@@ -2,13 +2,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -18,21 +19,21 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import static org.hibernate.cfg.DialectSpecificSettings.HANA_MAX_LOB_PREFETCH_SIZE;
 
 /**
- * Utility class that extracts some initial configuration from the database for {@link HANADialect}.
+ * Utility class that extracts some initial configuration from the database for {@link HANALegacyDialect}.
  */
-public class HANAServerConfiguration {
+public class HANALegacyServerConfiguration {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( HANAServerConfiguration.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( HANALegacyServerConfiguration.class );
 	public static final int MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE = 1024;
 
 	private final DatabaseVersion fullVersion;
 	private final int maxLobPrefetchSize;
 
-	public HANAServerConfiguration(DatabaseVersion fullVersion) {
+	public HANALegacyServerConfiguration(DatabaseVersion fullVersion) {
 		this( fullVersion, MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 	}
 
-	public HANAServerConfiguration(DatabaseVersion fullVersion, int maxLobPrefetchSize) {
+	public HANALegacyServerConfiguration(DatabaseVersion fullVersion, int maxLobPrefetchSize) {
 		this.fullVersion = fullVersion;
 		this.maxLobPrefetchSize = maxLobPrefetchSize;
 	}
@@ -45,7 +46,7 @@ public class HANAServerConfiguration {
 		return maxLobPrefetchSize;
 	}
 
-	public static HANAServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
+	public static HANALegacyServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
 		Integer maxLobPrefetchSize = null;
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
@@ -73,7 +74,7 @@ public class HANAServerConfiguration {
 					MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE
 			);
 		}
-		return new HANAServerConfiguration( staticDetermineDatabaseVersion( info ), maxLobPrefetchSize );
+		return new HANALegacyServerConfiguration( staticDetermineDatabaseVersion( info ), maxLobPrefetchSize );
 	}
 
 	static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
@@ -83,7 +84,7 @@ public class HANAServerConfiguration {
 		int minorVersion = 0;
 		int patchLevel = 0;
 		if ( versionString == null ) {
-			return HANADialect.MINIMUM_VERSION;
+			return HANALegacyDialect.DEFAULT_VERSION;
 		}
 		final String[] components = StringHelper.split( ".", versionString );
 		if ( components.length >= 3 ) {

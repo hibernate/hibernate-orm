@@ -47,6 +47,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -748,6 +749,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	SqmExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch);
+
+	@Override
+	SqmXmlElementExpression xmlelement(String elementName);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

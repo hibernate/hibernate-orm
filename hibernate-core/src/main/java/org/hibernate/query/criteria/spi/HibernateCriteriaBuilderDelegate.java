@@ -57,6 +57,7 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
+import org.hibernate.query.criteria.JpaXmlElementExpression;
 import org.hibernate.query.sqm.TemporalUnit;
 
 import jakarta.persistence.Tuple;
@@ -3630,5 +3631,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Incubating
 	public JpaExpression<String> jsonMergepatch(String document, Expression<?> patch) {
 		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
+
+	@Override
+	@Incubating
+	public JpaXmlElementExpression xmlelement(String elementName) {
+		return criteriaBuilder.xmlelement( elementName );
 	}
 }

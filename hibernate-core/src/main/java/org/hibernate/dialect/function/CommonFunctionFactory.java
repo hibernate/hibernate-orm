@@ -153,6 +153,9 @@ import org.hibernate.dialect.function.json.SQLServerJsonRemoveFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonReplaceFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
+import org.hibernate.dialect.function.xml.H2XmlElementFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
+import org.hibernate.dialect.function.xml.XmlElementFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -4096,5 +4099,26 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayInsert_sqlserver() {
 		functionRegistry.register( "json_array_insert", new SQLServerJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlelement() function
+	 */
+	public void xmlelement() {
+		functionRegistry.register( "xmlelement", new XmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlelement() function
+	 */
+	public void xmlelement_h2() {
+		functionRegistry.register( "xmlelement", new H2XmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlelement() function
+	 */
+	public void xmlelement_sqlserver() {
+		functionRegistry.register( "xmlelement", new SQLServerXmlElementFunction( typeConfiguration ) );
 	}
 }

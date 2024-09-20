@@ -434,6 +434,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isXmlFunctionsEnabled() {
+		return delegate.isXmlFunctionsEnabled();
+	}
+
+	@Override
 	public boolean isPortableIntegerDivisionEnabled() {
 		return delegate.isPortableIntegerDivisionEnabled();
 	}

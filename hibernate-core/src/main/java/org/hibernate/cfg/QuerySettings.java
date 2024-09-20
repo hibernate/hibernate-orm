@@ -24,6 +24,16 @@ public interface QuerySettings {
 	 */
 	@Incubating
 	String JSON_FUNCTIONS_ENABLED = "hibernate.query.hql.json_functions_enabled";
+
+	/**
+	 * Boolean setting to control if the use of tech preview XML functions in HQL is enabled.
+	 * By default, this is {@code false} i.e. disabled since the functions are still incubating.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String XML_FUNCTIONS_ENABLED = "hibernate.query.hql.xml_functions_enabled";
+
 	/**
 	 * Specifies that division of two integers should produce an integer on all
 	 * databases. By default, integer division in HQL can produce a non-integer

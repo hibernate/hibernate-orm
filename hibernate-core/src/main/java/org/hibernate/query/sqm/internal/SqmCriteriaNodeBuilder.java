@@ -136,6 +136,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.expression.SqmWindowFrame;
+import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -218,6 +219,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
 	private transient BasicType<Character> characterType;
+	private transient BasicType<String> stringType;
 	private transient FunctionReturnTypeResolver sumReturnTypeResolver;
 	private transient FunctionReturnTypeResolver avgReturnTypeResolver;
 	private final transient Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> extensions;
@@ -309,6 +311,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 							.resolve( StandardBasicTypes.CHARACTER );
 		}
 		return characterType;
+	}
+
+	public BasicType<String> getStringType() {
+		final BasicType<String> stringType = this.stringType;
+		if ( stringType == null ) {
+			return this.stringType =
+					getTypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.STRING );
+		}
+		return stringType;
 	}
 
 	public FunctionReturnTypeResolver getSumReturnTypeResolver() {
@@ -5660,6 +5672,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		//noinspection unchecked
 		return getFunctionDescriptor( "json_mergepatch" ).generateSqmExpression(
 				(List<? extends SqmTypedNode<?>>) (List<?>) asList( document, patch ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmXmlElementExpression xmlelement(String elementName) {
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( 3 );
+		arguments.add( new SqmLiteral<>( elementName, getStringType(), this ) );
+		return (SqmXmlElementExpression) getFunctionDescriptor( "xmlelement" ).<String>generateSqmExpression(
+				arguments,
 				null,
 				queryEngine
 		);

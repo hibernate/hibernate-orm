@@ -352,6 +352,8 @@ public class H2Dialect extends Dialect {
 			functionFactory.jsonArrayAgg_h2();
 			functionFactory.jsonObjectAgg_h2();
 		}
+
+		functionFactory.xmlelement_h2();
 	}
 
 	/**

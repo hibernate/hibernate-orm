@@ -417,6 +417,8 @@ public class H2LegacyDialect extends Dialect {
 				// Use group_concat until 2.x as listagg was buggy
 				functionFactory.listagg_groupConcat();
 			}
+
+			functionFactory.xmlelement_h2();
 		}
 		else {
 			functionFactory.listagg_groupConcat();

@@ -325,6 +325,8 @@ public class OracleLegacyDialect extends Dialect {
 			functionFactory.jsonArrayAppend_oracle();
 			functionFactory.jsonArrayInsert_oracle();
 		}
+
+		functionFactory.xmlelement();
 	}
 
 	@Override

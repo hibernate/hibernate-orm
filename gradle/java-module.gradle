@@ -459,6 +459,8 @@ tasks.checkstyleMain.source = 'src/main/java'
 tasks.checkstyleMain
 		.exclude('org/hibernate/processor/util/NullnessUtil.java')
 		.exclude('org/hibernate/internal/util/NullnessUtil.java')
+// For some big files we need more heap memory than the default 512m for parsing
+tasks.checkstyleMain.maxHeapSize = "640m"
 
 // define a second checkstyle task for checking non-fatal violations
 task nonFatalCheckstyle(type:Checkstyle) {

@@ -765,6 +765,12 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	SqmExpression<String> xmlforest(Expression<?>... elements);
 
+	@Override
+	SqmExpression<String> xmlconcat(Expression<?>... elements);
+
+	@Override
+	SqmExpression<String> xmlconcat(List<? extends Expression<?>> elements);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 

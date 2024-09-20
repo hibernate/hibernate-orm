@@ -170,6 +170,23 @@ public class XmlFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlconcat.class)
+	public void testXmlconcat(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select xmlconcat(xmlelement(name e1, 123), xmlelement(name e2, 'text'))," +
+									"xmlconcat(xmlelement(name id, e.id), xmlelement(name theString, e.theString)) " +
+									"from EntityOfBasics e where e.id = 1",
+							Tuple.class
+					).getSingleResult();
+					assertXmlEquals( "<r><e1>123</e1><e2>text</e2></r>", "<r>" + tuple.get( 0, String.class ) + "</r>" );
+					assertXmlEquals( "<r><id>1</id><theString>Dog</theString></r>", "<r>" + tuple.get( 1, String.class ) + "</r>" );
+				}
+		);
+	}
+
 	private void assertXmlEquals(String expected, String actual) {
 		final Document expectedDoc = parseXml( xmlNormalize( expected ) );
 		final Document actualDoc = parseXml( xmlNormalize( actual ) );

@@ -2173,7 +2173,8 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 
 | `xmlelement()` | Constructs an XML element from arguments
 | `xmlcomment()` | Constructs an XML comment from the single argument
-| `xmlforest()` | Constructs an XML forest from thearguments
+| `xmlforest()` | Constructs an XML forest from the arguments
+| `xmlconcat()` | Concatenates multiple XML fragments to each other
 |===
 
 
@@ -2245,6 +2246,21 @@ The name can be omitted if a path expression is passed, in which case the last a
 [source, java, indent=0]
 ----
 include::{xml-example-dir-hql}/XmlForestTest.java[tags=hql-xmlforest-example]
+----
+====
+
+WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
+
+[[hql-xmlconcat-function]]
+===== `xmlconcat()`
+
+Concatenates multiple XML fragments to each other.
+
+[[hql-xmlconcat-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlConcatTest.java[tags=hql-xmlconcat-example]
 ----
 ====
 

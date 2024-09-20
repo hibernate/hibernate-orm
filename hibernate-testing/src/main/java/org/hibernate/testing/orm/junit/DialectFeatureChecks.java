@@ -856,6 +856,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsXmlconcat implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlconcat" );
+		}
+	}
+
 	public static class IsJtds implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;

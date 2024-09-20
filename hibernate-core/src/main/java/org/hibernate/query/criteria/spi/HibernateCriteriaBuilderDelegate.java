@@ -3659,6 +3659,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
+	public JpaExpression<String> xmlconcat(Expression<?>... elements) {
+		return criteriaBuilder.xmlconcat( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements) {
+		return criteriaBuilder.xmlconcat( elements );
+	}
+
+	@Override
+	@Incubating
 	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
 		return criteriaBuilder.named( expression, name );
 	}

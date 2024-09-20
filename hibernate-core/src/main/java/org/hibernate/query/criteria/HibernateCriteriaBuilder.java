@@ -4067,6 +4067,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Creates an XML forest from the given XML element expressions.
 	 *
 	 * @since 7.0
+	 * @see #named(Expression, String)
 	 */
 	@Incubating
 	JpaExpression<String> xmlforest(Expression<?>... elements);
@@ -4075,9 +4076,26 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Creates an XML forest from the given XML element expressions.
 	 *
 	 * @since 7.0
+	 * @see #named(Expression, String)
 	 */
 	@Incubating
 	JpaExpression<String> xmlforest(List<? extends Expression<?>> elements);
+
+	/**
+	 * Concatenates the given XML element expressions.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlconcat(Expression<?>... elements);
+
+	/**
+	 * Concatenates the given XML element expressions.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements);
 
 	/**
 	 * Creates a named expression. The name is important for the result of the expression,

@@ -3671,6 +3671,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
+	public JpaExpression<String> xmlpi(String elementName) {
+		return criteriaBuilder.xmlpi( elementName );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlpi(String elementName, Expression<String> content) {
+		return criteriaBuilder.xmlpi( elementName, content );
+	}
+
+	@Override
+	@Incubating
 	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
 		return criteriaBuilder.named( expression, name );
 	}

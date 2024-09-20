@@ -187,6 +187,20 @@ public class XmlFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlpi.class)
+	public void testXmlpi(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select xmlpi(name test, 'abc')",
+							Tuple.class
+					).getSingleResult();
+					assertEquals( "<?test abc?>", tuple.get( 0, String.class ).trim() );
+				}
+		);
+	}
+
 	private void assertXmlEquals(String expected, String actual) {
 		final Document expectedDoc = parseXml( xmlNormalize( expected ) );
 		final Document actualDoc = parseXml( xmlNormalize( actual ) );

@@ -673,6 +673,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.xmlcomment();
 		functionFactory.xmlforest();
 		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();

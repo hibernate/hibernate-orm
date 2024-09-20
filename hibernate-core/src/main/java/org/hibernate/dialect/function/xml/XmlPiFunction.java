@@ -16,27 +16,29 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.XML;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
- * Standard xmlconcat function.
+ * Standard xmlpi function.
  */
-public class XmlConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class XmlPiFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public XmlConcatFunction(TypeConfiguration typeConfiguration) {
+	public XmlPiFunction(TypeConfiguration typeConfiguration) {
 		super(
-				"xmlconcat",
+				"xmlpi",
 				FunctionKind.NORMAL,
 				StandardArgumentsValidators.composite(
-						new ArgumentTypesValidator( StandardArgumentsValidators.min( 2 ), XML )
+						new ArgumentTypesValidator( StandardArgumentsValidators.between( 1, 2 ), STRING, STRING )
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML )
 				),
-				StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, XML )
+				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, ANY, STRING )
 		);
 	}
 
@@ -46,12 +48,12 @@ public class XmlConcatFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		sqlAppender.appendSql( "xmlconcat" );
-		char separator = '(';
-		for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
-			sqlAppender.appendSql( separator );
-			sqlAstArgument.accept( walker );
-			separator = ',';
+		sqlAppender.appendSql( "xmlpi(name " );
+		final Literal literal = (Literal) sqlAstArguments.get( 0 );
+		sqlAppender.appendDoubleQuoteEscapedString( (String) literal.getLiteralValue() );
+		if ( sqlAstArguments.size() > 1 ) {
+			sqlAppender.appendSql( ',' );
+			sqlAstArguments.get( 1 ).accept( walker );
 		}
 		sqlAppender.appendSql( ')' );
 	}

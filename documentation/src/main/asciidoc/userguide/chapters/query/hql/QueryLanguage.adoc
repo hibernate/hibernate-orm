@@ -7,6 +7,7 @@
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :array-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
 :json-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/json
+:xml-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/xml
 :extrasdir: extras
 
 This chapter describes Hibernate Query Language (HQL) and Jakarta Persistence Query Language (JPQL).
@@ -2157,6 +2158,56 @@ include::{json-example-dir-hql}/JsonArrayInsertTest.java[tags=hql-json-array-ins
 ====
 
 WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-functions-xml]]
+==== Functions for dealing with XML
+
+The following functions deal with SQL XML types, which are not supported on every database.
+
+NOTE: The following functions are incubating/tech-preview and to use them in HQL,
+it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` configuration setting.
+
+[[hql-xml-functions]]
+|===
+| Function | Purpose
+
+| `xmlelement()` | Constructs an XML element from arguments
+|===
+
+
+[[hql-xmlelement-function]]
+===== `xmlelement()`
+
+Constructs an XML element from the arguments.
+
+[[hql-xmlelement-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/xmlelement_bnf.txt[]
+----
+
+The identifier represents the XML element name and can be quoted by using backticks.
+
+[[hql-xmlelement-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlElementTest.java[tags=hql-xmlelement-example]
+----
+====
+
+XML element attributes can be defined by using the `xmlattributes` function as second argument.
+All following arguments represent the XML content.
+
+[[hql-xmlelement-attributes-content-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlElementTest.java[tags=hql-xmlelement-attributes-content-example]
+----
+====
+
+WARNING: SAP HANA, MySQL, MariaDB, H2 and HSQLDB do not support this function.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

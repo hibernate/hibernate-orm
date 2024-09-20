@@ -415,6 +415,8 @@ public class OracleDialect extends Dialect {
 		functionFactory.jsonMergepatch_oracle();
 		functionFactory.jsonArrayAppend_oracle();
 		functionFactory.jsonArrayInsert_oracle();
+
+		functionFactory.xmlelement();
 	}
 
 	@Override

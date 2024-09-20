@@ -440,6 +440,8 @@ public class DB2LegacyDialect extends Dialect {
 				functionFactory.jsonObjectAgg_db2();
 			}
 		}
+
+		functionFactory.xmlelement();
 	}
 
 	@Override

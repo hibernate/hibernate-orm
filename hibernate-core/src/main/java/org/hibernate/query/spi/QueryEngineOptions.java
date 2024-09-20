@@ -82,6 +82,11 @@ public interface QueryEngineOptions {
 	boolean isJsonFunctionsEnabled();
 
 	/**
+	 * @see org.hibernate.cfg.AvailableSettings#XML_FUNCTIONS_ENABLED
+	 */
+	boolean isXmlFunctionsEnabled();
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
 	 */
 	boolean isPortableIntegerDivisionEnabled();

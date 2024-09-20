@@ -413,6 +413,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
 			functionFactory.jsonArrayInsert_sqlserver();
 		}
+		functionFactory.xmlelement_sqlserver();
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );

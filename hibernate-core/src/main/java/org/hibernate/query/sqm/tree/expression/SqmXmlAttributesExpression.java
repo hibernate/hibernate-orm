@@ -1,0 +1,94 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.tree.expression;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.hibernate.Incubating;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.tree.expression.XmlAttributes;
+
+import jakarta.persistence.criteria.Expression;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+/**
+ * Special expression for the json_query function that also captures special syntax elements like error and empty behavior.
+ *
+ * @since 7.0
+ */
+@Incubating
+public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
+
+	private final Map<String, SqmExpression<?>> attributes;
+
+	public SqmXmlAttributesExpression(String attributeName, Expression<?> expression) {
+		final Map<String, SqmExpression<?>> attributes = new LinkedHashMap<>();
+		attributes.put( attributeName, (SqmExpression<?>) expression );
+		this.attributes = attributes;
+	}
+
+	private SqmXmlAttributesExpression(Map<String, SqmExpression<?>> attributes) {
+		this.attributes = attributes;
+	}
+
+	public void attribute(String attributeName, Expression<?> expression) {
+		attributes.put( attributeName, (SqmExpression<?>) expression );
+	}
+
+	public Map<String, SqmExpression<?>> getAttributes() {
+		return attributes;
+	}
+
+	@Override
+	public @Nullable SqmExpressible<Object> getNodeType() {
+		return null;
+	}
+
+	@Override
+	public NodeBuilder nodeBuilder() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		final Map<String, org.hibernate.sql.ast.tree.expression.Expression> attributes = new LinkedHashMap<>();
+		for ( Map.Entry<String, SqmExpression<?>> entry : this.attributes.entrySet() ) {
+			attributes.put( entry.getKey(), (org.hibernate.sql.ast.tree.expression.Expression) entry.getValue().accept( walker ) );
+		}
+		//noinspection unchecked
+		return (X) new XmlAttributes( attributes );
+	}
+
+	@Override
+	public SqmXmlAttributesExpression copy(SqmCopyContext context) {
+		final SqmXmlAttributesExpression existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final Map<String, SqmExpression<?>> attributes = new LinkedHashMap<>();
+		for ( Map.Entry<String, SqmExpression<?>> entry : this.attributes.entrySet() ) {
+			attributes.put( entry.getKey(), entry.getValue().copy( context ) );
+		}
+		return context.registerCopy( this, new SqmXmlAttributesExpression( attributes ) );
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		String separator = "xmlattributes(";
+		for ( Map.Entry<String, SqmExpression<?>> entry : attributes.entrySet() ) {
+			sb.append( separator );
+			entry.getValue().appendHqlString( sb );
+			sb.append( " as " );
+			sb.append( entry.getKey() );
+			separator = ", ";
+		}
+		sb.append( ')' );
+	}
+}

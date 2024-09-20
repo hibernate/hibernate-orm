@@ -4047,6 +4047,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaExpression<String> jsonMergepatch(String document, Expression<?> patch);
 
+	/**
+	 * Creates an XML element with the given element name.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaXmlElementExpression xmlelement(String elementName);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

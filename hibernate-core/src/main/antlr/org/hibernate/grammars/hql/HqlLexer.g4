@@ -258,6 +258,7 @@ MINELEMENT			: [mM] [iI] [nN] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
 MININDEX			: [mM] [iI] [nN] [iI] [nN] [dD] [eE] [xX];
 MINUTE				: [mM] [iI] [nN] [uU] [tT] [eE];
 MONTH				: [mM] [oO] [nN] [tT] [hH];
+NAME				: [nN] [aA] [mM] [eE];
 NANOSECOND			: [nN] [aA] [nN] [oO] [sS] [eE] [cC] [oO] [nN] [dD];
 NEW					: [nN] [eE] [wW];
 NEXT				: [nN] [eE] [xX] [tT];
@@ -329,6 +330,8 @@ WITH				: [wW] [iI] [tT] [hH];
 WITHIN				: [wW] [iI] [tT] [hH] [iI] [nN];
 WITHOUT				: [wW] [iI] [tT] [hH] [oO] [uU] [tT];
 WRAPPER				: [wW] [rR] [aA] [pP] [pP] [eE] [rR];
+XMLATTRIBUTES		: [xX] [mM] [lL] [aA] [tT] [tT] [rR] [iI] [bB] [uU] [tT] [eE] [sS];
+XMLELEMENT			: [xX] [mM] [lL] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
 YEAR				: [yY] [eE] [aA] [rR];
 ZONED				: [zZ] [oO] [nN] [eE] [dD];
 

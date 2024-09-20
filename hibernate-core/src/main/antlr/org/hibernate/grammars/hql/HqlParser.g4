@@ -1110,6 +1110,7 @@ function
 	| jpaNonstandardFunction
 	| columnFunction
 	| jsonFunction
+	| xmlFunction
 	| genericFunction
 	;
 
@@ -1716,6 +1717,24 @@ jsonUniqueKeysClause
 	: (WITH|WITHOUT) UNIQUE KEYS
 	;
 
+xmlFunction
+	: xmlelementFunction
+	;
+
+/**
+ * The 'xmlelement()' function
+ */
+xmlelementFunction
+	: XMLELEMENT LEFT_PAREN NAME identifier (COMMA xmlattributesFunction)? (COMMA expressionOrPredicate)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlattributes()' function
+ */
+xmlattributesFunction
+	: XMLATTRIBUTES LEFT_PAREN expressionOrPredicate AS identifier (COMMA expressionOrPredicate AS identifier)* RIGHT_PAREN
+	;
+
 /**
  * Support for "soft" keywords which may be used as identifiers
  *
@@ -1847,6 +1866,7 @@ jsonUniqueKeysClause
 	| MININDEX
 	| MINUTE
 	| MONTH
+	| NAME
 	| NANOSECOND
 	| NATURALID
 	| NEW
@@ -1921,6 +1941,8 @@ jsonUniqueKeysClause
 	| WITHIN
 	| WITHOUT
 	| WRAPPER
+	| XMLATTRIBUTES
+	| XMLELEMENT
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

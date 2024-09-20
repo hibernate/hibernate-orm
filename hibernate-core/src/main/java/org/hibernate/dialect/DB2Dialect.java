@@ -425,6 +425,8 @@ public class DB2Dialect extends Dialect {
 			functionFactory.jsonArrayAgg_db2();
 			functionFactory.jsonObjectAgg_db2();
 		}
+
+		functionFactory.xmlelement();
 	}
 
 	@Override

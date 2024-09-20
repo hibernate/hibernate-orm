@@ -444,6 +444,7 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
 		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
 	}
 
 	@Override

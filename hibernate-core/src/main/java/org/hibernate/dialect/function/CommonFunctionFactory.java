@@ -153,10 +153,13 @@ import org.hibernate.dialect.function.json.SQLServerJsonRemoveFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonReplaceFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
+import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
+import org.hibernate.dialect.function.xml.XmlConcatFunction;
 import org.hibernate.dialect.function.xml.XmlElementFunction;
 import org.hibernate.dialect.function.xml.XmlForestFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -4166,5 +4169,26 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlforest_sqlserver() {
 		functionRegistry.register( "xmlforest", new SQLServerXmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlconcat() function
+	 */
+	public void xmlconcat() {
+		functionRegistry.register( "xmlconcat", new XmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlconcat() function
+	 */
+	public void xmlconcat_h2() {
+		functionRegistry.register( "xmlconcat", new H2XmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlconcat() function
+	 */
+	public void xmlconcat_sqlserver() {
+		functionRegistry.register( "xmlconcat", new SQLServerXmlConcatFunction( typeConfiguration ) );
 	}
 }

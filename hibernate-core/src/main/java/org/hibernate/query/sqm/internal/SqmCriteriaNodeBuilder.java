@@ -5732,4 +5732,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> xmlconcat(Expression<?>... elements) {
+		return xmlconcat( Arrays.asList( elements ) );
+	}
+
+	@Override
+	public SqmExpression<String> xmlconcat(List<? extends Expression<?>> elements) {
+		return getFunctionDescriptor( "xmlforest" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) elements,
+				null,
+				queryEngine
+		);
+	}
 }

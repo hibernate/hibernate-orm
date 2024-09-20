@@ -1021,4 +1021,36 @@ public class SqlTypes {
 				return isCharacterOrClobType( typeCode );
 		}
 	}
+
+	/**
+	 * Does the typecode represent a XML type.
+	 *
+	 * @param typeCode - a JDBC type code
+	 * @since 7.0
+	 */
+	public static boolean isXmlType(int typeCode) {
+		switch ( typeCode ) {
+			case SQLXML:
+			case XML_ARRAY:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the typecode represent an XML type or a type that can be implicitly cast to XML.
+	 *
+	 * @param typeCode - a JDBC type code
+	 * @since 7.0
+	 */
+	public static boolean isImplicitXmlType(int typeCode) {
+		switch ( typeCode ) {
+			case SQLXML:
+			case XML_ARRAY:
+				return true;
+			default:
+				return isCharacterOrClobType( typeCode );
+		}
+	}
 }

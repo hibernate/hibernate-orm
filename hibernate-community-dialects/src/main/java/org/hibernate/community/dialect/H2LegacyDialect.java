@@ -420,6 +420,7 @@ public class H2LegacyDialect extends Dialect {
 
 			functionFactory.xmlelement_h2();
 			functionFactory.xmlcomment();
+			functionFactory.xmlforest_h2();
 		}
 		else {
 			functionFactory.listagg_groupConcat();

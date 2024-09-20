@@ -328,6 +328,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
 	}
 
 	@Override

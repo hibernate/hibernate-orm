@@ -3644,4 +3644,22 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaExpression<String> xmlcomment(String comment) {
 		return criteriaBuilder.xmlcomment( comment );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlforest(Expression<?>... elements) {
+		return criteriaBuilder.xmlforest( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlforest(List<? extends Expression<?>> elements) {
+		return criteriaBuilder.xmlforest( elements );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
+		return criteriaBuilder.named( expression, name );
+	}
 }

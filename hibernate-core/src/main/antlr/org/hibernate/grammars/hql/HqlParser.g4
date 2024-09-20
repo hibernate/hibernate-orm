@@ -1719,6 +1719,7 @@ jsonUniqueKeysClause
 
 xmlFunction
 	: xmlelementFunction
+	| xmlforestFunction
 	;
 
 /**
@@ -1733,6 +1734,13 @@ xmlelementFunction
  */
 xmlattributesFunction
 	: XMLATTRIBUTES LEFT_PAREN expressionOrPredicate AS identifier (COMMA expressionOrPredicate AS identifier)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlforest()' function
+ */
+xmlforestFunction
+	: XMLFOREST LEFT_PAREN expressionOrPredicate (AS identifier)? (COMMA expressionOrPredicate (AS identifier)?)* RIGHT_PAREN
 	;
 
 /**
@@ -1943,6 +1951,7 @@ xmlattributesFunction
 	| WRAPPER
 	| XMLATTRIBUTES
 	| XMLELEMENT
+	| XMLFOREST
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

@@ -153,6 +153,23 @@ public class XmlFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlforest.class)
+	public void testXmlforest(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select xmlforest(123 as e1, 'text' as e2)," +
+									"xmlforest(e.id, e.theString) " +
+									"from EntityOfBasics e where e.id = 1",
+							Tuple.class
+					).getSingleResult();
+					assertXmlEquals( "<r><e1>123</e1><e2>text</e2></r>", "<r>" + tuple.get( 0, String.class ) + "</r>" );
+					assertXmlEquals( "<r><id>1</id><theString>Dog</theString></r>", "<r>" + tuple.get( 1, String.class ) + "</r>" );
+				}
+		);
+	}
+
 	private void assertXmlEquals(String expected, String actual) {
 		final Document expectedDoc = parseXml( xmlNormalize( expected ) );
 		final Document actualDoc = parseXml( xmlNormalize( actual ) );

@@ -69,6 +69,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
@@ -418,4 +419,6 @@ public interface SemanticQueryWalker<T> {
 	T visitFullyQualifiedClass(Class<?> namedClass);
 
 	T visitAsWrapperExpression(AsWrapperSqmExpression<?> expression);
+
+	T visitNamedExpression(SqmNamedExpression<?> expression);
 }

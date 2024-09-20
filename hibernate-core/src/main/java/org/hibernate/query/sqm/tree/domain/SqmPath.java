@@ -175,6 +175,16 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Override
 	<Y> SqmPath<Y> get(String attributeName);
 
+	/**
+	 * Same as {@link #get(String)}, but if {@code includeSubtypes} is set to {@code true}
+	 * and this path is polymorphic, also try finding subtype attributes.
+	 *
+	 * @see SqmPathSource#findSubPathSource(String, boolean)
+	 */
+	default <Y> SqmPath<Y> get(String attributeName, boolean includeSubtypes) {
+		return get( attributeName );
+	}
+
 	@Override
 	SqmPath<T> copy(SqmCopyContext context);
 

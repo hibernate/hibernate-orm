@@ -110,7 +110,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

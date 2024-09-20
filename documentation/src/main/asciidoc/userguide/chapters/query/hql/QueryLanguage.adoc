@@ -2172,6 +2172,7 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 | Function | Purpose
 
 | `xmlelement()` | Constructs an XML element from arguments
+| `xmlcomment()` | Constructs an XML comment from the single argument
 |===
 
 
@@ -2204,6 +2205,21 @@ All following arguments represent the XML content.
 [source, java, indent=0]
 ----
 include::{xml-example-dir-hql}/XmlElementTest.java[tags=hql-xmlelement-attributes-content-example]
+----
+====
+
+WARNING: SAP HANA, MySQL, MariaDB, H2 and HSQLDB do not support this function.
+
+[[hql-xmlcomment-function]]
+===== `xmlcomment()`
+
+Constructs an XML comment from the single string argument.
+
+[[hql-xmlcomment-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlCommentTest.java[tags=hql-xmlcomment-example]
 ----
 ====
 

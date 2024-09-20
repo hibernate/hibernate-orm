@@ -3638,4 +3638,10 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaXmlElementExpression xmlelement(String elementName) {
 		return criteriaBuilder.xmlelement( elementName );
 	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlcomment(String comment) {
+		return criteriaBuilder.xmlcomment( comment );
+	}
 }

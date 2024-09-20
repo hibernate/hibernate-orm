@@ -4121,4 +4121,26 @@ public class CommonFunctionFactory {
 	public void xmlelement_sqlserver() {
 		functionRegistry.register( "xmlelement", new SQLServerXmlElementFunction( typeConfiguration ) );
 	}
+
+	/**
+	 * Standard xmlcomment() function
+	 */
+	public void xmlcomment() {
+		functionRegistry.namedDescriptorBuilder( "xmlcomment" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( STRING )
+				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML ) )
+				.register();
+	}
+
+	/**
+	 * Standard xmlcomment() function
+	 */
+	public void xmlcomment_sqlserver() {
+		functionRegistry.patternDescriptorBuilder( "xmlcomment", "cast(('<!--'+?1+'-->') AS xml)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( STRING )
+				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML ) )
+				.register();
+	}
 }

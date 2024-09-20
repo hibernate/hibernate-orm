@@ -427,6 +427,7 @@ public class DB2Dialect extends Dialect {
 		}
 
 		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
 	}
 
 	@Override

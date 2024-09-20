@@ -5687,4 +5687,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> xmlcomment(String comment) {
+		return getFunctionDescriptor( "xmlcomment" ).generateSqmExpression(
+				List.of( value( comment ) ),
+				null,
+				queryEngine
+		);
+	}
 }

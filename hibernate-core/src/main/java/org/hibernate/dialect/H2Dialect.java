@@ -354,6 +354,7 @@ public class H2Dialect extends Dialect {
 		}
 
 		functionFactory.xmlelement_h2();
+		functionFactory.xmlcomment();
 	}
 
 	/**

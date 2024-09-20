@@ -4055,6 +4055,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaXmlElementExpression xmlelement(String elementName);
 
+	/**
+	 * Creates an XML comment with the given argument as content.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlcomment(String comment);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

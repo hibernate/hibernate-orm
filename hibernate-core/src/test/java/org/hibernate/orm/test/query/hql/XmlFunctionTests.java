@@ -43,7 +43,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -137,24 +136,40 @@ public class XmlFunctionTests {
 		);
 	}
 
-	private void assertXmlEquals(String doc1, String doc2) {
-		final Document d1 = parseXml( xmlNormalize( doc1 ) );
-		final Document d2 = parseXml( xmlNormalize( doc2 ) );
-		normalize( d1 );
-		normalize( d2 );
-		assertEquals( toXml( d1 ), toXml( d2 ) );
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlcomment.class)
+	public void testXmlcomment(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select " +
+									"xmlcomment('Abc'), " +
+									"xmlcomment('<>')",
+							Tuple.class
+					).getSingleResult();
+					assertXmlEquals( "<!--Abc--><a/>", tuple.get( 0, String.class ) + "<a/>" );
+					assertXmlEquals( "<!--<>--><a/>", tuple.get( 1 , String.class ) + "<a/>" );
+				}
+		);
+	}
+
+	private void assertXmlEquals(String expected, String actual) {
+		final Document expectedDoc = parseXml( xmlNormalize( expected ) );
+		final Document actualDoc = parseXml( xmlNormalize( actual ) );
+		normalize( expectedDoc );
+		normalize( actualDoc );
+		assertEquals( toXml( expectedDoc ).trim(), toXml( actualDoc ).trim() );
 	}
 
 	private void normalize(Document document) {
-		normalize( document.getDocumentElement() );
+		normalize( document.getChildNodes() );
 	}
 
-	private void normalize(Element element) {
-		final NodeList childNodes = element.getChildNodes();
+	private void normalize(NodeList childNodes) {
 		for ( int i = 0; i < childNodes.getLength(); i++ ) {
 			final Node childNode = childNodes.item( i );
 			if ( childNode.getNodeType() == Node.ELEMENT_NODE ) {
-				normalize( (Element) childNode );
+				normalize( childNode.getChildNodes() );
 			}
 			else if ( childNode.getNodeType() == Node.TEXT_NODE ) {
 				if ( childNode.getNodeValue().isBlank() ) {
@@ -163,6 +178,9 @@ public class XmlFunctionTests {
 				else {
 					childNode.setNodeValue( childNode.getNodeValue().trim() );
 				}
+			}
+			else if ( childNode.getNodeType() == Node.COMMENT_NODE ) {
+				childNode.setNodeValue( childNode.getNodeValue().trim() );
 			}
 		}
 	}

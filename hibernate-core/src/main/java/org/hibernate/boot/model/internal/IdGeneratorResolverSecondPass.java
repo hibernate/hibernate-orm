@@ -5,7 +5,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,16 +20,9 @@ import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
 import org.hibernate.boot.models.spi.TableGeneratorRegistration;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
@@ -43,10 +35,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 
-import static org.hibernate.boot.model.internal.GeneratorBinder.callConfigure;
-import static org.hibernate.boot.model.internal.GeneratorBinder.instantiateGenerator;
+import static org.hibernate.boot.model.internal.GeneratorParameters.fallbackAllocationSize;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
-import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 
@@ -369,21 +359,19 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	private void handleIdGeneratorType(Annotation generatorAnnotation) {
 		final IdGeneratorType markerAnnotation = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
 		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
-
 			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
 			final Generator identifierGenerator = GeneratorBinder.instantiateGenerator(
 					beanContainer,
 					markerAnnotation.value()
 			);
-			final Map<String,Object> configuration = new HashMap<>();
-			GeneratorParameters.collectParameters(
-					idValue,
-					buildingContext.getMetadataCollector().getDatabase().getDialect(),
-					entityMapping.getRootClass(),
-					configuration::put
+			GeneratorAnnotationHelper.prepareForUse(
+					identifierGenerator,
+					generatorAnnotation,
+					idMember,
+					null,
+					null,
+					creationContext
 			);
-			GeneratorBinder.callInitialize( generatorAnnotation, idMember, creationContext, identifierGenerator );
-			callConfigure( creationContext, identifierGenerator, configuration, idValue );
 			return identifierGenerator;
 		} );
 	}
@@ -506,97 +494,45 @@ public class IdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		return false;
 	}
 
-	private void handleSequenceGenerator(String nameFromGeneratedValue, SequenceGenerator generator) {
-		createGeneratorFrom( SequenceStyleGenerator.class, extractConfiguration( nameFromGeneratedValue, generator ) );
-	}
-
-	private Map<String,Object> extractConfiguration(String nameFromGenerated, SequenceGenerator generator) {
-		final Map<String, Object> configuration = new HashMap<>();
-		if ( generator != null ) {
-			configuration.put( GENERATOR_NAME, generator.name() );
-		}
-		else if ( nameFromGenerated != null ) {
-			configuration.put( GENERATOR_NAME, nameFromGenerated );
-		}
-
-		applyCommonConfiguration( configuration, generator );
-
-		if ( generator != null ) {
-			SequenceStyleGenerator.applyConfiguration( generator, configuration::put );
-		}
-
-		return configuration;
-	}
-
-	private void applyCommonConfiguration(Map<String, Object> configuration, Annotation generatorAnnotation) {
-		GeneratorParameters.collectParameters(
-				idValue,
-				buildingContext.getMetadataCollector().getDatabase().getDialect(),
-				entityMapping.getRootClass(),
-				configuration::put
-		);
-
-		// we need to better handle default allocation-size here...
-		configuration.put( INCREMENT_PARAM, fallbackAllocationSize( buildingContext, generatorAnnotation ) );
-	}
-
-	private static int fallbackAllocationSize(MetadataBuildingContext buildingContext, Annotation generatorAnnotation) {
-		if ( generatorAnnotation == null ) {
-			// Special case where we have no matching SequenceGenerator/TableGenerator annotation.
-			// Historically we interpreted such cases using a default of 1, but JPA says the default
-			// here should be 50.  As a migration aid, under the assumption that one of the legacy
-			// naming-strategies are used in such cases, we revert to the old default; otherwise we
-			// use the compliant value.
-			final ConfigurationService configService =
-					buildingContext.getBootstrapContext().getServiceRegistry()
-							.requireService( ConfigurationService.class );
-			final String idNamingStrategy =
-					configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
-			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
-					|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
-					|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
-				return 1;
-			}
-		}
-
-		return OptimizableGenerator.DEFAULT_INCREMENT_SIZE;
-	}
-
-	private void handleTableGenerator(String nameFromGeneratedValue, TableGenerator generator) {
-		createGeneratorFrom( org.hibernate.id.enhanced.TableGenerator.class,
-				extractConfiguration( nameFromGeneratedValue, generator ) );
-	}
-
-	private Map<String,Object> extractConfiguration(String nameFromGenerated, TableGenerator generator) {
-		final Map<String, Object> configuration = new HashMap<>();
-		if ( generator != null ) {
-			configuration.put( GENERATOR_NAME, generator.name() );
-		}
-		else if ( nameFromGenerated != null ) {
-			configuration.put( GENERATOR_NAME, nameFromGenerated );
-		}
-
-		applyCommonConfiguration( configuration, generator );
-
-		if ( generator != null ) {
-			org.hibernate.id.enhanced.TableGenerator.applyConfiguration( generator, configuration::put );
-		}
-
-		return configuration;
-	}
-
-	private void createGeneratorFrom(
-			Class<? extends Generator> generatorClass,
-			Map<String, Object> configuration) {
-		final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
+	private void handleSequenceGenerator(String nameFromGeneratedValue, SequenceGenerator generatorAnnotation) {
 		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
-			final Generator identifierGenerator = instantiateGenerator( beanContainer, generatorClass );
-			callConfigure( creationContext, identifierGenerator, configuration, idValue );
-			if ( identifierGenerator instanceof IdentityGenerator ) {
-				idValue.setColumnToIdentity();
-			}
+			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
+			final SequenceStyleGenerator identifierGenerator = GeneratorBinder.instantiateGenerator(
+					beanContainer,
+					SequenceStyleGenerator.class
+			);
+			GeneratorAnnotationHelper.prepareForUse(
+					identifierGenerator,
+					generatorAnnotation,
+					idMember,
+					properties -> {
+						if ( generatorAnnotation != null ) {
+							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
+						}
+						else if ( nameFromGeneratedValue != null ) {
+							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
+						}
+						// we need to better handle default allocation-size here...
+						properties.put( INCREMENT_PARAM, fallbackAllocationSize( generatorAnnotation, buildingContext ) );
+					},
+					generatorAnnotation == null
+							? null
+							: (a, properties) -> SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+					creationContext
+			);
 			return identifierGenerator;
 		} );
 	}
+
+	private void handleTableGenerator(String nameFromGeneratedValue, TableGenerator generatorAnnotation) {
+		GeneratorAnnotationHelper.handleTableGenerator(
+				nameFromGeneratedValue,
+				generatorAnnotation,
+				entityMapping,
+				idValue,
+				idMember,
+				buildingContext
+		);
+	}
+
 }

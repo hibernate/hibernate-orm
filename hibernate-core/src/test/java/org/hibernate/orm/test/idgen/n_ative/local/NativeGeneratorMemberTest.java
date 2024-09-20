@@ -8,6 +8,9 @@ package org.hibernate.orm.test.idgen.n_ative.local;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.NativeGenerator;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.idgen.n_ative.GeneratorSettingsImpl;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -27,8 +30,16 @@ public class NativeGeneratorMemberTest {
 	@Test void test(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		scope.inTransaction(s -> s.persist(new NativeEntity()));
 
-		final KeyValue identifier = domainModelScope.getEntityBinding( NativeEntity.class ).getIdentifier();
-		final Generator generator = identifier.createGenerator( null, null, null );
+		final PersistentClass entityBinding = domainModelScope.getEntityBinding( NativeEntity.class );
+		final Property idProperty = entityBinding.getIdentifierProperty();
+		final KeyValue identifier = entityBinding.getIdentifier();
+
+		final Generator generator = identifier.createGenerator(
+				domainModelScope.getDomainModel().getDatabase().getDialect(),
+				entityBinding.getRootClass(),
+				idProperty,
+				new GeneratorSettingsImpl( domainModelScope.getDomainModel() )
+		);
 		assertThat( generator ).isInstanceOf( NativeGenerator.class );
 	}
 

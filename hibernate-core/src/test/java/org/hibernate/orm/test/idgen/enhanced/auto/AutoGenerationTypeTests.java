@@ -32,6 +32,8 @@ import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.idgen.n_ative.GeneratorSettingsImpl;
+
 import org.hibernate.testing.orm.junit.FailureExpectedExtension;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -85,7 +87,12 @@ public class AutoGenerationTypeTests {
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity2.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = idMapping.createGenerator( dialect, entityBinding.getRootClass());
+			final Generator generator = idMapping.createGenerator(
+					dialect,
+					entityBinding.getRootClass(),
+					entityBinding.getIdentifierProperty(),
+					new GeneratorSettingsImpl( metadata )
+			);
 			final SequenceStyleGenerator idGenerator = (SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
 
 			final DatabaseStructure database2Structure = idGenerator.getDatabaseStructure();

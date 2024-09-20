@@ -536,9 +536,9 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static Generator instantiateGeneratorAsBean(
+	private static <T extends Generator> T instantiateGeneratorAsBean(
 			BeanContainer beanContainer,
-			Class<? extends Generator> generatorClass) {
+			Class<T> generatorClass) {
 		return beanContainer.getBean( generatorClass,
 				new BeanContainer.LifecycleOptions() {
 					@Override
@@ -611,9 +611,9 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	public static Generator instantiateGenerator(
+	public static <T extends Generator> T instantiateGenerator(
 			BeanContainer beanContainer,
-			Class<? extends Generator> generatorClass) {
+			Class<T> generatorClass) {
 		if ( beanContainer != null ) {
 			return instantiateGeneratorAsBean( beanContainer, generatorClass );
 		}

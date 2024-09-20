@@ -7,6 +7,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Target;
 import java.lang.annotation.Retention;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.SequenceGenerator;
@@ -22,12 +23,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Generator that picks a strategy based on the {@linkplain Dialect#getNativeValueGenerationStrategy() dialect}.
  *
  * @since 7.0
- *
  * @author Steve Ebersole
  */
 @Target({METHOD, FIELD, TYPE, PACKAGE})
 @Retention(RUNTIME)
 @IdGeneratorType(org.hibernate.id.NativeGenerator.class)
+@Incubating
 public @interface NativeGenerator {
 	SequenceGenerator sequenceForm() default @SequenceGenerator();
 	TableGenerator tableForm() default @TableGenerator();

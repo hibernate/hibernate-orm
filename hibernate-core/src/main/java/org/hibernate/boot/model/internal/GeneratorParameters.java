@@ -4,12 +4,14 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
+import java.lang.annotation.Annotation;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.BiConsumer;
+
 import org.hibernate.Internal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -30,10 +32,11 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.BiConsumer;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.UniqueConstraint;
 
+import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.id.IdentifierGenerator.CONTRIBUTOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
@@ -93,14 +96,48 @@ public class GeneratorParameters {
 			RootClass rootClass,
 			BiConsumer<String,String> parameterCollector) {
 
-		final ConfigurationService configService =
-				identifierValue.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-						.requireService( ConfigurationService.class );
-
+		final ConfigurationService configService = identifierValue
+				.getMetadata()
+				.getMetadataBuildingOptions()
+				.getServiceRegistry()
+				.requireService( ConfigurationService.class );
 
 		// default initial value and allocation size per-JPA defaults
 		parameterCollector.accept( INITIAL_PARAM, String.valueOf( DEFAULT_INITIAL_VALUE ) );
 		parameterCollector.accept( INCREMENT_PARAM,	String.valueOf( defaultIncrement( configService ) ) );
+
+		collectBaselineProperties( identifierValue, dialect, rootClass, parameterCollector );
+	}
+
+	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
+		if ( generatorAnnotation == null ) {
+			final ConfigurationService configService = buildingContext
+					.getBootstrapContext()
+					.getServiceRegistry()
+					.requireService( ConfigurationService.class );
+			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
+			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
+					|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
+					|| SingleNamingStrategy.class.getName().equals( idNamingStrategy ) ) {
+				return 1;
+			}
+		}
+
+		return OptimizableGenerator.DEFAULT_INCREMENT_SIZE;
+	}
+
+	public static void collectBaselineProperties(
+			SimpleValue identifierValue,
+			Dialect dialect,
+			RootClass rootClass,
+			BiConsumer<String,String> parameterCollector) {
+
+		final ConfigurationService configService = identifierValue
+				.getMetadata()
+				.getMetadataBuildingOptions()
+				.getServiceRegistry()
+				.requireService( ConfigurationService.class );
 
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
@@ -144,6 +181,7 @@ public class GeneratorParameters {
 					(String) settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
 			);
 		}
+
 	}
 
 	public static String identityTablesString(Dialect dialect, RootClass rootClass) {
@@ -155,10 +193,6 @@ public class GeneratorParameters {
 			}
 		}
 		return tables.toString();
-	}
-
-	public static int defaultIncrement(MetadataImplementor metadata) {
-		return defaultIncrement( metadata.getMetadataBuildingOptions().getServiceRegistry().requireService( ConfigurationService.class ) );
 	}
 
 	public static int defaultIncrement(ConfigurationService configService) {

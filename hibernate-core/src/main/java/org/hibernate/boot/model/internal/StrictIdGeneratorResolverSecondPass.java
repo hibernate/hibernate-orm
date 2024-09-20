@@ -26,18 +26,21 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.SequenceGenerator;
 
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.*;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleUuidStrategy;
+import static org.hibernate.boot.model.internal.GeneratorParameters.fallbackAllocationSize;
 import static org.hibernate.boot.model.internal.GeneratorParameters.identityTablesString;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
 import static org.hibernate.id.OptimizableGenerator.IMPLICIT_NAME_BASE;
+import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
@@ -107,7 +110,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			handleSequenceGenerator(
 					entityMapping.getJpaEntityName(),
 					globalMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -118,7 +120,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 		handleSequenceGenerator(
 				entityMapping.getJpaEntityName(),
 				new SequenceGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext
@@ -135,7 +136,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			handleSequenceGenerator(
 					generatedValue.generator(),
 					globalMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -146,7 +146,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 		handleSequenceGenerator(
 				generatedValue.generator(),
 				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext
@@ -174,6 +173,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 					globalMatch.configuration(),
 					entityMapping,
 					idValue,
+					idMember,
 					buildingContext
 			);
 			return;
@@ -184,6 +184,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 				new TableGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
+				idMember,
 				buildingContext
 		);
 	}
@@ -200,6 +201,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 					globalMatch.configuration(),
 					entityMapping,
 					idValue,
+					idMember,
 					buildingContext
 			);
 
@@ -211,6 +213,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 				new TableGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
 				entityMapping,
 				idValue,
+				idMember,
 				buildingContext
 		);
 	}
@@ -228,7 +231,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 			handleSequenceGenerator(
 					globalRegistrationName,
 					globalSequenceMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -244,6 +246,7 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 					globalTableMatch.configuration(),
 					entityMapping,
 					idValue,
+					idMember,
 					buildingContext
 			);
 			return;
@@ -289,7 +292,6 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 		handleSequenceGenerator(
 				globalRegistrationName,
 				new SequenceGeneratorJpaAnnotation( generator, metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext
@@ -327,27 +329,37 @@ public class StrictIdGeneratorResolverSecondPass implements IdGeneratorResolver 
 	}
 
 	public static void handleSequenceGenerator(
-			String generatorName,
-			SequenceGenerator generatorConfig,
-			PersistentClass entityMapping,
+			String nameFromGeneratedValue,
+			SequenceGenerator generatorAnnotation,
 			SimpleValue idValue,
 			MemberDetails idMember,
-			MetadataBuildingContext context) {
-		//generator settings
-		final Map<String, String> configuration = new HashMap<>();
-		applyBaselineConfiguration( generatorConfig, idValue, entityMapping.getRootClass(), context, configuration::put );
-		if ( generatorConfig == null ) {
-			configuration.put( GENERATOR_NAME, generatorName );
-		}
-		else {
-			SequenceStyleGenerator.applyConfiguration( generatorConfig, configuration::put );
-		}
-
-		GeneratorBinder.createGeneratorFrom(
-				new IdentifierGeneratorDefinition( generatorName, SequenceStyleGenerator.class.getName(), configuration ),
-				idValue,
-				context
-		);
-
+			MetadataBuildingContext buildingContext) {
+		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
+			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
+			final SequenceStyleGenerator identifierGenerator = GeneratorBinder.instantiateGenerator(
+					beanContainer,
+					SequenceStyleGenerator.class
+			);
+			GeneratorAnnotationHelper.prepareForUse(
+					identifierGenerator,
+					generatorAnnotation,
+					idMember,
+					properties -> {
+						if ( generatorAnnotation != null ) {
+							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
+						}
+						else if ( nameFromGeneratedValue != null ) {
+							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
+						}
+						// we need to better handle default allocation-size here...
+						properties.put( INCREMENT_PARAM, fallbackAllocationSize( generatorAnnotation, buildingContext ) );
+					},
+					generatorAnnotation == null
+							? null
+							: (a, properties) -> SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+					creationContext
+			);
+			return identifierGenerator;
+		} );
 	}
 }

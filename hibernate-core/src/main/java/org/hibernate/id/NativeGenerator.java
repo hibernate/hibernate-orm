@@ -38,6 +38,7 @@ import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 /**
  * Generator that picks a strategy based on the {@linkplain Dialect#getNativeValueGenerationStrategy() dialect}.
  *
+ * @see org.hibernate.annotations.NativeGenerator
  * @since 7.0
  *
  * @author Steve Ebersole
@@ -152,11 +153,7 @@ public class NativeGenerator
 		final Map<String,Object> mapRef = (Map) properties;
 		mapRef.put( GENERATOR_NAME, sequenceAnnotation.name() );
 		applyCommonConfiguration( mapRef, creationContext );
-		SequenceStyleGenerator.applyConfiguration(
-				sequenceAnnotation,
-				(SimpleValue) creationContext.getProperty().getValue(),
-				mapRef::put
-		);
+		SequenceStyleGenerator.applyConfiguration( sequenceAnnotation, mapRef::put );
 	}
 
 	private void applyProperties(
@@ -167,11 +164,7 @@ public class NativeGenerator
 		final Map<String,Object> mapRef = (Map) properties;
 		mapRef.put( GENERATOR_NAME, tableGenerator.name() );
 		applyCommonConfiguration( mapRef, creationContext );
-		TableGenerator.applyConfiguration(
-				tableGenerator,
-				(SimpleValue) creationContext.getProperty().getValue(),
-				mapRef::put
-		);
+		TableGenerator.applyConfiguration( tableGenerator, mapRef::put );
 	}
 
 	private static void applyCommonConfiguration(

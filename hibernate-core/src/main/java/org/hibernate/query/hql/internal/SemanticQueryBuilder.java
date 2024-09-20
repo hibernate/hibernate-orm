@@ -3587,7 +3587,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						+ "' of 'id()' is a '" + identifiableType.getTypeName()
 						+ "' and does not have a well-defined '@Id' attribute" );
 			}
-			return sqmPath.get( identifierDescriptor.getPathName() );
+			return sqmPath.get( identifierDescriptor.getPathName(), true );
 		}
 		else if ( sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
 			return sqmPath.resolvePathPart( AnyKeyPart.KEY_NAME, true, processingStateStack.getCurrent().getCreationState() );

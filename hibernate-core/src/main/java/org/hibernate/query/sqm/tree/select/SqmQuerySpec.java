@@ -494,9 +494,9 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 
 		for ( SqmRoot<?> root : roots ) {
-			validateFetchOwners( selectedFromSet, root, root );
+			validateFetchOwners( selectedFromSet, root );
 			for ( SqmFrom<?, ?> sqmTreat : root.getSqmTreats() ) {
-				validateFetchOwners( selectedFromSet, root, sqmTreat );
+				validateFetchOwners( selectedFromSet, sqmTreat );
 			}
 		}
 	}
@@ -543,12 +543,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmFrom<?, ?> joinContainer) {
+	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> joinContainer) {
 		for ( SqmJoin<?, ?> sqmJoin : joinContainer.getSqmJoins() ) {
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
 				if ( attributeJoin.isFetched() ) {
-					assertFetchOwner( selectedFromSet, owner, sqmJoin );
+					assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), sqmJoin );
 					// Only need to check the first level
 					continue;
 				}
@@ -557,14 +557,14 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				if ( sqmTreat instanceof SqmAttributeJoin<?, ?> ) {
 					final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmTreat;
 					if ( attributeJoin.isFetched() ) {
-						assertFetchOwner( selectedFromSet, owner, attributeJoin );
+						assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), attributeJoin );
 						// Only need to check the first level
 						continue;
 					}
 				}
-				validateFetchOwners( selectedFromSet, sqmJoin, sqmTreat );
+				validateFetchOwners( selectedFromSet, sqmTreat );
 			}
-			validateFetchOwners( selectedFromSet, sqmJoin, sqmJoin );
+			validateFetchOwners( selectedFromSet, sqmJoin );
 		}
 	}
 

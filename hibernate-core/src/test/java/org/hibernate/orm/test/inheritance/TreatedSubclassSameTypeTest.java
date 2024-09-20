@@ -62,11 +62,6 @@ public class TreatedSubclassSameTypeTest {
 	}
 
 	@Test
-	public void testJoin(SessionFactoryScope scope) {
-		executeQuery( scope, criteria -> criteria.from( MyEntity1.class ), false );
-	}
-
-	@Test
 	public void testJoinOnTreatedSubtype(SessionFactoryScope scope) {
 		executeQuery( scope, criteria -> criteria.from( MySubEntity1.class ), true );
 	}

@@ -81,7 +81,7 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	}
 
 	/**
-	 * Find a {@link SqmPathSource} by name relative to this source.
+	 * Find a {@link SqmPathSource} by name relative to this source and all its subtypes.
 	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 * @throws IllegalArgumentException if the subPathSource is not found

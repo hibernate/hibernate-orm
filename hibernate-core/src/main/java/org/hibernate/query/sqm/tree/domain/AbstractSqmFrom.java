@@ -191,7 +191,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		if ( resolvedPath != null ) {
 			return resolvedPath;
 		}
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, nodeBuilder().getJpaMetamodel() );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -412,8 +412,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt) {
-		final SqmPathSource<?> subPathSource =
-				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+		final SqmPathSource<Y> subPathSource = (SqmPathSource<Y>) getReferencedPathSource()
+				.getSubPathSource( attributeName );
 		return (SqmAttributeJoin<X, Y>) buildJoin( subPathSource, SqmJoinType.from( jt ), false );
 	}
 

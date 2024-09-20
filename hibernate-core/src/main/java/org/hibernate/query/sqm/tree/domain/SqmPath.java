@@ -15,6 +15,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -174,6 +175,16 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	<Y> SqmPath<Y> get(String attributeName);
+
+	/**
+	 * Same as {@link #get(String)}, but implementations of this method will also return paths
+	 * from attribute names which are specified in inheritance subtypes of the current path.
+	 *
+	 * @see SqmPathSource#findSubPathSource(String, JpaMetamodel)
+	 */
+	default <Y> SqmPath<Y> get(String attributeName, JpaMetamodel metamodel) {
+		return get( attributeName );
+	}
 
 	@Override
 	SqmPath<T> copy(SqmCopyContext context);

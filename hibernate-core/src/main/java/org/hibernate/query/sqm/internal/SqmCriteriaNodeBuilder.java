@@ -5746,4 +5746,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> xmlpi(String elementName) {
+		return getFunctionDescriptor( "xmlpi" ).generateSqmExpression(
+				asList( literal( elementName ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> xmlpi(String elementName, Expression<String> content) {
+		return getFunctionDescriptor( "xmlpi" ).generateSqmExpression(
+				asList( literal( elementName ), (SqmTypedNode<?>) content ),
+				null,
+				queryEngine
+		);
+	}
 }

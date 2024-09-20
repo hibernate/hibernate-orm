@@ -2175,6 +2175,7 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 | `xmlcomment()` | Constructs an XML comment from the single argument
 | `xmlforest()` | Constructs an XML forest from the arguments
 | `xmlconcat()` | Concatenates multiple XML fragments to each other
+| `xmlpi()` | Constructs an XML processing instruction
 |===
 
 
@@ -2261,6 +2262,39 @@ Concatenates multiple XML fragments to each other.
 [source, java, indent=0]
 ----
 include::{xml-example-dir-hql}/XmlConcatTest.java[tags=hql-xmlconcat-example]
+----
+====
+
+WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
+
+[[hql-xmlpi-function]]
+===== `xmlpi()`
+
+Constructs an XML processing instruction from the arguments.
+
+[[hql-xmlpi-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/xmlpi_bnf.txt[]
+----
+
+The identifier represents the XML processing instruction name and can be quoted by using backticks.
+
+[[hql-xmlpi-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlPiTest.java[tags=hql-xmlpi-example]
+----
+====
+
+The optional second argument represents the processing instruction content.
+
+[[hql-xmlpi-content-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlPiTest.java[tags=hql-xmlpi-content-example]
 ----
 ====
 

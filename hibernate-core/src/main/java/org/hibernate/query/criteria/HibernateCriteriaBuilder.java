@@ -4098,6 +4098,22 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements);
 
 	/**
+	 * Creates an XML processing with the given name.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlpi(String elementName);
+
+	/**
+	 * Creates an XML processing with the given name and content.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<String> xmlpi(String elementName, Expression<String> content);
+
+	/**
 	 * Creates a named expression. The name is important for the result of the expression,
 	 * e.g. when building an {@code xmlforest}, the name acts as the XML element name.
 	 *

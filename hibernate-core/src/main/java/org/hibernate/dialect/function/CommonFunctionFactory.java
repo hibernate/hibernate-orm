@@ -156,12 +156,15 @@ import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
 import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
+import org.hibernate.dialect.function.xml.H2XmlPiFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlPiFunction;
 import org.hibernate.dialect.function.xml.XmlConcatFunction;
 import org.hibernate.dialect.function.xml.XmlElementFunction;
 import org.hibernate.dialect.function.xml.XmlForestFunction;
+import org.hibernate.dialect.function.xml.XmlPiFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -4190,5 +4193,26 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlconcat_sqlserver() {
 		functionRegistry.register( "xmlconcat", new SQLServerXmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlpi() function
+	 */
+	public void xmlpi() {
+		functionRegistry.register( "xmlpi", new XmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlpi() function
+	 */
+	public void xmlpi_h2() {
+		functionRegistry.register( "xmlpi", new H2XmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlpi() function
+	 */
+	public void xmlpi_sqlserver() {
+		functionRegistry.register( "xmlpi", new SQLServerXmlPiFunction( typeConfiguration ) );
 	}
 }

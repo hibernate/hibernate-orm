@@ -26,7 +26,7 @@ import static java.lang.Character.isLetter;
 import static java.lang.Character.isLetterOrDigit;
 
 /**
- * Standard XmlForestFunction function.
+ * Standard xmlforest function.
  */
 public class XmlForestFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 

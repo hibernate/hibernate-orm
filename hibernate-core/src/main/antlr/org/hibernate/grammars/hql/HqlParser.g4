@@ -1720,6 +1720,7 @@ jsonUniqueKeysClause
 xmlFunction
 	: xmlelementFunction
 	| xmlforestFunction
+	| xmlpiFunction
 	;
 
 /**
@@ -1741,6 +1742,13 @@ xmlattributesFunction
  */
 xmlforestFunction
 	: XMLFOREST LEFT_PAREN expressionOrPredicate (AS identifier)? (COMMA expressionOrPredicate (AS identifier)?)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlpi()' function
+ */
+xmlpiFunction
+	: XMLPI LEFT_PAREN NAME identifier (COMMA expression)? RIGHT_PAREN
 	;
 
 /**
@@ -1952,6 +1960,7 @@ xmlforestFunction
 	| XMLATTRIBUTES
 	| XMLELEMENT
 	| XMLFOREST
+	| XMLPI
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

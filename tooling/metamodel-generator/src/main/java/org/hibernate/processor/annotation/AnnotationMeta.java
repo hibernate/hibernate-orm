@@ -13,7 +13,11 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
+import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -103,22 +107,53 @@ public abstract class AnnotationMeta implements Metamodel {
 									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
 											context.getEntityNameMappings(), context.getEnumTypesByValue() )
 							);
-					if ( statement instanceof SqmSelectStatement
-							&& isQueryMethodName( name ) ) {
-						putMember( name,
-								new NamedQueryMethod(
-										this,
-										(SqmSelectStatement<?>) statement,
-										name.substring(1),
-										isRepository(),
-										getSessionType(),
-										getSessionVariableName(),
-										context.addNonnullAnnotation()
-								)
-						);
+					if ( statement instanceof SqmSelectStatement<?> selectStatement ) {
+						if ( isQueryMethodName( name ) ) {
+							putMember( name,
+									new NamedQueryMethod(
+											this,
+											selectStatement,
+											name.substring(1),
+											isRepository(),
+											getSessionType(),
+											getSessionVariableName(),
+											context.addNonnullAnnotation()
+									)
+							);
+						}
+						if ( !isJakartaDataStyle()
+								&& getAnnotationValue( mirror, "resultClass" ) == null ) {
+							final String resultType = resultType( selectStatement );
+							if ( resultType != null ) {
+								putMember( "QUERY_" + name,
+										new TypedMetaAttribute( this, name, "QUERY_", resultType,
+												"jakarta.persistence.TypedQueryReference" ) );
+							}
+						}
 					}
 				}
 			}
+		}
+	}
+
+	private static @Nullable String resultType(SqmSelectStatement<?> selectStatement) {
+		final JpaSelection<?> selection = selectStatement.getSelection();
+		if (selection == null) {
+			return null;
+		}
+		else if (selection instanceof SqmSelectClause from) {
+			return from.getSelectionItems().size() > 1
+					? "Object[]"
+					: from.getSelectionItems().get(0).getJavaTypeName();
+		}
+		else if (selection instanceof JpaRoot<?> root) {
+			return root.getModel().getTypeName();
+		}
+		else if (selection instanceof JpaEntityJoin<?, ?> join) {
+			return join.getModel().getTypeName();
+		}
+		else {
+			return selection.getJavaTypeName();
 		}
 	}
 
@@ -165,8 +200,9 @@ public abstract class AnnotationMeta implements Metamodel {
 	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {
 		if ( !isJakartaDataStyle() && "QUERY_".equals(prefix) ) {
 			final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
-			//TODO: if there is no explicit result class, obtain the result class by
-			//      type-checking the query (this is allowed but not required by JPA)
+			// if there is no explicit result class, we will infer it later by
+			// type checking the query (this is allowed but not required by JPA)
+			// and then we will replace this TypedMetaAttribute
 			return new TypedMetaAttribute( this, name, prefix,
 					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
 					"jakarta.persistence.TypedQueryReference" );

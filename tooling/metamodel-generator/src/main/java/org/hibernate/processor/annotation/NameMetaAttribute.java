@@ -54,7 +54,7 @@ class NameMetaAttribute implements MetaAttribute {
 				.toString();
 	}
 
-	private String fieldName() {
+	String fieldName() {
 		return nameToFieldName(name.charAt(0) == '#' ? name.substring(1) : name);
 	}
 

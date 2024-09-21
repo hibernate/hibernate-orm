@@ -12,6 +12,7 @@ import static org.hibernate.processor.util.StringUtil.nameToMethodName;
  * @author Gavin King
  */
 class TypedMetaAttribute extends NameMetaAttribute {
+	private final String prefix;
 	private final String resultType;
 	private final String referenceType;
 
@@ -22,6 +23,7 @@ class TypedMetaAttribute extends NameMetaAttribute {
 			String resultType,
 			String referenceType) {
 		super( annotationMetaEntity, name, prefix );
+		this.prefix = prefix;
 		this.resultType = resultType;
 		this.referenceType = referenceType;
 	}
@@ -34,8 +36,13 @@ class TypedMetaAttribute extends NameMetaAttribute {
 	@Override
 	public String getAttributeDeclarationString() {
 		final Metamodel entity = getHostingEntity();
-		return new StringBuilder()
-				.append("\n/**\n * @see ")
+		final StringBuilder declaration = new StringBuilder();
+		declaration
+				.append("\n/**")
+				.append("\n * The query named {@value ")
+				.append(prefix)
+				.append(fieldName())
+				.append("}\n *\n * @see ")
 				.append(entity.getQualifiedName())
 				.append("\n **/\n")
 				.append("public static volatile ")
@@ -45,8 +52,11 @@ class TypedMetaAttribute extends NameMetaAttribute {
 				.append('>')
 				.append(' ')
 				.append('_')
-				.append(nameToMethodName(getPropertyName()))
-				.append(';')
-				.toString();
+				.append(nameToMethodName(getPropertyName()));
+		if ( "QUERY_".equals(prefix) ) { //UGLY!
+			declaration.append('_');
+		}
+		declaration.append(';');
+		return declaration.toString();
 	}
 }

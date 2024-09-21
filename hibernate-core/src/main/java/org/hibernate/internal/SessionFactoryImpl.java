@@ -356,7 +356,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private void integrate(MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext, IntegratorObserver integratorObserver) {
 		for ( Integrator integrator : serviceRegistry.requireService( IntegratorService.class ).getIntegrators() ) {
-			integrator.integrate(bootMetamodel, bootstrapContext, this );
+			integrator.integrate( bootMetamodel, bootstrapContext, this );
 			integratorObserver.integrators.add( integrator );
 		}
 	}

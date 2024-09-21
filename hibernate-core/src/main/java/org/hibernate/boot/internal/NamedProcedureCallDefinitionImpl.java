@@ -203,4 +203,9 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	private static String normalize(String name) {
 		return StringHelper.isNotEmpty( name ) ? name : null;
 	}
+
+	@Override
+	public Map<String, Object> getHints() {
+		return hints;
+	}
 }

@@ -4,10 +4,12 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.persistence.TypedQueryReference;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.NamedQueryMemento;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
 
 /**
  * Common attributes shared across the mapping of named HQL, native
@@ -16,7 +18,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedQueryDefinition<E> {
+public interface NamedQueryDefinition<E> extends TypedQueryReference<E> {
+	@Override
+	default String getName() {
+		return getRegistrationName();
+	}
+
 	/**
 	 * The name under which the query is to be registered
 	 */

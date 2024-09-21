@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -15,43 +16,40 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  *
  * @author Andrea Boriero
  */
-public enum JpaStaticMetaModelPopulationSetting {
+public enum JpaStaticMetamodelPopulationSetting {
 	/**
-	 * ENABLED indicates that Hibernate will look for the JPA static metamodel description
+	 * Indicates that Hibernate will look for the JPA static metamodel description
 	 * of the application domain model and populate it.
 	 */
 	ENABLED,
 	/**
-	 * DISABLED indicates that Hibernate will not look for the JPA static metamodel description
+	 * Indicates that Hibernate will not look for the JPA static metamodel description
 	 * of the application domain model.
 	 */
 	DISABLED,
 	/**
-	 * SKIP_UNSUPPORTED works as ENABLED but ignores any non-JPA features that would otherwise
+	 * Works as {@link #ENABLED} but ignores any non-JPA features that would otherwise
 	 * result in the population failing.
 	 */
 	SKIP_UNSUPPORTED;
 
-	public static JpaStaticMetaModelPopulationSetting parse(String setting) {
-		if ( "enabled".equalsIgnoreCase( setting ) ) {
-			return ENABLED;
-		}
-		else if ( "disabled".equalsIgnoreCase( setting ) ) {
-			return DISABLED;
-		}
-		else {
-			return SKIP_UNSUPPORTED;
-		}
+	public static JpaStaticMetamodelPopulationSetting parse(String setting) {
+		return switch ( setting.toLowerCase(Locale.ROOT) ) {
+			case "enabled" -> ENABLED;
+			case "disabled" -> DISABLED;
+			default -> SKIP_UNSUPPORTED;
+		};
 	}
 
-	public static JpaStaticMetaModelPopulationSetting determineJpaStaticMetaModelPopulationSetting(Map configurationValues) {
+	public static JpaStaticMetamodelPopulationSetting determineJpaStaticMetaModelPopulationSetting(Map configurationValues) {
 		return parse( determineSetting( configurationValues ) );
 	}
 
 	private static String determineSetting(Map configurationValues) {
 		return ConfigurationHelper.getString(
 				AvailableSettings.STATIC_METAMODEL_POPULATION,
-				configurationValues
+				configurationValues,
+				"skipUnsupported"
 		);
 	}
 }

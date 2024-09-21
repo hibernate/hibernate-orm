@@ -110,6 +110,7 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 		return comment;
 	}
 
+	@Override
 	public Map<String, Object> getHints() {
 		return hints;
 	}

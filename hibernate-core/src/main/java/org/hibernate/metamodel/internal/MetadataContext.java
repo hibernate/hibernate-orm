@@ -6,7 +6,6 @@ package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +16,7 @@ import java.util.function.BiFunction;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -58,6 +58,9 @@ import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 
+import static java.lang.Character.charCount;
+import static java.util.Collections.unmodifiableMap;
+
 
 /**
  * Defines a context for storing information during the building of the {@link MappingMetamodelImpl}.
@@ -81,8 +84,8 @@ public class MetadataContext {
 
 	private final Set<MappedSuperclass> knownMappedSuperclasses;
 	private final TypeConfiguration typeConfiguration;
-	private final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting;
-	private final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
+	private final JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting;
+	private final JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private final Map<Class<?>, EntityDomainType<?>> entityTypes = new HashMap<>();
@@ -110,8 +113,8 @@ public class MetadataContext {
 			JpaMetamodelImplementor jpaMetamodel,
 			MappingMetamodel mappingMetamodel,
 			MetadataImplementor bootMetamodel,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
+			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.jpaMetamodel = jpaMetamodel;
 		this.classLoaderService = jpaMetamodel.getServiceRegistry().getService( ClassLoaderService.class );
@@ -149,7 +152,7 @@ public class MetadataContext {
 	 * @return The {@linkplain Class java type} to {@link EntityTypeImpl} map.
 	 */
 	public Map<Class<?>, EntityDomainType<?>> getEntityTypeMap() {
-		return Collections.unmodifiableMap( entityTypes );
+		return unmodifiableMap( entityTypes );
 	}
 
 	public Set<EmbeddableDomainType<?>> getEmbeddableTypeSet() {
@@ -255,7 +258,7 @@ public class MetadataContext {
 	}
 
 	public Map<String, IdentifiableDomainType<?>> getIdentifiableTypesByName() {
-		return Collections.unmodifiableMap( identifiableTypesByName );
+		return unmodifiableMap( identifiableTypesByName );
 	}
 
 	private <X> PersistentAttribute<X, ?> buildAttribute(
@@ -292,7 +295,7 @@ public class MetadataContext {
 		}
 
 		final boolean staticMetamodelScanEnabled =
-				this.jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED;
+				this.jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
 		final Set<String> processedMetamodelClasses = new HashSet<>();
 
 		//we need to process types from superclasses to subclasses
@@ -459,7 +462,7 @@ public class MetadataContext {
 					inFlightAccess.addAttribute( subAttribute );
 				}
 			}
-			if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.ENABLED ) {
+			if ( jpaMetaModelPopulationSetting != JpaMetamodelPopulationSetting.ENABLED ) {
 				return;
 			}
 		}
@@ -698,28 +701,78 @@ public class MetadataContext {
 		}
 		final String metamodelClassName = managedTypeClass.getName() + '_';
 		if ( processedMetamodelClassName.add( metamodelClassName ) ) {
-			try {
-				final Class<?> metamodelClass = classLoaderService.classForName( metamodelClassName );
-				// we found the class; so populate it...
-				registerAttributes( metamodelClass, managedType );
-				try {
-					injectField( metamodelClass, "class_", managedType, false );
-				}
-				catch ( NoSuchFieldException e ) {
-					// ignore
-				}
+			final Class<?> metamodelClass = metamodelClass( metamodelClassName );
+			if ( metamodelClass != null ) {
+				populateMetamodelClass( managedType, metamodelClass );
 			}
-			catch ( ClassLoadingException ignore ) {
-				// nothing to do...
-			}
-
-			// todo : this does not account for @MappedSuperclass, mainly because this is not being tracked in our
-			// internal metamodel as populated from the annotations properly
-			ManagedDomainType<? super X> superType = managedType.getSuperType();
+			// todo : this does not account for @MappedSuperclass, mainly
+			//        because this is not being tracked in our internal
+			//        metamodel as populated from the annotations properly
+			final ManagedDomainType<? super X> superType = managedType.getSuperType();
 			if ( superType != null ) {
 				populateStaticMetamodel( superType, processedMetamodelClassName );
 			}
 		}
+	}
+
+	private <X> void populateMetamodelClass(ManagedDomainType<X> managedType, Class<?> metamodelClass) {
+		registerAttributes( metamodelClass, managedType );
+		injectManagedType( managedType, metamodelClass );
+		runtimeModelCreationContext.getBootModel()
+				.visitNamedHqlQueryDefinitions( definition
+						-> injectTypedQueryReference( definition, metamodelClass) );
+		runtimeModelCreationContext.getBootModel()
+				.visitNamedNativeQueryDefinitions( definition
+						-> injectTypedQueryReference( definition, metamodelClass) );
+		//TODO: named entity graphs
+	}
+
+	private static <X> void injectManagedType(ManagedDomainType<X> managedType, Class<?> metamodelClass) {
+		try {
+			injectField(metamodelClass, "class_", managedType, false );
+		}
+		catch ( NoSuchFieldException e ) {
+			// ignore
+		}
+	}
+
+	private Class<?> metamodelClass(String metamodelClassName) {
+		try {
+			return classLoaderService.classForName( metamodelClassName );
+		}
+		catch ( ClassLoadingException ignore ) {
+			return null;
+		}
+	}
+
+	private static void injectTypedQueryReference(NamedQueryDefinition<?> definition, Class<?> metamodelClass) {
+		try {
+			injectField(
+					metamodelClass,
+					'_' + javaIdentifier( definition.getRegistrationName() ) + '_',
+					definition,
+					false
+			);
+		}
+		catch ( NoSuchFieldException e ) {
+			// ignore
+		}
+	}
+
+	public static String javaIdentifier(String name) {
+		final StringBuilder result = new StringBuilder();
+		int position = 0;
+		while ( position < name.length() ) {
+			final int codePoint = name.codePointAt( position );
+			if ( Character.isJavaIdentifierPart(codePoint) ) {
+				result.appendCodePoint( codePoint );
+			}
+			else {
+				result.append('_');
+			}
+			position += charCount( codePoint );
+		}
+		return result.toString();
 	}
 
 	private <X> void registerAttributes(Class<?> metamodelClass, ManagedDomainType<X> managedType) {

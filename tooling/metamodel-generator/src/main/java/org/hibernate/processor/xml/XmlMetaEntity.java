@@ -48,7 +48,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static jakarta.persistence.AccessType.FIELD;
 import static java.util.Collections.emptyList;
+import static org.hibernate.processor.util.StringUtil.classNameFromFullyQualifiedName;
 import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedClassName;
+import static org.hibernate.processor.util.StringUtil.isFullyQualified;
+import static org.hibernate.processor.util.StringUtil.packageNameFromFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.extractClosestRealTypeAsString;
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
 import static org.hibernate.processor.util.TypeUtils.getElementKindForAccessType;
@@ -121,11 +124,11 @@ public class XmlMetaEntity implements Metamodel {
 		this.defaultPackageName = defaultPackageName;
 		String className = clazz;
 		String pkg = defaultPackageName;
-		if ( StringUtil.isFullyQualified( className ) ) {
+		if ( isFullyQualified( className ) ) {
 			// if the class name is fully qualified we have to extract the package name from the fqcn.
 			// default package name gets ignored
-			pkg = StringUtil.packageNameFromFqcn( className );
-			className = StringUtil.classNameFromFqcn( clazz );
+			pkg = packageNameFromFullyQualifiedName( className );
+			className = classNameFromFullyQualifiedName( clazz );
 		}
 		this.clazzName = className;
 		this.packageName = pkg;

@@ -1723,6 +1723,7 @@ xmlFunction
 	| xmlpiFunction
 	| xmlqueryFunction
 	| xmlexistsFunction
+	| xmlaggFunction
 	;
 
 /**
@@ -1765,6 +1766,13 @@ xmlqueryFunction
  */
 xmlexistsFunction
 	: XMLEXISTS LEFT_PAREN expression PASSING expression RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlexists()' function
+ */
+xmlaggFunction
+	: XMLAGG LEFT_PAREN expression orderByClause? RIGHT_PAREN filterClause? overClause?
 	;
 
 /**
@@ -1973,6 +1981,7 @@ xmlexistsFunction
 	| WITHIN
 	| WITHOUT
 	| WRAPPER
+	| XMLAGG
 	| XMLATTRIBUTES
 	| XMLELEMENT
 	| XMLEXISTS

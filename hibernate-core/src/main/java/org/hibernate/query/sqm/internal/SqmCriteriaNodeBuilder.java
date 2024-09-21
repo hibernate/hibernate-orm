@@ -5792,4 +5792,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, Expression<?> argument) {
+		return xmlagg( order, null, null, argument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
+		return xmlagg( order, filter, null, argument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument) {
+		return xmlagg( order, null, window, argument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
+		return functionWithinGroup( "xmlagg", String.class, order, filter, window, argument );
+	}
 }

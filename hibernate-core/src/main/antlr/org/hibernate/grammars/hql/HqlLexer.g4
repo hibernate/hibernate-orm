@@ -330,6 +330,7 @@ WITH				: [wW] [iI] [tT] [hH];
 WITHIN				: [wW] [iI] [tT] [hH] [iI] [nN];
 WITHOUT				: [wW] [iI] [tT] [hH] [oO] [uU] [tT];
 WRAPPER				: [wW] [rR] [aA] [pP] [pP] [eE] [rR];
+XMLAGG				: [xX] [mM] [lL] [aA] [gG] [gG];
 XMLATTRIBUTES		: [xX] [mM] [lL] [aA] [tT] [tT] [rR] [iI] [bB] [uU] [tT] [eE] [sS];
 XMLELEMENT			: [xX] [mM] [lL] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
 XMLEXISTS			: [xX] [mM] [lL] [eE] [xX] [iI] [sS] [tT] [sS];

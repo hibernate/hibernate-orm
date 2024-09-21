@@ -4146,6 +4146,43 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
 
 	/**
+	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(JpaOrder order, Expression<?> argument);
+
+	/**
+	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument);
+
+	/**
+	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument);
+
+	/**
+	 * Create a {@code xmlagg} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param argument values to join
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 */
+	@Incubating
+	JpaExpression<String> xmlagg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<?> argument);
+
+	/**
 	 * Creates a named expression. The name is important for the result of the expression,
 	 * e.g. when building an {@code xmlforest}, the name acts as the XML element name.
 	 *

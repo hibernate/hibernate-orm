@@ -438,6 +438,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.xmlpi_sqlserver();
 		functionFactory.xmlquery_sqlserver();
 		functionFactory.xmlexists_sqlserver();
+		functionFactory.xmlagg_sqlserver();
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );

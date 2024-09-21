@@ -789,6 +789,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	SqmExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
 
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, Expression<?> argument);
+
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument);
+
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument);
+
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 

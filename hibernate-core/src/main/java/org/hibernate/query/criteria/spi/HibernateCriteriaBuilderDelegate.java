@@ -3707,6 +3707,30 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, filter, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, window, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, filter, window, argument );
+	}
+
+	@Override
+	@Incubating
 	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
 		return criteriaBuilder.named( expression, name );
 	}

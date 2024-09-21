@@ -1013,14 +1013,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean compatibleAccess(TypeElement assocTypeElement, Element member) {
 		final AccessType memberAccessType = determineAnnotationSpecifiedAccessType( member );
 		final AccessType accessType = memberAccessType == null ? getAccessType(assocTypeElement) : memberAccessType;
-		switch ( member.getKind() ) {
-			case FIELD:
-				return accessType == AccessType.FIELD;
-			case METHOD:
-				return accessType == AccessType.PROPERTY;
-			default:
-				return false;
-		}
+		return switch ( member.getKind() ) {
+			case FIELD -> accessType == AccessType.FIELD;
+			case METHOD -> accessType == AccessType.PROPERTY;
+			default -> false;
+		};
 	}
 
 	private void validateBackRef(
@@ -1443,15 +1440,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		switch ( parameterType.getKind() ) {
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) parameterType;
-				List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-				switch ( typeArguments.size() ) {
-					case 1:
-						return typeArguments.get(0);
-					case 2:
-						return typeArguments.get(1);
-					default:
-						return null;
-				}
+				final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+				return switch ( typeArguments.size() ) {
+					case 1 -> typeArguments.get(0);
+					case 2 -> typeArguments.get(1);
+					default -> null;
+				};
 			case ARRAY:
 				final ArrayType arrayType = (ArrayType) parameterType;
 				return arrayType.getComponentType();
@@ -1773,17 +1767,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private String getSessionVariableName(String sessionType) {
-		switch (sessionType) {
-			case HIB_SESSION:
-			case HIB_STATELESS_SESSION:
-			case MUTINY_SESSION:
-			case MUTINY_STATELESS_SESSION:
-//			case UNI_MUTINY_SESSION:
-//			case UNI_MUTINY_STATELESS_SESSION:
-				return "session";
-			default:
-				return sessionGetter;
-		}
+		return switch (sessionType) {
+			case HIB_SESSION, HIB_STATELESS_SESSION, MUTINY_SESSION, MUTINY_STATELESS_SESSION -> "session";
+//			case UNI_MUTINY_SESSION, UNI_MUTINY_STATELESS_SESSION -> "session";
+			default -> sessionGetter;
+		};
 	}
 
 	private static List<String> enabledFetchProfiles(ExecutableElement method) {
@@ -1972,17 +1960,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return FieldType.BASIC;
 		}
 		else {
-			switch (fieldType) {
-				case ID:
+			return switch (fieldType) {
+				case ID ->
 					// no byId() API for SS or M.S, only get()
-					return FieldType.ID;
-				case NATURAL_ID:
+						FieldType.ID;
+				case NATURAL_ID ->
 					// no byNaturalId() lookup API for SS
 					// no byNaturalId() in M.S, but we do have Identifier workaround
-					return FieldType.NATURAL_ID;
-				default:
-					return FieldType.BASIC;
-			}
+						FieldType.NATURAL_ID;
+				default -> FieldType.BASIC;
+			};
 		}
 	}
 
@@ -2546,12 +2533,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						returnTypeCorrect = false;
 				}
 			}
-			else if ( selection instanceof JpaEntityJoin ) {
-				final JpaEntityJoin<?,?> from = (JpaEntityJoin<?,?>) selection;
+			else if ( selection instanceof JpaEntityJoin<?, ?> from ) {
 				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
 			}
-			else if ( selection instanceof JpaRoot ) {
-				final JpaRoot<?> from = (JpaRoot<?>) selection;
+			else if ( selection instanceof JpaRoot<?> from ) {
 				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
 			}
 			else {
@@ -2810,26 +2795,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static @Nullable String fromPrimitive(String argType) {
-		switch (argType) {
-			case "boolean":
-				return Boolean.class.getName();
-			case "char":
-				return Character.class.getName();
-			case "int":
-				return Integer.class.getName();
-			case "long":
-				return Long.class.getName();
-			case "short":
-				return Short.class.getName();
-			case "byte":
-				return Byte.class.getName();
-			case "float":
-				return Float.class.getName();
-			case "double":
-				return Double.class.getName();
-			default:
-				return null;
-		}
+		return switch (argType) {
+			case "boolean" -> Boolean.class.getName();
+			case "char" -> Character.class.getName();
+			case "int" -> Integer.class.getName();
+			case "long" -> Long.class.getName();
+			case "short" -> Short.class.getName();
+			case "byte" -> Byte.class.getName();
+			case "float" -> Float.class.getName();
+			case "double" -> Double.class.getName();
+			default -> null;
+		};
 	}
 
 	private List<Boolean> parameterNullability(ExecutableElement method, TypeElement entity) {
@@ -2866,8 +2842,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private TypeMirror parameterType(VariableElement parameter) {
 		final ExecutableElement method =
 				(ExecutableElement) parameter.getEnclosingElement();
-		final TypeMirror type = memberMethodType(method).getParameterTypes()
-				.get( method.getParameters().indexOf(parameter) );
+		final TypeMirror type =
+				memberMethodType(method).getParameterTypes()
+						.get( method.getParameters().indexOf(parameter) );
 		switch ( type.getKind() ) {
 			case TYPEVAR:
 				final TypeVariable typeVariable = (TypeVariable) type;
@@ -3077,17 +3054,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean isLocal(Element methodOrParam) {
-		switch (methodOrParam.getKind()) {
-			case PARAMETER:
-				return element.getEnclosedElements()
-						.contains( methodOrParam.getEnclosingElement() );
-			case METHOD:
-			case FIELD:
-				return element.getEnclosedElements()
-						.contains( methodOrParam );
-			default:
-				return true;
-		}
+		return switch ( methodOrParam.getKind() ) {
+			case PARAMETER -> element.getEnclosedElements().contains( methodOrParam.getEnclosingElement() );
+			case METHOD, FIELD -> element.getEnclosedElements().contains( methodOrParam );
+			default -> true;
+		};
 	}
 
 	public void message(Element method, String message, Diagnostic.Kind severity) {

@@ -305,6 +305,11 @@ public class GeneratorAnnotationHelper {
 			Consumer<Properties> configBaseline,
 			BiConsumer<A,Properties> configExtractor,
 			GeneratorCreationContext creationContext) {
+		if ( generator instanceof AnnotationBasedGenerator ) {
+			@SuppressWarnings("unchecked")
+			final AnnotationBasedGenerator<A> generation = (AnnotationBasedGenerator<A>) generator;
+			generation.initialize( annotation, idMember.toJavaMember(), creationContext );
+		}
 		if ( generator instanceof Configurable configurable ) {
 			final Properties properties = new Properties();
 			if ( configBaseline != null ) {
@@ -322,14 +327,6 @@ public class GeneratorAnnotationHelper {
 				configExtractor.accept( annotation, properties );
 			}
 			configurable.configure( creationContext, properties );
-		}
-		if ( generator instanceof AnnotationBasedGenerator ) {
-			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be
-			// a programming error of the generation type developer and thus should show up during testing, we don't
-			// check this explicitly; If required, this could be done e.g. using ClassMate
-			@SuppressWarnings("unchecked")
-			final AnnotationBasedGenerator<A> generation = (AnnotationBasedGenerator<A>) generator;
-			generation.initialize( annotation, idMember.toJavaMember(), creationContext );
 		}
 		if ( generator instanceof ExportableProducer exportableProducer ) {
 			exportableProducer.registerExportables( creationContext.getDatabase() );

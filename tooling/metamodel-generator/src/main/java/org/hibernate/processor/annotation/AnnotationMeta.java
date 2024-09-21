@@ -21,6 +21,9 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import java.util.List;
 
+import static java.lang.Character.isJavaIdentifierStart;
+import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
+import static org.hibernate.processor.util.Constants.NAMED_QUERY;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
@@ -28,7 +31,7 @@ import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 public abstract class AnnotationMeta implements Metamodel {
 
 	void addAuxiliaryMembers() {
-		addAuxiliaryMembersForAnnotation( Constants.NAMED_QUERY, "QUERY_" );
+		addAuxiliaryMembersForAnnotation( NAMED_QUERY, "QUERY_" );
 		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_QUERIES, "QUERY_" );
 		addAuxiliaryMembersForAnnotation( Constants.NAMED_NATIVE_QUERY, "QUERY_" );
 		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_NATIVE_QUERIES, "QUERY_" );
@@ -50,7 +53,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	void checkNamedQueries() {
 		boolean checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
 						|| containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL );
-		handleNamedQueryAnnotation( Constants.NAMED_QUERY, checkHql );
+		handleNamedQueryAnnotation( NAMED_QUERY, checkHql );
 		handleNamedQueryRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
 		handleNamedQueryAnnotation( Constants.HIB_NAMED_QUERY, checkHql );
 		handleNamedQueryRepeatableAnnotation( Constants.HIB_NAMED_QUERIES, checkHql );
@@ -86,9 +89,7 @@ public abstract class AnnotationMeta implements Metamodel {
 			final boolean reportErrors = context.checkNamedQuery( name );
 			final AnnotationValue value = getAnnotationValue( mirror, "query" );
 			if ( value != null ) {
-				final Object query = value.getValue();
-				if ( query instanceof String ) {
-					final String hql = (String) query;
+				if ( value.getValue() instanceof String hql ) {
 					final SqmStatement<?> statement =
 							Validation.validate(
 									hql,
@@ -124,7 +125,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	private static boolean isQueryMethodName(String name) {
 		return name.length() >= 2
 			&& name.charAt(0) == '#'
-			&& Character.isJavaIdentifierStart( name.charAt(1) )
+			&& isJavaIdentifierStart( name.charAt(1) )
 			&& name.substring(2).chars().allMatch(Character::isJavaIdentifierPart);
 	}
 
@@ -155,11 +156,28 @@ public abstract class AnnotationMeta implements Metamodel {
 			if ( key.getSimpleName().contentEquals("name") ) {
 				final String name = value.getValue().toString();
 				if ( !name.isEmpty() ) {
-					putMember( prefix + name,
-							new NameMetaAttribute( this, name, prefix ) );
+					putMember( prefix + name, auxiliaryMember( mirror, prefix, name ) );
 				}
 			}
 		});
+	}
+
+	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {
+		if ( !isJakartaDataStyle() && "QUERY_".equals(prefix) ) {
+			final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
+			//TODO: if there is no explicit result class, obtain the result class by
+			//      type-checking the query (this is allowed but not required by JPA)
+			return new TypedMetaAttribute( this, name, prefix,
+					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
+					"jakarta.persistence.TypedQueryReference" );
+		}
+		else if ( !isJakartaDataStyle() && "GRAPH_".equals(prefix) ) {
+			return new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
+					"jakarta.persistence.EntityGraph" );
+		}
+		else {
+			return new NameMetaAttribute( this, name, prefix);
+		}
 	}
 
 	protected String getSessionVariableName() {

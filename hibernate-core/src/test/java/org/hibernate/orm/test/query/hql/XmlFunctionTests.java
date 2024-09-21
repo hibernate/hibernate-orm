@@ -230,6 +230,21 @@ public class XmlFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlagg.class)
+	public void testXmlagg(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select xmlagg(xmlelement(name a, e.theString) order by e.id) " +
+									"from from EntityOfBasics e",
+							Tuple.class
+					).getSingleResult();
+					assertXmlEquals( "<r><a>Dog</a><a>Cat</a></r>", "<r>" + tuple.get( 0, String.class ) + "</r>" );
+				}
+		);
+	}
+
 	private void assertXmlEquals(String expected, String actual) {
 		final Document expectedDoc = parseXml( xmlNormalize( expected ) );
 		final Document actualDoc = parseXml( xmlNormalize( actual ) );

@@ -2178,6 +2178,7 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 | `xmlpi()` | Constructs an XML processing instruction
 | `xmlquery()` | Extracts content from XML document using XQuery or XPath
 | `xmlexists()` | Checks if an XQuery or XPath expression exists in an XML document
+| `xmlagg()` | Aggregates XML elements by concatenation
 |===
 
 
@@ -2345,6 +2346,30 @@ The second argument after the `passing` keyword represents the XML document.
 [source, java, indent=0]
 ----
 include::{xml-example-dir-hql}/XmlExistsTest.java[tags=hql-xmlexists-example]
+----
+====
+
+WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
+
+[[hql-xmlagg-function]]
+===== `xmlagg()`
+
+Aggregates XML elements by concatenation.
+
+[[hql-xmlexists-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/xmlagg_bnf.txt[]
+----
+
+This aggregate function is similar to an <<hql-aggregate-functions-orderedset,_ordered set aggregate function_>>
+since it allows to specify the order in which elements are aggregated, but uses a special syntax.
+
+[[hql-xmlagg-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlAggTest.java[tags=hql-xmlagg-example]
 ----
 ====
 

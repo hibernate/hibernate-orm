@@ -158,13 +158,17 @@ import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
 import org.hibernate.dialect.function.xml.H2XmlPiFunction;
 import org.hibernate.dialect.function.xml.PostgreSQLXmlQueryFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlAggFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlExistsFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlPiFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlQueryFunction;
+import org.hibernate.dialect.function.xml.XmlAggFunction;
 import org.hibernate.dialect.function.xml.XmlConcatFunction;
 import org.hibernate.dialect.function.xml.XmlElementFunction;
+import org.hibernate.dialect.function.xml.XmlExistsFunction;
 import org.hibernate.dialect.function.xml.XmlForestFunction;
 import org.hibernate.dialect.function.xml.XmlPiFunction;
 import org.hibernate.dialect.function.xml.XmlQueryFunction;
@@ -4245,5 +4249,33 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlquery_sqlserver() {
 		functionRegistry.register( "xmlquery", new SQLServerXmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlexists() function
+	 */
+	public void xmlexists() {
+		functionRegistry.register( "xmlexists", new XmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlexists() function
+	 */
+	public void xmlexists_sqlserver() {
+		functionRegistry.register( "xmlexists", new SQLServerXmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlagg() function
+	 */
+	public void xmlagg() {
+		functionRegistry.register( "xmlagg", new XmlAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlagg() function
+	 */
+	public void xmlagg_sqlserver() {
+		functionRegistry.register( "xmlagg", new SQLServerXmlAggFunction( typeConfiguration ) );
 	}
 }

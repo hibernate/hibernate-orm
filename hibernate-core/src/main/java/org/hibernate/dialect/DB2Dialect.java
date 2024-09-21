@@ -433,6 +433,7 @@ public class DB2Dialect extends Dialect {
 		functionFactory.xmlpi();
 		functionFactory.xmlquery_db2();
 		functionFactory.xmlexists();
+		functionFactory.xmlagg();
 	}
 
 	@Override

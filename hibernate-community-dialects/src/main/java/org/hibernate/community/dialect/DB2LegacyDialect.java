@@ -448,6 +448,7 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.xmlpi();
 		functionFactory.xmlquery_db2();
 		functionFactory.xmlexists();
+		functionFactory.xmlagg();
 	}
 
 	@Override

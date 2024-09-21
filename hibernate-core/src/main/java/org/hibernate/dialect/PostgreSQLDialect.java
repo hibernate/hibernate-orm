@@ -637,6 +637,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.xmlpi();
 		functionFactory.xmlquery_postgresql();
 		functionFactory.xmlexists();
+		functionFactory.xmlagg();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions

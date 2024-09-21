@@ -3059,6 +3059,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return creationContext.getNodeBuilder().xmlexists( query, xmlDocument );
 	}
 
+	@Override
+	public SqmExpression<?> visitXmlaggFunction(HqlParser.XmlaggFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 1 );
+		arguments.add( (SqmTypedNode<?>) ctx.expression().accept( this ) );
+
+		return applyOverClause(
+				ctx.overClause(),
+				getFunctionDescriptor( "xmlagg" ).generateOrderedSetAggregateSqmExpression(
+						arguments,
+						getFilterExpression( ctx ),
+						ctx.orderByClause() == null
+								? null
+								: visitOrderByClause( ctx.orderByClause(), false ),
+						null,
+						creationContext.getQueryEngine()
+				)
+		);
+	}
+
 	private void checkXmlFunctionsEnabled(ParserRuleContext ctx) {
 		if ( !creationOptions.isXmlFunctionsEnabled() ) {
 			throw new SemanticException(

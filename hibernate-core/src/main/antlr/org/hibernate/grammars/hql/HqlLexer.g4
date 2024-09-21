@@ -332,6 +332,7 @@ WITHOUT				: [wW] [iI] [tT] [hH] [oO] [uU] [tT];
 WRAPPER				: [wW] [rR] [aA] [pP] [pP] [eE] [rR];
 XMLATTRIBUTES		: [xX] [mM] [lL] [aA] [tT] [tT] [rR] [iI] [bB] [uU] [tT] [eE] [sS];
 XMLELEMENT			: [xX] [mM] [lL] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
+XMLEXISTS			: [xX] [mM] [lL] [eE] [xX] [iI] [sS] [tT] [sS];
 XMLFOREST			: [xX] [mM] [lL] [fF] [oO] [rR] [eE] [sS] [tT];
 XMLPI				: [xX] [mM] [lL] [pP] [iI];
 XMLQUERY			: [xX] [mM] [lL] [qQ] [uU] [eE] [rR] [yY];

@@ -3051,6 +3051,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return creationContext.getNodeBuilder().xmlquery( query, xmlDocument );
 	}
 
+	@Override
+	public SqmExpression<?> visitXmlexistsFunction(HqlParser.XmlexistsFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final SqmExpression<String> query = (SqmExpression<String>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> xmlDocument = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		return creationContext.getNodeBuilder().xmlexists( query, xmlDocument );
+	}
+
 	private void checkXmlFunctionsEnabled(ParserRuleContext ctx) {
 		if ( !creationOptions.isXmlFunctionsEnabled() ) {
 			throw new SemanticException(

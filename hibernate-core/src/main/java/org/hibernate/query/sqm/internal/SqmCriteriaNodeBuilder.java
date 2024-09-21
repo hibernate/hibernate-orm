@@ -5778,4 +5778,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument) {
+		return xmlexists( value( query ), xmlDocument );
+	}
+
+	@Override
+	public SqmExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument) {
+		return getFunctionDescriptor( "xmlexists" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) query, (SqmTypedNode<?>) xmlDocument ),
+				null,
+				queryEngine
+		);
+	}
 }

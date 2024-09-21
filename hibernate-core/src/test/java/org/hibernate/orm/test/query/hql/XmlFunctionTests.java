@@ -49,6 +49,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel( annotatedClasses = {
 		XmlFunctionTests.XmlHolder.class,
@@ -211,6 +212,20 @@ public class XmlFunctionTests {
 							Tuple.class
 					).getSingleResult();
 					assertXmlEquals( "<val>asd</val>", tuple.get( 0, String.class ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlexists.class)
+	public void testXmlexists(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select xmlexists('/a/val' passing '<a><val>asd</val></a>')",
+							Tuple.class
+					).getSingleResult();
+					assertTrue( tuple.get( 0, Boolean.class ) );
 				}
 		);
 	}

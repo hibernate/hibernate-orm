@@ -376,8 +376,7 @@ public class HibernateProcessor extends AbstractProcessor {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 					handleRootElementAuxiliaryAnnotationMirrors( element );
 				}
-				else if ( element instanceof TypeElement ) {
-					final TypeElement typeElement = (TypeElement) element;
+				else if ( element instanceof TypeElement typeElement ) {
 					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
 					if ( repository != null ) {
 						final AnnotationValue provider = getAnnotationValue( repository, "provider" );

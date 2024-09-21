@@ -43,14 +43,14 @@ class NameMetaAttribute implements MetaAttribute {
 		return new StringBuilder()
 				.append("public static final ")
 				.append(annotationMetaEntity.importType(String.class.getName()))
-				.append(" ")
+				.append(' ')
 				.append(prefix)
 				.append(fieldName())
 				.append(" = ")
-				.append("\"")
+				.append('"')
 				.append(name)
-				.append("\"")
-				.append(";")
+				.append('"')
+				.append(';')
 				.toString();
 	}
 

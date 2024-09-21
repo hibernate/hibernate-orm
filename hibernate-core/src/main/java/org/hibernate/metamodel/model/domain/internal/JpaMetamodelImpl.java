@@ -37,8 +37,8 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -92,7 +92,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private final Map<String, ManagedDomainType<?>> managedTypeByName = new TreeMap<>();
 	private final Map<Class<?>, ManagedDomainType<?>> managedTypeByClass = new HashMap<>();
-	private JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
+	private JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting;
 	private final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames = new HashMap<>();
 	private final Map<String, EnumJavaType<?>> enumJavaTypes = new HashMap<>();
 
@@ -594,8 +594,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			MetadataImplementor bootMetamodel,
 			MappingMetamodel mappingMetamodel,
 			Map<Class<?>, String> entityProxyInterfaceMap,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
+			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		bootMetamodel.getImports()

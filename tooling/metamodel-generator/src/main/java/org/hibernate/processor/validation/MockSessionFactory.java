@@ -51,8 +51,8 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -217,8 +217,8 @@ public abstract class MockSessionFactory
 				metamodel.getJpaMetamodel(),
 				metamodel,
 				bootModel,
-				JpaStaticMetaModelPopulationSetting.DISABLED,
-				JpaMetaModelPopulationSetting.DISABLED,
+				JpaStaticMetamodelPopulationSetting.DISABLED,
+				JpaMetamodelPopulationSetting.DISABLED,
 				this
 		);
 

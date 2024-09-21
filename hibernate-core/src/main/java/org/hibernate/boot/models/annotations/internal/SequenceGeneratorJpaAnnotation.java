@@ -32,8 +32,8 @@ public class SequenceGeneratorJpaAnnotation implements SequenceGenerator {
 	/**
 	 * Used in creating named, defaulted annotation instances.  Generally this
 	 * is a situation where we have:<ol>
-	 *     <li>{@linkplain GeneratedValue#strategy()} set to {@linkplain jakarta.persistence.GenerationType#SEQUENCE}</li>
-	 *     <li>{@linkplain GeneratedValue#generator()} set to a non-empty String, but with no matching {@linkplain SequenceGenerator}</li>
+	 *     <li>{@linkplain jakarta.persistence.GeneratedValue#strategy()} set to {@linkplain jakarta.persistence.GenerationType#SEQUENCE}</li>
+	 *     <li>{@linkplain jakarta.persistence.GeneratedValue#generator()} set to a non-empty String, but with no matching {@linkplain SequenceGenerator}</li>
 	 * </ol>
 	 */
 	public SequenceGeneratorJpaAnnotation(String name, SourceModelBuildingContext modelContext) {

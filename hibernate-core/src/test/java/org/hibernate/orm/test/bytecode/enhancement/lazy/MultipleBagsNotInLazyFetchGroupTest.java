@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -30,52 +28,52 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * @author Christian Beikov
  */
 @DomainModel(
-        annotatedClasses = {
-                MultipleBagsNotInLazyFetchGroupTest.StringsEntity.class
-        }
+		annotatedClasses = {
+				MultipleBagsNotInLazyFetchGroupTest.StringsEntity.class
+		}
 )
 @SessionFactory(applyCollectionsInDefaultFetchGroup = false)
 @BytecodeEnhanced
 public class MultipleBagsNotInLazyFetchGroupTest {
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        assertFalse( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		assertFalse( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 
-        scope.inTransaction( em -> {
-            StringsEntity entity = new StringsEntity();
-            entity.id = 1L;
-            entity.text = "abc";
-            entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            entity.someStrings2 = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            em.persist( entity );
-        } );
-    }
+		scope.inTransaction( em -> {
+			StringsEntity entity = new StringsEntity();
+			entity.id = 1L;
+			entity.text = "abc";
+			entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			entity.someStrings2 = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			em.persist( entity );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( entityManager -> {
-            StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
-            assertEquals( 3, entity.someStrings.size() );
-            assertEquals( 3, entity.someStrings2.size() );
-        } );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.getReference( StringsEntity.class, 1L );
+			assertEquals( 3, entity.someStrings.size() );
+			assertEquals( 3, entity.someStrings2.size() );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table(name = "STRINGS_ENTITY")
-    static class StringsEntity {
+	@Entity
+	@Table(name = "STRINGS_ENTITY")
+	static class StringsEntity {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String text;
+		String text;
 
-        @ElementCollection(fetch = FetchType.EAGER)
-        List<String> someStrings;
+		@ElementCollection(fetch = FetchType.EAGER)
+		List<String> someStrings;
 
-        @ElementCollection(fetch = FetchType.EAGER)
-        List<String> someStrings2;
-    }
+		@ElementCollection(fetch = FetchType.EAGER)
+		List<String> someStrings2;
+	}
 }

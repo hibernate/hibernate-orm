@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -490,6 +488,20 @@ public class HANADialect extends Dialect {
 				ANY, ANY, ANY,
 				typeConfiguration
 		);
+
+		if ( getVersion().isSameOrAfter(2, 0, 20) ) {
+			// Introduced in 2.0 SPS 02
+			functionFactory.jsonValue_no_passing();
+			functionFactory.jsonQuery_no_passing();
+			functionFactory.jsonExists_hana();
+			if ( getVersion().isSameOrAfter(2, 0, 40) ) {
+				// Introduced in 2.0 SPS 04
+				functionFactory.jsonObject_hana();
+				functionFactory.jsonArray_hana();
+				functionFactory.jsonArrayAgg_hana();
+				functionFactory.jsonObjectAgg_hana();
+			}
+		}
 	}
 
 	@Override
@@ -1997,5 +2009,15 @@ public class HANADialect extends Dialect {
 	@Override
 	public String getForUpdateString(LockMode lockMode) {
 		return super.getForUpdateString(lockMode);
+	}
+
+	@Override
+	public String getDual() {
+		return "sys.dummy";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

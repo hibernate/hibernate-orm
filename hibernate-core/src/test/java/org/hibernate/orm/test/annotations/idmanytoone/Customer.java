@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.idmanytoone;
 import java.io.Serializable;
 import java.util.Set;
@@ -24,11 +20,11 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "Bs")
 public class Customer implements Serializable {
-    @Id @GeneratedValue
+	@Id @GeneratedValue
 	public Integer id;
 
-    @OneToMany(mappedBy = "customer")
-    public Set<StoreCustomer> stores;
+	@OneToMany(mappedBy = "customer")
+	public Set<StoreCustomer> stores;
 
-    private static final long serialVersionUID = 3818501706063039923L;
+	private static final long serialVersionUID = 3818501706063039923L;
 }

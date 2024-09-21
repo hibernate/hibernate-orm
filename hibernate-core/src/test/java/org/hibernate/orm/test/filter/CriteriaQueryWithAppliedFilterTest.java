@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
 
@@ -71,7 +69,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			student2.setAge( 27 );
 			student2.setAddress( new Address( "London", "Oxford St" ) );
 			session.persist( student2 );
-	   });
+	});
 	}
 
 	@AfterEach
@@ -108,7 +106,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 //			query.add( Property.forName( "age" ).eq( inner ) );
 
 			assertThat( list.size(), is( 1 ) );
-	   	});
+		});
 
 		scope.inTransaction( session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "deleted" );
@@ -133,7 +131,7 @@ public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStateles
 			final List<Student> list = session.createQuery( query ).getResultList();
 
 			assertThat( list.size(), is( 0 ) );
-	   	});
+		});
 	}
 
 	@ParameterizedTest

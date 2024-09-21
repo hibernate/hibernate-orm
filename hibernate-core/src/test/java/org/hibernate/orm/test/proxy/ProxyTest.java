@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy;
 
@@ -483,9 +481,9 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		s.remove( container );
 		// force a snapshot retrieval of the proxied container
 		SessionImpl sImpl = ( SessionImpl ) s;
-        sImpl.getPersistenceContext().getDatabaseSnapshot(
+		sImpl.getPersistenceContext().getDatabaseSnapshot(
 				lastContainerId,
-                sImpl.getFactory().getMappingMetamodel().getEntityDescriptor(Container.class.getName())
+				sImpl.getFactory().getMappingMetamodel().getEntityDescriptor(Container.class.getName())
 		);
 		assertFalse( Hibernate.isInitialized( proxy ) );
 		t.commit();

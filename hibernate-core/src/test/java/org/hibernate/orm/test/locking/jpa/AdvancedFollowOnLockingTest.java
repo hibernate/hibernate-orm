@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.locking.jpa;
 
 import org.hibernate.dialect.SQLServerDialect;
@@ -56,9 +60,9 @@ public class AdvancedFollowOnLockingTest {
 	public void testNoFollowonLockingOnGroupBy(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
-								 final Department engineering = new Department( 1, "Engineering" );
-								 session.persist( engineering );
-							 }
+								final Department engineering = new Department( 1, "Engineering" );
+								session.persist( engineering );
+							}
 		);
 
 		scope.inTransaction(

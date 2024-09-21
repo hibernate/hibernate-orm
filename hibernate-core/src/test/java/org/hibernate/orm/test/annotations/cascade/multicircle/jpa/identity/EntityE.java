@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cascade.multicircle.jpa.identity;
 
@@ -11,7 +9,7 @@ package org.hibernate.orm.test.annotations.cascade.multicircle.jpa.identity;
  */
 @jakarta.persistence.Entity
 public class EntityE extends AbstractEntity {
-    private static final long serialVersionUID = 1226955558L;
+	private static final long serialVersionUID = 1226955558L;
 
 	@jakarta.persistence.OneToMany(mappedBy = "e")
 	private java.util.Set<EntityD> dCollection = new java.util.HashSet<EntityD>();
@@ -26,10 +24,10 @@ public class EntityE extends AbstractEntity {
 		this.dCollection = dCollection;
 	}
 
-    public EntityF getF() {
-        return f;
-    }
-    public void setF(EntityF parameter) {
-        this.f = parameter;
-    }
+	public EntityF getF() {
+		return f;
+	}
+	public void setF(EntityF parameter) {
+		this.f = parameter;
+	}
 }

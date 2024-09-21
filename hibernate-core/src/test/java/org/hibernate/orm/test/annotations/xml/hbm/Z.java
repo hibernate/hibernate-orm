@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.xml.hbm;
 
 
@@ -13,11 +9,11 @@ package org.hibernate.orm.test.annotations.xml.hbm;
  * @author Emmanuel Bernard
  */
 public interface Z extends java.io.Serializable {
-  public Integer getZId();
+public Integer getZId();
 
-  public void setZId(Integer zId);
+public void setZId(Integer zId);
 
-  public B getB();
+public B getB();
 
-  public void setB(B b);
+public void setB(B b);
 }

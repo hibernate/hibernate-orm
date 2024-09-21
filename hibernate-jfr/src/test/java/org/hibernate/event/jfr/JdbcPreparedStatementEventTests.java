@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.jfr;
 
 import java.time.Duration;
@@ -101,14 +105,14 @@ public class JdbcPreparedStatementEventTests {
 					ProcedureCall call = session.createStoredProcedureCall("DB_OBJECT_SQL", String.class)
 							.registerStoredProcedureParameter(1, String.class, ParameterMode.IN)
 							.registerStoredProcedureParameter(2, String.class, ParameterMode.IN)
-							.setParameter(1, "USER")  
+							.setParameter(1, "USER")
 							.setParameter(2, "SA");
 					boolean hasResult = call.execute();
 					assertThat( hasResult ).isTrue();
 					Object createSa = call.getSingleResult();
 					assertThat( createSa ).isInstanceOf( String.class );
 					assertThat( ((String) createSa).toLowerCase( Locale.ROOT ) ).contains( "create user if not exists " );
-					
+
 					final List<RecordedEvent> events = jfrEvents.events()
 							.filter(
 									recordedEvent ->

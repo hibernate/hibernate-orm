@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
@@ -121,10 +119,10 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		// apply any pre-insert in-memory value generation
 		final boolean needsDynamicInsert = preInsertInMemoryValueGeneration( values, entity, session );
-
-		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
-		final boolean forceIdentifierBinding = entityPersister().getGenerator().generatedOnExecution() && id != null;
-		if ( entityMetamodel.isDynamicInsert() || needsDynamicInsert || forceIdentifierBinding ) {
+		final EntityPersister persister = entityPersister();
+		final boolean forceIdentifierBinding = persister.getGenerator().generatedOnExecution() && id != null;
+		if ( persister.getEntityMetamodel().isDynamicInsert()
+				|| needsDynamicInsert || forceIdentifierBinding ) {
 			return doDynamicInserts( id, values, entity, session, forceIdentifierBinding );
 		}
 		else {
@@ -432,7 +430,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			if ( tableMapping.isIdentifierTable() && entityPersister().isIdentifierAssignedByInsert() && !forceIdentifierBinding ) {
 				assert entityPersister().getInsertDelegate() != null;
 				final OnExecutionGenerator generator = (OnExecutionGenerator) entityPersister().getGenerator();
-				if ( generator.referenceColumnsInSql( dialect() ) ) {
+				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
 					tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
@@ -450,8 +448,8 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private static boolean isValueGenerated(Generator generator) {
 		return generator != null
-				&& generator.generatesOnInsert()
-				&& generator.generatedOnExecution();
+			&& generator.generatesOnInsert()
+			&& generator.generatedOnExecution();
 	}
 
 	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {

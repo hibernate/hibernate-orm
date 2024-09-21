@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.util;
 
@@ -23,7 +21,6 @@ import org.junit.runners.model.Statement;
 
 import org.jboss.logging.Logger;
 
-import static org.junit.Assert.fail;
 
 /**
  * A custom JUnit statement which will run annotation processor prior to execute the original statement/test.
@@ -95,7 +92,7 @@ public class CompilationStatement extends Statement {
 			for ( String source : sources ) {
 				javaFiles.add(
 						new File( resourcesBaseDir,
-										 source.replace( PACKAGE_SEPARATOR, File.separator ) + ".java" ) );
+										source.replace( PACKAGE_SEPARATOR, File.separator ) + ".java" ) );
 			}
 
 		}
@@ -169,5 +166,3 @@ public class CompilationStatement extends Statement {
 		}
 	}
 }
-
-

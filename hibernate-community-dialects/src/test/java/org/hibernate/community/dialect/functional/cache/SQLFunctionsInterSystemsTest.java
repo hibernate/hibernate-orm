@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect.functional.cache;
 
@@ -111,7 +109,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				.get(0);
 		assertTrue( 0 == value.intValue() );
 
-        s.remove(simple);
+		s.remove(simple);
 		t.commit();
 		s.close();
 	}
@@ -128,7 +126,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		//misuse of "Single" as a propertyobject, but it was the first testclass i found with a collection ;)
 		Single single = new Single() { // trivial hack to test properties with arrays.
 			@SuppressWarnings( {"unchecked"})
-			String[] getStuff() { 
+			String[] getStuff() {
 				return (String[]) getSeveral().toArray(new String[getSeveral().size()]);
 			}
 		};
@@ -480,8 +478,8 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.refresh(b);
 		//b.getBlob().setBytes( 2, "abc".getBytes() );
-        log.debug("levinson: just bfore b.getClob()");
-        b.getClob().getSubString(2, 3);
+		log.debug("levinson: just bfore b.getClob()");
+		b.getClob().getSubString(2, 3);
 		//b.getClob().setString(2, "abc");
 		s.flush();
 		s.getTransaction().commit();
@@ -522,11 +520,11 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	public void testSqlFunctionAsAlias() {
 		String functionName = locateAppropriateDialectFunctionNameForAliasTest();
 		if (functionName == null) {
-            log.info("Dialect does not list any no-arg functions");
+			log.info("Dialect does not list any no-arg functions");
 			return;
 		}
 
-        log.info("Using function named [" + functionName + "] for 'function as alias' test");
+		log.info("Using function named [" + functionName + "] for 'function as alias' test");
 		String query = "select " + functionName + " from Simple as " + functionName + " where " + functionName + ".id = 10";
 
 		Session s = openSession();
@@ -614,18 +612,18 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public void testInterSystemsFunctions() throws Exception {
-        Calendar cal = new GregorianCalendar();
-        cal.set(1977,6,3,0,0,0);
-        java.sql.Timestamp testvalue = new java.sql.Timestamp(cal.getTimeInMillis());
-        testvalue.setNanos(0);
-        Calendar cal3 = new GregorianCalendar();
-        cal3.set(1976,2,3,0,0,0);
-        java.sql.Timestamp testvalue3 = new java.sql.Timestamp(cal3.getTimeInMillis());
-        testvalue3.setNanos(0);
+		Calendar cal = new GregorianCalendar();
+		cal.set(1977,6,3,0,0,0);
+		java.sql.Timestamp testvalue = new java.sql.Timestamp(cal.getTimeInMillis());
+		testvalue.setNanos(0);
+		Calendar cal3 = new GregorianCalendar();
+		cal3.set(1976,2,3,0,0,0);
+		java.sql.Timestamp testvalue3 = new java.sql.Timestamp(cal3.getTimeInMillis());
+		testvalue3.setNanos(0);
 
-        final Session s = openSession();
-        s.beginTransaction();
-        try {
+		final Session s = openSession();
+		s.beginTransaction();
+		try {
 			s.doWork(
 					new Work() {
 						@Override
@@ -635,14 +633,14 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 						}
 					}
 			);
-        }
-        catch (Exception ex) {
-            System.out.println("as we expected stored procedure sp does not exist when we drop it");
+		}
+		catch (Exception ex) {
+			System.out.println("as we expected stored procedure sp does not exist when we drop it");
 
-        }
+		}
 		s.getTransaction().commit();
 
-        s.beginTransaction();
+		s.beginTransaction();
 		s.doWork(
 				new Work() {
 					@Override
@@ -668,82 +666,82 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 					}
 				}
 		);
-        s.getTransaction().commit();
+		s.getTransaction().commit();
 
-        s.beginTransaction();
+		s.beginTransaction();
 
-        TestInterSystemsFunctionsClass object = new TestInterSystemsFunctionsClass( Long.valueOf( 10 ) );
-        object.setDateText( "1977-07-03" );
-        object.setDate1( testvalue );
-        object.setDate3( testvalue3 );
-        s.persist( object );
-        s.getTransaction().commit();
-        s.close();
+		TestInterSystemsFunctionsClass object = new TestInterSystemsFunctionsClass( Long.valueOf( 10 ) );
+		object.setDateText( "1977-07-03" );
+		object.setDate1( testvalue );
+		object.setDate3( testvalue3 );
+		s.persist( object );
+		s.getTransaction().commit();
+		s.close();
 
-        Session s2 = openSession();
-        s2.beginTransaction();
-        TestInterSystemsFunctionsClass test = s2.get(TestInterSystemsFunctionsClass.class, 10L );
-        assertTrue( test.getDate1().equals(testvalue));
-        test = (TestInterSystemsFunctionsClass) s2.byId( TestInterSystemsFunctionsClass.class ).with( LockOptions.NONE ).load( 10L );
-        assertTrue( test.getDate1().equals(testvalue));
-        Date value = (Date) s2.createQuery( "select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" )
+		Session s2 = openSession();
+		s2.beginTransaction();
+		TestInterSystemsFunctionsClass test = s2.get(TestInterSystemsFunctionsClass.class, 10L );
+		assertTrue( test.getDate1().equals(testvalue));
+		test = (TestInterSystemsFunctionsClass) s2.byId( TestInterSystemsFunctionsClass.class ).with( LockOptions.NONE ).load( 10L );
+		assertTrue( test.getDate1().equals(testvalue));
+		Date value = (Date) s2.createQuery( "select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
-        assertTrue( value.equals(testvalue));
-        Object nv = s2.createQuery( "select nullif(o.dateText,o.dateText) from TestInterSystemsFunctionsClass as o" )
+		assertTrue( value.equals(testvalue));
+		Object nv = s2.createQuery( "select nullif(o.dateText,o.dateText) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
-        assertTrue( nv == null);
-        String dateText = (String) s2.createQuery(
+		assertTrue( nv == null);
+		String dateText = (String) s2.createQuery(
 				"select nvl(o.dateText,o.date) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
-        assertTrue( dateText.equals("1977-07-03"));
-        value = (Date) s2.createQuery( "select ifnull(o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
+		assertTrue( dateText.equals("1977-07-03"));
+		value = (Date) s2.createQuery( "select ifnull(o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
-        assertTrue( value.equals(testvalue));
-        value = (Date) s2.createQuery( "select ifnull(o.date3,o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
+		assertTrue( value.equals(testvalue));
+		value = (Date) s2.createQuery( "select ifnull(o.date3,o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
-        assertTrue( value.equals(testvalue));
-        Integer pos = (Integer) s2.createQuery(
+		assertTrue( value.equals(testvalue));
+		Integer pos = (Integer) s2.createQuery(
 				"select position('07', o.dateText) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
-        assertTrue(pos.intValue() == 6);
-        String st = (String) s2.createQuery( "select convert(o.date1, SQL_TIME) from TestInterSystemsFunctionsClass as o" )
+		assertTrue(pos.intValue() == 6);
+		String st = (String) s2.createQuery( "select convert(o.date1, SQL_TIME) from TestInterSystemsFunctionsClass as o" )
 				.list()
 				.get(0);
-        assertTrue( st.equals("00:00:00"));
-        java.sql.Time tm = (java.sql.Time) s2.createQuery(
+		assertTrue( st.equals("00:00:00"));
+		java.sql.Time tm = (java.sql.Time) s2.createQuery(
 				"select cast(o.date1, time) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
-        assertTrue( tm.toString().equals("00:00:00"));
-        Double diff = (Double) s2.createQuery(
+		assertTrue( tm.toString().equals("00:00:00"));
+		Double diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_FRAC_SECOND, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
-        assertTrue(diff.doubleValue() != 0.0);
-        diff = (Double) s2.createQuery(
+		assertTrue(diff.doubleValue() != 0.0);
+		diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_MONTH, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
-        assertTrue(diff.doubleValue() == 16.0);
-        diff = (Double) s2.createQuery(
+		assertTrue(diff.doubleValue() == 16.0);
+		diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_WEEK, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
-        assertTrue(diff.doubleValue() >= 16*4);
-        diff = (Double) s2.createQuery(
+		assertTrue(diff.doubleValue() >= 16*4);
+		diff = (Double) s2.createQuery(
 				"select timestampdiff(SQL_TSI_YEAR, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
 		).list()
 				.get(0);
-        assertTrue(diff.doubleValue() == 1.0);
+		assertTrue(diff.doubleValue() == 1.0);
 
-        s2.getTransaction().commit();
-        s2.close();
-    }
+		s2.getTransaction().commit();
+		s2.close();
+	}
 
 }

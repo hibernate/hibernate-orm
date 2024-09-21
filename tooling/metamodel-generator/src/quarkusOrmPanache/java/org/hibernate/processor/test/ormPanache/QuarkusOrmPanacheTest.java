@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.ormPanache;
 
@@ -30,13 +28,13 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBook.class ) );
 		Class<?> entityClass = getMetamodelClassFor( PanacheBook.class );
 		Assertions.assertNotNull( entityClass );
-		
+
 		// Make sure it has the proper supertype
 		Class<?> superclass = entityClass.getSuperclass();
 		if ( superclass != null ) {
 			Assertions.assertEquals( "io.quarkus.hibernate.orm.panache.PanacheEntity_", superclass.getName() );
 		}
-		
+
 		// Panache static native method generates a static method
 		Method method = entityClass.getDeclaredMethod( "hqlBook", EntityManager.class, String.class );
 		Assertions.assertNotNull( method );
@@ -55,13 +53,13 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( PanacheBookRepository.class );
 		Assertions.assertNotNull( repositoryClass );
-		
+
 		// Make sure it has the proper supertype
 		Class<?> superclass = repositoryClass.getSuperclass();
 		if ( superclass != null ) {
 			Assertions.assertEquals( "java.lang.Object", superclass.getName() );
 		}
-		
+
 		// Panache native method generates a static method
 		Method method = repositoryClass.getDeclaredMethod( "hqlBook", EntityManager.class, String.class );
 		Assertions.assertNotNull( method );
@@ -80,7 +78,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		System.out.println( TestUtil.getMetaModelSourceAsString( QuarkusBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( QuarkusBookRepository.class );
 		Assertions.assertNotNull( repositoryClass );
-		
+
 		// Make sure it has the proper supertype
 		Class<?> superclass = repositoryClass.getSuperclass();
 		if ( superclass != null ) {
@@ -89,7 +87,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		Class<?>[] interfaces = repositoryClass.getInterfaces();
 		Assertions.assertEquals( 1, interfaces.length );
 		Assertions.assertEquals( QuarkusBookRepository.class.getName(), interfaces[0].getName() );
-		
+
 		// Annotated method generates an instance method
 		Method method = repositoryClass.getDeclaredMethod( "hqlBook", String.class );
 		Assertions.assertNotNull( method );
@@ -99,7 +97,7 @@ public class QuarkusOrmPanacheTest extends CompilationTest {
 		method = repositoryClass.getDeclaredMethod( "findBook", String.class );
 		Assertions.assertNotNull( method );
 		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
-		
+
 		// Make sure we have the proper constructor
 		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( EntityManager.class );
 		Assertions.assertNotNull( constructor );

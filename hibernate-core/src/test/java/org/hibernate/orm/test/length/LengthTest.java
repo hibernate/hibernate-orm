@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.length;
 
 import org.hibernate.Length;
@@ -15,49 +19,49 @@ import static org.junit.Assert.assertEquals;
 @SessionFactory
 @DomainModel(annotatedClasses = {WithLongStrings.class,WithLongTypeStrings.class})
 public class LengthTest {
-    @Test
-    public void testLength(SessionFactoryScope scope) {
-        WithLongStrings strings = new WithLongStrings();
-        strings.longish = "hello world ".repeat(2500);
-        strings.long16 = "hello world ".repeat(2700);
-        strings.long32 = "hello world ".repeat(20000);
-        strings.clob = "hello world ".repeat(40000);
-        scope.inTransaction(s -> s.persist(strings));
-        scope.inTransaction(s -> {
-            WithLongStrings strs = s.find(WithLongStrings.class, strings.id);
-            assertEquals(strs.longish, strings.longish);
-            assertEquals(strs.long16, strings.long16);
-            assertEquals(strs.long32, strings.long32);
-            assertEquals(strs.clob, strings.clob);
-        });
-    }
+	@Test
+	public void testLength(SessionFactoryScope scope) {
+		WithLongStrings strings = new WithLongStrings();
+		strings.longish = "hello world ".repeat(2500);
+		strings.long16 = "hello world ".repeat(2700);
+		strings.long32 = "hello world ".repeat(20000);
+		strings.clob = "hello world ".repeat(40000);
+		scope.inTransaction(s -> s.persist(strings));
+		scope.inTransaction(s -> {
+			WithLongStrings strs = s.find(WithLongStrings.class, strings.id);
+			assertEquals(strs.longish, strings.longish);
+			assertEquals(strs.long16, strings.long16);
+			assertEquals(strs.long32, strings.long32);
+			assertEquals(strs.clob, strings.clob);
+		});
+	}
 
-    @Test
-    public void testSqlType(SessionFactoryScope scope) {
-        WithLongTypeStrings strings = new WithLongTypeStrings();
-        strings.longish = "hello world ".repeat(2500);
-        strings.long32 = "hello world ".repeat(20000);
-        scope.inTransaction(s -> s.persist(strings));
-        scope.inTransaction(s -> {
-            WithLongTypeStrings strs = s.find(WithLongTypeStrings.class, strings.id);
-            assertEquals(strs.longish, strings.longish);
-            assertEquals(strs.long32, strings.long32);
-        });
-    }
+	@Test
+	public void testSqlType(SessionFactoryScope scope) {
+		WithLongTypeStrings strings = new WithLongTypeStrings();
+		strings.longish = "hello world ".repeat(2500);
+		strings.long32 = "hello world ".repeat(20000);
+		scope.inTransaction(s -> s.persist(strings));
+		scope.inTransaction(s -> {
+			WithLongTypeStrings strs = s.find(WithLongTypeStrings.class, strings.id);
+			assertEquals(strs.longish, strings.longish);
+			assertEquals(strs.long32, strings.long32);
+		});
+	}
 
-    @Test
-    public void testLong32(SessionFactoryScope scope) {
-        final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-        final BasicValuedMapping mapping = (BasicValuedMapping) scope.getSessionFactory()
-                .getRuntimeMetamodels()
-                .getMappingMetamodel()
-                .getEntityDescriptor( WithLongStrings.class )
-                .findAttributeMapping( "long32" );
-        if ( dialect.useMaterializedLobWhenCapacityExceeded() && Length.LONG32 > dialect.getMaxVarcharCapacity() ) {
-            assertEquals( SqlTypes.CLOB, mapping.getJdbcMapping().getJdbcType().getJdbcTypeCode() );
-        }
-        else {
-            assertEquals( SqlTypes.VARCHAR, mapping.getJdbcMapping().getJdbcType().getJdbcTypeCode() );
-        }
-    }
+	@Test
+	public void testLong32(SessionFactoryScope scope) {
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final BasicValuedMapping mapping = (BasicValuedMapping) scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( WithLongStrings.class )
+				.findAttributeMapping( "long32" );
+		if ( dialect.useMaterializedLobWhenCapacityExceeded() && Length.LONG32 > dialect.getMaxVarcharCapacity() ) {
+			assertEquals( SqlTypes.CLOB, mapping.getJdbcMapping().getJdbcType().getJdbcTypeCode() );
+		}
+		else {
+			assertEquals( SqlTypes.VARCHAR, mapping.getJdbcMapping().getJdbcType().getJdbcTypeCode() );
+		}
+	}
 }

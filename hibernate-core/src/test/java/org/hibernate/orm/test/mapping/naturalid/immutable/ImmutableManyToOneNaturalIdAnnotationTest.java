@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.immutable;
 
@@ -31,9 +29,9 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory
 public class ImmutableManyToOneNaturalIdAnnotationTest {
 
-    @Test
-    @JiraKey( value = "HHH-10360")
-    public void testNaturalIdNullability(SessionFactoryScope scope) {
+	@Test
+	@JiraKey( value = "HHH-10360")
+	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		// nullability is not specified for either properties making up
 		// the natural ID, so they should be nullable by annotation-specific default
 

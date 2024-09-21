@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
@@ -77,7 +75,7 @@ public final class BytesHelper {
 	 *
 	 * @param longValue The long to interpret to binary
 	 * @param dest the destination array.
-     * @param destPos starting position in the destination array.
+	 * @param destPos starting position in the destination array.
 	 */
 	public static void fromLong(long longValue, byte[] dest, int destPos) {
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -61,7 +59,7 @@ public final class Collections {
 		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Collection dereferenced: %s",
-					MessageHelper.collectionInfoString( loadedPersister, 
+					MessageHelper.collectionInfoString( loadedPersister,
 							coll, entry.getLoadedKey(), session
 					)
 			);
@@ -118,7 +116,7 @@ public final class Collections {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Found collection with unloaded owner: %s",
-					MessageHelper.collectionInfoString( 
+					MessageHelper.collectionInfoString(
 							entry.getLoadedPersister(),
 							coll,
 							entry.getLoadedKey(),
@@ -134,14 +132,14 @@ public final class Collections {
 
 	}
 
-    /**
-     * Initialize the role of the collection.
-     *
-     * @param collection The collection to be updated by reachability.
-     * @param type The type of the collection.
-     * @param entity The owner of the collection.
+	/**
+	 * Initialize the role of the collection.
+	 *
+	 * @param collection The collection to be updated by reachability.
+	 * @param type The type of the collection.
+	 * @param entity The owner of the collection.
 	 * @param session The session from which this request originates
-     */
+	 */
 	public static void processReachableCollection(
 			PersistentCollection<?> collection,
 			CollectionType type,

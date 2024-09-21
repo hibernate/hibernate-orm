@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -44,14 +42,14 @@ public enum CascadeType {
 
 	/**
 	 * Equivalent to {@link jakarta.persistence.CascadeType#PERSIST}.
-	 * 
-	 * @see jakarta.persistence.EntityManager#persist(Object) 
+	 *
+	 * @see jakarta.persistence.EntityManager#persist(Object)
 	 */
 	PERSIST,
 
 	/**
 	 * Equivalent to {@link jakarta.persistence.CascadeType#MERGE}.
-	 * 
+	 *
 	 * @see jakarta.persistence.EntityManager#merge(Object)
 	 */
 	MERGE,
@@ -89,8 +87,8 @@ public enum CascadeType {
 	/**
 	 * A cascade type for the {@code replicate()} operation.
 	 *
-	 * @see org.hibernate.Session#replicate(Object, ReplicationMode) 
-	 * 
+	 * @see org.hibernate.Session#replicate(Object, ReplicationMode)
+	 *
 	 * @deprecated since {@link org.hibernate.Session#replicate(Object, ReplicationMode)}
 	 *             is deprecated
 	 */

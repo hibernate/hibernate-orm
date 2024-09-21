@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.test.components;
 import java.io.Serializable;
@@ -20,10 +18,10 @@ import jakarta.persistence.OneToMany;
  */
 @Embeddable
 public class Name implements Serializable {
-    private static final long serialVersionUID = 8381969086665589013L;
+	private static final long serialVersionUID = 8381969086665589013L;
 
-    private String firstName;
-    private String lastName;
+	private String firstName;
+	private String lastName;
 	private Set<Alias> aliases = new HashSet<Alias>(  );
 
 	public Name() {

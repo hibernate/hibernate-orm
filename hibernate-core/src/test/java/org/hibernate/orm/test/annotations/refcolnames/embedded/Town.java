@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.refcolnames.embedded;
 
 import jakarta.persistence.Column;
@@ -13,19 +17,19 @@ import org.hibernate.annotations.NaturalId;
 @Entity
 class Town {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
-    Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "id", nullable = false)
+	Integer id;
 
-    String name;
+	String name;
 
-    @NaturalId
-    @Embedded
-    TownCode townCode;
+	@NaturalId
+	@Embedded
+	TownCode townCode;
 
-    @ManyToOne
-    @JoinColumn(name = "country_code", referencedColumnName = "country_code", nullable = false, insertable = false, updatable = false)
-    @JoinColumn(name = "zip_code", referencedColumnName = "zip_code", nullable = false, insertable = false, updatable = false)
-    Region region;
+	@ManyToOne
+	@JoinColumn(name = "country_code", referencedColumnName = "country_code", nullable = false, insertable = false, updatable = false)
+	@JoinColumn(name = "zip_code", referencedColumnName = "zip_code", nullable = false, insertable = false, updatable = false)
+	Region region;
 }

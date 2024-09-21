@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -989,6 +987,38 @@ public class SqlTypes {
 				return true;
 			default:
 				return false;
+		}
+	}
+
+	/**
+	 * Does the typecode represent a JSON type.
+	 *
+	 * @param typeCode - a JDBC type code
+	 * @since 7.0
+	 */
+	public static boolean isJsonType(int typeCode) {
+		switch ( typeCode ) {
+			case JSON:
+			case JSON_ARRAY:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the typecode represent a JSON type or a type that can be implicitly cast to JSON.
+	 *
+	 * @param typeCode - a JDBC type code
+	 * @since 7.0
+	 */
+	public static boolean isImplicitJsonType(int typeCode) {
+		switch ( typeCode ) {
+			case JSON:
+			case JSON_ARRAY:
+				return true;
+			default:
+				return isCharacterOrClobType( typeCode );
 		}
 	}
 }

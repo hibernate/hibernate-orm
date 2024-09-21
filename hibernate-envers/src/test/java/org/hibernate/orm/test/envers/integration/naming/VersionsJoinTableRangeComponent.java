@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.naming;
 
@@ -31,11 +29,11 @@ public final class VersionsJoinTableRangeComponent<T extends VersionsJoinTableRa
 	@org.hibernate.annotations.Fetch(value = FetchMode.SUBSELECT)
 	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@JoinColumn(name = "VJTRCTE_ID", insertable = true, updatable = false, nullable = false)
-//	Note:	If this is processed without override annotation, then we should get a 
-//			org.hibernate.DuplicateMappingException: 
+//	Note:	If this is processed without override annotation, then we should get a
+//			org.hibernate.DuplicateMappingException:
 //			Duplicate class/entity mapping JOIN_TABLE_COMPONENT_1_AUD
 	@org.hibernate.envers.AuditJoinTable(name = "JOIN_TABLE_COMPONENT_1_AUD",
-										 inverseJoinColumns = @JoinColumn(name = "VJTRTE_ID"))
+										inverseJoinColumns = @JoinColumn(name = "VJTRTE_ID"))
 	private List<T> range = new ArrayList<T>();
 
 	// ********************** Accessor Methods ********************** //

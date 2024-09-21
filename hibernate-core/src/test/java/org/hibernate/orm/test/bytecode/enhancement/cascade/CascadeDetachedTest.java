@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
@@ -32,85 +30,85 @@ import java.util.List;
  */
 @JiraKey( "HHH-10254" )
 @DomainModel(
-        annotatedClasses = {
-             CascadeDetachedTest.Author.class, CascadeDetachedTest.Book.class
-        }
+		annotatedClasses = {
+			CascadeDetachedTest.Author.class, CascadeDetachedTest.Book.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class CascadeDetachedTest {
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        Book book = new Book( "978-1118063330", "Operating System Concepts 9th Edition" );
-        book.addAuthor( new Author( "Abraham", "Silberschatz", new char[] { 'a', 'b' } ) );
-        book.addAuthor( new Author( "Peter", "Galvin", new char[] { 'c', 'd' }  ) );
-        book.addAuthor( new Author( "Greg", "Gagne", new char[] { 'e', 'f' }  ) );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		Book book = new Book( "978-1118063330", "Operating System Concepts 9th Edition" );
+		book.addAuthor( new Author( "Abraham", "Silberschatz", new char[] { 'a', 'b' } ) );
+		book.addAuthor( new Author( "Peter", "Galvin", new char[] { 'c', 'd' }  ) );
+		book.addAuthor( new Author( "Greg", "Gagne", new char[] { 'e', 'f' }  ) );
 
-        scope.inTransaction( em -> {
-                    em.persist( book );
-        } );
+		scope.inTransaction( em -> {
+					em.persist( book );
+		} );
 
-        scope.inTransaction( em -> {
-            em.merge( book );
-        } );
-    }
+		scope.inTransaction( em -> {
+			em.merge( book );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "BOOK" )
-    public static class Book {
+	@Entity
+	@Table( name = "BOOK" )
+	public static class Book {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        String isbn;
-        String title;
+		String isbn;
+		String title;
 
-        @OneToMany( cascade = CascadeType.ALL, mappedBy = "book" )
-        List<Author> authors = new ArrayList<>();
+		@OneToMany( cascade = CascadeType.ALL, mappedBy = "book" )
+		List<Author> authors = new ArrayList<>();
 
-        public Book() {
-        }
+		public Book() {
+		}
 
-        public Book(String isbn, String title) {
-            this.isbn = isbn;
-            this.title = title;
-        }
+		public Book(String isbn, String title) {
+			this.isbn = isbn;
+			this.title = title;
+		}
 
-        public void addAuthor(Author author) {
-            authors.add( author );
-            author.book = this;
-        }
-    }
+		public void addAuthor(Author author) {
+			authors.add( author );
+			author.book = this;
+		}
+	}
 
-    @Entity
-    @Table( name = "AUTHOR" )
-    public static class Author {
+	@Entity
+	@Table( name = "AUTHOR" )
+	public static class Author {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        String firstName;
-        String lastName;
+		String firstName;
+		String lastName;
 
-        @ManyToOne( fetch = FetchType.LAZY )
-        @JoinColumn
-        Book book;
+		@ManyToOne( fetch = FetchType.LAZY )
+		@JoinColumn
+		Book book;
 
-        @Basic( fetch = FetchType.LAZY )
-        char[] charArrayCode;
+		@Basic( fetch = FetchType.LAZY )
+		char[] charArrayCode;
 
-        public Author() {
-        }
+		public Author() {
+		}
 
-        public Author(String firstName, String lastName, char[] charArrayCode) {
-            this.firstName = firstName;
-            this.lastName = lastName;
-            this.charArrayCode = charArrayCode;
-        }
-    }
+		public Author(String firstName, String lastName, char[] charArrayCode) {
+			this.firstName = firstName;
+			this.lastName = lastName;
+			this.charArrayCode = charArrayCode;
+		}
+	}
 }

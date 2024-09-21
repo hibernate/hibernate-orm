@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy;
 
@@ -37,25 +35,25 @@ import static org.junit.jupiter.api.Assertions.fail;
 @JiraKey("HHH-14460")
 @BytecodeEnhanced
 public class MissingSetterWithEnhancementTest {
-    private ServiceRegistry serviceRegistry;
+	private ServiceRegistry serviceRegistry;
 
-    @BeforeEach
-    public void setUp() {
+	@BeforeEach
+	public void setUp() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		builder.applyClassLoader( getClass().getClassLoader() );
 		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder( builder.build() )
 				.applySettings( Environment.getProperties() )
 				.build();
-    }
+	}
 
-    @AfterEach
-    public void tearDown() {
-        if ( serviceRegistry != null ) {
-            ServiceRegistryBuilder.destroy( serviceRegistry );
-        }
-    }
+	@AfterEach
+	public void tearDown() {
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
 
-    @Test
+	@Test
 	public void testEnhancedClassMissesSetterForProperty() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( EntityWithMissingSetter.class );
@@ -74,12 +72,12 @@ public class MissingSetterWithEnhancementTest {
 	@Entity
 	@Access(AccessType.PROPERTY)
 	public static class EntityWithMissingSetter {
-    	private Long id;
-    	@Column
+		private Long id;
+		@Column
 		@Access(AccessType.FIELD)
 		private int someInt;
 
-    	@Id
+		@Id
 		public Long getId() {
 			return id;
 		}

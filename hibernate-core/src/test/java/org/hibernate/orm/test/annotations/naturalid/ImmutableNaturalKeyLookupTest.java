@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.naturalid;
 
@@ -42,14 +40,14 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		a1.setName( "name1" );
 		s.persist( a1 );
 		newTx.commit();
-		
+
 		newTx = s.beginTransaction();
 		fetchA( s ); // put query-result into cache
 		A a2 = new A();
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
-		
+
 		//Create new session to avoid the session cache which can't be tracked
 		s.close();
 		s = openSession();
@@ -148,7 +146,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		a2.setName( "xxxxxx" );
 		s.persist( a2 );
 		newTx.commit();	  // Invalidates space A in UpdateTimeStamps region
-		
+
 		//Create new session to avoid the session cache which can't be tracked
 		s.close();
 		s = openSession();

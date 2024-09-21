@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.hhh14116;
 
 import java.util.Set;
@@ -33,10 +37,10 @@ public class HHH14116Test extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNoExceptionThrown() {
 		doInJPA( this::sessionFactory, em -> {
-				 em.createQuery(
-						 "SELECT g FROM User u JOIN u.groups g JOIN FETCH g.permissions JOIN FETCH g.tenant where u.id = ?1", Group.class )
-						 .setParameter(1, 1L )
-						 .getResultList();
+				em.createQuery(
+						"SELECT g FROM User u JOIN u.groups g JOIN FETCH g.permissions JOIN FETCH g.tenant where u.id = ?1", Group.class )
+						.setParameter(1, 1L )
+						.getResultList();
 			}
 		);
 	}
@@ -83,4 +87,3 @@ public class HHH14116Test extends BaseCoreFunctionalTestCase {
 		EXECUTE;
 	}
 }
-

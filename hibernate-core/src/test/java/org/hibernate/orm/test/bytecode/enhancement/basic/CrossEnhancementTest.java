@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
@@ -27,54 +25,54 @@ import java.io.Serializable;
  */
 @JiraKey( "HHH-9529" )
 @DomainModel(
-        annotatedClasses = {
-              CrossEnhancementTest.Parent.class, CrossEnhancementTest.Child.class, CrossEnhancementTest.ChildKey.class
-        }
+		annotatedClasses = {
+			CrossEnhancementTest.Parent.class, CrossEnhancementTest.Child.class, CrossEnhancementTest.ChildKey.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class CrossEnhancementTest {
 
-    @Test
-    public void test(SessionFactoryScope scope) {
+	@Test
+	public void test(SessionFactoryScope scope) {
 		//        sessionFactory().close();
 		//        buildSessionFactory();
 		scope.getSessionFactory().close();
-        // TODO: I do not get this test ^ and not sure how to update it ...
+		// TODO: I do not get this test ^ and not sure how to update it ...
 	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "PARENT" )
-    static class Parent {
-        @Id
-        String id;
-    }
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
+		@Id
+		String id;
+	}
 
-    @Embeddable
-    static class ChildKey implements Serializable {
-        String parent;
-        String type;
-    }
+	@Embeddable
+	static class ChildKey implements Serializable {
+		String parent;
+		String type;
+	}
 
-    @Entity
-    @Table( name = "CHILD" )
-    static class Child {
-        @EmbeddedId
-        ChildKey id;
+	@Entity
+	@Table( name = "CHILD" )
+	static class Child {
+		@EmbeddedId
+		ChildKey id;
 
-        @MapsId( "parent" )
-        @ManyToOne
-        Parent parent;
+		@MapsId( "parent" )
+		@ManyToOne
+		Parent parent;
 
-        public String getfieldOnChildKeyParent() {
-            // Note that there are two GETFIELD ops here, one on the field 'id' that should be enhanced and another
-            // on the field 'parent' that may be or not (depending if 'extended enhancement' is enabled)
+		public String getfieldOnChildKeyParent() {
+			// Note that there are two GETFIELD ops here, one on the field 'id' that should be enhanced and another
+			// on the field 'parent' that may be or not (depending if 'extended enhancement' is enabled)
 
-            // Either way, the field 'parent' on ChildKey should not be confused with the field 'parent' on Child
+			// Either way, the field 'parent' on ChildKey should not be confused with the field 'parent' on Child
 
-            return id.parent;
-        }
-    }
+			return id.parent;
+		}
+	}
 }

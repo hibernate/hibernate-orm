@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.internal.impl;
 
@@ -96,7 +94,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	public String getAlias() {
 		return REFERENCED_ENTITY_ALIAS;
 	}
-	
+
 	protected Query buildQuery() {
 		Query query = qb.toQuery( versionsReader.getSessionImplementor() );
 		setQueryProperties( query );
@@ -362,9 +360,9 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		// todo: can this be replaced by a call to getEntittyConfiguration#getEntityClassName()?
 		return entityName;
 	}
-	
+
 	protected void addAssociationQuery(String associationName, AbstractAuditAssociationQuery<AuditQueryImplementor> query) {
 		associationQueries.add( query );
 		associationQueryMap.put( associationName, query );
-	}	
+	}
 }

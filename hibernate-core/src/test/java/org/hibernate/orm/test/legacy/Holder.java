@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Holder.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.util.List;
 import java.util.Set;
@@ -17,13 +13,13 @@ public class Holder implements Named {
 	private Set foos;
 	private String name;
 	private Holder otherHolder;
-	
+
 	public Holder() {
 	}
 	public Holder(String name) {
 		this.name=name;
 	}
-	
+
 	/**
 	 * Returns the fooArray.
 	 * @return Foo[]
@@ -31,7 +27,7 @@ public class Holder implements Named {
 	public Foo[] getFooArray() {
 		return fooArray;
 	}
-	
+
 	/**
 	 * Returns the foos.
 	 * @return Set
@@ -39,7 +35,7 @@ public class Holder implements Named {
 	public Set getFoos() {
 		return foos;
 	}
-	
+
 	/**
 	 * Sets the fooArray.
 	 * @param fooArray The fooArray to set
@@ -47,7 +43,7 @@ public class Holder implements Named {
 	public void setFooArray(Foo[] fooArray) {
 		this.fooArray = fooArray;
 	}
-	
+
 	/**
 	 * Sets the foos.
 	 * @param foos The foos to set
@@ -55,7 +51,7 @@ public class Holder implements Named {
 	public void setFoos(Set foos) {
 		this.foos = foos;
 	}
-	
+
 	/**
 	 * Returns the id.
 	 * @return String
@@ -63,7 +59,7 @@ public class Holder implements Named {
 	public String getId() {
 		return id;
 	}
-	
+
 	/**
 	 * Sets the id.
 	 * @param id The id to set
@@ -71,7 +67,7 @@ public class Holder implements Named {
 	public void setId(String id) {
 		this.id = id;
 	}
-	
+
 	/**
 	 * Returns the name.
 	 * @return String
@@ -79,7 +75,7 @@ public class Holder implements Named {
 	public String getName() {
 		return name;
 	}
-	
+
 	/**
 	 * Sets the name.
 	 * @param name The name to set
@@ -87,7 +83,7 @@ public class Holder implements Named {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * Returns the ones.
 	 * @return List
@@ -95,7 +91,7 @@ public class Holder implements Named {
 	public List getOnes() {
 		return ones;
 	}
-	
+
 	/**
 	 * Sets the ones.
 	 * @param ones The ones to set
@@ -103,7 +99,7 @@ public class Holder implements Named {
 	public void setOnes(List ones) {
 		this.ones = ones;
 	}
-	
+
 	public Holder getOtherHolder() {
 		return otherHolder;
 	}
@@ -113,9 +109,3 @@ public class Holder implements Named {
 	}
 
 }
-
-
-
-
-
-

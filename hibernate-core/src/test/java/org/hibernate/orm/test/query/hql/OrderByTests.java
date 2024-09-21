@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 import java.util.HashSet;
@@ -71,7 +69,7 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		stateProvince = new StateProvince();
 		stateProvince.setName( "IL" );
 
-	    zoo1 = new Zoo();
+		zoo1 = new Zoo();
 		zoo1.setName( "Zoo" );
 		Address address1 = new Address();
 		address1.setStreet( "1313 Mockingbird Lane" );
@@ -103,7 +101,7 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		zoo2Director2 = new Human();
 		zoo2Director2.setName( new Name( "Fat", 'A', "Cat" ) );
 		zoo2.getDirectors().put( "Head Honcho", zoo2Director1 );
-		zoo2.getDirectors().put( "Asst. Head Honcho", zoo2Director2 );		
+		zoo2.getDirectors().put( "Asst. Head Honcho", zoo2Director2 );
 
 		zoo3 = new Zoo();
 		zoo3.setName( "Zoo" );
@@ -180,7 +178,7 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		}
 		if ( zoo2Director2 != null ) {
 			s.remove( zoo2Director2 );
-			zoo2Director2 = null;			
+			zoo2Director2 = null;
 		}
 		if ( stateProvince != null ) {
 			s.remove( stateProvince );

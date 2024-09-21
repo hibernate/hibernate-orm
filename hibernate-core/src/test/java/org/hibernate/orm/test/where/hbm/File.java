@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: File.java 8043 2005-08-30 15:20:42Z oneovthafew $
 package org.hibernate.orm.test.where.hbm;
 import java.util.Set;
 
@@ -15,7 +11,7 @@ public class File {
 	private File parent;
 	private boolean deleted;
 	private Set children;
-	
+
 	public Set getChildren() {
 		return children;
 	}
@@ -27,9 +23,9 @@ public class File {
 		this.name = name;
 		this.parent = parent;
 	}
-	
+
 	File() {}
-	
+
 	public boolean isDeleted() {
 		return deleted;
 	}
@@ -54,5 +50,5 @@ public class File {
 	public void setParent(File parent) {
 		this.parent = parent;
 	}
-	
+
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa;
 
@@ -404,40 +402,40 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-    @Test
-    public void testPersistExisting() throws Exception {
-        EntityManager em = getOrCreateEntityManager();
-        em.getTransaction().begin();
-        Wallet w = new Wallet();
-        w.setBrand( "Lacoste" );
-        w.setModel( "Minimic" );
-        w.setSerial( "0100202002" );
-        em.persist( w );
-        w = new Wallet();
-        w.setBrand( "Lacoste" );
-        w.setModel( "Minimic" );
-        w.setSerial( "0100202002" );
-        try {
-            em.persist( w );
-        }
-        catch ( EntityExistsException eee ) {
-            //success
-            if ( em.getTransaction() != null ) {
-                em.getTransaction().rollback();
-            }
-            em.close();
-            return;
-        }
-        try {
-            em.getTransaction().commit();
-            fail( "Should have raised an exception" );
-        }
-        catch ( PersistenceException pe ) {
-        }
-        finally {
-            em.close();
-        }
-    }
+	@Test
+	public void testPersistExisting() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Wallet w = new Wallet();
+		w.setBrand( "Lacoste" );
+		w.setModel( "Minimic" );
+		w.setSerial( "0100202002" );
+		em.persist( w );
+		w = new Wallet();
+		w.setBrand( "Lacoste" );
+		w.setModel( "Minimic" );
+		w.setSerial( "0100202002" );
+		try {
+			em.persist( w );
+		}
+		catch ( EntityExistsException eee ) {
+			//success
+			if ( em.getTransaction() != null ) {
+				em.getTransaction().rollback();
+			}
+			em.close();
+			return;
+		}
+		try {
+			em.getTransaction().commit();
+			fail( "Should have raised an exception" );
+		}
+		catch ( PersistenceException pe ) {
+		}
+		finally {
+			em.close();
+		}
+	}
 
 	@Test
 	public void testFactoryClosed() throws Exception {

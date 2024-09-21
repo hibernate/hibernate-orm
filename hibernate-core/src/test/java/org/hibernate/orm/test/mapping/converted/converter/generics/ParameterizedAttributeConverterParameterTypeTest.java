@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.generics;
 
@@ -36,13 +34,13 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the ability to interpret and understand AttributeConverter impls which
  * use parameterized types as one of (typically the "attribute type") its parameter types.
- * 
+ *
  * @author Svein Baardsen
  * @author Steve Ebersole
  */
 @ServiceRegistry
 public class ParameterizedAttributeConverterParameterTypeTest {
-	
+
 	@Test
 	@JiraKey(value = "HHH-8804")
 	public void testGenericTypeParameters() {

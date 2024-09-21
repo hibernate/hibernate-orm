@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.embeddables.collection;
 
 import org.hibernate.AnnotationException;
@@ -19,7 +23,7 @@ public abstract class AbstractEmbeddableWithManyToManyTest {
 	@Test
 	public void test() {
 		try (BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-			 StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr ).build()) {
+			StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr ).build()) {
 			MetadataSources metadataSources = new MetadataSources( ssr );
 			addResources( metadataSources );
 			addAnnotatedClasses(metadataSources);

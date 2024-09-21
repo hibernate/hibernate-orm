@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema;
 
@@ -14,21 +12,21 @@ import org.jboss.logging.Logger;
  * SchemaUpdate needs to create these constraints, but DB's
  * support for finding existing constraints is extremely inconsistent. Further,
  * non-explicitly-named unique constraints use randomly generated characters.
- * 
+ *
  * @author Brett Meyer
  */
 public enum UniqueConstraintSchemaUpdateStrategy {
-	
+
 	/**
 	 * Attempt to drop, then (re-)create each unique constraint.  Ignore any
 	 * exceptions thrown.  Note that this will require unique keys/constraints
 	 * to be explicitly named.  If Hibernate generates the names (randomly),
 	 * the drop will not work.
-	 * 
+	 *
 	 * DEFAULT
 	 */
 	DROP_RECREATE_QUIETLY,
-	
+
 	/**
 	 * Attempt to (re-)create unique constraints, ignoring exceptions thrown
 	 * (e.g., if the constraint already existed)

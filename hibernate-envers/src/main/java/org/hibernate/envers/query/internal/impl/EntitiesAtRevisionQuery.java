@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.internal.impl;
 
@@ -57,22 +55,22 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
 	public List list() {
 		/*
-         * The query that we need to create:
-         *   SELECT new list(e) FROM versionsReferencedEntity e
-         *   WHERE
-         * (all specified conditions, transformed, on the "e" entity) AND
-         * (selecting e entities at revision :revision)
-         *   --> for DefaultAuditStrategy:
-         *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
-         *       WHERE e2.revision <= :revision AND e2.id = e.id) 
-         *     
-         *   --> for ValidityAuditStrategy:
-         *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
-         *     
-         *     AND
-         * (only non-deleted entities)
-         *     e.revision_type != DEL
-         */
+		 * The query that we need to create:
+		 *   SELECT new list(e) FROM versionsReferencedEntity e
+		 *   WHERE
+		 * (all specified conditions, transformed, on the "e" entity) AND
+		 * (selecting e entities at revision :revision)
+		 *   --> for DefaultAuditStrategy:
+		 *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
+		 *       WHERE e2.revision <= :revision AND e2.id = e.id)
+		 *
+		 *   --> for ValidityAuditStrategy:
+		 *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
+		 *
+		 *     AND
+		 * (only non-deleted entities)
+		 *     e.revision_type != DEL
+		 */
 		Configuration configuration = enversService.getConfig();
 		String revisionPropertyPath = configuration.getRevisionNumberPath();
 		String originalIdPropertyName = configuration.getOriginalIdPropertyName();

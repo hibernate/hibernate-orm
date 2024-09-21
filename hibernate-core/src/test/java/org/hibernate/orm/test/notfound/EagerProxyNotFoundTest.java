@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.notfound;
 
@@ -157,7 +155,7 @@ public class EagerProxyNotFoundTest {
 						employeeLazy.getId();
 						employeeLazy.getName();
 						fail( "ObjectNotFoundException should have been thrown because Task.employeeLazy.location is not found " +
-									  "and is not mapped with @NotFound(IGNORE)" );
+									"and is not mapped with @NotFound(IGNORE)" );
 					}
 					catch (ObjectNotFoundException expected) {
 					}
@@ -190,7 +188,7 @@ public class EagerProxyNotFoundTest {
 						session.createQuery( "from Task", Task.class ).getSingleResult();
 					} );
 			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
@@ -212,7 +210,7 @@ public class EagerProxyNotFoundTest {
 		try {
 			scope.inTransaction( session -> session.get( Employee.class, 1 ) );
 			fail( "EntityNotFoundException should have been thrown because Employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
@@ -224,7 +222,7 @@ public class EagerProxyNotFoundTest {
 					Employee.class
 			).getSingleResult() );
 			fail( "EntityNotFoundException should have been thrown because Employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
@@ -288,7 +286,7 @@ public class EagerProxyNotFoundTest {
 						session.createQuery( "from Employee", Employee.class ).getSingleResult();
 					} );
 			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
-						  "and is not mapped with @NotFound(IGNORE)" );
+						"and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}

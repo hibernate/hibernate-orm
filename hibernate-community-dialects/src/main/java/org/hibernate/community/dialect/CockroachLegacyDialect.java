@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -93,6 +91,7 @@ import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -149,7 +148,13 @@ public class CockroachLegacyDialect extends Dialect {
 		super(version);
 		this.driverKind = driverKind;
 	}
-	protected static DatabaseVersion fetchDataBaseVersion( DialectResolutionInfo info ) {
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return fetchDataBaseVersion( info );
+	}
+
+	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info ) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {
 			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
@@ -257,9 +262,11 @@ public class CockroachLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 20 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "jsonb", this ) );
 		}
 		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		}
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
@@ -364,9 +371,11 @@ public class CockroachLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 				}
 				else {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonArrayJdbcType( serviceRegistry ) );
 				}
 			}
 			else {
@@ -374,9 +383,11 @@ public class CockroachLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 				}
 				else {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
 				}
 			}
 		}
@@ -386,9 +397,11 @@ public class CockroachLegacyDialect extends Dialect {
 			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
 			}
 		}
 
@@ -487,6 +500,22 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.arrayTrim_unnest();
 		functionFactory.arrayFill_cockroachdb();
 		functionFactory.arrayToString_postgresql();
+
+		functionFactory.jsonValue_cockroachdb();
+		functionFactory.jsonQuery_cockroachdb();
+		functionFactory.jsonExists_cockroachdb();
+		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonArrayAgg_postgresql( false );
+		functionFactory.jsonObjectAgg_postgresql( false );
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_cockroachdb();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		// No support for WITH clause in subquery: https://github.com/cockroachdb/cockroach/issues/131011
+//		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( false );
+		functionFactory.jsonArrayInsert_postgresql();
 
 		// Postgres uses # instead of ^ for XOR
 		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )

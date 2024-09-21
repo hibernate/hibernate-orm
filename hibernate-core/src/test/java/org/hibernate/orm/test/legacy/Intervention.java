@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 
@@ -12,26 +10,26 @@ package org.hibernate.orm.test.legacy;
  */
 public class Intervention {
 
-   String id;
-   long version;
+String id;
+long version;
 
-   String description;
+String description;
 
-  String getId() {
-    return id;
-  }
+String getId() {
+	return id;
+}
 
-  void  setId(String newValue) {
-    id = newValue;
-  }
+void  setId(String newValue) {
+	id = newValue;
+}
 
-  long getVersion() {
-    return version;
-  }
+long getVersion() {
+	return version;
+}
 
-  void  setVersion(long newValue) {
-    version = newValue;
-  }
+void  setVersion(long newValue) {
+	version = newValue;
+}
 
 
 public String getDescription() {

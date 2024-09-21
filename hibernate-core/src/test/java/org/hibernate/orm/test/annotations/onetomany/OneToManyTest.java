@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
@@ -531,7 +529,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testJoinColumnConfiguredInXml() {
 		PersistentClass pc = metadata().getEntityBinding( Model.class.getName() );
 		Table table = pc.getRootTable();
-        Iterator iter = table.getColumns().iterator();
+		Iterator iter = table.getColumns().iterator();
 		boolean joinColumnFound = false;
 		while(iter.hasNext()) {
 			Column column = (Column) iter.next();

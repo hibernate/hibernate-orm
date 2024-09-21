@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schemaupdate;
 
 import java.io.File;
@@ -5,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
-import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;

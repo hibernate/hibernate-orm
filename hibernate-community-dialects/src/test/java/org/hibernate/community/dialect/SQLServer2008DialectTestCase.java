@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -10,7 +8,6 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.community.dialect.SQLServerLegacyDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.spi.Limit;
@@ -136,9 +133,9 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 	public void testPagingWithColumnNameStartingWithFrom() {
 		final String sql = "select column1 c1, from_column c2 from table1";
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
-							  "select column1 c1, from_column c2 from table1) row_) " +
-							  "select c1,c2 from query_ where rownumber_>=? and rownumber_<?",
-					  dialect.getLimitHandler().processSql(sql, toRowSelection(3, 5)));
+							"select column1 c1, from_column c2 from table1) row_) " +
+							"select c1,c2 from query_ where rownumber_>=? and rownumber_<?",
+					dialect.getLimitHandler().processSql(sql, toRowSelection(3, 5)));
 	}
 
 	@Test
@@ -346,9 +343,9 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 		final String query = "select [Created From Nonstock Item], field2 from table1";
 
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
-							  "select [Created From Nonstock Item] as col0_, field2 as col1_ from table1) row_) " +
-							  "select col0_,col1_ from query_ where rownumber_>=? and rownumber_<?",
-					  dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+							"select [Created From Nonstock Item] as col0_, field2 as col1_ from table1) row_) " +
+							"select col0_,col1_ from query_ where rownumber_>=? and rownumber_<?",
+					dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -358,9 +355,9 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 		final String query = "select [Created From Item] c1, field2 from table1";
 
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
-							  "select [Created From Item] c1, field2 as col0_ from table1) row_) " +
-							  "select c1,col0_ from query_ where rownumber_>=? and rownumber_<?",
-					  dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+							"select [Created From Item] c1, field2 as col0_ from table1) row_) " +
+							"select c1,col0_ from query_ where rownumber_>=? and rownumber_<?",
+					dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
 		);
 	}
 
@@ -370,9 +367,9 @@ public class SQLServer2008DialectTestCase extends BaseUnitTestCase {
 		final String query = "select [Created From Item] as c1, field2 from table1";
 
 		assertEquals( "with query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" +
-							  "select [Created From Item] as c1, field2 as col0_ from table1) row_) " +
-							  "select c1,col0_ from query_ where rownumber_>=? and rownumber_<?",
-					  dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
+							"select [Created From Item] as c1, field2 as col0_ from table1) row_) " +
+							"select c1,col0_ from query_ where rownumber_>=? and rownumber_<?",
+					dialect.getLimitHandler().processSql( query, toRowSelection( 1, 5 ) )
 		);
 	}
 

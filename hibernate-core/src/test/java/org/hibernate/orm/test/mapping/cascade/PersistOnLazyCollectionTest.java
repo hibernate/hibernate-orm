@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.cascade;
 
@@ -108,8 +106,8 @@ public class PersistOnLazyCollectionTest {
 			// load invoice, invoiceLines should not be loaded
 			Invoice invoice = session.get( Invoice.class, _invoice.getId() );
 			assertEquals( 1,
-						  stats.getEntityCount(),
-						  "Invoice lines should not be initialized while loading the invoice, because of the lazy association."
+						stats.getEntityCount(),
+						"Invoice lines should not be initialized while loading the invoice, because of the lazy association."
 			);
 
 			Receipt receipt = new Receipt( RECEIPT_A );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
@@ -44,11 +42,9 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicTypeRegistry;
@@ -731,14 +727,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	public static void applyConfiguration(
 			jakarta.persistence.TableGenerator generatorConfig,
-			SimpleValue idValue,
-			Map<String, String> configuration) {
-		applyConfiguration( generatorConfig, idValue, configuration::put );
-	}
-
-	public static void applyConfiguration(
-			jakarta.persistence.TableGenerator generatorConfig,
-			SimpleValue idValue,
 			BiConsumer<String, String> configurationCollector) {
 		configurationCollector.accept( CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 

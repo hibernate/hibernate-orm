@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.persister.entity;
 
@@ -46,17 +44,17 @@ public class CustomSqlSchemaResolvingIdentityTest {
 
 		String className = CustomEntity.class.getName();
 
-        final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(className);
+		final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(className);
 		String insertQuery = ( (JdbcMutationOperation) persister.getInsertCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
 		String updateQuery = ( (JdbcMutationOperation) persister.getUpdateCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
 		String deleteQuery = ( (JdbcMutationOperation) persister.getDeleteCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
 
 		assertEquals( "Incorrect custom SQL for insert in  Entity: " + className,
 				"INSERT INTO FOO (name) VALUES (?)", insertQuery );
-		
+
 		assertEquals( "Incorrect custom SQL for delete in  Entity: " + className,
 				"DELETE FROM FOO WHERE id = ?", deleteQuery );
-		
+
 		assertEquals( "Incorrect custom SQL for update in  Entity: " + className,
 				"UPDATE FOO SET name = ? WHERE id = ?", updateQuery );
 
@@ -97,7 +95,7 @@ public class CustomSqlSchemaResolvingIdentityTest {
 
 		private String name;
 	}
-	
+
 	@Entity(name = "Dummy")
 	@Table(name = "FOO")
 	public static class Dummy {

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.sharedfk;
 
 import jakarta.persistence.*;
@@ -15,4 +19,4 @@ public abstract class AbstractChild {
 	@GeneratedValue
 	@Column(name = "ID")
 	Integer id;
-}	
+}

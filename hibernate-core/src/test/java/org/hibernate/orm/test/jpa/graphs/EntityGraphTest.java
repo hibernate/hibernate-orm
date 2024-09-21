@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.graphs;
 
@@ -99,84 +97,84 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-    @Test
-   	public void loadCollection() {
-   		EntityManager em = getOrCreateEntityManager();
-   		em.getTransaction().begin();
+	@Test
+	public void loadCollection() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-   		Bar bar = new Bar();
-   		em.persist( bar );
+		Bar bar = new Bar();
+		em.persist( bar );
 
-   		Foo foo = new Foo();
-   		foo.bar = bar;
-        bar.foos.add(foo);
-   		em.persist( foo );
+		Foo foo = new Foo();
+		foo.bar = bar;
+		bar.foos.add(foo);
+		em.persist( foo );
 
-   		em.getTransaction().commit();
-   		em.clear();
+		em.getTransaction().commit();
+		em.clear();
 
-   		em.getTransaction().begin();
+		em.getTransaction().begin();
 
-   		EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
-   		barGraph.addAttributeNodes("foos");
+		EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
+		barGraph.addAttributeNodes("foos");
 
-   		Map<String, Object> properties = new HashMap<String, Object>();
-   		properties.put( "javax.persistence.loadgraph", barGraph);
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( "javax.persistence.loadgraph", barGraph);
 
-   		Bar result = em.find( Bar.class, bar.id, properties );
+		Bar result = em.find( Bar.class, bar.id, properties );
 
-   		assertTrue( Hibernate.isInitialized( result ) );
-   		assertTrue( Hibernate.isInitialized( result.foos ) );
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.foos ) );
 
-   		em.getTransaction().commit();
-   		em.close();
-   	}
+		em.getTransaction().commit();
+		em.close();
+	}
 
-    @Test
-   	public void loadInverseCollection() {
-   		EntityManager em = getOrCreateEntityManager();
-   		em.getTransaction().begin();
+	@Test
+	public void loadInverseCollection() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-   		Bar bar = new Bar();
-   		em.persist( bar );
-   		Baz baz = new Baz();
-   		em.persist( baz );
+		Bar bar = new Bar();
+		em.persist( bar );
+		Baz baz = new Baz();
+		em.persist( baz );
 
-   		Foo foo = new Foo();
-   		foo.bar = bar;
-   		foo.baz = baz;
-        bar.foos.add(foo);
-        baz.foos.add(foo);
-   		em.persist( foo );
+		Foo foo = new Foo();
+		foo.bar = bar;
+		foo.baz = baz;
+		bar.foos.add(foo);
+		baz.foos.add(foo);
+		em.persist( foo );
 
-   		em.getTransaction().commit();
-   		em.clear();
+		em.getTransaction().commit();
+		em.clear();
 
-   		em.getTransaction().begin();
+		em.getTransaction().begin();
 
-   		EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
-   		fooGraph.addAttributeNodes("bar");
-   		fooGraph.addAttributeNodes("baz");
-        Subgraph<Bar> barGraph = fooGraph.addSubgraph("bar", Bar.class);
-        barGraph.addAttributeNodes("foos");
+		EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
+		fooGraph.addAttributeNodes("bar");
+		fooGraph.addAttributeNodes("baz");
+		Subgraph<Bar> barGraph = fooGraph.addSubgraph("bar", Bar.class);
+		barGraph.addAttributeNodes("foos");
 
-   		Map<String, Object> properties = new HashMap<String, Object>();
-   		properties.put( "javax.persistence.loadgraph", fooGraph );
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( "javax.persistence.loadgraph", fooGraph );
 
-   		Foo result = em.find( Foo.class, foo.id, properties );
+		Foo result = em.find( Foo.class, foo.id, properties );
 
-   		assertTrue( Hibernate.isInitialized( result ) );
-   		assertTrue( Hibernate.isInitialized( result.bar ) );
-        assertTrue( Hibernate.isInitialized( result.bar.getFoos()) );
-   		assertTrue( Hibernate.isInitialized( result.baz ) );
-   		// sanity check -- ensure the only bi-directional fetch was the one identified by the graph
-        assertFalse( Hibernate.isInitialized( result.baz.getFoos()) );
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.bar ) );
+		assertTrue( Hibernate.isInitialized( result.bar.getFoos()) );
+		assertTrue( Hibernate.isInitialized( result.baz ) );
+		// sanity check -- ensure the only bi-directional fetch was the one identified by the graph
+		assertFalse( Hibernate.isInitialized( result.baz.getFoos()) );
 
-   		em.getTransaction().commit();
-   		em.close();
-   	}
+		em.getTransaction().commit();
+		em.close();
+	}
 
-    /**
+	/**
 	 * JPA 2.1 spec: "Add a node to the graph that corresponds to a managed type with inheritance. This allows for
 	 * multiple subclass subgraphs to be defined for this node of the entity graph. Subclass subgraphs will
 	 * automatically include the specified attributes of superclass subgraphs."
@@ -228,87 +226,87 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-    @Test
-    @JiraKey(value = "HHH-9080")
-    public void attributeNodeInheritanceTest() {
-        EntityManager em = getOrCreateEntityManager();
-        em.getTransaction().begin();
+	@Test
+	@JiraKey(value = "HHH-9080")
+	public void attributeNodeInheritanceTest() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-        Manager manager = new Manager();
-        em.persist( manager );
-        Employee employee = new Employee();
-        manager.friends.add( employee);
-        em.persist( employee );
-        Manager anotherManager = new Manager();
-        manager.managers.add(anotherManager);
-        em.persist( anotherManager );
-        em.getTransaction().commit();
-        em.clear();
+		Manager manager = new Manager();
+		em.persist( manager );
+		Employee employee = new Employee();
+		manager.friends.add( employee);
+		em.persist( employee );
+		Manager anotherManager = new Manager();
+		manager.managers.add(anotherManager);
+		em.persist( anotherManager );
+		em.getTransaction().commit();
+		em.clear();
 
-        em.getTransaction().begin();
+		em.getTransaction().begin();
 
-        EntityGraph<Manager> entityGraph = em.createEntityGraph( Manager.class );
-        entityGraph.addAttributeNodes( "friends" );
-        entityGraph.addAttributeNodes( "managers" );
+		EntityGraph<Manager> entityGraph = em.createEntityGraph( Manager.class );
+		entityGraph.addAttributeNodes( "friends" );
+		entityGraph.addAttributeNodes( "managers" );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "javax.persistence.loadgraph", entityGraph );
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( "javax.persistence.loadgraph", entityGraph );
 
-        Manager result = em.find( Manager.class, manager.id, properties );
+		Manager result = em.find( Manager.class, manager.id, properties );
 
-        assertTrue( Hibernate.isInitialized( result ) );
-        assertTrue( Hibernate.isInitialized( result.friends ) );
-        assertEquals( result.friends.size(), 1 );
-        assertTrue( Hibernate.isInitialized( result.managers) );
-        assertEquals( result.managers.size(), 1 );
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.friends ) );
+		assertEquals( result.friends.size(), 1 );
+		assertTrue( Hibernate.isInitialized( result.managers) );
+		assertEquals( result.managers.size(), 1 );
 
-        em.getTransaction().commit();
-        em.close();
-    }
+		em.getTransaction().commit();
+		em.close();
+	}
 
-    @Test
-    @JiraKey(value = "HHH-9735")
-    public void loadIsMemeberQueriedCollection() {
+	@Test
+	@JiraKey(value = "HHH-9735")
+	public void loadIsMemeberQueriedCollection() {
 
-        EntityManager em = getOrCreateEntityManager();
-        em.getTransaction().begin();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-        Bar bar = new Bar();
-        em.persist( bar );
+		Bar bar = new Bar();
+		em.persist( bar );
 
-        Foo foo = new Foo();
-        foo.bar = bar;
-        bar.foos.add(foo);
-        em.persist( foo );
+		Foo foo = new Foo();
+		foo.bar = bar;
+		bar.foos.add(foo);
+		em.persist( foo );
 
-        em.getTransaction().commit();
-        em.clear();
+		em.getTransaction().commit();
+		em.clear();
 
-        em.getTransaction().begin();
-        foo = em.find(Foo.class, foo.id);
+		em.getTransaction().begin();
+		foo = em.find(Foo.class, foo.id);
 
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Bar> cq = cb.createQuery(Bar.class);
-        Root<Bar> from = cq.from(Bar.class);
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Bar> cq = cb.createQuery(Bar.class);
+		Root<Bar> from = cq.from(Bar.class);
 
-        Expression<Set<Foo>> foos = from.get("foos");
+		Expression<Set<Foo>> foos = from.get("foos");
 
-        cq.where(cb.isMember(foo, foos));
+		cq.where(cb.isMember(foo, foos));
 
-        TypedQuery<Bar> query = em.createQuery(cq);
+		TypedQuery<Bar> query = em.createQuery(cq);
 
-        EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
-        barGraph.addAttributeNodes("foos");
-        query.setHint("javax.persistence.loadgraph", barGraph);
+		EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
+		barGraph.addAttributeNodes("foos");
+		query.setHint("javax.persistence.loadgraph", barGraph);
 
-        Bar result = query.getSingleResult();
+		Bar result = query.getSingleResult();
 
-        assertTrue( Hibernate.isInitialized( result ) );
-        assertTrue( Hibernate.isInitialized( result.foos ) );
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.foos ) );
 
-        em.getTransaction().commit();
-        em.close();
-    }
+		em.getTransaction().commit();
+		em.close();
+	}
 
 	@Test
 	@JiraKey(value = "HHH-15859")
@@ -486,9 +484,9 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-    @Entity(name = "Foo")
+	@Entity(name = "Foo")
 	@Table(name = "foo")
-    public static class Foo {
+	public static class Foo {
 
 		@Id
 		@GeneratedValue
@@ -509,8 +507,8 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		@GeneratedValue
 		public Integer id;
 
-        @OneToMany(mappedBy = "bar")
-        public Set<Foo> foos = new HashSet<Foo>();
+		@OneToMany(mappedBy = "bar")
+		public Set<Foo> foos = new HashSet<Foo>();
 
 		public Set<Foo> getFoos() {
 			return foos;
@@ -519,14 +517,14 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Entity(name = "Baz")
 	@Table(name = "baz")
-    public static class Baz {
+	public static class Baz {
 
 		@Id
 		@GeneratedValue
-        public Integer id;
+		public Integer id;
 
-        @OneToMany(mappedBy = "baz")
-        public Set<Foo> foos = new HashSet<Foo>();
+		@OneToMany(mappedBy = "baz")
+		public Set<Foo> foos = new HashSet<Foo>();
 
 		public Set<Foo> getFoos() {
 			return foos;

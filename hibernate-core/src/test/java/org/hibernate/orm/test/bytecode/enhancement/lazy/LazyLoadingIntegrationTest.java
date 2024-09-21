@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -37,97 +35,97 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Luis Barreiro
  */
 @DomainModel(
-        annotatedClasses = {
-                LazyLoadingIntegrationTest.Parent.class, LazyLoadingIntegrationTest.Child.class
-        }
+		annotatedClasses = {
+				LazyLoadingIntegrationTest.Parent.class, LazyLoadingIntegrationTest.Child.class
+		}
 )
 @ServiceRegistry(
-        settings = {
-                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
-                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
-                @Setting( name = AvailableSettings.DEFAULT_LIST_SEMANTICS, value = "BAG" ),
-        }
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+				@Setting( name = AvailableSettings.DEFAULT_LIST_SEMANTICS, value = "BAG" ),
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class LazyLoadingIntegrationTest {
 
-    private static final int CHILDREN_SIZE = 10;
-    private Long lastChildID;
+	private static final int CHILDREN_SIZE = 10;
+	private Long lastChildID;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Parent parent = new Parent();
-            for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
-                Child child = new Child();
-                // Association management should kick in here
-                child.parent = parent;
-                s.persist( child );
-                lastChildID = child.id;
-            }
-            s.persist( parent );
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Parent parent = new Parent();
+			for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
+				Child child = new Child();
+				// Association management should kick in here
+				child.parent = parent;
+				s.persist( child );
+				lastChildID = child.id;
+			}
+			s.persist( parent );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Child loadedChild = s.getReference( Child.class, lastChildID );
-            checkDirtyTracking( loadedChild );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Child loadedChild = s.getReference( Child.class, lastChildID );
+			checkDirtyTracking( loadedChild );
 
-            loadedChild.name = "Barrabas";
-            checkDirtyTracking( loadedChild, "name" );
+			loadedChild.name = "Barrabas";
+			checkDirtyTracking( loadedChild, "name" );
 
-            Parent loadedParent = loadedChild.parent;
-            checkDirtyTracking( loadedChild, "name" );
-            checkDirtyTracking( loadedParent );
+			Parent loadedParent = loadedChild.parent;
+			checkDirtyTracking( loadedChild, "name" );
+			checkDirtyTracking( loadedParent );
 
-            List<Child> loadedChildren = new ArrayList<>( loadedParent.children );
-            loadedChildren.remove( 0 );
-            loadedChildren.remove( loadedChild );
-            loadedParent.setChildren( loadedChildren );
+			List<Child> loadedChildren = new ArrayList<>( loadedParent.children );
+			loadedChildren.remove( 0 );
+			loadedChildren.remove( loadedChild );
+			loadedParent.setChildren( loadedChildren );
 
-            assertNull( loadedChild.parent );
-        } );
-    }
+			assertNull( loadedChild.parent );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "PARENT" )
-    static class Parent {
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @OneToMany( mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        List<Child> children;
+		@OneToMany( mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		List<Child> children;
 
-        void setChildren(List<Child> children) {
-            this.children = children;
-        }
-    }
+		void setChildren(List<Child> children) {
+			this.children = children;
+		}
+	}
 
-    @Entity
-    @Table( name = "CHILD" )
-    static class Child {
+	@Entity
+	@Table( name = "CHILD" )
+	static class Child {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        Parent parent;
+		@ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		Parent parent;
 
-        String name;
+		String name;
 
-        Child() {
-        }
+		Child() {
+		}
 
-        Child(String name) {
-            this.name = name;
-        }
-    }
+		Child(String name) {
+			this.name = name;
+		}
+	}
 }

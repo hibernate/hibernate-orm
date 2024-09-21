@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
@@ -189,11 +187,11 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 					final Object[] loadedState = parentEntityEntry.getLoadedState();
 					if ( loadedState != null ) {
 						/*
-						 E.g.
+						E.g.
 
-						 ParentEntity -> RootEmbeddable -> ParentEmbeddable -> toOneAttributeMapping
+						ParentEntity -> RootEmbeddable -> ParentEmbeddable -> toOneAttributeMapping
 
-						 The value of RootEmbeddable is needed to update the ParentEntity loaded state
+						The value of RootEmbeddable is needed to update the ParentEntity loaded state
 						 */
 						final int parentEntitySubclassId = parentInfo.parentEntitySubclassId;
 						final Object rootEmbeddable = rootEmbeddableGetters[parentEntitySubclassId].get( parentEntityInstance );

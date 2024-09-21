@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -60,6 +58,7 @@ import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -109,6 +108,7 @@ import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -258,9 +258,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			// Prefer jsonb if possible
 			if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "jsonb", this ) );
 			}
 			else {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 			}
 		}
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
@@ -415,6 +417,16 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				return "(" + super.extractPattern(unit) + "+1)";
 			default:
 				return super.extractPattern(unit);
+		}
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
 		}
 	}
 
@@ -619,6 +631,43 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		}
 		functionFactory.arrayFill_postgresql();
 		functionFactory.arrayToString_postgresql();
+
+		if ( getVersion().isSameOrAfter( 17 ) ) {
+			functionFactory.jsonValue();
+			functionFactory.jsonQuery();
+			functionFactory.jsonExists();
+			functionFactory.jsonObject();
+			functionFactory.jsonArray();
+			functionFactory.jsonArrayAgg_postgresql( true );
+			functionFactory.jsonObjectAgg_postgresql( true );
+		}
+		else {
+			functionFactory.jsonValue_postgresql();
+			functionFactory.jsonQuery_postgresql();
+			functionFactory.jsonExists_postgresql();
+			if ( getVersion().isSameOrAfter( 16 ) ) {
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
+				functionFactory.jsonArrayAgg_postgresql( true );
+				functionFactory.jsonObjectAgg_postgresql( true );
+			}
+			else {
+				functionFactory.jsonObject_postgresql();
+				functionFactory.jsonArray_postgresql();
+				functionFactory.jsonArrayAgg_postgresql( false );
+				functionFactory.jsonObjectAgg_postgresql( false );
+			}
+		}
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_postgresql();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			// Requires support for WITH clause in subquery which only 13+ provides
+			functionFactory.jsonMergepatch_postgresql();
+		}
+		functionFactory.jsonArrayAppend_postgresql( getVersion().isSameOrAfter( 13 ) );
+		functionFactory.jsonArrayInsert_postgresql();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();
@@ -1349,7 +1398,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			tableTypesList.add( "MATERIALIZED VIEW" );
 
 			/*
-			 	PostgreSQL 10 and later adds support for Partition table.
+				PostgreSQL 10 and later adds support for Partition table.
 			 */
 			if ( getVersion().isSameOrAfter( 10 ) ) {
 				tableTypesList.add( "PARTITIONED TABLE" );
@@ -1401,17 +1450,21 @@ public class PostgreSQLLegacyDialect extends Dialect {
 					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 						}
 						else {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 						}
 					}
 					else {
 						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonArrayJdbcType( serviceRegistry ) );
 						}
 						else {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
 						}
 					}
 				}
@@ -1427,9 +1480,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 					}
 					else {
 						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
 					}
 				}
 			}

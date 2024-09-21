@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
@@ -1855,8 +1853,8 @@ public class EntityBinder {
 	}
 
 	public void finalSecondaryTableBinding(PropertyHolder propertyHolder) {
-		 // This operation has to be done after the id definition of the persistence class.
-		 // ie after the properties parsing
+		// This operation has to be done after the id definition of the persistence class.
+		// ie after the properties parsing
 		final Iterator<Object> joinColumns = secondaryTableJoins.values().iterator();
 		for ( Map.Entry<String, Join> entrySet : secondaryTables.entrySet() ) {
 			if ( !secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {
@@ -1866,8 +1864,8 @@ public class EntityBinder {
 	}
 
 	public void finalSecondaryTableFromAnnotationBinding(PropertyHolder propertyHolder) {
-		 // This operation has to be done before the end of the FK second pass processing in order
-		 // to find the join columns belonging to secondary tables
+		// This operation has to be done before the end of the FK second pass processing in order
+		// to find the join columns belonging to secondary tables
 		Iterator<Object> joinColumns = secondaryTableFromAnnotationJoins.values().iterator();
 		for ( Map.Entry<String, Join> entrySet : secondaryTables.entrySet() ) {
 			if ( secondaryTablesFromAnnotation.containsKey( entrySet.getKey() ) ) {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
@@ -18,7 +16,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYPE;
@@ -30,8 +27,7 @@ import static org.junit.Assert.assertNull;
 		settings = {
 				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "true" ),
 				@Setting( name = DEFAULT_ACCESSTYPE, value = "nonstrict-read-write" ),
-				@Setting( name = GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = ALLOW_REFRESH_DETACHED_ENTITY, value = "true" )
+				@Setting( name = GENERATE_STATISTICS, value = "true" )
 		}
 )
 @DomainModel( annotatedClasses = {A.class, Another.class, AllCached.class, B.class, SubClass.class} )
@@ -51,7 +47,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		final NaturalIdStatistics naturalIdStatistics = statistics.getNaturalIdStatistics( AllCached.class.getName() );
 		assertEquals( 1, naturalIdStatistics.getCachePutCount() );
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
@@ -70,7 +66,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		);
 		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
@@ -97,7 +93,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				}
 		);
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
@@ -128,7 +124,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
@@ -164,7 +160,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		assertEquals(0, statistics.getNaturalIdCacheHitCount());
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7309" )
 	public void testInsertUpdateEntity_NaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {

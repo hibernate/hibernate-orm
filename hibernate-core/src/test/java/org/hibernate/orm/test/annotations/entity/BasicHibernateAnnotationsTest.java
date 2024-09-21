@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.entity;
 
@@ -132,7 +130,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
 	public void testWhereClause() throws Exception {
@@ -276,19 +274,19 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testFilterOnCollection() {
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		
+
 		Topic topic = new Topic();
 		Narrative n1 = new Narrative();
 		n1.setState("published");
 		topic.addNarrative(n1);
-		
+
 		Narrative n2 = new Narrative();
 		n2.setState("draft");
 		topic.addNarrative(n2);
-		
+
 		s.persist(topic);
 		tx.commit();
 		s.close();
@@ -296,21 +294,21 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		topic = (Topic) s.getReference( Topic.class, topic.getId() );
-		
+
 		s.enableFilter("byState").setParameter("state", "published");
 		topic = (Topic) s.getReference( Topic.class, topic.getId() );
-		assertNotNull(topic); 
-		assertTrue(topic.getNarratives().size() == 1); 
+		assertNotNull(topic);
+		assertTrue(topic.getNarratives().size() == 1);
 		assertEquals("published", topic.getNarratives().iterator().next().getState());
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		s.createQuery( "delete from " + Narrative.class.getSimpleName() ).executeUpdate();
 		tx.commit();
 		s.close();
-	} 
+	}
 
 	@Test
 	public void testCascadedDeleteOfChildEntitiesBug2() {
@@ -367,7 +365,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		// create two single player teams (for one versus one match of soccer)
 		// and associate teams with players via the special OneVOne methods.
 		// Clear the Team reference to players, which should orphan the teams.
-		// Orphaning the team should delete the team. 
+		// Orphaning the team should delete the team.
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -443,7 +441,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	  
+
 	/**
 	 * Tests the functionality of inheriting @Filter and @FilterDef annotations
 	 * defined on a parent MappedSuperclass(s)
@@ -471,8 +469,8 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		 
-		//We test every filter with 2 queries, the first on the base class of the 
+
+		//We test every filter with 2 queries, the first on the base class of the
 		//inheritance hierarchy (Drill), and the second on a subclass (PowerDrill)
 		s.enableFilter( "byName" ).setParameter( "name", "HomeDrill1");
 		long count = ( (Long) s.createQuery( "select count(*) from Drill" ).list().get( 0 ) ).intValue();
@@ -480,18 +478,18 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).list().get( 0 ) ).intValue();
 		assertEquals( 1, count );
 		s.disableFilter( "byName" );
-		
+
 		s.enableFilter( "byCategory" ).setParameter( "category", "Industrial" );
 		count = ( (Long) s.createQuery( "select count(*) from Drill" ).list().get( 0 ) ).longValue();
 		assertEquals( 1, count );
 		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).list().get( 0 ) ).longValue();
 		assertEquals( 1, count );
 		s.disableFilter( "byCategory" );
-		
+
 		tx.rollback();
 		s.close();
 	}
-	
+
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testParameterizedType() {
@@ -623,23 +621,23 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-		
+
 	@Test
 	public void testTypeDefNameAndDefaultForTypeAttributes() {
 		ContactDetails contactDetails = new ContactDetails();
 		contactDetails.setLocalPhoneNumber(new PhoneNumber("999999"));
 		contactDetails.setOverseasPhoneNumber(
 				new OverseasPhoneNumber("041", "111111"));
-		
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		s.persist(contactDetails);
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
-		contactDetails = 
+		contactDetails =
 			s.get( ContactDetails.class, contactDetails.getId() );
 		assertNotNull( contactDetails );
 		assertEquals( "999999", contactDetails.getLocalPhoneNumber().getNumber() );
@@ -647,7 +645,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.remove(contactDetails);
 		tx.commit();
 		s.close();
-	
+
 	}
 
 

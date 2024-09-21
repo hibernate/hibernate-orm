@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ternary;
 
@@ -63,7 +61,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		tim.getManagerBySite().put(melb, tom);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		tom = (Employee) s.get(Employee.class, "Tom");
@@ -77,7 +75,7 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		assertTrue( melb.getEmployees().contains(bob) );
 		assertTrue( melb.getManagers().contains(tom) );
 		t.commit();
-		s.close();		
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -134,4 +132,3 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 }
-

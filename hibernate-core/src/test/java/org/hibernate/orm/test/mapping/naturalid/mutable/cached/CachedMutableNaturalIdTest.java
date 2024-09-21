@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
-import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -22,7 +19,7 @@ import static org.junit.Assert.assertNull;
 
 /**
  * Tests of mutable natural ids stored in second level cache
- * 
+ *
  * @author Guenther Demetz
  * @author Steve Ebersole
  */
@@ -128,11 +125,11 @@ public abstract class CachedMutableNaturalIdTest {
 					assertEquals( 0, statistics.getNaturalIdCacheHitCount() );
 				}
 		);
-		
+
 		// finally there should be only 2 NaturalIdCache puts : 1. insertion, 2. when updating natural-id from 'it' to 'it2'
 		assertEquals( 2, statistics.getNaturalIdCachePutCount() );
 	}
-	
+
 	@Test
 	@JiraKey( "HHH-7245" )
 	public void testNaturalIdChangeAfterResolveEntityFrom2LCache(SessionFactoryScope scope) {
@@ -178,7 +175,7 @@ public abstract class CachedMutableNaturalIdTest {
 				}
 		);
 	}
-	
+
 	@Test
 	@JiraKey( "HHH-16557" )
 	public void testCreateDeleteRecreate(SessionFactoryScope scope) {
@@ -275,40 +272,5 @@ public abstract class CachedMutableNaturalIdTest {
 			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount()); // thus hits should not increment
 		});
 	}
-	
-	@Test
-	public void testReattachUnmodifiedInstance(SessionFactoryScope scope) {
-		final B created = scope.fromTransaction(
-				(session) -> {
-					A a = new A();
-					B b = new B();
-					b.naturalid = 100;
-					session.persist( a );
-					session.persist( b );
-					b.assA = a;
-					a.assB.add( b );
-
-					return b;
-				}
-		);
-
-		scope.inTransaction(
-				(session) -> {
-					// HHH-7513 failure during reattachment
-					session.lock( created, LockOptions.NONE );
-					session.remove( created.assA );
-					session.remove( created );
-				}
-		);
-
-		scope.inTransaction(
-				(session) -> {
-					// true if the re-attachment worked
-					assertEquals( session.createQuery( "FROM A" ).list().size(), 0 );
-					assertEquals( session.createQuery( "FROM B" ).list().size(), 0 );
-				}
-		);
-	}
 
 }
-

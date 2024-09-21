@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.hhh17661;
 
 import jakarta.persistence.CascadeType;
@@ -12,12 +16,12 @@ import java.util.Set;
 @MappedSuperclass
 public abstract class Tree<T extends Tree<T, TR>, TR extends TreeRelation<T>> extends Entity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private T parent;
+	@ManyToOne(fetch = FetchType.LAZY)
+	private T parent;
 
-    @OneToMany(mappedBy = "parent")
-    private Set<TR> childRelation = new HashSet<>();
+	@OneToMany(mappedBy = "parent")
+	private Set<TR> childRelation = new HashSet<>();
 
-    @OneToMany(mappedBy = "child", cascade = {CascadeType.ALL}, orphanRemoval = true)
-    private Set<TR> parentRelation = new HashSet<>();
+	@OneToMany(mappedBy = "child", cascade = {CascadeType.ALL}, orphanRemoval = true)
+	private Set<TR> parentRelation = new HashSet<>();
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.tm;
 
@@ -19,24 +17,24 @@ import org.jboss.logging.Logger;
  */
 public class TestInterceptor implements Interceptor {
 
-    private static final Logger LOGGER = Logger.getLogger( TestInterceptor.class );
-    private static Map<TestInterceptor, Integer> interceptorInvocations = new HashMap<>();
+	private static final Logger LOGGER = Logger.getLogger( TestInterceptor.class );
+	private static Map<TestInterceptor, Integer> interceptorInvocations = new HashMap<>();
 
-    public TestInterceptor() {
-        interceptorInvocations.put( this, 0 );
-    }
+	public TestInterceptor() {
+		interceptorInvocations.put( this, 0 );
+	}
 
-    @Override
-    public void beforeTransactionCompletion(Transaction tx) {
-        interceptorInvocations.put( this, interceptorInvocations.get( this ) + 1 );
-        LOGGER.info( "Interceptor beforeTransactionCompletion invoked" );
-    }
+	@Override
+	public void beforeTransactionCompletion(Transaction tx) {
+		interceptorInvocations.put( this, interceptorInvocations.get( this ) + 1 );
+		LOGGER.info( "Interceptor beforeTransactionCompletion invoked" );
+	}
 
-    public static Map<TestInterceptor, Integer> getBeforeCompletionCallbacks() {
-        return interceptorInvocations;
-    }
+	public static Map<TestInterceptor, Integer> getBeforeCompletionCallbacks() {
+		return interceptorInvocations;
+	}
 
-    public static void reset() {
-        interceptorInvocations.clear();
-    }
+	public static void reset() {
+		interceptorInvocations.clear();
+	}
 }

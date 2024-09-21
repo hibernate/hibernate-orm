@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.immutable.entitywithmutablecollection;
 
@@ -11,16 +9,12 @@ import java.util.Iterator;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -35,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -43,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gail Badner
  */
 @SessionFactory(generateStatistics = true)
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public abstract class AbstractEntityWithManyToManyTest {
 	private boolean isPlanContractsInverse;
 	private boolean isPlanContractsBidirectional;
@@ -64,8 +58,8 @@ public abstract class AbstractEntityWithManyToManyTest {
 		catch (IllegalArgumentException ex) {
 			isPlanContractsBidirectional = false;
 		}
-        isPlanVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Plan.class.getName()).isVersioned();
-        isContractVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Contract.class.getName()).isVersioned();
+		isPlanVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Plan.class.getName()).isVersioned();
+		isContractVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Contract.class.getName()).isVersioned();
 		sessionFactory.getStatistics().clear();
 	}
 
@@ -174,9 +168,12 @@ public abstract class AbstractEntityWithManyToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					s.lock( c, LockMode.NONE );
+					assertThrows(IllegalArgumentException.class,
+								() -> s.lock( c, LockMode.NONE ),
+								"Given entity is not associated with the persistence context"
+					);
 					Plan p = new Plan( "plan" );
-					p.addContract( c );
+					p.addContract( s.get(Contract.class, c.getId()) );
 					s.persist( p );
 				}
 		);

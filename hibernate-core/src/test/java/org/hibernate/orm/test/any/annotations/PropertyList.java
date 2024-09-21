@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.any.annotations;
 
@@ -51,19 +49,19 @@ public class PropertyList<T extends Property> {
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class)
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class)
 	@AnyDiscriminatorValue( discriminator = "L", entity = LongProperty.class)
-    @Cascade( { CascadeType.ALL })
-    @JoinTable(name = "list_properties",
+	@Cascade( { CascadeType.ALL })
+	@JoinTable(name = "list_properties",
 			joinColumns = @JoinColumn(name = "obj_id"),
 			inverseJoinColumns = @JoinColumn(name = "property_id")
 	)
-    @OrderColumn(name = "prop_index")
-    public List<T> getGeneralProperties() {
-        return generalProperties;
-    }
+	@OrderColumn(name = "prop_index")
+	public List<T> getGeneralProperties() {
+		return generalProperties;
+	}
 
-    public void setGeneralProperties(List<T> generalProperties) {
-        this.generalProperties = generalProperties;
-    }
+	public void setGeneralProperties(List<T> generalProperties) {
+		this.generalProperties = generalProperties;
+	}
 
 	@Id
 	@GeneratedValue
@@ -83,7 +81,7 @@ public class PropertyList<T extends Property> {
 		this.name = name;
 	}
 
-    @Any
+	@Any
 	@Column(name = "property_type")
 	@JoinColumn(name = "property_id")
 	@AnyKeyJavaClass( Integer.class )
@@ -93,8 +91,8 @@ public class PropertyList<T extends Property> {
 	@AnyDiscriminatorValue( discriminator = "L", entity = LongProperty.class)
 	@Cascade( CascadeType.ALL )
 	public T getSomeProperty() {
-        return someProperty;
-    }
+		return someProperty;
+	}
 
 	public void setSomeProperty(T someProperty) {
 		this.someProperty = someProperty;

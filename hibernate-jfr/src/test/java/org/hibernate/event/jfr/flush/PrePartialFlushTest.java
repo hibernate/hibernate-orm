@@ -1,8 +1,11 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.jfr.flush;
 
 import java.util.List;
 
-import org.hibernate.event.jfr.internal.FlushEvent;
 import org.hibernate.event.jfr.internal.PrePartialFlushEvent;
 
 import org.hibernate.testing.orm.junit.DomainModel;

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.locking;
 
 import org.hibernate.LockMode;
@@ -66,7 +70,7 @@ public class PessimisticWriteLockTimeoutTest
 			.unwrap( Query.class )
 			.setLockOptions(
 				new LockOptions( LockMode.PESSIMISTIC_WRITE )
-		 	.setTimeOut( LockOptions.NO_WAIT ) )
+			.setTimeOut( LockOptions.NO_WAIT ) )
 			.list();
 
 			String lockingQuery = sqlStatementInterceptor.getSqlQueries().getLast();
@@ -92,7 +96,7 @@ public class PessimisticWriteLockTimeoutTest
 			.unwrap( Query.class )
 			.setLockOptions(
 				new LockOptions( LockMode.PESSIMISTIC_WRITE )
-		 	.setTimeOut( LockOptions.SKIP_LOCKED ) )
+			.setTimeOut( LockOptions.SKIP_LOCKED ) )
 			.list();
 
 			String lockingQuery = sqlStatementInterceptor.getSqlQueries().getLast();

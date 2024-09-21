@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchprofiles.join;
 
@@ -134,8 +132,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 									assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 									assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 									assertFalse( Hibernate.isInitialized( section.getCourse()
-																				  .getCode()
-																				  .getDepartment() ) );
+																				.getCode()
+																				.getDepartment() ) );
 									assertTrue( Hibernate.isInitialized( section.getCourse() ) );
 									assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 								}
@@ -160,8 +158,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 									assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 									assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 									assertFalse( Hibernate.isInitialized( section.getCourse()
-																				  .getCode()
-																				  .getDepartment() ) );
+																				.getCode()
+																				.getDepartment() ) );
 									assertTrue( Hibernate.isInitialized( section.getCourse() ) );
 									assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 								}

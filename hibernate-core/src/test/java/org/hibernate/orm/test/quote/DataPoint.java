@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.quote;
 
@@ -13,17 +11,17 @@ import java.util.List;
  */
 public class DataPoint {
 	private long id;
-	
+
 	private String fooProp;
-	
+
 	private DataPointEnum fooEnum;
-	
+
 	private List<DataPointEnum> fooEnumList;
-	
+
 	private List<AssociatedDataPoint> oneToMany;
-	
+
 	private List<AssociatedDataPoint> manyToMany;
-	
+
 	public static enum DataPointEnum {
 		FOO1, FOO2, FOO3;
 	}

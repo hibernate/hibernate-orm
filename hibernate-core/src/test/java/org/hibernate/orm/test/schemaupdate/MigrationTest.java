@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -85,7 +83,7 @@ public class MigrationTest extends BaseUnitTestCase {
 		);
 
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
-		
+
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
 
 	}
@@ -132,7 +130,7 @@ public class MigrationTest extends BaseUnitTestCase {
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v2metadata );
 
 	}
-	
+
 //	/**
 //	 * 3_Version.hbm.xml contains a named unique constraint and an un-named
 //	 * unique constraint (will receive a randomly-generated name).  Create
@@ -247,4 +245,3 @@ public class MigrationTest extends BaseUnitTestCase {
 
 
 }
-

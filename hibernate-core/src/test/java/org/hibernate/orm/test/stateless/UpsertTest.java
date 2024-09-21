@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.stateless;
 
 import jakarta.persistence.Entity;
@@ -12,34 +16,34 @@ import static org.junit.Assert.assertEquals;
 @SessionFactory
 @DomainModel(annotatedClasses = UpsertTest.Record.class)
 public class UpsertTest {
-    @Test void test(SessionFactoryScope scope) {
-        scope.inStatelessTransaction(s-> {
-            s.upsert(new Record(123L,"hello earth"));
-            s.upsert(new Record(456L,"hello mars"));
-        });
-        scope.inStatelessTransaction(s-> {
-            assertEquals("hello earth",s.get(Record.class,123L).message);
-            assertEquals("hello mars",s.get(Record.class,456L).message);
-        });
-        scope.inStatelessTransaction(s-> {
-            s.upsert(new Record(123L,"goodbye earth"));
-        });
-        scope.inStatelessTransaction(s-> {
-            assertEquals("goodbye earth",s.get(Record.class,123L).message);
-            assertEquals("hello mars",s.get(Record.class,456L).message);
-        });
-    }
-    @Entity
-    static class Record {
-        @Id Long id;
-        String message;
+	@Test void test(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(s-> {
+			s.upsert(new Record(123L,"hello earth"));
+			s.upsert(new Record(456L,"hello mars"));
+		});
+		scope.inStatelessTransaction(s-> {
+			assertEquals("hello earth",s.get(Record.class,123L).message);
+			assertEquals("hello mars",s.get(Record.class,456L).message);
+		});
+		scope.inStatelessTransaction(s-> {
+			s.upsert(new Record(123L,"goodbye earth"));
+		});
+		scope.inStatelessTransaction(s-> {
+			assertEquals("goodbye earth",s.get(Record.class,123L).message);
+			assertEquals("hello mars",s.get(Record.class,456L).message);
+		});
+	}
+	@Entity
+	static class Record {
+		@Id Long id;
+		String message;
 
-        Record(Long id, String message) {
-            this.id = id;
-            this.message = message;
-        }
+		Record(Long id, String message) {
+			this.id = id;
+			this.message = message;
+		}
 
-        Record() {
-        }
-    }
+		Record() {
+		}
+	}
 }

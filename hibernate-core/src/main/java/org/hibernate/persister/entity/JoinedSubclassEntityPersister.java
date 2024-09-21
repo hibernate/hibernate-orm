@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
 
@@ -48,7 +46,6 @@ import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappin
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -697,12 +694,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	protected boolean isIdentifierTable(String tableExpression) {
 		return tableExpression.equals( getRootTableName() );
-	}
-
-	@Override
-	public boolean hasSkippableTables() {
-		// todo (6.x) : cache this?
-		return hasAnySkippableTables( isNullableTable, isInverseTable );
 	}
 
 	@Override

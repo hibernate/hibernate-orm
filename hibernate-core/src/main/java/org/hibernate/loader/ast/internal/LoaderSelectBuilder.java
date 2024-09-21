@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -962,19 +960,6 @@ public class LoaderSelectBuilder {
 						creationState
 				);
 
-				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && joined ) {
-					if ( isFetchablePluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
-						applyOrdering(
-								querySpec,
-								fetchablePath,
-								pluralAttributeMapping,
-								creationState
-						);
-					}
-				}
-
 				fetches.add( fetch );
 			}
 			finally {
@@ -1007,19 +992,6 @@ public class LoaderSelectBuilder {
 		}
 
 		return true;
-	}
-
-	private void applyOrdering(
-			QuerySpec querySpec,
-			NavigablePath navigablePath,
-			PluralAttributeMapping pluralAttributeMapping,
-			LoaderSqlAstCreationState sqlAstCreationState) {
-		assert pluralAttributeMapping.getAttributeName().equals( navigablePath.getLocalName() );
-
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( navigablePath );
-		assert tableGroup != null;
-
-		applyOrdering( querySpec, tableGroup, pluralAttributeMapping, sqlAstCreationState );
 	}
 
 	private SelectStatement generateSelect(SubselectFetch subselect) {
@@ -1230,4 +1202,3 @@ public class LoaderSelectBuilder {
 		BAG
 	}
 }
-

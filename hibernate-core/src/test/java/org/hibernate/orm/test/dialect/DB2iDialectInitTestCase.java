@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.dialect;
 
 import org.hibernate.dialect.DB2iDialect;
@@ -14,10 +18,10 @@ import static org.junit.Assert.assertNotNull;
 @RequiresDialect(DB2iDialect.class)
 public class DB2iDialectInitTestCase {
 
-    @Test
-    public void testInitUniqueDelegate() {
-        final var db2iDialect = new DB2iDialect();
-        assertNotNull(db2iDialect);
-    }
+	@Test
+	public void testInitUniqueDelegate() {
+		final var db2iDialect = new DB2iDialect();
+		assertNotNull(db2iDialect);
+	}
 
 }

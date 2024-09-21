@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection.detached;
 
@@ -42,12 +40,12 @@ import org.jboss.logging.Logger;
  */
 public class AggregatedCollectionEventListener
 		implements InitializeCollectionEventListener,
-				   PreCollectionRecreateEventListener,
-				   PostCollectionRecreateEventListener,
-				   PreCollectionRemoveEventListener,
-				   PostCollectionRemoveEventListener,
-				   PreCollectionUpdateEventListener,
-				   PostCollectionUpdateEventListener {
+				PreCollectionRecreateEventListener,
+				PostCollectionRecreateEventListener,
+				PreCollectionRemoveEventListener,
+				PostCollectionRemoveEventListener,
+				PreCollectionUpdateEventListener,
+				PostCollectionUpdateEventListener {
 
 	private static final Logger log = Logger.getLogger( AggregatedCollectionEventListener.class );
 

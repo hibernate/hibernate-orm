@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.testing.dialects.oracle;
 
@@ -67,7 +65,7 @@ public class OracleSTNativeSqlTemplates extends NativeSQLTemplates {
 				"select id, ST_GEOMETRY(t.GEOM).ST_DISJOINT(ST_GEOMETRY.FROM_WKT(:filter, 4326)) as result from %s t"
 		);
 		sqls.put( ST_RELATE,
-				  "select id, ST_GEOMETRY(t.GEOM).st_relate(st_geometry.from_wkt(:filter, 4326), 'DETERMINE') as result from %s t" );
+				"select id, ST_GEOMETRY(t.GEOM).st_relate(st_geometry.from_wkt(:filter, 4326), 'DETERMINE') as result from %s t" );
 		sqls.put(
 				ST_TOUCHES,
 				"select id, ST_GEOMETRY(t.GEOM).ST_TOUCHES(ST_GEOMETRY.FROM_WKT(:filter, 4326)) as result from %s t"

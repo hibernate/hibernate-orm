@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
@@ -35,6 +33,8 @@ import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
@@ -78,7 +78,12 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isJtaTransactionAccessEnabled();
 
+	/**
+	 * @deprecated with no replacement.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default boolean isAllowRefreshDetachedEntity() {
+		DEPRECATION_LOGGER.deprecatedRefreshLockDetachedEntity();
 		return false;
 	}
 
@@ -246,6 +251,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * neither explicitly nor implicitly (see the concept of implicit catalog in XML mapping).
 	 *
 	 * @return The default catalog to use.
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_CATALOG
 	 */
 	default String getDefaultCatalog() {
 		return null;
@@ -256,6 +263,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * neither explicitly nor implicitly (see the concept of implicit schema in XML mapping).
 	 *
 	 * @return The default schema to use.
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_SCHEMA
 	 */
 	default String getDefaultSchema() {
 		return null;
@@ -265,6 +274,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#IN_CLAUSE_PARAMETER_PADDING
 	 */
 	default boolean inClauseParameterPaddingEnabled() {
+		return false;
+	}
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED
+	 */
+	@Override
+	default boolean isJsonFunctionsEnabled() {
 		return false;
 	}
 

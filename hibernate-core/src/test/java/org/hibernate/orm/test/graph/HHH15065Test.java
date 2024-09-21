@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.graph;
 
@@ -47,11 +45,11 @@ class HHH15065Test {
 		List<String> sqlQueries = statementInspector.getSqlQueries();
 		assertEquals( 1, sqlQueries.size() );
 		assertEquals( "select b1_0.id,a1_0.id,a1_0.name,ca1_0.id,ca1_0.name,ce1_0.id,ce1_0.name,e1_0.id,e1_0.name" +
-					 " from Book b1_0" +
-					 " left join Person a1_0 on a1_0.id=b1_0.author_id" +
-					 " left join Person ca1_0 on ca1_0.id=b1_0.coAuthor_id" +
-					 " left join Person ce1_0 on ce1_0.id=b1_0.coEditor_id" +
-					 " left join Person e1_0 on e1_0.id=b1_0.editor_id", sqlQueries.get(0) );
+					" from Book b1_0" +
+					" left join Person a1_0 on a1_0.id=b1_0.author_id" +
+					" left join Person ca1_0 on ca1_0.id=b1_0.coAuthor_id" +
+					" left join Person ce1_0 on ce1_0.id=b1_0.coEditor_id" +
+					" left join Person e1_0 on e1_0.id=b1_0.editor_id", sqlQueries.get(0) );
 	}
 
 	@Entity(name = "Book")

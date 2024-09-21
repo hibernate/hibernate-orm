@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
@@ -81,7 +79,7 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
-        final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
+		final EntityPersister ep = sessionFactory().getMappingMetamodel().getEntityDescriptor(Entity1.class.getName());
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final ConvertedBasicTypeImpl type = assertTyping(
 				ConvertedBasicTypeImpl.class,

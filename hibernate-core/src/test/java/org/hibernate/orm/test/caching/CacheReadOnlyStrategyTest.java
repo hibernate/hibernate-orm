@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.caching;
 
 import java.util.List;
@@ -92,8 +96,8 @@ public class CacheReadOnlyStrategyTest {
 		scope.inTransaction(
 				entityManager -> {
 					assertFalse( scope.getEntityManagerFactory()
-										 .getCache()
-										 .contains( TestEntity.class, testEntityId ) );
+										.getCache()
+										.contains( TestEntity.class, testEntityId ) );
 					List<TestEntity> results = entityManager.createQuery(
 							"select t from TestEntity t where t.id = :id",
 							TestEntity.class

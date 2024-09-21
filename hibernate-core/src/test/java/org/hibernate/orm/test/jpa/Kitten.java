@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id$
 package org.hibernate.orm.test.jpa;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +13,7 @@ import jakarta.persistence.Id;
 @SuppressWarnings("serial")
 @Entity
 public class Kitten {
-	
+
 	private Integer id;
 	private String name;
 
@@ -43,21 +39,21 @@ public class Kitten {
 	 * Constructs a <code>String</code> with all attributes
 	 * in name = value format.
 	 *
-	 * @return a <code>String</code> representation 
+	 * @return a <code>String</code> representation
 	 * of this object.
 	 */
 	public String toString()
 	{
-	    final String TAB = "    ";
-	    
-	    String retValue = "";
-	    
-	    retValue = "Kitten ( "
-	        + super.toString() + TAB
-	        + "id = " + this.id + TAB
-	        + "name = " + this.name + TAB
-	        + " )";
-	
-	    return retValue;
+		final String TAB = "    ";
+
+		String retValue = "";
+
+		retValue = "Kitten ( "
+			+ super.toString() + TAB
+			+ "id = " + this.id + TAB
+			+ "name = " + this.name + TAB
+			+ " )";
+
+		return retValue;
 	}
 }

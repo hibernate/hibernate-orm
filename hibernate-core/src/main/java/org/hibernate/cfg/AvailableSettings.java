@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
@@ -121,24 +119,6 @@ public interface AvailableSettings
 	 * @since 5.3
 	 */
 	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
-
-	/**
-	 * When enabled, allows calls to {@link jakarta.persistence.EntityManager#refresh(Object)}
-	 * and {@link org.hibernate.Session#refresh(Object)} on a detached entity instance.
-	 * <p>
-	 * Values are {@code true}, which allows refreshing a detached instance and {@code false},
-	 * which does not. When refreshing is disallowed, an {@link IllegalArgumentException}
-	 * is thrown.
-	 * <p>
-	 * The default behavior is to allow refreshing a detached instance unless Hibernate
-	 * is bootstrapped via JPA.
-	 *
-	 * @deprecated Will be removed with no replacement from ORM version 7 onwards
-	 *
-	 * @since 5.2
-	 */
-	@Deprecated(since="6.6", forRemoval = true)
-	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
 
 	/**
 	 * Specifies how Hibernate should behave when multiple representations of the same

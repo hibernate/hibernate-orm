@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
 
@@ -49,7 +47,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -596,12 +593,11 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
-		final Generator generator = collection.getIdentifier().createGenerator( context.getDialect(), null, null );
+		final Generator generator =
+				collection.getIdentifier()
+						.createGenerator( context.getDialect(), null, null, context.getGeneratorSettings() );
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
-		}
-		if ( generator instanceof Configurable ) {
-			( (Configurable) generator ).initialize( context.getSqlStringGenerationContext() );
 		}
 		return (BeforeExecutionGenerator) generator;
 	}

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.indexcoll;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -23,12 +19,12 @@ public class ExchangeRate {
 
 	@Id @GeneratedValue
 	private Integer id;
-	
+
 	@Column
 	private double rate;
-	
 
-	
+
+
 	public double getRate() {
 		return rate;
 	}
@@ -46,7 +42,7 @@ public class ExchangeRate {
 	}
 
 	@Embedded
-    private ExchangeRateKey key = new ExchangeRateKey();
+	private ExchangeRateKey key = new ExchangeRateKey();
 
 	public ExchangeRateKey getKey() {
 		return key;
@@ -57,7 +53,7 @@ public class ExchangeRate {
 	}
 
 	@jakarta.persistence.ManyToOne(fetch = FetchType.LAZY )
-    private ExchangeOffice parent = null;
+	private ExchangeOffice parent = null;
 
 
 	public ExchangeOffice getParent() {

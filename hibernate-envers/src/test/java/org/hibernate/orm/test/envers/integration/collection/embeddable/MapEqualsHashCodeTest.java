@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.collection.embeddable;
 
@@ -33,7 +31,7 @@ import static org.junit.Assert.assertNotNull;
  * This test verifies that when a map-based {@link ElementCollection} of {@link Embeddable} objects
  * are audited that the same number of audit rows are generated regardless whether the embeddable
  * implements proper {@code equals} and {@code hashCode} methods.
- * 
+ *
  * The {@link ValidityAuditStrategy} with equals/hashcode.
  *
  * +-----+---------+---------------+-----------+--------+--------+

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
@@ -51,20 +49,6 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 	 * for the given attribute
 	 */
 	String getAttributeMutationTableName(int i);
-
-	/**
-	 * Whether this target defines any potentially skippable tables.
-	 * <p>
-	 * A table is considered potentially skippable if it is defined
-	 * as inverse or as optional.
-	 *
-	 * @see org.hibernate.annotations.SecondaryRow#owned
-	 * @see org.hibernate.annotations.SecondaryRow#optional
-	 *
-	 * @deprecated No longer called
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	boolean hasSkippableTables();
 
 	/**
 	 * The delegate for executing inserts against the root table for

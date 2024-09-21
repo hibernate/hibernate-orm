@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
@@ -21,8 +19,6 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 
 /**
  * An extension to the {@link SingleIdMapper} implementation that supports the use case of an {@code @IdClass}

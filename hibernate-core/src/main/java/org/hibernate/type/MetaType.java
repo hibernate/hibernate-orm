@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -61,12 +59,12 @@ public class MetaType extends AbstractType {
 		return entityNameToDiscriminatorValueMap;
 	}
 
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return baseType.getSqlTypeCodes(mapping);
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return baseType.getSqlTypeCodes( mappingContext );
 	}
 
 	@Override
-	public int getColumnSpan(Mapping mapping) throws MappingException {
+	public int getColumnSpan(MappingContext mapping) throws MappingException {
 		return baseType.getColumnSpan(mapping);
 	}
 
@@ -105,12 +103,20 @@ public class MetaType extends AbstractType {
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return toXMLString(value, factory);
 	}
-	
+
 	public String toXMLString(Object value, SessionFactoryImplementor factory) throws HibernateException {
 		return (String) value; //value is the entity name
 	}
 
+	/**
+	 * @deprecated use {@link #fromXMLString(String, MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public Object fromXMLString(String xml, Mapping factory) throws HibernateException {
+		return fromXMLString( xml, (MappingContext) factory );
+	}
+
+	public Object fromXMLString(String xml, MappingContext mappingContext) throws HibernateException {
 		return xml; //xml is the entity name
 	}
 
@@ -140,7 +146,7 @@ public class MetaType extends AbstractType {
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		throw new UnsupportedOperationException();
 	}
 

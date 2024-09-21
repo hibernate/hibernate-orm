@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Employee.java 5686 2005-02-12 07:27:32Z steveebersole $
 package org.hibernate.orm.test.ternary;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,7 +17,7 @@ public class Employee {
 	private Date hireDate;
 	private Map managerBySite = new HashMap();
 	private Set underlings = new HashSet();
-	
+
 	Employee() {}
 	public Employee(String name) {
 		this.name=name;

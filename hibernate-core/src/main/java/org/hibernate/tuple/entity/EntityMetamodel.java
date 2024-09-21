@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple.entity;
 
@@ -162,10 +160,8 @@ public class EntityMetamodel implements Serializable {
 
 		subclassId = persistentClass.getSubclassId();
 
-		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
-				persistentClass,
-				sessionFactory.getGenerator( rootName )
-		);
+		final Generator idgenerator = buildIdGenerator( persistentClass, creationContext );
+		identifierAttribute = PropertyFactory.buildIdentifierAttribute( persistentClass, idgenerator );
 
 		versioned = persistentClass.isVersioned();
 
@@ -472,6 +468,26 @@ public class EntityMetamodel implements Serializable {
 //			}
 //		}
 //		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
+	}
+
+	private Generator buildIdGenerator(PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
+		final Generator existing = creationContext.getGenerators().get( rootName );
+		if ( existing != null ) {
+			return existing;
+		}
+		else {
+			final Generator idgenerator =
+					persistentClass.getIdentifier()
+							// returns the cached Generator if it was already created
+							.createGenerator(
+									creationContext.getDialect(),
+									persistentClass.getRootClass(),
+									persistentClass.getIdentifierProperty(),
+									creationContext.getGeneratorSettings()
+							);
+			creationContext.getGenerators().put( rootName, idgenerator );
+			return idgenerator;
+		}
 	}
 
 	private void verifyNaturalIdProperty(Property property) {

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id: Employee.java 5899 2005-02-24 20:08:04Z steveebersole $
 package org.hibernate.orm.test.subclassfilter;
 import jakarta.persistence.Column;
 import java.util.HashSet;
@@ -18,7 +14,7 @@ import java.util.Set;
  */
 public class Employee extends Person {
 	@Column(name="`title`")
-    private String title;
+	private String title;
 	private String department;
 	private Employee manager;
 	private Set minions = new HashSet();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -1138,7 +1136,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"implicit-join in select and group-by clauses"
 		);
 
-	 	s = openSession();
+		s = openSession();
 		s.beginTransaction();
 		s.remove( e1 );
 		s.remove( e2 );
@@ -1223,7 +1221,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-	 	s = openSession();
+		s = openSession();
 		s.beginTransaction();
 		int count = determineCount( s.createQuery( "select e.id, e.owner from SimpleAssociatedEntity e" ).list().iterator() );
 		// thing two would be removed from the result due to the inner join
@@ -1231,7 +1229,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-	 	s = openSession();
+		s = openSession();
 		s.beginTransaction();
 		s.remove( e1 );
 		s.remove( e2 );
@@ -1249,25 +1247,25 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		return count;
 	}
 
-    @Test
-    @JiraKey( value = "HHH-6714" )
-    public void testUnaryMinus(){
-        Session s = openSession();
-        s.beginTransaction();
-        Human stliu = new Human();
-        stliu.setIntValue( 26 );
+	@Test
+	@JiraKey( value = "HHH-6714" )
+	public void testUnaryMinus(){
+		Session s = openSession();
+		s.beginTransaction();
+		Human stliu = new Human();
+		stliu.setIntValue( 26 );
 
-        s.persist( stliu );
-        s.getTransaction().commit();
-        s.clear();
-        s.beginTransaction();
-        List list =s.createQuery( "from Human h where -(h.intValue - 100)=74" ).list();
-        assertEquals( 1, list.size() );
-        s.getTransaction().commit();
-        s.close();
+		s.persist( stliu );
+		s.getTransaction().commit();
+		s.clear();
+		s.beginTransaction();
+		List list =s.createQuery( "from Human h where -(h.intValue - 100)=74" ).list();
+		assertEquals( 1, list.size() );
+		s.getTransaction().commit();
+		s.close();
 
 
-    }
+	}
 
 	@Test
 	public void testEntityAndOneToOneReturnedByQuery() {
@@ -1738,11 +1736,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"       select a1 from Animal a1" +
 				"           left join a1.offspring o" +
 				"       where a1.id=1" +
-		        ")";
+				")";
 		s.createQuery( qryString ).list();
 		qryString =
 				"select h.id, h.description" +
-		        " from Human h" +
+				" from Human h" +
 				"      left join h.friends" +
 				" where h in (" +
 				"      select h1" +
@@ -1753,7 +1751,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( qryString ).list();
 		qryString =
 				"select h.id, h.description" +
-		        " from Human h" +
+				" from Human h" +
 				"      left join h.friends f" +
 				" where f in (" +
 				"      select h1" +
@@ -3561,7 +3559,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t = session.beginTransaction();
 
 		try (ScrollableResults sr = session.createQuery( query )
-			     .setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll()) {
+				.setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll()) {
 			assertTrue( "Incorrect result size", sr.next() );
 			assertTrue( "Incorrect return type", sr.get() instanceof Animal );
 			assertFalse( session.contains( sr.get() ) );

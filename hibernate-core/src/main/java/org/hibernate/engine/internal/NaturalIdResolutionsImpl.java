@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -529,11 +527,11 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	/**
-	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are 
+	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are
 	 * using the root persister.
 	 *
 	 * @param persister The persister representing the entity type.
-	 * 
+	 *
 	 * @return The root persister.
 	 */
 	protected EntityPersister locatePersisterForKey(EntityPersister persister) {
@@ -797,7 +795,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			final Resolution cachedNaturalId = new ResolutionImpl( getEntityDescriptor(), naturalIdValues, persistenceContext );
 			pkToNaturalIdMap.put( pk, cachedNaturalId );
 			naturalIdToPkMap.put( cachedNaturalId, pk );
-			
+
 			return true;
 		}
 

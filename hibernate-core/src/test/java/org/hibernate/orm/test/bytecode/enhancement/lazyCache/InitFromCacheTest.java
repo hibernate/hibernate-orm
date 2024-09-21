@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazyCache;
 
@@ -50,52 +48,52 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve EbersolenPropertyRefTest
  */
 @DomainModel(
-        annotatedClasses = {
-                InitFromCacheTest.Document.class
-        }
+		annotatedClasses = {
+				InitFromCacheTest.Document.class
+		}
 )
 @ServiceRegistry(
-        settings = {
-                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
-                @Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-        }
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class InitFromCacheTest {
 
-    private EntityPersister persister;
+	private EntityPersister persister;
 
-    private Long documentID;
+	private Long documentID;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        persister = scope.getSessionFactory().getRuntimeMetamodels()
-                .getMappingMetamodel()
-                .getEntityDescriptor( Document.class );
-        assertTrue( persister.hasCache() );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		persister = scope.getSessionFactory().getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( Document.class );
+		assertTrue( persister.hasCache() );
 
-        scope.inTransaction( s -> {
-            Document document = new Document( "HiA", "Hibernate book", "Hibernate is...." );
-            s.persist( document );
-            documentID = document.id;
-        } );
-    }
+		scope.inTransaction( s -> {
+			Document document = new Document( "HiA", "Hibernate book", "Hibernate is...." );
+			s.persist( document );
+			documentID = document.id;
+		} );
+	}
 
-    @Test
-    public void execute(SessionFactoryScope scope) {
-       scope.inTransaction( s -> {
-                    final RootGraph<Document> entityGraph = s.createEntityGraph( Document.class );
-                    entityGraph.addAttributeNodes( "text", "summary" );
-                    final Document document = s.createQuery( "from Document", Document.class )
-                            .setHint( HINT_SPEC_FETCH_GRAPH, entityGraph )
-                            .uniqueResult();
+	@Test
+	public void execute(SessionFactoryScope scope) {
+	scope.inTransaction( s -> {
+					final RootGraph<Document> entityGraph = s.createEntityGraph( Document.class );
+					entityGraph.addAttributeNodes( "text", "summary" );
+					final Document document = s.createQuery( "from Document", Document.class )
+							.setHint( HINT_SPEC_FETCH_GRAPH, entityGraph )
+							.uniqueResult();
 					assertTrue( isPropertyInitialized( document, "text" ) );
 					assertTrue( isPropertyInitialized( document, "summary" ) );
 
 					final EntityDataAccess entityDataAccess = persister.getCacheAccessStrategy();
 					final Object cacheKey = entityDataAccess.generateCacheKey(
-                            document.id,
+							document.id,
 							persister,
 							scope.getSessionFactory(),
 							null
@@ -103,69 +101,69 @@ public class InitFromCacheTest {
 					final Object cachedItem = entityDataAccess.get( (SharedSessionContractImplementor) s, cacheKey );
 					assertNotNull( cachedItem );
 					assertTyping( StandardCacheEntryImpl.class, cachedItem );
-                }
-        );
+				}
+		);
 
-        scope.getSessionFactory().getStatistics().clear();
+		scope.getSessionFactory().getStatistics().clear();
 
-        scope.inTransaction( s -> {
-            CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-            CriteriaQuery<Document> criteria = criteriaBuilder.createQuery( Document.class );
-            criteria.from( Document.class );
-            Document d = s.createQuery( criteria ).uniqueResult();
+		scope.inTransaction( s -> {
+			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+			CriteriaQuery<Document> criteria = criteriaBuilder.createQuery( Document.class );
+			criteria.from( Document.class );
+			Document d = s.createQuery( criteria ).uniqueResult();
 //            Document d = (Document) s.createCriteria( Document.class ).uniqueResult();
-            assertFalse( isPropertyInitialized( d, "text" ) );
-            assertFalse( isPropertyInitialized( d, "summary" ) );
-            assertEquals( "Hibernate is....", d.text );
-            assertTrue( isPropertyInitialized( d, "text" ) );
-            assertTrue( isPropertyInitialized( d, "summary" ) );
-        } );
+			assertFalse( isPropertyInitialized( d, "text" ) );
+			assertFalse( isPropertyInitialized( d, "summary" ) );
+			assertEquals( "Hibernate is....", d.text );
+			assertTrue( isPropertyInitialized( d, "text" ) );
+			assertTrue( isPropertyInitialized( d, "summary" ) );
+		} );
 
-        assertEquals( 2, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
+		assertEquals( 2, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
-        scope.inTransaction( s -> {
-            Document d = s.get( Document.class, documentID );
-            assertFalse( isPropertyInitialized( d, "text" ) );
-            assertFalse( isPropertyInitialized( d, "summary" ) );
-        } );
-    }
+		scope.inTransaction( s -> {
+			Document d = s.get( Document.class, documentID );
+			assertFalse( isPropertyInitialized( d, "text" ) );
+			assertFalse( isPropertyInitialized( d, "summary" ) );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity( name = "Document" )
-    @Table( name = "DOCUMENT" )
-    @Cacheable
-    @Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy", region = "foo" )
-    static class Document {
+	@Entity( name = "Document" )
+	@Table( name = "DOCUMENT" )
+	@Cacheable
+	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, include = "non-lazy", region = "foo" )
+	static class Document {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        String name;
+		String name;
 
-        @Basic( fetch = FetchType.LAZY )
-        @Formula( "upper(name)" )
-        String upperCaseName;
+		@Basic( fetch = FetchType.LAZY )
+		@Formula( "upper(name)" )
+		String upperCaseName;
 
-        @Basic( fetch = FetchType.LAZY )
-        String summary;
+		@Basic( fetch = FetchType.LAZY )
+		String summary;
 
-        @Basic( fetch = FetchType.LAZY )
-        String text;
+		@Basic( fetch = FetchType.LAZY )
+		String text;
 
-        @Basic( fetch = FetchType.LAZY )
-        Date lastTextModification;
+		@Basic( fetch = FetchType.LAZY )
+		Date lastTextModification;
 
-        Document() {
-        }
+		Document() {
+		}
 
-        Document(String name, String summary, String text) {
-            this.lastTextModification = new Date();
-            this.name = name;
-            this.upperCaseName = name.toUpperCase( Locale.ROOT );
-            this.summary = summary;
-            this.text = text;
-        }
-    }
+		Document(String name, String summary, String text) {
+			this.lastTextModification = new Date();
+			this.name = name;
+			this.upperCaseName = name.toUpperCase( Locale.ROOT );
+			this.summary = summary;
+			this.text = text;
+		}
+	}
 }

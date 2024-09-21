@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection.detached;
 
@@ -99,7 +97,7 @@ public class MultipleCollectionRefEntity2 implements org.hibernate.orm.test.even
 		return true;
 	}
 
-	
+
 	public MultipleCollectionRefEntity2 deepCopy(MultipleCollectionEntity newRef) {
 		MultipleCollectionRefEntity2 clone = new MultipleCollectionRefEntity2();
 		clone.setText(this.text);

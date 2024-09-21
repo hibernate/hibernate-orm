@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -474,9 +472,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( lazyInitializer != null ) {
 			/*
 				If the value is a Proxy and the property access is field, the value returned by
-			 	`attributeMapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object )`
-			 	is always null except for the id, we need the to use the proxy implementation to
-			 	extract the property value.
+				`attributeMapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object )`
+				is always null except for the id, we need the to use the proxy implementation to
+				extract the property value.
 			 */
 				value = lazyInitializer.getImplementation();
 			}
@@ -595,14 +593,20 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param factory The mappings...
 	 *
 	 * @return The identifier type
+	 * @deprecated use {@link #getIdentifierType(MappingContext)}
 	 */
+	@Deprecated(since = "7.0")
 	Type getIdentifierType(final Mapping factory) {
+		return getIdentifierType( (MappingContext) factory );
+	}
+
+	Type getIdentifierType(final MappingContext mappingContext) {
 		final Type type = associatedIdentifierType;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
 		//form it returns the local variable to avoid a second volatile read: associatedIdentifierType
 		//needs to be volatile as the initialization might happen by a different thread than the readers.
 		if ( type == null ) {
-			associatedIdentifierType = factory.getIdentifierType( getAssociatedEntityName() );
+			associatedIdentifierType = mappingContext.getIdentifierType( getAssociatedEntityName() );
 			return associatedIdentifierType;
 		}
 		else {
@@ -639,15 +643,33 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @throws MappingException Generally, if unable to resolve the associated entity name
 	 * or unique key property name.
+	 * @deprecated use {@link  #getIdentifierOrUniqueKeyType(MappingContext)}
 	 */
+	@Deprecated(since = "7.0")
 	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
+		return getIdentifierOrUniqueKeyType( (MappingContext) factory );
+	}
+
+	/**
+	 * Determine the type of either (1) the identifier if we reference the
+	 * associated entity's PK or (2) the unique key to which we refer (i.e.
+	 * the property-ref).
+	 *
+	 * @param mappingContext The mappings context {@see MappingContext}
+	 *
+	 * @return The appropriate type.
+	 *
+	 * @throws MappingException Generally, if unable to resolve the associated entity name
+	 * or unique key property name.
+	 */
+	public final Type getIdentifierOrUniqueKeyType(MappingContext mappingContext) throws MappingException {
 		if ( isReferenceToIdentifierProperty() ) {
-			return getIdentifierType( factory );
+			return getIdentifierType( mappingContext );
 		}
 		else {
-			final Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
+			final Type type = mappingContext.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
 			if ( type instanceof EntityType ) {
-				return ( (EntityType) type ).getIdentifierOrUniqueKeyType( factory );
+				return ( (EntityType) type ).getIdentifierOrUniqueKeyType( mappingContext );
 			}
 			else {
 				return type;
@@ -667,8 +689,23 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
 			throws MappingException {
+		return getIdentifierOrUniqueKeyPropertyName( (MappingContext) factory);
+	}
+
+	/**
+	 * The name of the property on the associated entity to which our FK
+	 * refers
+	 *
+	 * @param mappingContext The mappings...
+	 *
+	 * @return The appropriate property name.
+	 *
+	 * @throws MappingException Generally, if unable to resolve the associated entity name
+	 */
+	public final String getIdentifierOrUniqueKeyPropertyName(MappingContext mappingContext)
+			throws MappingException {
 		return isReferenceToIdentifierProperty()
-				? factory.getIdentifierPropertyName( getAssociatedEntityName() )
+				? mappingContext.getIdentifierPropertyName( getAssociatedEntityName() )
 				: uniqueKeyPropertyName;
 	}
 
@@ -766,7 +803,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return result == null ? null : persistenceContext.proxyFor( result );
 	}
 
-	protected Type requireIdentifierOrUniqueKeyType(Mapping mapping) {
+	protected Type requireIdentifierOrUniqueKeyType(MappingContext mapping) {
 		final Type fkTargetType = getIdentifierOrUniqueKeyType( mapping );
 		if ( fkTargetType == null ) {
 			throw new MappingException(

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
 
@@ -12,22 +10,21 @@ package org.hibernate.orm.test.query.criteria;
 //tag::criteria-typedquery-wrapper-example[]
 public class PersonWrapper {
 
-    private final Long id;
+	private final Long id;
 
-    private final String nickName;
+	private final String nickName;
 
-    public PersonWrapper(Long id, String nickName) {
-        this.id = id;
-        this.nickName = nickName;
-    }
+	public PersonWrapper(Long id, String nickName) {
+		this.id = id;
+		this.nickName = nickName;
+	}
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getNickName() {
-        return nickName;
-    }
+	public String getNickName() {
+		return nickName;
+	}
 }
 //end::criteria-typedquery-wrapper-example[]
-

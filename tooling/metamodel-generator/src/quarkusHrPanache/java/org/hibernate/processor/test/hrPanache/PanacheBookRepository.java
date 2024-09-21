@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.hrPanache;
 
 import java.util.List;
@@ -11,9 +15,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class PanacheBookRepository implements PanacheRepository<PanacheBook> {
-    @Find
-    public native Uni<List<PanacheBook>> findBook(String isbn);
+	@Find
+	public native Uni<List<PanacheBook>> findBook(String isbn);
 
-    @HQL("WHERE isbn = :isbn")
-    public native Uni<List<PanacheBook>> hqlBook(String isbn);
+	@HQL("WHERE isbn = :isbn")
+	public native Uni<List<PanacheBook>> hqlBook(String isbn);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -90,7 +88,7 @@ public class BooleanArrayTest {
 	@Test
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	public void testQueryById(SessionFactoryScope scope) {
-      scope.inSession( em -> {
+	scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getById", TableWithBooleanArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithBooleanArrays tableRecord = tq.getSingleResult();
@@ -100,8 +98,8 @@ public class BooleanArrayTest {
 
 	@Test
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
-    public void testQuery(SessionFactoryScope scope) {
-      scope.inSession( em -> {
+	public void testQuery(SessionFactoryScope scope) {
+	scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );
 			tq.setParameter( "data", new Boolean[]{} );
 			TableWithBooleanArrays tableRecord = tq.getSingleResult();

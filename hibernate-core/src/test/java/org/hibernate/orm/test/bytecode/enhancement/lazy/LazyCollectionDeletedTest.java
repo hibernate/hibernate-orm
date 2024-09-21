@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -38,112 +36,112 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 @JiraKey("HHH-11576")
 @DomainModel(
-        annotatedClasses = {
-                LazyCollectionDeletedTest.Post.class,
-                LazyCollectionDeletedTest.Tag.class,
-                LazyCollectionDeletedTest.AdditionalDetails.class
-        }
+		annotatedClasses = {
+				LazyCollectionDeletedTest.Post.class,
+				LazyCollectionDeletedTest.Tag.class,
+				LazyCollectionDeletedTest.AdditionalDetails.class
+		}
 )
 @ServiceRegistry(
-        settings = {
-                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
-                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
-        }
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class LazyCollectionDeletedTest {
 
-    private Long postId;
+	private Long postId;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Post post = new Post();
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Post post = new Post();
 
-            Tag tag1 = new Tag( "tag1" );
-            Tag tag2 = new Tag( "tag2" );
+			Tag tag1 = new Tag( "tag1" );
+			Tag tag2 = new Tag( "tag2" );
 
-            Set<Tag> tagSet = new HashSet<>();
-            tagSet.add( tag1 );
-            tagSet.add( tag2 );
-            post.tags = tagSet;
+			Set<Tag> tagSet = new HashSet<>();
+			tagSet.add( tag1 );
+			tagSet.add( tag2 );
+			post.tags = tagSet;
 
-            AdditionalDetails details = new AdditionalDetails();
-            details.post = post;
-            details.details = "Some data";
-            post.additionalDetails = details;
-            s.persist( post );
-            postId = post.id;
-        } );
-    }
+			AdditionalDetails details = new AdditionalDetails();
+			details.post = post;
+			details.details = "Some data";
+			post.additionalDetails = details;
+			s.persist( post );
+			postId = post.id;
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Query query = s.createQuery( "from AdditionalDetails where id=" + postId );
-            AdditionalDetails additionalDetails = (AdditionalDetails) query.getSingleResult();
-            additionalDetails.details = "New data";
-            s.persist( additionalDetails );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Query query = s.createQuery( "from AdditionalDetails where id=" + postId );
+			AdditionalDetails additionalDetails = (AdditionalDetails) query.getSingleResult();
+			additionalDetails.details = "New data";
+			s.persist( additionalDetails );
 
-            // additionalDetails.post.tags get deleted on commit
-        } );
+			// additionalDetails.post.tags get deleted on commit
+		} );
 
-        scope.inTransaction( s -> {
-            Query query = s.createQuery( "from Post where id=" + postId );
-            Post retrievedPost = (Post) query.getSingleResult();
+		scope.inTransaction( s -> {
+			Query query = s.createQuery( "from Post where id=" + postId );
+			Post retrievedPost = (Post) query.getSingleResult();
 
-            assertFalse( retrievedPost.tags.isEmpty(), "No tags found" );
-            retrievedPost.tags.forEach( tag -> System.out.println( "Found tag: " + tag ) );
-        } );
-    }
+			assertFalse( retrievedPost.tags.isEmpty(), "No tags found" );
+			retrievedPost.tags.forEach( tag -> System.out.println( "Found tag: " + tag ) );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity( name = "Tag" )
-    @Table( name = "TAG" )
-    static class Tag {
+	@Entity( name = "Tag" )
+	@Table( name = "TAG" )
+	static class Tag {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        String name;
+		String name;
 
-        Tag() {
-        }
+		Tag() {
+		}
 
-        Tag(String name) {
-            this.name = name;
-        }
-    }
+		Tag(String name) {
+			this.name = name;
+		}
+	}
 
-    @Entity( name = "Post" )
-    @Table( name = "POST" )
-    static class Post {
+	@Entity( name = "Post" )
+	@Table( name = "POST" )
+	static class Post {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        @ManyToMany( cascade = CascadeType.ALL )
-        Set<Tag> tags;
+		@ManyToMany( cascade = CascadeType.ALL )
+		Set<Tag> tags;
 
-        @OneToOne( fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL )
-        AdditionalDetails additionalDetails;
-    }
+		@OneToOne( fetch = FetchType.LAZY, mappedBy = "post", cascade = CascadeType.ALL )
+		AdditionalDetails additionalDetails;
+	}
 
-    @Entity( name = "AdditionalDetails" )
-    @Table( name = "ADDITIONAL_DETAILS" )
-    static class AdditionalDetails {
+	@Entity( name = "AdditionalDetails" )
+	@Table( name = "ADDITIONAL_DETAILS" )
+	static class AdditionalDetails {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String details;
+		String details;
 
-        @OneToOne( optional = false )
-        @MapsId
-        Post post;
-    }
+		@OneToOne( optional = false )
+		@MapsId
+		Post post;
+	}
 }

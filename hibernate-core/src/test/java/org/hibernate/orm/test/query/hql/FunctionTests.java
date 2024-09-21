@@ -1,12 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
 import org.hamcrest.Matchers;
+
+import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
@@ -24,6 +25,8 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+import org.hibernate.sql.exec.ExecutionException;
+
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -32,6 +35,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -1031,6 +1035,44 @@ public class FunctionTests {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18447")
+	public void testCastStringToBoolean(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery("select cast('1' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('0' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('y' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('n' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('Y' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('N' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('t' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('f' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('T' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('F' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('true' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('false' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+			assertThat( session.createQuery("select cast('TRUE' as Boolean)", Boolean.class).getSingleResult(), is(true) );
+			assertThat( session.createQuery("select cast('FALSE' as Boolean)", Boolean.class).getSingleResult(), is(false) );
+		});
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18447")
+	public void testCastInvalidStringToBoolean(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			try {
+				session.createQuery( "select cast('bla' as Boolean)", Boolean.class ).getSingleResult();
+				fail("Casting invalid boolean string should fail");
+			}
+			catch ( HibernateException e ) {
+				// Expected
+				if ( !( e instanceof JDBCException || e instanceof ExecutionException ) ) {
+					throw e;
+				}
+			}
+		} );
+	}
+
+	@Test
 	@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
@@ -1666,30 +1708,30 @@ public class FunctionTests {
 							session.createQuery("select local date + 1 week", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.MONTHS),
-								  session.createQuery("select local date + 1 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.YEARS),
-								  session.createQuery("select local date + 1 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.now().plus(3, ChronoUnit.MONTHS),
-								  session.createQuery("select local date + 1 quarter", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select local date + 1 quarter", LocalDate.class)
+										.getSingleResult() );
 					// Some explicit 'special' cases:
 					assertEquals( LocalDate.of(2024, 02, 29),
-								  session.createQuery("select {2024-01-31} + 1 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-01-31} + 1 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2025, 02, 28),
-								  session.createQuery("select {2024-02-29} + 1 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 1 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2028, 02, 29),
-								  session.createQuery("select {2024-02-29} + 4 year", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 4 year", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2025, 03, 29),
-								  session.createQuery("select {2024-02-29} + 13 month", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2024-02-29} + 13 month", LocalDate.class)
+										.getSingleResult() );
 					assertEquals( LocalDate.of(2024, 02, 29),
-								  session.createQuery("select {2023-11-30} + 1 quarter", LocalDate.class)
-										  .getSingleResult() );
+								session.createQuery("select {2023-11-30} + 1 quarter", LocalDate.class)
+										.getSingleResult() );
 
 					session.createQuery("select e.theTimestamp - 21 second from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
@@ -1714,7 +1756,7 @@ public class FunctionTests {
 	@SkipForDialect( dialectClass = TiDBDialect.class,
 			reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
 	@SkipForDialect( dialectClass = AltibaseDialect.class,
-	        reason = "exceeds timestampadd limit in Altibase")
+			reason = "exceeds timestampadd limit in Altibase")
 	public void testDurationArithmeticOverflowing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2488,7 +2530,7 @@ public class FunctionTests {
 					s.createQuery("select coalesce(:word, null)", String.class)
 							.setParameter("word", "hello")
 							.getSingleResultOrNull());
-        });
+		});
 	}
 
 	@Test

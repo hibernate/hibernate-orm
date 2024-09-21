@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
@@ -47,9 +45,9 @@ public class ListIndexTest extends AbstractMetamodelSpecificTest {
 	@JiraKey(value = "HHH-8404")
 	public void testListIndex() {
 		EntityManager em = getOrCreateEntityManager();
-		
+
 		em.getTransaction().begin();
-		
+
 		Address address1 = new Address();
 		address1.setId( "a1" );
 		Phone phone1 = new Phone();
@@ -57,19 +55,19 @@ public class ListIndexTest extends AbstractMetamodelSpecificTest {
 		phone1.setAddress( address1 );
 		Phone phone2 = new Phone();
 		phone2.setId( "p2" );
-		
+
 		phone2.setAddress( address1 );
 		address1.getPhones().add( phone1 );
 		address1.getPhones().add( phone2 );
-		
+
 		Address address2 = new Address();
 		address2.setId( "a2" );
 		Phone phone3 = new Phone();
 		phone3.setId( "p3" );
-		
+
 		phone3.setAddress( address2 );
 		address2.getPhones().add( phone3 );
-		
+
 		em.persist( phone1 );
 		em.persist( phone2 );
 		em.persist( phone3 );
@@ -77,7 +75,7 @@ public class ListIndexTest extends AbstractMetamodelSpecificTest {
 		em.persist( address2 );
 		em.getTransaction().commit();
 		em.clear();
-		
+
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Address> criteria = cb.createQuery( Address.class );
 		Root<Address> addressRoot = criteria.from( Address.class );

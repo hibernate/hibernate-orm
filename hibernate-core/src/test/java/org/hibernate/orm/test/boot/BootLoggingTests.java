@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot;
 
@@ -16,8 +14,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Logger;
-import org.hibernate.testing.orm.junit.LoggingInspections;
-import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
 import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 import org.hibernate.testing.orm.junit.RequiresDialect;

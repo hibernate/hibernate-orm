@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -12,9 +10,9 @@ import org.hibernate.boot.model.internal.AnnotatedJoinColumn;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.MappingContext;
 
 import java.util.Objects;
 
@@ -53,10 +51,12 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return fetchMode;
 	}
 
+	@Override
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode=fetchMode;
 	}
@@ -97,10 +97,12 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		}
 	}
 
+	@Override
 	public boolean isTypeSpecified() {
 		return referencedEntityName!=null;
 	}
-	
+
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -116,17 +118,20 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			&& Objects.equals( referencedEntityName, other.referencedEntityName );
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	@Override
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		if (referencedEntityName==null) {
 			throw new MappingException("association must specify the referenced entity");
 		}
-		return super.isValid( mapping );
+		return super.isValid( mappingContext );
 	}
 
+	@Override
 	public boolean isLazy() {
 		return lazy;
 	}
-	
+
+	@Override
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}

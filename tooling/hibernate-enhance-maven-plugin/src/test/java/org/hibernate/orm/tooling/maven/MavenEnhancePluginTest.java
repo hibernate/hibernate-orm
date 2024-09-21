@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.tooling.maven;
 
@@ -27,54 +25,54 @@ import java.util.Map;
  */
 public class MavenEnhancePluginTest {
 
-    @Test
-    public void testEnhancePlugin() throws Exception {
-        File baseDir = new File("target/classes/java/test");
-        URL[] baseURLs = { baseDir.toURI().toURL() };
+	@Test
+	public void testEnhancePlugin() throws Exception {
+		File baseDir = new File("target/classes/java/test");
+		URL[] baseURLs = { baseDir.toURI().toURL() };
 
-        MavenEnhancePlugin plugin = new MavenEnhancePlugin();
+		MavenEnhancePlugin plugin = new MavenEnhancePlugin();
 
-        Map<String, Object> pluginContext = new HashMap<>();
-        pluginContext.put( "project", new MavenProject() );
+		Map<String, Object> pluginContext = new HashMap<>();
+		pluginContext.put( "project", new MavenProject() );
 
-        setVariableValueToObject( plugin, "pluginContext", pluginContext );
-        setVariableValueToObject( plugin, "buildContext", new DefaultBuildContext() );
+		setVariableValueToObject( plugin, "pluginContext", pluginContext );
+		setVariableValueToObject( plugin, "buildContext", new DefaultBuildContext() );
 
-        setVariableValueToObject( plugin, "base", baseDir.getAbsolutePath() );
-        setVariableValueToObject( plugin, "dir", baseDir.getAbsolutePath() );
-        setVariableValueToObject( plugin, "classNames", "" );
+		setVariableValueToObject( plugin, "base", baseDir.getAbsolutePath() );
+		setVariableValueToObject( plugin, "dir", baseDir.getAbsolutePath() );
+		setVariableValueToObject( plugin, "classNames", "" );
 
-        setVariableValueToObject( plugin, "failOnError", true );
-        setVariableValueToObject( plugin, "enableLazyInitialization", true );
-        setVariableValueToObject( plugin, "enableDirtyTracking", true );
-        setVariableValueToObject( plugin, "enableAssociationManagement", true );
-        setVariableValueToObject( plugin, "enableExtendedEnhancement", false );
+		setVariableValueToObject( plugin, "failOnError", true );
+		setVariableValueToObject( plugin, "enableLazyInitialization", true );
+		setVariableValueToObject( plugin, "enableDirtyTracking", true );
+		setVariableValueToObject( plugin, "enableAssociationManagement", true );
+		setVariableValueToObject( plugin, "enableExtendedEnhancement", false );
 
-        plugin.execute();
+		plugin.execute();
 
-        try ( URLClassLoader classLoader = new URLClassLoader( baseURLs , getClass().getClassLoader() ) ) {
+		try ( URLClassLoader classLoader = new URLClassLoader( baseURLs , getClass().getClassLoader() ) ) {
 
-            Assert.assertTrue( declaresManaged( classLoader.loadClass( ParentEntity.class.getName() ) ) );
-            Assert.assertTrue( declaresManaged( classLoader.loadClass( ChildEntity.class.getName() ) ) );
-            Assert.assertTrue( declaresManaged( classLoader.loadClass( TestEntity.class.getName() ) ) );
+			Assert.assertTrue( declaresManaged( classLoader.loadClass( ParentEntity.class.getName() ) ) );
+			Assert.assertTrue( declaresManaged( classLoader.loadClass( ChildEntity.class.getName() ) ) );
+			Assert.assertTrue( declaresManaged( classLoader.loadClass( TestEntity.class.getName() ) ) );
 
-        }
+		}
 
-    }
+	}
 
-    private void setVariableValueToObject( Object object, String variable, Object value ) throws IllegalAccessException {
-        Field field = ReflectionUtils.getFieldByNameIncludingSuperclasses( variable, object.getClass() );
-        field.setAccessible( true );
-        field.set( object, value );
-    }
+	private void setVariableValueToObject( Object object, String variable, Object value ) throws IllegalAccessException {
+		Field field = ReflectionUtils.getFieldByNameIncludingSuperclasses( variable, object.getClass() );
+		field.setAccessible( true );
+		field.set( object, value );
+	}
 
-    private boolean declaresManaged(Class<?> clazz) {
-        for ( Class<?> interfaceClazz : clazz.getInterfaces() ) {
-            if ( Managed.class.isAssignableFrom( interfaceClazz ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
+	private boolean declaresManaged(Class<?> clazz) {
+		for ( Class<?> interfaceClazz : clazz.getInterfaces() ) {
+			if ( Managed.class.isAssignableFrom( interfaceClazz ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 }

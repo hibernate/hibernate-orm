@@ -1,14 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.version;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 
 import org.junit.Test;
 
@@ -74,7 +69,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 			session.getMetamodel().entity( Person.class ).getAttribute( "version" );
 		}
 	}
-	
+
 	@Test
 	public void testCollectionVersion() {
 		Session s = openSession();
@@ -84,16 +79,16 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		t.commit();
 		s.close();
-		
+
 		assertEquals(0, gavin.getVersion());
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		gavin = getPerson( s );
 		new Thing("Laptop", gavin);
 		t.commit();
 		s.close();
-		
+
 		assertEquals(1, gavin.getVersion());
 		assertFalse( Hibernate.isInitialized( gavin.getThings() ) );
 
@@ -103,7 +98,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		gavin.getThings().clear();
 		t.commit();
 		s.close();
-		
+
 		assertEquals(2, gavin.getVersion());
 		assertTrue( Hibernate.isInitialized( gavin.getThings() ) );
 
@@ -113,7 +108,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testCollectionNoVersion() {
 		Session s = openSession();
@@ -123,16 +118,16 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		s.persist(gavin);
 		t.commit();
 		s.close();
-		
+
 		assertEquals(0, gavin.getVersion());
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		gavin = getPerson( s );
 		new Task("Document", gavin);
 		t.commit();
 		s.close();
-		
+
 		assertEquals(0, gavin.getVersion());
 		assertFalse( Hibernate.isInitialized( gavin.getTasks() ) );
 
@@ -142,7 +137,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		gavin.getTasks().clear();
 		t.commit();
 		s.close();
-		
+
 		assertEquals(0, gavin.getVersion());
 		assertTrue( Hibernate.isInitialized( gavin.getTasks() ) );
 

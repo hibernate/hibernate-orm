@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: NumberedNode.java 7236 2005-06-20 03:19:34Z oneovthafew $
 package org.hibernate.orm.test.ops;
 import java.util.Date;
 import java.util.HashSet;
@@ -15,7 +11,7 @@ import java.util.Set;
  * @author Gavin King
  */
 public class NumberedNode {
-	
+
 	private long id;
 	private String name;
 	private NumberedNode parent;
@@ -38,7 +34,7 @@ public class NumberedNode {
 	public void setId(long id) {
 		this.id = id;
 	}
-	
+
 	public Set getChildren() {
 		return children;
 	}
@@ -57,13 +53,13 @@ public class NumberedNode {
 	public void setParent(NumberedNode parent) {
 		this.parent = parent;
 	}
-	
+
 	public NumberedNode addChild(NumberedNode child) {
 		children.add(child);
 		child.setParent(this);
 		return this;
 	}
-	
+
 	public String getDescription() {
 		return description;
 	}

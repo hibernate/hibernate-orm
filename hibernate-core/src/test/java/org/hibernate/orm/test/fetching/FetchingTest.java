@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetching;
 
@@ -27,7 +25,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +40,6 @@ import static org.junit.Assert.assertNotNull;
 		FetchingTest.Project.class
 })
 @RequiresDialect(H2Dialect.class)
-@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 2, matchSubTypes = true, reason = "See https://github.com/h2database/h2database/issues/3338")
 public class FetchingTest {
 
 	@Test
@@ -170,17 +166,11 @@ public class FetchingTest {
 		@NaturalId
 		private String username;
 
-		@Column(name = "pswd")
+		@Column(name = "pswd", columnDefinition = "varbinary")
 		@ColumnTransformer(
-			read = "decrypt('AES', '00', pswd )",
+			read = "trim(trailing u&'\\0000' from cast(decrypt('AES', '00', pswd ) as character varying))",
 			write = "encrypt('AES', '00', ?)"
 		)
-// For H2 2.0.202+ one must use the varbinary DDL type
-//		@Column(name = "pswd", columnDefinition = "varbinary")
-//		@ColumnTransformer(
-//			read = "trim(trailing u&'\\0000' from cast(decrypt('AES', '00', pswd ) as character varying))",
-//			write = "encrypt('AES', '00', ?)"
-//		)
 		private String password;
 
 		private int accessLevel;

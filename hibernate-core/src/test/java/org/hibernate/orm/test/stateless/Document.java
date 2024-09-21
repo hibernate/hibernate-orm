@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Document.java 8057 2005-08-31 23:19:53Z oneovthafew $
 package org.hibernate.orm.test.stateless;
 import java.util.Date;
 
@@ -13,13 +9,13 @@ import java.util.Date;
  * @author Gavin King
  */
 public class Document {
-	
+
 	private String text;
 	private String name;
 	private Date lastModified;
 
 	Document() {}
-	
+
 	public Document(String text, String name) {
 		this.text = text;
 		this.name = name;

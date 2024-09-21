@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
@@ -29,59 +27,59 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @JiraKey( "HHH-11293" )
 @DomainModel(
-        annotatedClasses = {
-                DirtyTrackingCollectionTest.StringsEntity.class
-        }
+		annotatedClasses = {
+				DirtyTrackingCollectionTest.StringsEntity.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class DirtyTrackingCollectionTest {
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( em -> {
-            StringsEntity entity = new StringsEntity();
-            entity.id = 1L;
-            entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            em.persist( entity );
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			StringsEntity entity = new StringsEntity();
+			entity.id = 1L;
+			entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			em.persist( entity );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( entityManager -> {
-            StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
-            entity.someStrings.clear();
-        } );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
+			entity.someStrings.clear();
+		} );
 
-        scope.inTransaction( entityManager -> {
-            StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
-            assertEquals( 0, entity.someStrings.size() );
-            entity.someStrings.add( "d" );
-        } );
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
+			assertEquals( 0, entity.someStrings.size() );
+			entity.someStrings.add( "d" );
+		} );
 
-        scope.inTransaction( entityManager -> {
-            StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
-            assertEquals( 1, entity.someStrings.size() );
-            entity.someStrings = new ArrayList<>();
-        } );
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
+			assertEquals( 1, entity.someStrings.size() );
+			entity.someStrings = new ArrayList<>();
+		} );
 
-        scope.inTransaction( entityManager -> {
-            StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
-            assertEquals( 0, entity.someStrings.size() );
-        } );
-    }
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
+			assertEquals( 0, entity.someStrings.size() );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "STRINGS_ENTITY" )
-    static class StringsEntity {
+	@Entity
+	@Table( name = "STRINGS_ENTITY" )
+	static class StringsEntity {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @ElementCollection
-        List<String> someStrings;
-    }
+		@ElementCollection
+		List<String> someStrings;
+	}
 }

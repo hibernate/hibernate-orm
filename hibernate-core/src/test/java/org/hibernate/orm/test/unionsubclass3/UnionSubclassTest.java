@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.unionsubclass3;
 
@@ -187,14 +185,14 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Father")
 	public static class Father extends Parent {
-		
+
 		@Column
 		String fathersDay;
 	}
 
 	@Entity(name = "Mother")
 	public static class Mother extends Parent {
-		
+
 		@Column
 		String mothersDay;
 	}
@@ -206,4 +204,3 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		public Long id;
 	}
 }
-

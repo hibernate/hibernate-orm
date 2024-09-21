@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
@@ -62,7 +60,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 			if ( !collection.isDirty() ) {
 				throw new AssertionFailure( "collection is not dirty" );
 			}
-			//do nothing - we only need to notify the cache... 
+			//do nothing - we only need to notify the cache...
 		}
 		else if ( !affectedByFilters && collection.empty() ) {
 			if ( !emptySnapshot ) {
@@ -95,7 +93,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 			statistics.updateCollection( persister.getRole() );
 		}
 	}
-	
+
 	private void preUpdate() {
 		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_UPDATE
 				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent,

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -58,7 +56,7 @@ public class SchemaUpdateGeneratingOnlyScriptFileTest {
 					.setDelimiter( ";" )
 					.setFormat( true )
 					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
-			
+
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
 			Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity" );
 			Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );

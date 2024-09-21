@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -28,7 +26,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
@@ -55,6 +52,7 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.UserComponentType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.Collections.unmodifiableList;
@@ -81,7 +79,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private PersistentClass owner;
 	private boolean dynamic;
 	private boolean isKey;
-	private Boolean isGeneric;
+	private transient Boolean isGeneric;
 	private String roleName;
 	private MappedSuperclass mappedSuperclass;
 	private Value discriminator;
@@ -99,7 +97,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private String[] instantiatorPropertyNames;
 
 	// cache the status of the type
-	private volatile CompositeType type;
+	private transient volatile CompositeType type;
 
 	private AggregateColumn aggregateColumn;
 	private AggregateColumn parentAggregateColumn;
@@ -107,8 +105,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private String[] structColumnNames;
 	private transient Class<?> componentClass;
 	private transient Boolean simpleRecord;
-
-	private transient Generator builtIdentifierGenerator;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -244,9 +240,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	private void collectAggregatedColumns(List<Column> aggregatedColumns, Component component) {
 		for ( Property property : component.getProperties() ) {
-			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			if ( property.getValue() instanceof Component subComponent ) {
 				final AggregateColumn subAggregate = subComponent.getAggregateColumn();
 				if ( subAggregate != null ) {
 					aggregatedColumns.add( subAggregate );
@@ -256,7 +250,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				}
 			}
 			else {
-				aggregatedColumns.addAll( value.getColumns() );
+				aggregatedColumns.addAll( property.getValue().getColumns() );
 			}
 		}
 		if ( component.isPolymorphic() ) {
@@ -269,17 +263,16 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			// Let the BasicValue of every sub-column know about the aggregate,
 			// which is needed in type resolution
 			final Value value = property.getValue();
-			if ( value instanceof BasicValue ) {
-				assert ( (BasicValue) value ).getResolution() == null;
-				( (BasicValue) value ).setAggregateColumn( aggregateColumn );
+			if ( value instanceof BasicValue basicValue ) {
+				assert basicValue.getResolution() == null;
+				basicValue.setAggregateColumn( aggregateColumn );
 			}
-			else if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			else if ( value instanceof Component subComponent ) {
 				if ( subComponent.getAggregateColumn() == null ) {
 					subComponent.notifyPropertiesAboutAggregateColumn( aggregateColumn, subComponent );
 				}
 				else {
-					( (Component) value ).setParentAggregateColumn( aggregateColumn );
+					subComponent.setParentAggregateColumn( aggregateColumn );
 				}
 			}
 		}
@@ -656,17 +649,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property) {
-		if ( builtIdentifierGenerator == null ) {
-			builtIdentifierGenerator =
-					getCustomIdGeneratorCreator().isAssigned()
-							? buildIdentifierGenerator( dialect, rootClass )
-							: super.createGenerator( dialect, rootClass, property );
-		}
-		return builtIdentifierGenerator;
+	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
+		return getCustomIdGeneratorCreator().isAssigned()
+				? buildIdentifierGenerator( dialect, rootClass, defaults )
+				: super.createGenerator( dialect, rootClass, property, defaults );
 	}
 
-	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass) {
+	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {
 		final CompositeNestedGeneratedValueGenerator generator =
 				new CompositeNestedGeneratedValueGenerator(
 						new StandardGenerationContextLocator( rootClass.getEntityName() ),
@@ -680,11 +669,19 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
 					// skip any 'assigned' generators, they would have been
 					// handled by the StandardGenerationContextLocator
-					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							value.createGenerator( dialect, rootClass, property ),
-							getType().isMutable() ? injector( property, getAttributeDeclarer( rootClass ) ) : null,
-							i
-					) );
+					if ( value.createGenerator( dialect, rootClass, property, defaults )
+							instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+						generator.addGeneratedValuePlan( new ValueGenerationPlan(
+								beforeExecutionGenerator,
+								getType().isMutable()
+										? injector( property, getAttributeDeclarer( rootClass ) )
+										: null,
+								i
+						) );
+					}
+					else {
+						throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
+					}
 				}
 			}
 		}
@@ -757,12 +754,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
-		private final Generator subgenerator;
+		private final BeforeExecutionGenerator generator;
 		private final Setter injector;
 		private final int propertyIndex;
 
-		public ValueGenerationPlan(Generator subgenerator, Setter injector, int propertyIndex) {
-			this.subgenerator = subgenerator;
+		public ValueGenerationPlan(BeforeExecutionGenerator generator, Setter injector, int propertyIndex) {
+			this.generator = generator;
 			this.injector = injector;
 			this.propertyIndex = propertyIndex;
 		}
@@ -779,9 +776,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
-			if ( !subgenerator.generatedOnExecution( incomingObject, session ) ) {
-				return ( (BeforeExecutionGenerator) subgenerator)
-						.generate( session, incomingObject, null, INSERT );
+			if ( !generator.generatedOnExecution( incomingObject, session ) ) {
+				return generator.generate( session, incomingObject, null, INSERT );
 			}
 			else {
 				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
@@ -790,15 +786,15 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void registerExportables(Database database) {
-			if ( subgenerator instanceof ExportableProducer ) {
-				( (ExportableProducer) subgenerator).registerExportables( database );
+			if ( generator instanceof ExportableProducer exportableProducer ) {
+				exportableProducer.registerExportables( database );
 			}
 		}
 
 		@Override
 		public void initialize(SqlStringGenerationContext context) {
-			if ( subgenerator instanceof Configurable) {
-				( (Configurable) subgenerator).initialize( context );
+			if ( generator instanceof Configurable configurable ) {
+				configurable.initialize( context );
 			}
 		}
 	}
@@ -809,8 +805,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public boolean isValid(Mapping mapping) throws MappingException {
-		if ( !super.isValid( mapping ) ) {
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
+		if ( !super.isValid( mappingContext ) ) {
 			return false;
 		}
 		if ( instantiatorPropertyNames != null ) {
@@ -951,7 +947,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public boolean isGeneric() {
 		if ( isGeneric == null ) {
-			isGeneric = getComponentClassName() != null && getComponentClass().getTypeParameters().length != 0;
+			isGeneric = getComponentClassName() != null
+					&& getComponentClass().getTypeParameters().length > 0;
 		}
 		return isGeneric;
 	}

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.annotations.manytoonewithformula;
 
 import jakarta.persistence.Column;
@@ -41,7 +38,7 @@ public class Contract {
 	public void setId(ContractId id) {
 		this.id = id;
 	}
- 
+
 	@ManyToOne
 	@JoinColumnOrFormula(column = @JoinColumn(name = "CDT_MDL_CODE", referencedColumnName = "MDL_CODE"))
 	@JoinColumnOrFormula(formula = @JoinFormula(value = "CDT_MFG_CODE", referencedColumnName = "MDL_MFG_CODE"))

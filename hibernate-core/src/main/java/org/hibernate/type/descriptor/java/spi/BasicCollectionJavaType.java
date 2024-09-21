@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
@@ -40,7 +38,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -78,7 +75,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		// (even though we only use this inside the if block, we want it to throw here if something wrong)
 		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
 				indicators.getPreferredSqlTypeCodeForArray(),
-				new BasicTypeImpl<>( componentJavaType, componentJavaType.getRecommendedJdbcType( indicators ) ),
+				indicators.getTypeConfiguration().getBasicTypeRegistry().resolve(
+						componentJavaType, componentJavaType.getRecommendedJdbcType( indicators ) ),
 				ColumnTypeInformation.EMPTY
 		);
 	}

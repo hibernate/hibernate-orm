@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.subclassfilter;
 
@@ -52,7 +50,7 @@ public class DiscrimSubclassFilterTest {
 					s.clear();
 
 					results = new ArrayList( new HashSet( s.createQuery( "from Person as p left join fetch p.minions" )
-																  .list() ) );
+																.list() ) );
 					assertEquals( 4, results.size(), "Incorrect qry result count" );
 					itr = results.iterator();
 					while ( itr.hasNext() ) {
@@ -67,7 +65,7 @@ public class DiscrimSubclassFilterTest {
 					s.clear();
 
 					results = new ArrayList( new HashSet( s.createQuery( "from Employee as p left join fetch p.minions" )
-																  .list() ) );
+																.list() ) );
 					assertEquals( 2, results.size(), "Incorrect qry result count" );
 					itr = results.iterator();
 					while ( itr.hasNext() ) {

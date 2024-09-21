@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect.functional.cache;
 import java.util.Date;
@@ -14,10 +12,10 @@ import java.util.Date;
  */
 public class TestInterSystemsFunctionsClass {
 	private Long id;
-    private Date date3;
-    private Date date1;
-    private Date date;
-    private String dateText;
+	private Date date3;
+	private Date date1;
+	private Date date;
+	private String dateText;
 
 	public TestInterSystemsFunctionsClass() {
 	}
@@ -35,38 +33,38 @@ public class TestInterSystemsFunctionsClass {
 	}
 
 	public Date getDate() {
-        return date;
-    }
+		return date;
+	}
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-
-    public String getDateText() {
-        return dateText;
-    }
-
-    public void setDateText(String dateText) {
-        this.dateText = dateText;
-    }
+	public void setDate(Date date) {
+		this.date = date;
+	}
 
 
-    public Date getDate1() {
-        return date1;
-    }
+	public String getDateText() {
+		return dateText;
+	}
 
-    public void setDate1(Date date1) {
-        this.date1 = date1;
-    }
+	public void setDateText(String dateText) {
+		this.dateText = dateText;
+	}
 
 
-    public Date getDate3() {
-        return date3;
-    }
+	public Date getDate1() {
+		return date1;
+	}
 
-    public void setDate3(Date date3) {
-        this.date3 = date3;
-    }
+	public void setDate1(Date date1) {
+		this.date1 = date1;
+	}
+
+
+	public Date getDate3() {
+		return date3;
+	}
+
+	public void setDate3(Date date3) {
+		this.date3 = date3;
+	}
 
 }

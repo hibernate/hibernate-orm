@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
@@ -11,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.StaleObjectStateException;
@@ -200,7 +197,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final boolean[] attributeUpdateability;
 		boolean forceDynamicUpdate;
-
 		if ( entityPersister().getEntityMetamodel().isDynamicUpdate() && dirtyAttributeIndexes != null ) {
 			attributeUpdateability = getPropertiesToUpdate( dirtyAttributeIndexes, hasDirtyCollection );
 			forceDynamicUpdate = true;
@@ -374,21 +370,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int position,
 			SingularAttributeMapping attribute,
 			EntityPersister persister) {
-		switch ( persister.optimisticLockStyle() ) {
-			case NONE:
-				return false;
-			case VERSION:
-				return versionMapping != null
-						&& versionMapping.getVersionAttribute() == attribute;
+		return switch ( persister.optimisticLockStyle() ) {
+			case NONE -> false;
+			case VERSION -> versionMapping != null
+					&& versionMapping.getVersionAttribute() == attribute;
 //						&& updateableAttributeIndexes[position];
-			case ALL:
-				return attribute.getAttributeMetadata().isIncludedInOptimisticLocking();
-			case DIRTY:
-				return attribute.getAttributeMetadata().isIncludedInOptimisticLocking()
-						&& dirtinessChecker.include( position, attribute );
-			default:
-				throw new AssertionFailure( "unknown OptimisticLockStyle" );
-		}
+			case ALL -> attribute.getAttributeMetadata().isIncludedInOptimisticLocking();
+			case DIRTY -> attribute.getAttributeMetadata().isIncludedInOptimisticLocking()
+					&& dirtinessChecker.include( position, attribute );
+		};
 	}
 
 	protected Supplier<GeneratedValues> handlePotentialImplicitForcedVersionIncrement(
@@ -988,7 +978,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean dynamicUpdate,
 			boolean batching) {
 		if ( batching ) {
-			return updateVersionExecutor(session, group,dynamicUpdate);
+			return updateVersionExecutor( session, group, dynamicUpdate );
 		}
 		return mutationExecutorService.createExecutor( NoBatchKeyAccess.INSTANCE, group, session );
 
@@ -1228,9 +1218,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			SharedSessionContractImplementor session) {
 		final Generator generator = attributeMapping.getGenerator();
-		if ( isValueGenerated( generator )
-				&& ( session == null && generator.generatedOnExecution() || generator.generatedOnExecution( entity, session ) )
-				&& isValueGenerationInSql( generator, dialect ) ) {
+		if ( needsValueGeneration( entity, session, generator ) ) {
 			handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator );
 		}
 		else if ( versionMapping != null
@@ -1245,6 +1233,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				attributeMapping.forEachUpdatable( tableUpdateBuilder );
 			}
 		}
+	}
+
+	private boolean needsValueGeneration(Object entity, SharedSessionContractImplementor session, Generator generator) {
+		return isValueGenerated( generator )
+			&& (session == null && generator.generatedOnExecution() || generator.generatedOnExecution( entity, session ) )
+			&& isValueGenerationInSql( generator, dialect );
 	}
 
 	/**
@@ -1608,19 +1602,19 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				null,
 				null,
 				null,
-				(index,attribute) -> isValueGenerated( attribute.getGenerator() ) && isValueGenerationInSql( attribute.getGenerator(), dialect() )
+				(index,attribute) ->
+						isValueGenerated( attribute.getGenerator() )
+								&& isValueGenerationInSql( attribute.getGenerator(), dialect() )
 						|| entityPersister().getPropertyUpdateability()[index],
-				(index,attribute) -> {
-					switch ( entityPersister().optimisticLockStyle() ) {
-						case ALL:
-							return true;
-						case VERSION:
-							final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
-							return versionMapping != null && attribute == versionMapping.getVersionAttribute();
-						default:
-							return false;
-					}
-				},
+				(index,attribute) ->
+						switch ( entityPersister().optimisticLockStyle() ) {
+							case ALL -> true;
+							case VERSION -> {
+								final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
+								yield versionMapping != null && attribute == versionMapping.getVersionAttribute();
+							}
+							default -> false;
+						},
 				(index,attribute) -> true,
 				"", // pass anything here to generate the row id restriction if possible
 				false,

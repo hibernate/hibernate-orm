@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -44,6 +42,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -90,6 +89,7 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -229,6 +229,7 @@ public class H2Dialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
@@ -245,6 +246,7 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonArrayJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
 	}
@@ -340,14 +342,24 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayTrim_trim_array();
 		functionFactory.arrayFill_h2();
 		functionFactory.arrayToString_h2( getMaximumArraySize() );
+
+		functionFactory.jsonObject();
+		functionFactory.jsonArray();
+		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+			functionFactory.jsonValue_h2();
+			functionFactory.jsonQuery_h2();
+			functionFactory.jsonExists_h2();
+			functionFactory.jsonArrayAgg_h2();
+			functionFactory.jsonObjectAgg_h2();
+		}
 	}
 
 	/**
-     * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
-     * due to <a href="https://github.com/h2database/h2database/issues/1815">issue 1815</a>.
-     * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
-     * but requires that {@code system_range} is fed with a "maximum array size".
-     */
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to <a href="https://github.com/h2database/h2database/issues/1815">issue 1815</a>.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
+	 */
 	protected int getMaximumArraySize() {
 		return 1000;
 	}
@@ -442,6 +454,16 @@ public class H2Dialect extends Dialect {
 		return unit == SECOND
 				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
 				: super.extractPattern(unit);
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -1010,6 +1032,16 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 
 }

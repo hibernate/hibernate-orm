@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.id.sequences;
 
@@ -15,7 +13,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 /**
- * Unlike Hibernate's UUID generator.  This avoids 
+ * Unlike Hibernate's UUID generator.  This avoids
  * meaningless synchronization and has less
  * than a chance of an asteroid hitting you on the head
  * even after trillions of rows are inserted.  I know
@@ -29,7 +27,7 @@ public class UUIDGenerator implements IdentifierGenerator {
 		String sud = uuid.toString();
 		System.out.println("uuid="+uuid);
 		sud = sud.replaceAll("-", "");
-		
+
 		BigInteger integer = new BigInteger(sud,16);
 
 		System.out.println("bi ="+integer);

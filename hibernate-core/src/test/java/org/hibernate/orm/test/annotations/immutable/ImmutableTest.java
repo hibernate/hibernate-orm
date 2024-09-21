@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.immutable;
 
@@ -123,7 +121,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			fail();
 		} catch (PersistenceException e) {
 			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
-            log.debug("success");
+			log.debug("success");
 		}
 		s.close();
 
@@ -135,7 +133,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testImmutableAttribute(){
 		configuration().addAttributeConverter( ExifConverter.class);
@@ -218,7 +216,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testMisplacedImmutableAnnotation() {
 		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
@@ -239,7 +237,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-    protected Class[] getAnnotatedClasses() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Country.class, State.class, Photo.class };
 	}
 }

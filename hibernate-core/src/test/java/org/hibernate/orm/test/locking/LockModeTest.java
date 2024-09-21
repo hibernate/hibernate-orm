@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
 
@@ -221,15 +219,15 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12257")
 	public void testRefreshWithExplicitLowerLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
-						   A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-						   session.refresh( a, LockMode.READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-						   session.refresh( a, LockModeType.READ );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-						   session.refresh( a, LockModeType.READ, Collections.emptyMap() );
-						   checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
-					   } );
+						A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						session.refresh( a, LockMode.READ );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						session.refresh( a, LockModeType.READ );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+						session.refresh( a, LockModeType.READ, Collections.emptyMap() );
+						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
+					} );
 	}
 
 
@@ -238,13 +236,13 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@SkipForDialect( dialectClass = CockroachDialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode1() {
 		doInHibernate( this::sessionFactory, session -> {
-						   A a = session.get( A.class, id );
-						   checkLockMode( a, LockMode.READ, session );
-						   session.refresh( a, LockMode.UPGRADE_NOWAIT );
-						   checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
-						   session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
-						   checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
-					   } );
+						A a = session.get( A.class, id );
+						checkLockMode( a, LockMode.READ, session );
+						session.refresh( a, LockMode.UPGRADE_NOWAIT );
+						checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
+						session.refresh( a, LockModeType.PESSIMISTIC_WRITE, Collections.emptyMap() );
+						checkLockMode( a, LockMode.PESSIMISTIC_WRITE, session );
+					} );
 	}
 
 	@Test

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import java.util.Collection;
@@ -34,8 +31,9 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	private final Object identifier;
 
 	//N.B. this Set needs to be treated as immutable
-	private final Set<String> lazyFields;
+	private Set<String> lazyFields;
 	private Set<String> initializedLazyFields;
+	private Set<String> mutableLazyFields;
 
 	public LazyAttributeLoadingInterceptor(
 			String entityName,
@@ -193,4 +191,11 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 		return initializedLazyFields == null ? Collections.emptySet() : initializedLazyFields;
 	}
 
+	public void addLazyFieldByGraph(String fieldName) {
+		if ( mutableLazyFields == null ) {
+			mutableLazyFields = new HashSet<>( lazyFields );
+			lazyFields = mutableLazyFields;
+		}
+		mutableLazyFields.add( fieldName );
+	}
 }

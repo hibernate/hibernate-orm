@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.id.generators;
 
@@ -11,10 +9,13 @@ import java.util.function.Function;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.generator.Generator;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.RootClass;
 
 import org.junit.jupiter.api.Test;
@@ -93,7 +94,23 @@ public class UnnamedGeneratorTests {
 			final Generator generator = entityBinding.getIdentifier().createGenerator(
 					metadata.getDatabase().getDialect(),
 					entityBinding,
-					entityBinding.getIdentifierProperty()
+					entityBinding.getIdentifierProperty(),
+					new GeneratorSettings() {
+						@Override
+						public String getDefaultCatalog() {
+							return null;
+						}
+
+						@Override
+						public String getDefaultSchema() {
+							return null;
+						}
+
+						@Override
+						public SqlStringGenerationContext getSqlStringGenerationContext() {
+							return SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+						}
+					}
 			);
 
 			checks.accept( generator );
@@ -170,7 +187,7 @@ public class UnnamedGeneratorTests {
 		private Integer id;
 		private String name;
 	}
-	
+
 	private static final Function<Generator,String> SEQUENCE_NAME_EXTRACTOR = (generator) -> {
 		return ( (org.hibernate.id.enhanced.SequenceStyleGenerator) generator ).getDatabaseStructure().getPhysicalName().getObjectName().getText();
 	};

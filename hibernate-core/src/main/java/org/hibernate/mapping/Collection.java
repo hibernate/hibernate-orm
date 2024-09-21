@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -33,6 +31,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.Type;
+import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
@@ -245,10 +244,12 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return comparator;
 	}
 
+	@Override
 	public boolean isLazy() {
 		return lazy;
 	}
 
+	@Override
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}
@@ -267,6 +268,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return false;
 	}
 
+	@Override
 	public boolean hasFormula() {
 		return false;
 	}
@@ -363,29 +365,39 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.batchSize = batchSize;
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return fetchMode;
 	}
 
+	@Override
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode = fetchMode;
 	}
 
+	/**
+	 * @deprecated use {@link #validate(MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public void validate(Mapping mapping) throws MappingException {
+		validate( (MappingContext) mapping);
+	}
+
+	public void validate(MappingContext mappingContext) throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
 
-		if ( !getKey().isValid( mapping ) ) {
+		if ( !getKey().isValid( mappingContext ) ) {
 			throw new MappingException(
-					"collection foreign key mapping has wrong number of columns: "
+					"collection foreign key mappingContext has wrong number of columns: "
 							+ getRole()
 							+ " type: "
 							+ getKey().getType().getName()
 			);
 		}
-		if ( !getElement().isValid( mapping ) ) {
+		if ( !getElement().isValid( mappingContext ) ) {
 			throw new MappingException(
-					"collection element mapping has wrong number of columns: "
+					"collection element mappingContext has wrong number of columns: "
 							+ getRole()
 							+ " type: "
 							+ getElement().getType().getName()
@@ -420,10 +432,12 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return Collections.emptyList();
 	}
 
+	@Override
 	public int getColumnSpan() {
 		return 0;
 	}
 
+	@Override
 	public Type getType() throws MappingException {
 		return getCollectionType();
 	}
@@ -483,18 +497,22 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return cachedCollectionType;
 	}
 
+	@Override
 	public boolean isNullable() {
 		return true;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return false;
 	}
 
+	@Override
 	public Table getTable() {
 		return owner.getTable();
 	}
 
+	@Override
 	public void createForeignKey() {
 	}
 
@@ -502,11 +520,13 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return false;
 	}
 
-	public boolean isValid(Mapping mapping) {
+	@Override
+	public boolean isValid(MappingContext mappingContext) {
 		return true;
 	}
 
@@ -558,6 +578,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.cacheConcurrencyStrategy = cacheConcurrencyStrategy;
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName) {
 	}
 
@@ -644,6 +665,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return deleteAllCheckStyle;
 	}
 
+	@Override
 	public void addFilter(
 			String name,
 			String condition,
@@ -662,6 +684,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		);
 	}
 
+	@Override
 	public List<FilterConfiguration> getFilters() {
 		return filters;
 	}

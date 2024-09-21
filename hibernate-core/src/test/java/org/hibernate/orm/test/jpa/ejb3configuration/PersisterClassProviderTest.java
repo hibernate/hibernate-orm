@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
@@ -109,7 +107,7 @@ public class PersisterClassProviderTest {
 			entityManagerFactory.close();
 		}
 		catch ( PersistenceException e ) {
-            Assertions.assertNotNull( e.getCause() );
+			Assertions.assertNotNull( e.getCause() );
 			Assertions.assertNotNull( e.getCause().getCause() );
 			Assertions.assertEquals( GoofyException.class, e.getCause().getCause().getClass() );
 
@@ -390,7 +388,7 @@ public class PersisterClassProviderTest {
 			return false;
 		}
 
-        @Override
+		@Override
 		public int[] getNaturalIdentifierProperties() {
 			return new int[0];
 		}
@@ -407,16 +405,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-        public boolean hasNaturalIdCache() {
-            return false;
-        }
+		public boolean hasNaturalIdCache() {
+			return false;
+		}
 
-        @Override
-        public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
-            return null;
-        }
+		@Override
+		public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
+			return null;
+		}
 
-        @Override
+		@Override
 		public IdentifierGenerator getIdentifierGenerator() {
 			return null;
 		}
@@ -879,11 +877,6 @@ public class PersisterClassProviderTest {
 		@Override
 		public ModelPart getIdentifierDescriptor() {
 			return null;
-		}
-
-		@Override
-		public boolean hasSkippableTables() {
-			return false;
 		}
 
 		@Override

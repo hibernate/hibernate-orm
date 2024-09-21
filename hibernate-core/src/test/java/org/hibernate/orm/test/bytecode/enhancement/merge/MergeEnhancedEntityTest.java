@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
@@ -34,53 +32,53 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @JiraKey( "HHH-11459" )
 @DomainModel(
-        annotatedClasses = {
-               MergeEnhancedEntityTest.Person.class,
+		annotatedClasses = {
+			MergeEnhancedEntityTest.Person.class,
 				MergeEnhancedEntityTest.PersonAddress.class,
 				MergeEnhancedEntityTest.NullablePerson.class
-        }
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class MergeEnhancedEntityTest {
-    private Person person;
+	private Person person;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        person = new Person( 1L, "Sam" );
-        scope.inTransaction( s -> {
-            s.persist( person );
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		person = new Person( 1L, "Sam" );
+		scope.inTransaction( s -> {
+			s.persist( person );
+		} );
+	}
 
-    @Test
-    public void testMerge(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Person entity = s.find( Person.class, 1L );
-            entity.name = "John";
-            try {
-                s.merge( entity );
-            } catch ( RuntimeException e ) {
-                fail( "Enhanced entity can't be merged: " + e.getMessage() );
-            }
-        } );
-    }
+	@Test
+	public void testMerge(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Person entity = s.find( Person.class, 1L );
+			entity.name = "John";
+			try {
+				s.merge( entity );
+			} catch ( RuntimeException e ) {
+				fail( "Enhanced entity can't be merged: " + e.getMessage() );
+			}
+		} );
+	}
 
-    @Test
-    public void testRefresh(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Person entity = s.find( Person.class, 1L );
-            entity.name = "John";
+	@Test
+	public void testRefresh(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Person entity = s.find( Person.class, 1L );
+			entity.name = "John";
 
-            s.refresh( entity );
+			s.refresh( entity );
 
 //            try {
 //                s.refresh( entity );
 //            } catch ( RuntimeException e ) {
 //                fail( "Enhanced entity can't be refreshed: " + e.getMessage() );
 //            }
-        } );
-    }
+		} );
+	}
 
 	@Test
 	public void testMergeWithNullValues(SessionFactoryScope scope) {
@@ -117,71 +115,71 @@ public class MergeEnhancedEntityTest {
 		} );
 	}
 
-    @AfterEach
-    public void cleanup(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            s.remove( person );
-        } );
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-            s.createQuery( "delete from NullablePerson" );
-        } );
-    }
+			s.remove( person );
+		} );
+		scope.inTransaction( s -> {
+			s.createQuery( "delete from NullablePerson" );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "PERSON" )
-    static class Person {
+	@Entity
+	@Table( name = "PERSON" )
+	static class Person {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @Column( name = "name", length = 10, nullable = false )
-        String name;
+		@Column( name = "name", length = 10, nullable = false )
+		String name;
 
-        @OneToMany( fetch = FetchType.LAZY, mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL )
-        List<PersonAddress> details = new ArrayList<>();
+		@OneToMany( fetch = FetchType.LAZY, mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL )
+		List<PersonAddress> details = new ArrayList<>();
 
-        Person() {
-        }
+		Person() {
+		}
 
-        Person(Long id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-    }
+		Person(Long id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
 
-    @Entity
-    @Table( name = "PERSON_ADDRESS" )
-    static class PersonAddress {
+	@Entity
+	@Table( name = "PERSON_ADDRESS" )
+	static class PersonAddress {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @ManyToOne( optional = false, fetch = FetchType.LAZY )
-        Person parent;
-    }
+		@ManyToOne( optional = false, fetch = FetchType.LAZY )
+		Person parent;
+	}
 
-    @Entity(name = "NullablePerson")
-    @Table(name = "NULLABLE_PERSON")
-    static class NullablePerson {
+	@Entity(name = "NullablePerson")
+	@Table(name = "NULLABLE_PERSON")
+	static class NullablePerson {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @Column
-        String name;
+		@Column
+		String name;
 
-        @Column(name = "NUMBER_COLUMN")
-        Integer number;
+		@Column(name = "NUMBER_COLUMN")
+		Integer number;
 
-        NullablePerson() {
-        }
+		NullablePerson() {
+		}
 
-        NullablePerson(Long id, String name, Integer number) {
-            this.id = id;
-            this.name = name;
-            this.number = number;
-        }
-    }
+		NullablePerson(Long id, String name, Integer number) {
+			this.id = id;
+			this.name = name;
+			this.number = number;
+		}
+	}
 }

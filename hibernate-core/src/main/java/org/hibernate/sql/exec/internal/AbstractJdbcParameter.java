@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
@@ -18,7 +16,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SqlExpressible;
-import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.query.BindableType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -27,6 +24,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -135,7 +133,7 @@ public abstract class AbstractJdbcParameter
 		}
 	}
 
-	private static <E extends Enum<E>> BasicTypeImpl<E> createEnumType(ExecutionContext executionContext, Class<E> enumClass) {
+	private static <E extends Enum<E>> BasicType<E> createEnumType(ExecutionContext executionContext, Class<E> enumClass) {
 		final EnumJavaType<E> enumJavaType = new EnumJavaType<>( enumClass );
 		final JdbcTypeIndicators indicators =
 				executionContext.getSession().getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
@@ -144,7 +142,7 @@ public abstract class AbstractJdbcParameter
 				// so just accept the default from the TypeConfiguration, which
 				// is usually ORDINAL (the default according to JPA)
 				enumJavaType.getRecommendedJdbcType(indicators);
-		return new BasicTypeImpl<>( enumJavaType, jdbcType );
+		return indicators.getTypeConfiguration().getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -13,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.JsonHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
@@ -28,16 +25,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Christian Beikov
  */
-public class OracleJsonBlobJdbcType implements AggregateJdbcType {
+public class OracleJsonBlobJdbcType extends JsonJdbcType {
 	/**
 	 * Singleton access
 	 */
 	public static final OracleJsonBlobJdbcType INSTANCE = new OracleJsonBlobJdbcType( null );
 
-	private final EmbeddableMappingType embeddableMappingType;
-
 	protected OracleJsonBlobJdbcType(EmbeddableMappingType embeddableMappingType) {
-		this.embeddableMappingType = embeddableMappingType;
+		super( embeddableMappingType );
 	}
 
 	@Override
@@ -46,19 +41,8 @@ public class OracleJsonBlobJdbcType implements AggregateJdbcType {
 	}
 
 	@Override
-	public int getDefaultSqlTypeCode() {
-		return SqlTypes.JSON;
-	}
-
-	@Override
 	public String toString() {
 		return "JsonBlobJdbcType";
-	}
-
-	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		// No literal support for now
-		return null;
 	}
 
 	@Override
@@ -72,50 +56,6 @@ public class OracleJsonBlobJdbcType implements AggregateJdbcType {
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
 		return new OracleJsonBlobJdbcType( mappingType );
-	}
-
-	@Override
-	public EmbeddableMappingType getEmbeddableMappingType() {
-		return embeddableMappingType;
-	}
-
-	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
-		if ( embeddableMappingType != null ) {
-			return JsonHelper.fromString(
-					embeddableMappingType,
-					string,
-					javaType.getJavaTypeClass() != Object[].class,
-					options
-			);
-		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
-	}
-
-	@Override
-	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
-		assert embeddableMappingType != null;
-		return JsonHelper.toString( embeddableMappingType, domainValue, options );
-	}
-
-	@Override
-	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
-		assert embeddableMappingType != null;
-		return JsonHelper.fromString( embeddableMappingType, (String) rawJdbcValue, false, options );
-	}
-
-	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
-		if ( embeddableMappingType != null ) {
-			return JsonHelper.toString( embeddableMappingType, value, options );
-		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
 	}
 
 	@Override

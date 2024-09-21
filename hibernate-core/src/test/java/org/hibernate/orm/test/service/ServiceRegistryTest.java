@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.service;
 
 import java.util.Map;
@@ -9,7 +13,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.service.NullServiceException;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;

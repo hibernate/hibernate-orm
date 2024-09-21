@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -285,10 +283,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				}
 			}
 			else {
-				/*
-				 Whenever the collection lazy loading is triggered during the loading process,
-				 closing the connection will cause an error when RowProcessingStateStandardImpl#next() will be called.
-				 */
+				// Whenever the collection lazy loading is triggered during the loading process,
+				// closing the connection will cause an error when RowProcessingStateStandardImpl#next() will be called.
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
 				if ( !session.isTransactionInProgress()
 						&& ( !persistenceContext.hasLoadContext()

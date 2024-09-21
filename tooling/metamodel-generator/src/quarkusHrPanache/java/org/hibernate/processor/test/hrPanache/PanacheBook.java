@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.hrPanache;
 
 import java.util.List;
@@ -13,14 +17,14 @@ import jakarta.persistence.Entity;
 @Entity
 public class PanacheBook extends PanacheEntity {
 	public @NaturalId String isbn;
-    public @NaturalId String title;
-    public @NaturalId String author;
-    public String text;
-    public int pages;
-    
-    @Find
-    public static native Uni<List<PanacheBook>> findBook(String isbn);
+	public @NaturalId String title;
+	public @NaturalId String author;
+	public String text;
+	public int pages;
 
-    @HQL("WHERE isbn = :isbn")
-    public static native Uni<List<PanacheBook>> hqlBook(String isbn);
+	@Find
+	public static native Uni<List<PanacheBook>> findBook(String isbn);
+
+	@HQL("WHERE isbn = :isbn")
+	public static native Uni<List<PanacheBook>> hqlBook(String isbn);
 }

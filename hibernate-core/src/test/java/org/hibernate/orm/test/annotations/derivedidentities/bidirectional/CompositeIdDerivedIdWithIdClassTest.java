@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.bidirectional;
 
@@ -74,7 +72,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 
 		// assertion for HHH-11274 - checking for exception
 		final Object identifier = new PersistenceUnitUtilImpl( scope.getSessionFactory() ).getIdentifier( transientCart.getLineItems()
-																												  .get( 0 ) );
+																												.get( 0 ) );
 
 		// merge ID with transient many-to-one
 		scope.inTransaction(

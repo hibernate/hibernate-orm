@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.map;
 
@@ -223,15 +221,15 @@ public class PersistentMapTest {
 						session.getTransaction().begin();
 /*
 select
-        userdatas0_.userId as userid2_8_0_,
-        userdatas0_.id as id1_8_0_,
-        userdatas0_.name as name3_0_,
-        userdatas0_.id as id1_8_1_,
-        userdatas0_.userId as userid2_8_1_
-    from
-        UserData userdatas0_
-    where
-        userdatas0_.userId=1
+		userdatas0_.userId as userid2_8_0_,
+		userdatas0_.id as id1_8_0_,
+		userdatas0_.name as name3_0_,
+		userdatas0_.id as id1_8_1_,
+		userdatas0_.userId as userid2_8_1_
+	from
+		UserData userdatas0_
+	where
+		userdatas0_.userId=1
  */
 						assertEquals( 0, session.get( User.class, user.id ).userDatas.size() );
 						assertEquals( 0, session.createQuery( "FROM " + UserData.class.getName() ).list().size() );

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: $
 package org.hibernate.orm.test.cascade;
 
 import java.util.HashSet;
@@ -13,82 +9,82 @@ import java.util.Set;
 
 public class G
 {
-    // Constants -----------------------------------------------------------------------------------
+	// Constants -----------------------------------------------------------------------------------
 
-    // Static --------------------------------------------------------------------------------------
+	// Static --------------------------------------------------------------------------------------
 
-    // Attributes ----------------------------------------------------------------------------------
+	// Attributes ----------------------------------------------------------------------------------
 
-    private long id;
+	private long id;
 
-    private String data;
+	private String data;
 
-    // A 1 <-> 1 G
-    private A a;
+	// A 1 <-> 1 G
+	private A a;
 
-    // G * <-> * H
-    private Set hs;
+	// G * <-> * H
+	private Set hs;
 
-    // Constructors --------------------------------------------------------------------------------
+	// Constructors --------------------------------------------------------------------------------
 
-    public G()
-    {
-        this(null);
-    }
+	public G()
+	{
+		this(null);
+	}
 
-    public G(String data)
-    {
-        this.data = data;
-        hs = new HashSet();
-    }
+	public G(String data)
+	{
+		this.data = data;
+		hs = new HashSet();
+	}
 
-    // Public --------------------------------------------------------------------------------------
+	// Public --------------------------------------------------------------------------------------
 
-    public String getData()
-    {
-        return data;
-    }
+	public String getData()
+	{
+		return data;
+	}
 
-    public void setData(String data)
-    {
-        this.data = data;
-    }
+	public void setData(String data)
+	{
+		this.data = data;
+	}
 
-    public A getA()
-    {
-        return a;
-    }
+	public A getA()
+	{
+		return a;
+	}
 
-    public void setA(A a)
-    {
-        this.a = a;
-    }
+	public void setA(A a)
+	{
+		this.a = a;
+	}
 
-    public Set getHs()
-    {
-        return hs;
-    }
+	public Set getHs()
+	{
+		return hs;
+	}
 
-    public void setHs(Set s)
-    {
-        hs = s;
-    }
+	public void setHs(Set s)
+	{
+		hs = s;
+	}
 
-    // Package protected ---------------------------------------------------------------------------
+	// Package protected ---------------------------------------------------------------------------
 
-    long getId()
-    {
-        return id;
-    }
+	long getId()
+	{
+		return id;
+	}
 
-    // Protected -----------------------------------------------------------------------------------
+	// Protected -----------------------------------------------------------------------------------
 
-    // Private -------------------------------------------------------------------------------------
+	// Private -------------------------------------------------------------------------------------
 
-    private void setId(long id)
-    {
-        this.id = id;
-    }
+	private void setId(long id)
+	{
+		this.id = id;
+	}
 
-    // Inner classes -------------------------------------------------------------------------------
+	// Inner classes -------------------------------------------------------------------------------
 }

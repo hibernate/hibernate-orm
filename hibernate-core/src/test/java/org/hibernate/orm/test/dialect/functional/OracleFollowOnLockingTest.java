@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
@@ -33,8 +31,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -211,7 +207,7 @@ public class OracleFollowOnLockingTest extends
 
 		List<Product> products = session.createQuery( "select p from Product p", Product.class )
 				.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-										 .setFollowOnLocking( false ) )
+										.setFollowOnLocking( false ) )
 				.setFirstResult( 40 )
 				.setMaxResults( 10 )
 				.getResultList();
@@ -236,7 +232,7 @@ public class OracleFollowOnLockingTest extends
 					session.createQuery(
 									"select p from Product p left join p.vehicle v on v.id is null", Product.class )
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													 .setFollowOnLocking( false ) )
+													.setFollowOnLocking( false ) )
 							.setFirstResult( 40 )
 							.setMaxResults( 10 )
 							.getResultList();
@@ -266,7 +262,7 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select p from Product p", Product.class )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.setFirstResult( 40 )
 						.setMaxResults( 10 )
 						.getResultList();
@@ -337,7 +333,7 @@ public class OracleFollowOnLockingTest extends
 						Product.class
 				)
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( false ) )
+												.setFollowOnLocking( false ) )
 						.setMaxResults( 10 )
 						.getResultList();
 		assertEquals( 10, products.size() );
@@ -356,7 +352,7 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select p from Product p order by p.id", Product.class )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.setMaxResults( 10 )
 						.getResultList();
 
@@ -405,7 +401,7 @@ public class OracleFollowOnLockingTest extends
 							Product.class
 					)
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													 .setFollowOnLocking( false ) )
+													.setFollowOnLocking( false ) )
 							.getResultList();
 			fail( "Should throw exception since Oracle does not support DISTINCT if follow on locking is disabled" );
 		}
@@ -434,7 +430,7 @@ public class OracleFollowOnLockingTest extends
 				session.createQuery(
 						"select distinct p from Product p where p.id > 40" )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.setMaxResults( 10 )
 						.getResultList();
 
@@ -483,7 +479,7 @@ public class OracleFollowOnLockingTest extends
 									"from Product p " +
 									"group by p.id, p.name, p.vehicle.id " )
 							.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													 .setFollowOnLocking( false ) )
+													.setFollowOnLocking( false ) )
 							.getResultList();
 			fail( "Should throw exception since Oracle does not support GROUP BY if follow on locking is disabled" );
 		}
@@ -514,7 +510,7 @@ public class OracleFollowOnLockingTest extends
 								"from Product p " +
 								"group by p.id, p.name, p.vehicle.id " )
 						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-												 .setFollowOnLocking( true ) )
+												.setFollowOnLocking( true ) )
 						.getResultList();
 
 		assertEquals( 50, products.size() );

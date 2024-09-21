@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.dialect;
 
 import java.util.Map;
@@ -23,7 +27,7 @@ public class MySQLDialectDatabaseVersionTest extends BaseUnitTestCase {
 		assertEquals(0, dialect.getVersion().getMinor());
 		assertEquals(37, dialect.getVersion().getMicro());
 	}
-	
+
 	@Test
 	public void releaseVersion() {
 		String version = "8.0.37";
@@ -91,7 +95,7 @@ public class MySQLDialectDatabaseVersionTest extends BaseUnitTestCase {
 		public Map<String, Object> getConfigurationValues() {
 			return Map.of();
 		}
-		
+
 	}
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags;
 
@@ -14,7 +12,6 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.auditReader.AuditedTestEntity;
 import org.hibernate.orm.test.envers.integration.auditReader.NotAuditedTestEntity;
 
-import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumEntity;
 import org.hibernate.orm.test.envers.integration.modifiedflags.entities.EnumOption;
 import org.junit.Test;

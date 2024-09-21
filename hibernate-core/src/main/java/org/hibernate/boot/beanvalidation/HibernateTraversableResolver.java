@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
 
@@ -28,7 +26,7 @@ import jakarta.validation.TraversableResolver;
  * Use Hibernate metadata to ignore cascade on entities.
  * Cascade on embeddable objects or collection of embeddable objects are accepted
  * Also use Hibernate's native {@link Hibernate#isInitialized} method call.
- * 
+ *
  * @author Emmanuel Bernard
  */
 public class HibernateTraversableResolver implements TraversableResolver {
@@ -36,7 +34,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 
 	public HibernateTraversableResolver(
 			EntityPersister persister,
-			ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister, 
+			ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister,
 			SessionFactoryImplementor factory) {
 		associations = associationsPerEntityPersister.get( persister );
 		if ( associations == null ) {

@@ -1,24 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: PublicationDate.java 7556 2005-07-19 23:22:27Z oneovthafew $
 package org.hibernate.orm.test.optlock;
 
 
 public class PublicationDate {
 	private int year;
 	private Integer month;
-	
+
 	public PublicationDate(int year) {
 		this.year = year;
 	}
-	
+
 	PublicationDate() {}
-	
+
 	public Integer getMonth() {
 		return month;
 	}

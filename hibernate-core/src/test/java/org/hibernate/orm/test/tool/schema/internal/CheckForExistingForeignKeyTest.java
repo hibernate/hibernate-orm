@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.tool.schema.internal;
 
 import java.lang.reflect.InvocationTargetException;
@@ -137,7 +141,7 @@ public class CheckForExistingForeignKeyTest {
 	/**
 	 * If the key has no name it should never be found. Result is that those keys are always recreated. But keys always
 	 * have a name so this is no problem.
-	 * 
+	 *
 	 * @throws NoSuchMethodException - error
 	 * @throws SecurityException - error
 	 * @throws IllegalAccessException - error
@@ -160,7 +164,7 @@ public class CheckForExistingForeignKeyTest {
 
 	/**
 	 * Test key not found if tableinformation is missing.
-	 * 
+	 *
 	 * @throws NoSuchMethodException - error
 	 * @throws SecurityException - error
 	 * @throws IllegalAccessException - error
@@ -183,7 +187,7 @@ public class CheckForExistingForeignKeyTest {
 
 	/**
 	 * Check detection of existing foreign keys with the same name exists.
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
@@ -220,7 +224,7 @@ public class CheckForExistingForeignKeyTest {
 
 	/**
 	 * Check detection of existing foreign keys with the same name exists.
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
@@ -258,7 +262,7 @@ public class CheckForExistingForeignKeyTest {
 	/**
 	 * Check detection of existing foreign key with the same mappings for a simple mapping (table1.objectId =>
 	 * table2.id).
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error
@@ -296,7 +300,7 @@ public class CheckForExistingForeignKeyTest {
 	/**
 	 * Check detection of not existing foreign key with the same mappings for a simple mapping (table1.objectId =>
 	 * table2.id).
-	 * 
+	 *
 	 * @throws SecurityException - error
 	 * @throws NoSuchMethodException - error
 	 * @throws InvocationTargetException - error

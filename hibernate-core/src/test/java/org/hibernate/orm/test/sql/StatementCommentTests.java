@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql;
 
@@ -86,11 +84,11 @@ public class StatementCommentTests {
 	@Entity( name = "VersionedEntity" )
 	@Table( name = "entity_table" )
 	public static class VersionedEntity {
-	    @Id
-	    private Integer id;
+		@Id
+		private Integer id;
 		@Version
 		private Integer version;
-	    @Basic
+		@Basic
 		private String name;
 
 		protected VersionedEntity() {

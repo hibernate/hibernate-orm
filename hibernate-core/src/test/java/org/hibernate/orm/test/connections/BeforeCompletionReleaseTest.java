@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.connections;
 
 import java.sql.Connection;
@@ -63,167 +60,166 @@ import static org.mockito.Mockito.spy;
 @RunWith(CustomParameterized.class)
 public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static List<Object[]> params() {
-        return Arrays.asList( new Object[][] {
-                {
-                        "Setting connection handling mode from properties",
-                        PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION,
-                        null
-                },
-                {
-                        "Setting connection handling mode through SessionBuilder",
-                        PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT,
-                        PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION
-                }
-        } );
-    }
+	@Parameterized.Parameters(name = "{0}")
+	public static List<Object[]> params() {
+		return Arrays.asList( new Object[][] {
+				{
+						"Setting connection handling mode from properties",
+						PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION,
+						null
+				},
+				{
+						"Setting connection handling mode through SessionBuilder",
+						PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT,
+						PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION
+				}
+		} );
+	}
 
-    @Rule
-    public MockitoRule mockito = MockitoJUnit.rule().strictness( Strictness.STRICT_STUBS );
-    private final ConnectionProvider connectionProvider = spy(
-            new ConnectionProviderDelegate( ConnectionProviderBuilder.buildConnectionProvider() )
-    );
+	@Rule
+	public MockitoRule mockito = MockitoJUnit.rule().strictness( Strictness.STRICT_STUBS );
+	private final ConnectionProvider connectionProvider = spy(
+			new ConnectionProviderDelegate( ConnectionProviderBuilder.buildConnectionProvider() )
+	);
 
-    private final PhysicalConnectionHandlingMode connectionHandlingModeInProperties;
-    private final PhysicalConnectionHandlingMode connectionHandlingModeInSessionBuilder;
+	private final PhysicalConnectionHandlingMode connectionHandlingModeInProperties;
+	private final PhysicalConnectionHandlingMode connectionHandlingModeInSessionBuilder;
 
-    public BeforeCompletionReleaseTest(
-            String ignoredTestLabel, PhysicalConnectionHandlingMode connectionHandlingModeInProperties,
-            PhysicalConnectionHandlingMode connectionHandlingModeInSessionBuilder) {
-        this.connectionHandlingModeInProperties = connectionHandlingModeInProperties;
-        this.connectionHandlingModeInSessionBuilder = connectionHandlingModeInSessionBuilder;
-    }
+	public BeforeCompletionReleaseTest(
+			String ignoredTestLabel, PhysicalConnectionHandlingMode connectionHandlingModeInProperties,
+			PhysicalConnectionHandlingMode connectionHandlingModeInSessionBuilder) {
+		this.connectionHandlingModeInProperties = connectionHandlingModeInProperties;
+		this.connectionHandlingModeInSessionBuilder = connectionHandlingModeInSessionBuilder;
+	}
 
-    @Override
-    protected Map getConfig() {
-        Map config = super.getConfig();
-        TestingJtaBootstrap.prepare( config );
-        config.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
-        if ( connectionHandlingModeInProperties != null ) {
-            config.put( AvailableSettings.CONNECTION_HANDLING, connectionHandlingModeInProperties );
-        }
-        return config;
-    }
+	@Override
+	protected Map getConfig() {
+		Map config = super.getConfig();
+		TestingJtaBootstrap.prepare( config );
+		config.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+		if ( connectionHandlingModeInProperties != null ) {
+			config.put( AvailableSettings.CONNECTION_HANDLING, connectionHandlingModeInProperties );
+		}
+		return config;
+	}
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] { Thing.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Thing.class };
+	}
 
-    @Test
-    @JiraKeyGroup( value = {
-            @JiraKey( value = "HHH-13976" ),
-            @JiraKey( value = "HHH-14326" )
-    } )
-    public void testResourcesReleasedThenConnectionClosedThenCommit() throws SQLException, XAException {
-        try (SessionImplementor s = (SessionImplementor) openSession()) {
-            XAResource transactionSpy = mock( XAResource.class );
-            Connection[] connections = new Connection[1];
-            Statement statementMock = Mockito.mock( Statement.class );
+	@Test
+	@JiraKeyGroup( value = {
+			@JiraKey( value = "HHH-13976" ),
+			@JiraKey( value = "HHH-14326" )
+	} )
+	public void testResourcesReleasedThenConnectionClosedThenCommit() throws SQLException, XAException {
+		try (SessionImplementor s = (SessionImplementor) openSession()) {
+			XAResource transactionSpy = mock( XAResource.class );
+			Connection[] connections = new Connection[1];
+			Statement statementMock = Mockito.mock( Statement.class );
 
-            TransactionUtil2.inTransaction( s, session -> {
-                spyOnTransaction( transactionSpy );
+			TransactionUtil2.inTransaction( s, session -> {
+				spyOnTransaction( transactionSpy );
 
-                Thing thing = new Thing();
-                thing.setId( 1 );
-                session.persist( thing );
+				Thing thing = new Thing();
+				thing.setId( 1 );
+				session.persist( thing );
 
-                LogicalConnectionImplementor logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
-                logicalConnection.getResourceRegistry().register( statementMock, true );
-                connections[0] = logicalConnection.getPhysicalConnection();
-            } );
+				LogicalConnectionImplementor logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
+				logicalConnection.getResourceRegistry().register( statementMock, true );
+				connections[0] = logicalConnection.getPhysicalConnection();
+			} );
 
-            // Note: all this must happen BEFORE the session is closed;
-            // it's particularly important when reusing the session.
+			// Note: all this must happen BEFORE the session is closed;
+			// it's particularly important when reusing the session.
 
-            Connection connection = connections[0];
+			Connection connection = connections[0];
 
-            // Must close the resources, then the connection, then commit
-            InOrder inOrder = inOrder( statementMock, connectionProvider, transactionSpy );
-            inOrder.verify( statementMock ).close();
-            inOrder.verify( connectionProvider ).closeConnection( connection );
-            inOrder.verify( transactionSpy ).commit( any(), anyBoolean() );
-        }
-    }
+			// Must close the resources, then the connection, then commit
+			InOrder inOrder = inOrder( statementMock, connectionProvider, transactionSpy );
+			inOrder.verify( statementMock ).close();
+			inOrder.verify( connectionProvider ).closeConnection( connection );
+			inOrder.verify( transactionSpy ).commit( any(), anyBoolean() );
+		}
+	}
 
-    @Test
-    @JiraKey(value = "HHH-14557")
-    public void testResourcesReleasedThenConnectionClosedOnEachRollback() throws SQLException {
-        try (SessionImplementor s = (SessionImplementor) openSession()) {
-            Connection[] connections = new Connection[1];
-            Statement statementMock = Mockito.mock( Statement.class );
-            RuntimeException rollbackException = new RuntimeException("Rollback");
+	@Test
+	@JiraKey(value = "HHH-14557")
+	public void testResourcesReleasedThenConnectionClosedOnEachRollback() throws SQLException {
+		try (SessionImplementor s = (SessionImplementor) openSession()) {
+			Connection[] connections = new Connection[1];
+			Statement statementMock = Mockito.mock( Statement.class );
+			RuntimeException rollbackException = new RuntimeException("Rollback");
 
-            try {
-                TransactionUtil2.inTransaction( s, session -> {
-                    Thing thing = new Thing();
-                    thing.setId( 1 );
-                    session.persist( thing );
+			try {
+				TransactionUtil2.inTransaction( s, session -> {
+					Thing thing = new Thing();
+					thing.setId( 1 );
+					session.persist( thing );
 
-                    LogicalConnectionImplementor logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
-                    logicalConnection.getResourceRegistry().register( statementMock, true );
-                    connections[0] = logicalConnection.getPhysicalConnection();
+					LogicalConnectionImplementor logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
+					logicalConnection.getResourceRegistry().register( statementMock, true );
+					connections[0] = logicalConnection.getPhysicalConnection();
 
-                    throw rollbackException;
-                } );
-            }
-            catch (RuntimeException e) {
-                if ( e != rollbackException ) {
-                    throw e;
-                }
-                // Else: ignore, that was expected.
-            }
+					throw rollbackException;
+				} );
+			}
+			catch (RuntimeException e) {
+				if ( e != rollbackException ) {
+					throw e;
+				}
+				// Else: ignore, that was expected.
+			}
 
-            // Note: all this must happen BEFORE the session is closed;
-            // it's particularly important when reusing the session.
+			// Note: all this must happen BEFORE the session is closed;
+			// it's particularly important when reusing the session.
 
-            Connection connection = connections[0];
+			Connection connection = connections[0];
 
-            // Must close the resources, then the connection
-            InOrder inOrder = inOrder( statementMock, connectionProvider );
-            inOrder.verify( statementMock ).close();
-            inOrder.verify( connectionProvider ).closeConnection( connection );
-            // We don't check the relative ordering of the rollback here,
-            // because unfortunately we know it's wrong:
-            // we don't get a "before transaction completion" event for rollbacks,
-            // so in the case of rollbacks the closing always happen after transaction completion.
-        }
-    }
+			// Must close the resources, then the connection
+			InOrder inOrder = inOrder( statementMock, connectionProvider );
+			inOrder.verify( statementMock ).close();
+			inOrder.verify( connectionProvider ).closeConnection( connection );
+			// We don't check the relative ordering of the rollback here,
+			// because unfortunately we know it's wrong:
+			// we don't get a "before transaction completion" event for rollbacks,
+			// so in the case of rollbacks the closing always happen after transaction completion.
+		}
+	}
 
-    private void spyOnTransaction(XAResource xaResource) {
-        try {
-            TestingJtaPlatformImpl.transactionManager().getTransaction().enlistResource( xaResource );
-        }
-        catch (RollbackException | SystemException e) {
-            throw new IllegalStateException( e );
-        }
-    }
+	private void spyOnTransaction(XAResource xaResource) {
+		try {
+			TestingJtaPlatformImpl.transactionManager().getTransaction().enlistResource( xaResource );
+		}
+		catch (RollbackException | SystemException e) {
+			throw new IllegalStateException( e );
+		}
+	}
 
-    private Session openSession() {
-        return connectionHandlingModeInSessionBuilder == null
-                ? entityManagerFactory().openSession()
-                : entityManagerFactory().withOptions().connectionHandlingMode( connectionHandlingModeInSessionBuilder )
-                .openSession();
-    }
+	private Session openSession() {
+		return connectionHandlingModeInSessionBuilder == null
+				? entityManagerFactory().openSession()
+				: entityManagerFactory().withOptions().connectionHandlingMode( connectionHandlingModeInSessionBuilder )
+				.openSession();
+	}
 
-    // --- //
+	// --- //
 
-    @Entity(name = "Thing")
-    @Table(name = "Thing")
-    public static class Thing {
+	@Entity(name = "Thing")
+	@Table(name = "Thing")
+	public static class Thing {
 
-        @Id
-        public Integer id;
+		@Id
+		public Integer id;
 
-        public Integer getId() {
-            return id;
-        }
+		public Integer getId() {
+			return id;
+		}
 
-        public void setId(Integer id) {
-            this.id = id;
-        }
-    }
+		public void setId(Integer id) {
+			this.id = id;
+		}
+	}
 
 }
-

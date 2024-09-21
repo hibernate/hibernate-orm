@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.list;
 
@@ -45,7 +43,7 @@ public class PersistentListTest {
 	public void testInverseListIndex(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-        final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
+		final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor(ListOwner.class.getName() + ".children");
 		assertTrue( collectionPersister.isInverse() );
@@ -110,7 +108,7 @@ public class PersistentListTest {
 	public void testInverseListIndex2(SessionFactoryScope scope) {
 		// make sure no one changes the mapping
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-        final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
+		final CollectionPersister collectionPersister = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor(Order.class.getName() + ".lineItems");
 		assertTrue( collectionPersister.isInverse() );

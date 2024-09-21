@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -23,9 +21,9 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
  * be classified as "candidate keys" (as in a column or group of
  * columns that are considered candidates for primary-key).
  * <p/>
- * However, a natural id has fewer restrictions than a primary 
+ * However, a natural id has fewer restrictions than a primary
  * key.  While these lessened restrictions make them inappropriate
- * for use as a primary key, they are still generally usable as 
+ * for use as a primary key, they are still generally usable as
  * unique locators with caveats.  General reasons a natural id
  * might be inappropriate for use as a primary key are<ul>
  *     <li>it contains nullable values</li>
@@ -33,10 +31,10 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
  * </ul>
  * <p>
  * See other sources for a more complete discussion of data modeling.
- * 
- * @see org.hibernate.Session#byNaturalId 
+ *
+ * @see org.hibernate.Session#byNaturalId
  * @see org.hibernate.Session#bySimpleNaturalId
- * @see org.hibernate.Session#byMultipleNaturalId 
+ * @see org.hibernate.Session#byMultipleNaturalId
  *
  * @author Steve Ebersole
  */
@@ -50,8 +48,8 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	List<SingularAttributeMapping> getNaturalIdAttributes();
 
 	/**
-	 * Whether the natural-id is mutable.  
-	 * 
+	 * Whether the natural-id is mutable.
+	 *
 	 * @apiNote For compound natural-ids, this is true if any of the attributes are mutable.
 	 */
 	boolean isMutable();

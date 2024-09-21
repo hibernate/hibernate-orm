@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cfg.persister;
 
@@ -504,7 +502,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public EntityDataAccess getCacheAccessStrategy() {
 			return null;
 		}
-		
+
 		@Override
 		public boolean hasNaturalIdCache() {
 			return false;
@@ -735,10 +733,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;
 		}
 
-        @Override
-        public int[] resolveAttributeIndexes(String[] attributeNames) {
-            return null;
-        }
+		@Override
+		public int[] resolveAttributeIndexes(String[] attributeNames) {
+			return null;
+		}
 
 		@Override
 		public boolean canUseReferenceCacheEntries() {
@@ -848,11 +846,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public ModelPart getIdentifierDescriptor() {
 			return null;
-		}
-
-		@Override
-		public boolean hasSkippableTables() {
-			return false;
 		}
 
 		@Override

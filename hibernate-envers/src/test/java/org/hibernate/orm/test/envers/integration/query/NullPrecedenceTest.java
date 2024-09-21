@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.query;
 
@@ -29,50 +27,50 @@ import org.hibernate.testing.transaction.TransactionUtil;
 @JiraKey( value = "HHH-14981" )
 public class NullPrecedenceTest extends BaseEnversJPAFunctionalTestCase {
 
-    Integer id1;
-    Integer id2;
+	Integer id1;
+	Integer id2;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] { StrIntTestEntity.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { StrIntTestEntity.class };
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        // Revision 1
-        id1 = TransactionUtil.doInJPA(this::entityManagerFactory, entityManager -> {
-            StrIntTestEntity entity1 = new StrIntTestEntity( null, 1 );
-            entityManager.persist( entity1 );
-            return entity1.getId();
-        } );
-        // Revision 2
-        id2 = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-            StrIntTestEntity entity2 = new StrIntTestEntity( "two", 2 );
-            entityManager.persist( entity2 );
-            return entity2.getId();
-        } );
-    }
+	@Test
+	@Priority(10)
+	public void initData() {
+		// Revision 1
+		id1 = TransactionUtil.doInJPA(this::entityManagerFactory, entityManager -> {
+			StrIntTestEntity entity1 = new StrIntTestEntity( null, 1 );
+			entityManager.persist( entity1 );
+			return entity1.getId();
+		} );
+		// Revision 2
+		id2 = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
+			StrIntTestEntity entity2 = new StrIntTestEntity( "two", 2 );
+			entityManager.persist( entity2 );
+			return entity2.getId();
+		} );
+	}
 
-    @Test
-    public void testNullPrecedenceFirst() {
-        List results = getAuditReader().createQuery().forRevisionsOfEntity( StrIntTestEntity.class, true, false )
-                .addProjection( AuditEntity.property( "number" ) )
-                .addOrder( AuditEntity.property( "str1" ).asc().nulls( NullPrecedence.FIRST ) )
-                .getResultList();
-        List<Integer> expected = new ArrayList<>();
-        expected.addAll( Arrays.asList( 1, 2 ) );
-        Assert.assertEquals( expected, results );
-    }
-    
-    @Test
-    public void testNullPrecedenceLast() {
-        List results = getAuditReader().createQuery().forRevisionsOfEntity( StrIntTestEntity.class, true, false )
-                .addProjection( AuditEntity.property( "number" ) )
-                .addOrder( AuditEntity.property( "str1" ).asc().nulls( NullPrecedence.LAST ) )
-                .getResultList();
-        List<Integer> expected = new ArrayList<>();
-        expected.addAll( Arrays.asList( 2, 1 ) );
-        Assert.assertEquals( expected, results );
-    }    
+	@Test
+	public void testNullPrecedenceFirst() {
+		List results = getAuditReader().createQuery().forRevisionsOfEntity( StrIntTestEntity.class, true, false )
+				.addProjection( AuditEntity.property( "number" ) )
+				.addOrder( AuditEntity.property( "str1" ).asc().nulls( NullPrecedence.FIRST ) )
+				.getResultList();
+		List<Integer> expected = new ArrayList<>();
+		expected.addAll( Arrays.asList( 1, 2 ) );
+		Assert.assertEquals( expected, results );
+	}
+
+	@Test
+	public void testNullPrecedenceLast() {
+		List results = getAuditReader().createQuery().forRevisionsOfEntity( StrIntTestEntity.class, true, false )
+				.addProjection( AuditEntity.property( "number" ) )
+				.addOrder( AuditEntity.property( "str1" ).asc().nulls( NullPrecedence.LAST ) )
+				.getResultList();
+		List<Integer> expected = new ArrayList<>();
+		expected.addAll( Arrays.asList( 2, 1 ) );
+		Assert.assertEquals( expected, results );
+	}
 }

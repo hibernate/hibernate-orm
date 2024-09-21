@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -49,6 +47,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
@@ -98,6 +97,7 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -265,6 +265,7 @@ public class H2LegacyDialect extends Dialect {
 			}
 			if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 			}
 		}
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
@@ -295,6 +296,7 @@ public class H2LegacyDialect extends Dialect {
 		}
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonArrayJdbcType.INSTANCE );
 		}
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
@@ -399,8 +401,19 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arrayTrim_trim_array();
 				functionFactory.arrayFill_h2();
 				functionFactory.arrayToString_h2( getMaximumArraySize() );
+
+				if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+					functionFactory.jsonValue_h2();
+					functionFactory.jsonQuery_h2();
+					functionFactory.jsonExists_h2();
+					functionFactory.jsonArrayAgg_h2();
+					functionFactory.jsonObjectAgg_h2();
+				}
 			}
 			else {
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
+
 				// Use group_concat until 2.x as listagg was buggy
 				functionFactory.listagg_groupConcat();
 			}
@@ -513,6 +526,16 @@ public class H2LegacyDialect extends Dialect {
 		return unit == SECOND
 				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
 				: super.extractPattern(unit);
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
 	}
 
 	@Override
@@ -992,5 +1015,15 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public boolean supportsCaseInsensitiveLike() {
 		return getVersion().isSameOrAfter( 1, 4, 194 );
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 }

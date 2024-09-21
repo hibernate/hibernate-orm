@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 
@@ -233,8 +231,8 @@ public class EmbeddedTest {
 
 		scope.inTransaction( session -> {
 			Query query = session.createQuery( "from Person p " +
-																  "where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
-																  "( p.bornIn.name is null or p.bornIn.name = :n )"
+																"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
+																"( p.bornIn.name is null or p.bornIn.name = :n )"
 			);
 			query.setParameter( "i", person.bornIn.getIso2() );
 			query.setParameter( "n", person.bornIn.getName() );

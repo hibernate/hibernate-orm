@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.sequence;
 
@@ -97,7 +95,7 @@ public class PooledWithCustomNamingStrategyTest {
 		provider.configure( PropertiesHelper.map( Environment.getProperties() ) );
 		connectionProvider = provider;
 		try (final Connection connection = connectionProvider.getConnection();
-			 final Statement statement = connection.createStatement()) {
+			final Statement statement = connection.createStatement()) {
 			statement.execute( "create sequence MY_SEQ start with 1 increment by 5" );
 			statement.execute( "create table RightEntity(id bigint not null, primary key (id))" );
 		}
@@ -109,7 +107,7 @@ public class PooledWithCustomNamingStrategyTest {
 	@AfterAll
 	public void tearDown() {
 		try (final Connection connection = connectionProvider.getConnection();
-			 final Statement statement = connection.createStatement()) {
+			final Statement statement = connection.createStatement()) {
 			statement.execute( "drop sequence MY_SEQ" );
 			statement.execute( "drop table RightEntity" );
 		}

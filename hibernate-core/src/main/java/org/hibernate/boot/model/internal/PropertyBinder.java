@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
@@ -25,7 +23,6 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
 import org.hibernate.binder.AttributeBinder;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -784,6 +781,12 @@ public class PropertyBinder {
 		propertyBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		propertyBinder.setId( !entityBinder.isIgnoreIdAnnotations() && hasIdAnnotation( property ) );
 
+		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
+				&& property.hasDirectAnnotationUsage(Id.class)) {
+			throw new AnnotationException("Member '" + property.getName()
+					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
+		}
+
 		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
 			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
@@ -806,6 +809,12 @@ public class PropertyBinder {
 				propertyBinder
 		);
 		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
+	}
+
+	private static boolean isPropertyOfRegularEmbeddable(PropertyHolder propertyHolder, boolean isComponentEmbedded) {
+		return propertyHolder.isComponent() // it's a field of some sort of composite value
+			&& !propertyHolder.isInIdClass() // it's not a field of an id class
+			&& !isComponentEmbedded; // it's not an entity field matching a field of the id class
 	}
 
 	private static AnnotatedColumns bindProperty(

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.write;
 
@@ -78,9 +76,9 @@ public class CustomSqlWithExpectationTests {
 	@SQLDelete( sql = "delete from custom_entity where id = ?", verify = Custom.class )
 	@SQLUpdate( sql = "update custom_entity set name = ? where id = ? ", verify = Custom.class )
 	public static class CustomEntity {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 
 		CustomEntity() {

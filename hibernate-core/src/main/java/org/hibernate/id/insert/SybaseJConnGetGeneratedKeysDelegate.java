@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
 
@@ -24,7 +22,7 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getG
  * Specialized {@link GetGeneratedKeysDelegate} which appends the database
  * specific clause which signifies to return generated {@code IDENTITY} values
  * to the end of the insert statement.
- * 
+ *
  * @author Christian Beikov
  */
 public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegate {

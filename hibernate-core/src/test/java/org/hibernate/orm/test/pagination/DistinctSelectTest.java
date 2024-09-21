@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pagination;
 
@@ -24,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * HHH-5715 bug test case: Duplicated entries when using select distinct with join and pagination. The bug has to do
  * with new {@link SQLServerDialect} that uses row_number function for pagination
- * 
+ *
  * @author Valotasios Yoryos
  */
 @JiraKey( value = "HHH-5715" )

@@ -1,12 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
-
 package org.hibernate.orm.test.jpa.connection;
 
 import java.net.URL;
@@ -38,9 +33,9 @@ import org.junit.jupiter.api.Test;
  * @author Emmanuel Bernard
  */
 public class DataSourceInjectionTest {
-    @Test
+	@Test
 	public void testDatasourceInjection() throws Exception {
-    	withPuRoot(
+		withPuRoot(
 				puRootUrl -> {
 					final PersistenceUnitInfoAdapter persistenceUnitInfo = createPuDescriptor( puRootUrl, new FakeDataSource() );
 

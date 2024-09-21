@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.otherentityentrycontext;
 
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.ManagedEntity;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,12 +16,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This task tests ManagedEntity objects that are already associated with a different PersistenceContext.
@@ -33,56 +26,56 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gail Badner
  */
 @DomainModel(
-        annotatedClasses = {
-            OtherEntityEntryContextTest.Parent.class
-        }
+		annotatedClasses = {
+			OtherEntityEntryContextTest.Parent.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class OtherEntityEntryContextTest {
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        // Create a Parent
-        scope.inTransaction( s -> {
-            s.persist( new Parent( 1L, "first" ) );
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		// Create a Parent
+		scope.inTransaction( s -> {
+			s.persist( new Parent( 1L, "first" ) );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Parent p = s.get( Parent.class, 1L );
-            p.name = "third";
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Parent p = s.get( Parent.class, 1L );
+			p.name = "third";
 
-            s.merge( p );
-            assertTrue( s.contains( p ) );
-            s.evict( p );
-            assertFalse( s.contains( p ) );
+			s.merge( p );
+			assertTrue( s.contains( p ) );
+			s.evict( p );
+			assertFalse( s.contains( p ) );
 
-            p = s.get( Parent.class, p.id );
+			p = s.get( Parent.class, p.id );
 
-            assertEquals( "first", p.name );
-        } );
-    }
+			assertEquals( "first", p.name );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "PARENT" )
-    static class Parent {
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String name;
+		String name;
 
-        Parent() {
-        }
+		Parent() {
+		}
 
-        Parent(Long id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-    }
+		Parent(Long id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
 }

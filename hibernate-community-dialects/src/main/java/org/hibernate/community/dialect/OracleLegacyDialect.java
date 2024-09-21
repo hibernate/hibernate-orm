@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -23,20 +21,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.BooleanDecoder;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleBooleanJdbcType;
-import org.hibernate.dialect.OracleJdbcHelper;
-import org.hibernate.dialect.OracleJsonJdbcType;
-import org.hibernate.dialect.OracleReflectionStructJdbcType;
-import org.hibernate.dialect.OracleTypes;
-import org.hibernate.dialect.OracleUserDefinedTypeExporter;
-import org.hibernate.dialect.OracleXmlJdbcType;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -104,9 +89,10 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OracleJsonArrayBlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
@@ -127,6 +113,7 @@ import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -135,6 +122,7 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
@@ -320,6 +308,23 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arrayTrim_oracle();
 		functionFactory.arrayFill_oracle();
 		functionFactory.arrayToString_oracle();
+
+		if ( getVersion().isSameOrAfter( 12 ) ) {
+			functionFactory.jsonValue_oracle();
+			functionFactory.jsonQuery_oracle();
+			functionFactory.jsonExists_oracle();
+			functionFactory.jsonObject_oracle();
+			functionFactory.jsonArray_oracle();
+			functionFactory.jsonArrayAgg_oracle();
+			functionFactory.jsonObjectAgg_oracle();
+			functionFactory.jsonSet_oracle();
+			functionFactory.jsonRemove_oracle();
+			functionFactory.jsonReplace_oracle();
+			functionFactory.jsonInsert_oracle();
+			functionFactory.jsonMergepatch_oracle();
+			functionFactory.jsonArrayAppend_oracle();
+			functionFactory.jsonArrayInsert_oracle();
+		}
 	}
 
 	@Override
@@ -399,20 +404,33 @@ public class OracleLegacyDialect extends Dialect {
 				}
 				break;
 			case INTEGER_BOOLEAN:
-				result = BooleanDecoder.toIntegerBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "1", "0" )
+						: BooleanDecoder.toIntegerBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case YN_BOOLEAN:
-				result = BooleanDecoder.toYesNoBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'Y'", "'N'" )
+						: BooleanDecoder.toYesNoBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
 				break;
 			case BOOLEAN:
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "true", "false" )
+						: BooleanDecoder.toBoolean( from );
+				if ( result != null ) {
+					return result;
+				}
+				break;
 			case TF_BOOLEAN:
-				result = BooleanDecoder.toTrueFalseBoolean( from );
+				result = from == CastType.STRING
+						? buildStringToBooleanCastDecode( "'T'", "'F'" )
+						: BooleanDecoder.toTrueFalseBoolean( from );
 				if ( result != null ) {
 					return result;
 				}
@@ -658,6 +676,7 @@ public class OracleLegacyDialect extends Dialect {
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
+			case BIT:
 				// still, after all these years...
 				return "number(1,0)";
 
@@ -716,9 +735,11 @@ public class OracleLegacyDialect extends Dialect {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
 			if ( getVersion().isSameOrAfter( 21 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 			}
 			else if ( getVersion().isSameOrAfter( 12 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "blob", this ) );
 			}
 		}
 
@@ -888,9 +909,11 @@ public class OracleLegacyDialect extends Dialect {
 
 			if ( getVersion().isSameOrAfter( 21 ) ) {
 				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
+				typeContributions.contributeJdbcType( OracleJsonArrayJdbcType.INSTANCE );
 			}
 			else {
 				typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
+				typeContributions.contributeJdbcType( OracleJsonArrayBlobJdbcType.INSTANCE );
 			}
 		}
 
@@ -1579,4 +1602,14 @@ public class OracleLegacyDialect extends Dialect {
 		}
 		return sqlCheckConstraint;
 	}
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
+	}
+
 }

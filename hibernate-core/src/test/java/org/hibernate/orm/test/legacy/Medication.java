@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 
@@ -12,16 +10,16 @@ package org.hibernate.orm.test.legacy;
  */
 public class Medication extends Intervention {
 
-   Drug prescribedDrug;
+Drug prescribedDrug;
 
-  
-  Drug getPrescribedDrug() {
-    return prescribedDrug;
-  }
 
-  void  setPrescribedDrug(Drug newValue) {
-    prescribedDrug = newValue;
-  }
+Drug getPrescribedDrug() {
+	return prescribedDrug;
+}
+
+void  setPrescribedDrug(Drug newValue) {
+	prescribedDrug = newValue;
+}
 
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.subselect;
 
@@ -33,31 +31,31 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 		item.setName("widget");
 		item.setId(itemId);
 		s.persist(item);
-		
+
 		Bid bid1 = new Bid();
 		bid1.setAmount(100.0);
 		bid1.setItemId(itemId);
 		bid1.setId(1);
 		s.persist(bid1);
-		
+
 		Bid bid2 = new Bid();
 		bid2.setAmount(200.0);
 		bid2.setItemId(itemId);
 		bid2.setId(2);
 		s.persist(bid2);
-		
+
 		//Because we use 'synchronize' annotation, this query should trigger session flush
 		Query query = s.createQuery("from HighestBid b where b.name = :name");
 		query.setParameter( "name", "widget", StandardBasicTypes.STRING );
 		HighestBid highestBid = (HighestBid) query.list().iterator().next();
-		
+
 		Assert.assertEquals( 200.0, highestBid.getAmount(), 0.01 );
-		tx.rollback();		
-		s.close();	
-		
-		
+		tx.rollback();
+		s.close();
+
+
 	}
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[]{

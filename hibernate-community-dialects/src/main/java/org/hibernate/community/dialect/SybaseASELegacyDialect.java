@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -125,13 +123,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		// But with jTDS we can't use them as the driver can't handle the types
 		if ( getVersion().isSameOrAfter( 15, 5 ) && getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
-							.build()
-			);
-			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( TIME, "bigdatetime", "bigdatetime", this )
-							.withTypeCapacity( 3, "datetime" )
+					CapacityDependentDdlType.builder( TIME, "bigtime", "bigtime", this )
+							.withTypeCapacity( 3, "time" )
 							.build()
 			);
 			ddlTypeRegistry.addDescriptor(
@@ -695,5 +688,10 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 			return super.getLimitHandler();
 		}
 		return new TopLimitHandler(false);
+	}
+
+	@Override
+	public String getDual() {
+		return "(select 1 c1)";
 	}
 }

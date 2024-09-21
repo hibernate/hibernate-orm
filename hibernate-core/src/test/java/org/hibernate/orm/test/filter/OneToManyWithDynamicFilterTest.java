@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
 
@@ -90,8 +88,8 @@ public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFil
 			enableFilter.validate();
 
 			final Query<Long> query = session.createQuery( "select a.id from ArticleRevision as a " +
-															 "left join a.articleTradings as t " +
-															 "with ( (t.partyId = :p_0)  and  (t.classifier = :p_1) )", Long.class );
+															"left join a.articleTradings as t " +
+															"with ( (t.partyId = :p_0)  and  (t.classifier = :p_1) )", Long.class );
 			query.setParameter( "p_0", 1L );
 			query.setParameter( "p_1", "no_classification" );
 			final List<Long> list = query.getResultList();

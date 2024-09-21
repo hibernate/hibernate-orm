@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Log.java 7700 2005-07-30 05:02:47Z oneovthafew $
 package org.hibernate.orm.test.interceptor;
 import java.util.Calendar;
 
@@ -15,7 +11,7 @@ public class Log {
 	private String entityId;
 	private String action;
 	private Calendar time;
-	
+
 	public Log(String action, String id, String name) {
 		super();
 		this.action = action;

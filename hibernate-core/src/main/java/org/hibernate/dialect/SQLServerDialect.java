@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -53,9 +51,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -422,8 +418,23 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			functionFactory.jsonValue_sqlserver();
+			functionFactory.jsonQuery_sqlserver();
+			functionFactory.jsonExists_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObject_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArray_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonSet_sqlserver();
+			functionFactory.jsonRemove_sqlserver();
+			functionFactory.jsonReplace_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayInsert_sqlserver();
+		}
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
+			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObjectAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
 		}
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			functionFactory.leastGreatest();

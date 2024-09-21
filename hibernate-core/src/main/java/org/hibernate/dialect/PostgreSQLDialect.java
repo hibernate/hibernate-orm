@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -58,6 +56,7 @@ import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -111,6 +110,7 @@ import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -260,6 +260,7 @@ public class PostgreSQLDialect extends Dialect {
 
 		// Prefer jsonb if possible
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "jsonb", this ) );
 
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
@@ -438,6 +439,16 @@ public class PostgreSQLDialect extends Dialect {
 		};
 	}
 
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
+	}
+
 	/**
 	 * {@code microsecond} is the smallest unit for an {@code interval},
 	 * and the highest precision for a {@code timestamp}, so we could
@@ -581,6 +592,43 @@ public class PostgreSQLDialect extends Dialect {
 		}
 		functionFactory.arrayFill_postgresql();
 		functionFactory.arrayToString_postgresql();
+
+		if ( getVersion().isSameOrAfter( 17 ) ) {
+			functionFactory.jsonValue();
+			functionFactory.jsonQuery();
+			functionFactory.jsonExists();
+			functionFactory.jsonObject();
+			functionFactory.jsonArray();
+			functionFactory.jsonArrayAgg_postgresql( true );
+			functionFactory.jsonObjectAgg_postgresql( true );
+		}
+		else {
+			functionFactory.jsonValue_postgresql();
+			functionFactory.jsonQuery_postgresql();
+			functionFactory.jsonExists_postgresql();
+			if ( getVersion().isSameOrAfter( 16 ) ) {
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
+				functionFactory.jsonArrayAgg_postgresql( true );
+				functionFactory.jsonObjectAgg_postgresql( true );
+			}
+			else {
+				functionFactory.jsonObject_postgresql();
+				functionFactory.jsonArray_postgresql();
+				functionFactory.jsonArrayAgg_postgresql( false );
+				functionFactory.jsonObjectAgg_postgresql( false );
+			}
+		}
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_postgresql();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonInsert_postgresql();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			// Requires support for WITH clause in subquery which only 13+ provides
+			functionFactory.jsonMergepatch_postgresql();
+		}
+		functionFactory.jsonArrayAppend_postgresql( getVersion().isSameOrAfter( 13 ) );
+		functionFactory.jsonArrayInsert_postgresql();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
@@ -1357,12 +1405,14 @@ public class PostgreSQLDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getStructJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 			}
 		}
 		else {
@@ -1370,6 +1420,7 @@ public class PostgreSQLDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
 		}
 
 		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY

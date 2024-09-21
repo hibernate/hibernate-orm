@@ -1,21 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
-import java.sql.Statement;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
@@ -61,13 +55,13 @@ public class SingleTableNotNullDiscriminatorSuperClassTest {
 
 			Val2Entity val2 = new Val2Entity();
 			val2.setId( 2L );
-			
+
 			RootEntity root = new RootEntity();
 			root.setId( 3L );
 
 			OtherEntity otherEntity = new OtherEntity();
 			otherEntity.setId( 4L );
-			
+
 			session.persist( val1 );
 			session.persist( val2 );
 			session.persist( root );

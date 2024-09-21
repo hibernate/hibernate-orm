@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -116,7 +114,7 @@ public interface NaturalIdLoadAccess<T> {
 	/**
 	 * Add a {@link org.hibernate.annotations.NaturalId @NaturalId}
 	 * attribute value.
-	 * 
+	 *
 	 * @param attributeName The name of an attribute of the entity
 	 *                      that is annotated {@code @NaturalId}
 	 * @param value The value of the attribute
@@ -211,7 +209,7 @@ public interface NaturalIdLoadAccess<T> {
 	 * the session, return that instance, initializing it if needed. This
 	 * method never returns an uninitialized instance.
 	 *
-	 * @return The persistent instance or {@code null} 
+	 * @return The persistent instance or {@code null}
 	 */
 	T load();
 

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.data.eg;
 
 import jakarta.persistence.Basic;
@@ -16,44 +20,43 @@ import java.util.Set;
 
 @Entity
 public class Book {
-    @Id
-    String isbn;
+	@Id
+	String isbn;
 
-    @NaturalId
-    String title;
+	@NaturalId
+	String title;
 
-    @NaturalId
-    LocalDate publicationDate;
+	@NaturalId
+	LocalDate publicationDate;
 
-    String text;
+	String text;
 
-    @Enumerated(EnumType.STRING)
-    @Basic(optional = false)
-    Type type = Type.Book;
+	@Enumerated(EnumType.STRING)
+	@Basic(optional = false)
+	Type type = Type.Book;
 
-    @ManyToOne(optional = false)
-    Publisher publisher;
+	@ManyToOne(optional = false)
+	Publisher publisher;
 
-    @ManyToMany(mappedBy = "books")
-    Set<Author> authors;
+	@ManyToMany(mappedBy = "books")
+	Set<Author> authors;
 
-    @Basic(optional = false)
-    int pages ;
+	@Basic(optional = false)
+	int pages ;
 
-    BigDecimal price;
-    BigInteger quantitySold;
+	BigDecimal price;
+	BigInteger quantitySold;
 
-    public Book(String isbn, String title, String text) {
-        this.isbn = isbn;
-        this.title = title;
-        this.text = text;
-    }
+	public Book(String isbn, String title, String text) {
+		this.isbn = isbn;
+		this.title = title;
+		this.text = text;
+	}
 
-    protected Book() {}
+	protected Book() {}
 
-    @Override
-    public String toString() {
-        return isbn + " : " + title + " [" + type + "]";
-    }
+	@Override
+	public String toString() {
+		return isbn + " : " + title + " [" + type + "]";
+	}
 }
-

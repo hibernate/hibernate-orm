@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.indexcoll;
 
@@ -88,7 +86,7 @@ public class IndexedCollectionTest {
 
 	private boolean isDefaultColumnPresent(SessionFactoryScope scope, String collectionOwner, String propertyName, String suffix) {
 		final Collection collection = scope.getMetadataImplementor().getCollectionBinding( collectionOwner + "." + propertyName );
-        final Iterator<Column> columnIterator = collection.getCollectionTable().getColumns().iterator();
+		final Iterator<Column> columnIterator = collection.getCollectionTable().getColumns().iterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
 			Column column = columnIterator.next();

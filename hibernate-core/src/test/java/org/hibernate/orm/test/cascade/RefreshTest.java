@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade;
 
@@ -21,18 +19,17 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Implementation of RefreshTest.
@@ -46,7 +43,6 @@ import static org.junit.Assert.assertEquals;
 	}
 )
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class RefreshTest {
 
 	private JobBatch batch;
@@ -69,11 +65,14 @@ public class RefreshTest {
 	}
 
 	@Test
-	void testRefreshCascade(SessionFactoryScope scope) {
+	void testCannotRefreshCascadeDetachedEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 			session -> {
-				session.refresh( batch );
-				batch.jobs.forEach( job -> assertEquals( "Jobs not refreshed!", 1, job.status ) );
+				assertThrows(IllegalArgumentException.class,
+							() -> session.refresh( batch ),
+							"Given entity is not associated with the persistence context"
+				);
+				batch.jobs.forEach( job -> assertEquals( 0, job.status ) );
 			}
 		);
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -266,10 +264,10 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Get the true, underlying class of a proxied entity. 
+	 * Get the true, underlying class of a proxied entity.
 	 * <p/>
 	 * Like {@link #getClass}, this operation might initialize a proxy by side effect.
-	 * However, here the initialization is avoided if possible.  If the entity type is 
+	 * However, here the initialization is avoided if possible.  If the entity type is
 	 * defined with subclasses, the proxy will need to be initialized to properly
 	 * determine the class.
 	 *
@@ -365,8 +363,8 @@ public final class Hibernate {
 		}
 	}
 
-    /**
-     * If the given object is not a proxy, return it. But, if it is a proxy, ensure
+	/**
+	 * If the given object is not a proxy, return it. But, if it is a proxy, ensure
 	 * that the proxy is initialized, and return a direct reference to its proxied
 	 * entity object.
 	 *
@@ -375,7 +373,7 @@ public final class Hibernate {
 	 *
 	 * @throws LazyInitializationException if this operation is called on an
 	 * uninitialized proxy that is not associated with an open session.
-     */
+	 */
 	public static Object unproxy(Object proxy) {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
 		return lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;

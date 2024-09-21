@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.strategy;
 
@@ -40,7 +38,7 @@ public class RevisionEndNumericTypeTest extends BaseEnversJPAFunctionalTestCase 
 		return new Class[] { StrTestEntity.class };
 	}
 
-    @Override
+	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, "true" );

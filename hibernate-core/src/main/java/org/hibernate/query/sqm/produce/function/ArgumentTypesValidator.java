@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
@@ -195,7 +193,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	/**
 	 * We can't validate some expressions involving parameters / unknown functions.
 	 */
-	private static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
+	public static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
 		return expressionType instanceof JavaObjectType
 			|| expressionType instanceof BasicType
 				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
@@ -219,7 +217,8 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		return paramNumber;
 	}
 
-	private static void checkArgumentType(
+	@Internal
+	public static void checkArgumentType(
 			int paramNumber, String functionName, FunctionParameterType type, JdbcType jdbcType, Type javaType) {
 		if ( !isCompatible( type, jdbcType )
 				// as a special case, we consider a binary column
@@ -250,6 +249,8 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case DATE -> jdbcType.hasDatePart();
 			case TIME -> jdbcType.hasTimePart();
 			case SPATIAL -> jdbcType.isSpatial();
+			case JSON -> jdbcType.isJson();
+			case IMPLICIT_JSON -> jdbcType.isImplicitJson();
 			default -> true; // TODO: should we throw here?
 		};
 	}

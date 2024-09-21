@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal;
 
@@ -11,7 +9,6 @@ import java.util.Locale;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyJavaTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyTemporalJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyTypeAnnotation;

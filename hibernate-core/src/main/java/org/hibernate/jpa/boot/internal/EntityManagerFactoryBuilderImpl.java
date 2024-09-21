@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.internal;
 
@@ -142,12 +140,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * Names a {@link IntegratorProvider}
 	 */
 	public static final String INTEGRATOR_PROVIDER = JpaSettings.INTEGRATOR_PROVIDER;
-	
+
 	/**
 	 * Names a {@link StrategyRegistrationProviderList}
 	 */
 	public static final String STRATEGY_REGISTRATION_PROVIDERS = JpaSettings.STRATEGY_REGISTRATION_PROVIDERS;
-	
+
 	/**
 	 * Names a {@link TypeContributorList}
 	 */
@@ -1481,7 +1479,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			builder.applyInterceptor( sessionFactoryInterceptor );
 //		}
 		handleAllowJtaTransactionAccess( builder );
-		handleAllowDetachedEntity( builder );
 		addConfiguredSessionFactoryObserver( builder );
 		builder.addSessionFactoryObservers( ServiceRegistryCloser.INSTANCE );
 		builder.applyEntityNotFoundDelegate( JpaEntityNotFoundDelegate.INSTANCE );
@@ -1499,16 +1496,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					standardServiceRegistry.requireService( StrategySelector.class )
 							.resolveStrategy( SessionFactoryObserver.class, sessionFactoryObserverSetting );
 			builder.addSessionFactoryObservers( suppliedSessionFactoryObserver );
-		}
-	}
-
-	// will use user override value or default to false if not supplied to follow JPA spec
-	private void handleAllowDetachedEntity(SessionFactoryBuilder builder) {
-		final boolean allowRefreshDetachedEntity =
-				readBooleanConfigurationValue( AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY );
-		if ( !allowRefreshDetachedEntity
-				&& builder instanceof SessionFactoryBuilderImplementor implementor ) {
-			implementor.disableRefreshDetachedEntity();
 		}
 	}
 

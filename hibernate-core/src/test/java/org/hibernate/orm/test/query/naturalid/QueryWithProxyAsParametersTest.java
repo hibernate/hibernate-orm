@@ -1,6 +1,9 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.naturalid;
 
-import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
 
 import org.hibernate.testing.orm.junit.DomainModel;

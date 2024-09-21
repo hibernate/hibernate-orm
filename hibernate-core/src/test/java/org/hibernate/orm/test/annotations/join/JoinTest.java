@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.join;
 
@@ -145,7 +143,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testReferenceColumnWithBacktics() {
 		Session s=openSession();
@@ -159,7 +157,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testUniqueConstaintOnSecondaryTable() {
 		Cat cat = new Cat();
@@ -198,7 +196,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( cat );
 		s.flush();
 		s.clear();
-		
+
 		s.get( Cat.class, cat.getId() );
 		//Find a way to test it, I need to define the secondary table on a subclass
 

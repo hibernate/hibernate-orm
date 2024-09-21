@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.formulajoin;
 
@@ -58,7 +56,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		s.persist(current);
 		tx.commit();
 		s.close();
-		
+
 		if ( getDialect() instanceof PostgreSQLDialect ) return;
 
 		s = openSession();
@@ -67,7 +65,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Root m left join fetch m.detail").list();
@@ -77,14 +75,14 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		assertTrue( m==m.getDetail().getRoot() );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Root m join fetch m.detail").list();
 		assertEquals( l.size(), 1 );
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		l = s.createQuery("from Detail d join fetch d.currentRoot.root").list();
@@ -109,13 +107,12 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		l = s.createQuery("from Detail d join fetch d.root m join fetch m.detail").list();
 		assertEquals( l.size(), 2 );
-		
+
 		s.createQuery("delete from Detail").executeUpdate();
 		s.createQuery("delete from Root").executeUpdate();
-		
+
 		tx.commit();
 		s.close();
 
 	}
 }
-

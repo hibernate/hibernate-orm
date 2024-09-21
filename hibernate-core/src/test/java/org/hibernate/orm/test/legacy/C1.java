@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: C1.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 
 import java.util.ArrayList;
@@ -24,7 +20,7 @@ public class C1 extends B{
 	public String getAddress() {
 		return address;
 	}
-	
+
 	/**
 	 * Sets the address.
 	 * @param address The address to set
@@ -32,7 +28,7 @@ public class C1 extends B{
 	public void setAddress(String address) {
 		this.address = address;
 	}
-	
+
 	/**
 	 * Returns the d.
 	 * @return D
@@ -40,7 +36,7 @@ public class C1 extends B{
 	public D getD() {
 		return d;
 	}
-	
+
 	/**
 	 * Sets the d.
 	 * @param d The d to set
@@ -48,7 +44,7 @@ public class C1 extends B{
 	public void setD(D d) {
 		this.d = d;
 	}
-	
+
 	/**
 	 * @return Returns the c.
 	 */
@@ -90,9 +86,3 @@ public class C1 extends B{
 		c1Name = name;
 	}
 }
-
-
-
-
-
-

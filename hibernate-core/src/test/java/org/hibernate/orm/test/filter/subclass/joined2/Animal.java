@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.filter.subclass.joined2;
 
 import jakarta.persistence.Column;
@@ -16,10 +20,10 @@ import static jakarta.persistence.InheritanceType.JOINED;
 public class Animal {
 	@Id
 	@Column(name = "id_animal")
-    private int id;
+	private int id;
 
-    private String name;
+	private String name;
 
 	@Column(name = "id_company")
-    private long company;
+	private long company;
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
@@ -118,11 +116,6 @@ public class KeyBasedPagination {
 			Expression<? extends C> key, C keyValue, SortDirection direction,
 			List<SqmPath<?>> previousKeys, List<Comparable<?>> keyValues,
 			NodeBuilder builder) {
-		// TODO: use a parameter here and create a binding for it
-//		@SuppressWarnings("unchecked")
-//		final Class<C> valueClass = (Class<C>) keyValue.getClass();
-//		final JpaParameterExpression<C> parameter = builder.parameter(valueClass);
-//		setParameter( parameter, keyValue );
 		SqmPredicate predicate;
 		switch ( direction ) {
 			case ASCENDING:

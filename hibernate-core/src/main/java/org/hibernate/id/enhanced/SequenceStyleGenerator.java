@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
@@ -33,7 +31,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
@@ -208,7 +205,7 @@ public class SequenceStyleGenerator
 
 		this.identifierType = creationContext.getType();
 
-		final QualifiedName sequenceName = determineSequenceName( parameters, dialect, jdbcEnvironment, serviceRegistry );
+		final QualifiedName sequenceName = determineSequenceName( parameters, jdbcEnvironment, serviceRegistry );
 		final int initialValue = determineInitialValue( parameters );
 		int incrementSize = determineIncrementSize( parameters );
 		final OptimizerDescriptor optimizationStrategy = determineOptimizationStrategy( parameters, incrementSize );
@@ -331,15 +328,13 @@ public class SequenceStyleGenerator
 	 * <p>
 	 * Called during {@linkplain #configure configuration}.
 	 *
-	 * @param params The params supplied in the generator config (plus some standard useful extras).
-	 * @param dialect The dialect in effect
+	 * @param params  The params supplied in the generator config (plus some standard useful extras).
 	 * @param jdbcEnv The JdbcEnvironment
 	 * @return The sequence name
 	 */
 	@SuppressWarnings("UnusedParameters")
 	protected QualifiedName determineSequenceName(
 			Properties params,
-			Dialect dialect,
 			JdbcEnvironment jdbcEnv,
 			ServiceRegistry serviceRegistry) {
 		final IdentifierHelper identifierHelper = jdbcEnv.getIdentifierHelper();
@@ -589,7 +584,7 @@ public class SequenceStyleGenerator
 			&& ( schema == null || schema.equals( jdbcEnvironment.getCurrentSchema() ) );
 	}
 
-	public static void applyConfiguration(SequenceGenerator generatorConfig, SimpleValue idValue, BiConsumer<String,String> configCollector) {
+	public static void applyConfiguration(SequenceGenerator generatorConfig, BiConsumer<String,String> configCollector) {
 		if ( !generatorConfig.sequenceName().isEmpty() ) {
 			configCollector.accept( SEQUENCE_PARAM, generatorConfig.sequenceName() );
 		}

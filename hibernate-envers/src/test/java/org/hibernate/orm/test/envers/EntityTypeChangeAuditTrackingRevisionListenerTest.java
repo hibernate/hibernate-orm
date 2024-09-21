@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
 
@@ -238,10 +236,10 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends EntityMan
 
 		@Override
 		public void entityChanged(Class entityClass,
-								  String entityName,
-								  Object entityId,
-								  RevisionType revisionType,
-								  Object revisionEntity) {
+								String entityName,
+								Object entityId,
+								RevisionType revisionType,
+								Object revisionEntity) {
 			String type = entityClass.getName();
 			((CustomTrackingRevisionEntity) revisionEntity).addModifiedEntityType(type);
 		}

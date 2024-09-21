@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.where;
 
@@ -19,9 +17,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import static jakarta.persistence.FetchType.LAZY;
-import static java.text.MessageFormat.format;
 import static java.util.Objects.hash;
-import static java.util.stream.Collectors.joining;
 
 @NamedEntityGraph(
 		name = "user-entity-graph",

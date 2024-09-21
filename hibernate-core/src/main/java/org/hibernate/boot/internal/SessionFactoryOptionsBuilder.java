@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
@@ -77,7 +75,6 @@ import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import jakarta.persistence.criteria.Nulls;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_CLOSE_SESSION;
 import static org.hibernate.cfg.AvailableSettings.AUTO_EVICT_COLLECTION_CACHE;
@@ -132,6 +129,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
 import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
 import static org.hibernate.cfg.QuerySettings.DEFAULT_NULL_ORDERING;
+import static org.hibernate.cfg.QuerySettings.JSON_FUNCTIONS_ENABLED;
 import static org.hibernate.cfg.QuerySettings.PORTABLE_INTEGER_DIVISION;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -177,7 +175,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean jtaTransactionAccessEnabled;
 	private boolean allowOutOfTransactionUpdateOperations;
 	private boolean releaseResourcesOnCloseEnabled;
-	private boolean allowRefreshDetachedEntity;
 
 	// (JTA) transaction handling
 	private boolean jtaTrackByThread;
@@ -278,6 +275,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean inClauseParameterPaddingEnabled;
 
 	private final boolean portableIntegerDivisionEnabled;
+	private final boolean jsonFunctionsEnabled;
 
 	private final int queryStatisticsMaxSize;
 
@@ -333,12 +331,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				ALLOW_JTA_TRANSACTION_ACCESS,
 				BOOLEAN,
 				true
-		);
-
-		this.allowRefreshDetachedEntity = configurationService.getSetting(
-				ALLOW_REFRESH_DETACHED_ENTITY,
-				BOOLEAN,
-				false
 		);
 
 		this.flushBeforeCompletionEnabled = configurationService.getSetting( FLUSH_BEFORE_COMPLETION, BOOLEAN, true );
@@ -616,6 +608,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.portableIntegerDivisionEnabled = getBoolean(
 				PORTABLE_INTEGER_DIVISION,
+				configurationSettings
+		);
+		this.jsonFunctionsEnabled = getBoolean(
+				JSON_FUNCTIONS_ENABLED,
 				configurationSettings
 		);
 
@@ -900,11 +896,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isJtaTransactionAccessEnabled() {
 		return jtaTransactionAccessEnabled;
-	}
-
-	@Override
-	public boolean isAllowRefreshDetachedEntity() {
-		return allowRefreshDetachedEntity;
 	}
 
 	@Override
@@ -1246,6 +1237,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean inClauseParameterPaddingEnabled() {
 		return this.inClauseParameterPaddingEnabled;
+	}
+
+	@Override
+	public boolean isJsonFunctionsEnabled() {
+		return jsonFunctionsEnabled;
 	}
 
 	@Override
@@ -1613,10 +1609,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableCollectionInDefaultFetchGroup(boolean enabled) {
 		this.collectionsInDefaultFetchGroupEnabled = enabled;
-	}
-
-	public void disableRefreshDetachedEntity() {
-		this.allowRefreshDetachedEntity = false;
 	}
 
 	public void disableJtaTransactionAccess() {

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.refcolnames.mixed;
 
 import jakarta.persistence.Column;
@@ -11,15 +15,15 @@ import org.hibernate.annotations.NaturalId;
 @Entity
 class Region {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
-    int id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "id", nullable = false)
+	int id;
 
-    String name;
+	String name;
 
-    @NaturalId
-    @Embedded
-    PostalCode postalCode;
+	@NaturalId
+	@Embedded
+	PostalCode postalCode;
 
 }

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.superdao;
 
 import jakarta.persistence.EntityManager;
@@ -9,12 +13,12 @@ import java.util.List;
 
 public interface SuperDao {
 
-    EntityManager em();
+	EntityManager em();
 
 
-    @Find
-    List<Book> books1(@Pattern String title);
+	@Find
+	List<Book> books1(@Pattern String title);
 
-    @HQL("where title like :title")
-    List<Book> books2(String title);
+	@HQL("where title like :title")
+	List<Book> books2(String title);
 }

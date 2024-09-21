@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
@@ -26,17 +30,17 @@ public class JpaComplianceDisallowFQNTests extends BaseSqmUnitTest {
 	public void testQuery() {
 		interpretSelect( String.format( "select p from %s p", Person.class.getName() ) );
 	}
-	
+
 	@Test
 	@ExpectedException(StrictJpaComplianceViolation.class)
 	public void testUpdate() {
 		interpretSelect( String.format( "update %s set numberOfToes = 0", Person.class.getName() ) );
 	}
-	
+
 	@Test
 	@ExpectedException(StrictJpaComplianceViolation.class)
 	public void testDelete() {
 		interpretSelect( String.format( "delete %s", Person.class.getName() ) );
 	}
-	
+
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
@@ -46,7 +44,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -123,6 +120,11 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
+import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
+import org.hibernate.query.sqm.tree.expression.SqmJsonObjectAggUniqueKeysBehavior;
+import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
@@ -189,6 +191,7 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.criteria.TemporalField;
 import jakarta.persistence.metamodel.Bindable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -237,13 +240,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			HibernateCriteriaBuilder builder = extension.extend( this );
 			extensions.put( extension.getRegistrationKey(), builder );
 		}
-	}
-
-	@Override
-	public ValueHandlingMode setCriteriaValueHandlingMode(ValueHandlingMode criteriaValueHandlingMode) {
-		ValueHandlingMode current = this.criteriaValueHandlingMode;
-		this.criteriaValueHandlingMode = criteriaValueHandlingMode;
-		return current;
 	}
 
 	@Override
@@ -1542,7 +1538,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				final EnumJavaType javaType = new EnumJavaType<>( type );
 				final JdbcType jdbcType =
 						javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-				return new BasicTypeImpl<>( javaType, jdbcType );
+				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 			}
 			else {
 				return result;
@@ -5288,6 +5284,382 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			String separator) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
 				asList( (SqmExpression<?>) collectionExpression, value( separator ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath) {
+		return jsonValue( jsonDocument, value( jsonPath ), null );
+	}
+
+	@Override
+	public <T> SqmJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			String jsonPath,
+			Class<T> returningType) {
+		return jsonValue( jsonDocument, value( jsonPath ), returningType );
+	}
+
+	@Override
+	public SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return jsonValue( jsonDocument, jsonPath, null );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> SqmJsonValueExpression<T> jsonValue(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Class<T> returningType) {
+		if ( returningType == null ) {
+			return (SqmJsonValueExpression<T>) getFunctionDescriptor( "json_value" ).generateSqmExpression(
+					asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+					null,
+					queryEngine
+			);
+		}
+		else {
+			final BasicType<T> type = getTypeConfiguration().standardBasicTypeForJavaType( returningType );
+			return (SqmJsonValueExpression<T>) getFunctionDescriptor( "json_value" ).generateSqmExpression(
+					asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath, new SqmCastTarget<>( type, this ) ),
+					type,
+					queryEngine
+			);
+		}
+	}
+
+	@Override
+	public SqmJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath) {
+		return jsonQuery( jsonDocument, value( jsonPath ) );
+	}
+
+	@Override
+	public SqmJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return (SqmJsonQueryExpression) getFunctionDescriptor( "json_query" ).<String>generateSqmExpression(
+				asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath) {
+		return jsonExists( jsonDocument, value( jsonPath ) );
+	}
+
+	@Override
+	public SqmJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return (SqmJsonExistsExpression) getFunctionDescriptor( "json_exists" ).<Boolean>generateSqmExpression(
+				asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayWithNulls(Expression<?>... values) {
+		final var arguments = new ArrayList<SqmTypedNode<?>>( values.length + 1 );
+		for ( Expression<?> expression : values ) {
+			arguments.add( (SqmTypedNode<?>) expression );
+		}
+		arguments.add( SqmJsonNullBehavior.NULL );
+		return getFunctionDescriptor( "json_array" ).generateSqmExpression(
+				arguments,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonArray(Expression<?>... values) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_array" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( values ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, (SqmPredicate) filter, orderByClause( orderBy ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, (SqmPredicate) filter, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy) {
+		return jsonArrayAgg( (SqmExpression<?>) value, null, null, orderByClause( orderBy ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value) {
+		return jsonArrayAgg( (SqmExpression<?>) value, SqmJsonNullBehavior.NULL, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
+		return jsonArrayAgg(
+				(SqmExpression<?>) value,
+				SqmJsonNullBehavior.NULL,
+				(SqmPredicate) filter,
+				orderByClause( orderBy )
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter) {
+		return jsonArrayAgg( (SqmExpression<?>) value, SqmJsonNullBehavior.NULL, (SqmPredicate) filter, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy) {
+		return jsonArrayAgg( (SqmExpression<?>) value, SqmJsonNullBehavior.NULL, null, orderByClause( orderBy ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, SqmJsonObjectAggUniqueKeysBehavior.WITH, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, null, SqmJsonObjectAggUniqueKeysBehavior.WITH, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value) {
+		return jsonObjectAgg( key, value, null, null, null );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(
+			Expression<?> key,
+			Expression<?> value,
+			Predicate filter) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, SqmJsonObjectAggUniqueKeysBehavior.WITH, filter );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter) {
+		return jsonObjectAgg( key, value, null, SqmJsonObjectAggUniqueKeysBehavior.WITH, filter );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter) {
+		return jsonObjectAgg( key, value, SqmJsonNullBehavior.NULL, null, filter );
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter) {
+		return jsonObjectAgg( key, value, null, null, filter );
+	}
+
+	private SqmExpression<String> jsonObjectAgg(
+			Expression<?> key,
+			Expression<?> value,
+			@Nullable SqmJsonNullBehavior nullBehavior,
+			@Nullable SqmJsonObjectAggUniqueKeysBehavior uniqueKeysBehavior,
+			@Nullable Predicate filterPredicate) {
+		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 4 );
+		arguments.add( (SqmTypedNode<?>) key );
+		arguments.add( (SqmTypedNode<?>) value );
+		if ( nullBehavior != null ) {
+			arguments.add( nullBehavior );
+		}
+		if ( uniqueKeysBehavior != null ) {
+			arguments.add( uniqueKeysBehavior );
+		}
+		return getFunctionDescriptor( "json_objectagg" ).generateAggregateSqmExpression(
+				arguments,
+				(SqmPredicate) filterPredicate,
+				null,
+				queryEngine
+		);
+	}
+
+	private @Nullable SqmOrderByClause orderByClause(JpaOrder[] orderBy) {
+		if ( orderBy.length == 0 ) {
+			return null;
+		}
+		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orderBy.length );
+		for ( JpaOrder jpaOrder : orderBy ) {
+			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) jpaOrder );
+		}
+		return sqmOrderByClause;
+	}
+
+	private SqmExpression<String> jsonArrayAgg(
+			SqmExpression<?> value,
+			@Nullable SqmJsonNullBehavior nullBehavior,
+			@Nullable SqmPredicate filterPredicate,
+			@Nullable SqmOrderByClause orderByClause) {
+		return getFunctionDescriptor( "json_arrayagg" ).generateOrderedSetAggregateSqmExpression(
+				nullBehavior == null
+						? Collections.singletonList( value )
+						: Arrays.asList( value, SqmJsonNullBehavior.NULL ),
+				filterPredicate,
+				orderByClause,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues) {
+		final var arguments = keyValuesAsAlternatingList( keyValues );
+		arguments.add( SqmJsonNullBehavior.NULL );
+		return getFunctionDescriptor( "json_object" ).generateSqmExpression(
+				arguments,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues) {
+		return getFunctionDescriptor( "json_object" ).generateSqmExpression(
+				keyValuesAsAlternatingList( keyValues ),
+				null,
+				queryEngine
+		);
+	}
+
+	private ArrayList<SqmTypedNode<?>> keyValuesAsAlternatingList(Map<?, ? extends Expression<?>> keyValues) {
+		final var list = new ArrayList<SqmTypedNode<?>>( keyValues.size() );
+		for ( Map.Entry<?, ? extends Expression<?>> entry : keyValues.entrySet() ) {
+			list.add( value( entry.getKey() ) );
+			list.add( (SqmTypedNode<?>) entry.getValue() );
+		}
+		return list;
+	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return jsonSet( jsonDocument, jsonPath, value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return jsonSet( jsonDocument, value( jsonPath ), value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return jsonSet( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_set" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath, value ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath) {
+		return jsonRemove( jsonDocument, value( jsonPath ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_remove" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return jsonInsert( jsonDocument, jsonPath, value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return jsonInsert( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return jsonInsert( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonInsert(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_insert" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath, value ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
+		return jsonReplace( jsonDocument, jsonPath, value( value ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value) {
+		return jsonReplace( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
+		return jsonReplace( jsonDocument, value( jsonPath ), value );
+	}
+
+	@Override
+	public SqmExpression<String> jsonReplace(
+			Expression<?> jsonDocument,
+			Expression<String> jsonPath,
+			Expression<?> value) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_replace" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( jsonDocument, jsonPath, value ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> jsonMergepatch(String document, Expression<?> patch) {
+		return jsonMergepatch( value( document ), patch );
+	}
+
+	@Override
+	public SqmExpression<String> jsonMergepatch(Expression<?> document, String patch) {
+		return jsonMergepatch( document, value( patch ) );
+	}
+
+	@Override
+	public SqmExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch) {
+		//noinspection unchecked
+		return getFunctionDescriptor( "json_mergepatch" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) (List<?>) asList( document, patch ),
 				null,
 				queryEngine
 		);

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.criteria.internal.hhh13058;
 
 import java.util.Arrays;
@@ -114,8 +118,8 @@ public class HHH13058Test extends BaseEntityManagerFunctionalTestCase {
 							subquery.select( subtask )
 									.where(
 											builder.or(
-												   patient.isNull(),
-												   site.in( validSites )
+												patient.isNull(),
+												site.in( validSites )
 											)
 									)
 					)

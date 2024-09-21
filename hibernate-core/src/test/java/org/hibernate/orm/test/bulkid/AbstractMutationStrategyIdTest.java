@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bulkid;
 
 import jakarta.persistence.Entity;
@@ -12,7 +16,6 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.orm.test.jpa.compliance.CriteriaMutationQueryTableTest;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

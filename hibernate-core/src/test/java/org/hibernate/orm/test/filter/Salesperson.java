@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id: Salesperson.java 4448 2004-08-28 02:29:05Z steveebersole $
 package org.hibernate.orm.test.filter;
 import java.util.Date;
 import java.util.HashSet;
@@ -13,7 +9,7 @@ import java.util.Set;
 
 /**
  * Implementation of Salesperson.
- * 
+ *
  * @author Steve
  */
 public class Salesperson {

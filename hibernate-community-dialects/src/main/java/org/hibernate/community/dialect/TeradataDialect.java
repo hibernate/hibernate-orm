@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -201,7 +199,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-	 	// Do duration arithmetic in a seconds, but
+		// Do duration arithmetic in a seconds, but
 		// with the fractional part
 		return 1_000_000_000; //seconds!!
 	}

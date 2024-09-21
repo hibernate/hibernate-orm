@@ -1,26 +1,18 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.dialect;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 @RequiresDialect(H2Dialect.class)
@@ -33,7 +25,7 @@ public class H2DialectDatabaseVersionTest extends BaseUnitTestCase {
 		Dialect dialect = new H2Dialect( new TestingH2DialectResolutionInfo( version ) );
 		assertEquals(229, dialect.getVersion().getMicro());
 	}
-	
+
 	@Test
 	public void releaseVersion() {
 		String version = "2.2.224 (2023-09-17)";
@@ -98,7 +90,7 @@ public class H2DialectDatabaseVersionTest extends BaseUnitTestCase {
 		public Map<String, Object> getConfigurationValues() {
 			return Map.of();
 		}
-		
+
 	}
 
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.function;
 
@@ -32,7 +30,6 @@ import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -53,7 +50,7 @@ public class AnsiTrimEmulationFunctionTest  {
 	private static final String TRAILING = "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
 	private static final String BOTH = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
 
-    @Test
+	@Test
 //	@RequiresDialect( SQLServerDialect.class )
 	public void testBasicSqlServerProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SQLServerDialect();
@@ -77,7 +74,7 @@ public class AnsiTrimEmulationFunctionTest  {
 		assertEquals( expected, rendered );
 	}
 
-    @Test
+	@Test
 //	@RequiresDialect( SybaseDialect.class )
 	public void testBasicSybaseProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SybaseDialect();
@@ -146,7 +143,7 @@ public class AnsiTrimEmulationFunctionTest  {
 				return null;
 			}
 		} );
-    	function.render( walker, sqlAstArguments, (ReturnableType<?>) null, walker );
+		function.render( walker, sqlAstArguments, (ReturnableType<?>) null, walker );
 		return walker.getSql();
 	}
 

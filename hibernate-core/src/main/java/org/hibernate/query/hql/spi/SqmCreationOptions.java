@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.spi;
 
@@ -23,6 +21,13 @@ public interface SqmCreationOptions {
 	 * @see StrictJpaComplianceViolation
 	 */
 	default boolean useStrictJpaCompliance() {
+		return false;
+	}
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED
+	 */
+	default boolean isJsonFunctionsEnabled() {
 		return false;
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pagination;
 
@@ -36,52 +34,52 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @ServiceRegistry
 @SessionFactory
 public class FetchClausePaginationTest {
-    @BeforeEach
-    public void createTestData(SessionFactoryScope scope) {
-        scope.inTransaction(
-                session -> {
-                    final EntityOfLists entityContainingLists = new EntityOfLists( 1, "first" );
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityOfLists entityContainingLists = new EntityOfLists( 1, "first" );
 
-                    entityContainingLists.addBasic( "abc" );
-                    entityContainingLists.addBasic( "def" );
-                    entityContainingLists.addBasic( "ghi" );
+					entityContainingLists.addBasic( "abc" );
+					entityContainingLists.addBasic( "def" );
+					entityContainingLists.addBasic( "ghi" );
 
-                    entityContainingLists.addConvertedEnum( EnumValue.TWO );
+					entityContainingLists.addConvertedEnum( EnumValue.TWO );
 
-                    entityContainingLists.addEnum( EnumValue.ONE );
-                    entityContainingLists.addEnum( EnumValue.THREE );
+					entityContainingLists.addEnum( EnumValue.ONE );
+					entityContainingLists.addEnum( EnumValue.THREE );
 
-                    entityContainingLists.addComponent( new SimpleComponent( "first-a1", "first-another-a1" ) );
-                    entityContainingLists.addComponent( new SimpleComponent( "first-a2", "first-another-a2" ) );
-                    entityContainingLists.addComponent( new SimpleComponent( "first-a3", "first-another-a2" ) );
+					entityContainingLists.addComponent( new SimpleComponent( "first-a1", "first-another-a1" ) );
+					entityContainingLists.addComponent( new SimpleComponent( "first-a2", "first-another-a2" ) );
+					entityContainingLists.addComponent( new SimpleComponent( "first-a3", "first-another-a2" ) );
 
-                    session.persist( entityContainingLists );
-                }
-        );
-    }
+					session.persist( entityContainingLists );
+				}
+		);
+	}
 
-    @AfterEach
-    public void dropTestData(SessionFactoryScope scope) {
-        scope.inTransaction(
-                session -> {
-                    session.createQuery( "delete from EntityOfLists" ).executeUpdate();
-                    session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-                }
-        );
-    }
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from EntityOfLists" ).executeUpdate();
+					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
+				}
+		);
+	}
 
-    @Test
-    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWithTies.class)
-    @SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby only supports row_number, but this requires the dense_rank window function")
-    public void testFetchWithTies(SessionFactoryScope scope) {
-        scope.inSession(
-                session -> {
-                    List<SimpleComponent> list = session.createQuery(
-                            "select comp from EntityOfLists e join e.listOfComponents comp order by comp.anotherAttribute desc fetch first 1 row with ties",
-                            SimpleComponent.class
-                    ).list();
-                    assertThat( list.size(), is( 2 ) );
-                }
-        );
-    }
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWithTies.class)
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby only supports row_number, but this requires the dense_rank window function")
+	public void testFetchWithTies(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<SimpleComponent> list = session.createQuery(
+							"select comp from EntityOfLists e join e.listOfComponents comp order by comp.anotherAttribute desc fetch first 1 row with ties",
+							SimpleComponent.class
+					).list();
+					assertThat( list.size(), is( 2 ) );
+				}
+		);
+	}
 }

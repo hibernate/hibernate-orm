@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -288,6 +286,11 @@ public class MySQLDialect extends Dialect {
 	public boolean useMaterializedLobWhenCapacityExceeded() {
 		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs
 		return false;
+	}
+	@Override
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		// Use the true/false constants since these evaluate to true/false literals in JSON functions
+		appender.appendSql( bool );
 	}
 
 	@Override
@@ -634,6 +637,21 @@ public class MySQLDialect extends Dialect {
 		}
 
 		functionFactory.listagg_groupConcat();
+
+		functionFactory.jsonValue_mysql();
+		functionFactory.jsonQuery_mysql();
+		functionFactory.jsonExists_mysql();
+		functionFactory.jsonObject_mysql();
+		functionFactory.jsonArray_mysql();
+		functionFactory.jsonArrayAgg_mysql();
+		functionFactory.jsonObjectAgg_mysql();
+		functionFactory.jsonSet_mysql();
+		functionFactory.jsonRemove_mysql();
+		functionFactory.jsonReplace_mysql();
+		functionFactory.jsonInsert_mysql();
+		functionFactory.jsonMergepatch_mysql();
+		functionFactory.jsonArrayAppend_mysql();
+		functionFactory.jsonArrayInsert_mysql();
 	}
 
 	@Override
@@ -643,6 +661,7 @@ public class MySQLDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, MySQLCastingJsonArrayJdbcType.INSTANCE );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
@@ -1517,5 +1536,10 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 }

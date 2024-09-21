@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -24,7 +22,7 @@ import org.hibernate.type.CompositeType;
  * need to happen to "fill" the identifier property(s).
  * <p>
  * This generator is used implicitly for all composite identifier scenarios if an
- * explicit generator is not in place.  So it make sense to discuss the various 
+ * explicit generator is not in place.  So it make sense to discuss the various
  * potential scenarios:<ul>
  * <li>
  * <i>"embedded" composite identifier</i> - this is possible only in HBM mappings

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools.query;
 
@@ -173,7 +171,7 @@ public class Parameters {
 				right
 		);
 	}
-	
+
 	public void addWhere(String aliasLeft, String left, String op, String aliasRight, String right) {
 		final StringBuilder expression = new StringBuilder();
 
@@ -195,15 +193,15 @@ public class Parameters {
 	public void addWhereWithFunction(String alias, String left, String leftFunction, String op, Object paramValue){
 		final String paramName = generateQueryParam();
 		localQueryParamValues.put( paramName, paramValue );
-		
+
 		final StringBuilder expression = new StringBuilder();
-		
+
 		expression.append( leftFunction ).append( "(" );
 		expression.append( alias ).append( "." );
 		expression.append( left ).append( ")" );
 		expression.append( " " ).append( op ).append( " " );
 		expression.append( ":" ).append( paramName );
-		
+
 		expressions.add( expression.toString() );
 	}
 
@@ -296,7 +294,7 @@ public class Parameters {
 	 * @param op The operator.
 	 * @param right Right property name.
 	 * @param addAliasRight Whether to add the alias to the right property.
-     */
+	 */
 	public void addWhereOrNullRestriction(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
 		if ( "=".equals( op ) ) {
 			addWhere( left, addAliasLeft, " is not distinct from ", right, addAliasRight );

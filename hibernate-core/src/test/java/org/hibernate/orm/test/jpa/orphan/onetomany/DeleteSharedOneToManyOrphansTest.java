@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.orphan.onetomany;
 
@@ -43,8 +41,8 @@ import org.junit.jupiter.api.BeforeEach;
 public class DeleteSharedOneToManyOrphansTest {
 
 	/*
-	 A value of DEFAULT_BATCH_FETCH_SIZE > 1 along with the initialization of the Item#higherItemRelations
-	 collection causes the issue
+	A value of DEFAULT_BATCH_FETCH_SIZE > 1 along with the initialization of the Item#higherItemRelations
+	collection causes the issue
 	 */
 
 	@BeforeEach

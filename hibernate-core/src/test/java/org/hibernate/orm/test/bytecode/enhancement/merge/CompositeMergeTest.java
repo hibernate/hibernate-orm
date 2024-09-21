@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
@@ -34,111 +32,111 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Luis Barreiro
  */
 @DomainModel(
-        annotatedClasses = {
-            CompositeMergeTest.ParentEntity.class, CompositeMergeTest.Address.class, CompositeMergeTest.Country.class
-        }
+		annotatedClasses = {
+			CompositeMergeTest.ParentEntity.class, CompositeMergeTest.Address.class, CompositeMergeTest.Country.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class CompositeMergeTest {
 
-    private long entityId;
+	private long entityId;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        ParentEntity parent = new ParentEntity();
-        parent.description = "desc";
-        parent.address = new Address();
-        parent.address.street = "Sesame street";
-        parent.address.country = new Country();
-        parent.address.country.name = "Suriname";
-        parent.address.country.languages = Arrays.asList( "english", "spanish" );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		ParentEntity parent = new ParentEntity();
+		parent.description = "desc";
+		parent.address = new Address();
+		parent.address.street = "Sesame street";
+		parent.address.country = new Country();
+		parent.address.country.name = "Suriname";
+		parent.address.country.languages = Arrays.asList( "english", "spanish" );
 
-        parent.lazyField = new byte[100];
+		parent.lazyField = new byte[100];
 
-        scope.inTransaction( s -> {
-            s.persist( parent );
-        } );
+		scope.inTransaction( s -> {
+			s.persist( parent );
+		} );
 
-        checkDirtyTracking( parent );
-        entityId = parent.id;
-    }
+		checkDirtyTracking( parent );
+		entityId = parent.id;
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        ParentEntity[] parent = new ParentEntity[3];
+	@Test
+	public void test(SessionFactoryScope scope) {
+		ParentEntity[] parent = new ParentEntity[3];
 
-        scope.inTransaction( s -> {
-            parent[0] = s.get( ParentEntity.class, entityId );
-        } );
+		scope.inTransaction( s -> {
+			parent[0] = s.get( ParentEntity.class, entityId );
+		} );
 
-        checkDirtyTracking( parent[0] );
+		checkDirtyTracking( parent[0] );
 
-        parent[0].address.country.name = "Paraguai";
+		parent[0].address.country.name = "Paraguai";
 
-        checkDirtyTracking( parent[0], "address.country" );
+		checkDirtyTracking( parent[0], "address.country" );
 
-        scope.inTransaction( s -> {
-            parent[1] = (ParentEntity) s.merge( parent[0] );
-            checkDirtyTracking( parent[0], "address.country" );
-            checkDirtyTracking( parent[1], "address.country" );
-        } );
+		scope.inTransaction( s -> {
+			parent[1] = (ParentEntity) s.merge( parent[0] );
+			checkDirtyTracking( parent[0], "address.country" );
+			checkDirtyTracking( parent[1], "address.country" );
+		} );
 
-        checkDirtyTracking( parent[0], "address.country" );
-        checkDirtyTracking( parent[1] );
+		checkDirtyTracking( parent[0], "address.country" );
+		checkDirtyTracking( parent[1] );
 
-        parent[1].address.country.name = "Honduras";
+		parent[1].address.country.name = "Honduras";
 
-        checkDirtyTracking( parent[1], "address.country" );
+		checkDirtyTracking( parent[1], "address.country" );
 
-        scope.inTransaction( s -> {
-            s.merge( parent[1] );
-            checkDirtyTracking( parent[1], "address.country" );
-        } );
+		scope.inTransaction( s -> {
+			s.merge( parent[1] );
+			checkDirtyTracking( parent[1], "address.country" );
+		} );
 
-        scope.inTransaction( s -> {
-            parent[2] = s.get( ParentEntity.class, entityId );
-            assertEquals( "Honduras", parent[2].address.country.name );
-        } );
-    }
+		scope.inTransaction( s -> {
+			parent[2] = s.get( ParentEntity.class, entityId );
+			assertEquals( "Honduras", parent[2].address.country.name );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity(name = "Parent")
-    @Table( name = "PARENT_ENTITY" )
-    static class ParentEntity {
+	@Entity(name = "Parent")
+	@Table( name = "PARENT_ENTITY" )
+	static class ParentEntity {
 
-        @Id
-        @GeneratedValue
-        Long id;
+		@Id
+		@GeneratedValue
+		Long id;
 
-        String description;
+		String description;
 
-        @Embedded
-        Address address;
+		@Embedded
+		Address address;
 
-        @Basic( fetch = FetchType.LAZY )
-        byte[] lazyField;
-    }
+		@Basic( fetch = FetchType.LAZY )
+		byte[] lazyField;
+	}
 
-    @Embeddable
-    @Table( name = "ADDRESS" )
-    static class Address {
+	@Embeddable
+	@Table( name = "ADDRESS" )
+	static class Address {
 
-        String street;
+		String street;
 
-        @Embedded
-        Country country;
-    }
+		@Embedded
+		Country country;
+	}
 
-    @Embeddable
-    @Table( name = "COUNTRY" )
-    static class Country {
+	@Embeddable
+	@Table( name = "COUNTRY" )
+	static class Country {
 
-        String name;
+		String name;
 
-        @ElementCollection
-        @CollectionTable( name = "languages", joinColumns = @JoinColumn( name = "id", referencedColumnName = "id" ) )
-        List<String> languages;
-    }
+		@ElementCollection
+		@CollectionTable( name = "languages", joinColumns = @JoinColumn( name = "id", referencedColumnName = "id" ) )
+		List<String> languages;
+	}
 }

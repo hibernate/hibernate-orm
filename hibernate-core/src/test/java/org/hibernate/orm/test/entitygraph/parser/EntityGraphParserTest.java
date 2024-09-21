@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.parser;
 
@@ -28,7 +26,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * A unit test of {@link GraphParser}.
- * 
+ *
  * @author asusnjar
  */
 public class EntityGraphParserTest extends AbstractEntityGraphTest {
@@ -215,7 +213,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );
-		
+
 		final String mapAttributeName = "map";
 		Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );
 		Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
@@ -233,7 +231,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 				Map<Class, Subgraph> keySubgraphs = node.getKeySubgraphs();
 				Assert.assertTrue( "Missing the key subgraph", !keySubgraphs.isEmpty() );
 				Assert.assertSame( keySubgraph, keySubgraphs.get( GraphParsingTestEntity.class ) );
-				
+
 				@SuppressWarnings("rawtypes")
 				Map<Class, Subgraph> valueSubgraphs = node.getSubgraphs();
 				Assert.assertTrue( "Missing the value subgraph", !valueSubgraphs.isEmpty() );
@@ -247,7 +245,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 	public void testHHH12696MapSubgraphsValueFirst() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<GraphParsingTestEntity> graph = entityManager.createEntityGraph( GraphParsingTestEntity.class );
-		
+
 		final String mapAttributeName = "map";
 		Subgraph<GraphParsingTestEntity> valueSubgraph = graph.addSubgraph( mapAttributeName );
 		Subgraph<GraphParsingTestEntity> keySubgraph = graph.addKeySubgraph( mapAttributeName );

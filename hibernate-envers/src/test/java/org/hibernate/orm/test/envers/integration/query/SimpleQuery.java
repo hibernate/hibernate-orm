@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.query;
 
@@ -382,30 +380,30 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 			Assert.assertTrue( (number >= 0 && number <= 5) || (number >= 20 && number <= 100) );
 		}
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-8495")
 	public void testIlike() {
 		StrIntTestEntity site1 = new StrIntTestEntity( "aBc", 10, id1 );
-		
+
 		StrIntTestEntity result = (StrIntTestEntity) getAuditReader().createQuery()
 				.forRevisionsOfEntity( StrIntTestEntity.class, true, true )
 				.add( AuditEntity.property( "str1" ).ilike( "abc" ) )
 				.getSingleResult();
-		
+
 		Assert.assertEquals( site1, result );
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-8495")
 	public void testIlikeWithMatchMode() {
 		StrIntTestEntity site1 = new StrIntTestEntity( "aBc", 10, id1 );
-		
+
 		StrIntTestEntity result = (StrIntTestEntity) getAuditReader().createQuery()
 				.forRevisionsOfEntity( StrIntTestEntity.class, true, true )
 				.add( AuditEntity.property( "str1" ).ilike( "BC", MatchMode.ANYWHERE ) )
 				.getSingleResult();
-		
+
 		Assert.assertEquals( site1, result );
 	}
 

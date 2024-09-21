@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
@@ -13,7 +11,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
@@ -114,7 +111,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		}
 		catch (ClassLoadingException ignore) {
 		}
-		
+
 		// WebSphere Liberty ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		try {
 			classLoaderService.classForName(WebSphereLibertyJtaPlatform.TMF_CLASS_NAME);
@@ -122,7 +119,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		}
 		catch (ClassLoadingException ignore) {
 		}
-		
+
 		// WebSphere traditional ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		for ( WebSphereJtaPlatform.WebSphereEnvironment webSphereEnvironment
 				: WebSphereJtaPlatform.WebSphereEnvironment.values() ) {

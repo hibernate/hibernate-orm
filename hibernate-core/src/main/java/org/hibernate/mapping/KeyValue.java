@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 
@@ -20,18 +19,16 @@ import org.hibernate.generator.Generator;
 public interface KeyValue extends Value {
 
 	ForeignKey createForeignKeyOfEntity(String entityName);
-	
+
 	boolean isCascadeDeleteEnabled();
-	
+
 	String getNullValue();
-	
+
 	boolean isUpdateable();
 
-	@Deprecated(since = "7.0")
-	default Generator createGenerator(Dialect dialect, RootClass rootClass) {
-		return createGenerator( dialect, rootClass, null );
-	}
+	@Deprecated(since = "7.0", forRemoval = true)
+	Generator createGenerator(Dialect dialect, RootClass rootClass);
 
-	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property);
-
+	@Incubating
+	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults);
 }

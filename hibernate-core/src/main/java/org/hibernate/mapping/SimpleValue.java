@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -28,13 +26,13 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
@@ -54,6 +52,7 @@ import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -63,6 +62,7 @@ import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
+import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
@@ -105,7 +105,6 @@ public abstract class SimpleValue implements KeyValue {
 	private Type type;
 
 	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
-	private Generator generator;
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -139,7 +138,6 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
-		this.generator = original.generator;
 	}
 
 	@Override
@@ -155,6 +153,7 @@ public abstract class SimpleValue implements KeyValue {
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
+
 
 	public TypeConfiguration getTypeConfiguration() {
 		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
@@ -376,14 +375,46 @@ public abstract class SimpleValue implements KeyValue {
 		return customIdGeneratorCreator;
 	}
 
-	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property) {
-		if ( generator == null ) {
-			if ( customIdGeneratorCreator != null ) {
-				generator = customIdGeneratorCreator.createGenerator( new IdGeneratorCreationContext( rootClass, property ) );
+	@Deprecated(since = "7.0", forRemoval = true)
+	@Override @SuppressWarnings("removal")
+	public Generator createGenerator(Dialect dialect, RootClass rootClass) {
+		return createGenerator( dialect, rootClass, null, new GeneratorSettings() {
+			@Override
+			public String getDefaultCatalog() {
+				return null;
 			}
+
+			@Override
+			public String getDefaultSchema() {
+				return null;
+			}
+
+			@Override
+			public SqlStringGenerationContext getSqlStringGenerationContext() {
+				final Database database = buildingContext.getMetadataCollector().getDatabase();
+				return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
+			}
+		} );
+	}
+
+	@Override
+	public Generator createGenerator(
+			Dialect dialect,
+			RootClass rootClass,
+			Property property,
+			GeneratorSettings defaults) {
+		if ( customIdGeneratorCreator != null ) {
+			final IdGeneratorCreationContext context =
+					new IdGeneratorCreationContext( rootClass, property, defaults );
+			final Generator generator = customIdGeneratorCreator.createGenerator( context );
+			if ( generator.allowAssignedIdentifiers() && getNullValue() == null ) {
+				setNullValue( "undefined" );
+			}
+			return generator;
 		}
-		return generator;
+		else {
+			return null;
+		}
 	}
 
 	@Internal
@@ -400,19 +431,23 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	@Override
 	public boolean isUpdateable() {
 		//needed to satisfy KeyValue
 		return true;
 	}
-	
+
+	@Override
 	public FetchMode getFetchMode() {
 		return FetchMode.SELECT;
 	}
 
+	@Override
 	public Table getTable() {
 		return table;
 	}
 
+	@Override
 	public String getNullValue() {
 		return nullValue;
 	}
@@ -461,6 +496,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.foreignKeyDefinition = foreignKeyDefinition;
 	}
 
+	@Override
 	public boolean isAlternateUniqueKey() {
 		return alternateUniqueKey;
 	}
@@ -469,6 +505,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.alternateUniqueKey = unique;
 	}
 
+	@Override
 	public boolean isNullable() {
 		for ( Selectable selectable : getSelectables() ) {
 			if ( selectable instanceof Formula ) {
@@ -486,12 +523,14 @@ public abstract class SimpleValue implements KeyValue {
 		return true;
 	}
 
+	@Override
 	public boolean isSimpleValue() {
 		return true;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
-		return getColumnSpan() == getType().getColumnSpan( mapping );
+	@Override
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
+		return getColumnSpan() == getType().getColumnSpan( mappingContext );
 	}
 
 	protected void setAttributeConverterDescriptor(ConverterDescriptor descriptor) {
@@ -842,8 +881,7 @@ public abstract class SimpleValue implements KeyValue {
 
 			for ( int i = 0; i < columns.size(); i++ ) {
 				final Selectable selectable = columns.get(i);
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					columnNames[i] = column.getName();
 					columnLengths[i] = column.getLength();
 				}
@@ -896,8 +934,7 @@ public abstract class SimpleValue implements KeyValue {
 
 			for ( int i = 0; i < columns.size(); i++ ) {
 				final Selectable selectable = columns.get(i);
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					columnNames[i] = column.getName();
 					columnLengths[i] = column.getLength();
 				}
@@ -1022,10 +1059,12 @@ public abstract class SimpleValue implements KeyValue {
 	private class IdGeneratorCreationContext implements GeneratorCreationContext {
 		private final RootClass rootClass;
 		private final Property property;
+		private final GeneratorSettings defaults;
 
-		public IdGeneratorCreationContext(RootClass rootClass, Property property) {
+		public IdGeneratorCreationContext(RootClass rootClass, Property property, GeneratorSettings defaults) {
 			this.rootClass = rootClass;
 			this.property = property;
+			this.defaults = defaults;
 		}
 
 		@Override
@@ -1039,13 +1078,18 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return defaults.getSqlStringGenerationContext();
+		}
+
+		@Override
 		public String getDefaultCatalog() {
-			return buildingContext.getEffectiveDefaults().getDefaultCatalogName();
+			return defaults.getDefaultCatalog();
 		}
 
 		@Override
 		public String getDefaultSchema() {
-			return buildingContext.getEffectiveDefaults().getDefaultSchemaName();
+			return defaults.getDefaultSchema();
 		}
 
 		@Override
@@ -1068,7 +1112,7 @@ public abstract class SimpleValue implements KeyValue {
 			return SimpleValue.this.getType();
 		}
 
-		// we could add these if it helps integrate old infrastructure
+		// we could add this if it helps integrate old infrastructure
 //		@Override
 //		public Properties getParameters() {
 //			final Value value = getProperty().getValue();
@@ -1079,10 +1123,5 @@ public abstract class SimpleValue implements KeyValue {
 //			return collectParameters( (SimpleValue) value, dialect, defaultCatalog, defaultSchema, rootClass );
 //		}
 //
-//		@Override
-//		public SqlStringGenerationContext getSqlStringGenerationContext() {
-//			final Database database = getDatabase();
-//			return fromExplicit( database.getJdbcEnvironment(), database, defaultCatalog, defaultSchema );
-//		}
 	}
 }

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.collate;
 
 import jakarta.persistence.Basic;
@@ -18,21 +22,21 @@ import org.junit.jupiter.api.Test;
 @RequiresDialect(PostgreSQLDialect.class)
 public class PostgresCollateTest {
 
-    @Test void test(SessionFactoryScope scope) {
-        scope.inTransaction(session -> session.persist(new Message("Hello, world!")));
-    }
+	@Test void test(SessionFactoryScope scope) {
+		scope.inTransaction(session -> session.persist(new Message("Hello, world!")));
+	}
 
-    @Entity(name = "msgs")
-    static class Message {
-        @Id @GeneratedValue
-        Long id;
-        @Basic(optional = false)
-        @Collate("en_US")
-        @Column(length = 200)
-        String text;
+	@Entity(name = "msgs")
+	static class Message {
+		@Id @GeneratedValue
+		Long id;
+		@Basic(optional = false)
+		@Collate("en_US")
+		@Column(length = 200)
+		String text;
 
-        public Message(String text) {
-            this.text = text;
-        }
-    }
+		public Message(String text) {
+			this.text = text;
+		}
+	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -653,6 +651,23 @@ public class MySQLLegacyDialect extends Dialect {
 		functionRegistry.registerAlternateKey( "char", "chr" );
 
 		functionFactory.listagg_groupConcat();
+
+		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
+			functionFactory.jsonValue_mysql();
+			functionFactory.jsonQuery_mysql();
+			functionFactory.jsonExists_mysql();
+			functionFactory.jsonObject_mysql();
+			functionFactory.jsonArray_mysql();
+			functionFactory.jsonArrayAgg_mysql();
+			functionFactory.jsonObjectAgg_mysql();
+			functionFactory.jsonSet_mysql();
+			functionFactory.jsonRemove_mysql();
+			functionFactory.jsonReplace_mysql();
+			functionFactory.jsonInsert_mysql();
+			functionFactory.jsonMergepatch_mysql();
+			functionFactory.jsonArrayAppend_mysql();
+			functionFactory.jsonArrayInsert_mysql();
+		}
 	}
 
 	@Override
@@ -663,6 +678,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, MySQLCastingJsonArrayJdbcType.INSTANCE );
 		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
@@ -1438,4 +1454,14 @@ public class MySQLLegacyDialect extends Dialect {
 		}
 		return sqlCheckConstraint;
 	}
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
+	}
+
 }

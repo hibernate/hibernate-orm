@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.cascade;
 
@@ -22,15 +20,15 @@ public class Student {
 
 	@Id @GeneratedValue
 	Long id;
-	
+
 	String name;
-	
+
 	@ManyToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
 	private Teacher primaryTeacher;
 
 	@OneToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
 	private Teacher favoriteTeacher;
-	
+
 	public  Student() {
 	}
 
@@ -49,7 +47,7 @@ public class Student {
 	public void setPrimaryTeacher(Teacher relativeTo) {
 		this.primaryTeacher = relativeTo;
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -57,7 +55,7 @@ public class Student {
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}

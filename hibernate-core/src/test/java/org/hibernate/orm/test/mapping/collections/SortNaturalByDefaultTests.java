@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.collections;
 
 import java.util.Arrays;
@@ -33,7 +37,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *     <li>{@link org.hibernate.annotations.OrderBy @OrderBy(from hibernate)}</li>
  *     <li>{@link jakarta.persistence.OrderBy @OrderBy(from JPA)}</li>
  * </ul>
- * 
+ *
  * @author Nathan Xu
  */
 @ServiceRegistry
@@ -46,7 +50,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory
 @JiraKey( value = "HHH-13877" )
 public class SortNaturalByDefaultTests {
-	
+
 	@Test
 	void test(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -73,7 +77,7 @@ public class SortNaturalByDefaultTests {
 		scope.inTransaction(
 			session -> {
 				final Person person = new Person();
-				final SortedSet<Phone> phones = new TreeSet<>( 
+				final SortedSet<Phone> phones = new TreeSet<>(
 					Arrays.asList(
 						new Phone( "678-912-345" ),
 						new Phone( "234-567-891" ),
@@ -140,7 +144,7 @@ public class SortNaturalByDefaultTests {
 
 		public Phone() {
 		}
-		
+
 		public Phone(String number) {
 			this.number = number;
 		}

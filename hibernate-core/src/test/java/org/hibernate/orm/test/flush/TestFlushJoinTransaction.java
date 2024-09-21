@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.flush;
 
@@ -33,7 +31,7 @@ public class TestFlushJoinTransaction extends BaseNonConfigCoreFunctionalTestCas
 		TestingJtaBootstrap.prepare( settings );
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 	}
-	
+
 	@Test
 	public void testFlush() throws Exception {
 		Session session = openSession();
@@ -49,7 +47,7 @@ public class TestFlushJoinTransaction extends BaseNonConfigCoreFunctionalTestCas
 			session.close();
 		}
 	}
-	
+
 	@Test
 	public void testIsConnectedFlush() throws Exception {
 		Session session = openSession();

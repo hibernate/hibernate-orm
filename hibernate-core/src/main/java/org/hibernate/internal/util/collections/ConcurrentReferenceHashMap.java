@@ -1,16 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-/*
- * Written by Doug Lea with assistance from members of JCP JSR-166
- * Expert Group and released to the public domain, as explained at
- * http://creativecommons.org/licenses/publicdomain
- */
-
 package org.hibernate.internal.util.collections;
 
 import java.io.IOException;
@@ -1646,9 +1637,9 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	/*
-		  * This class is needed for JDK5 compatibility.
-		  */
+	/**
+	 * This class is needed for JDK5 compatibility.
+	 */
 	static class SimpleEntry<K, V> implements Entry<K, V>, Serializable {
 		private static final long serialVersionUID = -8499721149061103585L;
 

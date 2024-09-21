@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
 
@@ -41,7 +39,7 @@ public class CriteriaStringInlineLiteralTest extends BaseEntityManagerFunctional
 		CriteriaBuilder.Case<String> sCase = cb.selectCase();
 		Expression<String> caseSelect =
 				sCase.when( cb.equal( animalRoot.get( "name" ), cb.literal( "kitty" ) ), cb.literal( "Cat" ) )
-				      .otherwise("escapez'moi" );
+					.otherwise("escapez'moi" );
 		criteriaQuery.multiselect( caseSelect );
 		criteriaQuery.where( cb.equal( animalRoot.get( "name" ), "myFavoriteAnimal" ) );
 		entityManager.createQuery( criteriaQuery); // would throw exception for unescaped otherwise literal in HHH-13889

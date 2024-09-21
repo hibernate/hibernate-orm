@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -92,7 +90,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  *         Perform string casts to varchar; removes space padding.
  *     </li>
  * </ul>
- * 
+ *
  * @author Ian Booth
  * @author Bruce Lunsford
  * @author Max Rydahl Andersen
@@ -558,5 +556,16 @@ public class IngresDialect extends Dialect {
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 9, 3 );
+	}
+
+	@Override
+	public String getDual() {
+		return "(select 0)";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		//this is only necessary if the query has a where clause
+		return " from " + getDual() + " dual";
 	}
 }

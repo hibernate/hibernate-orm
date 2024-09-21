@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
@@ -103,16 +101,16 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Wall> query = cb.createQuery( Wall.class );
 		Root<Wall> root = query.from( Wall.class );
-		
+
 		query.select( root ).where( cb.equal( root.get( "color" ), cb.lower( cb.literal( "YELLOW" ) ) ) );
-		
+
 		Wall resultItem = em.createQuery( query ).getSingleResult();
 		assertNotNull( resultItem );
-		
+
 		em.getTransaction().commit();
 		em.close();
 	}
-    
+
 	@Test
 	@JiraKey( value = "HHH-8914" )
 	public void testDoubleNegation() {
@@ -120,20 +118,20 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		wall1.setColor( "yellow" );
 		Wall wall2 = new Wall();
 		wall2.setColor( null );
-		
+
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.persist( wall1 );
 		em.persist( wall2 );
 		em.getTransaction().commit();
 		em.clear();
-		
+
 		em.getTransaction().begin();
-		
+
 		// Although the examples are simplified and the usages appear pointless,
 		// double negatives can occur in some dynamic applications (regardless
 		// if it results from bad design or not).  Ensure we handle them as expected.
-		
+
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Wall> query = cb.createQuery( Wall.class );
 		Root<Wall> root = query.from( Wall.class );
@@ -143,7 +141,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		Wall result = em.createQuery( query ).getSingleResult();
 		assertNotNull( result );
 		assertEquals( null, result.getColor() );
-		
+
 		query = cb.createQuery( Wall.class );
 		root = query.from( Wall.class );
 		query.select( root ).where(
@@ -153,7 +151,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		result = em.createQuery( query ).getSingleResult();
 		assertNotNull( result );
 		assertEquals( null, result.getColor() );
-		
+
 		query = cb.createQuery( Wall.class );
 		root = query.from( Wall.class );
 		query.select( root ).where(
@@ -163,7 +161,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		result = em.createQuery( query ).getSingleResult();
 		assertNotNull( result );
 		assertEquals( "yellow", result.getColor() );
-		
+
 		em.getTransaction().commit();
 		em.close();
 	}

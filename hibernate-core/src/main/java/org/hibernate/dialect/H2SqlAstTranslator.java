@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -43,7 +41,6 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
-import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * A SQL AST translator for H2.
@@ -359,11 +356,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	protected boolean supportsNullPrecedence() {
 		// Support for nulls clause in listagg was added in 2.0
 		return true;
-	}
-
-	@Override
-	protected String getDual() {
-		return "dual";
 	}
 
 	private boolean supportsOffsetFetchClause() {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.query;
 
@@ -31,162 +29,162 @@ import org.hibernate.testing.orm.junit.JiraKey;
  */
 @JiraKey( "HHH-13817" )
 public class AssociationRevisionsOfEntitiesQueryTest extends BaseEnversFunctionalTestCase {
-    @Override
-    protected Class[] getAnnotatedClasses() {
-        return new Class<?>[] { Template.class, TemplateType.class };
-    }
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class<?>[] { Template.class, TemplateType.class };
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        doInHibernate( this::sessionFactory, session -> {
-            final TemplateType type1 = new TemplateType( 1, "Type1" );
-            final TemplateType type2 = new TemplateType( 2, "Type2" );
-            session.persist( type1 );
-            session.persist( type2 );
+	@Test
+	@Priority(10)
+	public void initData() {
+		doInHibernate( this::sessionFactory, session -> {
+			final TemplateType type1 = new TemplateType( 1, "Type1" );
+			final TemplateType type2 = new TemplateType( 2, "Type2" );
+			session.persist( type1 );
+			session.persist( type2 );
 
-            final Template template = new Template( 1, "Template1", type1 );
-            session.persist( template );
-        } );
+			final Template template = new Template( 1, "Template1", type1 );
+			session.persist( template );
+		} );
 
-        doInHibernate( this::sessionFactory, session -> {
-            final TemplateType type = session.find( TemplateType.class, 2 );
-            final Template template = session.find( Template.class, 1 );
-            template.setName( "Template1-Updated" );
-            template.setTemplateType( type );
-            session.merge( template );
-        } );
+		doInHibernate( this::sessionFactory, session -> {
+			final TemplateType type = session.find( TemplateType.class, 2 );
+			final Template template = session.find( Template.class, 1 );
+			template.setName( "Template1-Updated" );
+			template.setTemplateType( type );
+			session.merge( template );
+		} );
 
-        doInHibernate( this::sessionFactory, session -> {
-            final Template template = session.find( Template.class, 1 );
-            session.remove( template );
-        } );
-    }
+		doInHibernate( this::sessionFactory, session -> {
+			final Template template = session.find( Template.class, 1 );
+			session.remove( template );
+		} );
+	}
 
-    @Test
-    public void testRevisionsOfEntityWithAssociationQueries() {
-        doInHibernate( this::sessionFactory, session -> {
-            List<?> results = getAuditReader().createQuery()
-                    .forRevisionsOfEntity( Template.class, true, true )
-                    .add( AuditEntity.id().eq( 1 ) )
-                    .traverseRelation( "templateType", JoinType.INNER )
-                    .add( AuditEntity.property( "name" ).eq( "Type1" ) )
-                    .up()
-                    .getResultList();
-            assertEquals( 1, results.size() );
-            assertEquals( "Template1", ( (Template) results.get( 0 ) ).getName() );
-        } );
+	@Test
+	public void testRevisionsOfEntityWithAssociationQueries() {
+		doInHibernate( this::sessionFactory, session -> {
+			List<?> results = getAuditReader().createQuery()
+					.forRevisionsOfEntity( Template.class, true, true )
+					.add( AuditEntity.id().eq( 1 ) )
+					.traverseRelation( "templateType", JoinType.INNER )
+					.add( AuditEntity.property( "name" ).eq( "Type1" ) )
+					.up()
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "Template1", ( (Template) results.get( 0 ) ).getName() );
+		} );
 
-        doInHibernate( this::sessionFactory, session -> {
-            List<?> results = getAuditReader().createQuery()
-                    .forRevisionsOfEntity( Template.class, true, true )
-                    .add( AuditEntity.id().eq( 1 ) )
-                    .traverseRelation( "templateType", JoinType.INNER )
-                    .add( AuditEntity.property("name" ).eq("Type2" ) )
-                    .up()
-                    .getResultList();
+		doInHibernate( this::sessionFactory, session -> {
+			List<?> results = getAuditReader().createQuery()
+					.forRevisionsOfEntity( Template.class, true, true )
+					.add( AuditEntity.id().eq( 1 ) )
+					.traverseRelation( "templateType", JoinType.INNER )
+					.add( AuditEntity.property("name" ).eq("Type2" ) )
+					.up()
+					.getResultList();
 
-            assertEquals( getConfiguration().isStoreDataAtDelete() ? 2 : 1, results.size() );
-            for ( Object result : results ) {
-                assertEquals( "Template1-Updated", ( (Template) result ).getName() );
-            }
-        } );
-    }
+			assertEquals( getConfiguration().isStoreDataAtDelete() ? 2 : 1, results.size() );
+			for ( Object result : results ) {
+				assertEquals( "Template1-Updated", ( (Template) result ).getName() );
+			}
+		} );
+	}
 
-    @Test
-    public void testAssociationQueriesNotAllowedWhenNotSelectingJustEntities() {
-        try {
-            doInHibernate( this::sessionFactory, session -> {
-                getAuditReader().createQuery()
-                        .forRevisionsOfEntity( Template.class, false, true )
-                        .add( AuditEntity.id().eq( 1 ) )
-                        .traverseRelation("templateType", JoinType.INNER )
-                        .add( AuditEntity.property( "name" ).eq( "Type1" ) )
-                        .up()
-                        .getResultList();
-            } );
+	@Test
+	public void testAssociationQueriesNotAllowedWhenNotSelectingJustEntities() {
+		try {
+			doInHibernate( this::sessionFactory, session -> {
+				getAuditReader().createQuery()
+						.forRevisionsOfEntity( Template.class, false, true )
+						.add( AuditEntity.id().eq( 1 ) )
+						.traverseRelation("templateType", JoinType.INNER )
+						.add( AuditEntity.property( "name" ).eq( "Type1" ) )
+						.up()
+						.getResultList();
+			} );
 
-            fail( "Test should have thrown IllegalStateException due to selectEntitiesOnly=false" );
-        }
-        catch ( Exception e ) {
-            assertTyping( IllegalStateException.class, e );
-        }
-    }    
-    
-    @Entity(name = "TemplateType")
-    @Audited
-    public static class TemplateType {
-        @Id
-        private Integer id;
-        private String name;
+			fail( "Test should have thrown IllegalStateException due to selectEntitiesOnly=false" );
+		}
+		catch ( Exception e ) {
+			assertTyping( IllegalStateException.class, e );
+		}
+	}
 
-        TemplateType() {
-            this( null, null );
-        }
+	@Entity(name = "TemplateType")
+	@Audited
+	public static class TemplateType {
+		@Id
+		private Integer id;
+		private String name;
 
-        TemplateType(Integer id, String name) {
-            this.id = id;
-            this.name = name;
-        }
+		TemplateType() {
+			this( null, null );
+		}
 
-        public Integer getId() {
-            return id;
-        }
+		TemplateType(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 
-        public void setId(Integer id) {
-            this.id = id;
-        }
+		public Integer getId() {
+			return id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public void setId(Integer id) {
+			this.id = id;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
-    }
+		public String getName() {
+			return name;
+		}
 
-    @Entity(name = "Template")
-    @Audited
-    public static class Template {
-        @Id
-        private Integer id;
-        private String name;
-        @ManyToOne
-        private TemplateType templateType;
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
 
-        Template() {
-            this( null, null, null );
-        }
+	@Entity(name = "Template")
+	@Audited
+	public static class Template {
+		@Id
+		private Integer id;
+		private String name;
+		@ManyToOne
+		private TemplateType templateType;
 
-        Template(Integer id, String name, TemplateType type) {
-            this.id = id;
-            this.name = name;
-            this.templateType = type;
-        }
+		Template() {
+			this( null, null, null );
+		}
 
-        public Integer getId() {
-            return id;
-        }
+		Template(Integer id, String name, TemplateType type) {
+			this.id = id;
+			this.name = name;
+			this.templateType = type;
+		}
 
-        public void setId(Integer id) {
-            this.id = id;
-        }
+		public Integer getId() {
+			return id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public void setId(Integer id) {
+			this.id = id;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public TemplateType getTemplateType() {
-            return templateType;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public void setTemplateType(TemplateType templateType) {
-            this.templateType = templateType;
-        }
-    }    
+		public TemplateType getTemplateType() {
+			return templateType;
+		}
+
+		public void setTemplateType(TemplateType templateType) {
+			this.templateType = templateType;
+		}
+	}
 }

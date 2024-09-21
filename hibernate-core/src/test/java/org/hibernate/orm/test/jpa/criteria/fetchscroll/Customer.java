@@ -1,4 +1,7 @@
-
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
 import java.io.Serializable;
@@ -7,7 +10,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "customers")
 public class Customer implements Comparable<Customer>, Serializable {
-	
+
 	private Long id;
 	private String name;
 
@@ -48,7 +51,7 @@ public class Customer implements Comparable<Customer>, Serializable {
 		boolean result = false;
 		if(object instanceof Customer) {
 			Customer other = (Customer) object;
-			result = id.equals(other.id);		
+			result = id.equals(other.id);
 		}
 		return result;
 	}
@@ -59,4 +62,3 @@ public class Customer implements Comparable<Customer>, Serializable {
 	}
 
 }
-

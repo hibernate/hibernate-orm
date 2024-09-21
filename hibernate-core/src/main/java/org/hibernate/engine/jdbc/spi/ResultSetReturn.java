@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -42,7 +40,7 @@ public interface ResultSetReturn {
 	 * @return The resulting {@link ResultSet}
 	 */
 	ResultSet extract(Statement statement, String sql);
-	
+
 	/**
 	 * Execute the {@link PreparedStatement} return its first {@link ResultSet}, if any.
 	 * If there is no {@link ResultSet}, returns {@code null}
@@ -64,7 +62,7 @@ public interface ResultSetReturn {
 	 * @return The extracted {@link ResultSet}, or {@code null}
 	 */
 	ResultSet execute(Statement statement, String sql);
-	
+
 	/**
 	 * Execute the {@link PreparedStatement}, returning its "affected row count".
 	 *
@@ -74,7 +72,7 @@ public interface ResultSetReturn {
 	 * @return The {@link PreparedStatement#executeUpdate()} result
 	 */
 	int executeUpdate(PreparedStatement statement, String sql);
-	
+
 	/**
 	 * Execute the given SQL statement returning its "affected row count".
 	 *

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.querycache;
 
@@ -12,22 +10,22 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class StringCompositeKey implements Serializable {
-	
-    private static final long serialVersionUID = 1L;
 
- private String substation;
-    
-    private String deviceType;
-    
-    private String device;
+	private static final long serialVersionUID = 1L;
 
-    private String analog;
-    
-    // For some dialects, the sum of a primary key column lengths cannot
-    // be larger than 255 (DB2).  Restrict them to a sufficiently
-    // small size.  See HHH-8085.
-    
-    @Column( length = 50 )
+private String substation;
+
+	private String deviceType;
+
+	private String device;
+
+	private String analog;
+
+	// For some dialects, the sum of a primary key column lengths cannot
+	// be larger than 255 (DB2).  Restrict them to a sufficiently
+	// small size.  See HHH-8085.
+
+	@Column( length = 50 )
 	public String getSubstation() {
 		return substation;
 	}

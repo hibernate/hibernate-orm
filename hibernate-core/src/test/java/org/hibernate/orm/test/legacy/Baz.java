@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Baz.java 4688 2004-10-26 09:10:50Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 
 import java.io.Serializable;
@@ -60,9 +56,9 @@ public class Baz implements Named, Serializable, Comparable {
 	private List moreParts;
 	public List subs;
 	public Baz superBaz;
-	
+
 	Baz() {}
-	
+
 	public SortedSet getStringSet() {
 		return stringSet;
 	}
@@ -99,14 +95,14 @@ public class Baz implements Named, Serializable, Comparable {
 	public void setStringArray(String[] stringArray) {
 		this.stringArray = stringArray;
 	}
-	
+
 	public String getCode() {
 		return code;
 	}
 	public void setCode(String code) {
 		this.code = code;
 	}
-	
+
 	public void setDefaults() {
 		SortedSet set = new TreeSet();
 		set.add("foo"); set.add("bar"); set.add("baz");
@@ -122,7 +118,7 @@ public class Baz implements Named, Serializable, Comparable {
 		setIntArray( new int[] { 1,3,3,7 } );
 		setFooArray( new Foo[0] );
 		setStringArray( (String[]) list.toArray( new String[0] ) );
-		
+
 		fooSet = new HashSet();
 		components = new FooComponent[] {
 			new FooComponent("foo", 42, null, null),
@@ -133,7 +129,7 @@ public class Baz implements Named, Serializable, Comparable {
 		x.add("w"); x.add("x"); x.add("y"); x.add("z");
 		TreeSet a = new TreeSet();
 		a.add("a"); a.add("b"); a.add("d"); a.add("c");
-		
+
 		count = 667;
 		name="Bazza";
 		topComponents = new ArrayList();
@@ -156,10 +152,10 @@ public class Baz implements Named, Serializable, Comparable {
 		cached.add(ce2);
 		cachedMap = new TreeMap();
 		cachedMap.put(this, ce);
-		
+
 		text="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 		for (int i=0; i<10; i++) text+=text;
-		
+
 	}
 
 	public Set getFooSet() {
@@ -168,103 +164,103 @@ public class Baz implements Named, Serializable, Comparable {
 	public void setFooSet(Set fooSet) {
 		this.fooSet = fooSet;
 	}
-	
+
 	public FooComponent[] getComponents() {
 		return components;
 	}
 	public void setComponents(FooComponent[] components) {
 		this.components = components;
 	}
-	
+
 	public Date[] getTimeArray() {
 		return timeArray;
 	}
-	
+
 	public void setTimeArray(Date[] timeArray) {
 		this.timeArray = timeArray;
 	}
-	
+
 	public int getCount() {
 		return count;
 	}
-	
+
 	public void setCount(int count) {
 		this.count = count;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public List getTopComponents() {
 		return topComponents;
 	}
-	
+
 	public void setTopComponents(List topComponents) {
 		this.topComponents = topComponents;
 	}
-	
+
 	public Collection getBag() {
 		return bag;
 	}
-	
+
 	public void setBag(Collection bag) {
 		this.bag = bag;
 	}
-	
+
 	public Set getTopFoos() {
 		return topFoos;
 	}
-	
+
 	public void setTopFoos(Set topFoos) {
 		this.topFoos = topFoos;
 	}
-	
-	
+
+
 	public Map getTopGlarchez() {
 		return topGlarchez;
 	}
-	
+
 	public void setTopGlarchez(Map topGlarchez) {
 		this.topGlarchez = topGlarchez;
 	}
-	
+
 	public Set getCascadingBars() {
 		return cascadingBars;
 	}
-	
+
 	public void setCascadingBars(Set cascadingBars) {
 		this.cascadingBars = cascadingBars;
 	}
-	
+
 	public Map getFooToGlarch() {
 		return fooToGlarch;
 	}
-	
+
 	public void setFooToGlarch(Map fooToGlarch) {
 		this.fooToGlarch = fooToGlarch;
 	}
-	
+
 	public Map getFooComponentToFoo() {
 		return fooComponentToFoo;
 	}
-	
+
 	public void setFooComponentToFoo(Map fooComponentToFoo) {
 		this.fooComponentToFoo = fooComponentToFoo;
 	}
-	
+
 	public Map getGlarchToFoo() {
 		return glarchToFoo;
 	}
-	
+
 	public void setGlarchToFoo(Map glarchToFoo) {
 		this.glarchToFoo = glarchToFoo;
 	}
-	
+
 	public List getFees() {
 		return fees;
 	}
@@ -438,10 +434,3 @@ public class Baz implements Named, Serializable, Comparable {
 		this.moreParts = moreParts;
 	}
 }
-
-
-
-
-
-
-

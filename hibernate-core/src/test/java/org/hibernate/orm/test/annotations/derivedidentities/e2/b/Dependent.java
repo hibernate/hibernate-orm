@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e2.b;
 import jakarta.persistence.EmbeddedId;
@@ -22,7 +20,7 @@ public class Dependent {
 
 	@MapsId("empPK")
 
-    @ManyToOne
-    @JoinColumns( { @JoinColumn(nullable = false), @JoinColumn(nullable = false) })
-    Employee emp;
+	@ManyToOne
+	@JoinColumns( { @JoinColumn(nullable = false), @JoinColumn(nullable = false) })
+	Employee emp;
 }

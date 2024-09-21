@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
@@ -28,7 +26,7 @@ import org.junit.Test;
  * Tests the correctness of the parameter hibernate.dialect.hana.use_legacy_boolean_type which controls the mapping of
  * boolean types to be either TINYINT (parameter is set to true) or BOOLEAN (default behavior or parameter is set to
  * false)
- * 
+ *
  * @author Jonathan Bregler
  */
 @RequiresDialect(HANADialect.class)

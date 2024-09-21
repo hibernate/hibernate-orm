@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b2;
 import java.io.Serializable;
@@ -17,108 +15,108 @@ import jakarta.persistence.Version;
 
 
 
-   @NamedQueries( {
-      @NamedQuery(name = "Item.findByCategory", 
-          query = "SELECT i FROM Item i WHERE i.category=:category ORDER BY i.id")})
-  @SuppressWarnings("serial")
-  @Entity
-  @Table(name = "O_ITEM")
-  public class Item implements Serializable 
-  {
+@NamedQueries( {
+	@NamedQuery(name = "Item.findByCategory",
+		query = "SELECT i FROM Item i WHERE i.category=:category ORDER BY i.id")})
+@SuppressWarnings("serial")
+@Entity
+@Table(name = "O_ITEM")
+public class Item implements Serializable
+{
 
-    public static final String QUERY_BY_CATEGORY = "Item.findByCategory";
+	public static final String QUERY_BY_CATEGORY = "Item.findByCategory";
 
-    @Id
-    @Column(name = "I_ID")
-    private String id;
+	@Id
+	@Column(name = "I_ID")
+	private String id;
 
-    @Column(name = "I_NAME")
-    private String name;
+	@Column(name = "I_NAME")
+	private String name;
 
-    @Column(name = "I_PRICE")
-    private BigDecimal price;
+	@Column(name = "I_PRICE")
+	private BigDecimal price;
 
-    @Column(name = "I_DESC")
-    private String description;
+	@Column(name = "I_DESC")
+	private String description;
 
-    @Column(name = "I_DISCOUNT")
-    private BigDecimal discount;
+	@Column(name = "I_DISCOUNT")
+	private BigDecimal discount;
 
-    @Column(name = "I_CATEGORY")
-    private int category;
+	@Column(name = "I_CATEGORY")
+	private int category;
 
-    @Version
-    @Column(name = "I_VERSION")
-    int version;
-    
-    public String getId() {
-       return id;
-     }
+	@Version
+	@Column(name = "I_VERSION")
+	int version;
 
-     public void setId(String i) {
-       id = i;
-     }
-    
-    public int getCategory() {
-       return category;
-     }
+	public String getId() {
+	return id;
+	}
 
-     public void setCategory(int category) {
-       this.category = category;
-     }
+	public void setId(String i) {
+	id = i;
+	}
 
-     public String getDescription() {
-       return description;
-     }
+	public int getCategory() {
+	return category;
+	}
 
-     public void setDescription(String description) {
-       this.description = description;
-     }
+	public void setCategory(int category) {
+	this.category = category;
+	}
 
-     public BigDecimal getDiscount() {
-       return discount;
-     }
+	public String getDescription() {
+	return description;
+	}
 
-     public void setDiscount(BigDecimal discount) {
-       if (discount.doubleValue() < 0 || discount.doubleValue() > 100.0)
-         throw new IllegalArgumentException(this + " discount " + discount
-             + " is invalid. Must be between 0.0 and 100.0");
-       this.discount = discount;
-     }
+	public void setDescription(String description) {
+	this.description = description;
+	}
 
-     public String getName() {
-       return name;
-     }
+	public BigDecimal getDiscount() {
+	return discount;
+	}
 
-     public void setName(String name) {
-       this.name = name;
-     }
+	public void setDiscount(BigDecimal discount) {
+	if (discount.doubleValue() < 0 || discount.doubleValue() > 100.0)
+		throw new IllegalArgumentException(this + " discount " + discount
+			+ " is invalid. Must be between 0.0 and 100.0");
+	this.discount = discount;
+	}
 
-     public BigDecimal getPrice() {
-       return price;
-     }
+	public String getName() {
+	return name;
+	}
 
-     public void setPrice(BigDecimal price) {
-       this.price = price;
-     }
+	public void setName(String name) {
+	this.name = name;
+	}
 
-     public int getVersion() {
-       return version;
-     }
-     
-     @Override
-     public boolean equals(Object other) {
-       if (other == null || other.getClass() != this.getClass()) {
-         return false;
-       }
-       if (other == this) {
-         return true;
-       }
-       return id.equals(((Item) other).id);
-     }
+	public BigDecimal getPrice() {
+	return price;
+	}
 
-     @Override
-     public int hashCode() {
-       return id.hashCode();
-     }
+	public void setPrice(BigDecimal price) {
+	this.price = price;
+	}
+
+	public int getVersion() {
+	return version;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+	if (other == null || other.getClass() != this.getClass()) {
+		return false;
+	}
+	if (other == this) {
+		return true;
+	}
+	return id.equals(((Item) other).id);
+	}
+
+	@Override
+	public int hashCode() {
+	return id.hashCode();
+	}
 }

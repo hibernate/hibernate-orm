@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.engine.jdbc;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -11,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @JiraKey("HHH-17770")
 class BlobProxyTest {
 
-    @Test
-    void testLengthIsNotTruncated() throws SQLException {
-        long THREE_GB = 3 * 1024 * 1024 * 1024L;
-        Blob blob = BlobProxy.generateProxy(null, THREE_GB);
-        assertEquals(THREE_GB, blob.length());
-    }
+	@Test
+	void testLengthIsNotTruncated() throws SQLException {
+		long THREE_GB = 3 * 1024 * 1024 * 1024L;
+		Blob blob = BlobProxy.generateProxy(null, THREE_GB);
+		assertEquals(THREE_GB, blob.length());
+	}
 }

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bootstrap.spi.metadatabuildercontributor;
 
 import org.hibernate.boot.MetadataBuilder;
@@ -10,13 +14,13 @@ import org.hibernate.type.StandardBasicTypes;
  */
 //tag::bootstrap-jpa-compliant-MetadataBuilderContributor-example[]
 public class SqlFunctionMetadataBuilderContributor
-        implements MetadataBuilderContributor {
+		implements MetadataBuilderContributor {
 
-    @Override
-    public void contribute(MetadataBuilder metadataBuilder) {
-        metadataBuilder.applySqlFunction(
-            "instr", new StandardSQLFunction( "instr", StandardBasicTypes.INTEGER )
-        );
-    }
+	@Override
+	public void contribute(MetadataBuilder metadataBuilder) {
+		metadataBuilder.applySqlFunction(
+			"instr", new StandardSQLFunction( "instr", StandardBasicTypes.INTEGER )
+		);
+	}
 }
 //end::bootstrap-jpa-compliant-MetadataBuilderContributor-example[]

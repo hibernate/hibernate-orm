@@ -1,0 +1,10 @@
+"json_value(" expression "," expression passingClause? ("returning" castTarget)? onErrorClause? onEmptyClause? ")"
+
+passingClause
+	: "passing" expression "as" identifier ("," expression "as" identifier)*
+
+onErrorClause
+	: ( "error" | "null" | ( "default" expression ) ) "on error";
+
+onEmptyClause
+	: ( "error" | "null" | ( "default" expression ) ) "on empty";

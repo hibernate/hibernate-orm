@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
@@ -29,107 +27,107 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey("HHH-10708")
 @DomainModel(
-        annotatedClasses = {
-                UnexpectedDeleteTest3.Parent.class, UnexpectedDeleteTest3.Child.class
-        }
+		annotatedClasses = {
+				UnexpectedDeleteTest3.Parent.class, UnexpectedDeleteTest3.Child.class
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class UnexpectedDeleteTest3 {
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Child child = new Child();
-            child.setId( 2L );
-            s.persist( child );
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Child child = new Child();
+			child.setId( 2L );
+			s.persist( child );
 
-            Parent parent = new Parent();
-            parent.setId( 1L );
-            parent.setNames( Collections.singleton( "name" ) );
-            parent.addChild( child );
+			Parent parent = new Parent();
+			parent.setId( 1L );
+			parent.setNames( Collections.singleton( "name" ) );
+			parent.addChild( child );
 
-            s.persist( parent );
-        } );
-    }
+			s.persist( parent );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Parent parent = s.get( Parent.class, 1L );
-           
-            Child child = new Child();
-            child.setId( 1L );
-            s.persist( child );
-            parent.addChild( child );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Parent parent = s.get( Parent.class, 1L );
 
-            // We need to leave at least one attribute unfetchd
-            //parent.getNames().size();
-            s.persist( parent );
-        } );
+			Child child = new Child();
+			child.setId( 1L );
+			s.persist( child );
+			parent.addChild( child );
 
-        scope.inTransaction( s -> {
-            Parent application = s.get( Parent.class, 1L );
-            assertEquals( 2, application.getChildren().size(), "Loaded Children collection has unexpected size" );
-        } );
-    }
+			// We need to leave at least one attribute unfetchd
+			//parent.getNames().size();
+			s.persist( parent );
+		} );
 
-    // --- //
+		scope.inTransaction( s -> {
+			Parent application = s.get( Parent.class, 1L );
+			assertEquals( 2, application.getChildren().size(), "Loaded Children collection has unexpected size" );
+		} );
+	}
 
-    @Entity
-    @Table( name = "CHILD" )
-    static class Child {
+	// --- //
 
-        Long id;
+	@Entity
+	@Table( name = "CHILD" )
+	static class Child {
 
-        @Id
-        @Column( name = "id", unique = true, nullable = false )
-        Long getId() {
-            return id;
-        }
+		Long id;
 
-        void setId(Long id) {
-            this.id = id;
-        }
-    }
+		@Id
+		@Column( name = "id", unique = true, nullable = false )
+		Long getId() {
+			return id;
+		}
 
-    @Entity
-    @Table( name = "PARENT" )
-    static class Parent {
+		void setId(Long id) {
+			this.id = id;
+		}
+	}
 
-        Long id;
-        Set<String> names;
-        Set<Child> children;
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        @Id
-        @Column( name = "id", unique = true, nullable = false )
-        Long getId() {
-            return id;
-        }
+		Long id;
+		Set<String> names;
+		Set<Child> children;
 
-        void setId(Long id) {
-            this.id = id;
-        }
+		@Id
+		@Column( name = "id", unique = true, nullable = false )
+		Long getId() {
+			return id;
+		}
 
-        @ElementCollection
-        Set<String> getNames() {
-            return Collections.unmodifiableSet( names );
-        }
+		void setId(Long id) {
+			this.id = id;
+		}
 
-        void setNames(Set<String> secrets) {
-            this.names = secrets;
-        }
+		@ElementCollection
+		Set<String> getNames() {
+			return Collections.unmodifiableSet( names );
+		}
 
-        @ManyToMany( fetch = FetchType.LAZY, targetEntity = Child.class )
-        Set<Child> getChildren() {
-            return Collections.unmodifiableSet( children );
-        }
+		void setNames(Set<String> secrets) {
+			this.names = secrets;
+		}
 
-        void addChild(Child child) {
-            if (children == null) {
-                children = new HashSet<>();
-            }
-            children.add( child );
-        }
-    }
+		@ManyToMany( fetch = FetchType.LAZY, targetEntity = Child.class )
+		Set<Child> getChildren() {
+			return Collections.unmodifiableSet( children );
+		}
+
+		void addChild(Child child) {
+			if (children == null) {
+				children = new HashSet<>();
+			}
+			children.add( child );
+		}
+	}
 }

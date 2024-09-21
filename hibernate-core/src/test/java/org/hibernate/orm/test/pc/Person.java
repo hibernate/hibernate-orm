@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pc;
 
@@ -20,43 +18,43 @@ import jakarta.persistence.OneToMany;
 @Entity
 public class Person {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    private String name;
+	private String name;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
-    private List<Phone> phones = new ArrayList<>();
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+	private List<Phone> phones = new ArrayList<>();
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 //end::pc-cascade-domain-model-example[]
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public List<Phone> getPhones() {
-        return phones;
-    }
+	public List<Phone> getPhones() {
+		return phones;
+	}
 
 //tag::pc-cascade-domain-model-example[]
 
-    public void addPhone(Phone phone) {
-        this.phones.add(phone);
-        phone.setOwner(this);
-    }
+	public void addPhone(Phone phone) {
+		this.phones.add(phone);
+		phone.setOwner(this);
+	}
 }
 
 //end::pc-cascade-domain-model-example[]

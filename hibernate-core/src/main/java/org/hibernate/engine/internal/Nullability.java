@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -24,7 +22,7 @@ import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterato
 
 /**
  * Implements the algorithm for validating property values for illegal null values
- * 
+ *
  * @author Gavin King
  */
 public final class Nullability {
@@ -74,22 +72,22 @@ public final class Nullability {
 		 */
 		if ( checkNullability ) {
 			/*
-			  * Algorithm
-			  * Check for any level one nullability breaks
-			  * Look at non-null components to
-			  *   recursively check next level of nullability breaks
-			  * Look at Collections containing components to
-			  *   recursively check next level of nullability breaks
-			  *
-			  *
-			  * In the previous implementation, not-null stuffs where checked
-			  * filtering by level one only updatable
-			  * or insertable columns. So setting a subcomponent as update="false"
-			  * has no effect on not-null check if the main component had good checkability
-			  * In this implementation, we keep this feature.
-			  * However, I never see any documentation mentioning that, but it's for
-			  * sure a limitation.
-			  */
+			 * Algorithm
+			 * Check for any level one nullability breaks
+			 * Look at non-null components to
+			 *   recursively check next level of nullability breaks
+			 * Look at Collections containing components to
+			 *   recursively check next level of nullability breaks
+			 *
+			 *
+			 * In the previous implementation, not-null stuffs where checked
+			 * filtering by level one only updatable
+			 * or insertable columns. So setting a subcomponent as update="false"
+			 * has no effect on not-null check if the main component had good checkability
+			 * In this implementation, we keep this feature.
+			 * However, I never see any documentation mentioning that, but it's for
+			 * sure a limitation.
+			 */
 
 			final boolean[] nullability = persister.getPropertyNullability();
 			final boolean[] checkability = checkType == NullabilityCheckType.CREATE

@@ -1,4 +1,7 @@
-
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
 import jakarta.persistence.*;
@@ -7,7 +10,7 @@ import jakarta.persistence.*;
 @Table(name = "products")
 public class Product {
 
-	private ProductId id;	
+	private ProductId id;
 	private String number;
 	private Facility facility;
 
@@ -21,33 +24,33 @@ public class Product {
 		this.number = number;
 		this.facility = facility;
 	}
-	
+
 	@Id
 	private ProductId getId() {
 		return id;
 	}
-	
+
 	public void setId(ProductId id) {
 		this.id = id;
 	}
-	
+
 	@Column(name = "PRODUCT_NUMBER", length = 40, nullable = false, updatable = false)
 	public String getNumber() {
 		return number;
 	}
-	
+
 	public void setNumber(String number) {
 		this.number = number;
-	} 
-	
+	}
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "FACILITY_ID", referencedColumnName = "FACILITY_ID", nullable = false, insertable = false, updatable = false)
 	public Facility getFacility() {
 		return facility;
 	}
-	
+
 	public void setFacility(Facility facility) {
 		this.facility = facility;
 	}
-	
+
 }

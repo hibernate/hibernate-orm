@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -24,7 +22,6 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -40,7 +37,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Handles "any" mappings
- * 
+ *
  * @author Gavin King
  */
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
@@ -78,8 +75,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return join( discriminatorType.getSqlTypeCodes( mappingContext ), identifierType.getSqlTypeCodes( mappingContext ) );
 	}
 
 	@Override
@@ -210,7 +207,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		final boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );
@@ -225,7 +222,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan(MappingContext session) {
 		return 2;
 	}
 

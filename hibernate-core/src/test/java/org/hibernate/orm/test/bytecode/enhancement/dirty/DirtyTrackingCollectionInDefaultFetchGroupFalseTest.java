@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
@@ -46,58 +44,58 @@ import jakarta.persistence.Table;
  */
 @JiraKey( "HHH-14348" )
 @DomainModel(
-        annotatedClasses = {
-                DirtyTrackingCollectionInDefaultFetchGroupFalseTest.StringsEntity.class
-        }
+		annotatedClasses = {
+				DirtyTrackingCollectionInDefaultFetchGroupFalseTest.StringsEntity.class
+		}
 )
 @SessionFactory(
-        // We want to test with this setting set to false explicitly,
-        // because another test already takes care of the default.
-        applyCollectionsInDefaultFetchGroup = false
+		// We want to test with this setting set to false explicitly,
+		// because another test already takes care of the default.
+		applyCollectionsInDefaultFetchGroup = false
 )
 @BytecodeEnhanced
 public class DirtyTrackingCollectionInDefaultFetchGroupFalseTest {
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( em -> {
-            StringsEntity entity = new StringsEntity();
-            entity.id = 1L;
-            entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
-            em.persist( entity );
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			StringsEntity entity = new StringsEntity();
+			entity.id = 1L;
+			entity.someStrings = new ArrayList<>( Arrays.asList( "a", "b", "c" ) );
+			em.persist( entity );
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( entityManager -> {
-            StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
-            entityManager.flush();
-            BytecodeLazyAttributeInterceptor interceptor = (BytecodeLazyAttributeInterceptor) ( (PersistentAttributeInterceptable) entity )
-                    .$$_hibernate_getInterceptor();
-            assertTrue( interceptor.hasAnyUninitializedAttributes() );
-            assertFalse( interceptor.isAttributeLoaded( "someStrings" ) );
-            assertFalse( interceptor.isAttributeLoaded( "someStringEntities" ) );
-        } );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StringsEntity entity = entityManager.find( StringsEntity.class, 1L );
+			entityManager.flush();
+			BytecodeLazyAttributeInterceptor interceptor = (BytecodeLazyAttributeInterceptor) ( (PersistentAttributeInterceptable) entity )
+					.$$_hibernate_getInterceptor();
+			assertTrue( interceptor.hasAnyUninitializedAttributes() );
+			assertFalse( interceptor.isAttributeLoaded( "someStrings" ) );
+			assertFalse( interceptor.isAttributeLoaded( "someStringEntities" ) );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table(name = "STRINGS_ENTITY")
-    static class StringsEntity {
+	@Entity
+	@Table(name = "STRINGS_ENTITY")
+	static class StringsEntity {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @ElementCollection
-        @CollectionTable(name = "STRINGS_ENTITY_SOME", joinColumns = @JoinColumn(name = "SOME_ID"))
-        List<String> someStrings;
+		@ElementCollection
+		@CollectionTable(name = "STRINGS_ENTITY_SOME", joinColumns = @JoinColumn(name = "SOME_ID"))
+		List<String> someStrings;
 
-        @ManyToOne(fetch = FetchType.LAZY)
-        StringsEntity parent;
+		@ManyToOne(fetch = FetchType.LAZY)
+		StringsEntity parent;
 
-        @OneToMany(mappedBy = "parent", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-        Set<StringsEntity> someStringEntities;
-    }
+		@OneToMany(mappedBy = "parent", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+		Set<StringsEntity> someStringEntities;
+	}
 }

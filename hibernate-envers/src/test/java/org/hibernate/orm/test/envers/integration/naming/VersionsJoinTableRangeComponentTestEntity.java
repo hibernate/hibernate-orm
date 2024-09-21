@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.naming;
 
@@ -41,16 +39,16 @@ public class VersionsJoinTableRangeComponentTestEntity {
 	 */
 	@Embedded
 	@AssociationOverride(name = "range",
-						 joinColumns = {
-								 @JoinColumn(name = "VJTRCTE1_ID",
-											 insertable = true,
-											 updatable = false,
-											 nullable = false)
-						 })
+						joinColumns = {
+								@JoinColumn(name = "VJTRCTE1_ID",
+											insertable = true,
+											updatable = false,
+											nullable = false)
+						})
 	@org.hibernate.envers.Audited
 	@AuditOverride(name = "range",
-				   auditJoinTable = @org.hibernate.envers.AuditJoinTable(name = "JOIN_TABLE_COMPONENT_1_AUD",
-																		 inverseJoinColumns = @JoinColumn(name = "VJTRTE_ID")))
+				auditJoinTable = @org.hibernate.envers.AuditJoinTable(name = "JOIN_TABLE_COMPONENT_1_AUD",
+																		inverseJoinColumns = @JoinColumn(name = "VJTRTE_ID")))
 	private VersionsJoinTableRangeComponent<VersionsJoinTableRangeTestEntity> component1 = new VersionsJoinTableRangeComponent<VersionsJoinTableRangeTestEntity>();
 
 	/**
@@ -59,17 +57,17 @@ public class VersionsJoinTableRangeComponentTestEntity {
 	 */
 	@Embedded
 	@AssociationOverride(name = "range",
-						 joinColumns = {
-								 @JoinColumn(name = "VJTRCTE2_ID",
-											 insertable = true,
-											 updatable = false,
-											 nullable = false)
-						 })
+						joinColumns = {
+								@JoinColumn(name = "VJTRCTE2_ID",
+											insertable = true,
+											updatable = false,
+											nullable = false)
+						})
 	@org.hibernate.envers.Audited
 	@AuditOverrides(value = {
 			@AuditOverride(name = "range",
-						   auditJoinTable = @org.hibernate.envers.AuditJoinTable(name = "JOIN_TABLE_COMPONENT_2_AUD",
-																				 inverseJoinColumns = @JoinColumn(name = "VJTRTAE_ID")))
+						auditJoinTable = @org.hibernate.envers.AuditJoinTable(name = "JOIN_TABLE_COMPONENT_2_AUD",
+																				inverseJoinColumns = @JoinColumn(name = "VJTRTAE_ID")))
 	})
 	private VersionsJoinTableRangeComponent<VersionsJoinTableRangeTestAlternateEntity> component2 = new VersionsJoinTableRangeComponent<VersionsJoinTableRangeTestAlternateEntity>();
 

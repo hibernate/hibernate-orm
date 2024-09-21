@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id$
 package org.hibernate.orm.test.annotations.namingstrategy;
 
 import jakarta.persistence.Entity;
@@ -43,17 +39,17 @@ public class LongKeyNamingStrategyTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
 
 	@Before
-    public void setUp() {
+	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@After
-    public void tearDown() {
-        if ( serviceRegistry != null ) {
+	public void tearDown() {
+		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
-    @Test
+	@Test
 	public void testWithCustomNamingStrategy() throws Exception {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass(Address.class)
@@ -66,10 +62,10 @@ public class LongKeyNamingStrategyTest extends BaseUnitTestCase {
 				(org.hibernate.mapping.ForeignKey) metadata.getEntityBinding(Address.class.getName()).getTable().getForeignKeys().values().iterator().next();
 		assertEquals( "FK_way_longer_than_the_30_char", foreignKey.getName() );
 
-        UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
+		UniqueKey uniqueKey = metadata.getEntityBinding(Address.class.getName()).getTable().getUniqueKeys().values().iterator().next();
 		assertEquals( "UK_way_longer_than_the_30_char", uniqueKey.getName() );
 
-        org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
+		org.hibernate.mapping.Index index = metadata.getEntityBinding(Address.class.getName()).getTable().getIndexes().values().iterator().next();
 		assertEquals( "IDX_way_longer_than_the_30_cha", index.getName() );
 	}
 

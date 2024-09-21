@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$
 package org.hibernate.orm.test.annotations.collectionelement.indexedCollection;
 
 import java.sql.Types;
@@ -32,10 +28,10 @@ import jakarta.persistence.JoinTable;
 public class Sale {
 	@Id @GeneratedValue private Integer id;
 	@ElementCollection
-    @JoinTable(
-        name = "contact",
-        joinColumns = @JoinColumn(name = "n_key_person"))
-    @CollectionId( column = @Column(name = "n_key_contact"), generator = "increment" )
+	@JoinTable(
+		name = "contact",
+		joinColumns = @JoinColumn(name = "n_key_person"))
+	@CollectionId( column = @Column(name = "n_key_contact"), generator = "increment" )
 	@CollectionIdJdbcTypeCode( Types.BIGINT )
 	private List<Contact> contacts = new ArrayList<Contact>();
 

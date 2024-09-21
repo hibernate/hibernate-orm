@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -36,6 +34,7 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.unmodifiableList;
@@ -275,7 +274,15 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 				: name.equalsIgnoreCase( column.name ) );
 	}
 
-	public int getSqlTypeCode(Mapping mapping) throws MappingException {
+	/**
+	 * @deprecated use {@link #getSqlTypeCode(MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
+	public int getSqlTypeCode(Mapping mapping) throws MappingException{
+		return getSqlTypeCode((MappingContext) mapping);
+	}
+
+	public int getSqlTypeCode(MappingContext mapping) throws MappingException {
 		if ( sqlTypeCode == null ) {
 			final Type type = getValue().getType();
 			final int[] sqlTypeCodes;
@@ -309,7 +316,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return sqlTypeCode;
 	}
 
-	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, Mapping mapping) {
+	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, MappingContext mapping) {
 		if ( sqlTypeName == null ) {
 			final int typeCode = getSqlTypeCode( mapping );
 			final DdlType descriptor = ddlTypeRegistry.getDescriptor( typeCode );
@@ -350,21 +357,21 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return sqlTypeName;
 	}
 
-	private static Type getUnderlyingType(Mapping mapping, Type type, int typeIndex) {
+	private static Type getUnderlyingType(MappingContext mappingContext, Type type, int typeIndex) {
 		if ( type instanceof ComponentType componentType ) {
 			int cols = 0;
 			for ( Type subtype : componentType.getSubtypes() ) {
-				int columnSpan = subtype.getColumnSpan( mapping );
+				int columnSpan = subtype.getColumnSpan( mappingContext );
 				if ( cols+columnSpan > typeIndex ) {
-					return getUnderlyingType( mapping, subtype, typeIndex-cols );
+					return getUnderlyingType( mappingContext, subtype, typeIndex-cols );
 				}
 				cols += columnSpan;
 			}
 			throw new IndexOutOfBoundsException();
 		}
 		else if ( type instanceof EntityType entityType ) {
-			final Type idType = entityType.getIdentifierOrUniqueKeyType( mapping );
-			return getUnderlyingType( mapping, idType, typeIndex );
+			final Type idType = entityType.getIdentifierOrUniqueKeyType( mappingContext );
+			return getUnderlyingType( mappingContext, idType, typeIndex );
 		}
 		else {
 			return type;
@@ -375,7 +382,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	 * Returns {@linkplain org.hibernate.type.SqlTypes SQL type code}
 	 * for this column, or {@code null} if the type code is unknown.
 	 * <p>
-	 * Use {@link #getSqlTypeCode(Mapping)} to retrieve the type code
+	 * Use {@link #getSqlTypeCode(MappingContext)} to retrieve the type code
 	 * using {@link Value} associated with the column.
 	 *
 	 * @return the type code, if it is set, otherwise null.
@@ -434,23 +441,31 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return scale == null ? 0 : scale;
 	}
 
+	/**
+	 * @deprecated use {@link #getColumnSize(Dialect, MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public Size getColumnSize(Dialect dialect, Mapping mapping) {
+		return getColumnSize(dialect, (MappingContext) mapping);
+	}
+
+	public Size getColumnSize(Dialect dialect, MappingContext mappingContext) {
 		if ( columnSize == null ) {
-			columnSize = calculateColumnSize( dialect, mapping );
+			columnSize = calculateColumnSize( dialect, mappingContext );
 		}
 		return columnSize;
 	}
 
-	Size calculateColumnSize(Dialect dialect, Mapping mapping) {
+	Size calculateColumnSize(Dialect dialect, MappingContext mappingContext) {
 		Type type = getValue().getType();
 		Long lengthToUse = getLength();
 		Integer precisionToUse = getPrecision();
 		Integer scaleToUse = getScale();
 		if ( type instanceof EntityType ) {
-			type = getTypeForEntityValue( mapping, type, getTypeIndex() );
+			type = getTypeForEntityValue( mappingContext, type, getTypeIndex() );
 		}
 		if ( type instanceof ComponentType ) {
-			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
+			type = getTypeForComponentValue( mappingContext, type, getTypeIndex() );
 		}
 		if ( type instanceof BasicType<?> basicType ) {
 			if ( isTemporal( basicType.getExpressibleJavaType() ) ) {
@@ -474,18 +489,18 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return size;
 	}
 
-	private Type getTypeForComponentValue(Mapping mapping, Type type, int typeIndex) {
+	private Type getTypeForComponentValue(MappingContext mappingContext, Type type, int typeIndex) {
 		final Type[] subtypes = ( (ComponentType) type ).getSubtypes();
 		int typeStartIndex = 0;
 		for ( Type subtype : subtypes ) {
-			final int columnSpan = subtype.getColumnSpan(mapping);
+			final int columnSpan = subtype.getColumnSpan(mappingContext);
 			if ( typeStartIndex + columnSpan > typeIndex ) {
 				final int subtypeIndex = typeIndex - typeStartIndex;
 				if ( subtype instanceof EntityType ) {
-					return getTypeForEntityValue(mapping, subtype, subtypeIndex);
+					return getTypeForEntityValue(mappingContext, subtype, subtypeIndex);
 				}
 				if ( subtype instanceof ComponentType ) {
-					return getTypeForComponentValue(mapping, subtype, subtypeIndex);
+					return getTypeForComponentValue(mappingContext, subtype, subtypeIndex);
 				}
 				if ( subtypeIndex == 0 ) {
 					return subtype;
@@ -505,18 +520,18 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		);
 	}
 
-	private Type getTypeForEntityValue(Mapping mapping, Type type, int typeIndex) {
+	private Type getTypeForEntityValue(MappingContext mappingContext, Type type, int typeIndex) {
 		int index = 0;
 		if ( type instanceof EntityType entityType ) {
-			return getTypeForEntityValue( mapping, entityType.getIdentifierOrUniqueKeyType( mapping ), typeIndex );
+			return getTypeForEntityValue( mappingContext, entityType.getIdentifierOrUniqueKeyType( mappingContext ), typeIndex );
 		}
 		else if ( type instanceof ComponentType componentType ) {
 			for ( Type subtype : componentType.getSubtypes() ) {
-				final Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
+				final Type result = getTypeForEntityValue( mappingContext, subtype, typeIndex - index );
 				if ( result != null ) {
 					return result;
 				}
-				index += subtype.getColumnSpan( mapping );
+				index += subtype.getColumnSpan( mappingContext );
 			}
 			return null;
 		}
@@ -735,7 +750,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	public void setCollation(String collation) {
 		this.collation = collation;
 	}
-	
+
 	public String getDefaultValue() {
 		return defaultValue;
 	}

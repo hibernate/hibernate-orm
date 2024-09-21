@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -17,7 +15,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -97,8 +94,11 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 * @param parameters param values, keyed by parameter name
 	 * @param serviceRegistry Access to service that may be needed.
 	 * @throws MappingException If configuration fails.
+	 *
+	 * @deprecated since it overrides a deprecated method
 	 */
-	@Override
+	@SuppressWarnings("removal")
+	@Override @Deprecated( since = "7.0", forRemoval = true )
 	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {}
 
 	/**

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.serialization.entity;
 
 import jakarta.persistence.Cacheable;
@@ -13,6 +17,6 @@ import jakarta.persistence.Id;
 @Entity
 @Cacheable
 public class WithSimpleId {
-   @Id
-   private Long id;
+@Id
+private Long id;
 }

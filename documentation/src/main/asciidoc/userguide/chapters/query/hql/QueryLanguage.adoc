@@ -6,6 +6,7 @@
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :array-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
+:json-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/json
 :extrasdir: extras
 
 This chapter describes Hibernate Query Language (HQL) and Jakarta Persistence Query Language (JPQL).
@@ -1618,6 +1619,544 @@ which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']
 include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
 ----
 ====
+
+[[hql-functions-json]]
+==== Functions for dealing with JSON
+
+The following functions deal with SQL JSON types, which are not supported on every database.
+
+NOTE: The following functions are incubating/tech-preview and to use them in HQL,
+it is necessary to enable the `hibernate.query.hql.json_functions_enabled` configuration setting.
+
+[[hql-json-functions]]
+|===
+| Function | Purpose
+
+| `json_object()` | Constructs a JSON object from pairs of key and value arguments
+| `json_array()` | Constructs a JSON array from arguments
+| `json_value()` | Extracts a value from a JSON document by JSON path
+| `json_exists()` | Checks if a JSON path exists in a JSON document
+| `json_query()` | Queries non-scalar values by JSON path in a JSON document
+| `json_arrayagg()` | Creates a JSON array by aggregating values
+| `json_objectagg()` | Creates a JSON object by aggregating values
+| `json_set()` | Inserts/Replaces a value by JSON path within a JSON document
+| `json_remove()` | Removes a value by JSON path within a JSON document
+| `json_mergepatch()` | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
+| `json_array_append()` | Appends to a JSON array of a JSON document by JSON path
+| `json_array_insert()` | Inserts a value by JSON path to a JSON array within a JSON document
+|===
+
+
+[[hql-json-object-function]]
+===== `json_object()`
+
+Constructs a JSON object from pairs of key and value arguments.
+
+[[hql-json-object-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_object_bnf.txt[]
+----
+
+Argument count must be even and expressions alternate between keys and values i.e. `key1, value1, key2, value2, ...`.
+Alternatively, it is also possible to use a `:` (colon) to separate keys from values or the `value` keyword.
+
+[[hql-json-object-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectTest.java[tags=hql-json-object-example]
+----
+====
+
+Although database dependent, usually `null` values are present in the resulting JSON object.
+To remove `null` value entries, use the `absent on null` clause.
+
+[[hql-json-object-on-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectTest.java[tags=hql-json-object-on-null-example]
+----
+====
+
+[[hql-json-array-function]]
+===== `json_array()`
+
+Constructs a JSON array from arguments.
+
+[[hql-json-array-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_array_bnf.txt[]
+----
+
+[[hql-json-array-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayTest.java[tags=hql-json-array-example]
+----
+====
+
+Although database dependent, usually `null` values are `absent` in the resulting JSON array.
+To retain `null` elements, use the `null on null` clause.
+
+[[hql-json-array-on-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayTest.java[tags=hql-json-array-on-null-example]
+----
+====
+
+[[hql-json-value-function]]
+===== `json_value()`
+
+Extracts a scalar value by https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path] from a JSON document.
+
+[[hql-json-value-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_value_bnf.txt[]
+----
+
+The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
+
+WARNING: Some databases might also allow extracting non-scalar values. Beware that this behavior is not portable.
+
+NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
+since most databases support only that.
+
+[[hql-json-value-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-example]
+----
+====
+
+The `passing` clause allows to reuse the same JSON path but pass different values for evaluation.
+
+[[hql-json-value-passing-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-passing-example]
+----
+====
+
+The `returning` clause allows to specify the <<hql-function-cast,cast target>> i.e. the type of value to extract.
+
+[[hql-json-value-returning-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-returning-example]
+----
+====
+
+The `on error` clause defines the behavior when an error occurs while resolving the value for the JSON path.
+Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
+
+* First argument is not a valid JSON document
+* Second argument is not a valid JSON path
+* JSON path does not resolve to a scalar value
+
+The default behavior of `on error` is database specific, but usually, `null` is returned on an error.
+It is recommended to specify this clause when the exact error behavior is important.
+
+[[hql-json-value-on-error-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-on-error-example]
+----
+====
+
+The `on empty` clause defines the behavior when the JSON path does not match the JSON document.
+By default, `null` is returned on empty.
+
+[[hql-json-value-on-empty-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonValueTest.java[tags=hql-json-value-on-empty-example]
+----
+====
+
+To actually receive an error `on empty`, it is necessary to also specify `error on error`.
+Depending on the database, an error might still be thrown even without that, but that is not portable.
+
+NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
+
+[[hql-json-exists-function]]
+===== `json_exists()`
+
+Checks if a JSON document contains a https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path].
+
+[[hql-json-exists-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_exists_bnf.txt[]
+----
+
+The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
+
+NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
+since most databases support only that.
+
+[[hql-json-exists-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonExistsTest.java[tags=hql-json-exists-example]
+----
+====
+
+The `passing` clause allows to reuse the same JSON path but pass different values for evaluation.
+
+[[hql-json-exists-passing-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonExistsTest.java[tags=hql-json-exists-passing-example]
+----
+====
+
+The `on error` clause defines the behavior when an error occurs while checking for existence with the JSON path.
+Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
+
+* First argument is not a valid JSON document
+* Second argument is not a valid JSON path
+
+The default behavior of `on error` is database specific, but usually, `false` is returned on an error.
+It is recommended to specify this clause when the exact error behavior is important.
+
+[[hql-json-exists-on-error-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonExistsTest.java[tags=hql-json-exists-on-error-example]
+----
+====
+
+NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
+
+[[hql-json-query-function]]
+===== `json_query()`
+
+Queries non-scalar values from a JSON document by a https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html[JSON path].
+
+[[hql-json-query-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_query_bnf.txt[]
+----
+
+The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
+
+WARNING: Some databases might also allow querying scalar values. Beware that this behavior is not portable.
+
+NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
+since most databases support only that.
+
+[[hql-json-query-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-example]
+----
+====
+
+The `passing` clause allows to reuse the same JSON path but pass different values for evaluation.
+
+[[hql-json-query-passing-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-passing-example]
+----
+====
+
+The `wrapper` clause allows to specify whether results of a query should be wrapped in brackets `[]` i.e. an array.
+The default behavior is to omit an array wrapper i.e. `without wrapper`.
+It is an error when a `json_query` returns more than a single result and `without wrapper` is used.
+How an error like this should be handled can be controlled with the `on error` clause.
+
+WARNING: Since the default behavior of `on error` is database dependent,
+some databases might return a comma separated list of values even when using `without wrapper`. This is not portable.
+
+[[hql-json-query-wrapper-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-with-wrapper-example]
+----
+====
+
+The `on error` clause defines the behavior when an error occurs while querying with the JSON path.
+Conditions that classify as errors are database dependent, but usual errors which can be handled with this clause are:
+
+* First argument is not a valid JSON document
+* Second argument is not a valid JSON path
+* Multiple `json_query` results when `without wrapper` is used
+
+The default behavior of `on error` is database specific, but usually, `null` is returned on an error.
+It is recommended to specify this clause when the exact error behavior is important.
+
+[[hql-json-query-on-error-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-on-error-example]
+----
+====
+
+The `on empty` clause defines the behavior when the JSON path does not match the JSON document.
+By default, `null` is returned on empty.
+
+[[hql-json-query-on-empty-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonQueryTest.java[tags=hql-json-query-on-empty-example]
+----
+====
+
+To actually receive an error `on empty`, it is necessary to also specify `error on error`.
+Depending on the database, an error might still be thrown even without that, but that is not portable.
+
+NOTE: The H2 emulation only supports absolute JSON paths using the dot notation.
+
+[[hql-json-arrayagg-function]]
+===== `json_arrayagg()`
+
+Creates a JSON array by aggregating values.
+
+[[hql-json-arrayagg-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_arrayagg_bnf.txt[]
+----
+
+This aggregate function is similar to an <<hql-aggregate-functions-orderedset,_ordered set aggregate function_>>
+since it allows to specify the order in which elements are aggregated, but uses a special syntax.
+
+[[hql-json-arrayagg-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-example]
+----
+====
+
+Although database dependent, usually `null` values are `absent` in the resulting JSON array.
+To retain `null` elements, use the `null on null` clause.
+
+[[hql-json-arrayagg-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-null-example]
+----
+====
+
+The order in which elements are aggregated can be defined by specifying an order by clause.
+
+[[hql-json-arrayagg-order-by-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAggregateTest.java[tags=hql-json-arrayagg-order-by-example]
+----
+====
+
+[[hql-json-objectagg-function]]
+===== `json_objectagg()`
+
+Creates a JSON object by aggregating values.
+
+[[hql-json-arrayagg-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_objectagg_bnf.txt[]
+----
+
+The arguments represent the key and the value to be aggregated to the JSON object,
+separated by the `value` keyword or a `:` (colon).
+
+[[hql-json-objectagg-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-example]
+----
+====
+
+Although database dependent, usually `null` values are `absent` in the resulting JSON array.
+To retain `null` elements, use the `null on null` clause.
+
+[[hql-json-objectagg-null-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-null-example]
+----
+====
+
+Duplicate keys usually are retained in the resulting string.
+Use `with unique keys` to specify that the encounter of a duplicate key should cause an error.
+
+[[hql-json-objectagg-unique-keys-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonObjectAggregateTest.java[tags=hql-json-objectagg-unique-keys-example]
+----
+====
+
+WARNING: Some databases like e.g. MySQL, SAP HANA, DB2 and SQL Server do not support raising an error on duplicate keys.
+
+[[hql-json-set-function]]
+===== `json_set()`
+
+Inserts/Replaces a value by JSON path within a JSON document.
+The function takes 3 arguments, the json document, the json path and the new value to set/insert.
+
+[[hql-json-set-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonSetTest.java[tags=hql-json-set-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-remove-function]]
+===== `json_remove()`
+
+Removes a value by JSON path within a JSON document.
+The function takes 2 arguments, the json document and the json path representing what to remove.
+
+[[hql-json-remove-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonRemoveTest.java[tags=hql-json-remove-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-replace-function]]
+===== `json_replace()`
+
+Replaces a value by JSON path within a JSON document.
+The function takes 3 arguments, the json document, the json path and the new value to set.
+A value will not be inserted if the key is missing, only the values of existing keys are replaced.
+
+[[hql-json-replace-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonReplaceTest.java[tags=hql-json-replace-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-insert-function]]
+===== `json_insert()`
+
+Inserts a value by JSON path in a JSON document.
+The function takes 3 arguments, the json document, the json path and the value to insert.
+When the JSON document contains a value for a JSON path, no insertion happens,
+unless the value is an array, in which case the value will be appended to that array.
+If no value exists for a JSON path, the value will be inserted under the key as specified through the JSON path.
+
+[[hql-json-insert-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonInsertTest.java[tags=hql-json-insert-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-mergepatch-function]]
+===== `json_mergepatch()`
+
+Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge, which is
+
+* When the first JSON value is not an object, the result is as if the first argument was an empty object
+* When the second JSON value is not an object, the result is the second argument
+* When both JSON values are objects, members are merged
+** Retain first JSON object members when the second JSON object has no members with matching keys
+** Retain second JSON object members when the first JSON object has no members with matching keys and the value is not equal to the JSON `null` literal
+** Recursively merge values that exist in both JSON objects, except if the second JSON object member is a JSON `null`
+
+In simple terms this means
+
+* The second JSON overrides members of the first, with JSON `null` values causing members to be removed
+* JSON objects are merged recursively
+
+NOTE: Arrays and hence objects within arrays are not merged, but replaced.
+
+[[hql-json-mergepatch-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonMergepatchTest.java[tags=hql-json-mergepatch-example]
+----
+====
+
+WARNING: SAP HANA, DB2, SQL Server, H2 and HSQLDB do not support this function. On PostgreSQL, this function is emulated.
+
+[[hql-json-array-append-function]]
+===== `json_array_append()`
+
+Appends a value by JSON path to a JSON array within a JSON document.
+The function takes 3 arguments, the json document, the json path and the value to append.
+
+If the value within the JSON document as identified by the JSON path is not a JSON array,
+it is auto-wrapped into an array.
+When no value exists for a JSON path, the document is not changed.
+
+[[hql-json-array-append-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayAppendTest.java[tags=hql-json-array-append-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-array-insert-function]]
+===== `json_array_insert()`
+
+Inserts a value by JSON path to a JSON array within a JSON document.
+The function takes 3 arguments, the json document, the json path and the value to append.
+
+Although the exact behavior is database dependent, usually an error will be triggered if
+the JSON path does not end with an array index access i.e. `$.a[0]`.
+The zero based array index represents the position at which an element should be inserted in an array.
+
+If the JSON path without the index does not resolve to a JSON array within the JSON document,
+the document is not changed.
+
+[[hql-json-array-insert-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonArrayInsertTest.java[tags=hql-json-array-insert-example]
+----
+====
+
+WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions

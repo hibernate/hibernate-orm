@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ondemandload.cache;
 
@@ -162,7 +160,7 @@ public class CacheLazyLoadNoTransTest {
 		Object value = scope.fromSession(
 				session -> {
 					final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-                    CollectionPersister persister = sessionFactory.getMappingMetamodel().getCollectionDescriptor( entityClass.getName() + "." + attr);
+					CollectionPersister persister = sessionFactory.getMappingMetamodel().getCollectionDescriptor( entityClass.getName() + "." + attr);
 					CollectionDataAccess cache = persister.getCacheAccessStrategy();
 					Object key = cache.generateCacheKey( id, persister, sessionFactory, session.getTenantIdentifier() );
 					Object cachedValue = cache.get( session, key );

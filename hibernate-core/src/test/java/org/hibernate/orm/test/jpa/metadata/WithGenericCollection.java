@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.metadata;
 import java.util.ArrayList;
@@ -26,50 +24,50 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "WITH_GENERIC_COLLECTION")
 public class WithGenericCollection<T> implements java.io.Serializable {
-    @Id
-    @Column(name = "ID")
-    private String id;
+	@Id
+	@Column(name = "ID")
+	private String id;
 
-    @Basic(optional=false)
-    private double d;
+	@Basic(optional=false)
+	private double d;
 
-    @ManyToOne(optional=false)
-    @JoinColumn(name="PARENT_ID", insertable=false, updatable=false)
-    private WithGenericCollection<? extends Object> parent = null;
+	@ManyToOne(optional=false)
+	@JoinColumn(name="PARENT_ID", insertable=false, updatable=false)
+	private WithGenericCollection<? extends Object> parent = null;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name="PARENT_ID")
-    private List<WithGenericCollection<? extends Object>> children = new ArrayList<WithGenericCollection<? extends Object>>();
+	@OneToMany(cascade = CascadeType.ALL)
+	@JoinColumn(name="PARENT_ID")
+	private List<WithGenericCollection<? extends Object>> children = new ArrayList<WithGenericCollection<? extends Object>>();
 
-    public WithGenericCollection() {
-    }
+	public WithGenericCollection() {
+	}
 
-    //====================================================================
-    // getters and setters for State fields
+	//====================================================================
+	// getters and setters for State fields
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-    public void setD(double d) {
-        this.d = d;
-    }
+	public void setD(double d) {
+		this.d = d;
+	}
 
-    public double getD() {
-        return d;
-    }
+	public double getD() {
+		return d;
+	}
 
-    public List<WithGenericCollection<? extends Object>> getChildren() {
-        return children;
-    }
+	public List<WithGenericCollection<? extends Object>> getChildren() {
+		return children;
+	}
 
-    public void setChildren(List<WithGenericCollection<? extends Object>> children) {
-        this.children = children;
-    }
+	public void setChildren(List<WithGenericCollection<? extends Object>> children) {
+		this.children = children;
+	}
 
 
 }

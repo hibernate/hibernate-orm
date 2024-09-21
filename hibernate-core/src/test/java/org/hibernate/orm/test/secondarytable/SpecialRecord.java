@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.secondarytable;
 
 import java.time.Instant;
@@ -12,6 +16,6 @@ import jakarta.persistence.SecondaryTable;
 @SecondaryTable(name = "`View`")
 @SecondaryRow(table = "`View`", owned = false)
 public class SpecialRecord extends Record {
-    @Column(table = "`View`", name="`timestamp`")
-    Instant timestamp;
+	@Column(table = "`View`", name="`timestamp`")
+	Instant timestamp;
 }

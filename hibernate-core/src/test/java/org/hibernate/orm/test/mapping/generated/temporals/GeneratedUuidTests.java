@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.temporals;
 
@@ -115,17 +113,17 @@ public class GeneratedUuidTests {
 	@Entity( name = "GeneratedUuidEntity" )
 	@Table( name = "t_gen_uuid" )
 	public static class GeneratedUuidEntity {
-	    @Id
-	    public Integer id;
-	    @Basic
-	    public String name;
+		@Id
+		public Integer id;
+		@Basic
+		public String name;
 
 		//tag::mapping-generated-custom-ex1[]
 		@GeneratedUuidValue( timing = INSERT )
 		public UUID createdUuid;
 
 		@GeneratedUuidValue( timing = {INSERT, UPDATE} )
-	    public UUID updatedUuid;
+		public UUID updatedUuid;
 		//end::mapping-generated-custom-ex1[]
 
 		public GeneratedUuidEntity() {

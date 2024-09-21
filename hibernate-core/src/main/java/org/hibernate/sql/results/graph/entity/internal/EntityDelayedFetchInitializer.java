@@ -1,20 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.BiConsumer;
 
 import org.hibernate.FetchNotFoundException;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -37,6 +39,7 @@ import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.determineConcreteEntityDescriptor;
 
 /**
@@ -193,7 +196,17 @@ public class EntityDelayedFetchInitializer
 					// For unique-key mappings, we always use bytecode-laziness if possible,
 					// because we can't generate a proxy based on the unique key yet
 					if ( referencedModelPart.isLazy() ) {
-						instance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+						instance = UNFETCHED_PROPERTY;
+					}
+					else if ( getParent().isEntityInitializer() && isLazyByGraph( rowProcessingState ) ) {
+						// todo : manage the case when parent is an EmbeddableInitializer
+						final Object resolvedInstance = getParent().asEntityInitializer()
+								.getResolvedInstance( rowProcessingState );
+						final LazyAttributeLoadingInterceptor persistentAttributeInterceptor = (LazyAttributeLoadingInterceptor) ManagedTypeHelper
+								.asPersistentAttributeInterceptable( resolvedInstance ).$$_hibernate_getInterceptor();
+
+						persistentAttributeInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
+						instance = UNFETCHED_PROPERTY;
 					}
 					else {
 						instance = concreteDescriptor.loadByUniqueKey(
@@ -224,7 +237,7 @@ public class EntityDelayedFetchInitializer
 				// For primary key based mappings we only use bytecode-laziness if the attribute is optional,
 				// because the non-optionality implies that it is safe to have a proxy
 				else if ( referencedModelPart.isOptional() && referencedModelPart.isLazy() ) {
-					instance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					instance = UNFETCHED_PROPERTY;
 				}
 				else {
 					instance = session.internalLoad(
@@ -242,6 +255,19 @@ public class EntityDelayedFetchInitializer
 				data.setInstance( instance );
 			}
 		}
+	}
+
+	private boolean isLazyByGraph(RowProcessingState rowProcessingState) {
+		final AppliedGraph appliedGraph = rowProcessingState.getQueryOptions().getAppliedGraph();
+		if ( appliedGraph != null && appliedGraph.getSemantic() == GraphSemantic.FETCH ) {
+			final AttributeNodeImplementor<Object> attributeNode = appliedGraph.getGraph()
+					.findAttributeNode( navigablePath.getLocalName() );
+			if ( attributeNode != null && attributeNode.getAttributeDescriptor() == getInitializedPart().asAttributeMapping() ) {
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	@Override

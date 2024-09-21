@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -12,8 +10,6 @@ import org.hibernate.orm.test.annotations.query.Attrset;
 import org.hibernate.orm.test.annotations.query.Attrvalue;
 import org.hibernate.orm.test.annotations.query.Employee;
 import org.hibernate.orm.test.annotations.query.Employeegroup;
-import org.hibernate.orm.test.hql.Panel;
-import org.hibernate.orm.test.hql.TrtPanel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -50,16 +46,16 @@ public class DeleteWithSubqueryTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-8447" )
 	public void testDeleteMultipleWhereIns() {
 		Session s = openSession();
 		s.getTransaction().begin();
-        s.createQuery("DELETE FROM Panel panelEntity WHERE " +
-		        " panelEntity.clientId IN ( SELECT trtPanel.clientId FROM TrtPanel trtPanel ) " +
-		        " AND panelEntity.deltaStamp NOT IN ( SELECT trtPanel.deltaStamp FROM TrtPanel trtPanel )").executeUpdate();
-        s.getTransaction().commit();
-        s.close();
+		s.createQuery("DELETE FROM Panel panelEntity WHERE " +
+				" panelEntity.clientId IN ( SELECT trtPanel.clientId FROM TrtPanel trtPanel ) " +
+				" AND panelEntity.deltaStamp NOT IN ( SELECT trtPanel.deltaStamp FROM TrtPanel trtPanel )").executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
 }

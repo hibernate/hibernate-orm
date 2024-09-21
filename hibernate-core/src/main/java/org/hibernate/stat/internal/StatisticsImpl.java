@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
@@ -80,7 +78,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	private final LongAdder secondLevelCacheHitCount = new LongAdder();
 	private final LongAdder secondLevelCacheMissCount = new LongAdder();
 	private final LongAdder secondLevelCachePutCount = new LongAdder();
-	
+
 	private final LongAdder naturalIdCacheHitCount = new LongAdder();
 	private final LongAdder naturalIdCacheMissCount = new LongAdder();
 	private final LongAdder naturalIdCachePutCount = new LongAdder();
@@ -156,7 +154,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		secondLevelCacheHitCount.reset();
 		secondLevelCacheMissCount.reset();
 		secondLevelCachePutCount.reset();
-		
+
 		naturalIdCacheHitCount.reset();
 		naturalIdCacheMissCount.reset();
 		naturalIdCachePutCount.reset();

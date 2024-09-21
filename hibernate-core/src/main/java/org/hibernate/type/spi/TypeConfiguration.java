@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.spi;
 
@@ -352,6 +350,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "truefalse": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.TRUE_FALSE.getName() );
 			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
 			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
+			case "json": return basicTypeRegistry.resolve( Object.class, SqlTypes.JSON );
+			case "xml": return basicTypeRegistry.resolve( Object.class, SqlTypes.SQLXML );
 			//really not sure about this one - it works well for casting from binary
 			//to UUID, but people will want to use it to cast from varchar, and that
 			//won't work at all without some special casing in the Dialects

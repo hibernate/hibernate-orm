@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
 
@@ -16,7 +14,6 @@ import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -33,6 +30,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.Type;
+import org.hibernate.type.MappingContext;
 
 /**
  * @author Gavin King
@@ -352,7 +350,7 @@ class EntityPropertyMapping {
 		}
 	}
 
-	private boolean hasNonIdentifierPropertyNamedId(final EntityType entityType, final Mapping factory) {
+	private boolean hasNonIdentifierPropertyNamedId(final EntityType entityType, final MappingContext factory) {
 		// TODO : would be great to have a Mapping#hasNonIdentifierPropertyNamedId method
 		// I don't believe that Mapping#getReferencedPropertyType accounts for the identifier property; so
 		// if it returns for a property named 'id', then we should have a non-id field named id

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.cascade;
 
@@ -11,15 +9,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.LockMode;
-import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
-import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -28,9 +23,16 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @Jpa(annotatedClasses = {MergeWithTransientNonCascadedAssociationTest.Person.class,
-						MergeWithTransientNonCascadedAssociationTest.Address.class},
-		properties = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
+						MergeWithTransientNonCascadedAssociationTest.Address.class})
 public class MergeWithTransientNonCascadedAssociationTest {
+
+	@AfterAll
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> entityManager.createQuery( "delete from Person" ).executeUpdate()
+		);
+	}
+
 	@Test
 	public void testMergeWithTransientNonCascadedAssociation(EntityManagerFactoryScope scope) {
 		Person person = new Person();
@@ -54,14 +56,6 @@ public class MergeWithTransientNonCascadedAssociationTest {
 						// expected...
 						entityManager.getTransaction().rollback();
 					}
-				}
-		);
-
-		scope.inTransaction(
-				entityManager -> {
-					person.address = null;
-					entityManager.unwrap( Session.class ).lock( person, LockMode.NONE );
-					entityManager.unwrap( Session.class ).remove( person );
 				}
 		);
 	}

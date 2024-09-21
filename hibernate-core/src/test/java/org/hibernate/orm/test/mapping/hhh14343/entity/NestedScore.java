@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.hhh14343.entity;
 
 import java.io.Serializable;
@@ -14,65 +18,65 @@ import jakarta.persistence.Table;
 @IdClass(NestedScoreId.class)
 public class NestedScore implements Serializable
 {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @Column(name = "game_id")
-    private Integer gameId;
+	@Id
+	@Column(name = "game_id")
+	private Integer gameId;
 
-    @Id
-    @Column(name = "is_home")
-    private Boolean home;
+	@Id
+	@Column(name = "is_home")
+	private Boolean home;
 
-    @Basic(optional = false)
-    @Column(name = "roster_id")
-    private Integer rosterId;
+	@Basic(optional = false)
+	@Column(name = "roster_id")
+	private Integer rosterId;
 
-    @Basic
-    @Column(name = "final_score")
-    private Integer finalScore;
+	@Basic
+	@Column(name = "final_score")
+	private Integer finalScore;
 
-    public NestedScore()
-    {
-    }
+	public NestedScore()
+	{
+	}
 
-    public Integer getGameId()
-    {
-        return gameId;
-    }
+	public Integer getGameId()
+	{
+		return gameId;
+	}
 
-    public void setGameId(Integer gameId)
-    {
-        this.gameId = gameId;
-    }
+	public void setGameId(Integer gameId)
+	{
+		this.gameId = gameId;
+	}
 
-    public Boolean getHome()
-    {
-        return home;
-    }
+	public Boolean getHome()
+	{
+		return home;
+	}
 
-    public void setHome(Boolean home)
-    {
-        this.home = home;
-    }
+	public void setHome(Boolean home)
+	{
+		this.home = home;
+	}
 
-    public Integer getRosterId()
-    {
-        return rosterId;
-    }
+	public Integer getRosterId()
+	{
+		return rosterId;
+	}
 
-    public void setRosterId(Integer rosterId)
-    {
-        this.rosterId = rosterId;
-    }
+	public void setRosterId(Integer rosterId)
+	{
+		this.rosterId = rosterId;
+	}
 
-    public Integer getFinalScore()
-    {
-        return finalScore;
-    }
+	public Integer getFinalScore()
+	{
+		return finalScore;
+	}
 
-    public void setFinalScore(Integer finalScore)
-    {
-        this.finalScore = finalScore;
-    }
+	public void setFinalScore(Integer finalScore)
+	{
+		this.finalScore = finalScore;
+	}
 }

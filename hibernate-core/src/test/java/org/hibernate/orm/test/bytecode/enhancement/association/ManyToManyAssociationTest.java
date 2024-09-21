@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -26,95 +23,95 @@ import java.util.Set;
 @BytecodeEnhanced
 public class ManyToManyAssociationTest {
 
-    @Test
-    public void test() {
-        Group group = new Group();
-        Group anotherGroup = new Group();
+	@Test
+	public void test() {
+		Group group = new Group();
+		Group anotherGroup = new Group();
 
-        User user = new User();
-        User anotherUser = new User();
+		User user = new User();
+		User anotherUser = new User();
 
-        user.addGroup( group );
-        user.addGroup( anotherGroup );
-        anotherUser.addGroup( group );
+		user.addGroup( group );
+		user.addGroup( anotherGroup );
+		anotherUser.addGroup( group );
 
-        assertEquals( 2, group.getUsers().size() );
-        assertEquals( 1, anotherGroup.getUsers().size() );
+		assertEquals( 2, group.getUsers().size() );
+		assertEquals( 1, anotherGroup.getUsers().size() );
 
-        group.resetUsers();
+		group.resetUsers();
 
-        assertEquals( 1, user.getGroups().size() );
-        assertEquals( 0, anotherUser.getGroups().size() );
+		assertEquals( 1, user.getGroups().size() );
+		assertEquals( 0, anotherUser.getGroups().size() );
 
-        // Test remove
-        user.addGroup( group );
-        anotherUser.addGroup( group );
+		// Test remove
+		user.addGroup( group );
+		anotherUser.addGroup( group );
 
-        assertEquals( 2, group.getUsers().size() );
-        assertEquals( 1, anotherGroup.getUsers().size() );
+		assertEquals( 2, group.getUsers().size() );
+		assertEquals( 1, anotherGroup.getUsers().size() );
 
-        Set<Group> groups = new HashSet<>( user.getGroups() );
-        groups.remove( group );
-        user.setGroups( groups );
+		Set<Group> groups = new HashSet<>( user.getGroups() );
+		groups.remove( group );
+		user.setGroups( groups );
 
-        assertEquals( 1, group.getUsers().size() );
-        assertEquals( 1, anotherGroup.getUsers().size() );
+		assertEquals( 1, group.getUsers().size() );
+		assertEquals( 1, anotherGroup.getUsers().size() );
 
-        groups.remove( anotherGroup );
-        user.setGroups( groups );
+		groups.remove( anotherGroup );
+		user.setGroups( groups );
 
-        assertEquals( 1, group.getUsers().size() );
-        // This happens (and is expected) because there was no snapshot taken before remove
-        assertEquals( 1, anotherGroup.getUsers().size() );
-    }
+		assertEquals( 1, group.getUsers().size() );
+		// This happens (and is expected) because there was no snapshot taken before remove
+		assertEquals( 1, anotherGroup.getUsers().size() );
+	}
 
-    // -- //
+	// -- //
 
-    @Entity
-    private static class Group {
+	@Entity
+	private static class Group {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @Column
-        String name;
+		@Column
+		String name;
 
-        @ManyToMany( mappedBy = "groups" )
-        Set<User> users = new HashSet<>();
+		@ManyToMany( mappedBy = "groups" )
+		Set<User> users = new HashSet<>();
 
-        Set<User> getUsers() {
-            return Collections.unmodifiableSet( users );
-        }
+		Set<User> getUsers() {
+			return Collections.unmodifiableSet( users );
+		}
 
-        void resetUsers() {
-            // this wouldn't trigger association management: users.clear();
-            users = new HashSet<>();
-        }
-    }
+		void resetUsers() {
+			// this wouldn't trigger association management: users.clear();
+			users = new HashSet<>();
+		}
+	}
 
-    @Entity
-    private static class User {
+	@Entity
+	private static class User {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String password;
+		String password;
 
-        @ManyToMany
-        Set<Group> groups;
+		@ManyToMany
+		Set<Group> groups;
 
-        void addGroup(Group group) {
-            Set<Group> groups = this.groups == null ? new HashSet<>() : this.groups;
-            groups.add( group );
-            this.groups = groups;
-        }
+		void addGroup(Group group) {
+			Set<Group> groups = this.groups == null ? new HashSet<>() : this.groups;
+			groups.add( group );
+			this.groups = groups;
+		}
 
-        Set<Group> getGroups() {
-            return Collections.unmodifiableSet( groups );
-        }
+		Set<Group> getGroups() {
+			return Collections.unmodifiableSet( groups );
+		}
 
-        void setGroups(Set<Group> groups) {
-            this.groups = groups;
-        }
-    }
+		void setGroups(Set<Group> groups) {
+			this.groups = groups;
+		}
+	}
 }

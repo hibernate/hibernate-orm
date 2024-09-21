@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph;
 
@@ -142,8 +140,8 @@ public class EntityGraphNativeQueryTest {
 		);
 	}
 
-    @Entity(name = "Foo")
-    public static class Foo {
+	@Entity(name = "Foo")
+	public static class Foo {
 
 		@Id
 		@GeneratedValue
@@ -163,19 +161,19 @@ public class EntityGraphNativeQueryTest {
 		@GeneratedValue
 		public Integer id;
 
-        @OneToMany(mappedBy = "bar")
-        public Set<Foo> foos = new HashSet<>();
+		@OneToMany(mappedBy = "bar")
+		public Set<Foo> foos = new HashSet<>();
 	}
 
 	@Entity(name = "Baz")
-    public static class Baz {
+	public static class Baz {
 
 		@Id
 		@GeneratedValue
-        public Integer id;
+		public Integer id;
 
-        @OneToMany(mappedBy = "baz")
-        public Set<Foo> foos = new HashSet<>();
+		@OneToMany(mappedBy = "baz")
+		public Set<Foo> foos = new HashSet<>();
 
 	}
 

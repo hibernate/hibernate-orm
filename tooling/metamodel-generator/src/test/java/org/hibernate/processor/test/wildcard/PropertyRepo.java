@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.wildcard;
 
 import jakarta.persistence.DiscriminatorType;
@@ -11,10 +15,10 @@ import java.util.List;
 
 @Entity
 public class PropertyRepo {
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @ManyToAny
-    @AnyDiscriminator(DiscriminatorType.STRING)
-    private List<Property<?>> properties = new ArrayList<>();
+	@ManyToAny
+	@AnyDiscriminator(DiscriminatorType.STRING)
+	private List<Property<?>> properties = new ArrayList<>();
 }

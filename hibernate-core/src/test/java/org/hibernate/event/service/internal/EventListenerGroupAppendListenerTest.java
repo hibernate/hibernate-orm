@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.internal;
 
@@ -15,7 +13,6 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -64,7 +61,7 @@ public class EventListenerGroupAppendListenerTest extends BaseSessionFactoryFunc
 			DefaultMergeEventListener mergeEventListener) {
 		inTransaction( session -> {
 
-            EventListenerGroup<MergeEventListener> group =
+			EventListenerGroup<MergeEventListener> group =
 					sessionFactory().getServiceRegistry()
 							.requireService( EventListenerRegistry.class )
 							.getEventListenerGroup( EventType.MERGE );

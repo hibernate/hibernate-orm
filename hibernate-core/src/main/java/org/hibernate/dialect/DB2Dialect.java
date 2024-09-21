@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -60,6 +58,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
@@ -416,6 +415,16 @@ public class DB2Dialect extends Dialect {
 
 		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
+
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.jsonValue_no_passing();
+			functionFactory.jsonQuery_no_passing();
+			functionFactory.jsonExists_no_passing();
+			functionFactory.jsonObject_db2();
+			functionFactory.jsonArray_db2();
+			functionFactory.jsonArrayAgg_db2();
+			functionFactory.jsonObjectAgg_db2();
+		}
 	}
 
 	@Override
@@ -1218,6 +1227,16 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
+		}
+		else {
+			return super.castPattern( from, to );
+		}
+	}
+
+	@Override
 	public int getInExpressionCountLimit() {
 		return BIND_PARAMETERS_NUMBER_LIMIT;
 	}
@@ -1283,5 +1302,15 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsFromClauseInUpdate() {
 		return getDB2Version().isSameOrAfter( 11 );
+	}
+
+	@Override
+	public String getDual() {
+		return "sysibm.dual";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 }

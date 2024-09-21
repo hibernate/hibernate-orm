@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.customsql;
 
 import jakarta.persistence.Entity;
@@ -30,57 +34,56 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 13)
 @RequiresDialect(SQLServerDialect.class)
 public class CustomSqlOverrideTest {
-    @Test
-    public void testCustomSql(SessionFactoryScope scope) {
-        Custom c = new Custom();
-        scope.inTransaction(s->{
-            s.persist(c);
-            c.whatever = "old value";
-            s.flush();
-            assertNotNull(c.id);
-            assertNotNull(c.uid);
-            s.clear();
-            Custom cc = s.find(Custom.class, c.id);
-            assertNotNull(cc.id);
-            assertNotNull(cc.uid);
-            assertEquals("old value", cc.whatever);
-            cc.whatever = "new value";
-            s.flush();
-            s.clear();
-            Custom ccc = s.find(Custom.class, c.id);
-            assertNotNull(cc.id);
-            assertNotNull(cc.uid);
-            assertEquals("new value", ccc.whatever);
-            assertEquals(cc.id, ccc.id);
-            assertNotEquals(cc.uid, ccc.uid);
-        });
-    }
-    @Entity
-    @Table(name = "CustomTable")
+	@Test
+	public void testCustomSql(SessionFactoryScope scope) {
+		Custom c = new Custom();
+		scope.inTransaction(s->{
+			s.persist(c);
+			c.whatever = "old value";
+			s.flush();
+			assertNotNull(c.id);
+			assertNotNull(c.uid);
+			s.clear();
+			Custom cc = s.find(Custom.class, c.id);
+			assertNotNull(cc.id);
+			assertNotNull(cc.uid);
+			assertEquals("old value", cc.whatever);
+			cc.whatever = "new value";
+			s.flush();
+			s.clear();
+			Custom ccc = s.find(Custom.class, c.id);
+			assertNotNull(cc.id);
+			assertNotNull(cc.uid);
+			assertEquals("new value", ccc.whatever);
+			assertEquals(cc.id, ccc.id);
+			assertNotEquals(cc.uid, ccc.uid);
+		});
+	}
+	@Entity
+	@Table(name = "CustomTable")
 //    @SQLInsert(sql="")
-    @DialectOverride.SQLInsert(dialect = H2Dialect.class,
-            override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (random_uuid(),?)"))
-    @DialectOverride.SQLInsert(dialect = MySQLDialect.class,
-            override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (uuid(),?)"))
-    @DialectOverride.SQLInsert(dialect = PostgreSQLDialect.class,
-            override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (gen_random_uuid(),?)"))
-    @DialectOverride.SQLInsert(dialect = SQLServerDialect.class,
-            override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (newid(),?)"))
+	@DialectOverride.SQLInsert(dialect = H2Dialect.class,
+			override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (random_uuid(),?)"))
+	@DialectOverride.SQLInsert(dialect = MySQLDialect.class,
+			override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (uuid(),?)"))
+	@DialectOverride.SQLInsert(dialect = PostgreSQLDialect.class,
+			override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (gen_random_uuid(),?)"))
+	@DialectOverride.SQLInsert(dialect = SQLServerDialect.class,
+			override = @SQLInsert(sql="insert into CustomTable (uid,whatever) values (newid(),?)"))
 //    @SQLUpdate(sql="")
-    @DialectOverride.SQLUpdate(dialect = H2Dialect.class,
-            override = @SQLUpdate(sql="update CustomTable set uid = random_uuid(), whatever = ? where id = ?"))
-    @DialectOverride.SQLUpdate(dialect = MySQLDialect.class,
-            override = @SQLUpdate(sql="update CustomTable set uid = uuid(), whatever = ? where id = ?"))
-    @DialectOverride.SQLUpdate(dialect = PostgreSQLDialect.class,
-            override = @SQLUpdate(sql="update CustomTable set uid = gen_random_uuid(), whatever = ? where id = ?"))
-    @DialectOverride.SQLUpdate(dialect = SQLServerDialect.class,
-            override = @SQLUpdate(sql="update CustomTable set uid = newid(), whatever = ? where id = ?"))
-    static class Custom {
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-        Long id;
-        @Generated
-        String uid;
-        String whatever;
-    }
+	@DialectOverride.SQLUpdate(dialect = H2Dialect.class,
+			override = @SQLUpdate(sql="update CustomTable set uid = random_uuid(), whatever = ? where id = ?"))
+	@DialectOverride.SQLUpdate(dialect = MySQLDialect.class,
+			override = @SQLUpdate(sql="update CustomTable set uid = uuid(), whatever = ? where id = ?"))
+	@DialectOverride.SQLUpdate(dialect = PostgreSQLDialect.class,
+			override = @SQLUpdate(sql="update CustomTable set uid = gen_random_uuid(), whatever = ? where id = ?"))
+	@DialectOverride.SQLUpdate(dialect = SQLServerDialect.class,
+			override = @SQLUpdate(sql="update CustomTable set uid = newid(), whatever = ? where id = ?"))
+	static class Custom {
+		@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+		Long id;
+		@Generated
+		String uid;
+		String whatever;
+	}
 }
-

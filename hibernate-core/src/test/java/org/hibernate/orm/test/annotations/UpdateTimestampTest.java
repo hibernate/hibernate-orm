@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations;
 
@@ -32,188 +30,188 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class UpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{
-                Event.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[]{
+				Event.class
+		};
+	}
 
-    @Entity(name = "Event")
-    private static class Event {
+	@Entity(name = "Event")
+	private static class Event {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @Column(name = "`date`")
-        @UpdateTimestamp
-        private Date date;
+		@Column(name = "`date`")
+		@UpdateTimestamp
+		private Date date;
 
-        @Column(name = "`calendar`")
-        @UpdateTimestamp
-        private Calendar calendar;
+		@Column(name = "`calendar`")
+		@UpdateTimestamp
+		private Calendar calendar;
 
-        @Column(name = "`sqlDate`")
-        @UpdateTimestamp
-        private java.sql.Date sqlDate;
+		@Column(name = "`sqlDate`")
+		@UpdateTimestamp
+		private java.sql.Date sqlDate;
 
-        @Column(name = "`time`")
-        @UpdateTimestamp
-        private Time time;
+		@Column(name = "`time`")
+		@UpdateTimestamp
+		private Time time;
 
-        @Column(name = "`timestamp`")
-        @UpdateTimestamp
-        private Timestamp timestamp;
+		@Column(name = "`timestamp`")
+		@UpdateTimestamp
+		private Timestamp timestamp;
 
-        @Column(name = "`instant`")
-        @UpdateTimestamp
-        private Instant instant;
+		@Column(name = "`instant`")
+		@UpdateTimestamp
+		private Instant instant;
 
-        @Column(name = "`localDate`")
-        @UpdateTimestamp
-        private LocalDate localDate;
+		@Column(name = "`localDate`")
+		@UpdateTimestamp
+		private LocalDate localDate;
 
-        @Column(name = "`localDateTime`")
-        @UpdateTimestamp
-        private LocalDateTime localDateTime;
+		@Column(name = "`localDateTime`")
+		@UpdateTimestamp
+		private LocalDateTime localDateTime;
 
-        @Column(name = "`localTime`")
-        @UpdateTimestamp
-        private LocalTime localTime;
+		@Column(name = "`localTime`")
+		@UpdateTimestamp
+		private LocalTime localTime;
 
-        @Column(name = "`monthDay`")
-        @UpdateTimestamp
-        private MonthDay monthDay;
+		@Column(name = "`monthDay`")
+		@UpdateTimestamp
+		private MonthDay monthDay;
 
-        @Column(name = "`offsetDateTime`")
-        @UpdateTimestamp
-        private OffsetDateTime offsetDateTime;
+		@Column(name = "`offsetDateTime`")
+		@UpdateTimestamp
+		private OffsetDateTime offsetDateTime;
 
-        @Column(name = "`offsetTime`")
-        @UpdateTimestamp
-        private OffsetTime offsetTime;
+		@Column(name = "`offsetTime`")
+		@UpdateTimestamp
+		private OffsetTime offsetTime;
 
-        @Column(name = "`year`")
-        @UpdateTimestamp
-        private Year year;
+		@Column(name = "`year`")
+		@UpdateTimestamp
+		private Year year;
 
-        @Column(name = "`yearMonth`")
-        @UpdateTimestamp
-        private YearMonth yearMonth;
+		@Column(name = "`yearMonth`")
+		@UpdateTimestamp
+		private YearMonth yearMonth;
 
-        @Column(name = "`zonedDateTime`")
-        @UpdateTimestamp
-        private ZonedDateTime zonedDateTime;
+		@Column(name = "`zonedDateTime`")
+		@UpdateTimestamp
+		private ZonedDateTime zonedDateTime;
 
-        public Event() {
-        }
+		public Event() {
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public Date getDate() {
-            return date;
-        }
+		public Date getDate() {
+			return date;
+		}
 
-        public Calendar getCalendar() {
-            return calendar;
-        }
+		public Calendar getCalendar() {
+			return calendar;
+		}
 
-        public java.sql.Date getSqlDate() {
-            return sqlDate;
-        }
+		public java.sql.Date getSqlDate() {
+			return sqlDate;
+		}
 
-        public Time getTime() {
-            return time;
-        }
+		public Time getTime() {
+			return time;
+		}
 
-        public Timestamp getTimestamp() {
-            return timestamp;
-        }
+		public Timestamp getTimestamp() {
+			return timestamp;
+		}
 
-        public Instant getInstant() {
-            return instant;
-        }
+		public Instant getInstant() {
+			return instant;
+		}
 
-        public LocalDate getLocalDate() {
-            return localDate;
-        }
+		public LocalDate getLocalDate() {
+			return localDate;
+		}
 
-        public LocalDateTime getLocalDateTime() {
-            return localDateTime;
-        }
+		public LocalDateTime getLocalDateTime() {
+			return localDateTime;
+		}
 
-        public LocalTime getLocalTime() {
-            return localTime;
-        }
+		public LocalTime getLocalTime() {
+			return localTime;
+		}
 
-        public MonthDay getMonthDay() {
-            return monthDay;
-        }
+		public MonthDay getMonthDay() {
+			return monthDay;
+		}
 
-        public OffsetDateTime getOffsetDateTime() {
-            return offsetDateTime;
-        }
+		public OffsetDateTime getOffsetDateTime() {
+			return offsetDateTime;
+		}
 
-        public OffsetTime getOffsetTime() {
-            return offsetTime;
-        }
+		public OffsetTime getOffsetTime() {
+			return offsetTime;
+		}
 
-        public Year getYear() {
-            return year;
-        }
+		public Year getYear() {
+			return year;
+		}
 
-        public YearMonth getYearMonth() {
-            return yearMonth;
-        }
+		public YearMonth getYearMonth() {
+			return yearMonth;
+		}
 
-        public ZonedDateTime getZonedDateTime() {
-            return zonedDateTime;
-        }
-    }
+		public ZonedDateTime getZonedDateTime() {
+			return zonedDateTime;
+		}
+	}
 
-    @Test
-    public void generatesCurrentTimestamp() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Event event = new Event();
-            entityManager.persist(event);
-            entityManager.flush();
-            check( event );
-        });
-    }
+	@Test
+	public void generatesCurrentTimestamp() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Event event = new Event();
+			entityManager.persist(event);
+			entityManager.flush();
+			check( event );
+		});
+	}
 
-    @Test
-    @JiraKey( value = "HHH-16240")
-    public void generatesCurrentTimestampInStatelessSession() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class);
-            try (StatelessSession statelessSession = session.getSessionFactory().openStatelessSession()) {
-                Event event = new Event();
-                statelessSession.getTransaction().begin();
-                statelessSession.insert(event);
-                statelessSession.getTransaction().commit();
-                check( event );
-            }
-        });
-    }
+	@Test
+	@JiraKey( value = "HHH-16240")
+	public void generatesCurrentTimestampInStatelessSession() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class);
+			try (StatelessSession statelessSession = session.getSessionFactory().openStatelessSession()) {
+				Event event = new Event();
+				statelessSession.getTransaction().begin();
+				statelessSession.insert(event);
+				statelessSession.getTransaction().commit();
+				check( event );
+			}
+		});
+	}
 
-    private void check(Event event) {
-        Assert.assertNotNull(event.getDate());
-        Assert.assertNotNull(event.getCalendar());
-        Assert.assertNotNull(event.getSqlDate());
-        Assert.assertNotNull(event.getTime());
-        Assert.assertNotNull(event.getTimestamp());
-        Assert.assertNotNull(event.getInstant());
-        Assert.assertNotNull(event.getLocalDate());
-        Assert.assertNotNull(event.getLocalDateTime());
-        Assert.assertNotNull(event.getLocalTime());
-        Assert.assertNotNull(event.getMonthDay());
-        Assert.assertNotNull(event.getOffsetDateTime());
-        Assert.assertNotNull(event.getOffsetTime());
-        Assert.assertNotNull(event.getYear());
-        Assert.assertNotNull(event.getYearMonth());
-        Assert.assertNotNull(event.getZonedDateTime());
-    }
+	private void check(Event event) {
+		Assert.assertNotNull(event.getDate());
+		Assert.assertNotNull(event.getCalendar());
+		Assert.assertNotNull(event.getSqlDate());
+		Assert.assertNotNull(event.getTime());
+		Assert.assertNotNull(event.getTimestamp());
+		Assert.assertNotNull(event.getInstant());
+		Assert.assertNotNull(event.getLocalDate());
+		Assert.assertNotNull(event.getLocalDateTime());
+		Assert.assertNotNull(event.getLocalTime());
+		Assert.assertNotNull(event.getMonthDay());
+		Assert.assertNotNull(event.getOffsetDateTime());
+		Assert.assertNotNull(event.getOffsetTime());
+		Assert.assertNotNull(event.getYear());
+		Assert.assertNotNull(event.getYearMonth());
+		Assert.assertNotNull(event.getZonedDateTime());
+	}
 }

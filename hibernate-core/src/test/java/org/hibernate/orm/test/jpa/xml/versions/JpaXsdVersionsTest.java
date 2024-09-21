@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.xml.versions;
 
@@ -37,7 +35,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class JpaXsdVersionsTest {
-    @Test
+	@Test
 	public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-1_0.xml" );
@@ -63,7 +61,7 @@ public class JpaXsdVersionsTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testOrm21() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.1" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_1.xml" );
@@ -73,7 +71,7 @@ public class JpaXsdVersionsTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testOrm22() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.2")
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_2.xml" );
@@ -83,7 +81,7 @@ public class JpaXsdVersionsTest {
 		}
 	}
 
-    @Test
+	@Test
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/invalid-orm-1_0.xml" );

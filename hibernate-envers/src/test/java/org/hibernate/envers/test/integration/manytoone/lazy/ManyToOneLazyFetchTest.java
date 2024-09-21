@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.manytoone.lazy;
 
@@ -31,51 +29,51 @@ import static org.junit.Assert.assertEquals;
 @JiraKey(value = "HHH-13760")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class ManyToOneLazyFetchTest extends BaseEnversFunctionalTestCase {
-    private Long shipmentId;
+	private Long shipmentId;
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] { Shipment.class, Address.class, AddressVersion.class, User.class, ChildUser.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Shipment.class, Address.class, AddressVersion.class, User.class, ChildUser.class };
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        this.shipmentId = doInHibernate( this::sessionFactory, session -> {
-            final Shipment shipment = new Shipment( Instant.now(), "system", Instant.now().plus( Duration.ofDays( 3 ) ), "abcd123", null, null );
-            session.persist( shipment );
-            session.flush();
+	@Test
+	@Priority(10)
+	public void initData() {
+		this.shipmentId = doInHibernate( this::sessionFactory, session -> {
+			final Shipment shipment = new Shipment( Instant.now(), "system", Instant.now().plus( Duration.ofDays( 3 ) ), "abcd123", null, null );
+			session.persist( shipment );
+			session.flush();
 
-            final Address origin = new Address( Instant.now(), "system", "Valencia#1" );
-            final Address destination = new Address( Instant.now(), "system", "Madrid#3" );
-            final AddressVersion originVersion0 = origin.addInitialVersion( "Poligono Manises" );
-            final AddressVersion destinationVersion0 = destination.addInitialVersion( "Poligono Alcobendas" );
-            session.persist( origin );
-            session.persist( destination );
-            session.flush();
+			final Address origin = new Address( Instant.now(), "system", "Valencia#1" );
+			final Address destination = new Address( Instant.now(), "system", "Madrid#3" );
+			final AddressVersion originVersion0 = origin.addInitialVersion( "Poligono Manises" );
+			final AddressVersion destinationVersion0 = destination.addInitialVersion( "Poligono Alcobendas" );
+			session.persist( origin );
+			session.persist( destination );
+			session.flush();
 
-            shipment.setOrigin( originVersion0 );
-            shipment.setDestination( destinationVersion0 );
-            session.merge( shipment );
-            session.flush();
+			shipment.setOrigin( originVersion0 );
+			shipment.setDestination( destinationVersion0 );
+			session.merge( shipment );
+			session.flush();
 
-            return shipment.getId();
-        } );
+			return shipment.getId();
+		} );
 
-        doInHibernate( this::sessionFactory, session -> {
-            final Shipment shipment = session.get( Shipment.class, shipmentId );
+		doInHibernate( this::sessionFactory, session -> {
+			final Shipment shipment = session.get( Shipment.class, shipmentId );
 
-            Hibernate.initialize( shipment.getOrigin() );
-            Hibernate.initialize( shipment.getDestination() );
-            shipment.setClosed( true );
+			Hibernate.initialize( shipment.getOrigin() );
+			Hibernate.initialize( shipment.getDestination() );
+			shipment.setClosed( true );
 
-            session.merge( shipment );
-            session.flush();
-        } );
-    }
+			session.merge( shipment );
+			session.flush();
+		} );
+	}
 
-    @Test
-    public void testRevisionHistory() {
-        assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( Shipment.class, shipmentId ) );
-    }
+	@Test
+	public void testRevisionHistory() {
+		assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( Shipment.class, shipmentId ) );
+	}
 }

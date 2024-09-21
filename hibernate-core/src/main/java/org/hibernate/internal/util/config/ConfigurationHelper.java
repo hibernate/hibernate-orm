@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.config;
 
@@ -17,10 +15,12 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
@@ -509,6 +509,21 @@ public final class ConfigurationHelper {
 				.getJdbcEnvironment()
 				.getDialect()
 				.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry, Dialect dialect) {
+		final Integer typeCode = serviceRegistry.requireService( ConfigurationService.class ).getSetting(
+				AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE,
+				TypeCodeConverter.INSTANCE
+		);
+		if ( typeCode != null ) {
+			INCUBATION_LOGGER.incubatingSetting( AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE );
+			return typeCode;
+		}
+
+		// default to the Dialect answer
+		return dialect.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Incubating

@@ -1,21 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.ast;
 
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -47,8 +42,8 @@ import static org.hibernate.internal.util.StringHelper.*;
  */
 @ServiceRegistry( services = @ServiceRegistry.Service(
 		role = ParameterMarkerStrategy.class,
-		impl = ParameterMarkerStrategyTests.ParameterMarkerStrategyImpl.class
-), settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true") )
+		impl = ParameterMarkerStrategyTests.ParameterMarkerStrategyImpl.class )
+)
 @DomainModel( annotatedClasses = {
 		EntityOfBasics.class,
 		ParameterMarkerStrategyTests.EntityWithFilters.class,
@@ -130,28 +125,6 @@ public class ParameterMarkerStrategyTests {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-16229" )
-	public void testLocking(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-
-		final EntityWithVersion created = scope.fromTransaction( (session) -> {
-			final EntityWithVersion entity = new EntityWithVersion( 1, "Entity Prime" );
-			session.persist( entity );
-			return entity;
-		} );
-
-		statementInspector.clear();
-		scope.inTransaction( (session) -> {
-			session.lock( created, LockMode.PESSIMISTIC_FORCE_INCREMENT );
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?2" );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?3" );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).matches( (sql) -> count( sql, "?" ) == 3 );
-		} );
-	}
-
-	@Test
 	@FailureExpected
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16283" )
 	public void testNativeQuery(SessionFactoryScope scope) {
@@ -205,9 +178,9 @@ public class ParameterMarkerStrategyTests {
 	)
 	@Filter( name = "region" )
 	public static class EntityWithFilters {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Basic
 		private String region;
@@ -246,9 +219,9 @@ public class ParameterMarkerStrategyTests {
 	@Entity( name = "EntityWithVersion" )
 	@Table( name = "versioned_entity" )
 	public static class EntityWithVersion {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Version
 		private int version;

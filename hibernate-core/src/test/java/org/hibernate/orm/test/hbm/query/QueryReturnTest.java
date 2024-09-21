@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.hbm.query;
 
 import java.io.StringReader;
@@ -26,23 +30,23 @@ import org.junit.Test;
 @JiraKey( value = "HHH-10405" )
 @RequiresDialect( H2Dialect.class )
 public class QueryReturnTest extends BaseUnitTestCase {
-	
+
 	private static String QUERY_RETURN_HBM_XML =
 			"<hibernate-mapping package='org.hibernate.orm.test.hbm.query'>          "+
-		    "    <class name='QueryReturnTest$Bar'>                                  "+
+			"    <class name='QueryReturnTest$Bar'>                                  "+
 			"        <id name='id'>                                                  "+
-		    "            <generator class='sequence'/>                               "+
-		    "        </id>                                                           "+
-		    "        <property name='foo' type='string'/>                            "+
+			"            <generator class='sequence'/>                               "+
+			"        </id>                                                           "+
+			"        <property name='foo' type='string'/>                            "+
 			"    </class>                                                            "+
-		    "    <sql-query name='myQuery'>                                          "+
-			"        <synchronize table='myTable'/>                                  "+ 
-		    "        <return                                                         "+
+			"    <sql-query name='myQuery'>                                          "+
+			"        <synchronize table='myTable'/>                                  "+
+			"        <return                                                         "+
 			"                alias='e'                                               "+
-		    "                class='org.hibernate.orm.test.hbm.query.QueryReturnTest$Bar'"+
+			"                class='org.hibernate.orm.test.hbm.query.QueryReturnTest$Bar'"+
 			"        />                                                              "+
-		    "        <![CDATA[from elephant as {e} where {e.age} > 50]]>             "+
-		    "    </sql-query>                                                        "+    	
+			"        <![CDATA[from elephant as {e} where {e.age} > 50]]>             "+
+			"    </sql-query>                                                        "+
 			"</hibernate-mapping>                                                    ";
 
 	@Test
@@ -89,7 +93,7 @@ public class QueryReturnTest extends BaseUnitTestCase {
 	}
 
 	public static class Bar {
-		public Integer id;		
+		public Integer id;
 		public String foo;
 		public Integer getId() { return id; }
 		public void setId(Integer id) { this.id = id; }

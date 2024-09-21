@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.util;
 import java.io.InputStream;
@@ -63,9 +61,9 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 
 	public void testSerDeserClassUnknownToCustomLoader() throws Exception {
 		Object instance = LockMode.OPTIMISTIC;
-		assertSame( 
+		assertSame(
 			SerializationHelper.hibernateClassLoader(),
-			instance.getClass().getClassLoader() 
+			instance.getClass().getClassLoader()
 		);
 
 		// SerializableType.toBytes() logic, as called from SerializableType.disassemble()

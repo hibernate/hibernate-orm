@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -48,6 +45,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -283,22 +281,6 @@ public class GeneratorBinder {
 		// todo (jpa32) : when can this ever be null?
 		final GenerationType strategy = generatedValueAnn.strategy();
 		return strategy == null ? AUTO : strategy;
-	}
-
-	/**
-	 * Collects definition objects for all generators defined using any of {@link TableGenerator},
-	 * {@link SequenceGenerator}, and {@link GenericGenerator} on the given annotated element.
-	 */
-	public static List<IdentifierGeneratorDefinition> collectIdGeneratorDefinitions(
-			AnnotationTarget annotatedElement,
-			MetadataBuildingContext context) {
-		final ArrayList<IdentifierGeneratorDefinition> definitions = new ArrayList<>();
-		visitIdGeneratorDefinitions(
-				annotatedElement,
-				definitions::add,
-				context
-		);
-		return definitions;
 	}
 
 	public static void visitIdGeneratorDefinitions(
@@ -695,7 +677,7 @@ public class GeneratorBinder {
 			Generator generator,
 			Map<String, Object> configuration,
 			SimpleValue identifierValue) {
-		if ( generator instanceof final Configurable configurable ) {
+		if ( generator instanceof Configurable configurable ) {
 			final Properties parameters = collectParameters(
 					identifierValue,
 					creationContext.getDatabase().getDialect(),
@@ -703,6 +685,12 @@ public class GeneratorBinder {
 					configuration
 			);
 			configurable.configure( creationContext, parameters );
+		}
+		if ( generator instanceof ExportableProducer exportableProducer ) {
+			exportableProducer.registerExportables( creationContext.getDatabase() );
+		}
+		if ( generator instanceof Configurable configurable ) {
+			configurable.initialize( creationContext.getSqlStringGenerationContext() );
 		}
 	}
 
@@ -728,11 +716,12 @@ public class GeneratorBinder {
 		// NOTE: `generatedValue` is never null here
 		final GeneratedValue generatedValue = castNonNull( idMember.getDirectAnnotationUsage( GeneratedValue.class ) );
 
+		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
 		if ( isGlobalGeneratorNameGlobal( context ) ) {
 			// process and register any generators defined on the member.
 			// according to JPA these are also global.
-			context.getMetadataCollector().getGlobalRegistrations().as( GlobalRegistrar.class ).collectIdGenerators( idMember );
-			context.getMetadataCollector().addSecondPass( new StrictIdGeneratorResolverSecondPass(
+			metadataCollector.getGlobalRegistrations().as( GlobalRegistrar.class ).collectIdGenerators( idMember );
+			metadataCollector.addSecondPass( new StrictIdGeneratorResolverSecondPass(
 					persistentClass,
 					idValue,
 					idMember,
@@ -740,7 +729,7 @@ public class GeneratorBinder {
 			) );
 		}
 		else {
-			context.getMetadataCollector().addSecondPass( new IdGeneratorResolverSecondPass(
+			metadataCollector.addSecondPass( new IdGeneratorResolverSecondPass(
 					persistentClass,
 					idValue,
 					idMember,
@@ -752,7 +741,6 @@ public class GeneratorBinder {
 
 	public static void createGeneratorFrom(
 			IdentifierGeneratorDefinition defaultedGenerator,
-			MemberDetails idMember,
 			SimpleValue idValue,
 			Map<String, Object> configuration,
 			MetadataBuildingContext context) {
@@ -768,11 +756,6 @@ public class GeneratorBinder {
 			if ( identifierGenerator instanceof IdentityGenerator) {
 				idValue.setColumnToIdentity();
 			}
-
-			if ( identifierGenerator instanceof ExportableProducer exportableProducer ) {
-				exportableProducer.registerExportables( creationContext.getDatabase() );
-			}
-
 			return identifierGenerator;
 		} );
 	}
@@ -780,31 +763,22 @@ public class GeneratorBinder {
 
 	public static void createGeneratorFrom(
 			IdentifierGeneratorDefinition defaultedGenerator,
-			MemberDetails idMember,
 			SimpleValue idValue,
-			PersistentClass persistentClass,
 			MetadataBuildingContext context) {
 		createGeneratorFrom(
 				defaultedGenerator,
-				idMember,
 				idValue,
-				buildConfigurationMap( defaultedGenerator, idValue, persistentClass ),
+				buildConfigurationMap( idValue ),
 				context
 		);
 	}
 
-	public static Map<String, Object> buildConfigurationMap(
-			IdentifierGeneratorDefinition defaultedGenerator,
-			SimpleValue idValue,
-			PersistentClass persistentClass) {
+	private static Map<String, Object> buildConfigurationMap(KeyValue idValue) {
 		final Map<String,Object> configuration = new HashMap<>();
-
 		configuration.put( PersistentIdentifierGenerator.TABLE, idValue.getTable().getName() );
-
 		if ( idValue.getColumnSpan() == 1 ) {
-			configuration.put( PersistentIdentifierGenerator.PK, idValue.getColumns().get( 0).getName() );
+			configuration.put( PersistentIdentifierGenerator.PK, idValue.getColumns().get(0).getName() );
 		}
-
 		return configuration;
 	}
 
@@ -943,15 +917,12 @@ public class GeneratorBinder {
 		final List<? extends Annotation> generatorAnnotations =
 				property.getMetaAnnotated( ValueGenerationType.class,
 						context.getMetadataCollector().getSourceModelBuildingContext() );
-		switch ( generatorAnnotations.size() ) {
-			case 0:
-				return null;
-			case 1:
-				return generatorCreator( property, generatorAnnotations.get(0), beanContainer( context ) );
-			default:
-				throw new AnnotationException( "Property '" + qualify( holder.getPath(), propertyName )
-						+ "' has too many generator annotations: " + generatorAnnotations );
-		}
+		return switch ( generatorAnnotations.size() ) {
+			case 0 -> null;
+			case 1 -> generatorCreator( property, generatorAnnotations.get(0), beanContainer( context ) );
+			default -> throw new AnnotationException( "Property '" + qualify( holder.getPath(), propertyName )
+					+ "' has too many generator annotations: " + generatorAnnotations );
+		};
 	}
 
 	public static void applyIfNotEmpty(String name, String value, BiConsumer<String,String> consumer) {

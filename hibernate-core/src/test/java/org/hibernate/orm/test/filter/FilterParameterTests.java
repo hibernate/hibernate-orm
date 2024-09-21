@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
 
@@ -309,9 +307,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@Entity( name = "EntityOne" )
 	@Table( name = "EntityOne" )
 	public static class EntityOne {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Column( name = "yes_no" )
 		@JdbcTypeCode( Types.CHAR )
@@ -364,9 +362,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@Entity( name = "EntityTwo" )
 	@Table( name = "EntityTwo" )
 	public static class EntityTwo {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Column( name = "zero_one" )
 		@JdbcTypeCode( Types.TINYINT )
@@ -412,9 +410,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@Entity( name = "EntityThree" )
 	@Table( name = "EntityThree" )
 	public static class EntityThree {
-	    @Id
-	    private Integer id;
-	    @Basic
+		@Id
+		private Integer id;
+		@Basic
 		private String name;
 		@Column( name = "mismatch" )
 		@JdbcTypeCode( Types.TINYINT )

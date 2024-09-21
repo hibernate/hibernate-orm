@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.registry.classloading;
 
@@ -45,21 +43,21 @@ public class ClassLoaderServiceImplTest {
 		Thread.currentThread().setContextClassLoader( null );
 
 		ClassLoaderServiceImpl csi1 = new ClassLoaderServiceImpl( null,
-																  TcclLookupPrecedence.BEFORE );
+																TcclLookupPrecedence.BEFORE );
 		Class<ClassLoaderServiceImplTest> clazz1 = csi1.classForName(
 				ClassLoaderServiceImplTest.class.getName() );
 		assertEquals( ClassLoaderServiceImplTest.class, clazz1 );
 		csi1.stop();
 
 		ClassLoaderServiceImpl csi2 = new ClassLoaderServiceImpl( null,
-																  TcclLookupPrecedence.AFTER );
+																TcclLookupPrecedence.AFTER );
 		Class<ClassLoaderServiceImplTest> clazz2 = csi2.classForName(
 				ClassLoaderServiceImplTest.class.getName() );
 		assertEquals( ClassLoaderServiceImplTest.class, clazz2 );
 		csi2.stop();
 
 		ClassLoaderServiceImpl csi3 = new ClassLoaderServiceImpl( null,
-																  TcclLookupPrecedence.NEVER );
+																TcclLookupPrecedence.NEVER );
 		Class<ClassLoaderServiceImplTest> clazz3 = csi3.classForName(
 				ClassLoaderServiceImplTest.class.getName() );
 		assertEquals( ClassLoaderServiceImplTest.class, clazz3 );
@@ -72,7 +70,7 @@ public class ClassLoaderServiceImplTest {
 		Thread.currentThread().setContextClassLoader( icl );
 
 		ClassLoaderServiceImpl csi = new ClassLoaderServiceImpl( null,
-																 TcclLookupPrecedence.BEFORE );
+																TcclLookupPrecedence.BEFORE );
 		Class<ClassLoaderServiceImplTest> clazz = csi.classForName(
 				ClassLoaderServiceImplTest.class.getName() );
 		assertEquals( ClassLoaderServiceImplTest.class, clazz );
@@ -86,7 +84,7 @@ public class ClassLoaderServiceImplTest {
 		Thread.currentThread().setContextClassLoader( icl );
 
 		ClassLoaderServiceImpl csi = new ClassLoaderServiceImpl( null,
-																 TcclLookupPrecedence.AFTER );
+																TcclLookupPrecedence.AFTER );
 		Class<ClassLoaderServiceImplTest> clazz = csi.classForName(
 				ClassLoaderServiceImplTest.class.getName() );
 		assertEquals( ClassLoaderServiceImplTest.class, clazz );
@@ -100,7 +98,7 @@ public class ClassLoaderServiceImplTest {
 		Thread.currentThread().setContextClassLoader( icl );
 
 		ClassLoaderServiceImpl csi = new ClassLoaderServiceImpl( null,
-																 TcclLookupPrecedence.AFTER );
+																TcclLookupPrecedence.AFTER );
 		try {
 			csi.classForName( "test.class.name" );
 			assertTrue( false );
@@ -117,7 +115,7 @@ public class ClassLoaderServiceImplTest {
 		Thread.currentThread().setContextClassLoader( icl );
 
 		ClassLoaderServiceImpl csi = new ClassLoaderServiceImpl( null,
-																 TcclLookupPrecedence.BEFORE );
+																TcclLookupPrecedence.BEFORE );
 		try {
 			csi.classForName( "test.class.not.found" );
 			assertTrue( false );
@@ -134,7 +132,7 @@ public class ClassLoaderServiceImplTest {
 		Thread.currentThread().setContextClassLoader( icl );
 
 		ClassLoaderServiceImpl csi = new ClassLoaderServiceImpl( null,
-																 TcclLookupPrecedence.NEVER );
+																TcclLookupPrecedence.NEVER );
 		try {
 			csi.classForName( "test.class.name" );
 			assertTrue( false );

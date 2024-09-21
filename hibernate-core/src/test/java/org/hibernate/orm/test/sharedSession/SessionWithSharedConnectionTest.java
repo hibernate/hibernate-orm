@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sharedSession;
 
@@ -58,9 +56,9 @@ public class SessionWithSharedConnectionTest {
 //		secondSession.createCriteria( IrrelevantEntity.class ).list();
 
 		//the list should have registered and then released a JDBC resource
-        assertFalse(
+		assertFalse(
 				((SessionImplementor) secondSession)
-                        .getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+						.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
 						.hasRegisteredResources()
 		);
 
@@ -188,14 +186,14 @@ public class SessionWithSharedConnectionTest {
 		session.getTransaction().commit();
 		session.close();
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionCallsAfterTransactionAction(SessionFactoryScope scope) throws Exception {
 		Session session = scope.getSessionFactory().openSession();
 
 		final String postCommitMessage = "post commit was called";
-		
+
 		EventListenerRegistry eventListenerRegistry = scope.getSessionFactory().getServiceRegistry().getService(EventListenerRegistry.class);
 		//register a post commit listener
 		eventListenerRegistry.appendListeners(
@@ -231,7 +229,7 @@ public class SessionWithSharedConnectionTest {
 		secondSession.persist( irrelevantEntitySecondarySession );
 
 		session.getTransaction().commit();
-		
+
 		//both entities should have their names updated to the postCommitMessage value
 		assertEquals(postCommitMessage, irrelevantEntityMainSession.getName());
 		assertEquals(postCommitMessage, irrelevantEntitySecondarySession.getName());
@@ -241,19 +239,19 @@ public class SessionWithSharedConnectionTest {
 	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionTwoTransactions(SessionFactoryScope scope) throws Exception {
 		Session session = scope.getSessionFactory().openSession();
-		
+
 		session.getTransaction().begin();
-		
+
 		//open secondary session with managed options
 		Session secondarySession = session.sessionWithOptions()
 				.connection()
 //				.flushBeforeCompletion( true )
 				.autoClose( true )
 				.openSession();
-		
+
 		//the secondary session should be automatically closed after the commit
 		session.getTransaction().commit();
-		
+
 		assertFalse( secondarySession.isOpen() );
 
 		//should be able to create a new transaction and carry on using the original session

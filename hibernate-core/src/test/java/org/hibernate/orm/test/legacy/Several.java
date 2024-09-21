@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Several.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.io.Serializable;
 
@@ -22,7 +18,7 @@ public class Several implements Serializable {
 	public String getId() {
 		return id;
 	}
-	
+
 	/**
 	 * Returns the prop.
 	 * @return String
@@ -30,7 +26,7 @@ public class Several implements Serializable {
 	public String getProp() {
 		return prop;
 	}
-	
+
 	/**
 	 * Returns the single.
 	 * @return Single
@@ -38,7 +34,7 @@ public class Several implements Serializable {
 	public Single getSingle() {
 		return single;
 	}
-	
+
 	/**
 	 * Sets the id.
 	 * @param id The id to set
@@ -46,7 +42,7 @@ public class Several implements Serializable {
 	public void setId(String id) {
 		this.id = id;
 	}
-	
+
 	/**
 	 * Sets the prop.
 	 * @param prop The prop to set
@@ -54,7 +50,7 @@ public class Several implements Serializable {
 	public void setProp(String prop) {
 		this.prop = prop;
 	}
-	
+
 	/**
 	 * Sets the single.
 	 * @param single The single to set
@@ -62,7 +58,7 @@ public class Several implements Serializable {
 	public void setSingle(Single single) {
 		this.single = single;
 	}
-	
+
 	/**
 	 * Returns the string.
 	 * @return String
@@ -70,7 +66,7 @@ public class Several implements Serializable {
 	public String getString() {
 		return string;
 	}
-	
+
 	/**
 	 * Sets the string.
 	 * @param string The string to set
@@ -78,19 +74,13 @@ public class Several implements Serializable {
 	public void setString(String string) {
 		this.string = string;
 	}
-	
+
 	/*public boolean equals(Object other) {
 		return ( (Several) other ).id.equals(id) && ( (Several) other ).string.equals(string);
 	}
-	
+
 	public int hashCode() {
 		return id.hashCode();
 	}*/
-	
+
 }
-
-
-
-
-
-

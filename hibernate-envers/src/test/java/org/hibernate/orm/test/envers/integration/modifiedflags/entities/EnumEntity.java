@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags.entities;
 
@@ -20,36 +18,36 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class EnumEntity {
-    @Id
-    private Integer id;
+	@Id
+	private Integer id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "client_option")
-    @Audited(modifiedColumnName = "client_option_mod")
-    private EnumOption option;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "client_option")
+	@Audited(modifiedColumnName = "client_option_mod")
+	private EnumOption option;
 
-    EnumEntity() {
+	EnumEntity() {
 
-    }
+	}
 
-    public EnumEntity(Integer id, EnumOption option) {
-        this.id = id;
-        this.option = option;
-    }
+	public EnumEntity(Integer id, EnumOption option) {
+		this.id = id;
+		this.option = option;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public EnumOption getOption() {
-        return option;
-    }
+	public EnumOption getOption() {
+		return option;
+	}
 
-    public void setOption(EnumOption option) {
-        this.option = option;
-    }
+	public void setOption(EnumOption option) {
+		this.option = option;
+	}
 }

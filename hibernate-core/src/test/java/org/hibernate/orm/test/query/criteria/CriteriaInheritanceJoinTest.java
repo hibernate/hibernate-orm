@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
 
@@ -79,8 +77,8 @@ public class CriteriaInheritanceJoinTest {
 			final Root<Address> addressRoot = cq.from( Address.class );
 			cq.select( addressRoot ).where(
 					cb.equal( cb.treat( addressRoot, StreetAddress.class )
-									  .get( "street" )
-									  .get( "name" ), "Via Roma" )
+									.get( "street" )
+									.get( "name" ), "Via Roma" )
 			);
 			final Address result = session.createQuery( cq ).getSingleResult();
 			assertThat( result ).isInstanceOf( StreetAddress.class );

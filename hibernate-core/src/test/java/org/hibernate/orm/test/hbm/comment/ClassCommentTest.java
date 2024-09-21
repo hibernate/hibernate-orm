@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.hbm.comment;
 
 import java.io.StringReader;
@@ -5,7 +9,6 @@ import java.io.StringReader;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.mapping.PersistentClass;
@@ -43,6 +46,6 @@ public class ClassCommentTest extends BaseUnitTestCase {
 			Assert.assertNotNull( table );
 			Assert.assertEquals( "This is class 'Foo' with property 'bar'.", table.getComment() );
 		}
-	}	
-	
+	}
+
 }

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Mammal.java 6005 2005-03-04 11:41:11Z oneovthafew $
 package org.hibernate.orm.test.hql;
 import java.util.Date;
 
@@ -30,7 +26,7 @@ public class Mammal extends Animal {
 	public Date getBirthdate() {
 		return birthdate;
 	}
-	
+
 
 	public void setBirthdate(Date birthdate) {
 		this.birthdate = birthdate;

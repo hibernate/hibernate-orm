@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
@@ -284,11 +282,11 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		session.close();
 	}
-	
+
 	@Test
 	@JiraKey(value = "HHH-5732")
 	public void testInverseIndex() {
-        final CollectionPersister transactionsPersister = sessionFactory().getRuntimeMetamodels()
+		final CollectionPersister transactionsPersister = sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getCollectionDescriptor( BankAccount.class.getName() + ".transactions" );
 		assertTrue( transactionsPersister.isInverse() );
@@ -307,7 +305,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		
+
 		try {
 			SimpleSelect select = new SimpleSelect( sessionFactory() )
 					.setTableName( transactionsPersister.getTableName() )
@@ -337,7 +335,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 			s.close();
 		}
 	}
-	
+
 	@Test
 	@JiraKey( value = "HHH-8083" )
 	public void testInverseIndexCascaded() {
@@ -395,7 +393,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		Hibernate.initialize( forum.getUsers() );
 		assertEquals( 1, forum.getUsers().size() );
 	}
-  
+
 	@Test
 	@JiraKey(value = "HHH-8794")
 	public void testOrderByNoElement() {

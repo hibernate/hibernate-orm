@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.nulliteral;
 
@@ -36,7 +34,6 @@ import org.junit.Test;
 import static java.lang.Boolean.FALSE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -131,7 +128,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			testNumericLiterals(
 				entityManager,
-			 	"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
+				"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
 			);
 		} );
 	}
@@ -141,7 +138,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			testNumericLiterals(
 				entityManager,
-			 	"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
+				"select 'abc',b1_0.name from Book b1_0 where b1_0.id=1"
 			);
 		} );
 	}

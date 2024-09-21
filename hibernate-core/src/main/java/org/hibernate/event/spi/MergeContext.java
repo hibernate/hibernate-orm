@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
@@ -90,8 +88,8 @@ public class MergeContext implements Map<Object,Object> {
 	// TODO: merge mergeEntityToOperatedOnFlagMap into mergeToManagedEntityXref, since they have the same key.
 	//       need to check if this would hurt performance.
 	private final Map<Object,Boolean> mergeEntityToOperatedOnFlagMap = new IdentityHashMap<>( 10 );
-	    // key is a merge entity;
-	    // value is a flag indicating if the merge entity is currently in the merge process.
+		// key is a merge entity;
+		// value is a flag indicating if the merge entity is currently in the merge process.
 
 	public MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
 		this.session = session;

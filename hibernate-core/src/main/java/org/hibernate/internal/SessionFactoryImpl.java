@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -69,16 +67,14 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.Configurable;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
@@ -188,8 +184,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private final transient CurrentSessionContext currentSessionContext;
 
-	// todo : move to MetamodelImpl
-	private final transient Map<String, Generator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient java.util.Collection<FilterDefinition> autoEnabledFilters = new HashSet<>();
 	private final transient Map<String, FetchProfile> fetchProfiles;
@@ -266,7 +260,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		try {
 			integrate( bootMetamodel, bootstrapContext, integratorObserver );
 
-			identifierGenerators = createGenerators( jdbcServices, sqlStringGenerationContext, bootMetamodel );
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
 
@@ -285,16 +278,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
 			runtimeMetamodels = runtimeMetamodelsImpl;
-			final MappingMetamodelImpl mappingMetamodelImpl =
-					new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
+			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
 			fastSessionServices = new FastSessionServices( this );
-			initializeMappingModel( mappingMetamodelImpl, bootstrapContext, bootMetamodel, options );
+			mappingMetamodelImpl.finishInitialization(
+					new ModelCreationContext( bootstrapContext, bootMetamodel, mappingMetamodelImpl, typeConfiguration ) );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
 			// this needs to happen after the mapping metamodel is
 			// completely built, since we need to use the persisters
-			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodels );
+			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodelsImpl);
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
@@ -326,121 +319,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		LOG.debug( "Instantiated SessionFactory" );
-	}
-
-	private void initializeMappingModel(
-			MappingMetamodelImpl mappingMetamodelImpl,
-			BootstrapContext bootstrapContext,
-			MetadataImplementor bootMetamodel,
-			SessionFactoryOptions options) {
-		mappingMetamodelImpl.finishInitialization( runtimeModelCreationContext(
-				bootstrapContext,
-				bootMetamodel,
-				mappingMetamodelImpl,
-				mappingMetamodelImpl.getTypeConfiguration(),
-				options
-		) );
-	}
-
-	private RuntimeModelCreationContext runtimeModelCreationContext(
-			BootstrapContext bootstrapContext,
-			MetadataImplementor bootMetamodel,
-			MappingMetamodelImplementor mappingMetamodel,
-			TypeConfiguration typeConfiguration,
-			SessionFactoryOptions options) {
-		return new RuntimeModelCreationContext() {
-			@Override
-			public BootstrapContext getBootstrapContext() {
-				return bootstrapContext;
-			}
-
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				// this is bad, we're not yet fully-initialized
-				return SessionFactoryImpl.this;
-			}
-
-			@Override
-			public MetadataImplementor getBootModel() {
-				return bootMetamodel;
-			}
-
-			@Override
-			public MappingMetamodelImplementor getDomainModel() {
-				return mappingMetamodel;
-			}
-
-			@Override
-			public CacheImplementor getCache() {
-				return cacheAccess;
-			}
-
-			@Override
-			public Map<String, Object> getSettings() {
-				return settings;
-			}
-
-			@Override
-			public Dialect getDialect() {
-				return jdbcServices.getDialect();
-			}
-
-			@Override
-			public SqmFunctionRegistry getFunctionRegistry() {
-				return queryEngine.getSqmFunctionRegistry();
-			}
-
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-
-			@Override
-			public SessionFactoryOptions getSessionFactoryOptions() {
-				return options;
-			}
-
-			@Override
-			public JdbcServices getJdbcServices() {
-				return jdbcServices;
-			}
-
-			@Override
-			public SqlStringGenerationContext getSqlStringGenerationContext() {
-				return sqlStringGenerationContext;
-			}
-
-			@Override
-			public ServiceRegistry getServiceRegistry() {
-				return serviceRegistry;
-			}
-		};
-	}
-
-	private static Map<String, Generator> createGenerators(
-			JdbcServices jdbcServices,
-			SqlStringGenerationContext sqlStringGenerationContext,
-			MetadataImplementor bootMetamodel) {
-		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
-		final Map<String, Generator> generators = new HashMap<>();
-		for ( PersistentClass model : bootMetamodel.getEntityBindings() ) {
-			if ( !model.isInherited() ) {
-				final KeyValue id = model.getIdentifier();
-				final Generator generator =
-						id.createGenerator( dialect, (RootClass) model, model.getIdentifierProperty() );
-				if ( generator instanceof Configurable configurable ) {
-					configurable.initialize( sqlStringGenerationContext );
-				}
-				//TODO: this isn't a great place to do this
-				if ( generator.allowAssignedIdentifiers()
-						&& id instanceof SimpleValue simpleValue
-						&& simpleValue.getNullValue() == null ) {
-					simpleValue.setNullValue( "undefined" );
-				}
-				generators.put( model.getEntityName(), generator );
-			}
-		}
-		return generators;
 	}
 
 	private static SqlStringGenerationContext createSqlStringGenerationContext(
@@ -1081,7 +959,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override @Deprecated
 	public Generator getGenerator(String rootEntityName) {
-		return identifierGenerators.get( rootEntityName );
+		return null;
 	}
 
 	private boolean canAccessTransactionManager() {
@@ -1713,5 +1591,111 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		OPEN,
 		CLOSING,
 		CLOSED
+	}
+
+	private class ModelCreationContext implements RuntimeModelCreationContext, GeneratorSettings {
+		final Map<String, Generator> generators;
+		private final BootstrapContext bootstrapContext;
+		private final MetadataImplementor bootMetamodel;
+		private final MappingMetamodelImplementor mappingMetamodel;
+		private final TypeConfiguration typeConfiguration;
+
+		private ModelCreationContext(
+				BootstrapContext bootstrapContext,
+				MetadataImplementor bootMetamodel,
+				MappingMetamodelImplementor mappingMetamodel,
+				TypeConfiguration typeConfiguration) {
+			this.bootstrapContext = bootstrapContext;
+			this.bootMetamodel = bootMetamodel;
+			this.mappingMetamodel = mappingMetamodel;
+			this.typeConfiguration = typeConfiguration;
+			generators = new HashMap<>();
+		}
+
+		@Override
+		public BootstrapContext getBootstrapContext() {
+			return bootstrapContext;
+		}
+
+		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			// this is bad, we're not yet fully-initialized
+			return SessionFactoryImpl.this;
+		}
+
+		@Override
+		public MetadataImplementor getBootModel() {
+			return bootMetamodel;
+		}
+
+		@Override
+		public MappingMetamodelImplementor getDomainModel() {
+			return mappingMetamodel;
+		}
+
+		@Override
+		public CacheImplementor getCache() {
+			return cacheAccess;
+		}
+
+		@Override
+		public Map<String, Object> getSettings() {
+			return settings;
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return jdbcServices.getDialect();
+		}
+
+		@Override
+		public SqmFunctionRegistry getFunctionRegistry() {
+			return queryEngine.getSqmFunctionRegistry();
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+
+		@Override
+		public SessionFactoryOptions getSessionFactoryOptions() {
+			return sessionFactoryOptions;
+		}
+
+		@Override
+		public JdbcServices getJdbcServices() {
+			return jdbcServices;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
+
+		@Override
+		public Map<String, Generator> getGenerators() {
+			return generators;
+		}
+
+		@Override
+		public GeneratorSettings getGeneratorSettings() {
+			return this;
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return sessionFactoryOptions.getDefaultCatalog();
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return sessionFactoryOptions.getDefaultSchema();
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return sqlStringGenerationContext;
+		}
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable;
 
@@ -40,7 +38,7 @@ public interface EmbeddableInitializer<Data extends InitializerData> extends Ini
 
 	/**
 	 * Resets the resolved entity registrations by i.e. removing {@link org.hibernate.engine.spi.EntityHolder}.
-	 * 
+	 *
 	 * This is used after {@link org.hibernate.sql.results.graph.entity.EntityInitializer#resolveEntityKeyOnly(RowProcessingState)}
 	 * to deregister registrations for entities that were only resolved, but not initialized.
 	 * Failing to do this will lead to errors, because {@link org.hibernate.engine.spi.PersistenceContext#postLoad(JdbcValuesSourceProcessingState, Consumer)}

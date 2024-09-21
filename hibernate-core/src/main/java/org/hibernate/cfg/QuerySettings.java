@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.query.spi.QueryPlan;
 
@@ -17,6 +16,14 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * @author Steve Ebersole
  */
 public interface QuerySettings {
+	/**
+	 * Boolean setting to control if the use of tech preview JSON functions in HQL is enabled.
+	 * By default, this is {@code false} i.e. disabled since the functions are still incubating.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String JSON_FUNCTIONS_ENABLED = "hibernate.query.hql.json_functions_enabled";
 	/**
 	 * Specifies that division of two integers should produce an integer on all
 	 * databases. By default, integer division in HQL can produce a non-integer

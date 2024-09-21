@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
 
@@ -30,104 +28,104 @@ import static org.junit.Assert.fail;
  */
 public class ClobTest extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            Product.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+			Product.class
+		};
+	}
 
-    @Test
-    public void test() {
-        Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap(Session.class);
+	@Test
+	public void test() {
+		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
 
-            //tag::basic-clob-persist-example[]
-            String warranty = "My product warranty";
+			//tag::basic-clob-persist-example[]
+			String warranty = "My product warranty";
 
-            final Product product = new Product();
-            product.setId(1);
-            product.setName("Mobile phone");
+			final Product product = new Product();
+			product.setId(1);
+			product.setName("Mobile phone");
 
-            product.setWarranty(ClobProxy.generateProxy(warranty));
+			product.setWarranty(ClobProxy.generateProxy(warranty));
 
-            entityManager.persist(product);
-            //end::basic-clob-persist-example[]
+			entityManager.persist(product);
+			//end::basic-clob-persist-example[]
 
-            return product.getId();
-        });
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            try {
-                //tag::basic-clob-find-example[]
+			return product.getId();
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			try {
+				//tag::basic-clob-find-example[]
 
-                Product product = entityManager.find(Product.class, productId);
+				Product product = entityManager.find(Product.class, productId);
 
-                try (Reader reader = product.getWarranty().getCharacterStream()) {
-                    assertEquals("My product warranty", toString(reader));
-                }
-                //end::basic-clob-find-example[]
-            }
-            catch (Exception e) {
-                fail(e.getMessage());
-            }
-        });
-    }
+				try (Reader reader = product.getWarranty().getCharacterStream()) {
+					assertEquals("My product warranty", toString(reader));
+				}
+				//end::basic-clob-find-example[]
+			}
+			catch (Exception e) {
+				fail(e.getMessage());
+			}
+		});
+	}
 
-    private String toString(Reader reader) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(reader);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+	private String toString(Reader reader) throws IOException {
+		BufferedReader bufferedReader = new BufferedReader(reader);
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        int result = bufferedReader.read();
+		int result = bufferedReader.read();
 
-        while(result != -1) {
-            byteArrayOutputStream.write((byte) result);
-            result = bufferedReader.read();
-        }
+		while(result != -1) {
+			byteArrayOutputStream.write((byte) result);
+			result = bufferedReader.read();
+		}
 
-        return byteArrayOutputStream.toString();
-    }
+		return byteArrayOutputStream.toString();
+	}
 
 
-    //tag::basic-clob-example[]
-    @Entity(name = "Product")
-    public static class Product {
+	//tag::basic-clob-example[]
+	@Entity(name = "Product")
+	public static class Product {
 
-        @Id
-        private Integer id;
+		@Id
+		private Integer id;
 
-        private String name;
+		private String name;
 
-        @Lob
-        private Clob warranty;
+		@Lob
+		private Clob warranty;
 
-        //Getters and setters are omitted for brevity
+		//Getters and setters are omitted for brevity
 
-    //end::basic-clob-example[]
-        public Integer getId() {
-            return id;
-        }
+	//end::basic-clob-example[]
+		public Integer getId() {
+			return id;
+		}
 
-        public void setId(Integer id) {
-            this.id = id;
-        }
+		public void setId(Integer id) {
+			this.id = id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public Clob getWarranty() {
-            return warranty;
-        }
+		public Clob getWarranty() {
+			return warranty;
+		}
 
-        public void setWarranty(Clob warranty) {
-            this.warranty = warranty;
-        }
+		public void setWarranty(Clob warranty) {
+			this.warranty = warranty;
+		}
 
-        //tag::basic-clob-example[]
-    }
-    //end::basic-clob-example[]
+		//tag::basic-clob-example[]
+	}
+	//end::basic-clob-example[]
 }

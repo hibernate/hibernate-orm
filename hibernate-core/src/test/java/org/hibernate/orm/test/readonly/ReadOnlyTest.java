@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.readonly;
 
@@ -15,11 +13,8 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 	@Test
@@ -317,55 +311,6 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		assertUpdateCount( 0, scope );
 		assertDeleteCount( 1, scope );
 		clearCounts( scope );
-	}
-
-	@Test
-	public void testReadOnlyRefreshDetached(SessionFactoryScope scope) {
-		clearCounts( scope );
-
-		Session s = openSession( scope );
-		Transaction t = s.beginTransaction();
-		DataPoint dp = new DataPoint();
-		dp.setDescription( "original" );
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		s.persist( dp );
-		t.commit();
-		s.close();
-
-		assertInsertCount( 1, scope );
-		assertUpdateCount( 0, scope );
-		clearCounts( scope );
-
-		s = openSession( scope );
-		t = s.beginTransaction();
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertFalse( s.isReadOnly( dp ) );
-		s.setReadOnly( dp, true );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.evict( dp );
-		s.refresh( dp );
-		assertEquals( "original", dp.getDescription() );
-		assertFalse( s.isReadOnly( dp ) );
-		t.commit();
-
-		assertInsertCount( 0, scope );
-		assertUpdateCount( 0, scope );
-
-		s.clear();
-		t = s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dp.getId() );
-		assertEquals( "original", dp.getDescription() );
-		s.remove( dp );
-		t.commit();
-		s.close();
-
-		assertUpdateCount( 0, scope );
-		assertDeleteCount( 1, scope );
 	}
 
 	@Test
@@ -660,4 +605,3 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		return scope.getSessionFactory().openSession();
 	}
 }
-

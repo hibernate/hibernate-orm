@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tenantidpk;
 
@@ -18,21 +16,21 @@ import java.util.UUID;
 
 @Entity
 public class Client {
-    @Id
-    @GeneratedValue
-    Long id;
+	@Id
+	@GeneratedValue
+	Long id;
 
-    String name;
+	String name;
 
-    @Id @TenantId
-    UUID tenantId;
+	@Id @TenantId
+	UUID tenantId;
 
-    @OneToMany(mappedBy = "client")
-    Set<Account> accounts = new HashSet<>();
+	@OneToMany(mappedBy = "client")
+	Set<Account> accounts = new HashSet<>();
 
-    public Client(String name) {
-        this.name = name;
-    }
+	public Client(String name) {
+		this.name = name;
+	}
 
-    Client() {}
+	Client() {}
 }

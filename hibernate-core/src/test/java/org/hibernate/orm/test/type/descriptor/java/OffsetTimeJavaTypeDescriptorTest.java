@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.type.descriptor.java;
 
 import java.sql.Time;
@@ -13,7 +17,6 @@ import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 

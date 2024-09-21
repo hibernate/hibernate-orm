@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -433,5 +431,15 @@ public class RDMSOS2200Dialect extends Dialect {
 	@Override
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, isWhitespace );
+	}
+
+	@Override
+	public String getDual() {
+		return "rdms.rdms_dummy";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual() + " where key_col=1";
 	}
 }

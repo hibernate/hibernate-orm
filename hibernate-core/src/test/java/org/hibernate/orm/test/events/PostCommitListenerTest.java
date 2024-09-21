@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.events;
 
@@ -35,7 +33,7 @@ import org.junit.Test;
 
 /**
  * Test to ensure that the existing post commit behavior when using plain PostXEventListeners fire on both success and failure.
- * 
+ *
  * @author ShawnClowater
  */
 public class PostCommitListenerTest extends BaseCoreFunctionalTestCase {

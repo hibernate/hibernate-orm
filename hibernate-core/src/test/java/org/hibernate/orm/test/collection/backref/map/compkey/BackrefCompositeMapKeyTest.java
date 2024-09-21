@@ -1,26 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.backref.map.compkey;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.SerializationHelper;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -36,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		)
 )
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY, value = "true"))
 public class BackrefCompositeMapKeyTest {
 
 	@Test
@@ -117,7 +111,7 @@ public class BackrefCompositeMapKeyTest {
 	}
 
 	@Test
-	public void testOrphanDeleteAfterLock(SessionFactoryScope scope) {
+	public void testCannotLockDetachedEntity(SessionFactoryScope scope) {
 		Product prod = new Product( "Widget" );
 		MapKey mapKey = new MapKey( "Top" );
 		scope.inTransaction(
@@ -133,14 +127,16 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					session.lock( prod, LockMode.READ );
-					prod.getParts().remove( mapKey );
+					assertThrows(IllegalArgumentException.class,
+								() -> session.lock( prod, LockMode.READ ),
+								"Given entity is not associated with the persistence context"
+					);
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
+					assertNotNull( session.get( Part.class, "Widge" ) );
 					assertNotNull( session.get( Part.class, "Get" ) );
 					session.remove( session.get( Product.class, "Widget" ) );
 				}

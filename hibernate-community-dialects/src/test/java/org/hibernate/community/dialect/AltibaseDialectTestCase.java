@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.community.dialect;
 
 import java.util.Locale;
@@ -47,22 +44,22 @@ public class AltibaseDialectTestCase extends BaseUnitTestCase {
 	@Test
 	public void testSelectWithLimitOnly() {
 		assertEquals( "select c1, c2 from t1 order by c1, c2 desc limit ?",
-					  dialect.getLimitHandler().processSql("select c1, c2 from t1 order by c1, c2 desc",
-														   toRowSelection( 0, 15 ) ).toLowerCase( Locale.ROOT));
+					dialect.getLimitHandler().processSql("select c1, c2 from t1 order by c1, c2 desc",
+														toRowSelection( 0, 15 ) ).toLowerCase( Locale.ROOT));
 	}
 
 	@Test
 	public void testSelectWithOffsetLimit() {
 		assertEquals( "select c1, c2 from t1 order by c1, c2 desc limit 1+?,?",
-					  dialect.getLimitHandler().processSql("select c1, c2 from t1 order by c1, c2 desc",
-														   toRowSelection( 5, 15 ) ).toLowerCase(Locale.ROOT));
+					dialect.getLimitHandler().processSql("select c1, c2 from t1 order by c1, c2 desc",
+														toRowSelection( 5, 15 ) ).toLowerCase(Locale.ROOT));
 	}
 
 	@Test
 	public void testSelectWithNoLimit() {
 		assertEquals( "select c1, c2 from t1 order by c1, c2 desc",
-					  dialect.getLimitHandler().processSql("select c1, c2 from t1 order by c1, c2 desc",
-														   null ).toLowerCase(Locale.ROOT));
+					dialect.getLimitHandler().processSql("select c1, c2 from t1 order by c1, c2 desc",
+														null ).toLowerCase(Locale.ROOT));
 	}
 
 	private Limit toRowSelection(int firstRow, int maxRows) {

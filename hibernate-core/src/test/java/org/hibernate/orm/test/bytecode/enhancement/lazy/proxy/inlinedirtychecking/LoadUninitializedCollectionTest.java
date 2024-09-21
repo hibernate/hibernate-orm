@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking;
 
@@ -81,50 +79,50 @@ public class LoadUninitializedCollectionTest {
 	@Test
 	public void testLoadAfterNativeQueryExecution(SessionFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-					 BankAccount account = entityManager.find( BankAccount.class, 1L );
+					BankAccount account = entityManager.find( BankAccount.class, 1L );
 
-					 Query nativeQuery = entityManager.createNativeQuery( "SELECT ID FROM BANK" );
-					 nativeQuery.getResultList();
+					Query nativeQuery = entityManager.createNativeQuery( "SELECT ID FROM BANK" );
+					nativeQuery.getResultList();
 
-					 Bank bank = account.getBank();
-					 List<BankDepartment> deps = bank.getDepartments();
+					Bank bank = account.getBank();
+					List<BankDepartment> deps = bank.getDepartments();
 
-					 assertEquals( deps.size(), 3 );
-				 }
+					assertEquals( deps.size(), 3 );
+				}
 		);
 	}
 
 	@Test
 	public void testLoadAfterFlush(SessionFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-					 BankAccount account = entityManager.find( BankAccount.class, 1L );
+					BankAccount account = entityManager.find( BankAccount.class, 1L );
 
-					 entityManager.flush();
+					entityManager.flush();
 
-					 Bank bank = account.getBank();
-					 List<BankDepartment> deps = bank.getDepartments();
+					Bank bank = account.getBank();
+					List<BankDepartment> deps = bank.getDepartments();
 
-					 assertEquals( deps.size(), 3 );
-				 }
+					assertEquals( deps.size(), 3 );
+				}
 		);
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-					 Bank bank = entityManager.find( Bank.class, 1L );
-					 bank.getDepartments().forEach(
-							 department -> entityManager.remove( department )
-					 );
-					 bank.getDepartments().clear();
-					 List<BankAccount> accounts = entityManager.createQuery( "from BankAccount" ).getResultList();
+					Bank bank = entityManager.find( Bank.class, 1L );
+					bank.getDepartments().forEach(
+							department -> entityManager.remove( department )
+					);
+					bank.getDepartments().clear();
+					List<BankAccount> accounts = entityManager.createQuery( "from BankAccount" ).getResultList();
 
-					 accounts.forEach(
-							 account -> entityManager.remove( account )
-					 );
+					accounts.forEach(
+							account -> entityManager.remove( account )
+					);
 
-					 entityManager.remove( bank );
-				 }
+					entityManager.remove( bank );
+				}
 		);
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 
@@ -73,7 +71,7 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 
 		assertNotNull( expectedName );
 
-        SingleTableEntityPersister persister = (SingleTableEntityPersister) sessionFactory().getRuntimeMetamodels()
+		SingleTableEntityPersister persister = (SingleTableEntityPersister) sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( Box.class.getName());
 		assertEquals( expectedName, persister.getTableName() );

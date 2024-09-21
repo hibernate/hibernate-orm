@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
 
@@ -33,8 +31,8 @@ import org.hibernate.type.descriptor.java.DataHelper;
  */
 @Internal
 public final class BlobProxy implements Blob, BlobImplementer {
-    // In previous versions this used to be implemented by using a java.lang.reflect.Proxy to deal with
-    // incompatibilities across various JDBC versions, hence the class name, but using a real Proxy is
+	// In previous versions this used to be implemented by using a java.lang.reflect.Proxy to deal with
+	// incompatibilities across various JDBC versions, hence the class name, but using a real Proxy is
 	// no longer necessary. The class name could be updated to reflect this but that would break APIs.
 
 	private final BinaryStream binaryStream;

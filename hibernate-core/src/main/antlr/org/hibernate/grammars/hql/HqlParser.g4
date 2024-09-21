@@ -1109,6 +1109,7 @@ function
 	| collectionFunctionMisuse
 	| jpaNonstandardFunction
 	| columnFunction
+	| jsonFunction
 	| genericFunction
 	;
 
@@ -1620,6 +1621,101 @@ rollup
 	: ROLLUP LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)* RIGHT_PAREN
 	;
 
+jsonFunction
+	: jsonArrayFunction
+	| jsonExistsFunction
+	| jsonObjectFunction
+	| jsonQueryFunction
+	| jsonValueFunction
+	| jsonArrayAggFunction
+	| jsonObjectAggFunction
+	;
+
+/**
+ * The 'json_value()' function
+ */
+jsonValueFunction
+	: JSON_VALUE LEFT_PAREN expression COMMA expression jsonPassingClause? jsonValueReturningClause? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause? RIGHT_PAREN
+	;
+
+jsonPassingClause
+	: PASSING expressionOrPredicate AS identifier (COMMA expressionOrPredicate AS identifier)*
+	;
+
+jsonValueReturningClause
+	: RETURNING castTarget
+	;
+
+jsonValueOnErrorOrEmptyClause
+	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY)
+	;
+
+/**
+ * The 'json_query()' function
+ */
+jsonQueryFunction
+	: JSON_QUERY LEFT_PAREN expression COMMA expression jsonPassingClause? jsonQueryWrapperClause? jsonQueryOnErrorOrEmptyClause? jsonQueryOnErrorOrEmptyClause? RIGHT_PAREN
+	;
+
+jsonQueryWrapperClause
+	: WITH (CONDITIONAL|UNCONDITIONAL)? ARRAY? WRAPPER
+	| WITHOUT ARRAY? WRAPPER
+	;
+
+jsonQueryOnErrorOrEmptyClause
+	: ( ERROR | NULL | ( EMPTY ( ARRAY | OBJECT )? ) ) ON (ERROR|EMPTY);
+
+/**
+ * The 'json_exists()' function
+ */
+jsonExistsFunction
+	: JSON_EXISTS LEFT_PAREN expression COMMA expression jsonPassingClause? jsonExistsOnErrorClause? RIGHT_PAREN
+	;
+
+jsonExistsOnErrorClause
+	: ( ERROR | TRUE | FALSE ) ON ERROR;
+
+/**
+ * The 'json_array()' function
+ */
+jsonArrayFunction
+	: JSON_ARRAY LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)* jsonNullClause?)? RIGHT_PAREN
+	;
+
+/**
+ * The 'json_object()' function
+ */
+jsonObjectFunction
+	: JSON_OBJECT LEFT_PAREN (jsonObjectFunctionEntries jsonNullClause?)? RIGHT_PAREN
+	;
+
+jsonObjectFunctionEntries
+	: expressionOrPredicate COMMA expressionOrPredicate (COMMA expressionOrPredicate COMMA expressionOrPredicate)*
+	| (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate) (COMMA (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate))*
+	;
+
+jsonNullClause
+	: (ABSENT|NULL) ON NULL
+	;
+
+/**
+ * The 'json_arrayagg()' function
+ */
+jsonArrayAggFunction
+	: JSON_ARRAYAGG LEFT_PAREN expressionOrPredicate jsonNullClause? orderByClause? RIGHT_PAREN filterClause?
+	;
+
+/**
+ * The 'json_objectagg()' function
+ */
+jsonObjectAggFunction
+	: JSON_OBJECTAGG LEFT_PAREN KEY? expressionOrPredicate (VALUE|COLON) expressionOrPredicate jsonNullClause? jsonUniqueKeysClause? RIGHT_PAREN filterClause?
+	;
+
+jsonUniqueKeysClause
+	: (WITH|WITHOUT) UNIQUE KEYS
+	;
+
 /**
  * Support for "soft" keywords which may be used as identifiers
  *
@@ -1636,9 +1732,11 @@ rollup
  nakedIdentifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
-	| (ALL
+	| (ABSENT
+	| ALL
 	| AND
 	| ANY
+	| ARRAY
 	| AS
 	| ASC
 	| AVG
@@ -1650,6 +1748,7 @@ rollup
 	| CAST
 	| COLLATE
 	| COLUMN
+	| CONDITIONAL
 	| CONFLICT
 	| CONSTRAINT
 	| CONTAINS
@@ -1714,6 +1813,13 @@ rollup
 	| INTO
 	| IS
 	| JOIN
+	| JSON_ARRAY
+	| JSON_ARRAYAGG
+	| JSON_EXISTS
+	| JSON_OBJECT
+	| JSON_OBJECTAGG
+	| JSON_QUERY
+	| JSON_VALUE
 	| KEY
 	| KEYS
 	| LAST
@@ -1764,6 +1870,7 @@ rollup
 	| OVERLAY
 	| PAD
 	| PARTITION
+	| PASSING
 	| PERCENT
 	| PLACING
 	| POSITION
@@ -1771,6 +1878,7 @@ rollup
 	| QUARTER
 	| RANGE
 	| RESPECT
+	| RETURNING
 //	| RIGHT
 	| ROLLUP
 	| ROW
@@ -1797,7 +1905,9 @@ rollup
 	| TRUNCATE
 	| TYPE
 	| UNBOUNDED
+	| UNCONDITIONAL
 	| UNION
+	| UNIQUE
 	| UPDATE
 	| USING
 	| VALUE
@@ -1810,6 +1920,7 @@ rollup
 	| WITH
 	| WITHIN
 	| WITHOUT
+	| WRAPPER
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

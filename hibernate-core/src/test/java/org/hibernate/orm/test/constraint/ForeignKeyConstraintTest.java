@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.constraint;
 
@@ -180,7 +178,7 @@ public class ForeignKeyConstraintTest {
 		Set<String> columnSet = new LinkedHashSet<>( Arrays.asList( columns ) );
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-                Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
+				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
 				while ( fkItr.hasNext() ) {
 					org.hibernate.mapping.ForeignKey fk = fkItr.next();
 
@@ -202,7 +200,7 @@ public class ForeignKeyConstraintTest {
 	private void assertNoForeignKey(DomainModelScope scope, String foreignKeyName, String... columns) {
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-                Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
+				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
 				while ( fkItr.hasNext() ) {
 					org.hibernate.mapping.ForeignKey fk = fkItr.next();
 					assertFalse(
@@ -219,7 +217,7 @@ public class ForeignKeyConstraintTest {
 		@Id
 		public String number;
 	}
-	
+
 	@Entity(name = "Person")
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class Person {

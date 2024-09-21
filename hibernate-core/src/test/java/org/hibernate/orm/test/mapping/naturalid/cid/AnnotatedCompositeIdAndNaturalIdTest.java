@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.cid;
 
@@ -19,11 +17,11 @@ import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
  * @author Donnchadh O Donnabhain
  */
 @ServiceRegistry(
-        settings = {
-                @Setting( name = USE_SECOND_LEVEL_CACHE, value = "false" ),
-                @Setting( name = USE_QUERY_CACHE, value = "false" ),
-                @Setting( name = GENERATE_STATISTICS, value = "false" )
-        }
+		settings = {
+				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = USE_QUERY_CACHE, value = "false" ),
+				@Setting( name = GENERATE_STATISTICS, value = "false" )
+		}
 )
 @DomainModel( annotatedClasses = { Account.class, AccountId.class } )
 @SessionFactory

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -15,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -33,9 +32,9 @@ import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.MappingContext;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -86,7 +85,7 @@ public class Property implements Serializable, MetaAttributable {
 	public Type getType() throws MappingException {
 		return value.getType();
 	}
-	
+
 	public int getColumnSpan() {
 		return value.getColumnSpan();
 	}
@@ -106,11 +105,11 @@ public class Property implements Serializable, MetaAttributable {
 	public java.util.List<Column> getColumns() {
 		return value.getColumns();
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public boolean isComposite() {
 		return value instanceof Component;
 	}
@@ -130,8 +129,7 @@ public class Property implements Serializable, MetaAttributable {
 	public void resetOptional(boolean optional) {
 		setOptional( optional );
 		for ( Selectable selectable: getValue().getSelectables() ) {
-			if (selectable instanceof Column) {
-				final Column column = (Column) selectable;
+			if ( selectable instanceof Column column ) {
 				column.setNullable( optional );
 			}
 		}
@@ -150,18 +148,18 @@ public class Property implements Serializable, MetaAttributable {
 			return getCollectionCascadeStyle( collection.getElement().getType(), cascade );
 		}
 		else {
-			return getCascadeStyle( cascade );			
-		}
-	}
-
-	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
-		if ( compositeType instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		else {
-			return getCompositeCascadeStyle( (ComponentType) compositeType, cascade );
-		}
 	}
+//
+//	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
+//		if ( compositeType instanceof AnyType ) {
+//			return getCascadeStyle( cascade );
+//		}
+//		else {
+//			return getCompositeCascadeStyle( (ComponentType) compositeType, cascade );
+//		}
+//	}
 
 	private static CascadeStyle getCompositeCascadeStyle(ComponentType compositeType, String cascade) {
 		final int length = compositeType.getSubtypes().length;
@@ -184,7 +182,7 @@ public class Property implements Serializable, MetaAttributable {
 			return getCascadeStyle( cascade );
 		}
 	}
-	
+
 	private static CascadeStyle getCascadeStyle(String cascade) {
 		if ( cascade==null || cascade.equals("none") ) {
 			return CascadeStyles.NONE;
@@ -197,9 +195,9 @@ public class Property implements Serializable, MetaAttributable {
 				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
 			return new CascadeStyles.MultipleCascadeStyle(styles);
-		}		
+		}
 	}
-	
+
 	public String getCascade() {
 		return cascade;
 	}
@@ -223,7 +221,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isInsertable() {
-		// if the property mapping consists of all formulas, 
+		// if the property mapping consists of all formulas,
 		// make it non-insertable
 		return insertable && value.hasAnyInsertableColumns();
 	}
@@ -278,7 +276,15 @@ public class Property implements Serializable, MetaAttributable {
 		this.metaAttributes = metas;
 	}
 
+	/**
+	 * @deprecated use {@link #isValid(MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
 	public boolean isValid(Mapping mapping) throws MappingException {
+		return isValid( (MappingContext) mapping);
+	}
+
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
 		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
 			throw new MappingException(
@@ -295,13 +301,13 @@ public class Property implements Serializable, MetaAttributable {
 							"and the Javadoc of the org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING field."
 			);
 		}
-		return value.isValid( mapping );
+		return value.isValid( mappingContext );
 	}
 
 	public String toString() {
 		return getClass().getSimpleName() + '(' + name + ')';
 	}
-	
+
 	public void setLazy(boolean lazy) {
 		this.lazy=lazy;
 	}
@@ -347,11 +353,11 @@ public class Property implements Serializable, MetaAttributable {
 	public void setOptimisticLocked(boolean optimisticLocked) {
 		this.optimisticLocked = optimisticLocked;
 	}
-	
+
 	public boolean isOptional() {
 		return optional;
 	}
-	
+
 	public void setOptional(boolean optional) {
 		this.optional = optional;
 	}
@@ -367,7 +373,7 @@ public class Property implements Serializable, MetaAttributable {
 	public boolean isSelectable() {
 		return selectable;
 	}
-	
+
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
 	}
@@ -535,6 +541,11 @@ public class Property implements Serializable, MetaAttributable {
 		@Override
 		public Property getProperty() {
 			return Property.this;
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return context.getSqlStringGenerationContext();
 		}
 	}
 }

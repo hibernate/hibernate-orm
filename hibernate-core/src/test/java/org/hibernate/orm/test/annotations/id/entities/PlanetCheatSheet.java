@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.id.entities;
 import jakarta.persistence.Column;
@@ -14,7 +12,7 @@ import jakarta.persistence.Id;
 
 /**
  * Test entity for enum type as id.
- * 
+ *
  * @author Hardy Ferentschik
  * @see ANN-744
  */
@@ -68,23 +66,23 @@ public class PlanetCheatSheet {
 	 * Constructs a <code>String</code> with all attributes
 	 * in name = value format.
 	 *
-	 * @return a <code>String</code> representation 
+	 * @return a <code>String</code> representation
 	 * of this object.
 	 */
 	public String toString()
 	{
-	    final String TAB = "    ";
-	    
-	    String retValue = "";
-	    
-	    retValue = "PlanetCheatSheet ( "
-	        + super.toString() + TAB
-	        + "planet = " + this.planet + TAB
-	        + "mass = " + this.mass + TAB
-	        + "radius = " + this.radius + TAB
-	        + "numberOfInhabitants = " + this.numberOfInhabitants + TAB
-	        + " )";
-	
-	    return retValue;
-	}	
+		final String TAB = "    ";
+
+		String retValue = "";
+
+		retValue = "PlanetCheatSheet ( "
+			+ super.toString() + TAB
+			+ "planet = " + this.planet + TAB
+			+ "mass = " + this.mass + TAB
+			+ "radius = " + this.radius + TAB
+			+ "numberOfInhabitants = " + this.numberOfInhabitants + TAB
+			+ " )";
+
+		return retValue;
+	}
 }

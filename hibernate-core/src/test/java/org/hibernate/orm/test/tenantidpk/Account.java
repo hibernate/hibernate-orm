@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.tenantidpk;
 
 import jakarta.persistence.Entity;
@@ -12,16 +16,16 @@ import java.util.UUID;
 @Entity @IdClass(TenantizedId.class)
 public class Account {
 
-    @Id @GeneratedValue Long id;
+	@Id @GeneratedValue Long id;
 
-    @Id @TenantId UUID tenantId;
+	@Id @TenantId UUID tenantId;
 
-    @ManyToOne(optional = false)
-    Client client;
+	@ManyToOne(optional = false)
+	Client client;
 
-    public Account(Client client) {
-        this.client = client;
-    }
+	public Account(Client client) {
+		this.client = client;
+	}
 
-    Account() {}
+	Account() {}
 }

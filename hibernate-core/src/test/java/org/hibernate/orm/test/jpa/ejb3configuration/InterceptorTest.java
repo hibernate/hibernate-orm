@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
@@ -16,7 +14,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -46,7 +43,7 @@ public class InterceptorTest {
 				Distributor.class
 		};
 	}
-	
+
 	private EntityManagerFactory entityManagerFactory;
 
 	@AfterEach
@@ -61,10 +58,10 @@ public class InterceptorTest {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // test deprecated Interceptor settings
+	// test deprecated Interceptor settings
 
-    @Test
-    public void testDeprecatedConfiguredInterceptor() {
+	@Test
+	public void testDeprecatedConfiguredInterceptor() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
@@ -82,7 +79,7 @@ public class InterceptorTest {
 		catch ( IllegalStateException e ) {
 			assertEquals( ExceptionInterceptor.EXCEPTION_MESSAGE, e.getMessage() );
 		}
-    }
+	}
 
 	@Test
 	public void testDeprecatedConfiguredSessionInterceptor() {
@@ -110,13 +107,13 @@ public class InterceptorTest {
 	// test Interceptor settings
 
 	@Test
-    public void testConfiguredInterceptor() {
+	public void testConfiguredInterceptor() {
 		Map settings = basicSettings();
 		settings.put( org.hibernate.cfg.AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
-		
-        Item i = new Item();
-        i.setName( "Laptop" );
+
+		Item i = new Item();
+		i.setName( "Laptop" );
 
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {
@@ -128,16 +125,16 @@ public class InterceptorTest {
 		catch ( IllegalStateException e ) {
 			assertEquals( ExceptionInterceptor.EXCEPTION_MESSAGE, e.getMessage() );
 		}
-    }
+	}
 
-    @Test
-    public void testConfiguredSessionInterceptor() {
+	@Test
+	public void testConfiguredSessionInterceptor() {
 		Map settings = basicSettings();
 		settings.put( org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
-		
-        Item i = new Item();
-        i.setName( "Laptop" );
+
+		Item i = new Item();
+		i.setName( "Laptop" );
 
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {
@@ -149,10 +146,10 @@ public class InterceptorTest {
 		catch ( IllegalStateException e ) {
 			assertEquals( LocalExceptionInterceptor.LOCAL_EXCEPTION_MESSAGE, e.getMessage() );
 		}
-    }
+	}
 
-    @Test
-    public void testConfiguredSessionInterceptorWithSessionFactory() {
+	@Test
+	public void testConfiguredSessionInterceptorWithSessionFactory() {
 
 		StandardServiceRegistryImpl standardRegistry = ServiceRegistryUtil.serviceRegistry();
 
@@ -197,12 +194,12 @@ public class InterceptorTest {
 		}
 	}
 
-    @Test
-    public void testConfiguredSessionInterceptorSupplier() {
-        Map settings = basicSettings();
-        settings.put( org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR, (Supplier<Interceptor>) LocalExceptionInterceptor::new);
+	@Test
+	public void testConfiguredSessionInterceptorSupplier() {
+		Map settings = basicSettings();
+		settings.put( org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR, (Supplier<Interceptor>) LocalExceptionInterceptor::new);
 		buildEntityManagerFactory( settings );
-        
+
 		Item i = new Item();
 		i.setName( "Laptop" );
 
@@ -216,16 +213,16 @@ public class InterceptorTest {
 		catch ( IllegalStateException e ) {
 			assertEquals( LocalExceptionInterceptor.LOCAL_EXCEPTION_MESSAGE, e.getMessage() );
 		}
-    }
+	}
 
-    @Test
-    public void testEmptyCreateEntityManagerFactoryAndPropertyUse() {
+	@Test
+	public void testEmptyCreateEntityManagerFactoryAndPropertyUse() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, ExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
-		
-        Item i = new Item();
-        i.setName( "Laptop" );
+
+		Item i = new Item();
+		i.setName( "Laptop" );
 
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {
@@ -237,16 +234,16 @@ public class InterceptorTest {
 		catch ( IllegalStateException e ) {
 			assertEquals( ExceptionInterceptor.EXCEPTION_MESSAGE, e.getMessage() );
 		}
-    }
+	}
 
-    @Test
-    public void testOnLoadCallInInterceptor() {
+	@Test
+	public void testOnLoadCallInInterceptor() {
 		Map settings = basicSettings();
 		settings.put( AvailableSettings.INTERCEPTOR, new ExceptionInterceptor( true ) );
 		buildEntityManagerFactory( settings );
-		
-        Item i = new Item();
-        i.setName( "Laptop" );
+
+		Item i = new Item();
+		i.setName( "Laptop" );
 
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {
@@ -267,16 +264,16 @@ public class InterceptorTest {
 		catch ( IllegalStateException e ) {
 			assertEquals( LocalExceptionInterceptor.LOCAL_EXCEPTION_MESSAGE, e.getMessage() );
 		}
-    }
+	}
 
 
-    protected Map basicSettings() {
+	protected Map basicSettings() {
 		return SettingsGenerator.generateSettings(
 				AvailableSettings.HBM2DDL_AUTO, "create-drop",
 				AvailableSettings.DIALECT, DialectContext.getDialect().getClass().getName(),
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() )
 		);
-    }
+	}
 
 	private void buildEntityManagerFactory(Map settings) {
 		entityManagerFactory = Bootstrap

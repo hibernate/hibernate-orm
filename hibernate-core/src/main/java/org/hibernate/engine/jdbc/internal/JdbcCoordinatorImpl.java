@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
@@ -141,7 +139,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		if ( flushDepth == 0 ) {
 			releasesEnabled = true;
 		}
-		
+
 		afterStatementExecution();
 	}
 
@@ -351,7 +349,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void enableReleases() {
 		releasesEnabled = true;
 	}
-	
+
 	@Override
 	public void disableReleases() {
 		releasesEnabled = false;
@@ -360,7 +358,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@SuppressWarnings("unchecked")
 	protected void close(Statement statement) {
 		LOG.tracev( "Closing prepared statement [{0}]", statement );
-		
+
 		// Important for Statement caching -- some DBs (especially Sybase) log warnings on every Statement under
 		// certain situations.
 		sqlExceptionHelper().logAndClearWarnings( statement );

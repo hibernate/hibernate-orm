@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.records;
 
 import jakarta.persistence.CascadeType;
@@ -27,47 +31,47 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @DomainModel(annotatedClasses = {GenericEnbeddedIdRecordTest.MainEntity.class, GenericEnbeddedIdRecordTest.ReferencedEntity.class})
 class GenericEnbeddedIdRecordTest {
 
-    @Test
-    void testOverrideJoinColumn(SessionFactoryScope scope) {
-        scope.inTransaction(entityManager -> {
-            MainEntity mainEntity = new MainEntity();
-            ReferencedEntity referencedEntity = new ReferencedEntity();
-            mainEntity.id = new GenericEmbeddedId<>(referencedEntity);
-            referencedEntity.entities = Collections.singleton(mainEntity);
-            entityManager.persist(referencedEntity);
-            assertNotNull(mainEntity);
-        });
-    }
+	@Test
+	void testOverrideJoinColumn(SessionFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			MainEntity mainEntity = new MainEntity();
+			ReferencedEntity referencedEntity = new ReferencedEntity();
+			mainEntity.id = new GenericEmbeddedId<>(referencedEntity);
+			referencedEntity.entities = Collections.singleton(mainEntity);
+			entityManager.persist(referencedEntity);
+			assertNotNull(mainEntity);
+		});
+	}
 
-    @Embeddable
-    public record GenericEmbeddedId<T>(@ManyToOne(fetch = FetchType.EAGER)
-                                       @JoinColumn(name = "REFERENCED_ENTITY_ID")
-                                       T referencedEntity) {
-    }
+	@Embeddable
+	public record GenericEmbeddedId<T>(@ManyToOne(fetch = FetchType.EAGER)
+									@JoinColumn(name = "REFERENCED_ENTITY_ID")
+									T referencedEntity) {
+	}
 
-    @Entity
-    public static class MainEntity {
+	@Entity
+	public static class MainEntity {
 
-        @EmbeddedId
-        private GenericEmbeddedId<ReferencedEntity> id;
+		@EmbeddedId
+		private GenericEmbeddedId<ReferencedEntity> id;
 
-        @Column(name = "DESCRIPTION")
-        private String description;
+		@Column(name = "DESCRIPTION")
+		private String description;
 
-    }
+	}
 
-    @Entity
-    public static class ReferencedEntity {
+	@Entity
+	public static class ReferencedEntity {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.SEQUENCE,
-                generator = "REFERENCED_ENTITY_ID_GEN")
-        @SequenceGenerator(name = "REFERENCED_ENTITY_ID_GEN")
-        @Column(name = "REFERENCED_ENTITY_ID")
-        private Long id;
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE,
+				generator = "REFERENCED_ENTITY_ID_GEN")
+		@SequenceGenerator(name = "REFERENCED_ENTITY_ID_GEN")
+		@Column(name = "REFERENCED_ENTITY_ID")
+		private Long id;
 
-        @OneToMany(mappedBy = "id.referencedEntity", cascade = CascadeType.ALL)
-        private Collection<MainEntity> entities;
+		@OneToMany(mappedBy = "id.referencedEntity", cascade = CascadeType.ALL)
+		private Collection<MainEntity> entities;
 
-    }
+	}
 }

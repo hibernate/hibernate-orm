@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
@@ -96,10 +94,11 @@ public class GeneratorAnnotationHelper {
 		// lastly, on the package
 		final String packageInfoFqn = StringHelper.qualifier( idMember.getDeclaringType().getClassName() ) + ".package-info";
 		try {
-			final ClassDetails packageInfo = context.getMetadataCollector()
-					.getSourceModelBuildingContext()
-					.getClassDetailsRegistry()
-					.resolveClassDetails( packageInfoFqn );
+			final ClassDetails packageInfo =
+					context.getMetadataCollector()
+							.getSourceModelBuildingContext()
+							.getClassDetailsRegistry()
+							.resolveClassDetails( packageInfoFqn );
 			for ( A generatorAnnotation : packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
 				if ( nameExtractor != null ) {
 					final String registrationName = nameExtractor.apply( generatorAnnotation );
@@ -140,10 +139,7 @@ public class GeneratorAnnotationHelper {
 		idValue.setCustomIdGeneratorCreator( (creationContext) -> new UuidGenerator( generatorConfig, idMember ) );
 	}
 
-	public static void handleIdentityStrategy(
-			SimpleValue idValue,
-			MemberDetails idMember,
-			MetadataBuildingContext context) {
+	public static void handleIdentityStrategy(SimpleValue idValue) {
 		idValue.setCustomIdGeneratorCreator( (creationContext) -> new IdentityGenerator() );
 		idValue.setColumnToIdentity();
 	}
@@ -191,7 +187,6 @@ public class GeneratorAnnotationHelper {
 			GenericGenerator generatorConfig,
 			PersistentClass entityMapping,
 			SimpleValue idValue,
-			MemberDetails idMember,
 			MetadataBuildingContext context) {
 		//generator settings
 		final Map<String,String> configuration = new HashMap<>();
@@ -208,9 +203,7 @@ public class GeneratorAnnotationHelper {
 
 		GeneratorBinder.createGeneratorFrom(
 				new IdentifierGeneratorDefinition( generatorName, determineStrategyName( generatorConfig ), configuration ),
-				idMember,
 				idValue,
-				entityMapping,
 				context
 		);
 	}
@@ -234,17 +227,14 @@ public class GeneratorAnnotationHelper {
 			TableGenerator generatorConfig,
 			PersistentClass entityMapping,
 			SimpleValue idValue,
-			MemberDetails idMember,
 			MetadataBuildingContext context) {
 		final Map<String,String> configuration = new HashMap<>();
 		applyBaselineConfiguration( generatorConfig, idValue, entityMapping.getRootClass(), context, configuration::put );
-		org.hibernate.id.enhanced.TableGenerator.applyConfiguration( generatorConfig, idValue, configuration::put );
+		org.hibernate.id.enhanced.TableGenerator.applyConfiguration( generatorConfig, configuration::put );
 
 		GeneratorBinder.createGeneratorFrom(
 				new IdentifierGeneratorDefinition( generatorName, org.hibernate.id.enhanced.TableGenerator.class.getName(), configuration ),
-				idMember,
 				idValue,
-				entityMapping,
 				context
 		);
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -21,7 +19,7 @@ import static java.lang.annotation.ElementType.*;
  * Changes made in memory to the state of an immutable entity are never synchronized to
  * the database. The changes are ignored, with no exception thrown.
  * <p>
- * An immutable entity need not be dirty-checked, and so Hibernate does not need to 
+ * An immutable entity need not be dirty-checked, and so Hibernate does not need to
  * maintain a snapshot of its state. This may help reduce memory allocation.
  * Note that it's also possible to obtain an entity in read-only mode in a given session,
  * and this has similar benefits.
@@ -60,10 +58,10 @@ import static java.lang.annotation.ElementType.*;
  * have a type whose values are immutable.
  *
  * @author Emmanuel Bernard
- * 
+ *
  * @see org.hibernate.Session#setDefaultReadOnly(boolean)
- * @see org.hibernate.Session#setReadOnly(Object, boolean) 
- * @see org.hibernate.query.Query#setReadOnly(boolean) 
+ * @see org.hibernate.Session#setReadOnly(Object, boolean)
+ * @see org.hibernate.query.Query#setReadOnly(boolean)
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention( RetentionPolicy.RUNTIME )

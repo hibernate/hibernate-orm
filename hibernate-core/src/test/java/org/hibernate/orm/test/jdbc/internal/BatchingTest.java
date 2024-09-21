@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc.internal;
 
@@ -18,8 +16,6 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.common.JournalingBatchObserver;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -76,7 +72,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch( jdbcValueBindings, null );
 		assertThat( batchObserver.getExplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( batchObserver.getImplicitExecutionCount() ).isEqualTo( 0 );
-        assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
+		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
 
 		// bind values for #2 - again, nothing at JDBC level (we have statement from earlier)
 		jdbcValueBindings.bindValue( 2, SANDBOX_TBL, "ID", ParameterUsage.SET );

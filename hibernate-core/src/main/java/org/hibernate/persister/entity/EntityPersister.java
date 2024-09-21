@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
 
@@ -154,7 +152,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
+	// stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -1131,8 +1129,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
-    /**
-     * Inject the identifier value into the given entity.
+	/**
+	 * Inject the identifier value into the given entity.
 	 */
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
@@ -1443,7 +1441,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Given a property path, return the corresponding column name(s).
-	 * 
+	 *
 	 * @deprecated No longer used in ORM core
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)

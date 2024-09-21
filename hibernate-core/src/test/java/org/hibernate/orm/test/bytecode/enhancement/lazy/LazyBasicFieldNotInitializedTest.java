@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -40,65 +38,65 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 @JiraKey("HHH-9937")
 @DomainModel(
-        annotatedClasses = {
-               LazyBasicFieldNotInitializedTest.TestEntity.class
-        }
+		annotatedClasses = {
+			LazyBasicFieldNotInitializedTest.TestEntity.class
+		}
 )
 @ServiceRegistry(
-        settings = {
-                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
-                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
-        }
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class LazyBasicFieldNotInitializedTest {
 
-    private Long entityId;
+	private Long entityId;
 
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            TestEntity entity = new TestEntity();
-            entity.description = "desc";
-            s.persist( entity );
-            entityId = entity.id;
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			TestEntity entity = new TestEntity();
+			entity.description = "desc";
+			s.persist( entity );
+			entityId = entity.id;
+		} );
+	}
 
-    @Test
-    public void test(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            TestEntity entity = s.get( TestEntity.class, entityId );
-            assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			TestEntity entity = s.get( TestEntity.class, entityId );
+			assertFalse( Hibernate.isPropertyInitialized( entity, "description" ) );
 
-            EntityPersister entityPersister = scope.getSessionFactory().getRuntimeMetamodels()
-                    .getMappingMetamodel()
-                    .getEntityDescriptor( TestEntity.class );
+			EntityPersister entityPersister = scope.getSessionFactory().getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( TestEntity.class );
 
-            boolean[] propertyLaziness = entityPersister.getPropertyLaziness();
-            assertEquals( 1, propertyLaziness.length );
-            Assertions.assertTrue( propertyLaziness[0] );
+			boolean[] propertyLaziness = entityPersister.getPropertyLaziness();
+			assertEquals( 1, propertyLaziness.length );
+			Assertions.assertTrue( propertyLaziness[0] );
 
-            // Make sure NonIdentifierAttribute#isLazy is consistent (HHH-10551)
-            final AttributeMapping theBytesAttr = entityPersister.findAttributeMapping( "description" );
-            assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
-            assertThat( theBytesAttr.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );
-        } );
-    }
+			// Make sure NonIdentifierAttribute#isLazy is consistent (HHH-10551)
+			final AttributeMapping theBytesAttr = entityPersister.findAttributeMapping( "description" );
+			assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
+			assertThat( theBytesAttr.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );
+		} );
+	}
 
-    // --- //
-    
-    @Entity(name = "TestEntity")
-    @Table( name = "TEST_ENTITY" )
-    static class TestEntity {
+	// --- //
 
-        @Id
-        @GeneratedValue
-        Long id;
+	@Entity(name = "TestEntity")
+	@Table( name = "TEST_ENTITY" )
+	static class TestEntity {
 
-        @Basic( fetch = FetchType.LAZY )
-        String description;
-    }
+		@Id
+		@GeneratedValue
+		Long id;
+
+		@Basic( fetch = FetchType.LAZY )
+		String description;
+	}
 }

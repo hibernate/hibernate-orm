@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa;
 
@@ -16,23 +14,23 @@ import jakarta.persistence.Entity;
 @Entity
 public class EntityWithCompositeId implements Serializable {
 
-    @EmbeddedId
-    private CompositeId id;
-    private String description;
+	@EmbeddedId
+	private CompositeId id;
+	private String description;
 
-    public CompositeId getId() {
-        return id;
-    }
+	public CompositeId getId() {
+		return id;
+	}
 
-    public void setId(CompositeId id) {
-        this.id = id;
-    }
+	public void setId(CompositeId id) {
+		this.id = id;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 }

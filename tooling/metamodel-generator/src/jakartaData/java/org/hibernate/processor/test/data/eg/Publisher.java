@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.data.eg;
 
 import jakarta.persistence.Basic;
@@ -9,11 +13,11 @@ import java.util.Set;
 
 @Entity
 public class Publisher {
-    @Id long id;
+	@Id long id;
 
-    @Basic(optional = false)
-    String name;
+	@Basic(optional = false)
+	String name;
 
-    @OneToMany(mappedBy = "publisher")
-    Set<Book> books;
+	@OneToMany(mappedBy = "publisher")
+	Set<Book> books;
 }

@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.internal.QueryLiteralHelper;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -23,7 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *     <li>some.JavaEnum.VALUE</li>
  *     <li>etc</li>
  * </ul>
- * 
+ *
  * @author Steve Ebersole
  */
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {
@@ -84,7 +82,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		else {
 			final String string = javaType.toString( value );
 			if ( javaType.getJavaTypeClass() == String.class ) {
-				QueryLiteralHelper.appendStringLiteral( sb, string );
+				QuotingHelper.appendSingleQuoteEscapedString( sb, string );
 			}
 			else {
 				sb.append( string );

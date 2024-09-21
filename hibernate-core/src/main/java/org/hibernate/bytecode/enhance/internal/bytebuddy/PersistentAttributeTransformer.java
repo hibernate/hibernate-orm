@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
@@ -16,7 +14,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import jakarta.persistence.Embedded;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -148,7 +145,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 		TypeDefinition managedCtSuperclass = managedCtClass.getSuperClass();
 
-		if ( enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
+		// If managedCtSuperclass is null, managedCtClass can be either interface or module-info.
+		// Interfaces are already filtered-out, and module-info does not have any fields to enhance
+		// so we can safely return empty list.
+		if ( managedCtSuperclass == null || enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
 			return Collections.emptyList();
 		}
 		else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass.asErasure() ) ) {

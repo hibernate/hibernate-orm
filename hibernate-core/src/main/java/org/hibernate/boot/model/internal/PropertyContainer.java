@@ -1,15 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-// $Id$
-
 package org.hibernate.boot.model.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -28,7 +22,6 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.spi.AccessType;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.ClassDetails;
@@ -39,7 +32,6 @@ import org.hibernate.models.spi.RecordComponentDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.Basic;
@@ -139,8 +131,8 @@ public class PropertyContainer {
 			List<MethodDetails> getters) {
 		final Map<String, MemberDetails> attributeMemberMap;
 		// If the record class has only record components which match up with fields and no additional getters,
-		// we can retain the property order, to match up with the record component order
-		if ( !recordComponents.isEmpty() && recordComponents.size() == fields.size() && getters.isEmpty() ) {
+		// we must retain the property order, to match up with the record component order
+		if ( !recordComponents.isEmpty() && recordComponents.size() == fields.size() ) {
 			attributeMemberMap = new LinkedHashMap<>();
 		}
 		//otherwise we sort them in alphabetical order, since this is at least deterministic

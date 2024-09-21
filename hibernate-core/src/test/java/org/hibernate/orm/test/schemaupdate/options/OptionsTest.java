@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schemaupdate.options;
 
 import jakarta.persistence.Column;
@@ -19,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 @Jpa(annotatedClasses = OptionsTest.WithOptions.class,
 		useCollectingStatementInspector = true)
-@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14)
 public class OptionsTest {
 	@Test void test(EntityManagerFactoryScope scope) throws SchemaValidationException {
 		SchemaManager schemaManager = scope.getEntityManagerFactory().getSchemaManager();

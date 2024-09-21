@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.processor.test.keypage;
 
 import jakarta.persistence.EntityManager;
@@ -8,11 +12,11 @@ import org.hibernate.query.KeyedResultList;
 
 public interface Dao {
 
-    EntityManager em();
+	EntityManager em();
 
-    @Find
-    KeyedResultList<Book> books1(String title, KeyedPage<Book> page);
+	@Find
+	KeyedResultList<Book> books1(String title, KeyedPage<Book> page);
 
-    @HQL("where title like :title")
-    KeyedResultList<Book> books2(String title, KeyedPage<Book> page);
+	@HQL("where title like :title")
+	KeyedResultList<Book> books2(String title, KeyedPage<Book> page);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations;
 
@@ -38,81 +36,81 @@ import jakarta.persistence.Id;
 @JiraKey( "HHH-11096" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 @Jpa(
-        annotatedClasses = {
-                DatabaseCreationTimestampNullableColumnTest.Person.class
-        }
+		annotatedClasses = {
+				DatabaseCreationTimestampNullableColumnTest.Person.class
+		}
 )
 public class DatabaseCreationTimestampNullableColumnTest {
 
-    @Entity(name = "Person")
-    public static class Person {
+	@Entity(name = "Person")
+	public static class Person {
 
-        @Id
-        @GeneratedValue
-        private Long id;
+		@Id
+		@GeneratedValue
+		private Long id;
 
-        @NaturalId
-        private String name;
+		@NaturalId
+		private String name;
 
-        @Column(nullable = false)
-        @FunctionCreationTimestamp
-        private Date creationDate;
+		@Column(nullable = false)
+		@FunctionCreationTimestamp
+		private Date creationDate;
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public Date getCreationDate() {
-            return creationDate;
-        }
+		public Date getCreationDate() {
+			return creationDate;
+		}
 
-        public void setCreationDate(Date creationDate) {
-            this.creationDate = creationDate;
-        }
+		public void setCreationDate(Date creationDate) {
+			this.creationDate = creationDate;
+		}
 
-    }
+	}
 
-    @ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface FunctionCreationTimestamp {}
+	@ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
+	@Retention(RetentionPolicy.RUNTIME)
+	public @interface FunctionCreationTimestamp {}
 
-    public static class FunctionCreationValueGeneration implements OnExecutionGenerator {
-        @Override
-        public EnumSet<EventType> getEventTypes() {
-            return EventTypeSets.INSERT_ONLY;
-        }
+	public static class FunctionCreationValueGeneration implements OnExecutionGenerator {
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return EventTypeSets.INSERT_ONLY;
+		}
 
-        @Override
-        public boolean referenceColumnsInSql(Dialect dialect) {
-            return true;
-        }
+		@Override
+		public boolean referenceColumnsInSql(Dialect dialect) {
+			return true;
+		}
 
-        @Override
-        public boolean writePropertyValue() {
-            return false;
-        }
+		@Override
+		public boolean writePropertyValue() {
+			return false;
+		}
 
-        @Override
-        public String[] getReferencedColumnValues(Dialect dialect) {
-            return new String[] { dialect.currentTimestamp() };
-        }
-    }
+		@Override
+		public String[] getReferencedColumnValues(Dialect dialect) {
+			return new String[] { dialect.currentTimestamp() };
+		}
+	}
 
-    @Test
-    public void generatesCurrentTimestamp(EntityManagerFactoryScope scope) {
-        scope.inTransaction(
-                entityManager -> {
-                    Person person = new Person();
-                    person.setName("John Doe");
-                    entityManager.persist(person);
+	@Test
+	public void generatesCurrentTimestamp(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Person person = new Person();
+					person.setName("John Doe");
+					entityManager.persist(person);
 
-                    entityManager.flush();
-                    Assertions.assertNotNull(person.getCreationDate());
-                }
-        );
-    }
+					entityManager.flush();
+					Assertions.assertNotNull(person.getCreationDate());
+				}
+		);
+	}
 }

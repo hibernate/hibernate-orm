@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.hrPanache;
 
-import org.hibernate.StatelessSession;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
@@ -14,7 +11,6 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
 
 import static org.hibernate.processor.test.util.TestUtil.getMetamodelClassFor;
 
@@ -33,13 +29,13 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBook.class ) );
 		Class<?> entityClass = getMetamodelClassFor( PanacheBook.class );
 		Assertions.assertNotNull( entityClass );
-		
+
 		// Make sure it has the proper supertype
 		Class<?> superclass = entityClass.getSuperclass();
 		if ( superclass != null ) {
 			Assertions.assertEquals( "io.quarkus.hibernate.reactive.panache.PanacheEntity_", superclass.getName() );
 		}
-		
+
 		// Panache static native method generates a static method
 		Method method = entityClass.getDeclaredMethod( "hqlBook", Uni.class, String.class );
 		Assertions.assertNotNull( method );
@@ -60,13 +56,13 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 		System.out.println( TestUtil.getMetaModelSourceAsString( PanacheBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( PanacheBookRepository.class );
 		Assertions.assertNotNull( repositoryClass );
-		
+
 		// Make sure it has the proper supertype
 		Class<?> superclass = repositoryClass.getSuperclass();
 		if ( superclass != null ) {
 			Assertions.assertEquals( "java.lang.Object", superclass.getName() );
 		}
-		
+
 		// Panache native method generates a static method
 		Method method = repositoryClass.getDeclaredMethod( "hqlBook", Uni.class, String.class );
 		Assertions.assertNotNull( method );
@@ -91,7 +87,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 		System.out.println( TestUtil.getMetaModelSourceAsString( QuarkusBookRepository.class ) );
 		Class<?> repositoryClass = getMetamodelClassFor( QuarkusBookRepository.class );
 		Assertions.assertNotNull( repositoryClass );
-		
+
 		// Make sure it has the proper supertype
 		Class<?> superclass = repositoryClass.getSuperclass();
 		if ( superclass != null ) {
@@ -100,7 +96,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 		Class<?>[] interfaces = repositoryClass.getInterfaces();
 		Assertions.assertEquals( 1, interfaces.length );
 		Assertions.assertEquals( QuarkusBookRepository.class.getName(), interfaces[0].getName() );
-		
+
 		// Annotated method generates an instance method
 		Method method = repositoryClass.getDeclaredMethod( "hqlBook", String.class );
 		Assertions.assertNotNull( method );
@@ -110,7 +106,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 		method = repositoryClass.getDeclaredMethod( "findBook", String.class );
 		Assertions.assertNotNull( method );
 		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
-		
+
 		// Make sure we have only the default constructor
 		Constructor<?>[] constructors = repositoryClass.getDeclaredConstructors();
 		Assertions.assertNotNull( constructors );
@@ -143,7 +139,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 		Assertions.assertNotNull( constructors );
 		Assertions.assertEquals( 1, constructors.length );
 		Assertions.assertNotNull( repositoryClass.getDeclaredConstructor() );
-		
+
 		// Make sure we do not override the default session method
 		Assertions.assertThrows( NoSuchMethodException.class, () -> repositoryClass.getDeclaredMethod( "mySession" ) );
 	}
@@ -156,7 +152,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 //		System.out.println( TestUtil.getMetaModelSourceAsString( JakartaDataBookRepository.class ) );
 //		Class<?> repositoryClass = getMetamodelClassFor( JakartaDataBookRepository.class );
 //		Assertions.assertNotNull( repositoryClass );
-//		
+//
 //		// Make sure it has the proper supertype
 //		Class<?> superclass = repositoryClass.getSuperclass();
 //		if ( superclass != null ) {
@@ -165,7 +161,7 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 //		Class<?>[] interfaces = repositoryClass.getInterfaces();
 //		Assertions.assertEquals( 1, interfaces.length );
 //		Assertions.assertEquals( JakartaDataBookRepository.class.getName(), interfaces[0].getName() );
-//		
+//
 //		// Annotated method generates an instance method
 //		Method method = repositoryClass.getDeclaredMethod( "hqlBook", String.class );
 //		Assertions.assertNotNull( method );
@@ -175,11 +171,10 @@ public class QuarkusHrPanacheTest extends CompilationTest {
 //		method = repositoryClass.getDeclaredMethod( "findBook", String.class );
 //		Assertions.assertNotNull( method );
 //		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
-//		
+//
 //		// Make sure we have the proper constructor
 //		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( StatelessSession.class );
 //		Assertions.assertNotNull( constructor );
 //		Assertions.assertTrue( constructor.isAnnotationPresent( Inject.class ) );
 //	}
 }
-

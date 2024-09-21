@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
@@ -85,9 +83,21 @@ public enum FunctionParameterType {
 	STRING_OR_CLOB,
 	/**
 	 * Indicates that the argument should be a spatial type
-	 * @see org.hibernate.type.SqlTypes#isSpatialType(int) 
+	 * @see org.hibernate.type.SqlTypes#isSpatialType(int)
 	 */
 	SPATIAL,
+	/**
+	 * Indicates that the argument should be a JSON type
+	 * @see org.hibernate.type.SqlTypes#isJsonType(int)
+	 * @since 7.0
+	 */
+	JSON,
+	/**
+	 * Indicates that the argument should be a JSON or String type
+	 * @see org.hibernate.type.SqlTypes#isImplicitJsonType(int)
+	 * @since 7.0
+	 */
+	IMPLICIT_JSON,
 	/**
 	 * Indicates a parameter that accepts any type, except untyped expressions like {@code null} literals
 	 */

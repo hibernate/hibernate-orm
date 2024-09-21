@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection;
 import java.util.Collection;
@@ -264,7 +262,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		checkNumberOfResults( listeners, index );
-	}	
+	}
 	*/
 
 	private ParentWithCollection createParentWithNullChildren(String parentName) {
@@ -301,23 +299,23 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 ParentWithCollection parent,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							ParentWithCollection parent,
+							int index) {
 		checkResult( listeners, listenerExpected, parent, parent.getChildren(), index );
 	}
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 ChildWithBidirectionalManyToMany child,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							ChildWithBidirectionalManyToMany child,
+							int index) {
 		checkResult( listeners, listenerExpected, child, child.getParents(), index );
 	}
 
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 Entity ownerExpected,
-							 Collection collExpected,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							Entity ownerExpected,
+							Collection collExpected,
+							int index) {
 		assertSame( listenerExpected, listeners.getListenersCalled().get( index ) );
 		assertSame(
 				ownerExpected,

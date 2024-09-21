@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
@@ -11,7 +9,6 @@ import java.sql.SQLException;
 
 import org.hibernate.query.spi.Limit;
 
-import static java.util.regex.Pattern.compile;
 
 /**
  * Handler not supporting query LIMIT clause. JDBC API is used to set maximum number of returned rows.

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
@@ -39,155 +37,155 @@ import static org.junit.Assert.fail;
 @JiraKey( value = "HHH-11459" )
 @RunWith( BytecodeEnhancerRunner.class )
 public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTestCase {
-    private Person person;
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Person.class, PersonAddress.class, NullablePerson.class};
-    }
+	private Person person;
+	@Override
+	public Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[]{Person.class, PersonAddress.class, NullablePerson.class};
+	}
 
-    @Before
-    public void prepare() {
-        person = new Person( 1L, "Sam" );
-        doInHibernate( this::sessionFactory, s -> {
-            s.persist( person );
-        } );
-    }
+	@Before
+	public void prepare() {
+		person = new Person( 1L, "Sam" );
+		doInHibernate( this::sessionFactory, s -> {
+			s.persist( person );
+		} );
+	}
 
-    @Test
-    public void testMerge() {
-        doInHibernate( this::sessionFactory, s -> {
-            Person entity = s.find( Person.class, 1L );
-            entity.name = "John";
-            try {
-                s.merge( entity );
-            } catch ( RuntimeException e ) {
-                fail( "Enhanced entity can't be merged: " + e.getMessage() );
-            }
-        } );
-    }
+	@Test
+	public void testMerge() {
+		doInHibernate( this::sessionFactory, s -> {
+			Person entity = s.find( Person.class, 1L );
+			entity.name = "John";
+			try {
+				s.merge( entity );
+			} catch ( RuntimeException e ) {
+				fail( "Enhanced entity can't be merged: " + e.getMessage() );
+			}
+		} );
+	}
 
-    @Test
-    public void testRefresh() {
-        doInHibernate( this::sessionFactory, s -> {
-            Person entity = s.find( Person.class, 1L );
-            entity.name = "John";
+	@Test
+	public void testRefresh() {
+		doInHibernate( this::sessionFactory, s -> {
+			Person entity = s.find( Person.class, 1L );
+			entity.name = "John";
 
-            s.refresh( entity );
+			s.refresh( entity );
 
 //            try {
 //                s.refresh( entity );
 //            } catch ( RuntimeException e ) {
 //                fail( "Enhanced entity can't be refreshed: " + e.getMessage() );
 //            }
-        } );
-    }
+		} );
+	}
 
-    @Test
-    public void testMergeWithNullValues() {
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson nullablePerson = new NullablePerson( 1L, "Sam", 100 );
-            em.persist( nullablePerson );
-        } );
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson updated = em.find( NullablePerson.class, 1L );
-            assertThat( updated.name ).isEqualTo( "Sam" );
-            assertThat( updated.number ).isEqualTo( 100 );
-        } );
+	@Test
+	public void testMergeWithNullValues() {
+		doInHibernate( this::sessionFactory, em -> {
+			NullablePerson nullablePerson = new NullablePerson( 1L, "Sam", 100 );
+			em.persist( nullablePerson );
+		} );
+		doInHibernate( this::sessionFactory, em -> {
+			NullablePerson updated = em.find( NullablePerson.class, 1L );
+			assertThat( updated.name ).isEqualTo( "Sam" );
+			assertThat( updated.number ).isEqualTo( 100 );
+		} );
 
-        // only some properties are null
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson nullablePerson = new NullablePerson( 1L, "Joe", null );
-            em.merge( nullablePerson );
-        } );
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson updated = em.find( NullablePerson.class, 1L );
-            assertThat( updated.name ).isEqualTo( "Joe" );
-            assertThat( updated.number ).isNull();
-        } );
+		// only some properties are null
+		doInHibernate( this::sessionFactory, em -> {
+			NullablePerson nullablePerson = new NullablePerson( 1L, "Joe", null );
+			em.merge( nullablePerson );
+		} );
+		doInHibernate( this::sessionFactory, em -> {
+			NullablePerson updated = em.find( NullablePerson.class, 1L );
+			assertThat( updated.name ).isEqualTo( "Joe" );
+			assertThat( updated.number ).isNull();
+		} );
 
-        // all properties are null:
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson nullablePerson = new NullablePerson( 1L, null, null );
-            em.merge( nullablePerson );
-        } );
-        doInHibernate( this::sessionFactory, em -> {
-            NullablePerson updated = em.find( NullablePerson.class, 1L );
-            assertThat( updated.name ).isNull();
-            assertThat( updated.number ).isNull();
-        } );
-    }
+		// all properties are null:
+		doInHibernate( this::sessionFactory, em -> {
+			NullablePerson nullablePerson = new NullablePerson( 1L, null, null );
+			em.merge( nullablePerson );
+		} );
+		doInHibernate( this::sessionFactory, em -> {
+			NullablePerson updated = em.find( NullablePerson.class, 1L );
+			assertThat( updated.name ).isNull();
+			assertThat( updated.number ).isNull();
+		} );
+	}
 
-    @After
-    public void cleanup() {
-        doInHibernate( this::sessionFactory, s -> {
-            s.remove( person );
-        } );
-        doInHibernate( this::sessionFactory, s -> {
-            s.createQuery( "delete from NullablePerson" );
-        } );
-    }
+	@After
+	public void cleanup() {
+		doInHibernate( this::sessionFactory, s -> {
+			s.remove( person );
+		} );
+		doInHibernate( this::sessionFactory, s -> {
+			s.createQuery( "delete from NullablePerson" );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "PERSON" )
-    @DynamicUpdate
-    @DynamicInsert
-    private static class Person {
+	@Entity
+	@Table( name = "PERSON" )
+	@DynamicUpdate
+	@DynamicInsert
+	private static class Person {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @Column( name = "name", length = 10, nullable = false )
-        String name;
+		@Column( name = "name", length = 10, nullable = false )
+		String name;
 
-        @OneToMany( fetch = FetchType.LAZY, mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL )
-        List<PersonAddress> details = new ArrayList<>();
+		@OneToMany( fetch = FetchType.LAZY, mappedBy = "parent", orphanRemoval = true, cascade = CascadeType.ALL )
+		List<PersonAddress> details = new ArrayList<>();
 
-        Person() {
-        }
+		Person() {
+		}
 
-        Person(Long id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-    }
+		Person(Long id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
 
-    @Entity
-    @Table( name = "PERSON_ADDRESS" )
-    @DynamicUpdate
-    @DynamicInsert
-    private static class PersonAddress {
+	@Entity
+	@Table( name = "PERSON_ADDRESS" )
+	@DynamicUpdate
+	@DynamicInsert
+	private static class PersonAddress {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @ManyToOne( optional = false, fetch = FetchType.LAZY )
-        Person parent;
-    }
+		@ManyToOne( optional = false, fetch = FetchType.LAZY )
+		Person parent;
+	}
 
-    @Entity(name = "NullablePerson")
-    @Table(name = "NULLABLE_PERSON")
-    @DynamicUpdate
-    @DynamicInsert
-    private static class NullablePerson {
+	@Entity(name = "NullablePerson")
+	@Table(name = "NULLABLE_PERSON")
+	@DynamicUpdate
+	@DynamicInsert
+	private static class NullablePerson {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @Column
-        String name;
+		@Column
+		String name;
 
-        @Column(name = "NUMBER_COLUMN")
-        Integer number;
+		@Column(name = "NUMBER_COLUMN")
+		Integer number;
 
-        NullablePerson() {
-        }
+		NullablePerson() {
+		}
 
-        NullablePerson(Long id, String name, Integer number) {
-            this.id = id;
-            this.name = name;
-            this.number = number;
-        }
-    }
+		NullablePerson(Long id, String name, Integer number) {
+			this.id = id;
+			this.name = name;
+			this.number = number;
+		}
+	}
 }

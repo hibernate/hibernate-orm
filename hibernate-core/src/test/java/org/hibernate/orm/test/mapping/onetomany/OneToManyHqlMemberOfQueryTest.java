@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetomany;
 
@@ -62,7 +60,7 @@ public class OneToManyHqlMemberOfQueryTest {
 					person1.setNickName( "JD" );
 					person1.setAddress( "Earth" );
 					person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-																  .toInstant( ZoneOffset.UTC ) ) );
+																.toInstant( ZoneOffset.UTC ) ) );
 					person1.getAddresses().put( AddressType.HOME, "Home address" );
 					person1.getAddresses().put( AddressType.OFFICE, "Office address" );
 					session.persist( person1 );
@@ -70,7 +68,7 @@ public class OneToManyHqlMemberOfQueryTest {
 					Person person2 = new Person( "Mrs. John Doe" );
 					person2.setAddress( "Earth" );
 					person2.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 2, 12, 0, 0 )
-																  .toInstant( ZoneOffset.UTC ) ) );
+																.toInstant( ZoneOffset.UTC ) ) );
 					session.persist( person2 );
 
 					Person person3 = new Person( "Dr_ John Doe" );
@@ -80,19 +78,19 @@ public class OneToManyHqlMemberOfQueryTest {
 					phone1.setId( 1L );
 					person1.addPhone( phone1 );
 					phone1.getRepairTimestamps().add( Timestamp.from( LocalDateTime.of( 2005, 1, 1, 12, 0, 0 )
-																			  .toInstant( ZoneOffset.UTC ) ) );
+																			.toInstant( ZoneOffset.UTC ) ) );
 					phone1.getRepairTimestamps().add( Timestamp.from( LocalDateTime.of( 2006, 1, 1, 12, 0, 0 )
-																			  .toInstant( ZoneOffset.UTC ) ) );
+																			.toInstant( ZoneOffset.UTC ) ) );
 
 					Call call11 = new Call();
 					call11.setDuration( 12 );
 					call11.setTimestamp( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-																 .toInstant( ZoneOffset.UTC ) ) );
+																.toInstant( ZoneOffset.UTC ) ) );
 
 					Call call12 = new Call();
 					call12.setDuration( 33 );
 					call12.setTimestamp( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 1, 0, 0 )
-																 .toInstant( ZoneOffset.UTC ) ) );
+																.toInstant( ZoneOffset.UTC ) ) );
 
 					phone1.addCall( call11 );
 					phone1.addCall( call12 );

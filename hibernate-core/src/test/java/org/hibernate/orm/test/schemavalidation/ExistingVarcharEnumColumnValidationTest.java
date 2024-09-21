@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schemavalidation;
 
 import org.hibernate.boot.MetadataSources;
@@ -21,11 +25,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import static jakarta.persistence.GenerationType.IDENTITY;
 
 @JiraKey("HHH-17908")
 @RequiresDialect( H2Dialect.class )

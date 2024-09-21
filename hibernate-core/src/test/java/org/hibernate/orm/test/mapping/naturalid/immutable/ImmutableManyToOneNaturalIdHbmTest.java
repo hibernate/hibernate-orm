@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.immutable;
 
@@ -70,9 +68,9 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 		);
 	}
 
-    @Test
-    @JiraKey( value = "HHH-10360")
-    public void checkingMapping(SessionFactoryScope scope) {
+	@Test
+	@JiraKey( value = "HHH-10360")
+	public void checkingMapping(SessionFactoryScope scope) {
 
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
 		final EntityMappingType childMapping = runtimeMetamodels.getEntityMappingType( Child.class.getName() );
@@ -130,11 +128,11 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 					}
 				}
 		);
-    }
+	}
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-    public void testSaveParentWithDetachedChildren(SessionFactoryScope scope) {
+	public void testSaveParentWithDetachedChildren(SessionFactoryScope scope) {
 		final Parent p = scope.fromTransaction(
 				(session) -> session.createQuery( "from Parent p join fetch p.children where p.name = 'alex'", Parent.class )
 						.setCacheable( true )
@@ -148,10 +146,10 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 
 		// todo (6.0) : ^^ this test has nothing to do with (im)mutability...
 
-        Child c2 = new Child( 2, "joey", p );
-        p.getChildren().add( c2 );
+		Child c2 = new Child( 2, "joey", p );
+		p.getChildren().add( c2 );
 
-        scope.inTransaction( (session) -> session.merge( p ) );
-    }
+		scope.inTransaction( (session) -> session.merge( p ) );
+	}
 
 }

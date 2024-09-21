@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
 
@@ -43,6 +41,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CLOB;
@@ -134,6 +133,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							parentPartExpression = aggregateParentReadExpression + ",'$.";
 						}
 						switch ( column.getTypeCode() ) {
+							case BIT:
+								return template.replace(
+										placeholder,
+										"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',1,'false',0,null)"
+								);
 							case BOOLEAN:
 								if ( column.getTypeName().toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
 									return template.replace(
@@ -268,6 +272,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
 							case CLOB:
 								return "(select json_arrayagg(to_clob(t.column_value)) from table(" + customWriteExpression + ") t)";
+							case BIT:
+								return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
 							case BOOLEAN:
 								final String elementTypeName = determineElementTypeName( column.toSize(), pluralType, typeConfiguration );
 								if ( elementTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
@@ -276,6 +282,9 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							default:
 								break;
 						}
+						return customWriteExpression;
+					case BIT:
+						return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
 					case BOOLEAN:
 						final String sqlTypeName = AbstractSqlAstTranslator.getSqlTypeName( column, typeConfiguration );
 						if ( sqlTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {

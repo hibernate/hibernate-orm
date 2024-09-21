@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.dialect;
 
 import org.hibernate.dialect.DB2zDialect;
@@ -14,12 +18,12 @@ import static org.junit.Assert.assertNotNull;
 @RequiresDialect(DB2zDialect.class)
 public class DB2zDialectInitTestCase {
 
-    static class DB2zDialectWithExplicitTimezoneSupport extends DB2zDialect {
+	static class DB2zDialectWithExplicitTimezoneSupport extends DB2zDialect {
 	}
 
-    @Test
-    public void testInitWithTimezoneSupport() {
-        final var db2zDialect = new DB2zDialectWithExplicitTimezoneSupport();
-        assertNotNull(db2zDialect);
-    }
+	@Test
+	public void testInitWithTimezoneSupport() {
+		final var db2zDialect = new DB2zDialectWithExplicitTimezoneSupport();
+		assertNotNull(db2zDialect);
+	}
 }

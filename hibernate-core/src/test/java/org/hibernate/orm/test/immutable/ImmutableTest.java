@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.immutable;
 
@@ -65,7 +63,6 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 	protected void applySettings(StandardServiceRegistryBuilder builer) {
 		builer.applySetting( Environment.GENERATE_STATISTICS, "true" );
 		builer.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
-		builer.applySetting( Environment.ALLOW_REFRESH_DETACHED_ENTITY, "true" );
 	}
 
 	@Override
@@ -367,34 +364,23 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				s -> {
-					// refresh detached
-					s.refresh( contract );
-					assertTrue( s.isReadOnly( contract ) );
-					assertEquals( "gavin", contract.getCustomerName() );
-					assertEquals( 2, contract.getVariations().size() );
-					Iterator<ContractVariation> it = contract.getVariations().iterator();
-					ContractVariation cv1 = it.next();
-					assertEquals( "expensive", cv1.getText() );
-					ContractVariation cv2 = it.next();
-					assertEquals( "more expensive", cv2.getText() );
-					assertTrue( s.isReadOnly( cv1 ) );
-					assertTrue( s.isReadOnly( cv2 ) );
+					Contract c = s.get(Contract.class, contract.getId());
+					c.setCustomerName( "joe" );
+					s.merge( c );
 				}
 		);
 
 		assertInsertCount( 0 );
 		assertUpdateCount( 0 );
 		clearCounts();
-
-		contract.setCustomerName( "joe" );
 
 		inTransaction(
 				s -> {
-					s.refresh( contract );
-					assertTrue( s.isReadOnly( contract ) );
-					assertEquals( "gavin", contract.getCustomerName() );
-					assertEquals( 2, contract.getVariations().size() );
-					Iterator<ContractVariation> it = contract.getVariations().iterator();
+					Contract c = s.get(Contract.class, contract.getId());
+					assertTrue( s.isReadOnly( c ) );
+					assertEquals( "gavin", c.getCustomerName() );
+					assertEquals( 2, c.getVariations().size() );
+					Iterator<ContractVariation> it = c.getVariations().iterator();
 					ContractVariation cv1 = it.next();
 					assertEquals( "expensive", cv1.getText() );
 					ContractVariation cv2 = it.next();
@@ -403,11 +389,6 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 					assertTrue( s.isReadOnly( cv2 ) );
 				}
 		);
-		// refresh updated detached
-
-		assertInsertCount( 0 );
-		assertUpdateCount( 0 );
-		clearCounts();
 
 		inTransaction(
 				s -> {
@@ -1492,4 +1473,3 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 }
-

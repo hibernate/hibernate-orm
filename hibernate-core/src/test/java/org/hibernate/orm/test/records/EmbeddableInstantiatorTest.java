@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.records;
 
 import java.time.LocalDate;
@@ -80,7 +84,7 @@ public class EmbeddableInstantiatorTest {
 			@Override
 			public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
 				return new MyRecord( valueAccess.getValue( 2, Integer.class ), valueAccess.getValue( 1, String.class ),
-									 valueAccess.getValue( 0, LocalDate.class )
+									valueAccess.getValue( 0, LocalDate.class )
 				);
 			}
 		}

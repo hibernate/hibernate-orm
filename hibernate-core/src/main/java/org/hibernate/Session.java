@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -385,10 +383,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	boolean isDirty();
 
 	/**
-	 * Will entities and proxies that are loaded into this session be made 
+	 * Will entities and proxies that are loaded into this session be made
 	 * read-only by default?
 	 * <p>
-	 * To determine the read-only/modifiable setting for a particular entity 
+	 * To determine the read-only/modifiable setting for a particular entity
 	 * or proxy use {@link #isReadOnly(Object)}.
 	 *
 	 * @see #isReadOnly(Object)
@@ -828,7 +826,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the entity name for a persistent entity.
-	 *   
+	 *
 	 * @param object a persistent entity associated with this session
 	 *
 	 * @return the entity name
@@ -905,7 +903,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Create an {@link IdentifierLoadAccess} instance to retrieve an instance of the named
 	 * entity type by its primary key.
-	 * 
+	 *
 	 * @param entityName the entity name of the entity type to be retrieved
 	 *
 	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
@@ -960,7 +958,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
 	 * which may be a composite natural id. The entity must have at least one attribute
 	 * annotated {@link org.hibernate.annotations.NaturalId}.
-	 * 
+	 *
 	 * @param entityName the entity name of the entity type to be retrieved
 	 *
 	 * @return an instance of {@link NaturalIdLoadAccess} for executing the lookup
@@ -1036,7 +1034,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	@Override
 	void disableFilter(String filterName);
-	
+
 	/**
 	 * Get the {@linkplain SessionStatistics statistics} for this session.
 	 *

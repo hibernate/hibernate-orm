@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -515,6 +513,18 @@ public class CUBRIDDialect extends Dialect {
 		//note: timediff() is backwards on CUBRID
 		sqlAppender.append(",timediff(?3,?2))");
 		sqlAppender.append( diffUnit.conversionFactor( toUnit, this ) );
+	}
+
+	@Override
+	public String getDual() {
+		//TODO: is this really needed?
+		//TODO: would "from table({0})" be better?
+		return "db_root";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual();
 	}
 
 }

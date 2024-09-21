@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -56,146 +54,146 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-10055" )
 @DomainModel(
-        annotatedClasses = {
-                LazyCollectionLoadingTest.Parent.class, LazyCollectionLoadingTest.Child.class
-        }
+		annotatedClasses = {
+				LazyCollectionLoadingTest.Parent.class, LazyCollectionLoadingTest.Child.class
+		}
 )
 @ServiceRegistry(
-        settings = {
-                @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
-                @Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
-        }
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
 )
 @SessionFactory
 @BytecodeEnhanced
 public class LazyCollectionLoadingTest {
-    private static final int CHILDREN_SIZE = 10;
-    private Long parentID;
-    private Parent parent;
+	private static final int CHILDREN_SIZE = 10;
+	private Long parentID;
+	private Parent parent;
 
-    @BeforeEach
-    public void prepare(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Parent parent = new Parent();
-            parent.setChildren( new ArrayList<>() );
-            for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
-                Child child = new Child();
-                child.parent = parent;
-                s.persist( child );
-            }
-            s.persist( parent );
-            parentID = parent.id;
-        } );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Parent parent = new Parent();
+			parent.setChildren( new ArrayList<>() );
+			for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
+				Child child = new Child();
+				child.parent = parent;
+				s.persist( child );
+			}
+			s.persist( parent );
+			parentID = parent.id;
+		} );
+	}
 
-    @Test
-    public void testTransaction(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            Parent parent = s.getReference( Parent.class, parentID );
-            assertThat( parent, notNullValue() );
-            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
-            assertFalse( isPropertyInitialized( parent, "children" ) );
-            checkDirtyTracking( parent );
+	@Test
+	public void testTransaction(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Parent parent = s.getReference( Parent.class, parentID );
+			assertThat( parent, notNullValue() );
+			assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
+			assertFalse( isPropertyInitialized( parent, "children" ) );
+			checkDirtyTracking( parent );
 
-            List children1 = parent.children;
-            List children2 = parent.children;
+			List children1 = parent.children;
+			List children2 = parent.children;
 
-            assertTrue( isPropertyInitialized( parent, "children" ) );
-            checkDirtyTracking( parent );
+			assertTrue( isPropertyInitialized( parent, "children" ) );
+			checkDirtyTracking( parent );
 
-            assertThat( children1, sameInstance( children2 ) );
+			assertThat( children1, sameInstance( children2 ) );
 
-            assertFalse( isInitialized( children1 ) );
-            assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
-            assertTrue( isInitialized( children1 ) );
-        } );
-    }
+			assertFalse( isInitialized( children1 ) );
+			assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
+			assertTrue( isInitialized( children1 ) );
+		} );
+	}
 
-    @Test
-    @JiraKey( "HHH-14620" )
-    public void testTransaction_noProxy(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            // find will not return a proxy, which is exactly what we want here.
-            Parent parent = s.find( Parent.class, parentID );
-            assertThat( parent, notNullValue() );
-            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
-            checkDirtyTracking( parent );
+	@Test
+	@JiraKey( "HHH-14620" )
+	public void testTransaction_noProxy(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			// find will not return a proxy, which is exactly what we want here.
+			Parent parent = s.find( Parent.class, parentID );
+			assertThat( parent, notNullValue() );
+			assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
+			checkDirtyTracking( parent );
 
-            List<Child> children1 = parent.children;
-            List<Child> children2 = parent.children;
+			List<Child> children1 = parent.children;
+			List<Child> children2 = parent.children;
 
-            checkDirtyTracking( parent );
+			checkDirtyTracking( parent );
 
-            assertThat( children1, sameInstance( children2 ) );
+			assertThat( children1, sameInstance( children2 ) );
 
-            // This check is important: a bug used to cause the collection to be initialized
-            // during the call to parent.children above.
-            // Note the same problem would occur if we were using getters:
-            // we only need extended enhancement to be enabled.
-            assertFalse( isInitialized( children1 ) );
-            assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
-            assertTrue( isInitialized( children1 ) );
-        } );
-    }
+			// This check is important: a bug used to cause the collection to be initialized
+			// during the call to parent.children above.
+			// Note the same problem would occur if we were using getters:
+			// we only need extended enhancement to be enabled.
+			assertFalse( isInitialized( children1 ) );
+			assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
+			assertTrue( isInitialized( children1 ) );
+		} );
+	}
 
-    @Test
-    public void testNoTransaction(SessionFactoryScope scope) {
-        scope.inTransaction( s -> {
-            parent = s.getReference( Parent.class, parentID );
-            assertThat( parent, notNullValue() );
-            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
-            assertFalse( isPropertyInitialized( parent, "children" ) );
-        } );
+	@Test
+	public void testNoTransaction(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			parent = s.getReference( Parent.class, parentID );
+			assertThat( parent, notNullValue() );
+			assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
+			assertFalse( isPropertyInitialized( parent, "children" ) );
+		} );
 
-        List children1 = parent.children;
-        List children2 = parent.children;
+		List children1 = parent.children;
+		List children2 = parent.children;
 
-        assertTrue( isPropertyInitialized( parent, "children" ) );
+		assertTrue( isPropertyInitialized( parent, "children" ) );
 
-        checkDirtyTracking( parent );
-        assertThat( children1, sameInstance( children2 ) );
+		checkDirtyTracking( parent );
+		assertThat( children1, sameInstance( children2 ) );
 
-        assertFalse( isInitialized( children1 ) );
-        assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
-        assertTrue( isInitialized( children1 ) );
-    }
+		assertFalse( isInitialized( children1 ) );
+		assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
+		assertTrue( isInitialized( children1 ) );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "PARENT" )
-    static class Parent {
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @OneToMany( mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        List<Child> children;
+		@OneToMany( mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		List<Child> children;
 
-        void setChildren(List<Child> children) {
-            this.children = children;
-        }
-    }
+		void setChildren(List<Child> children) {
+			this.children = children;
+		}
+	}
 
-    @Entity
-    @Table( name = "CHILD" )
-    static class Child {
+	@Entity
+	@Table( name = "CHILD" )
+	static class Child {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
-        Parent parent;
+		@ManyToOne( cascade = CascadeType.ALL, fetch = FetchType.LAZY )
+		Parent parent;
 
-        String name;
+		String name;
 
-        Child() {
-        }
+		Child() {
+		}
 
-        Child(String name) {
-            this.name = name;
-        }
-    }
+		Child(String name) {
+			this.name = name;
+		}
+	}
 }

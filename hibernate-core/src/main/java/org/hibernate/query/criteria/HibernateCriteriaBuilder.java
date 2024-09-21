@@ -4130,6 +4130,22 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument);
 
 	/**
+	 * Checks if the given XPath or XQuery query exists in the given XML document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument);
+
+	/**
+	 * Checks if the given XPath or XQuery query exists in the given XML document.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
+
+	/**
 	 * Creates a named expression. The name is important for the result of the expression,
 	 * e.g. when building an {@code xmlforest}, the name acts as the XML element name.
 	 *

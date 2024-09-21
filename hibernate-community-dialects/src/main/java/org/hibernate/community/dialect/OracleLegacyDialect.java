@@ -332,6 +332,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.xmlconcat();
 		functionFactory.xmlpi();
 		functionFactory.xmlquery_oracle();
+		functionFactory.xmlexists();
 	}
 
 	@Override

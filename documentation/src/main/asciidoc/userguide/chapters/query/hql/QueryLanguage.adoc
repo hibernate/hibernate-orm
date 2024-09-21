@@ -2177,6 +2177,7 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 | `xmlconcat()` | Concatenates multiple XML fragments to each other
 | `xmlpi()` | Constructs an XML processing instruction
 | `xmlquery()` | Extracts content from XML document using XQuery or XPath
+| `xmlexists()` | Checks if an XQuery or XPath expression exists in an XML document
 |===
 
 
@@ -2320,6 +2321,30 @@ The second argument after the `passing` keyword represents the XML document.
 [source, java, indent=0]
 ----
 include::{xml-example-dir-hql}/XmlQueryTest.java[tags=hql-xmlquery-example]
+----
+====
+
+WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
+
+[[hql-xmlexists-function]]
+===== `xmlexists()`
+
+Checks if an XQuery or XPath expression exists in an XML document.
+
+[[hql-xmlexists-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/xmlexists_bnf.txt[]
+----
+
+The first argument represents the XQuery or XPath expression.
+The second argument after the `passing` keyword represents the XML document.
+
+[[hql-xmlexists-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlExistsTest.java[tags=hql-xmlexists-example]
 ----
 ====
 

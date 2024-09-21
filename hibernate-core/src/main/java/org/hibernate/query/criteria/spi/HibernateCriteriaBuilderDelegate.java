@@ -3695,6 +3695,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
+	public JpaExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlexists( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlexists( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
 	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
 		return criteriaBuilder.named( expression, name );
 	}

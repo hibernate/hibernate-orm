@@ -422,6 +422,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.xmlconcat();
 		functionFactory.xmlpi();
 		functionFactory.xmlquery_oracle();
+		functionFactory.xmlexists();
 	}
 
 	@Override

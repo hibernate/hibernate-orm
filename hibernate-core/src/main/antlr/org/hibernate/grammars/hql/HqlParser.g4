@@ -1722,6 +1722,7 @@ xmlFunction
 	| xmlforestFunction
 	| xmlpiFunction
 	| xmlqueryFunction
+	| xmlexistsFunction
 	;
 
 /**
@@ -1757,6 +1758,13 @@ xmlpiFunction
  */
 xmlqueryFunction
 	: XMLQUERY LEFT_PAREN expression PASSING expression RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlexists()' function
+ */
+xmlexistsFunction
+	: XMLEXISTS LEFT_PAREN expression PASSING expression RIGHT_PAREN
 	;
 
 /**
@@ -1967,6 +1975,7 @@ xmlqueryFunction
 	| WRAPPER
 	| XMLATTRIBUTES
 	| XMLELEMENT
+	| XMLEXISTS
 	| XMLFOREST
 	| XMLPI
 	| XMLQUERY

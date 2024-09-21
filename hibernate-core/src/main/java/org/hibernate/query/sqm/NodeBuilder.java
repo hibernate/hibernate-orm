@@ -783,6 +783,12 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	SqmExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument);
 
+	@Override
+	SqmExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument);
+
+	@Override
+	SqmExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 

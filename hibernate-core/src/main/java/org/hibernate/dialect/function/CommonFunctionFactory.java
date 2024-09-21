@@ -157,14 +157,17 @@ import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
 import org.hibernate.dialect.function.xml.H2XmlPiFunction;
+import org.hibernate.dialect.function.xml.PostgreSQLXmlQueryFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlPiFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlQueryFunction;
 import org.hibernate.dialect.function.xml.XmlConcatFunction;
 import org.hibernate.dialect.function.xml.XmlElementFunction;
 import org.hibernate.dialect.function.xml.XmlForestFunction;
 import org.hibernate.dialect.function.xml.XmlPiFunction;
+import org.hibernate.dialect.function.xml.XmlQueryFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -4214,5 +4217,33 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlpi_sqlserver() {
 		functionRegistry.register( "xmlpi", new SQLServerXmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle xmlquery() function
+	 */
+	public void xmlquery_oracle() {
+		functionRegistry.register( "xmlquery", new XmlQueryFunction( true, typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 xmlquery() function
+	 */
+	public void xmlquery_db2() {
+		functionRegistry.register( "xmlquery", new XmlQueryFunction( false, typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL xmlquery() function
+	 */
+	public void xmlquery_postgresql() {
+		functionRegistry.register( "xmlquery", new PostgreSQLXmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlquery() function
+	 */
+	public void xmlquery_sqlserver() {
+		functionRegistry.register( "xmlquery", new SQLServerXmlQueryFunction( typeConfiguration ) );
 	}
 }

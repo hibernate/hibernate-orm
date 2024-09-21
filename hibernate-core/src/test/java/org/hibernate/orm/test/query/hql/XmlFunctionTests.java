@@ -201,6 +201,20 @@ public class XmlFunctionTests {
 		);
 	}
 
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlquery.class)
+	public void testXmlquery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select xmlquery('/a/val' passing '<a><val>asd</val></a>')",
+							Tuple.class
+					).getSingleResult();
+					assertXmlEquals( "<val>asd</val>", tuple.get( 0, String.class ) );
+				}
+		);
+	}
+
 	private void assertXmlEquals(String expected, String actual) {
 		final Document expectedDoc = parseXml( xmlNormalize( expected ) );
 		final Document actualDoc = parseXml( xmlNormalize( actual ) );

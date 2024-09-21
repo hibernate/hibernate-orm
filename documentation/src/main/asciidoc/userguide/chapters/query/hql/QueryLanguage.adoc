@@ -2176,6 +2176,7 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 | `xmlforest()` | Constructs an XML forest from the arguments
 | `xmlconcat()` | Concatenates multiple XML fragments to each other
 | `xmlpi()` | Constructs an XML processing instruction
+| `xmlquery()` | Extracts content from XML document using XQuery or XPath
 |===
 
 
@@ -2295,6 +2296,30 @@ The optional second argument represents the processing instruction content.
 [source, java, indent=0]
 ----
 include::{xml-example-dir-hql}/XmlPiTest.java[tags=hql-xmlpi-content-example]
+----
+====
+
+WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
+
+[[hql-xmlquery-function]]
+===== `xmlquery()`
+
+Extracts content from an XML document using XQuery or XPath.
+
+[[hql-xmlquery-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/xmlquery_bnf.txt[]
+----
+
+The first argument represents the XQuery or XPath expression.
+The second argument after the `passing` keyword represents the XML document.
+
+[[hql-xmlquery-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlQueryTest.java[tags=hql-xmlquery-example]
 ----
 ====
 

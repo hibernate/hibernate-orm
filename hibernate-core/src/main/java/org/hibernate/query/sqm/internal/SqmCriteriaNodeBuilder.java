@@ -5764,4 +5764,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				queryEngine
 		);
 	}
+
+	@Override
+	public SqmExpression<String> xmlquery(String query, Expression<?> xmlDocument) {
+		return xmlquery( value( query ), xmlDocument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument) {
+		return getFunctionDescriptor( "xmlquery" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) query, (SqmTypedNode<?>) xmlDocument ),
+				null,
+				queryEngine
+		);
+	}
 }

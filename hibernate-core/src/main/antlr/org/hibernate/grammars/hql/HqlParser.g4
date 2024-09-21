@@ -1721,6 +1721,7 @@ xmlFunction
 	: xmlelementFunction
 	| xmlforestFunction
 	| xmlpiFunction
+	| xmlqueryFunction
 	;
 
 /**
@@ -1749,6 +1750,13 @@ xmlforestFunction
  */
 xmlpiFunction
 	: XMLPI LEFT_PAREN NAME identifier (COMMA expression)? RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlquery()' function
+ */
+xmlqueryFunction
+	: XMLQUERY LEFT_PAREN expression PASSING expression RIGHT_PAREN
 	;
 
 /**
@@ -1961,6 +1969,7 @@ xmlpiFunction
 	| XMLELEMENT
 	| XMLFOREST
 	| XMLPI
+	| XMLQUERY
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

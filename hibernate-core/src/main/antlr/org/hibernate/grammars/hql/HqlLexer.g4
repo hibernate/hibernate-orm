@@ -334,6 +334,7 @@ XMLATTRIBUTES		: [xX] [mM] [lL] [aA] [tT] [tT] [rR] [iI] [bB] [uU] [tT] [eE] [sS
 XMLELEMENT			: [xX] [mM] [lL] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
 XMLFOREST			: [xX] [mM] [lL] [fF] [oO] [rR] [eE] [sS] [tT];
 XMLPI				: [xX] [mM] [lL] [pP] [iI];
+XMLQUERY			: [xX] [mM] [lL] [qQ] [uU] [eE] [rR] [yY];
 YEAR				: [yY] [eE] [aA] [rR];
 ZONED				: [zZ] [oO] [nN] [eE] [dD];
 

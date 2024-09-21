@@ -3683,6 +3683,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	@Incubating
+	public JpaExpression<String> xmlquery(String query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlquery( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlquery( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
 	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
 		return criteriaBuilder.named( expression, name );
 	}

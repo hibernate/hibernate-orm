@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
@@ -72,6 +73,12 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	@Override
 	public String getRegistrationName() {
 		return registeredName;
+	}
+
+	@Override
+	public @Nullable String getLocation() {
+		// not kept for now
+		return null;
 	}
 
 	@Override

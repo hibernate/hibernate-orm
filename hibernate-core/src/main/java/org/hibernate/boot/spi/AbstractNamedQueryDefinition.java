@@ -36,6 +36,7 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 	private final String comment;
 
 	private final Map<String,Object> hints;
+	private final String location;
 
 	public AbstractNamedQueryDefinition(
 			String name,
@@ -49,7 +50,8 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 			Integer timeout,
 			Integer fetchSize,
 			String comment,
-			Map<String,Object> hints) {
+			Map<String,Object> hints,
+			String location) {
 		this.name = name;
 		this.resultType = resultType;
 		this.cacheable = cacheable;
@@ -62,11 +64,17 @@ public abstract class AbstractNamedQueryDefinition<R> implements NamedQueryDefin
 		this.fetchSize = fetchSize;
 		this.comment = comment;
 		this.hints = hints == null ? new HashMap<>() : new HashMap<>( hints );
+		this.location = location;
 	}
 
 	@Override
 	public String getRegistrationName() {
 		return name;
+	}
+
+	@Override
+	public @Nullable String getLocation() {
+		return location;
 	}
 
 	@Override

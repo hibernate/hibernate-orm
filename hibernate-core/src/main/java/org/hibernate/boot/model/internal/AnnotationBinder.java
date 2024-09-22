@@ -104,11 +104,11 @@ public final class AnnotationBinder {
 		// queries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		globalRegistrations.getNamedQueryRegistrations().forEach( (name, queryRegistration) -> {
-			QueryBinder.bindQuery( queryRegistration.configuration(), context, true );
+			QueryBinder.bindQuery( queryRegistration.configuration(), context, true, null );
 		} );
 
 		globalRegistrations.getNamedNativeQueryRegistrations().forEach( (name, queryRegistration) -> {
-			QueryBinder.bindNativeQuery( queryRegistration.configuration(), context, true );
+			QueryBinder.bindNativeQuery( queryRegistration.configuration(), context, null, true );
 		} );
 
 		globalRegistrations.getNamedStoredProcedureQueryRegistrations().forEach( (name, queryRegistration) -> {
@@ -152,13 +152,13 @@ public final class AnnotationBinder {
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindQuery( usage, context )
+				(usage) -> QueryBinder.bindQuery( usage, context, annotationTarget )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_NATIVE_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindNativeQuery( usage, context )
+				(usage) -> QueryBinder.bindNativeQuery( usage, context, annotationTarget )
 		);
 	}
 
@@ -174,13 +174,13 @@ public final class AnnotationBinder {
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindQuery( usage, context, false )
+				(usage) -> QueryBinder.bindQuery( usage, context, false, annotationTarget )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.NAMED_NATIVE_QUERY,
 				sourceModelContext,
-				(usage) -> QueryBinder.bindNativeQuery( usage, context, false )
+				(usage) -> QueryBinder.bindNativeQuery( usage, context, annotationTarget, false )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(

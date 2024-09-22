@@ -112,12 +112,9 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 	@Override
 	public void visitAttributeNodes(Consumer<AttributeNodeImplementor<?>> consumer) {
-		if ( attrNodeMap == null ) {
-			return;
+		if ( attrNodeMap != null ) {
+			attrNodeMap.forEach( (attribute, nodeImplementor) -> consumer.accept( nodeImplementor ) );
 		}
-		attrNodeMap.forEach( (persistentAttribute, attributeNodeImplementor) -> {
-			consumer.accept( attributeNodeImplementor );
-		} );
 	}
 
 	@Override
@@ -125,9 +122,11 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		if ( attrNodeMap == null ) {
 			return emptyList();
 		}
-		final List<AttributeNode<?>> result = new ArrayList<>();
-		visitAttributeNodes( result::add );
-		return result;
+		else {
+			final List<AttributeNode<?>> result = new ArrayList<>();
+			visitAttributeNodes( result::add );
+			return result;
+		}
 	}
 
 	@Override
@@ -209,8 +208,8 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		}
 	}
 
-	@Override
-	public void addAttributeNodes(Attribute<? super J, ?>... attributes) {
+	@Override @SafeVarargs
+	public final void addAttributeNodes(Attribute<? super J, ?>... attributes) {
 		for ( int i = 0; i < attributes.length; i++ ) {
 			addAttributeNode( attributes[i] );
 		}

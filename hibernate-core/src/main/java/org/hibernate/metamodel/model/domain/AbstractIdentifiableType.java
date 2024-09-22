@@ -74,13 +74,8 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	protected InFlightAccessImpl createInFlightAccess() {
+	protected InFlightAccess<J> createInFlightAccess() {
 		return new InFlightAccessImpl( super.createInFlightAccess() );
-	}
-
-	@Override
-	public InFlightAccessImpl getInFlightAccess() {
-		return (InFlightAccessImpl) super.getInFlightAccess();
 	}
 
 	@Override

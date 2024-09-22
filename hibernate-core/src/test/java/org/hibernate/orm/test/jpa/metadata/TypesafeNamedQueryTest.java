@@ -4,8 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.metadata;
 
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(annotatedClasses = Record.class)
 public class TypesafeNamedQueryTest {
+	@SkipForDialect(dialectClass = SybaseASEDialect.class,
+			reason = "'order by timestamp, id' not quite working")
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Record record1 = new Record("Hello, World!");

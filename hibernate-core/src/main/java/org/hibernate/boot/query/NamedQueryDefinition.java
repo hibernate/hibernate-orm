@@ -25,7 +25,7 @@ public interface NamedQueryDefinition<E> extends TypedQueryReference<E> {
 	}
 
 	/**
-	 * The name under which the query is to be registered
+	 * The name under which the query is to be registered.
 	 */
 	String getRegistrationName();
 
@@ -36,7 +36,14 @@ public interface NamedQueryDefinition<E> extends TypedQueryReference<E> {
 	Class<E> getResultType();
 
 	/**
-	 * Resolve the mapping definition into its run-time memento form
+	 * Resolve the mapping definition into its run-time memento form.
 	 */
 	NamedQueryMemento<E> resolve(SessionFactoryImplementor factory);
+
+	/**
+	 * The location at which the defining named query annotation occurs,
+	 * usually a class or package name. Null for named queries declared
+	 * in XML.
+	 */
+	@Nullable String getLocation();
 }

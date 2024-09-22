@@ -44,7 +44,8 @@ public class NamedNativeQueryDefinitionImpl<E> extends AbstractNamedQueryDefinit
 			String comment,
 			Integer firstResult,
 			Integer maxResults,
-			Map<String,Object> hints) {
+			Map<String,Object> hints,
+			String location) {
 		super(
 				name,
 				resultType,
@@ -57,7 +58,8 @@ public class NamedNativeQueryDefinitionImpl<E> extends AbstractNamedQueryDefinit
 				timeout,
 				fetchSize,
 				comment,
-				hints
+				hints,
+				location
 		);
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;

@@ -12,6 +12,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.models.spi.AnnotationTarget;
 
 /**
  * @author Steve Ebersole
@@ -36,12 +37,19 @@ public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryB
 
 	private Map<String, Object> hints;
 
-	public AbstractNamedQueryBuilder(String name) {
+	private final AnnotationTarget location;
+
+	public AbstractNamedQueryBuilder(String name, AnnotationTarget location) {
 		this.name = name;
+		this.location = location;
 	}
 
 	public String getName() {
 		return name;
+	}
+
+	AnnotationTarget getLocation() {
+		return location;
 	}
 
 	protected abstract T getThis();

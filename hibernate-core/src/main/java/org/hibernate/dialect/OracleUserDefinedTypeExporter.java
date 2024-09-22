@@ -283,30 +283,50 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 		final Integer arraySqlTypeCode = userDefinedType.getArraySqlTypeCode();
 		if ( arraySqlTypeCode == null || arraySqlTypeCode == TABLE ) {
 			return new String[] {
-					"drop type " + arrayTypeName + " force"
+					buildDropTypeSqlString(arrayTypeName)
 			};
 		}
 		return new String[] {
-				"drop type " + arrayTypeName + " force",
-				"drop function " + arrayTypeName + "_cmp",
-				"drop function " + arrayTypeName + "_distinct",
-				"drop function " + arrayTypeName + "_position",
-				"drop function " + arrayTypeName + "_length",
-				"drop function " + arrayTypeName + "_concat",
-				"drop function " + arrayTypeName + "_includes",
-				"drop function " + arrayTypeName + "_intersects",
-				"drop function " + arrayTypeName + "_get",
-				"drop function " + arrayTypeName + "_set",
-				"drop function " + arrayTypeName + "_remove",
-				"drop function " + arrayTypeName + "_remove_index",
-				"drop function " + arrayTypeName + "_slice",
-				"drop function " + arrayTypeName + "_replace",
-				"drop function " + arrayTypeName + "_trim",
-				"drop function " + arrayTypeName + "_fill",
-				"drop function " + arrayTypeName + "_positions",
-				"drop function " + arrayTypeName + "_to_string",
-				"drop function " + arrayTypeName + "_from_json"
+				buildDropTypeSqlString(arrayTypeName),
+				buildDropFunctionSqlString(arrayTypeName + "_cmp"),
+				buildDropFunctionSqlString(arrayTypeName + "_distinct"),
+				buildDropFunctionSqlString(arrayTypeName + "_position"),
+				buildDropFunctionSqlString(arrayTypeName + "_length"),
+				buildDropFunctionSqlString(arrayTypeName + "_concat"),
+				buildDropFunctionSqlString(arrayTypeName + "_includes"),
+				buildDropFunctionSqlString(arrayTypeName + "_intersects"),
+				buildDropFunctionSqlString(arrayTypeName + "_get"),
+				buildDropFunctionSqlString(arrayTypeName + "_set"),
+				buildDropFunctionSqlString(arrayTypeName + "_remove"),
+				buildDropFunctionSqlString(arrayTypeName + "_remove_index"),
+				buildDropFunctionSqlString(arrayTypeName + "_slice"),
+				buildDropFunctionSqlString(arrayTypeName + "_replace"),
+				buildDropFunctionSqlString(arrayTypeName + "_trim"),
+				buildDropFunctionSqlString(arrayTypeName + "_fill"),
+				buildDropFunctionSqlString(arrayTypeName + "_positions"),
+				buildDropFunctionSqlString(arrayTypeName + "_to_string"),
+				buildDropFunctionSqlString(arrayTypeName + "_from_json")
 		};
+	}
+
+	private String buildDropTypeSqlString(String arrayTypeName) {
+		if ( dialect.supportsIfExistsBeforeTypeName() ) {
+			return "drop type if exists " + arrayTypeName + " force";
+		} else {
+			return "drop type " + arrayTypeName + " force";
+		}
+	}
+
+	private String buildDropFunctionSqlString(String functionTypeName) {
+		if ( supportsIfExistsBeforeFunctionName() ) {
+			return "drop function if exists " + functionTypeName;
+		} else {
+			return "drop function " + functionTypeName;
+		}
+	}
+
+	private boolean supportsIfExistsBeforeFunctionName() {
+		return dialect.getVersion().isSameOrAfter( 23 );
 	}
 
 	private String determineValueExpression(String expression, int elementSqlTypeCode, String elementType) {

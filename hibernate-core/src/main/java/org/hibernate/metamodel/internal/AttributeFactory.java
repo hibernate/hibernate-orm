@@ -231,16 +231,12 @@ public class AttributeFactory {
 	}
 
 	public static <Y> DomainType<Y> determineSimpleType(ValueContext typeContext, MetadataContext context) {
-		switch ( typeContext.getValueClassification() ) {
-			case BASIC:
-				return basicDomainType( typeContext, context );
-			case ENTITY:
-				return entityDomainType( typeContext, context );
-			case EMBEDDABLE:
-				return embeddableDomainType( typeContext, context );
-			default:
-				throw new AssertionFailure( "Unknown type : " + typeContext.getValueClassification() );
-		}
+		return switch ( typeContext.getValueClassification() ) {
+			case BASIC -> basicDomainType( typeContext, context );
+			case ENTITY -> entityDomainType (typeContext, context );
+			case EMBEDDABLE -> embeddableDomainType( typeContext, context );
+			default -> throw new AssertionFailure( "Unknown type : " + typeContext.getValueClassification() );
+		};
 	}
 
 	private static <Y> EmbeddableDomainType<Y> embeddableDomainType(ValueContext typeContext, MetadataContext context) {
@@ -339,8 +335,7 @@ public class AttributeFactory {
 
 	private static <Y> DomainType<Y> entityDomainType(ValueContext typeContext, MetadataContext context) {
 		final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
-		if ( type instanceof EntityType ) {
-			final EntityType entityType = (EntityType) type;
+		if ( type instanceof EntityType entityType ) {
 			final IdentifiableDomainType<Y> domainType =
 					context.locateIdentifiableType( entityType.getAssociatedEntityName() );
 			if ( domainType == null ) {
@@ -378,11 +373,11 @@ public class AttributeFactory {
 		}
 		else {
 			final org.hibernate.type.Type type = hibernateValue.getType();
-			if ( type instanceof BasicPluralType<?, ?> ) {
-				final JavaType<?> javaTypeDescriptor = ( (BasicPluralType<?, ?>) type ).getElementType()
-						.getJavaTypeDescriptor();
-				if ( javaTypeDescriptor instanceof EmbeddableAggregateJavaType<?> ) {
-					final AggregateColumn aggregateColumn = (AggregateColumn) hibernateValue.getColumns().get( 0 );
+			if ( type instanceof BasicPluralType<?, ?> pluralType ) {
+				if ( pluralType.getElementType().getJavaTypeDescriptor()
+						instanceof EmbeddableAggregateJavaType<?> ) {
+					final AggregateColumn aggregateColumn =
+							(AggregateColumn) hibernateValue.getColumns().get( 0 );
 					classEmbeddableType( context, aggregateColumn.getComponent() );
 				}
 			}
@@ -483,18 +478,15 @@ public class AttributeFactory {
 		}
 		else if ( type instanceof CollectionType ) {
 			// collection
-			if ( value instanceof Collection ) {
-				final Collection collValue = (Collection) value;
-				final Value elementValue = collValue.getElement();
-				final org.hibernate.type.Type elementType = elementValue.getType();
+			if ( value instanceof Collection collection ) {
+				final org.hibernate.type.Type elementType = collection.getElement().getType();
 				final boolean isManyToMany = isManyToMany( member );
-
 				return new PluralAttributeMetadataImpl<>(
 						propertyMapping,
 						attributeContext.getOwnerType(),
 						member,
-						collectionClassification( elementType, elementValue, isManyToMany ),
-						elementClassification( elementType, elementValue, isManyToMany ),
+						collectionClassification( elementType, isManyToMany ),
+						elementClassification( elementType, isManyToMany ),
 						indexClassification( value ),
 						context
 				);
@@ -544,9 +536,8 @@ public class AttributeFactory {
 	}
 
 	private static AttributeClassification indexClassification(Value value) {
-		if ( value instanceof Map ) {
-			final Value keyValue = ( (Map) value).getIndex();
-			return keyClassification( keyValue.getType(), keyValue );
+		if ( value instanceof Map map ) {
+			return keyClassification( map.getIndex().getType() );
 		}
 		else if ( value instanceof List ) {
 			return AttributeClassification.BASIC;
@@ -557,7 +548,7 @@ public class AttributeFactory {
 	}
 
 	private static AttributeClassification elementClassification(
-			org.hibernate.type.Type elementType, Value elementValue, boolean isManyToMany) {
+			org.hibernate.type.Type elementType, boolean isManyToMany) {
 		// First, determine the type of the elements and use that to help determine the
 		// collection type
 		if ( elementType instanceof AnyType ) {
@@ -577,7 +568,7 @@ public class AttributeFactory {
 	}
 
 	private static AttributeClassification collectionClassification(
-			org.hibernate.type.Type elementType, Value elementValue, boolean isManyToMany) {
+			org.hibernate.type.Type elementType, boolean isManyToMany) {
 		if ( elementType instanceof EntityType ) {
 			return isManyToMany ?
 					AttributeClassification.MANY_TO_MANY :
@@ -588,7 +579,7 @@ public class AttributeFactory {
 		}
 	}
 
-	private static AttributeClassification keyClassification(org.hibernate.type.Type keyType, Value keyValue) {
+	private static AttributeClassification keyClassification(org.hibernate.type.Type keyType) {
 		if ( keyType instanceof AnyType ) {
 			return AttributeClassification.ANY;
 		}
@@ -604,47 +595,48 @@ public class AttributeFactory {
 	}
 
 	public static AttributeClassification determineSingularAssociationClassification(Member member) {
-		if ( member instanceof Field ) {
-			return ( (Field) member ).getAnnotation( OneToOne.class ) != null
+		if ( member instanceof Field field ) {
+			return field.getAnnotation( OneToOne.class ) != null
 					? AttributeClassification.ONE_TO_ONE
 					: AttributeClassification.MANY_TO_ONE;
 		}
 		else if ( member instanceof MapMember ) {
 			return AttributeClassification.MANY_TO_ONE; // curious to see how this works for non-annotated methods
 		}
-		else {
-			return ( (Method) member ).getAnnotation( OneToOne.class ) != null
+		else if ( member instanceof Method method) {
+			return method.getAnnotation( OneToOne.class ) != null
 					? AttributeClassification.ONE_TO_ONE
 					: AttributeClassification.MANY_TO_ONE;
+		}
+		else {
+			throw new AssertionFailure( "Unexpected member type" );
 		}
 	}
 
 	public static ParameterizedType getSignatureType(Member member) {
 		final java.lang.reflect.Type type;
-		if ( member instanceof Field ) {
-			type = ( (Field) member ).getGenericType();
+		if ( member instanceof Field field ) {
+			type = field.getGenericType();
 		}
-		else if ( member instanceof Method ) {
-			type = ( (Method) member ).getGenericReturnType();
+		else if ( member instanceof Method method ) {
+			type = method.getGenericReturnType();
+		}
+		else if ( member instanceof MapMember mapMember ) {
+			type = mapMember.getType();
 		}
 		else {
-			type = ( (MapMember) member ).getType();
+			throw new AssertionFailure( "Unexpected member type" );
 		}
 		//this is a raw type
-		if ( type instanceof Class ) {
-			return null;
-		}
-		else {
-			return (ParameterizedType) type;
-		}
+		return type instanceof Class ? null : (ParameterizedType) type;
 	}
 
 	public static boolean isManyToMany(Member member) {
-		if ( member instanceof Field ) {
-			return ( (Field) member ).getAnnotation( ManyToMany.class ) != null;
+		if ( member instanceof Field field ) {
+			return field.getAnnotation( ManyToMany.class ) != null;
 		}
-		else if ( member instanceof Method ) {
-			return ( (Method) member ).getAnnotation( ManyToMany.class ) != null;
+		else if ( member instanceof Method method ) {
+			return method.getAnnotation( ManyToMany.class ) != null;
 		}
 		else {
 			return false;

@@ -599,7 +599,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		bootMetamodel.getImports()
-				.forEach( ( k, v ) ->  this.nameToImportMap.put( k, new ImportInfo<>( v, null ) ) );
+				.forEach( (key, value) -> this.nameToImportMap.put( key, new ImportInfo<>( value, null ) ) );
 		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap );
 
 		final MetadataContext context = new MetadataContext(

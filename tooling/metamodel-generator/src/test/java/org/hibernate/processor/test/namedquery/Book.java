@@ -11,6 +11,12 @@ import jakarta.persistence.NamedQuery;
 
 @Entity
 @NamedEntityGraph(name = "entityGraph")
+@NamedQuery(name="booksByTitle",
+		query = "from Book where title = ?1")
+@NamedQuery(name="booksByTitleVerbose",
+		query = "select book from Book book where book.title = ?1")
+@NamedQuery(name = "titlesWithIsbns",
+		query = "select title, isbn from Book")
 @NamedQuery(name = "#findByTitle",
 		query = "from Book where title like :titlePattern")
 @NamedQuery(name = "#findByTitleAndType",

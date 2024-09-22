@@ -107,9 +107,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			if ( hbmValueMapping instanceof JaxbHbmNativeQueryReturnType ) {
-				final JaxbHbmNativeQueryReturnType hbmEntityReturn = (JaxbHbmNativeQueryReturnType) hbmValueMapping;
-
+			if ( hbmValueMapping instanceof JaxbHbmNativeQueryReturnType hbmEntityReturn ) {
 				final EntityResultDescriptor entityResultDescriptor = new EntityResultDescriptor(
 						hbmEntityReturn,
 						() -> joinDescriptors,
@@ -119,10 +117,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				localResultDescriptors.add( entityResultDescriptor );
 				fetchParentByAlias.put( entityResultDescriptor.tableAlias, entityResultDescriptor );
 			}
-			else if ( hbmValueMapping instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
-				final JaxbHbmNativeQueryCollectionLoadReturnType hbmCollectionReturn = (JaxbHbmNativeQueryCollectionLoadReturnType) hbmValueMapping;
+			else if ( hbmValueMapping instanceof JaxbHbmNativeQueryCollectionLoadReturnType hbmCollectionReturn ) {
 				foundCollectionReturn = true;
-
 				final CollectionResultDescriptor collectionResultDescriptor = new CollectionResultDescriptor(
 						hbmCollectionReturn,
 						() -> joinDescriptors,
@@ -132,14 +128,10 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				localResultDescriptors.add( collectionResultDescriptor );
 				fetchParentByAlias.put( collectionResultDescriptor.tableAlias, collectionResultDescriptor );
 			}
-			else if ( hbmValueMapping instanceof JaxbHbmNativeQueryJoinReturnType ) {
-				final JaxbHbmNativeQueryJoinReturnType jaxbHbmJoinReturn = (JaxbHbmNativeQueryJoinReturnType) hbmValueMapping;
-
+			else if ( hbmValueMapping instanceof JaxbHbmNativeQueryJoinReturnType jaxbHbmJoinReturn ) {
 				collectJoinFetch( jaxbHbmJoinReturn, joinDescriptors, fetchParentByAlias, registrationName, context );
 			}
-			else if ( hbmValueMapping instanceof JaxbHbmNativeQueryScalarReturnType ) {
-				final JaxbHbmNativeQueryScalarReturnType hbmScalarReturn = (JaxbHbmNativeQueryScalarReturnType) hbmValueMapping;
-
+			else if ( hbmValueMapping instanceof JaxbHbmNativeQueryScalarReturnType hbmScalarReturn ) {
 				localResultDescriptors.add( new ScalarDescriptor( hbmScalarReturn ) );
 			}
 			else {
@@ -510,7 +502,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this.parent = parent;
 			this.propertyPath = hbmPropertyMapping.getName();
 			this.propertyPathParts = StringHelper.split( ".", propertyPath );
-			this.columnAliases = extractColumnAliases( hbmPropertyMapping, context );
+			this.columnAliases = extractColumnAliases( hbmPropertyMapping );
 
 			if ( columnAliases.size() > 1 ) {
 				// We have to reorder the columns according to the property reordering
@@ -536,11 +528,11 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		private static Value getValue(HbmFetchParent parent, String propertyPath, MetadataBuildingContext context) {
-			if ( parent instanceof EntityResultDescriptor ) {
+			if ( parent instanceof EntityResultDescriptor resultDescriptor ) {
 				final PersistentClass entityBinding = context.getMetadataCollector()
-						.getEntityBinding( ( (EntityResultDescriptor) parent ).entityName );
+						.getEntityBinding( resultDescriptor.entityName );
 				Value value = null;
-				StringTokenizer st = new StringTokenizer( propertyPath, ".", false );
+				final StringTokenizer st = new StringTokenizer( propertyPath, ".", false );
 				try {
 					while ( st.hasMoreElements() ) {
 						final String element = (String) st.nextElement();
@@ -569,17 +561,17 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 								value = entityBinding.getProperty( element ).getValue();
 							}
 						}
-						else if ( value instanceof Component ) {
-							value = ( (Component) value ).getProperty( element ).getValue();
+						else if ( value instanceof Component component ) {
+							value = component.getProperty( element ).getValue();
 						}
-						else if ( value instanceof ToOne ) {
+						else if ( value instanceof ToOne toOne ) {
 							value = context.getMetadataCollector()
-									.getEntityBinding( ( (ToOne) value ).getReferencedEntityName() )
+									.getEntityBinding( toOne.getReferencedEntityName() )
 									.getProperty( element )
 									.getValue();
 						}
-						else if ( value instanceof OneToMany ) {
-							value = ( (OneToMany) value ).getAssociatedClass().getProperty( element ).getValue();
+						else if ( value instanceof OneToMany oneToMany ) {
+							value = oneToMany.getAssociatedClass().getProperty( element ).getValue();
 						}
 						else {
 							final Collection collection = (Collection) value;
@@ -606,9 +598,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					throw new MappingException( "property [" + propertyPath + "] not found on entity [" + entityBinding.getEntityName() + "]" );
 				}
 			}
-			else if ( parent instanceof CollectionResultDescriptor ) {
+			else if ( parent instanceof CollectionResultDescriptor descriptor ) {
 				final Collection collectionBinding = context.getMetadataCollector()
-						.getCollectionBinding( ( (CollectionResultDescriptor) parent ).collectionPath.getFullPath() );
+						.getCollectionBinding( descriptor.collectionPath.getFullPath() );
 				return collectionBinding.getElement();
 			}
 			else {
@@ -629,9 +621,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			return columnAliases;
 		}
 
-		private static List<String> extractColumnAliases(
-				JaxbHbmNativeQueryPropertyReturnType hbmPropertyMapping,
-				MetadataBuildingContext context) {
+		private static List<String> extractColumnAliases(JaxbHbmNativeQueryPropertyReturnType hbmPropertyMapping) {
 			if ( hbmPropertyMapping.getColumn() != null ) {
 				return Collections.singletonList( hbmPropertyMapping.getColumn() );
 			}
@@ -853,7 +843,6 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	public static class CollectionResultDescriptor implements ResultDescriptor, HbmFetchParent {
 		private final NavigablePath collectionPath;
 		private final String tableAlias;
-		private final LockMode lockMode;
 		private final Supplier<Map<String, Map<String, JoinDescriptor>>> joinDescriptorsAccess;
 		private final List<HbmFetchDescriptor> propertyFetchDescriptors;
 
@@ -887,7 +876,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					collectionPath
 			);
 
-			this.lockMode = hbmCollectionReturn.getLockMode();
+//			this.lockMode = hbmCollectionReturn.getLockMode();
 			this.joinDescriptorsAccess = joinDescriptorsAccess;
 
 			this.propertyFetchDescriptors = extractPropertyFetchDescriptors(

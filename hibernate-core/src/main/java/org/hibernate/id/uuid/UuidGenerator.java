@@ -58,25 +58,58 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
-		generator = determineValueGenerator( config, idMember );
+		generator = determineValueGenerator( config, idMember.getDeclaringClass().getName(), idMember.getName() );
 
 		final Class<?> memberType = getPropertyType( idMember );
 		valueTransformer = determineProperTransformer( memberType );
 	}
 
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			Member member,
+			GeneratorCreationContext creationContext) {
+		this( config, member );
+	}
+
+	/**
+	 * @return {@link EventTypeSets#INSERT_ONLY}
+	 */
+	@Override
+	public EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
+	}
+
+	@Override
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+		return valueTransformer.transform( generator.generateUuid( session ) );
+	}
+
+	@Internal
+	public UuidValueGenerator getValueGenerator() {
+		return generator;
+	}
+
+	@Internal
+	public ValueTransformer getValueTransformer() {
+		return valueTransformer;
+	}
+
 	private static UuidValueGenerator determineValueGenerator(
 			org.hibernate.annotations.UuidGenerator config,
-			Member idMember) {
+			String memberDeclaringClassName,
+			String memberName) {
 		if ( config != null ) {
+			// there is an annotation
 			if ( config.algorithm() != UuidValueGenerator.class ) {
+				// the annotation specified a custom algorithm
 				if ( config.style() != AUTO ) {
 					throw new MappingException(
 							String.format(
 									Locale.ROOT,
 									"Style [%s] should not be specified with custom UUID value generator : %s.%s",
 									config.style().name(),
-								idMember.getDeclaringClass().getName(),
-								idMember.getName()
+									memberDeclaringClassName,
+									memberName
 							)
 					);
 				}
@@ -85,14 +118,18 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			if ( config.style() == TIME ) {
 				return new CustomVersionOneStrategy();
 			}
-			else if ( config.style() == VERSION_6 ) {
+			if ( config.style() == VERSION_6 ) {
 				return UuidVersion6Strategy.INSTANCE;
 			}
-			else if ( config.style() == VERSION_7 ) {
+			if ( config.style() == VERSION_7 ) {
 				return UuidVersion7Strategy.INSTANCE;
 			}
+			// NOTE : AUTO falls through
 		}
 
+		// Either -
+		//		1. there is no annotation
+		//		2. the annotation specified AUTO (with no custom algorithm)
 		return StandardRandomStrategy.INSTANCE;
 	}
 
@@ -126,35 +163,5 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			Member idMember,
 			CustomIdGeneratorCreationContext creationContext) {
 		this(config, idMember);
-	}
-
-	public UuidGenerator(
-			org.hibernate.annotations.UuidGenerator config,
-			Member member,
-			GeneratorCreationContext creationContext) {
-		this(config, member);
-	}
-
-	/**
-	 * @return {@link EventTypeSets#INSERT_ONLY}
-	 */
-	@Override
-	public EnumSet<EventType> getEventTypes() {
-		return INSERT_ONLY;
-	}
-
-	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-		return valueTransformer.transform( generator.generateUuid( session ) );
-	}
-
-	@Internal
-	public UuidValueGenerator getValueGenerator() {
-		return generator;
-	}
-
-	@Internal
-	public ValueTransformer getValueTransformer() {
-		return valueTransformer;
 	}
 }

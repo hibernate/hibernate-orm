@@ -1057,6 +1057,19 @@ public class DB2LegacyDialect extends Dialect {
 		return DB2IdentityColumnSupport.INSTANCE;
 	}
 
+	/**
+	 * @return {@code true} because we can use {@code select ... from new table (insert .... )}
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return false;
+	}
+
 	@Override
 	public boolean supportsValuesList() {
 		return true;

@@ -157,6 +157,8 @@ import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
 import org.hibernate.dialect.function.xml.H2XmlPiFunction;
+import org.hibernate.dialect.function.xml.LegacyDB2XmlExistsFunction;
+import org.hibernate.dialect.function.xml.LegacyDB2XmlQueryFunction;
 import org.hibernate.dialect.function.xml.PostgreSQLXmlQueryFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlAggFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
@@ -4238,6 +4240,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * DB2 10.5 xmlquery() function
+	 */
+	public void xmlquery_db2_legacy() {
+		functionRegistry.register( "xmlquery", new LegacyDB2XmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
 	 * PostgreSQL xmlquery() function
 	 */
 	public void xmlquery_postgresql() {
@@ -4263,6 +4272,13 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlexists_sqlserver() {
 		functionRegistry.register( "xmlexists", new SQLServerXmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 10.5 xmlexists() function
+	 */
+	public void xmlexists_db2_legacy() {
+		functionRegistry.register( "xmlexists", new LegacyDB2XmlExistsFunction( typeConfiguration ) );
 	}
 
 	/**

@@ -133,7 +133,6 @@ public class ManagedTypeProcessor {
 			classDetails.forEachPersistableMember( memberDetails -> {
 				final MutableMemberDetails mutableMemberDetails = (MutableMemberDetails) memberDetails;
 				mutableMemberDetails.clearAnnotationUsages();
-				mutableMemberDetails.addAnnotationUsage( JpaAnnotations.TRANSIENT.createUsage( xmlDocumentContext.getModelBuildingContext() ) );
 			} );
 		}
 
@@ -720,7 +719,6 @@ public class ManagedTypeProcessor {
 			MutableMemberDetails memberDetails,
 			JaxbPersistentAttribute jaxbAttribute,
 			XmlDocumentContext xmlDocumentContext) {
-		memberDetails.removeAnnotationUsage( JpaAnnotations.TRANSIENT );
 		CommonAttributeProcessing.applyAttributeAccessor(
 				jaxbAttribute,
 				memberDetails,

@@ -431,8 +431,14 @@ public class DB2Dialect extends Dialect {
 		functionFactory.xmlforest();
 		functionFactory.xmlconcat();
 		functionFactory.xmlpi();
-		functionFactory.xmlquery_db2();
-		functionFactory.xmlexists();
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.xmlquery_db2();
+			functionFactory.xmlexists();
+		}
+		else {
+			functionFactory.xmlquery_db2_legacy();
+			functionFactory.xmlexists_db2_legacy();
+		}
 		functionFactory.xmlagg();
 	}
 

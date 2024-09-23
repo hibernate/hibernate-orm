@@ -4,28 +4,34 @@
  */
 package org.hibernate.processor.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.model.Metamodel;
 
 import static org.hibernate.processor.util.StringUtil.nameToMethodName;
 
 /**
+ * Represents a named query or named entity graph.
+ *
  * @author Gavin King
  */
 class TypedMetaAttribute extends NameMetaAttribute {
 	private final String prefix;
 	private final String resultType;
 	private final String referenceType;
+	private final @Nullable String query;
 
 	public TypedMetaAttribute(
 			Metamodel annotationMetaEntity,
 			String name,
 			String prefix,
 			String resultType,
-			String referenceType) {
+			String referenceType,
+			@Nullable String query) {
 		super( annotationMetaEntity, name, prefix );
 		this.prefix = prefix;
 		this.resultType = resultType;
 		this.referenceType = referenceType;
+		this.query = query;
 	}
 
 	@Override
@@ -35,14 +41,25 @@ class TypedMetaAttribute extends NameMetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		final boolean isQuery = "QUERY_".equals(prefix);  //UGLY!
 		final Metamodel entity = getHostingEntity();
 		final StringBuilder declaration = new StringBuilder();
 		declaration
 				.append("\n/**")
-				.append("\n * The query named {@value ")
+				.append("\n * The ")
+				.append(isQuery ? "query" : "entity graph")
+				.append(" named {@value ")
 				.append(prefix)
 				.append(fieldName())
-				.append("}\n *\n * @see ")
+				.append("}\n");
+		if ( query != null ) {
+			declaration.append(" * <pre>");
+			query.lines()
+					.forEach( line -> declaration.append("\n * ").append( line ) );
+			declaration.append("\n * </pre>\n");
+		}
+		declaration
+				.append(" *\n * @see ")
 				.append(entity.getQualifiedName())
 				.append("\n **/\n")
 				.append("public static volatile ")
@@ -53,7 +70,7 @@ class TypedMetaAttribute extends NameMetaAttribute {
 				.append(' ')
 				.append('_')
 				.append(nameToMethodName(getPropertyName()));
-		if ( "QUERY_".equals(prefix) ) { //UGLY!
+		if ( isQuery ) {
 			declaration.append('_');
 		}
 		declaration.append(';');

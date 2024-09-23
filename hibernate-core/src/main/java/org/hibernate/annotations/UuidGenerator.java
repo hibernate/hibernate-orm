@@ -60,12 +60,14 @@ public @interface UuidGenerator {
 		 * version 6.
 		 * @see UuidVersion6Strategy
 		 */
+		@Incubating
 		VERSION_6,
 		/**
 		 * Use a time-based generation strategy consistent with RFC 4122
 		 * version 7.
 		 * @see UuidVersion7Strategy
 		 */
+		@Incubating
 		VERSION_7
 	}
 

@@ -56,25 +56,68 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
 			MemberDetails memberDetails) {
-		generator = determineValueGenerator( config, memberDetails );
+		generator = determineValueGenerator( config, memberDetails.getDeclaringType().getName(), memberDetails.getName() );
 
 		final Class<?> memberType = memberDetails.getType().determineRawClass().toJavaClass();
 		valueTransformer = determineProperTransformer( memberType );
 	}
 
+	@Internal
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			Member idMember) {
+		generator = determineValueGenerator( config, idMember.getDeclaringClass().getName(), idMember.getName() );
+
+		final Class<?> propertyType = getPropertyType( idMember );
+		this.valueTransformer = determineProperTransformer( propertyType );
+	}
+
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			Member member,
+			GeneratorCreationContext creationContext) {
+		this( config, member );
+	}
+
+	/**
+	 * @return {@link EventTypeSets#INSERT_ONLY}
+	 */
+	@Override
+	public EnumSet<EventType> getEventTypes() {
+		return INSERT_ONLY;
+	}
+
+	@Override
+	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+		return valueTransformer.transform( generator.generateUuid( session ) );
+	}
+
+	@Internal
+	public UuidValueGenerator getValueGenerator() {
+		return generator;
+	}
+
+	@Internal
+	public ValueTransformer getValueTransformer() {
+		return valueTransformer;
+	}
+
 	private static UuidValueGenerator determineValueGenerator(
 			org.hibernate.annotations.UuidGenerator config,
-			MemberDetails memberDetails) {
+			String memberDeclaringClassName,
+			String memberName) {
 		if ( config != null ) {
+			// there is an annotation
 			if ( config.algorithm() != UuidValueGenerator.class ) {
+				// the annotation specified a custom algorithm
 				if ( config.style() != AUTO ) {
 					throw new MappingException(
 							String.format(
 									Locale.ROOT,
 									"Style [%s] should not be specified with custom UUID value generator : %s.%s",
 									config.style().name(),
-									memberDetails.getDeclaringType().getName(),
-									memberDetails.getName()
+									memberDeclaringClassName,
+									memberName
 							)
 					);
 				}
@@ -83,44 +126,19 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			if ( config.style() == TIME ) {
 				return new CustomVersionOneStrategy();
 			}
-			else if ( config.style() == VERSION_6 ) {
+			if ( config.style() == VERSION_6 ) {
 				return UuidVersion6Strategy.INSTANCE;
 			}
-			else if ( config.style() == VERSION_7 ) {
+			if ( config.style() == VERSION_7 ) {
 				return UuidVersion7Strategy.INSTANCE;
 			}
+			// NOTE : AUTO falls through
 		}
 
+		// Either -
+		//		1. there is no annotation
+		//		2. the annotation specified AUTO (with no custom algorithm)
 		return StandardRandomStrategy.INSTANCE;
-	}
-
-	@Internal
-	public UuidGenerator(
-			org.hibernate.annotations.UuidGenerator config,
-			Member idMember) {
-		if ( config.algorithm() != UuidValueGenerator.class ) {
-			if ( config.style() != AUTO ) {
-				throw new MappingException(
-						String.format(
-								Locale.ROOT,
-								"Style [%s] should not be specified with custom UUID value generator : %s.%s",
-								config.style().name(),
-								idMember.getDeclaringClass().getName(),
-								idMember.getName()
-						)
-				);
-			}
-			generator = instantiateCustomGenerator( config.algorithm() );
-		}
-		else if ( config.style() == TIME ) {
-			generator = new CustomVersionOneStrategy();
-		}
-		else {
-			generator = StandardRandomStrategy.INSTANCE;
-		}
-
-		final Class<?> propertyType = getPropertyType( idMember );
-		this.valueTransformer = determineProperTransformer( propertyType );
 	}
 
 	private static UuidValueGenerator instantiateCustomGenerator(Class<? extends UuidValueGenerator> algorithmClass) {
@@ -146,35 +164,5 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		}
 
 		throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );
-	}
-
-	public UuidGenerator(
-			org.hibernate.annotations.UuidGenerator config,
-			Member member,
-			GeneratorCreationContext creationContext) {
-		this(config, member);
-	}
-
-	/**
-	 * @return {@link EventTypeSets#INSERT_ONLY}
-	 */
-	@Override
-	public EnumSet<EventType> getEventTypes() {
-		return INSERT_ONLY;
-	}
-
-	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-		return valueTransformer.transform( generator.generateUuid( session ) );
-	}
-
-	@Internal
-	public UuidValueGenerator getValueGenerator() {
-		return generator;
-	}
-
-	@Internal
-	public ValueTransformer getValueTransformer() {
-		return valueTransformer;
 	}
 }

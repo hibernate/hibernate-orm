@@ -725,6 +725,7 @@ public class GeneratorBinder {
 					persistentClass,
 					idValue,
 					idMember,
+					generatedValue,
 					context
 			) );
 		}

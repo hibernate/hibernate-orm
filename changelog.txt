@@ -10,6 +10,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32340
 
 ** Bug
     * [HHH-18571] - Entities and collections with batch size 1 are treated as batchable
+    * [HHH-18565] - Bytecode enhancement, assertion error on reloading *toOne entities
     * [HHH-18560] - DB2iDialect executes incompatible query in combination with @AuditJoinTable mapping
     * [HHH-18558] - Informix UUID type support
     * [HHH-18556] - Expressions.nullExpresion() in querydsl result in NPE in SqmExpressible

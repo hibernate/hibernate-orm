@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
 
@@ -33,6 +34,10 @@ import static java.time.temporal.ChronoUnit.MILLIS;
  *     <li>48 bits - pseudorandom data to provide uniqueness.</li>
  * </ul>
  *
+ * @apiNote Version 7 features a time-ordered value field derived from the widely implemented and
+ * well-known Unix Epoch timestamp source, the number of milliseconds since midnight 1 Jan 1970 UTC,
+ * leap seconds excluded.
+ *
  * @author Cedomir Igaly
  */
 public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
@@ -40,52 +45,37 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 	public static final UuidVersion7Strategy INSTANCE = new UuidVersion7Strategy();
 
 	private static class Holder {
-
 		static final SecureRandom numberGenerator = new SecureRandom();
 	}
 
 	private final Lock lock = new ReentrantLock( true );
-
+	private final AtomicLong clockSequence;
 	private Duration currentTimestamp;
 
-	private final AtomicLong clockSequence;
-
+	@Internal
 	public UuidVersion7Strategy() {
 		this( getCurrentTimestamp(), 0 );
 	}
 
+	@Internal
 	public UuidVersion7Strategy(final Duration currentTimestamp, final long clockSequence) {
 		this.currentTimestamp = currentTimestamp;
 		this.clockSequence = new AtomicLong( clockSequence );
 	}
 
 	/**
-	 * A variant 7
+	 * Version 7
 	 */
 	@Override
 	public int getGeneratedVersion() {
-		/*
-		 *	UUIDv7 features a time-ordered value field derived from the widely implemented and well-
-		 * known Unix Epoch timestamp source, the number of milliseconds since midnight 1 Jan 1970 UTC,
-		 * leap seconds excluded.
-		 */
 		return 7;
 	}
 
-	/**
-	 * Delegates to {@link #generateUuid}
-	 */
 	@Override
 	public UUID generateUUID(SharedSessionContractImplementor session) {
 		return generateUuid( session );
 	}
 
-	/**
-	 * @param session session
-	 *
-	 * @return UUID version 7
-	 * @see UuidValueGenerator#generateUuid(SharedSessionContractImplementor)
-	 */
 	@Override
 	public UUID generateUuid(SharedSessionContractImplementor session) {
 		final Duration currentTimestamp = getCurrentTimestamp();

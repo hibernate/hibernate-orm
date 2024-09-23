@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
 
@@ -30,64 +31,51 @@ import org.hibernate.id.UUIDGenerationStrategy;
  *     <li>48 bits - pseudorandom data to provide uniqueness.</li>
  * </ul>
  *
+ * @apiNote This strategy is field-compatible with Version 1, with the time bits reordered for improved DB locality.
+ *
  * @author Cedomir Igaly
  */
 public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
 
-	private static final Instant EPOCH_1582;
+	public static final UuidVersion6Strategy INSTANCE = new UuidVersion6Strategy();
 
-	static {
-		EPOCH_1582 = LocalDate.of( 1582, 10, 15 )
-				.atStartOfDay( ZoneId.of( "UTC" ) )
-				.toInstant();
-	}
+	private static final Instant EPOCH_1582 = LocalDate.of( 1582, 10, 15 )
+			.atStartOfDay( ZoneId.of( "UTC" ) )
+			.toInstant();
 
 	private static class Holder {
-
 		static final SecureRandom numberGenerator = new SecureRandom();
 	}
 
-	public static final UuidVersion6Strategy INSTANCE = new UuidVersion6Strategy();
-
 	private final Lock lock = new ReentrantLock( true );
-
+	private final AtomicLong clockSequence = new AtomicLong( 0 );
 	private long currentTimestamp;
 
-	private final AtomicLong clockSequence = new AtomicLong( 0 );
 
+	@Internal
 	public UuidVersion6Strategy() {
 		this( getCurrentTimestamp(), 0 );
 	}
 
+	@Internal
 	public UuidVersion6Strategy(final long currentTimestamp, final long clockSequence) {
 		this.currentTimestamp = currentTimestamp;
 		this.clockSequence.set( clockSequence );
 	}
 
 	/**
-	 * A variant 6
+	 * Version 6
 	 */
 	@Override
 	public int getGeneratedVersion() {
-		// UUIDv6 is a field-compatible version of UUIDv1, reordered for improved DB locality
 		return 6;
 	}
 
-	/**
-	 * Delegates to {@link #generateUuid}
-	 */
 	@Override
 	public UUID generateUUID(SharedSessionContractImplementor session) {
 		return generateUuid( session );
 	}
 
-
-	/**
-	 * @param session session
-	 *
-	 * @return UUID version 6
-	 * @see UuidValueGenerator#generateUuid(SharedSessionContractImplementor)
-	 */
 	@Override
 	public UUID generateUuid(SharedSessionContractImplementor session) {
 		final long currentTimestamp = getCurrentTimestamp();

@@ -127,7 +127,7 @@ public abstract class AnnotationMeta implements Metamodel {
 							if ( resultType != null ) {
 								putMember( "QUERY_" + name,
 										new TypedMetaAttribute( this, name, "QUERY_", resultType,
-												"jakarta.persistence.TypedQueryReference" ) );
+												"jakarta.persistence.TypedQueryReference", hql ) );
 							}
 						}
 					}
@@ -205,11 +205,11 @@ public abstract class AnnotationMeta implements Metamodel {
 			// and then we will replace this TypedMetaAttribute
 			return new TypedMetaAttribute( this, name, prefix,
 					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
-					"jakarta.persistence.TypedQueryReference" );
+					"jakarta.persistence.TypedQueryReference", null );
 		}
 		else if ( !isJakartaDataStyle() && "GRAPH_".equals(prefix) ) {
 			return new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
-					"jakarta.persistence.EntityGraph" );
+					"jakarta.persistence.EntityGraph", null );
 		}
 		else {
 			return new NameMetaAttribute( this, name, prefix);

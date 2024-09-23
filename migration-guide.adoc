@@ -105,6 +105,32 @@ The behaviour of `jakarta.persistence.criteria.Expression#as(Class)` has been ch
 In order to perform an actual typecast, `org.hibernate.query.criteria.JpaExpression#cast(Class)` can be used.
 
 E.g.
-```
+
+[source,java]
+----
 ( (JpaExpression) from.get( "theInt" ) ).cast( String.class )
-```
+----
+
+
+[[table-annotation-subclasses]]
+== @Table and SINGLE_TABLE inheritance
+
+In previous versions, `@Table` on a subclass in a SINGLE_TABLE hierarchy was simply ignored.  E.g.
+
+[source,java]
+----
+@Entity
+@Inherited
+class RootClass {
+	// ...
+}
+@Entity
+@Table(...)
+class SubClass extends RootClass {
+	// ...
+}
+----
+
+As part of a larger effort toward better annotation validation, this now results in a mapping exception.
+All classes in the hierarchy are stored to a single table as defined by the root.  `@Table` on the subclasses is,
+at best, confusing.

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -66,7 +67,7 @@ public class SingleTableNativeQueryTest extends BaseEntityManagerFunctionalTestC
 		doInHibernate(this::entityManagerFactory, session -> {
 			loadData(session);
 			List<Object> results = session.createNativeQuery("select {p.*} from person p order by p.name", Object.class).addEntity("p", Person.class).list();
-			assertThat( results.stream().map(p -> ((Person)p).getName()).toList(), contains("Jane", "John", "Mark", "Susan") );
+			assertThat( results.stream().map(p -> ((Person)p).getName()).collect(Collectors.toList()), contains("Jane", "John", "Mark", "Susan") );
 		} );
 	}
 

@@ -17,6 +17,7 @@ java.modularity.inferModulePath = true
 dependencies {
 	api project( ':hibernate-core' )
 	api project( ':hibernate-envers' )
+	implementation project( ':hibernate-scan-jandex' )
 	//Provide the jakarta.cdi module, as it's required by module jakarta.transaction
 	//but not provided as transitive dependency of Narayana.
 	testRuntimeOnly( jakartaLibs.cdi )

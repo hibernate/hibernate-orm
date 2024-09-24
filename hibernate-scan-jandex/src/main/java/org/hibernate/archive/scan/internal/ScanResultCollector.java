@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.archive.scan.internal;
+package org.hibernate.archive.scan.internal;
 
 import java.util.Collections;
 import java.util.HashSet;

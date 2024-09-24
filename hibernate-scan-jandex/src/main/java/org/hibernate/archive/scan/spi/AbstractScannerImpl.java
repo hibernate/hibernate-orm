@@ -2,14 +2,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.archive.scan.spi;
+package org.hibernate.archive.scan.spi;
 
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.boot.archive.scan.internal.NoopEntryHandler;
-import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
+import org.hibernate.archive.scan.internal.NoopEntryHandler;
+import org.hibernate.archive.scan.internal.ScanResultCollector;
+import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
+import org.hibernate.boot.archive.scan.spi.ScanOptions;
+import org.hibernate.boot.archive.scan.spi.ScanParameters;
+import org.hibernate.boot.archive.scan.spi.ScanResult;
+import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;

@@ -8,13 +8,13 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
-import org.hibernate.sql.ast.tree.from.EmbeddableFunctionTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.NullType;
@@ -90,7 +90,10 @@ public interface SqlExpressionResolver {
 	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
 		assert tableReference.containsAffectedTableName( selectable.getContainingTableExpression() )
 				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), selectable.getContainingTableExpression() );
-		return createColumnReferenceKey( tableReference, selectable.getSelectablePath(), selectable.getJdbcMapping() );
+		final JdbcMapping jdbcMapping = (selectable instanceof DiscriminatorMapping) ?
+			((DiscriminatorMapping)selectable).getUnderlyingJdbcMapping() :
+			selectable.getJdbcMapping();
+		return createColumnReferenceKey( tableReference, selectable.getSelectablePath(), jdbcMapping );
 	}
 
 	default Expression resolveSqlExpression(TableReference tableReference, SelectableMapping selectableMapping) {

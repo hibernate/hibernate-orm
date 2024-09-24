@@ -82,7 +82,7 @@ public class SingleTableNativeQueryTest extends BaseEntityManagerFunctionalTestC
 			assertThat(results.size(), is(1));
 			assertThat(results.get(0)[0], instanceOf(Man.class));
 			assertThat(((Man)results.get(0)[0]).getName(), is("John"));
-			assertThat(results.get(0)[0], instanceOf(Woman.class));
+			assertThat(results.get(0)[1], instanceOf(Woman.class));
 			assertThat(((Woman)results.get(0)[1]).getName(), is("Jane"));
 		});
 	}

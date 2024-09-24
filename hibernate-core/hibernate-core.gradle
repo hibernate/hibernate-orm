@@ -28,8 +28,6 @@ dependencies {
     api jakartaLibs.jta
 
     implementation libs.hibernateModels
-    implementation libs.hibernateModelsJandex
-    implementation libs.jandex
     implementation libs.classmate
     implementation libs.byteBuddy
 
@@ -50,8 +48,12 @@ dependencies {
 //    annotationProcessor project( ":annotation-descriptor-generator" )
     compileOnly project( ":annotation-descriptor-generator" )
 
+    runtimeOnly project(':hibernate-scan-jandex')
+
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
+    testImplementation project(':hibernate-scan-jandex')
+
     testImplementation testLibs.shrinkwrapApi
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors
@@ -71,6 +73,7 @@ dependencies {
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
     testRuntimeOnly testLibs.wildFlyTxnClient
+    testImplementation libs.jandex
     testImplementation jakartaLibs.jsonb
     testImplementation libs.jackson
     testRuntimeOnly libs.jacksonXml

@@ -9,13 +9,13 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.DisabledScanner;
+import org.hibernate.archive.scan.internal.MappingFileDescriptorImpl;
+import org.hibernate.archive.scan.internal.PackageDescriptorImpl;
+import org.hibernate.archive.scan.internal.ScanResultImpl;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
-import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.DisabledScanner;
-import org.hibernate.boot.archive.scan.internal.MappingFileDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.PackageDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.ScanResultImpl;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;

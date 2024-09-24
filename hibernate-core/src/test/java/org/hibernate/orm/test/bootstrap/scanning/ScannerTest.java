@@ -14,9 +14,9 @@ import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import org.hibernate.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;

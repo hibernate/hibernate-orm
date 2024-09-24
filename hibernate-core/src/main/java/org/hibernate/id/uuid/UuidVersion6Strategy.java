@@ -36,15 +36,13 @@ import org.hibernate.id.UUIDGenerationStrategy;
  * @author Cedomir Igaly
  */
 public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
-
 	public static final UuidVersion6Strategy INSTANCE = new UuidVersion6Strategy();
-
-	private static final Instant EPOCH_1582 = LocalDate.of( 1582, 10, 15 )
-			.atStartOfDay( ZoneId.of( "UTC" ) )
-			.toInstant();
 
 	private static class Holder {
 		static final SecureRandom numberGenerator = new SecureRandom();
+		static final Instant EPOCH_1582 = LocalDate.of( 1582, 10, 15 )
+				.atStartOfDay( ZoneId.of( "UTC" ) )
+				.toInstant();
 	}
 
 	private final Lock lock = new ReentrantLock( true );
@@ -112,7 +110,7 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 	}
 
 	private static long getCurrentTimestamp() {
-		final Duration duration = Duration.between( EPOCH_1582, Instant.now() );
+		final Duration duration = Duration.between( Holder.EPOCH_1582, Instant.now() );
 		return duration.toSeconds() * 10_000_000 + duration.toNanosPart() / 100;
 	}
 }

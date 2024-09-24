@@ -93,9 +93,6 @@ class DomToAsciidocConverter {
 	}
 
 	private void visitDiv(Element div) {
-		if ( converted.length() != 0 ) {
-			converted.append( "\n+\n" );
-		}
 		for ( Node childNode : div.childNodes() ) {
 			visitNode( childNode );
 		}
@@ -129,7 +126,6 @@ class DomToAsciidocConverter {
 		if ( converted.lastIndexOf( "\n" ) != converted.length() - 1 ) {
 			converted.append( '\n' );
 		}
-		converted.append( "+\n" );
 		for ( Node childNode : ul.childNodes() ) {
 			visitNode( childNode );
 		}

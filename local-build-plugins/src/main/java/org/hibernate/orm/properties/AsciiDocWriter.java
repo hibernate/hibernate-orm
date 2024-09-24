@@ -68,9 +68,7 @@ public class AsciiDocWriter {
 			for ( SettingDescriptor settingDescriptor : sectionSettingDescriptors ) {
 				// write an anchor in the form `[[{anchorNameBase}-{settingName}]]`
 				tryToWriteLine( writer, "[[", anchorNameBase, "-", settingDescriptor.getName(), "]]" );
-
-				writeSettingName( settingDescriptor, writer );
-				writer.write( "::\n" );
+				tryToWriteLine( writer, "==== ", settingName( settingDescriptor ) );
 
 				writeMetadata( settingDescriptor, writer );
 
@@ -88,7 +86,6 @@ public class AsciiDocWriter {
 			return;
 		}
 
-		writer.write( "+\n" );
 		writer.write( "****\n" );
 
 		writer.write(
@@ -125,27 +122,24 @@ public class AsciiDocWriter {
 			writer.write( settingDescriptor.getApiNote() + "\n\n" );
 		}
 
-		writer.write( "****\n+\n" );
+		writer.write( "****\n\n" );
 	}
 
-	private static void writeSettingName(SettingDescriptor settingDescriptor, FileWriter writer) throws IOException {
-		writer.write( "`" );
+	private static String settingName(SettingDescriptor settingDescriptor) {
 		if ( settingDescriptor.getLifecycleDetails().isDeprecated() ) {
-			writer.write( "[.line-through]#" );
+			return String.format(
+					Locale.ROOT,
+					"`[.line-through]#%s#`",
+					settingDescriptor.getName()
+			);
 		}
 		else {
-			writer.write( '*' );
+			return String.format(
+					Locale.ROOT,
+					"`%s`",
+					settingDescriptor.getName()
+			);
 		}
-
-		writer.write( settingDescriptor.getName() );
-
-		if ( settingDescriptor.getLifecycleDetails().isDeprecated() ) {
-			writer.write( '#' );
-		}
-		else {
-			writer.write( '*' );
-		}
-		writer.write( '`' );
 	}
 
 	private static void tryToWriteLine(Writer writer, String prefix, String value, String... other) {

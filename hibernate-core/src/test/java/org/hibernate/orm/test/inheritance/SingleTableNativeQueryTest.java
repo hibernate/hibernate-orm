@@ -63,12 +63,6 @@ public class SingleTableNativeQueryTest extends BaseEntityManagerFunctionalTestC
 
 	@Test
 	public void itShouldGetPersons() {
-		// This case fails because it adds an alias of "type1_1_0_" to the "TYPE" column of the Person table, but after retrieving the ResultSet
-		// it tries to find a column named "TYPE" instead of the alias
-		//
-		// Note that this only fails on databases with a strict JDBC driver such as PostgreSQL. If you change the hibernate.properties to use a database
-		// with a more lenient JDBC driver such as H2 or HSQL it will "work". This is because when you search for the "TYPE" column, even though it is
-		// aliased, and technically shouldn't be available the JDBC driver will fall back and find it because it was the name of the column in the table schema
 		doInHibernate(this::entityManagerFactory, session -> {
 			loadData(session);
 			List<Object> results = session.createNativeQuery("select {p.*} from person p order by p.name", Object.class).addEntity("p", Person.class).list();
@@ -94,7 +88,6 @@ public class SingleTableNativeQueryTest extends BaseEntityManagerFunctionalTestC
 
 	@Test
 	public void itShouldGetFamilyMembers() {
-		// This case works because it does not add an alias to the TYPE column when retrieving the family members (Person table)
 		doInHibernate(this::entityManagerFactory, session -> {
 			loadData(session);
 			List<Object> results = session.createNativeQuery("select {f.*} from family f", Object.class).addEntity("f", Family.class).list();

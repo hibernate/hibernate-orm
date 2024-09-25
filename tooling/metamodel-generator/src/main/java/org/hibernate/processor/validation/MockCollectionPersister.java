@@ -18,7 +18,6 @@ import org.hibernate.type.MapType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.internal.util.StringHelper.root;
-import static org.hibernate.processor.validation.MockSessionFactory.typeConfiguration;
 
 /**
  * @author Gavin King
@@ -96,11 +95,11 @@ public abstract class MockCollectionPersister implements QueryableCollection {
 	@Override
 	public Type getIndexType() {
 		if (collectionType instanceof ListType) {
-			return typeConfiguration.getBasicTypeForJavaType(Integer.class);
+			return factory.getTypeConfiguration().getBasicTypeForJavaType(Integer.class);
 		}
 		else if (collectionType instanceof MapType) {
 			//TODO!!! this is incorrect, return the correct key type
-			return typeConfiguration.getBasicTypeForJavaType(String.class);
+			return factory.getTypeConfiguration().getBasicTypeForJavaType(String.class);
 		}
 		else {
 			return null;
@@ -114,7 +113,7 @@ public abstract class MockCollectionPersister implements QueryableCollection {
 
 	@Override
 	public Type getIdentifierType() {
-		return typeConfiguration.getBasicTypeForJavaType(Long.class);
+		return factory.getTypeConfiguration().getBasicTypeForJavaType(Long.class);
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
@@ -67,6 +68,15 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 	 * Extract the identifier from an instance of the entity
 	 */
 	Object getIdentifier(Object entity);
+
+	/**
+	 * Extract the identifier from an instance of the entity
+	 *
+	 * It's supposed to be use during the merging process
+	 */
+	default Object getIdentifier(Object entity, MergeContext mergeContext){
+		return getIdentifier( entity );
+	}
 
 	/**
 	 * Return the identifier of the persistent or transient object, or throw

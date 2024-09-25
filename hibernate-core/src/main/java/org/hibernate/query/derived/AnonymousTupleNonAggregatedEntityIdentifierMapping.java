@@ -14,6 +14,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
@@ -77,6 +78,12 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	@Override
 	public Object getIdentifier(Object entity) {
 		return delegate.getIdentifier( entity );
+	}
+
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override

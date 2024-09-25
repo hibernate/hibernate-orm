@@ -1110,6 +1110,7 @@ function
 	| jpaNonstandardFunction
 	| columnFunction
 	| jsonFunction
+	| xmlFunction
 	| genericFunction
 	;
 
@@ -1716,6 +1717,64 @@ jsonUniqueKeysClause
 	: (WITH|WITHOUT) UNIQUE KEYS
 	;
 
+xmlFunction
+	: xmlelementFunction
+	| xmlforestFunction
+	| xmlpiFunction
+	| xmlqueryFunction
+	| xmlexistsFunction
+	| xmlaggFunction
+	;
+
+/**
+ * The 'xmlelement()' function
+ */
+xmlelementFunction
+	: XMLELEMENT LEFT_PAREN NAME identifier (COMMA xmlattributesFunction)? (COMMA expressionOrPredicate)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlattributes()' function
+ */
+xmlattributesFunction
+	: XMLATTRIBUTES LEFT_PAREN expressionOrPredicate AS identifier (COMMA expressionOrPredicate AS identifier)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlforest()' function
+ */
+xmlforestFunction
+	: XMLFOREST LEFT_PAREN expressionOrPredicate (AS identifier)? (COMMA expressionOrPredicate (AS identifier)?)* RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlpi()' function
+ */
+xmlpiFunction
+	: XMLPI LEFT_PAREN NAME identifier (COMMA expression)? RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlquery()' function
+ */
+xmlqueryFunction
+	: XMLQUERY LEFT_PAREN expression PASSING expression RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlexists()' function
+ */
+xmlexistsFunction
+	: XMLEXISTS LEFT_PAREN expression PASSING expression RIGHT_PAREN
+	;
+
+/**
+ * The 'xmlexists()' function
+ */
+xmlaggFunction
+	: XMLAGG LEFT_PAREN expression orderByClause? RIGHT_PAREN filterClause? overClause?
+	;
+
 /**
  * Support for "soft" keywords which may be used as identifiers
  *
@@ -1847,6 +1906,7 @@ jsonUniqueKeysClause
 	| MININDEX
 	| MINUTE
 	| MONTH
+	| NAME
 	| NANOSECOND
 	| NATURALID
 	| NEW
@@ -1921,6 +1981,13 @@ jsonUniqueKeysClause
 	| WITHIN
 	| WITHOUT
 	| WRAPPER
+	| XMLAGG
+	| XMLATTRIBUTES
+	| XMLELEMENT
+	| XMLEXISTS
+	| XMLFOREST
+	| XMLPI
+	| XMLQUERY
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

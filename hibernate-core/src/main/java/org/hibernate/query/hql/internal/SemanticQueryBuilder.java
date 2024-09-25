@@ -153,6 +153,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
@@ -165,6 +166,7 @@ import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -229,6 +231,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -2977,6 +2980,110 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new SemanticException(
 					"Can't use function '" + ctx.children.get( 0 ).getText() +
 							"', because tech preview JSON functions are not enabled. To enable, set the '" + QuerySettings.JSON_FUNCTIONS_ENABLED + "' setting to 'true'.",
+					query
+			);
+		}
+	}
+
+	@Override
+	public SqmExpression<?> visitXmlelementFunction(HqlParser.XmlelementFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final String elementName = visitIdentifier( ctx.identifier() );
+		final SqmXmlElementExpression xmlelement = creationContext.getNodeBuilder().xmlelement( elementName );
+		final HqlParser.XmlattributesFunctionContext attributeCtx = ctx.xmlattributesFunction();
+		if ( attributeCtx != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressions = attributeCtx.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> attributeNames = attributeCtx.identifier();
+			for ( int i = 0; i < expressions.size(); i++ ) {
+				xmlelement.attribute(
+						visitIdentifier( attributeNames.get( i ) ),
+						(Expression<?>) expressions.get( i ).accept( this )
+				);
+			}
+		}
+		xmlelement.content( visitExpressions( ctx ) );
+		return xmlelement;
+	}
+
+	@Override
+	public SqmExpression<?> visitXmlforestFunction(HqlParser.XmlforestFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final ArrayList<SqmExpression<?>> elementExpressions = new ArrayList<>( ctx.getChildCount() >> 1 );
+		for ( int i = 2; i < ctx.getChildCount(); i++ ) {
+			if ( ctx.getChild( i ) instanceof HqlParser.ExpressionOrPredicateContext exprCtx ) {
+				final SqmExpression<?> expression = (SqmExpression<?>) exprCtx.accept( this );
+				if ( i + 2 < ctx.getChildCount() && ctx.getChild( i + 2 ) instanceof HqlParser.IdentifierContext identifierContext ) {
+					final String name = visitIdentifier( identifierContext );
+					elementExpressions.add( new SqmNamedExpression<>( expression, name ) );
+					i += 2;
+				}
+				else {
+					if ( !( expression instanceof SqmPath<?> path ) || !( path.getModel() instanceof PersistentAttribute<?, ?> attribute ) ) {
+						throw new SemanticException(
+								"Can't use expression '" + exprCtx.getText() + " without explicit name in xmlforest function" +
+										", because XML element names can only be derived from path expressions.",
+								query
+						);
+					}
+					elementExpressions.add( new SqmNamedExpression<>( expression, attribute.getName() ) );
+				}
+			}
+		}
+		return creationContext.getNodeBuilder().xmlforest( elementExpressions );
+	}
+
+	@Override
+	public SqmExpression<?> visitXmlpiFunction(HqlParser.XmlpiFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final String name = visitIdentifier( ctx.identifier() );
+		final HqlParser.ExpressionContext exprCtx = ctx.expression();
+		//noinspection unchecked
+		return exprCtx == null
+				? creationContext.getNodeBuilder().xmlpi( name )
+				: creationContext.getNodeBuilder().xmlpi( name, (Expression<String>) exprCtx.accept( this ) );
+	}
+
+	@Override
+	public SqmExpression<?> visitXmlqueryFunction(HqlParser.XmlqueryFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final SqmExpression<String> query = (SqmExpression<String>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> xmlDocument = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		return creationContext.getNodeBuilder().xmlquery( query, xmlDocument );
+	}
+
+	@Override
+	public SqmExpression<?> visitXmlexistsFunction(HqlParser.XmlexistsFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final SqmExpression<String> query = (SqmExpression<String>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> xmlDocument = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		return creationContext.getNodeBuilder().xmlexists( query, xmlDocument );
+	}
+
+	@Override
+	public SqmExpression<?> visitXmlaggFunction(HqlParser.XmlaggFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 1 );
+		arguments.add( (SqmTypedNode<?>) ctx.expression().accept( this ) );
+
+		return applyOverClause(
+				ctx.overClause(),
+				getFunctionDescriptor( "xmlagg" ).generateOrderedSetAggregateSqmExpression(
+						arguments,
+						getFilterExpression( ctx ),
+						ctx.orderByClause() == null
+								? null
+								: visitOrderByClause( ctx.orderByClause(), false ),
+						null,
+						creationContext.getQueryEngine()
+				)
+		);
+	}
+
+	private void checkXmlFunctionsEnabled(ParserRuleContext ctx) {
+		if ( !creationOptions.isXmlFunctionsEnabled() ) {
+			throw new SemanticException(
+					"Can't use function '" + ctx.children.get( 0 ).getText() +
+							"', because tech preview XML functions are not enabled. To enable, set the '" + QuerySettings.XML_FUNCTIONS_ENABLED + "' setting to 'true'.",
 					query
 			);
 		}

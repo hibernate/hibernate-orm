@@ -52,6 +52,7 @@ import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -386,8 +387,9 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsRepeat implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			// Derby doesn't support the `REPLACE` function
-			return !( dialect instanceof DerbyDialect );
+			// Derby doesn't support the `REPEAT` function
+			return !( dialect instanceof DerbyDialect
+					|| dialect instanceof InformixDialect );
 		}
 	}
 
@@ -553,6 +555,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect
 					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) )
+					|| dialect instanceof InformixDialect
 					|| dialect instanceof MariaDBDialect;
 		}
 	}
@@ -832,6 +835,54 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonArrayInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_array_insert" );
+		}
+	}
+
+	public static class SupportsXmlelement implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlelement" );
+		}
+	}
+
+	public static class SupportsXmlcomment implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlcomment" );
+		}
+	}
+
+	public static class SupportsXmlforest implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlforest" );
+		}
+	}
+
+	public static class SupportsXmlconcat implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlconcat" );
+		}
+	}
+
+	public static class SupportsXmlpi implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlpi" );
+		}
+	}
+
+	public static class SupportsXmlquery implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlquery" );
+		}
+	}
+
+	public static class SupportsXmlexists implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlexists" );
+		}
+	}
+
+	public static class SupportsXmlagg implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "xmlagg" );
 		}
 	}
 

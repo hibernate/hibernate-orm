@@ -36,7 +36,7 @@ public class FunctionTableReference extends DerivedTableReference {
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		functionExpression.accept( sqlTreeWalker );
+		sqlTreeWalker.visitFunctionTableReference( this );
 	}
 
 	@Override

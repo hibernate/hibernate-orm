@@ -74,7 +74,7 @@ public class SubselectFetch {
 
 	/**
 	 *The entity-keys of all owners loaded from a particular execution
-	 *
+	 * <p>
 	 * Used for "empty collection" handling mostly
 	 */
 	public Set<EntityKey> getResultingEntityKeys() {

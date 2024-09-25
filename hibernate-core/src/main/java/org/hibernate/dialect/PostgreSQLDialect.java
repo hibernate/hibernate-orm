@@ -95,6 +95,7 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -630,6 +631,15 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.jsonArrayAppend_postgresql( getVersion().isSameOrAfter( 13 ) );
 		functionFactory.jsonArrayInsert_postgresql();
 
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		functionFactory.xmlquery_postgresql();
+		functionFactory.xmlexists();
+		functionFactory.xmlagg();
+
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
 		functionFactory.inverseDistributionOrderedSetAggregates();
@@ -847,8 +857,8 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return "sequence";
+	public GenerationType getNativeValueGenerationStrategy() {
+		return GenerationType.SEQUENCE;
 	}
 
 	@Override

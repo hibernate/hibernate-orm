@@ -35,6 +35,13 @@ public class ExpressionTypeHelper {
 				&& expressionType.getSingleJdbcMapping().getJdbcType().isJson();
 	}
 
+	public static boolean isXml(SqlAstNode node) {
+		final Expression expression = (Expression) node;
+		final JdbcMappingContainer expressionType = expression.getExpressionType();
+		return expressionType.getJdbcTypeCount() == 1
+				&& expressionType.getSingleJdbcMapping().getJdbcType().isXml();
+	}
+
 	public static JdbcType getSingleJdbcType(SqlAstNode node) {
 		final Expression expression = (Expression) node;
 		final JdbcMappingContainer expressionType = expression.getExpressionType();

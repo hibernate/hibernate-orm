@@ -47,15 +47,16 @@ public class NamedQueryBinder {
 			String prefix) {
 		final String registrationName = prefix + namedQueryBinding.getName();
 
-		final NamedHqlQueryDefinition.Builder<?> queryBuilder = new NamedHqlQueryDefinition.Builder<>( registrationName )
-				.setComment( namedQueryBinding.getComment() )
-				.setCacheable( namedQueryBinding.isCacheable() )
-				.setCacheMode( namedQueryBinding.getCacheMode() )
-				.setCacheRegion( namedQueryBinding.getCacheRegion() )
-				.setTimeout( namedQueryBinding.getTimeout() )
-				.setReadOnly( namedQueryBinding.isReadOnly() )
-				.setFlushMode( namedQueryBinding.getFlushMode() )
-				.setFetchSize( namedQueryBinding.getFetchSize() );
+		final NamedHqlQueryDefinition.Builder<?> queryBuilder =
+				new NamedHqlQueryDefinition.Builder<>( registrationName )
+						.setComment( namedQueryBinding.getComment() )
+						.setCacheable( namedQueryBinding.isCacheable() )
+						.setCacheMode( namedQueryBinding.getCacheMode() )
+						.setCacheRegion( namedQueryBinding.getCacheRegion() )
+						.setTimeout( namedQueryBinding.getTimeout() )
+						.setReadOnly( namedQueryBinding.isReadOnly() )
+						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFetchSize( namedQueryBinding.getFetchSize() );
 
 		boolean foundQuery = false;
 
@@ -109,16 +110,17 @@ public class NamedQueryBinder {
 
 		final String registrationName = prefix + namedQueryBinding.getName();
 
-		final NamedNativeQueryDefinition.Builder<?> builder = new NamedNativeQueryDefinition.Builder<>( registrationName )
-				.setComment( namedQueryBinding.getComment() )
-				.setCacheable( namedQueryBinding.isCacheable() )
-				.setCacheMode( namedQueryBinding.getCacheMode() )
-				.setCacheRegion( namedQueryBinding.getCacheRegion() )
-				.setTimeout( namedQueryBinding.getTimeout() )
-				.setReadOnly( namedQueryBinding.isReadOnly() )
-				.setFlushMode( namedQueryBinding.getFlushMode() )
-				.setFetchSize( namedQueryBinding.getFetchSize() )
-				.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
+		final NamedNativeQueryDefinition.Builder<?> builder =
+				new NamedNativeQueryDefinition.Builder<>( registrationName )
+						.setComment( namedQueryBinding.getComment() )
+						.setCacheable( namedQueryBinding.isCacheable() )
+						.setCacheMode( namedQueryBinding.getCacheMode() )
+						.setCacheRegion( namedQueryBinding.getCacheRegion() )
+						.setTimeout( namedQueryBinding.getTimeout() )
+						.setReadOnly( namedQueryBinding.isReadOnly() )
+						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFetchSize( namedQueryBinding.getFetchSize() )
+						.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 
 		final ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder =
 				new ImplicitHbmResultSetMappingDescriptorBuilder( registrationName, context );
@@ -222,12 +224,10 @@ public class NamedQueryBinder {
 			);
 		}
 
-		if ( content instanceof JaxbHbmQueryParamType ) {
-			final JaxbHbmQueryParamType paramTypeBinding = (JaxbHbmQueryParamType) content;
+		if ( content instanceof JaxbHbmQueryParamType paramTypeBinding ) {
 			queryBuilder.addParameterTypeHint( paramTypeBinding.getName(), paramTypeBinding.getType() );
 		}
-		else if ( content instanceof JaxbHbmSynchronizeType ) {
-			final JaxbHbmSynchronizeType synchronizedSpace = (JaxbHbmSynchronizeType) content;
+		else if ( content instanceof JaxbHbmSynchronizeType synchronizedSpace ) {
 			queryBuilder.addSynchronizedQuerySpace( synchronizedSpace.getTable() );
 		}
 		else if ( content instanceof JaxbHbmNativeQueryScalarReturnType ) {

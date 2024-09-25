@@ -286,6 +286,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	/**
+	 * @see org.hibernate.cfg.AvailableSettings#XML_FUNCTIONS_ENABLED
+	 */
+	@Override
+	default boolean isXmlFunctionsEnabled() {
+		return false;
+	}
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
 	 */
 	@Override

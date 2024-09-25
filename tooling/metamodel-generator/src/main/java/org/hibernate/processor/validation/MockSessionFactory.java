@@ -51,8 +51,8 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -145,9 +145,7 @@ public abstract class MockSessionFactory
 	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
 			new BasicTypeImpl<>(new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE);
 
-	// static so other things can get at it
-	// TODO: make a static instance of this whole object instead!
-	static TypeConfiguration typeConfiguration;
+	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String,MockEntityPersister> entityPersistersByName = new HashMap<>();
 	private final Map<String,MockCollectionPersister> collectionPersistersByName = new HashMap<>();
@@ -217,8 +215,8 @@ public abstract class MockSessionFactory
 				metamodel.getJpaMetamodel(),
 				metamodel,
 				bootModel,
-				JpaStaticMetaModelPopulationSetting.DISABLED,
-				JpaMetaModelPopulationSetting.DISABLED,
+				JpaStaticMetamodelPopulationSetting.DISABLED,
+				JpaMetamodelPopulationSetting.DISABLED,
 				this
 		);
 

@@ -87,15 +87,13 @@ public interface Value extends Serializable {
 	}
 
 	private JdbcMapping getType(MappingContext factory, Type elementType, int index) {
-		if ( elementType instanceof CompositeType ) {
-			final Type[] subtypes = ( (CompositeType) elementType ).getSubtypes();
+		if ( elementType instanceof CompositeType compositeType ) {
+			final Type[] subtypes = compositeType.getSubtypes();
 			for ( int i = 0; i < subtypes.length; i++ ) {
 				final Type subtype = subtypes[i];
 				final int columnSpan;
-				if ( subtype instanceof EntityType ) {
-					final EntityType entityType = (EntityType) subtype;
-					final Type idType = getIdType( entityType );
-					columnSpan = idType.getColumnSpan( factory );
+				if ( subtype instanceof EntityType entityType ) {
+					columnSpan = getIdType( entityType ).getColumnSpan( factory );
 				}
 				else {
 					columnSpan = subtype.getColumnSpan( factory );
@@ -110,13 +108,11 @@ public interface Value extends Serializable {
 			// Should never happen
 			throw new IllegalStateException( "Type index is past the types column span!" );
 		}
-		else if ( elementType instanceof EntityType ) {
-			final EntityType entityType = (EntityType) elementType;
-			final Type idType = getIdType( entityType );
-			return getType( factory, idType, index );
+		else if ( elementType instanceof EntityType entityType ) {
+			return getType( factory, getIdType( entityType ), index );
 		}
-		else if ( elementType instanceof MetaType ) {
-			return (JdbcMapping) ( (MetaType) elementType ).getBaseType();
+		else if ( elementType instanceof MetaType metaType ) {
+			return (JdbcMapping) metaType.getBaseType();
 		}
 		return (JdbcMapping) elementType;
 	}

@@ -196,6 +196,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -2045,11 +2046,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@code "native"} is specified in {@code hbm.xml}.
 	 *
 	 * @return The name identifying the native generator strategy.
+	 *
+	 * @deprecated Use {@linkplain #getNativeValueGenerationStrategy()} instead
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	public String getNativeIdentifierGeneratorStrategy() {
+		return getNativeValueGenerationStrategy().name().toLowerCase( Locale.ROOT );
+	}
+
+	/**
+	 * The native type of generation supported by this Dialect.
+	 */
+	public GenerationType getNativeValueGenerationStrategy() {
 		return getIdentityColumnSupport().supportsIdentityColumns()
-				? "identity"
-				: "sequence";
+				? GenerationType.IDENTITY
+				: GenerationType.SEQUENCE;
 	}
 
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

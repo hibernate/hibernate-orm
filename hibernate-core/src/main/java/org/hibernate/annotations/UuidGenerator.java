@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 import java.util.UUID;
 
 import org.hibernate.Incubating;
+import org.hibernate.id.uuid.UuidVersion6Strategy;
+import org.hibernate.id.uuid.UuidVersion7Strategy;
 import org.hibernate.id.uuid.UuidValueGenerator;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -52,7 +54,21 @@ public @interface UuidGenerator {
 		 * @implNote Can be a bottleneck, since synchronization is used when
 		 *           incrementing an internal counter as part of the algorithm.
 		 */
-		TIME
+		TIME,
+		/**
+		 * Use a time-based generation strategy consistent with RFC 4122
+		 * version 6.
+		 * @see UuidVersion6Strategy
+		 */
+		@Incubating
+		VERSION_6,
+		/**
+		 * Use a time-based generation strategy consistent with RFC 4122
+		 * version 7.
+		 * @see UuidVersion7Strategy
+		 */
+		@Incubating
+		VERSION_7
 	}
 
 	/**

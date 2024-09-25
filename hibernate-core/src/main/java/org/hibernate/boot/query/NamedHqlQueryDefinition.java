@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 /**
@@ -35,8 +36,12 @@ public interface NamedHqlQueryDefinition<E> extends NamedQueryDefinition<E> {
 
 		private Map<String,String> parameterTypes;
 
+		public Builder(String name, AnnotationTarget location) {
+			super( name, location );
+		}
+
 		public Builder(String name) {
-			super( name );
+			super( name, null );
 		}
 
 		@Override
@@ -80,7 +85,9 @@ public interface NamedHqlQueryDefinition<E> extends NamedQueryDefinition<E> {
 					getFetchSize(),
 					getComment(),
 					parameterTypes,
-					getHints()
+					getHints(),
+					//TODO: should this be location.asClassDetails().getClassName() ?
+					getLocation() == null ? null : getLocation().getName()
 			);
 		}
 

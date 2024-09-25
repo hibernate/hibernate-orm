@@ -246,7 +246,7 @@ public class SqmUtil {
 	 * or one that has an explicit on clause predicate.
 	 */
 	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath, EntityAssociationMapping associationMapping) {
-		if ( sqmPath instanceof SqmJoin<?, ?> sqmJoin ) {
+		if ( associationMapping.isFkOptimizationAllowed() && sqmPath instanceof SqmJoin<?, ?> sqmJoin ) {
 			switch ( sqmJoin.getSqmJoinType() ) {
 				case LEFT:
 					if ( isFiltered( associationMapping ) ) {

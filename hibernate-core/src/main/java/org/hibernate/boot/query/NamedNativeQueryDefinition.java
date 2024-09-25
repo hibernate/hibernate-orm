@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.hibernate.boot.internal.NamedNativeQueryDefinitionImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
 /**
@@ -43,8 +44,12 @@ public interface NamedNativeQueryDefinition<E> extends NamedQueryDefinition<E> {
 		private Integer firstResult;
 		private Integer maxResults;
 
+		public Builder(String name, AnnotationTarget location) {
+			super( name, location );
+		}
+
 		public Builder(String name) {
-			super( name );
+			super( name, null );
 		}
 
 		public Builder<E> setSqlString(String sqlString) {
@@ -79,7 +84,9 @@ public interface NamedNativeQueryDefinition<E> extends NamedQueryDefinition<E> {
 					getComment(),
 					firstResult,
 					maxResults,
-					getHints()
+					getHints(),
+					//TODO: should this be location.asClassDetails().getClassName() ?
+					getLocation() == null ? null : getLocation().getName()
 			);
 		}
 

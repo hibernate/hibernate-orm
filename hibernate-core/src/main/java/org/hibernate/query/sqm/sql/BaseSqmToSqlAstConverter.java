@@ -224,6 +224,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
@@ -314,6 +315,7 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -4138,12 +4140,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredEntityMapping == null ) {
 				// When the inferred mapping is null, we try to resolve to the FK by default, which is fine because
 				// expansion to all target columns for select and group by clauses is handled in EntityValuedPathInterpretation
-				if ( entityValuedModelPart instanceof EntityAssociationMapping
-						&& isFkOptimizationAllowed( path, (EntityAssociationMapping) entityValuedModelPart ) ) {
+				if ( entityValuedModelPart instanceof EntityAssociationMapping associationMapping
+						&& isFkOptimizationAllowed( path, associationMapping ) ) {
 					// If the table group uses an association mapping that is not a one-to-many,
 					// we make use of the FK model part - unless the path is a non-optimizable join,
 					// for which we should always use the target's identifier to preserve semantics
-					final EntityAssociationMapping associationMapping = (EntityAssociationMapping) entityValuedModelPart;
 					final ModelPart targetPart = associationMapping.getForeignKeyDescriptor().getPart(
 							associationMapping.getSideNature()
 					);
@@ -8323,6 +8324,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				(Expression) sqmExpression.getExpression().accept( this ),
 				sqmExpression.getNodeType()
 		);
+	}
+
+	@Override
+	public Object visitNamedExpression(SqmNamedExpression<?> expression) {
+		return new AliasedExpression( (Expression) expression.getExpression().accept( this ), expression.getName() );
 	}
 
 	@Override

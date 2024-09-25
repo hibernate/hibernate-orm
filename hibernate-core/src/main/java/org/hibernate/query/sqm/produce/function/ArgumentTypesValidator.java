@@ -251,6 +251,8 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case SPATIAL -> jdbcType.isSpatial();
 			case JSON -> jdbcType.isJson();
 			case IMPLICIT_JSON -> jdbcType.isImplicitJson();
+			case XML -> jdbcType.isXml();
+			case IMPLICIT_XML -> jdbcType.isImplicitXml();
 			default -> true; // TODO: should we throw here?
 		};
 	}

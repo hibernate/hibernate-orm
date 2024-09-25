@@ -12,6 +12,7 @@
         <attributes>
             <id name="name"/>
             <id name="number"/>
+            <transient name="addresses"/>
         </attributes>
     </entity>
 </entity-mappings>

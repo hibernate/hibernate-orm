@@ -201,7 +201,7 @@ public class NamedSqmFunctionDescriptor
 
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
 			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " within group (order by" );
+			sqlAppender.appendSql( " within group (order by " );
 			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
 				sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );

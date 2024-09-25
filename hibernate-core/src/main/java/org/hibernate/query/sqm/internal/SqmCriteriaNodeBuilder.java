@@ -43,6 +43,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
@@ -128,6 +129,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
@@ -136,6 +138,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.expression.SqmWindow;
 import org.hibernate.query.sqm.tree.expression.SqmWindowFrame;
+import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -218,6 +221,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
 	private transient BasicType<Character> characterType;
+	private transient BasicType<String> stringType;
 	private transient FunctionReturnTypeResolver sumReturnTypeResolver;
 	private transient FunctionReturnTypeResolver avgReturnTypeResolver;
 	private final transient Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> extensions;
@@ -309,6 +313,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 							.resolve( StandardBasicTypes.CHARACTER );
 		}
 		return characterType;
+	}
+
+	public BasicType<String> getStringType() {
+		final BasicType<String> stringType = this.stringType;
+		if ( stringType == null ) {
+			return this.stringType =
+					getTypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.STRING );
+		}
+		return stringType;
 	}
 
 	public FunctionReturnTypeResolver getSumReturnTypeResolver() {
@@ -5663,5 +5677,139 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				null,
 				queryEngine
 		);
+	}
+
+	@Override
+	public SqmXmlElementExpression xmlelement(String elementName) {
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( 3 );
+		arguments.add( new SqmLiteral<>( elementName, getStringType(), this ) );
+		return (SqmXmlElementExpression) getFunctionDescriptor( "xmlelement" ).<String>generateSqmExpression(
+				arguments,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> xmlcomment(String comment) {
+		return getFunctionDescriptor( "xmlcomment" ).generateSqmExpression(
+				List.of( value( comment ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> named(Expression<T> expression, String name) {
+		return new SqmNamedExpression<>( (SqmExpression<T>) expression, name );
+	}
+
+	@Override
+	public SqmExpression<String> xmlforest(Expression<?>... elements) {
+		return xmlforest( Arrays.asList( elements ) );
+	}
+
+	@Override
+	public SqmExpression<String> xmlforest(List<? extends Expression<?>> elements) {
+		final ArrayList<SqmExpression<?>> arguments = new ArrayList<>( elements.size() );
+		for ( Expression<?> expression : elements ) {
+			if ( expression instanceof SqmNamedExpression<?> ) {
+				arguments.add( (SqmNamedExpression<?>) expression );
+			}
+			else {
+				if ( !( expression instanceof SqmPath<?> path ) || !( path.getModel() instanceof PersistentAttribute<?, ?> attribute ) ) {
+					throw new SemanticException(
+							"Can't use expression '" + expression + " without explicit name in xmlforest function"+
+									", because XML element names can only be derived from path expressions."
+					);
+				}
+				arguments.add( new SqmNamedExpression<>( (SqmExpression<?>) expression, attribute.getName() ) );
+			}
+		}
+		return getFunctionDescriptor( "xmlforest" ).generateSqmExpression(
+				arguments,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> xmlconcat(Expression<?>... elements) {
+		return xmlconcat( Arrays.asList( elements ) );
+	}
+
+	@Override
+	public SqmExpression<String> xmlconcat(List<? extends Expression<?>> elements) {
+		return getFunctionDescriptor( "xmlforest" ).generateSqmExpression(
+				(List<? extends SqmTypedNode<?>>) elements,
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> xmlpi(String elementName) {
+		return getFunctionDescriptor( "xmlpi" ).generateSqmExpression(
+				asList( literal( elementName ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> xmlpi(String elementName, Expression<String> content) {
+		return getFunctionDescriptor( "xmlpi" ).generateSqmExpression(
+				asList( literal( elementName ), (SqmTypedNode<?>) content ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> xmlquery(String query, Expression<?> xmlDocument) {
+		return xmlquery( value( query ), xmlDocument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument) {
+		return getFunctionDescriptor( "xmlquery" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) query, (SqmTypedNode<?>) xmlDocument ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument) {
+		return xmlexists( value( query ), xmlDocument );
+	}
+
+	@Override
+	public SqmExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument) {
+		return getFunctionDescriptor( "xmlexists" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) query, (SqmTypedNode<?>) xmlDocument ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, Expression<?> argument) {
+		return xmlagg( order, null, null, argument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
+		return xmlagg( order, filter, null, argument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument) {
+		return xmlagg( order, null, window, argument );
+	}
+
+	@Override
+	public SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
+		return functionWithinGroup( "xmlagg", String.class, order, filter, window, argument );
 	}
 }

@@ -131,6 +131,7 @@ import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIEN
 import static org.hibernate.cfg.QuerySettings.DEFAULT_NULL_ORDERING;
 import static org.hibernate.cfg.QuerySettings.JSON_FUNCTIONS_ENABLED;
 import static org.hibernate.cfg.QuerySettings.PORTABLE_INTEGER_DIVISION;
+import static org.hibernate.cfg.QuerySettings.XML_FUNCTIONS_ENABLED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -276,6 +277,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private final boolean portableIntegerDivisionEnabled;
 	private final boolean jsonFunctionsEnabled;
+	private final boolean xmlFunctionsEnabled;
 
 	private final int queryStatisticsMaxSize;
 
@@ -612,6 +614,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 		this.jsonFunctionsEnabled = getBoolean(
 				JSON_FUNCTIONS_ENABLED,
+				configurationSettings
+		);
+		this.xmlFunctionsEnabled = getBoolean(
+				XML_FUNCTIONS_ENABLED,
 				configurationSettings
 		);
 
@@ -1242,6 +1248,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isJsonFunctionsEnabled() {
 		return jsonFunctionsEnabled;
+	}
+
+	@Override
+	public boolean isXmlFunctionsEnabled() {
+		return xmlFunctionsEnabled;
 	}
 
 	@Override

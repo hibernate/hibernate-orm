@@ -35,7 +35,7 @@ public enum SqmJsonObjectAggUniqueKeysBehavior implements SqmTypedNode<Object> {
 
 	@Override
 	public NodeBuilder nodeBuilder() {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

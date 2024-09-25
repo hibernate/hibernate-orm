@@ -436,6 +436,16 @@ public interface JdbcType extends Serializable {
 	}
 
 	@Incubating
+	default boolean isXml() {
+		return isXmlType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isImplicitXml() {
+		return isImplicitXmlType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
 	default boolean isBoolean() {
 		return getDefaultSqlTypeCode() == BOOLEAN;
 	}

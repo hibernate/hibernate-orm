@@ -80,8 +80,8 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
-import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
+import static org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting.determineJpaMetaModelPopulationSetting;
+import static org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
 
 /**
  * Implementation of the JPA-defined contract {@link jakarta.persistence.metamodel.Metamodel}.

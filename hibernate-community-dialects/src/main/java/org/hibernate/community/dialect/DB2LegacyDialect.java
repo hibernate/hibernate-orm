@@ -440,6 +440,21 @@ public class DB2LegacyDialect extends Dialect {
 				functionFactory.jsonObjectAgg_db2();
 			}
 		}
+
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.xmlquery_db2();
+			functionFactory.xmlexists();
+		}
+		else {
+			functionFactory.xmlquery_db2_legacy();
+			functionFactory.xmlexists_db2_legacy();
+		}
+		functionFactory.xmlagg();
 	}
 
 	@Override
@@ -1058,6 +1073,19 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return DB2IdentityColumnSupport.INSTANCE;
+	}
+
+	/**
+	 * @return {@code true} because we can use {@code select ... from new table (insert .... )}
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return false;
 	}
 
 	@Override

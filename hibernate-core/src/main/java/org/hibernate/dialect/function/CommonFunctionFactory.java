@@ -153,6 +153,27 @@ import org.hibernate.dialect.function.json.SQLServerJsonRemoveFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonReplaceFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
 import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
+import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
+import org.hibernate.dialect.function.xml.H2XmlElementFunction;
+import org.hibernate.dialect.function.xml.H2XmlForestFunction;
+import org.hibernate.dialect.function.xml.H2XmlPiFunction;
+import org.hibernate.dialect.function.xml.LegacyDB2XmlExistsFunction;
+import org.hibernate.dialect.function.xml.LegacyDB2XmlQueryFunction;
+import org.hibernate.dialect.function.xml.PostgreSQLXmlQueryFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlAggFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlElementFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlExistsFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlPiFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlQueryFunction;
+import org.hibernate.dialect.function.xml.XmlAggFunction;
+import org.hibernate.dialect.function.xml.XmlConcatFunction;
+import org.hibernate.dialect.function.xml.XmlElementFunction;
+import org.hibernate.dialect.function.xml.XmlExistsFunction;
+import org.hibernate.dialect.function.xml.XmlForestFunction;
+import org.hibernate.dialect.function.xml.XmlPiFunction;
+import org.hibernate.dialect.function.xml.XmlQueryFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -4096,5 +4117,181 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayInsert_sqlserver() {
 		functionRegistry.register( "json_array_insert", new SQLServerJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlelement() function
+	 */
+	public void xmlelement() {
+		functionRegistry.register( "xmlelement", new XmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlelement() function
+	 */
+	public void xmlelement_h2() {
+		functionRegistry.register( "xmlelement", new H2XmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlelement() function
+	 */
+	public void xmlelement_sqlserver() {
+		functionRegistry.register( "xmlelement", new SQLServerXmlElementFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlcomment() function
+	 */
+	public void xmlcomment() {
+		functionRegistry.namedDescriptorBuilder( "xmlcomment" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( STRING )
+				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML ) )
+				.register();
+	}
+
+	/**
+	 * SQL Server xmlcomment() function
+	 */
+	public void xmlcomment_sqlserver() {
+		functionRegistry.patternDescriptorBuilder( "xmlcomment", "cast(('<!--'+?1+'-->') AS xml)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( STRING )
+				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.SQLXML ) )
+				.register();
+	}
+
+	/**
+	 * Standard xmlforest() function
+	 */
+	public void xmlforest() {
+		functionRegistry.register( "xmlforest", new XmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlforest() function
+	 */
+	public void xmlforest_h2() {
+		functionRegistry.register( "xmlforest", new H2XmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlforest() function
+	 */
+	public void xmlforest_sqlserver() {
+		functionRegistry.register( "xmlforest", new SQLServerXmlForestFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlconcat() function
+	 */
+	public void xmlconcat() {
+		functionRegistry.register( "xmlconcat", new XmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlconcat() function
+	 */
+	public void xmlconcat_h2() {
+		functionRegistry.register( "xmlconcat", new H2XmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlconcat() function
+	 */
+	public void xmlconcat_sqlserver() {
+		functionRegistry.register( "xmlconcat", new SQLServerXmlConcatFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlpi() function
+	 */
+	public void xmlpi() {
+		functionRegistry.register( "xmlpi", new XmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 xmlpi() function
+	 */
+	public void xmlpi_h2() {
+		functionRegistry.register( "xmlpi", new H2XmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlpi() function
+	 */
+	public void xmlpi_sqlserver() {
+		functionRegistry.register( "xmlpi", new SQLServerXmlPiFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle xmlquery() function
+	 */
+	public void xmlquery_oracle() {
+		functionRegistry.register( "xmlquery", new XmlQueryFunction( true, typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 xmlquery() function
+	 */
+	public void xmlquery_db2() {
+		functionRegistry.register( "xmlquery", new XmlQueryFunction( false, typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 10.5 xmlquery() function
+	 */
+	public void xmlquery_db2_legacy() {
+		functionRegistry.register( "xmlquery", new LegacyDB2XmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL xmlquery() function
+	 */
+	public void xmlquery_postgresql() {
+		functionRegistry.register( "xmlquery", new PostgreSQLXmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlquery() function
+	 */
+	public void xmlquery_sqlserver() {
+		functionRegistry.register( "xmlquery", new SQLServerXmlQueryFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlexists() function
+	 */
+	public void xmlexists() {
+		functionRegistry.register( "xmlexists", new XmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlexists() function
+	 */
+	public void xmlexists_sqlserver() {
+		functionRegistry.register( "xmlexists", new SQLServerXmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 10.5 xmlexists() function
+	 */
+	public void xmlexists_db2_legacy() {
+		functionRegistry.register( "xmlexists", new LegacyDB2XmlExistsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmlagg() function
+	 */
+	public void xmlagg() {
+		functionRegistry.register( "xmlagg", new XmlAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmlagg() function
+	 */
+	public void xmlagg_sqlserver() {
+		functionRegistry.register( "xmlagg", new SQLServerXmlAggFunction( typeConfiguration ) );
 	}
 }

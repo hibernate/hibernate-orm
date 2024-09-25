@@ -42,7 +42,8 @@ public class NamedHqlQueryDefinitionImpl<E> extends AbstractNamedQueryDefinition
 			Integer fetchSize,
 			String comment,
 			Map<String,String> parameterTypes,
-			Map<String,Object> hints) {
+			Map<String,Object> hints,
+			String location) {
 		super(
 				name,
 				resultType,
@@ -55,7 +56,8 @@ public class NamedHqlQueryDefinitionImpl<E> extends AbstractNamedQueryDefinition
 				timeout,
 				fetchSize,
 				comment,
-				hints
+				hints,
+				location
 		);
 		this.hqlString = hqlString;
 		this.firstResult = firstResult;

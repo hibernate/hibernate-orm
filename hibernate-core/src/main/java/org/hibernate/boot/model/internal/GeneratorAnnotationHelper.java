@@ -8,33 +8,46 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.SourceModelContext;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 
+import static org.hibernate.boot.model.internal.GeneratorParameters.collectBaselineProperties;
+import static org.hibernate.boot.model.internal.GeneratorParameters.fallbackAllocationSize;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
+import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 import static org.hibernate.internal.util.config.ConfigurationHelper.setIfNotEmpty;
 
 /**
@@ -92,13 +105,9 @@ public class GeneratorAnnotationHelper {
 		}
 
 		// lastly, on the package
-		final String packageInfoFqn = StringHelper.qualifier( idMember.getDeclaringType().getClassName() ) + ".package-info";
-		try {
-			final ClassDetails packageInfo =
-					context.getMetadataCollector()
-							.getSourceModelBuildingContext()
-							.getClassDetailsRegistry()
-							.resolveClassDetails( packageInfoFqn );
+		final ClassDetails packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
+		if ( packageInfo !=
+					null ) {
 			for ( A generatorAnnotation : packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
 				if ( nameExtractor != null ) {
 					final String registrationName = nameExtractor.apply( generatorAnnotation );
@@ -118,11 +127,176 @@ public class GeneratorAnnotationHelper {
 				}
 			}
 		}
-		catch (ClassLoadingException e) {
-			// means there is no package-info
-		}
 
 		return possibleMatch;
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
+		return locatePackageInfoDetails( classDetails, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, SourceModelContext modelContext) {
+		return locatePackageInfoDetails( classDetails, modelContext.getClassDetailsRegistry() );
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ClassDetailsRegistry classDetailsRegistry) {
+		final String packageInfoFqn = StringHelper.qualifier( classDetails.getName() ) + ".package-info";
+		try {
+			return classDetailsRegistry.resolveClassDetails( packageInfoFqn );
+		}
+		catch (ClassLoadingException e) {
+			// means there is no package-info
+			return null;
+		}
+	}
+
+	public static void handleSequenceGenerator(
+			String nameFromGeneratedValue,
+			SequenceGenerator generatorAnnotation,
+			SimpleValue idValue,
+			MemberDetails idMember,
+			MetadataBuildingContext buildingContext) {
+		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
+			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
+			final SequenceStyleGenerator identifierGenerator = GeneratorBinder.instantiateGenerator(
+					beanContainer,
+					SequenceStyleGenerator.class
+			);
+			prepareForUse(
+					identifierGenerator,
+					generatorAnnotation,
+					idMember,
+					properties -> {
+						if ( generatorAnnotation != null ) {
+							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
+						}
+						else if ( nameFromGeneratedValue != null ) {
+							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
+						}
+						// we need to better handle default allocation-size here...
+						properties.put( INCREMENT_PARAM, fallbackAllocationSize( generatorAnnotation, buildingContext ) );
+					},
+					generatorAnnotation == null
+							? null
+							: (a, properties) -> SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+					creationContext
+			);
+			return identifierGenerator;
+		} );
+	}
+
+	public static void handleTableGenerator(
+			String nameFromGeneratedValue,
+			TableGenerator generatorAnnotation,
+			PersistentClass entityMapping,
+			SimpleValue idValue,
+			MemberDetails idMember,
+			MetadataBuildingContext buildingContext) {
+		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
+			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
+			final org.hibernate.id.enhanced.TableGenerator identifierGenerator = GeneratorBinder.instantiateGenerator(
+					beanContainer,
+					org.hibernate.id.enhanced.TableGenerator.class
+			);
+			GeneratorAnnotationHelper.prepareForUse(
+					identifierGenerator,
+					generatorAnnotation,
+					idMember,
+					properties -> {
+						if ( generatorAnnotation != null ) {
+							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
+						}
+						else if ( nameFromGeneratedValue != null ) {
+							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
+						}
+						// we need to better handle default allocation-size here...
+						properties.put(
+								INCREMENT_PARAM,
+								fallbackAllocationSize( generatorAnnotation, buildingContext )
+						);
+					},
+					generatorAnnotation == null
+							? null
+							: (a, properties) -> org.hibernate.id.enhanced.TableGenerator.applyConfiguration(
+									generatorAnnotation,
+									properties::put
+							),
+					creationContext
+			);
+			return identifierGenerator;
+		} );
+	}
+
+	public static void handleIdGeneratorType(
+			Annotation generatorAnnotation,
+			SimpleValue idValue,
+			MemberDetails idMember,
+			MetadataBuildingContext buildingContext) {
+		final IdGeneratorType markerAnnotation = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
+		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
+			final BeanContainer beanContainer = GeneratorBinder.beanContainer( buildingContext );
+			final Generator identifierGenerator = GeneratorBinder.instantiateGenerator(
+					beanContainer,
+					markerAnnotation.value()
+			);
+			GeneratorAnnotationHelper.prepareForUse(
+					identifierGenerator,
+					generatorAnnotation,
+					idMember,
+					null,
+					null,
+					creationContext
+			);
+			return identifierGenerator;
+		} );
+	}
+
+	/**
+	 * Prepares a generator for use by handling its various potential means of "configuration".
+	 *
+	 * @param generator The "empty" generator
+	 * @param annotation The annotation which defines configuration for the generator
+	 * @param idMember The member defining the id
+	 * @param configBaseline Allows to set any default values.  Called before common config is handled.
+	 * @param configExtractor Allows to extract values from the generator annotation.  Called after common config is handled.
+	 * @param creationContext Access to useful information
+	 */
+	public static <A extends Annotation> void prepareForUse(
+			Generator generator,
+			A annotation,
+			MemberDetails idMember,
+			Consumer<Properties> configBaseline,
+			BiConsumer<A,Properties> configExtractor,
+			GeneratorCreationContext creationContext) {
+		if ( generator instanceof AnnotationBasedGenerator ) {
+			@SuppressWarnings("unchecked")
+			final AnnotationBasedGenerator<A> generation = (AnnotationBasedGenerator<A>) generator;
+			generation.initialize( annotation, idMember.toJavaMember(), creationContext );
+		}
+		if ( generator instanceof Configurable configurable ) {
+			final Properties properties = new Properties();
+			if ( configBaseline != null ) {
+				configBaseline.accept( properties );
+			}
+			collectBaselineProperties(
+					creationContext.getProperty() != null
+							? (SimpleValue) creationContext.getProperty().getValue()
+							: (SimpleValue) creationContext.getPersistentClass().getIdentifierProperty().getValue(),
+					creationContext.getDatabase().getDialect(),
+					creationContext.getRootClass(),
+					properties::setProperty
+			);
+			if ( configExtractor != null ) {
+				configExtractor.accept( annotation, properties );
+			}
+			configurable.configure( creationContext, properties );
+		}
+		if ( generator instanceof ExportableProducer exportableProducer ) {
+			exportableProducer.registerExportables( creationContext.getDatabase() );
+		}
+		if ( generator instanceof Configurable configurable ) {
+			configurable.initialize( creationContext.getSqlStringGenerationContext() );
+		}
 	}
 
 	public static void handleUuidStrategy(
@@ -142,44 +316,6 @@ public class GeneratorAnnotationHelper {
 	public static void handleIdentityStrategy(SimpleValue idValue) {
 		idValue.setCustomIdGeneratorCreator( (creationContext) -> new IdentityGenerator() );
 		idValue.setColumnToIdentity();
-	}
-
-	public static void applyBaselineConfiguration(
-			SequenceGenerator generatorConfig,
-			SimpleValue idValue,
-			RootClass rootClass,
-			MetadataBuildingContext context,
-			BiConsumer<String,String> configurationCollector) {
-		if ( generatorConfig != null && !generatorConfig.name().isEmpty() ) {
-			configurationCollector.accept( GENERATOR_NAME, generatorConfig.name() );
-		}
-
-		GeneratorParameters.collectParameters(
-				idValue,
-				context.getMetadataCollector().getDatabase().getDialect(),
-				rootClass,
-				configurationCollector
-		);
-
-	}
-
-	static void applyBaselineConfiguration(
-			TableGenerator generatorConfig,
-			SimpleValue idValue,
-			RootClass rootClass,
-			MetadataBuildingContext context,
-			BiConsumer<String, String> configurationCollector) {
-		if ( !generatorConfig.name().isEmpty() ) {
-			configurationCollector.accept( GENERATOR_NAME, generatorConfig.name() );
-		}
-
-		GeneratorParameters.collectParameters(
-				idValue,
-				context.getMetadataCollector().getDatabase().getDialect(),
-				rootClass,
-				configurationCollector
-		);
-
 	}
 
 	public static void handleGenericGenerator(
@@ -220,23 +356,5 @@ public class GeneratorAnnotationHelper {
 		for ( Parameter parameter : generatorConfig.parameters() ) {
 			configuration.put( parameter.name(), parameter.value() );
 		}
-	}
-
-	public static void handleTableGenerator(
-			String generatorName,
-			TableGenerator generatorConfig,
-			PersistentClass entityMapping,
-			SimpleValue idValue,
-			MetadataBuildingContext context) {
-		final Map<String,String> configuration = new HashMap<>();
-		applyBaselineConfiguration( generatorConfig, idValue, entityMapping.getRootClass(), context, configuration::put );
-		org.hibernate.id.enhanced.TableGenerator.applyConfiguration( generatorConfig, configuration::put );
-
-		GeneratorBinder.createGeneratorFrom(
-				new IdentifierGeneratorDefinition( generatorName, org.hibernate.id.enhanced.TableGenerator.class.getName(), configuration ),
-				idValue,
-				context
-		);
-
 	}
 }

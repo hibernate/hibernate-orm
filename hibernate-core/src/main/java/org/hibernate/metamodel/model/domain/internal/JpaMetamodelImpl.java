@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -32,13 +33,12 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
+import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -68,6 +68,9 @@ import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
 import static java.util.Collections.emptySet;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.metamodel.internal.InjectionHelper.injectEntityGraph;
+import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryReference;
 
 /**
  *
@@ -77,10 +80,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( JpaMetamodel.class );
 
 	private static class ImportInfo<T> {
-		final String importedName;
-		Class<T> loadedClass; // could be null for boot metamodel import; not final to allow for populating later
+		private final String importedName;
+		private Class<T> loadedClass; // could be null for boot metamodel import; not final to allow for populating later
 
-		ImportInfo(String importedName, Class<T> loadedClass) {
+		private ImportInfo(String importedName, Class<T> loadedClass) {
 			this.importedName = importedName;
 			this.loadedClass = loadedClass;
 		}
@@ -92,7 +95,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private final Map<String, ManagedDomainType<?>> managedTypeByName = new TreeMap<>();
 	private final Map<Class<?>, ManagedDomainType<?>> managedTypeByClass = new HashMap<>();
-	private JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
+	private JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting;
 	private final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames = new HashMap<>();
 	private final Map<String, EnumJavaType<?>> enumJavaTypes = new HashMap<>();
 
@@ -301,6 +304,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 		}
 		catch (NoSuchFieldException e) {
+			// ignore
 		}
 		return null;
 	}
@@ -429,7 +433,6 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
 			log.debugf(
@@ -438,7 +441,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					definition.getEntityName(),
 					definition.getJpaEntityName()
 			);
-			final EntityDomainType<Object> entityType = (EntityDomainType<Object>) entity( definition.getEntityName() );
+			final EntityDomainType<?> entityType = entity( definition.getEntityName() );
 			if ( entityType == null ) {
 				throw new IllegalArgumentException(
 						"Attempted to register named entity graph [" + definition.getRegisteredName()
@@ -446,23 +449,26 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 				);
 			}
-
-			final RootGraphImpl<Object> entityGraph = new RootGraphImpl<>( definition.getRegisteredName(), entityType );
-
 			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
-
-			if ( namedEntityGraph.includeAllAttributes() ) {
-				for ( Attribute<? super Object, ?> attribute : entityType.getAttributes() ) {
-					entityGraph.addAttributeNodes( attribute );
-				}
-			}
-
+			final RootGraphImpl<?> entityGraph =
+					createRootGraph( definition.getRegisteredName(), entityType,
+							namedEntityGraph.includeAllAttributes() );
 			if ( namedEntityGraph.attributeNodes() != null ) {
 				applyNamedAttributeNodes( namedEntityGraph.attributeNodes(), namedEntityGraph, entityGraph );
 			}
-
 			entityGraphMap.put( definition.getRegisteredName(), entityGraph );
 		}
+	}
+
+	private static <T> RootGraphImpl<T> createRootGraph(
+			String name, EntityDomainType<T> entityType, boolean includeAllAttributes) {
+		final RootGraphImpl<T> entityGraph = new RootGraphImpl<>( name, entityType );
+		if ( includeAllAttributes ) {
+			for ( Attribute<? super T, ?> attribute : entityType.getAttributes() ) {
+				entityGraph.addAttributeNodes( attribute );
+			}
+		}
+		return entityGraph;
 	}
 
 	private void applyNamedAttributeNodes(
@@ -470,23 +476,20 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			NamedEntityGraph namedEntityGraph,
 			GraphImplementor<?> graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
-			final String value = namedAttributeNode.value();
-			final AttributeNodeImplementor<?> attributeNode = graphNode.findOrCreateAttributeNode( value );
-			if ( StringHelper.isNotEmpty( namedAttributeNode.subgraph() ) ) {
-				final SubGraphImplementor<?> subgraph = attributeNode.makeSubGraph();
+			final AttributeNodeImplementor<?> attributeNode =
+					graphNode.findOrCreateAttributeNode( namedAttributeNode.value() );
+			if ( isNotEmpty( namedAttributeNode.subgraph() ) ) {
 				applyNamedSubgraphs(
 						namedEntityGraph,
 						namedAttributeNode.subgraph(),
-						subgraph
+						attributeNode.makeSubGraph()
 				);
 			}
-			if ( StringHelper.isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
-				final SubGraphImplementor<?> subgraph = attributeNode.makeKeySubGraph();
-
+			if ( isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
 				applyNamedSubgraphs(
 						namedEntityGraph,
 						namedAttributeNode.keySubgraph(),
-						subgraph
+						attributeNode.makeKeySubGraph()
 				);
 			}
 		}
@@ -594,12 +597,12 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			MetadataImplementor bootMetamodel,
 			MappingMetamodel mappingMetamodel,
 			Map<Class<?>, String> entityProxyInterfaceMap,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
-			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
+			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		bootMetamodel.getImports()
-				.forEach( ( k, v ) ->  this.nameToImportMap.put( k, new ImportInfo<>( v, null ) ) );
+				.forEach( (key, value) -> this.nameToImportMap.put( key, new ImportInfo<>( value, null ) ) );
 		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap );
 
 		final MetadataContext context = new MetadataContext(
@@ -646,8 +649,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		typeConfiguration.getJavaTypeRegistry().forEachDescriptor( descriptor -> {
 			if ( descriptor instanceof EnumJavaType<? extends Enum<?>> enumJavaType ) {
 				final Class<? extends Enum<?>> enumJavaClass = enumJavaType.getJavaTypeClass();
-				final Enum<?>[] enumConstants = enumJavaClass.getEnumConstants();
-				for ( Enum<?> enumConstant : enumConstants ) {
+				for ( Enum<?> enumConstant : enumJavaClass.getEnumConstants() ) {
 					addAllowedEnumLiteralsToEnumTypesMap(
 							allowedEnumLiteralsToEnumTypeNames,
 							enumConstant.name(),
@@ -662,6 +664,26 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		} );
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
+
+		populateStaticMetamodel( bootMetamodel, context );
+	}
+
+	private void populateStaticMetamodel(MetadataImplementor bootMetamodel, MetadataContext context) {
+		bootMetamodel.visitNamedHqlQueryDefinitions( definition
+				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
+		bootMetamodel.visitNamedNativeQueryDefinitions( definition
+				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
+		bootMetamodel.getNamedEntityGraphs().values().forEach(definition
+				-> injectEntityGraph( definition, graphMetamodelClass( definition, context ), this ) );
+	}
+
+	private Class<?> namedQueryMetamodelClass(NamedQueryDefinition<?> definition, MetadataContext context) {
+		final String location = definition.getLocation();
+		return location == null ? null : context.metamodelClass( managedTypeByName.get( location ) );
+	}
+
+	private Class<?> graphMetamodelClass(NamedEntityGraphDefinition definition, MetadataContext context) {
+		return context.metamodelClass( managedTypeByName.get( definition.getEntityName() ) );
 	}
 
 	public static void addAllowedEnumLiteralsToEnumTypesMap(

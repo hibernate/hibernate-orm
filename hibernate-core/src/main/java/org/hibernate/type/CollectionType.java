@@ -514,13 +514,10 @@ public abstract class CollectionType extends AbstractType implements Association
 		// One thing to be careful of here is a "bare" original collection
 		// in which case we should never ever ever reset the dirty flag
 		// on the target because we simply do not know...
-		if ( original instanceof PersistentCollection && result instanceof PersistentCollection ) {
-			final PersistentCollection<?> originalPersistentCollection = (PersistentCollection<?>) original;
-			final PersistentCollection<?> resultPersistentCollection = (PersistentCollection<?>) result;
-
+		if ( original instanceof PersistentCollection<?> originalPersistentCollection
+				&& result instanceof PersistentCollection<?> resultPersistentCollection) {
 			preserveSnapshot( originalPersistentCollection, resultPersistentCollection, elemType, owner, copyCache, session );
-
-			if ( ! originalPersistentCollection.isDirty() ) {
+			if ( !originalPersistentCollection.isDirty() ) {
 				resultPersistentCollection.clearDirty();
 			}
 		}
@@ -582,10 +579,9 @@ public abstract class CollectionType extends AbstractType implements Association
 			}
 
 		}
-		else if ( originalSnapshot instanceof Object[] ) {
-			Object[] arr = (Object[]) originalSnapshot;
-			for ( int i = 0; i < arr.length; i++ ) {
-				arr[i] = elemType.replace( arr[i], null, session, owner, copyCache );
+		else if ( originalSnapshot instanceof Object[] array ) {
+			for ( int i = 0; i < array.length; i++ ) {
+				array[i] = elemType.replace( array[i], null, session, owner, copyCache );
 			}
 			targetSnapshot = originalSnapshot;
 

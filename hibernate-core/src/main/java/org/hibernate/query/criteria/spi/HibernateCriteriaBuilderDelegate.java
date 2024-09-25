@@ -57,6 +57,7 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
+import org.hibernate.query.criteria.JpaXmlElementExpression;
 import org.hibernate.query.sqm.TemporalUnit;
 
 import jakarta.persistence.Tuple;
@@ -3630,5 +3631,107 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Incubating
 	public JpaExpression<String> jsonMergepatch(String document, Expression<?> patch) {
 		return criteriaBuilder.jsonMergepatch( document, patch );
+	}
+
+	@Override
+	@Incubating
+	public JpaXmlElementExpression xmlelement(String elementName) {
+		return criteriaBuilder.xmlelement( elementName );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlcomment(String comment) {
+		return criteriaBuilder.xmlcomment( comment );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlforest(Expression<?>... elements) {
+		return criteriaBuilder.xmlforest( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlforest(List<? extends Expression<?>> elements) {
+		return criteriaBuilder.xmlforest( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlconcat(Expression<?>... elements) {
+		return criteriaBuilder.xmlconcat( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements) {
+		return criteriaBuilder.xmlconcat( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlpi(String elementName) {
+		return criteriaBuilder.xmlpi( elementName );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlpi(String elementName, Expression<String> content) {
+		return criteriaBuilder.xmlpi( elementName, content );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlquery(String query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlquery( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlquery( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlexists( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlexists( query, xmlDocument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, filter, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, window, argument );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
+		return criteriaBuilder.xmlagg( order, filter, window, argument );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
+		return criteriaBuilder.named( expression, name );
 	}
 }

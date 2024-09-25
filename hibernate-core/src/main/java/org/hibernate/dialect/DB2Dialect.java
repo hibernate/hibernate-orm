@@ -425,6 +425,21 @@ public class DB2Dialect extends Dialect {
 			functionFactory.jsonArrayAgg_db2();
 			functionFactory.jsonObjectAgg_db2();
 		}
+
+		functionFactory.xmlelement();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest();
+		functionFactory.xmlconcat();
+		functionFactory.xmlpi();
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.xmlquery_db2();
+			functionFactory.xmlexists();
+		}
+		else {
+			functionFactory.xmlquery_db2_legacy();
+			functionFactory.xmlexists_db2_legacy();
+		}
+		functionFactory.xmlagg();
 	}
 
 	@Override

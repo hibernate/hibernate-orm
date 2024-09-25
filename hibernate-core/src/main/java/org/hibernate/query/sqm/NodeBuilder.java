@@ -47,6 +47,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -748,6 +749,57 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	SqmExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch);
+
+	@Override
+	SqmXmlElementExpression xmlelement(String elementName);
+
+	@Override
+	SqmExpression<String> xmlcomment(String comment);
+
+	@Override
+	<T> SqmExpression<T> named(Expression<T> expression, String name);
+
+	@Override
+	SqmExpression<String> xmlforest(List<? extends Expression<?>> elements);
+
+	@Override
+	SqmExpression<String> xmlforest(Expression<?>... elements);
+
+	@Override
+	SqmExpression<String> xmlconcat(Expression<?>... elements);
+
+	@Override
+	SqmExpression<String> xmlconcat(List<? extends Expression<?>> elements);
+
+	@Override
+	SqmExpression<String> xmlpi(String elementName);
+
+	@Override
+	SqmExpression<String> xmlpi(String elementName, Expression<String> content);
+
+	@Override
+	SqmExpression<String> xmlquery(String query, Expression<?> xmlDocument);
+
+	@Override
+	SqmExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument);
+
+	@Override
+	SqmExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument);
+
+	@Override
+	SqmExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
+
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, Expression<?> argument);
+
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument);
+
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument);
+
+	@Override
+	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

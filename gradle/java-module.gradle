@@ -447,7 +447,7 @@ tasks.copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Report configs
 
-task enforceRules {
+tasks.register('enforceRules') {
 	doLast {
 		def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
 		def missingNewline = ~/^\s*}\s*(else|catch|finally)/
@@ -477,23 +477,23 @@ task enforceRules {
 				}
 				if (!line.startsWith("//")) { //ignore commented-out code
 					if (line =~ equals) {
-						equalsMinusHashcode ++
+						equalsMinusHashcode++
 					}
 					if (line =~ hashCode) {
-						equalsMinusHashcode --
+						equalsMinusHashcode--
 					}
 				}
 			}
-			if (equalsMinusHashcode>0) {
+			if (equalsMinusHashcode > 0) {
 				errors++
 				logger.error("Equals with missing hash code in ${shortName}")
 			}
-			if (equalsMinusHashcode<0) {
+			if (equalsMinusHashcode < 0) {
 				errors++
 				logger.error("Hash code with missing equals in ${shortName}")
 			}
 		}
-		if ( errors>0 ) {
+		if (errors > 0) {
 			throw new GradleException("Code rules were violated ($errors problems)")
 		}
 	}
@@ -514,6 +514,26 @@ spotless {
 
 tasks.spotlessApply.dependsOn enforceRules
 
+tasks.register( "ciCheck" ) {
+	group "verification"
+	description "Checks for CI environments"
+	dependsOn tasks.check
+
+	spotlessApply {
+		enabled = false
+	}
+	spotlessJavaApply {
+		enabled = false
+	}
+}
+
+tasks.register( "formatChecks" ) {
+	group "verification"
+	description "Code style and formatting checks"
+
+	dependsOn tasks.spotlessCheck
+	dependsOn tasks.enforceRules
+}
 
 class CompilerStubsArgumentProvider implements CommandLineArgumentProvider {
 

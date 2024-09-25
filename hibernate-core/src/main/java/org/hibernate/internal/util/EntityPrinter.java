@@ -51,7 +51,7 @@ public final class EntityPrinter {
 			result.put(
 					entityPersister.getIdentifierPropertyName(),
 					entityPersister.getIdentifierType().toLoggableString(
-							entityPersister.getIdentifier( entity, null ),
+							entityPersister.getIdentifier( entity ),
 							factory
 					)
 			);

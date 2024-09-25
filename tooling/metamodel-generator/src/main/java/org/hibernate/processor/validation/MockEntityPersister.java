@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import static org.hibernate.processor.validation.MockSessionFactory.typeConfiguration;
-
 /**
  * @author Gavin King
  */
@@ -120,7 +118,7 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	@Override
 	public Type getIdentifierType() {
 		//TODO: propertyType(getIdentifierPropertyName())
-		return typeConfiguration.getBasicTypeForJavaType(Long.class);
+		return factory.getTypeConfiguration().getBasicTypeForJavaType(Long.class);
 	}
 
 	@Override
@@ -204,7 +202,7 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 
 	@Override
 	public Type getResolutionType() {
-		return typeConfiguration.getBasicTypeForJavaType(Class.class);
+		return factory.getTypeConfiguration().getBasicTypeForJavaType(Class.class);
 	}
 
 	@Override
@@ -234,6 +232,6 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 
 	@Override
 	public Type getDiscriminatorType() {
-		return typeConfiguration.getBasicTypeForJavaType(String.class);
+		return factory.getTypeConfiguration().getBasicTypeForJavaType(String.class);
 	}
 }

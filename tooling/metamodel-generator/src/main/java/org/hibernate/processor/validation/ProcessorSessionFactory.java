@@ -178,13 +178,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 	}
 
-	static Type propertyType(Element member, String entityName, String path, AccessType defaultAccessType) {
+	private Type propertyType(Element member, String entityName, String path, AccessType defaultAccessType) {
 		final TypeMirror memberType = memberType(member);
 		if (isEmbeddedProperty(member)) {
-			return component.make(asElement(memberType), entityName, path, defaultAccessType);
+			return component.make(asElement(memberType), entityName, path, defaultAccessType, this);
 		}
 		else if (isToOneAssociation(member)) {
-			return new ManyToOneType(typeConfiguration, getToOneTargetEntity(member));
+			return new ManyToOneType(getTypeConfiguration(), getToOneTargetEntity(member));
 		}
 		else if (isToManyAssociation(member)) {
 			return collectionType(memberType, qualify(entityName, path));
@@ -193,10 +193,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return collectionType(memberType, qualify(entityName, path));
 		}
 		else if (isEnumProperty(member)) {
-			return enumType( member, memberType );
+			return enumType(member, memberType);
 		}
 		else {
-			return typeConfiguration.getBasicTypeRegistry()
+			return getTypeConfiguration().getBasicTypeRegistry()
 					.getRegisteredType(qualifiedName(memberType));
 		}
 	}
@@ -255,12 +255,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private static Type elementCollectionElementType(TypeElement elementType,
 			String role, String path,
-			AccessType defaultAccessType) {
+			AccessType defaultAccessType,
+			MockSessionFactory factory) {
 		if (isEmbeddableType(elementType)) {
-			return component.make(elementType, role, path, defaultAccessType);
+			return component.make(elementType, role, path, defaultAccessType, factory);
 		}
 		else {
-			return typeConfiguration.getBasicTypeRegistry()
+			return factory.getTypeConfiguration().getBasicTypeRegistry()
 					.getRegisteredType(qualifiedName(elementType.asType()));
 		}
 	}
@@ -277,7 +278,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		public Component(TypeElement type,
 				String entityName, String path,
-				AccessType defaultAccessType) {
+				AccessType defaultAccessType,
+				ProcessorSessionFactory factory) {
 			this.type = type;
 
 			List<String> names = new ArrayList<>();
@@ -290,7 +292,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 						if (isPersistable(member, accessType)) {
 							String name = propertyName(member);
 							Type propertyType =
-									propertyType(member, entityName,
+									factory.propertyType(member, entityName,
 											qualify(path, name), defaultAccessType);
 							if (propertyType != null) {
 								names.add(name);
@@ -358,11 +360,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	public static abstract class EntityPersister extends MockEntityPersister {
 		private final TypeElement type;
 		private final Types typeUtil;
+		private final ProcessorSessionFactory factory;
 
-		public EntityPersister(String entityName, TypeElement type, ProcessorSessionFactory that) {
-			super(entityName, getDefaultAccessType(type), that);
+		public EntityPersister(String entityName, TypeElement type, ProcessorSessionFactory factory) {
+			super(entityName, getDefaultAccessType(type), factory);
 			this.type = type;
-			this.typeUtil = that.typeUtil;
+			this.typeUtil = factory.typeUtil;
+			this.factory = factory;
 			initSubclassPersisters();
 		}
 
@@ -397,7 +401,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		Type createPropertyType(String propertyPath) {
 			Element symbol = findPropertyByPath(type, propertyPath, defaultAccessType);
 			return symbol == null ? null :
-					propertyType(symbol, getEntityName(), propertyPath, defaultAccessType);
+					factory.propertyType(symbol, getEntityName(), propertyPath, defaultAccessType);
 		}
 
 		@Override
@@ -414,7 +418,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		public Type identifierType() {
 			for (Element element : type.getEnclosedElements()) {
 				if ( hasAnnotation(element, "Id")|| hasAnnotation(element, "EmbeddedId") ) {
-					return propertyType(element, getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType);
+					return factory.propertyType(element, getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType);
 				}
 			}
 			return null;
@@ -424,7 +428,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		public BasicType<?> versionType() {
 			for (Element element : type.getEnclosedElements()) {
 				if ( hasAnnotation(element, "Version") ) {
-					return (BasicType<?>) propertyType(element, getEntityName(), "{version}", defaultAccessType);
+					return (BasicType<?>) factory.propertyType(element, getEntityName(), "{version}", defaultAccessType);
 				}
 			}
 			return null;
@@ -434,7 +438,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	public abstract static class ToManyAssociationPersister extends MockCollectionPersister {
 		public ToManyAssociationPersister(String role, CollectionType collectionType, String targetEntityName, ProcessorSessionFactory that) {
 			super(role, collectionType,
-					new ManyToOneType(typeConfiguration, targetEntityName),
+					new ManyToOneType(that.getTypeConfiguration(), targetEntityName),
 					that);
 		}
 
@@ -447,26 +451,29 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	public abstract static class ElementCollectionPersister extends MockCollectionPersister {
 		private final TypeElement elementType;
 		private final AccessType defaultAccessType;
+		private final ProcessorSessionFactory factory;
 
 		public ElementCollectionPersister(String role,
 				CollectionType collectionType,
 				TypeElement elementType,
 				String propertyPath,
 				AccessType defaultAccessType,
-				ProcessorSessionFactory that) {
+				ProcessorSessionFactory factory) {
 			super(role, collectionType,
 					elementCollectionElementType(elementType, role,
-							propertyPath, defaultAccessType),
-					that);
+							propertyPath, defaultAccessType,
+							factory),
+					factory);
 			this.elementType = elementType;
 			this.defaultAccessType = defaultAccessType;
+			this.factory = factory;
 		}
 
 		@Override
 		Type getElementPropertyType(String propertyPath) {
 			Element symbol = findPropertyByPath(elementType, propertyPath, defaultAccessType);
 			return symbol == null ? null :
-					propertyType(symbol, getOwnerEntityName(), propertyPath, defaultAccessType);
+					factory.propertyType(symbol, getOwnerEntityName(), propertyPath, defaultAccessType);
 		}
 	}
 

@@ -145,9 +145,7 @@ public abstract class MockSessionFactory
 	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
 			new BasicTypeImpl<>(new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE);
 
-	// static so other things can get at it
-	// TODO: make a static instance of this whole object instead!
-	static TypeConfiguration typeConfiguration;
+	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String,MockEntityPersister> entityPersistersByName = new HashMap<>();
 	private final Map<String,MockCollectionPersister> collectionPersistersByName = new HashMap<>();

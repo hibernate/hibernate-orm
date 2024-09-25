@@ -284,7 +284,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		final EntityPersister concretePersister = getAssociatedEntityPersister( factory );
 		return concretePersister == null
 				? null
-				: concretePersister.getIdentifier( entity, null );
+				: concretePersister.getIdentifier( entity, (SharedSessionContractImplementor) null );
 	}
 
 	@Override
@@ -353,7 +353,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			else {
 				final Class<?> mappedClass = persister.getMappedClass();
 				if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-					id = persister.getIdentifier( x, null );
+					id = persister.getIdentifier( x, (SharedSessionContractImplementor) null );
 				}
 				else {
 					id = x;
@@ -387,7 +387,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				xid = persister.getIdentifier( x, null );
+				xid = persister.getIdentifier( x, (SharedSessionContractImplementor) null );
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
@@ -402,7 +402,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
-				yid = persister.getIdentifier( y, null );
+				yid = persister.getIdentifier( y, (SharedSessionContractImplementor) null );
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
@@ -564,7 +564,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				id = lazyInitializer.getInternalIdentifier();
 			}
 			else {
-				id = persister.getIdentifier( value, null );
+				id = persister.getIdentifier( value, (SharedSessionContractImplementor) null );
 			}
 
 			result.append( '#' )

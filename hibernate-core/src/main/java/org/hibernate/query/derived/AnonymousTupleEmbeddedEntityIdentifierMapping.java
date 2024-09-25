@@ -12,6 +12,7 @@ import java.util.Set;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
@@ -68,6 +69,11 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	@Override
 	public Object getIdentifier(Object entity) {
 		return delegate.getIdentifier( entity );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override

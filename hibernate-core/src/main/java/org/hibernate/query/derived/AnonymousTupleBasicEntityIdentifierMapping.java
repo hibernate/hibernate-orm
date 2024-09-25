@@ -9,6 +9,7 @@ package org.hibernate.query.derived;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -49,6 +50,11 @@ public class AnonymousTupleBasicEntityIdentifierMapping
 	@Override
 	public Object getIdentifier(Object entity) {
 		return delegate.getIdentifier( entity );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return delegate.getIdentifier( entity, mergeContext );
 	}
 
 	@Override

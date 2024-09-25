@@ -13,6 +13,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -106,7 +107,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		catch (MappingException ex) {
 			throw new IllegalArgumentException( entityClass.getName() + " is not an entity", ex );
 		}
-		return persister.getIdentifier( entity, null );
+		return persister.getIdentifier( entity, (SharedSessionContractImplementor) null );
 	}
 
 }

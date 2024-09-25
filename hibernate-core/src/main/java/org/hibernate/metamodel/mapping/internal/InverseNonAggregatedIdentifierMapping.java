@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -196,6 +197,11 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public Object getIdentifier(Object entity) {
+		return getIdentifier( entity, null );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
 		if ( hasContainingClass() ) {
 			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
 					null,
@@ -218,16 +224,17 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
 				else if ( attributeMapping instanceof ToOneAttributeMapping
 						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
+					final Object toOne = getIfMerged( o, mergeContext );
 					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 							toOneAttributeMapping.getSideNature().inverse()
 					);
 					if ( targetPart.isEntityIdentifierMapping() ) {
-						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
+						propertyValues[i] = ( (EntityIdentifierMapping) targetPart )
+								.getIdentifier( toOne, mergeContext );
 					}
 					else {
-						propertyValues[i] = o;
-						assert false;
+						propertyValues[i] = toOne;
 					}
 				}
 				else {
@@ -240,6 +247,16 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		else {
 			return entity;
 		}
+	}
+
+	private static Object getIfMerged(Object o, MergeContext mergeContext) {
+		if ( mergeContext != null ) {
+			final Object merged = mergeContext.get( o );
+			if ( merged != null ) {
+				return merged;
+			}
+		}
+		return o;
 	}
 
 	@Override

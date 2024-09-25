@@ -94,6 +94,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
@@ -4295,6 +4296,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		return identifierMapping.getIdentifier( entity );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return identifierMapping.getIdentifier( entity, mergeContext );
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
@@ -1128,6 +1129,24 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Throw an exception if it has no identifier property.
 	 */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+
+	/**
+	 * Get the identifier of an instance from the object's identifier property.
+	 * Throw an exception if it has no identifier property.
+	 *
+	 * It's supposed to be use during the merging process
+	 */
+	default Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return getIdentifier( entity, mergeContext.getEventSource() );
+	}
+
+	/**
+	 * Get the identifier of an instance from the object's identifier property.
+	 * Throw an exception if it has no identifier property.
+	 */
+	default Object getIdentifier(Object entity) {
+		return getIdentifier( entity, (SharedSessionContractImplementor) null );
+	}
 
 	/**
 	 * Inject the identifier value into the given entity.

@@ -1279,11 +1279,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this
 			);
 
-			if ( !rootTableGroup.getTableReferenceJoins().isEmpty()
-					|| !rootTableGroup.getTableGroupJoins().isEmpty() ) {
-				throw new HibernateException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
-			}
-
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 
 			final InsertSelectStatement insertStatement = new InsertSelectStatement(
@@ -1299,9 +1294,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					rootTableGroup
 			);
 
-			if ( !rootTableGroup.getTableReferenceJoins().isEmpty()
-					|| !rootTableGroup.getTableGroupJoins().isEmpty() ) {
-				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
+			if ( hasJoins( rootTableGroup ) ) {
+				throw new HibernateException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
 			}
 
 			for ( SqmValues sqmValues : sqmStatement.getValuesList() ) {

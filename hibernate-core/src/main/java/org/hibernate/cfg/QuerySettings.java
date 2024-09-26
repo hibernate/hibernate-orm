@@ -279,5 +279,5 @@ public interface QuerySettings {
 	 * <p>
 	 * By default, this is set to false
 	 */
-	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_paramater_names";
+	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_parameter_names";
 }

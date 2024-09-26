@@ -23,6 +23,8 @@ public interface QuerySettings {
 	 * databases. By default, integer division in HQL can produce a non-integer
 	 * on Oracle, MySQL, or MariaDB.
 	 *
+	 * @settingDefault {@code false}
+	 *
 	 * @since 6.5
 	 */
 	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
@@ -53,9 +55,9 @@ public interface QuerySettings {
 	/**
 	 * When enabled, specifies that named queries be checked during startup.
 	 * <p>
-	 * By default, named queries are checked at startup.
-	 * <p>
 	 * Mainly intended for use in test environments.
+	 *
+	 * @settingDefault {@code true} (enabled) - named queries are checked at startup.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNamedQueryCheckingOnStartup(boolean)
 	 */
@@ -85,8 +87,8 @@ public interface QuerySettings {
 	 *     {@link jakarta.persistence.Query#setParameter(jakarta.persistence.Parameter,Object)}
 	 *     to specify its argument are passed to JDBC using a bind parameter.
 	 * </ul>
-	 * <p>
-	 * The default mode is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
+	 *
+	 * @settingDefault {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
 	 *
 	 * @since 6.0.0
 	 *
@@ -101,8 +103,8 @@ public interface QuerySettings {
 	 * Specifies the default {@linkplain NullPrecedence precedence of null values} in the
 	 * HQL {@code ORDER BY} clause, either {@code none}, {@code first}, or {@code last},
 	 * or an instance of {@link NullPrecedence}.
-	 * <p>
-	 * The default is {@code none}.
+	 *
+	 * @settingDefault {@code none}.
 	 *
 	 * @see NullPrecedence
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(NullPrecedence)
@@ -135,10 +137,10 @@ public interface QuerySettings {
 	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
 
 	/**
-	 * When set to true, indicates that ordinal parameters (represented by the '?' placeholder) in native queries will be ignored.
-	 * <p>
-	 * By default, this is set to false, i.e. native queries will be checked for ordinal placeholders.
-	 * <p>
+	 * When enabled, ordinal parameters (represented by the {@code ?} placeholder) in
+	 * native queries will be ignored.
+	 *
+	 * @settingDefault {@code false} (disabled) - native queries are checked for ordinal placeholders.
 	 *
 	 * @see SessionFactoryOptions#getNativeJdbcParametersIgnored()
 	 */
@@ -152,9 +154,9 @@ public interface QuerySettings {
 	 * <p>
 	 * When enabled, this setting specifies that an exception should be thrown for any
 	 * query which would result in the limit being applied in-memory.
-	 * <p>
-	 * By default, the exception is <em>disabled</em>, and the possibility of terrible
-	 * performance is left as a problem for the client to avoid.
+	 *
+	 * @settingDefault {@code false} (disabled) - no exception is thrown and the
+	 * possibility of terrible performance is left as a problem for the client to avoid.
 	 *
 	 * @since 5.2.13
 	 */
@@ -172,8 +174,8 @@ public interface QuerySettings {
 	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
 	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
 	 * </ul>
-	 * <p>
-	 * By default, a warning is logged.
+	 *
+	 * @settingDefault {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
 	 *
 	 * @since 5.2.17
 	 *

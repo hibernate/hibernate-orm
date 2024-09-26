@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+
 import jakarta.persistence.spi.PersistenceUnitInfo;
 
 /**
@@ -130,36 +131,6 @@ public interface TransactionSettings {
 	String ALLOW_JTA_TRANSACTION_ACCESS = "hibernate.jta.allowTransactionAccess";
 
 	/**
-	 * Allows a detached proxy or lazy collection to be fetched even when not
-	 * associated with an open persistence context, by creating a temporary
-	 * persistence context when the proxy or collection is accessed. This
-	 * behavior is not recommended, since it can easily break transaction
-	 * isolation or lead to data aliasing; it is therefore disabled by default.
-	 *
-	 * @settingDefault {@code false} (disabled)
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
-	 */
-	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
-
-	/**
-	 * When enabled, allows update operations outside a transaction.
-	 * <p>
-	 * Since version 5.2 Hibernate conforms with the JPA specification and disallows
-	 * flushing any update outside a transaction.
-	 * <p>
-	 * Values are {@code true}, which allows flushing outside a transaction, and
-	 * {@code false}, which does not.
-	 * <p>
-	 * The default behavior is to disallow update operations outside a transaction.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#allowOutOfTransactionUpdateOperations(boolean)
-	 *
-	 * @since 5.2
-	 */
-	String ALLOW_UPDATE_OUTSIDE_TRANSACTION = "hibernate.allow_update_outside_transaction";
-
-	/**
 	 * When enabled, specifies that the {@link org.hibernate.Session} should be
 	 * closed automatically at the end of each transaction.
 	 *
@@ -178,4 +149,43 @@ public interface TransactionSettings {
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoFlushing(boolean)
 	 */
 	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
+
+	/**
+	 * Allows a detached proxy or lazy collection to be fetched even when not
+	 * associated with an open persistence context, by creating a temporary
+	 * persistence context when the proxy or collection is accessed. This
+	 * behavior is not recommended, since it can easily break transaction
+	 * isolation or lead to data aliasing; it is therefore disabled by default.
+	 *
+	 * @settingDefault {@code false} (disabled)
+	 *
+	 * @apiNote Generally speaking, all access to transactional data should be done in a transaction.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
+	 */
+	@Unsafe
+	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
+
+	/**
+	 * When enabled, allows update operations outside a transaction.
+	 * <p>
+	 * Since version 5.2 Hibernate conforms with the JPA specification and disallows
+	 * flushing any update outside a transaction.
+	 * <p>
+	 * Values are {@code true}, which allows flushing outside a transaction, and
+	 * {@code false}, which does not.
+	 * <p>
+	 * The default behavior is to disallow update operations outside a transaction.
+	 *
+	 * @settingDefault {@code false} (disabled)
+	 *
+	 * @apiNote Generally speaking, all access to transactional data should be done in a transaction.
+	 * Combining this with second-level caching, e.g., will cause problems.
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#allowOutOfTransactionUpdateOperations(boolean)
+	 *
+	 * @since 5.2
+	 */
+	@Unsafe
+	String ALLOW_UPDATE_OUTSIDE_TRANSACTION = "hibernate.allow_update_outside_transaction";
 }

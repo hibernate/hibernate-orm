@@ -573,7 +573,7 @@ settingsDocumentation {
 		}
 		transaction {
 			explicitPosition = 6
-			summary = "Proxool Connection Pool Settings"
+			summary = "Transaction Environment Settings"
 			description = "Settings which control how Hibernate interacts with and manages transactions"
 			settingsClassName "org.hibernate.cfg.TransactionSettings"
 		}

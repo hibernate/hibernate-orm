@@ -18,7 +18,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 public interface QuerySettings {
 	/**
 	 * Boolean setting to control if the use of tech preview JSON functions in HQL is enabled.
-	 * By default, this is {@code false} i.e. disabled since the functions are still incubating.
+	 *
+	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
 	 *
 	 * @since 7.0
 	 */
@@ -27,7 +28,8 @@ public interface QuerySettings {
 
 	/**
 	 * Boolean setting to control if the use of tech preview XML functions in HQL is enabled.
-	 * By default, this is {@code false} i.e. disabled since the functions are still incubating.
+	 *
+	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
 	 *
 	 * @since 7.0
 	 */
@@ -38,6 +40,8 @@ public interface QuerySettings {
 	 * Specifies that division of two integers should produce an integer on all
 	 * databases. By default, integer division in HQL can produce a non-integer
 	 * on Oracle, MySQL, or MariaDB.
+	 *
+	 * @settingDefault {@code false}
 	 *
 	 * @since 6.5
 	 */
@@ -70,9 +74,9 @@ public interface QuerySettings {
 	/**
 	 * When enabled, specifies that named queries be checked during startup.
 	 * <p>
-	 * By default, named queries are checked at startup.
-	 * <p>
 	 * Mainly intended for use in test environments.
+	 *
+	 * @settingDefault {@code true} (enabled) - named queries are checked at startup.
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNamedQueryCheckingOnStartup(boolean)
 	 */
@@ -102,8 +106,8 @@ public interface QuerySettings {
 	 *     {@link jakarta.persistence.Query#setParameter(jakarta.persistence.Parameter,Object)}
 	 *     to specify its argument are passed to JDBC using a bind parameter.
 	 * </ul>
-	 * <p>
-	 * The default mode is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
+	 *
+	 * @settingDefault {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
 	 *
 	 * @since 6.0.0
 	 *
@@ -119,8 +123,8 @@ public interface QuerySettings {
 	 * of null values} sorted via the HQL {@code ORDER BY} clause, either {@code none},
 	 * {@code first}, or {@code last}, or an instance of the enumeration
 	 * {@link jakarta.persistence.criteria.Nulls}.
-	 * <p>
-	 * The default is {@code none}.
+	 *
+	 * @settingDefault {@code none}.
 	 *
 	 * @see jakarta.persistence.criteria.Nulls
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(jakarta.persistence.criteria.Nulls)
@@ -155,8 +159,8 @@ public interface QuerySettings {
 	/**
 	 * When enabled, ordinal parameters (represented by the {@code ?} placeholder) in
 	 * native queries will be ignored.
-	 * <p>
-	 * By default, native queries are checked for ordinal placeholders.
+	 *
+	 * @settingDefault {@code false} (disabled) - native queries are checked for ordinal placeholders.
 	 *
 	 * @see SessionFactoryOptions#getNativeJdbcParametersIgnored()
 	 */
@@ -167,12 +171,14 @@ public interface QuerySettings {
 	 * {@link java.sql.Time}, and {@link java.sql.Timestamp} instead of the
 	 * datetime types from {@link java.time}, recovering the behavior of
 	 * native queries in Hibernate 6 and earlier.
-	 * <p>
-	 * By default, native queries return {@link java.time.LocalDate},
-	 * {@link java.time.LocalTime}, and {@link java.time.LocalDateTime}.
+	 *
+	 * @settingDefault {@code false} (disabled) - native queries return
+	 * {@link java.time.LocalDate}, {@link java.time.LocalTime}, and
+	 * {@link java.time.LocalDateTime}.
 	 *
 	 * @since 7.0
 	 */
+	@Compatibility
 	String NATIVE_PREFER_JDBC_DATETIME_TYPES = "hibernate.query.native.prefer_jdbc_datetime_types";
 
 	/**
@@ -183,9 +189,9 @@ public interface QuerySettings {
 	 * <p>
 	 * When enabled, this setting specifies that an exception should be thrown for any
 	 * query which would result in the limit being applied in-memory.
-	 * <p>
-	 * By default, the exception is <em>disabled</em>, and the possibility of terrible
-	 * performance is left as a problem for the client to avoid.
+	 *
+	 * @settingDefault {@code false} (disabled) - no exception is thrown and the
+	 * possibility of terrible performance is left as a problem for the client to avoid.
 	 *
 	 * @since 5.2.13
 	 */
@@ -203,8 +209,8 @@ public interface QuerySettings {
 	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
 	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
 	 * </ul>
-	 * <p>
-	 * By default, a warning is logged.
+	 *
+	 * @settingDefault {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
 	 *
 	 * @since 5.2.17
 	 *

@@ -19,12 +19,12 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.type.descriptor.java.JavaType;
-
 import org.hibernate.type.spi.TypeConfiguration;
+
 import org.jboss.logging.Logger;
 
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.findMatchingConstructor;
 
 /**
  * @author Steve Ebersole
@@ -164,13 +164,14 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 						.getMappingMetamodel()
 						.getTypeConfiguration();
 		// find a constructor matching argument types
-		for ( Constructor<?> constructor : javaType.getJavaTypeClass().getDeclaredConstructors() ) {
-			if ( isConstructorCompatible( constructor, argumentTypes, typeConfiguration ) ) {
-				constructor.setAccessible( true );
-				@SuppressWarnings("unchecked")
-				final Constructor<R> construct = (Constructor<R>) constructor;
-				return new DynamicInstantiationAssemblerConstructorImpl<>( construct, javaType, argumentReaders );
-			}
+		final Constructor<R> constructor = findMatchingConstructor(
+				javaType.getJavaTypeClass(),
+				argumentTypes,
+				typeConfiguration
+		);
+		if ( constructor != null ) {
+			constructor.setAccessible( true );
+			return new DynamicInstantiationAssemblerConstructorImpl<>( constructor, javaType, argumentReaders );
 		}
 
 		if ( log.isDebugEnabled() ) {

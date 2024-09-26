@@ -5,7 +5,6 @@
 package org.hibernate.id.uuid;
 
 import java.security.SecureRandom;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -16,7 +15,6 @@ import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
 
-import static java.time.Instant.EPOCH;
 import static java.time.temporal.ChronoUnit.MILLIS;
 
 /**
@@ -50,15 +48,15 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	private final Lock lock = new ReentrantLock( true );
 	private final AtomicLong clockSequence;
-	private Duration currentTimestamp;
+	private Instant currentTimestamp;
 
 	@Internal
 	public UuidVersion7Strategy() {
-		this( getCurrentTimestamp(), 0 );
+		this( Instant.now(), 0 );
 	}
 
 	@Internal
-	public UuidVersion7Strategy(final Duration currentTimestamp, final long clockSequence) {
+	public UuidVersion7Strategy(final Instant currentTimestamp, final long clockSequence) {
 		this.currentTimestamp = currentTimestamp;
 		this.clockSequence = new AtomicLong( clockSequence );
 	}
@@ -78,12 +76,12 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	@Override
 	public UUID generateUuid(SharedSessionContractImplementor session) {
-		final Duration currentTimestamp = getCurrentTimestamp();
+		final Instant currentTimestamp = Instant.now();
 
 		final long seq = getSequence( currentTimestamp );
 
-		final long millis = currentTimestamp.getSeconds() * 1000 + currentTimestamp.getNano() / 1_000_000;
-		final long nanosPart = Math.round( ( currentTimestamp.getNano() % 1_000_000L ) * 0.004096 );
+		final long millis = currentTimestamp.toEpochMilli();
+		final long nanosPart = (long) ( ( currentTimestamp.getNano() % 1_000_000L ) * 0.004096 );
 
 		return new UUID(
 				// MSB bits 0-47 - 48-bit big-endian unsigned number of the Unix Epoch timestamp in milliseconds
@@ -101,21 +99,17 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 		);
 	}
 
-	private long getSequence(final Duration currentTimestamp) {
+	private long getSequence(final Instant currentTimestamp) {
 		lock.lock();
 		try {
-			if ( !this.currentTimestamp.equals( currentTimestamp ) ) {
-				this.currentTimestamp = currentTimestamp;
-				clockSequence.set( 0 );
+			if ( this.currentTimestamp.toEpochMilli() < currentTimestamp.toEpochMilli() ) {
+				this.currentTimestamp = currentTimestamp.truncatedTo( MILLIS );
+				clockSequence.updateAndGet( l -> l & 0x1FFFL );
 			}
 		}
 		finally {
 			lock.unlock();
 		}
 		return clockSequence.getAndIncrement();
-	}
-
-	private static Duration getCurrentTimestamp() {
-		return Duration.between( EPOCH, Instant.now() ).truncatedTo( MILLIS );
 	}
 }

@@ -23,6 +23,8 @@ public class SettingWorkingDetails {
 	private String since;
 	private boolean deprecated;
 	private boolean incubating;
+	private boolean unsafe;
+	private boolean compatibility;
 	private List<String> relatedSettingNames;
 
 	public SettingWorkingDetails(
@@ -92,6 +94,22 @@ public class SettingWorkingDetails {
 		this.incubating = incubating;
 	}
 
+	public boolean isUnsafe() {
+		return unsafe;
+	}
+
+	public void setUnsafe(boolean unsafe) {
+		this.unsafe = unsafe;
+	}
+
+	public boolean isCompatibility() {
+		return compatibility;
+	}
+
+	public void setCompatibility(boolean compatibility) {
+		this.compatibility = compatibility;
+	}
+
 	public List<String> getRelatedSettingNames() {
 		return relatedSettingNames;
 	}
@@ -134,7 +152,9 @@ public class SettingWorkingDetails {
 				apiNote,
 				since,
 				deprecated,
-				incubating
+				incubating,
+				unsafe,
+				compatibility
 		);
 	}
 }

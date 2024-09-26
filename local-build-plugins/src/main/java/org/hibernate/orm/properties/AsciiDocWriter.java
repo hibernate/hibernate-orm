@@ -109,6 +109,12 @@ public class AsciiDocWriter {
 		if ( lifecycleDetails.isDeprecated() ) {
 			writer.write( "WARNING: *_This setting is considered deprecated_*\n\n" );
 		}
+		if ( settingDescriptor.isUnsafe() ) {
+			writer.write( "WARNING: *_This setting is considered unsafe_*\n\n" );
+		}
+		if ( settingDescriptor.isCompatibility() ) {
+			writer.write( "INFO: *_This setting manages a certain backwards compatibility_*\n\n" );
+		}
 
 		if ( lifecycleDetails.getSince() != null ) {
 			writer.write( "*_Since:_* _" + lifecycleDetails.getSince() + "_\n\n" );

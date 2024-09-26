@@ -14,6 +14,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.jsoup.nodes.Element;
+
 /**
  * @author Steve Ebersole
  */
@@ -38,5 +40,40 @@ public class Utils {
 			map.put( descriptor, new TreeSet<>( SettingDescriptorComparator.INSTANCE ) );
 		} );
 		return map;
+	}
+
+	public static boolean containsHref(Element fieldJavadocElement, String target) {
+		final String cssQuery = "a[href$=" + target + "]";
+		final Element incubatingMarkerElement = fieldJavadocElement.selectFirst( cssQuery );
+		return incubatingMarkerElement != null;
+
+	}
+
+	public static boolean interpretIncubation(Element fieldJavadocElement) {
+		return containsHref( fieldJavadocElement, "Incubating.html" );
+	}
+
+	public static boolean interpretUnsafe(Element fieldJavadocElement) {
+		return containsHref( fieldJavadocElement, "Unsafe.html" );
+	}
+
+	public static boolean interpretCompatibility(Element fieldJavadocElement) {
+		return containsHref( fieldJavadocElement, "Compatibility.html" );
+	}
+
+	public static boolean interpretDeprecation(Element fieldJavadocElement) {
+		// A setting is considered deprecated with either `@Deprecated`
+		final Element deprecationDiv = fieldJavadocElement.selectFirst( ".deprecationBlock" );
+		// presence of this <div/> indicates the member is deprecated
+		if ( deprecationDiv != null ) {
+			return true;
+		}
+
+		// or `@Remove`
+		if ( containsHref( fieldJavadocElement, "Remove.html" ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }

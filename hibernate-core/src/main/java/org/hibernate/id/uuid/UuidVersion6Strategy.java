@@ -98,9 +98,9 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 	private long getSequence(final long currentTimestamp) {
 		lock.lock();
 		try {
-			if ( this.currentTimestamp > currentTimestamp ) {
+			if ( this.currentTimestamp < currentTimestamp ) {
 				this.currentTimestamp = currentTimestamp;
-				clockSequence.set( 0 );
+				clockSequence.updateAndGet( l -> l & 0x1FFFL );
 			}
 		}
 		finally {

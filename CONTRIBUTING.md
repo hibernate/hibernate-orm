@@ -83,7 +83,6 @@ Do your thing!
 up the related commits and display them on the JIRA issue
 * Make sure you have added the necessary tests for your changes
 * Run _all_ the tests to ensure nothing else was accidentally broken
-* Make sure your source does not violate the _checkstyles_
 
 _Before committing, if you want to pull in the latest upstream changes (highly
 appreciated btw), please use rebasing rather than merging.  Merging creates

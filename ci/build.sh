@@ -76,11 +76,6 @@ elif [ "$RDBMS" == "informix" ]; then
   goal="-Pdb=informix"
 fi
 
-# Disable checkstyle
-#if [ -n "$goal" ]; then
-goal="$goal -x checkstyleMain -DPOPULATE_REMOTE=true"
-#fi
-
 function logAndExec() {
   echo 1>&2 "Executing:" "${@}"
   exec "${@}"

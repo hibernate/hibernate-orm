@@ -14,9 +14,6 @@ apply from: rootProject.file( 'gradle/java-module.gradle' )
 java.modularity.inferModulePath = true
 
 
-// Checkstyle fails for module-info
-checkstyleMain.exclude '**/module-info.java'
-
 dependencies {
 	api project( ':hibernate-core' )
 	api project( ':hibernate-envers' )

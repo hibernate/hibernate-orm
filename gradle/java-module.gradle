@@ -36,7 +36,6 @@ apply plugin: 'de.thetaphi.forbiddenapis'
 apply plugin: 'com.diffplug.spotless'
 
 apply plugin: "jacoco"
-apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
@@ -448,26 +447,37 @@ tasks.copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Report configs
 
-checkstyle {
-	it.sourceSets = [ project.sourceSets.main ]
-	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-	showViolations = false
-}
-
-// exclude generated java sources - by explicitly setting the base source dir
-tasks.checkstyleMain.source = 'src/main/java'
-tasks.checkstyleMain
-		.exclude('org/hibernate/processor/util/NullnessUtil.java')
-		.exclude('org/hibernate/internal/util/NullnessUtil.java')
-// For some big files we need more heap memory than the default 512m for parsing
-tasks.checkstyleMain.maxHeapSize = "640m"
-
-// define a second checkstyle task for checking non-fatal violations
-task nonFatalCheckstyle(type:Checkstyle) {
-	source = project.sourceSets.main.java
-	classpath = project.configurations.checkstyle
-	showViolations = false
-	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
+task enforceRules {
+	doLast {
+		def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
+		def missingNewline = ~/^\s*}\s*(else|catch|finally)/
+		def lowerEll = ~/\b\d+l\b/
+		def errors = 0
+		def tree = fileTree("src/main/java/")
+		tree.include "**/*.java"
+		tree.each { file ->
+			def lineNum = 0
+			def shortName = file.path.substring(rootDir.path.length())
+			file.eachLine { line ->
+				lineNum++
+				if (line =~ illegalImport) {
+					errors++
+					logger.error("Illegal import in ${shortName}\n${lineNum}: ${line}")
+				}
+				if (line =~ missingNewline) {
+					errors++
+					logger.error("Missing newline in ${shortName}\n${lineNum}: ${line}")
+				}
+				if (line =~ lowerEll) {
+					errors++
+					logger.error("Lowercase long literal in ${shortName}\n${lineNum}: ${line}")
+				}
+			}
+		}
+		if ( errors>0 ) {
+			throw new GradleException("Code rules were violated ($errors problems)")
+		}
+	}
 }
 
 spotless {
@@ -482,6 +492,8 @@ spotless {
 		endWithNewline()
 	}
 }
+
+tasks.spotlessApply.dependsOn enforceRules
 
 
 class CompilerStubsArgumentProvider implements CommandLineArgumentProvider {

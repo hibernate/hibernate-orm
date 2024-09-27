@@ -11,8 +11,6 @@ plugins {
 	id 'java-gradle-plugin'
 	id 'com.gradle.plugin-publish' version '1.2.1'
 
-	id 'checkstyle'
-
 	// for local publishing
 	id 'maven-publish'
 }
@@ -129,12 +127,6 @@ tasks.named( "javadoc", Javadoc ) {
 		windowTitle = "Hibernate Javadocs ($project.name)"
 		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
 	}
-}
-
-checkstyle {
-	sourceSets = [ project.sourceSets.main ]
-	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-	showViolations = false
 }
 
 tasks.publish.enabled !project.ormVersion.isSnapshot

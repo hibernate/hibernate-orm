@@ -113,6 +113,5 @@ jobs:
           name: test-reports-java11-${{ matrix.rdbms }}
           path: |
             ./**/target/reports/tests/
-            ./**/target/reports/checkstyle/
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh

@@ -19,6 +19,7 @@ out
 .idea/modules
 .idea/shelf
 .idea/*.xml
+.idea/.gitignore
 *.ipr
 *.iws
 *.iml

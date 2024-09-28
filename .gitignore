@@ -16,7 +16,10 @@ lib
 
 # IntelliJ specific files/directories
 out
-.idea
+.idea/modules
+.idea/shelf
+.idea/*.xml
+.idea/.gitignore
 *.ipr
 *.iws
 *.iml

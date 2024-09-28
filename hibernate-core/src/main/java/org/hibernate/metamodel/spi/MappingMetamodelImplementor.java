@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 
 /**
@@ -31,5 +33,31 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 * use for determining the entity descriptor from an instance of an entity
 	 */
 	Collection<EntityNameResolver> getEntityNameResolvers();
+
+	/**
+	 * Get the names of all entities known to this Metamodel
+	 *
+	 * @return All the entity names
+	 */
+	default String[] getAllEntityNames() {
+		return streamEntityDescriptors()
+				.map( EntityPersister::getEntityName )
+				.toArray( String[]::new );
+	}
+
+	/**
+	 * Get the names of all collections known to this Metamodel
+	 *
+	 * @return All the entity names
+	 */
+	default String[] getAllCollectionRoles(){
+		return streamCollectionDescriptors()
+				.map( CollectionPersister::getRole )
+				.toArray( String[]::new );
+	}
+
+	default void close() {
+
+	}
 
 }

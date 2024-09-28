@@ -52,7 +52,7 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 
 	@Override
 	public EntityPersister getOwnerEntityPersister() {
-		return factory.getMetamodel().entityPersister(ownerEntityName);
+		return factory.getMetamodel().getEntityDescriptor(ownerEntityName);
 	}
 
 	abstract Type getElementPropertyType(String propertyPath);
@@ -96,7 +96,7 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 	public EntityPersister getElementPersister() {
 		if (elementType instanceof EntityType ) {
 			return factory.getMetamodel()
-					.entityPersister(elementType.getName());
+					.getEntityDescriptor(elementType.getName());
 		}
 		else {
 			return null;

@@ -384,6 +384,8 @@ While most users will never see this change, it might impact integrations which 
 ** Removed `org.hibernate.Interceptor#onCollectionUpdate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionUpdate(Object, Object)`
 ** Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
 ** Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
+** Removed `org.hibernate.metamodel.spi.MetamodelImplementor` in favor of `org.hibernate.metamodela.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
+** Removed `org.hibernate.Metamodel` in favor of `org.hibernate.metamodel.model.domain.JpaMetamodel`
 
 * Settings
 ** Removed `hibernate.mapping.precedence` and friends

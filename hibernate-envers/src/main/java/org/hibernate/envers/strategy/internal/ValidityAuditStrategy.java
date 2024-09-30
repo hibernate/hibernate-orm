@@ -547,7 +547,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final EntityPersister rootEntity = getEntityPersister( entity.getRootEntityName(), session );
 		final EntityPersister auditEntity = getEntityPersister( auditEntityName, session );
 		final EntityPersister rootAuditEntity = getEntityPersister( auditEntity.getRootEntityName(), session );
-		final EntityPersister revisionEntity = getEntityPersister( configuration.getRevisionInfo().getRevisionInfoEntityName(), session );
+		final EntityPersister revisionEntity = getEntityPersister( configuration.getRevisionInfo().getRevisionInfoClass().getName(), session );
 
 		final Number revisionNumber = getRevisionNumber( configuration, revision );
 

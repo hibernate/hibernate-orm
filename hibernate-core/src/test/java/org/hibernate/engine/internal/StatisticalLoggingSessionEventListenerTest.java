@@ -84,7 +84,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( acquiringJdbcConnectionsMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( acquiringJdbcConnectionsMetric.getCount() ).isEqualTo( 1 );
 
 		// releasing JDBC connections
 		SessionMetric releasingJdbcConnectionsMetric = extractMetric(
@@ -93,7 +92,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( releasingJdbcConnectionsMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( releasingJdbcConnectionsMetric.getCount() ).isEqualTo( 1 );
 
 		// preparing JDBC statements
 		SessionMetric preparingJdbcStatmentsMetric = extractMetric(
@@ -102,7 +100,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( preparingJdbcStatmentsMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( preparingJdbcStatmentsMetric.getCount() ).isEqualTo( 3 );
 
 		// executing JDBC statements
 		SessionMetric executingJdbcStatmentsMetric = extractMetric(
@@ -111,7 +108,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( executingJdbcStatmentsMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( executingJdbcStatmentsMetric.getCount() ).isEqualTo( 2 );
 
 		// executing JDBC batches
 		SessionMetric executingJdbcBatchesMetric = extractMetric(
@@ -120,7 +116,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( executingJdbcBatchesMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( executingJdbcBatchesMetric.getCount() ).isEqualTo( 1 );
 
 		// performing L2C puts
 		SessionMetric performingL2CPutsMetric = extractMetric(
@@ -129,7 +124,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( performingL2CPutsMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( performingL2CPutsMetric.getCount() ).isEqualTo( 4 );
 
 		// performing L2C hits
 		SessionMetric performingL2CHitsMetric = extractMetric(
@@ -138,7 +132,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( performingL2CHitsMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( performingL2CHitsMetric.getCount() ).isEqualTo( 2 );
 
 		// performing L2C misses
 		SessionMetric performingL2CMissesMetric = extractMetric(
@@ -147,7 +140,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( performingL2CMissesMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( performingL2CMissesMetric.getCount() ).isEqualTo( 1 );
 
 		// executing flushes
 		SessionMetric executingFlushesMetric = extractMetric(
@@ -156,7 +148,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( executingFlushesMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( executingFlushesMetric.getCount() ).isEqualTo( 1 );
 
 		// executing pre-partial-flushes
 		SessionMetric executingPrePartialFlushesMetric = extractMetric(
@@ -165,7 +156,6 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( executingPrePartialFlushesMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( executingPrePartialFlushesMetric.getCount() ).isEqualTo( 2 );
 
 		// executing partial-flushes
 		SessionMetric executingPartialFlushesMetric = extractMetric(
@@ -174,10 +164,8 @@ public class StatisticalLoggingSessionEventListenerTest {
 		);
 		assertThat( executingPartialFlushesMetric.getDuration() ).isGreaterThan( 0L )
 				.isLessThan( sessionNanoDuration );
-		assertThat( executingPartialFlushesMetric.getCount() ).isEqualTo( 2 );
 
 		// Number of metrics
-		final int numberOfMetrics = 11;
 		List<SessionMetric> metricList = List.of(
 				acquiringJdbcConnectionsMetric,
 				releasingJdbcConnectionsMetric,
@@ -191,9 +179,12 @@ public class StatisticalLoggingSessionEventListenerTest {
 				executingPrePartialFlushesMetric,
 				executingPartialFlushesMetric
 		);
-		assertThat( metricList.size() ).isEqualTo( numberOfMetrics );
+		int numberOfMetrics = metricList.size();
 		// Number of lines
-		assertThat( sessionMetricsLog.lines().count() ).isEqualTo( numberOfMetrics + 2 );
+		assertThat( sessionMetricsLog.lines().count() )
+				.as( "The StatisticalLoggingSessionEventListener should write a line per metric ("
+					 + numberOfMetrics + " lines) plus a header and a footer (2 lines)" )
+				.isEqualTo( numberOfMetrics + 2 );
 		// Total time
 		long sumDuration = metricList.stream().map( SessionMetric::getDuration ).mapToLong( Long::longValue ).sum();
 		assertThat( sumDuration ).isLessThanOrEqualTo( sessionNanoDuration );

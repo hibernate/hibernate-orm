@@ -496,7 +496,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public Property copy() {
-		final Property property = new Property();
+		final Property property = this instanceof SyntheticProperty ? new SyntheticProperty() : new Property();
 		property.setName( getName() );
 		property.setValue( getValue() );
 		property.setCascade( getCascade() );

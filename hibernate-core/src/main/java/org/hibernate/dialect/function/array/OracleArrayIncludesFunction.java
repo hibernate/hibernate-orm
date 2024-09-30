@@ -47,6 +47,6 @@ public class OracleArrayIncludesFunction extends AbstractArrayIncludesFunction {
 			haystackExpression.accept( walker );
 			sqlAppender.append( ")))" );
 		}
-		
+
 	}
 }

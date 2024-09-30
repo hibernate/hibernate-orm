@@ -19,7 +19,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
+import org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
@@ -198,7 +198,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends EntityManagerFacto
 	@Table(name = "TRACKING_REV_INFO")
 	@RevisionEntity
 	public static class CustomTrackingRevisionEntity
-		extends DefaultTrackingModifiedEntitiesRevisionEntity {
+		extends TrackingModifiedEntitiesRevisionMapping {
 
 	}
 	//end::envers-tracking-modified-entities-revchanges-example[]

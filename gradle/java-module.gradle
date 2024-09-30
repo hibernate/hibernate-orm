@@ -452,12 +452,15 @@ task enforceRules {
 		def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
 		def missingNewline = ~/^\s*}\s*(else|catch|finally)/
 		def lowerEll = ~/\b\d+l\b/
+		def equals = ~/boolean +equals\((@?\w+ )*Object \w+\)/
+		def hashCode = ~/int +hashCode\(\)/
 		def errors = 0
 		def tree = fileTree("src/main/java/")
 		tree.include "**/*.java"
 		tree.each { file ->
 			def lineNum = 0
 			def shortName = file.path.substring(rootDir.path.length())
+			def equalsMinusHashcode = 0
 			file.eachLine { line ->
 				lineNum++
 				if (line =~ illegalImport) {
@@ -472,6 +475,22 @@ task enforceRules {
 					errors++
 					logger.error("Lowercase long literal in ${shortName}\n${lineNum}: ${line}")
 				}
+				if (!line.startsWith("//")) { //ignore commented-out code
+					if (line =~ equals) {
+						equalsMinusHashcode ++
+					}
+					if (line =~ hashCode) {
+						equalsMinusHashcode --
+					}
+				}
+			}
+			if (equalsMinusHashcode>0) {
+				errors++
+				logger.error("Equals with missing hash code in ${shortName}")
+			}
+			if (equalsMinusHashcode<0) {
+				errors++
+				logger.error("Hash code with missing equals in ${shortName}")
 			}
 		}
 		if ( errors>0 ) {

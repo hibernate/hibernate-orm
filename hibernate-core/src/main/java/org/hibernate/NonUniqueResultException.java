@@ -15,6 +15,9 @@ import org.hibernate.query.Query;
  * @author Gavin King
  */
 public class NonUniqueResultException extends HibernateException {
+
+	private final int resultCount;
+
 	/**
 	 * Constructs a {@code NonUniqueResultException}.
 	 *
@@ -22,6 +25,15 @@ public class NonUniqueResultException extends HibernateException {
 	 */
 	public NonUniqueResultException(int resultCount) {
 		super( "Query did not return a unique result: " + resultCount + " results were returned" );
+		this.resultCount = resultCount;
+	}
+
+	/**
+	 * Get the number of actual results.
+	 * @return number of actual results
+	 */
+	public int getResultCount() {
+		return this.resultCount;
 	}
 
 }

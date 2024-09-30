@@ -279,8 +279,10 @@ public class MetadataContext {
 			attribute = factoryFunction.apply( entityType, genericProperty );
 			if ( !property.isGeneric() ) {
 				final PersistentAttribute<X, ?> concreteAttribute = factoryFunction.apply( entityType, property );
-				//noinspection unchecked
-				( (AttributeContainer<X>) entityType ).getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
+				if ( concreteAttribute != null ) {
+					@SuppressWarnings("unchecked") final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
+					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
+				}
 			}
 		}
 		else {

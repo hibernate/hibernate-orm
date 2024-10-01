@@ -10,8 +10,8 @@ description = 'Integration for HikariCP into Hibernate O/RM'
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.hikaricp )
-    testCompile project( ':hibernate-testing' )
-    testCompile(libraries.mockito)
+    implementation project( ':hibernate-core' )
+    implementation( libraries.hikaricp )
+    testImplementation project( ':hibernate-testing' )
+    testImplementation(libraries.mockito)
 }

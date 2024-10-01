@@ -11,9 +11,9 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.proxool )
-    testCompile project( ':hibernate-testing' )
+    implementation project( ':hibernate-core' )
+    implementation( libraries.proxool )
+    testImplementation project( ':hibernate-testing' )
 }
 
 test {

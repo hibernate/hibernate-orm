@@ -62,7 +62,7 @@ configurations {
 }
 
 dependencies {
-	compile( project( ':hibernate-core' ) ) {
+	implementation( project( ':hibernate-core' ) ) {
 		// having javax.activation-api as a dependency requires us to have com.sun.activation:javax.activation
 		// this dependency wasn't there in the 5.2.x bundles so ignoring it for now
 		// we might reintroduce it at some point if users complain about it
@@ -71,23 +71,23 @@ dependencies {
 		exclude module: 'jaxb-api'
 		exclude module: 'jaxb-runtime'
 	}
-	testCompile( project( ':hibernate-envers' ) )
+	testImplementation( project( ':hibernate-envers' ) )
 
-	compile "org.osgi:org.osgi.core:${osgiCoreVersion}"
-	compile "org.osgi:org.osgi.compendium:${osgiCompediumVersion}"
-	compile "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
+	implementation "org.osgi:org.osgi.core:${osgiCoreVersion}"
+	implementation "org.osgi:org.osgi.compendium:${osgiCompediumVersion}"
+	implementation "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
 
 	// Needed by JBoss JTA
-	runtime( libraries.interceptor )
+	runtimeOnly( libraries.interceptor )
 
-	testCompile "org.ops4j.pax.exam:pax-exam:${project.paxExamVersion}"
-	testCompile "org.ops4j.pax.exam:pax-exam-junit4:${project.paxExamVersion}"
-	testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${project.paxExamVersion}"
+	testImplementation "org.ops4j.pax.exam:pax-exam:${project.paxExamVersion}"
+	testImplementation "org.ops4j.pax.exam:pax-exam-junit4:${project.paxExamVersion}"
+	testImplementation "org.ops4j.pax.exam:pax-exam-container-karaf:${project.paxExamVersion}"
 	// Need this explicitly in order to use @Inject -> shouldn't this be a transtive dep of pax-exam?
 	//      is there ever a pax exam test that *does not* use this?
-	testCompile 'javax.inject:javax.inject:1'
+	testImplementation 'javax.inject:javax.inject:1'
 
-	testCompile( "org.apache.karaf:apache-karaf:${project.karafVersion}" ) {
+	testImplementation( "org.apache.karaf:apache-karaf:${project.karafVersion}" ) {
 		// having trouble finding this one locally
 		exclude group: 'org.eclipse', module: 'org.eclipse.osgi'
 	}

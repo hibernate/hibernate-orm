@@ -61,14 +61,14 @@ configurations {
 
 dependencies {
 
-    compile( libraries.jpa )
+    implementation( libraries.jpa )
     // Could be made optional?
-    compile( libraries.byteBuddy )
-    compile( libraries.antlr )
-    compile( libraries.jta )
-    compile( libraries.jandex )
-    compile( libraries.classmate )
-    compile( libraries.activation )
+    implementation( libraries.byteBuddy )
+    implementation( libraries.antlr )
+    implementation( libraries.jta )
+    implementation( libraries.jandex )
+    implementation( libraries.classmate )
+    implementation( libraries.activation )
 
     implementation( "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}" )
     
@@ -76,14 +76,14 @@ dependencies {
     //      1) (unsupported) EntityMode.DOM4J support
     //      2) Envers
     //      3) hibernate-commons-annotations
-    compile( libraries.dom4j )
-    compile( libraries.commons_annotations )
+    implementation( libraries.dom4j )
+    implementation( libraries.commons_annotations )
     antlr( libraries.antlr )
 
     // JAXB
-    compile( libraries.jaxb_api )
-    compile( libraries.jaxb_runtime )
-    xjc( libraries.jaxb_runtime )
+    implementation( libraries.jaxb_api )
+    implementation( libraries.jaxb_runtimeOnly )
+    xjc( libraries.jaxb_runtimeOnly )
     xjc( libraries.jaxb_xjc )
     xjc( libraries.jaxb2_basics )
     xjc( libraries.jaxb2_basics_ant )
@@ -94,51 +94,51 @@ dependencies {
     provided( libraries.ant )
     provided( libraries.cdi )
 
-    testCompile( project(':hibernate-testing') )
-    testCompile( libraries.shrinkwrap_api )
-    testCompile( libraries.shrinkwrap )
-    testCompile( libraries.jacc )
-    testCompile( libraries.validation )
-    testCompile( libraries.jandex )
-    testCompile( libraries.classmate )
-    testCompile( libraries.mockito )
-    testCompile( libraries.mockito_inline )
-    testCompile( libraries.jodaTime )
-    testCompile( libraries.assertj )
+    testImplementation( project(':hibernate-testing') )
+    testImplementation( libraries.shrinkwrap_api )
+    testImplementation( libraries.shrinkwrap )
+    testImplementation( libraries.jacc )
+    testImplementation( libraries.validation )
+    testImplementation( libraries.jandex )
+    testImplementation( libraries.classmate )
+    testImplementation( libraries.mockito )
+    testImplementation( libraries.mockito_inline )
+    testImplementation( libraries.jodaTime )
+    testImplementation( libraries.assertj )
 
-    testCompile( libraries.cdi )
+    testImplementation( libraries.cdi )
 
-    testCompile( libraries.validator ) {
+    testImplementation( libraries.validator ) {
         // for test runtime
         transitive = true
     }
 
     // for testing stored procedure support
-    testCompile( libraries.derby )
+    testImplementation( libraries.derby )
 
-    testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
-    testRuntime( libraries.expression_language )
-    testRuntime( 'jaxen:jaxen:1.1' )
-    testRuntime( libraries.byteBuddy )
-    testRuntime( libraries.weld )
-    testRuntime( libraries.atomikos )
-    testRuntime( libraries.atomikos_jta )
-    testRuntime( libraries.wildfly_transaction_client )
+    testRuntimeOnly( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
+    testRuntimeOnly( libraries.expression_language )
+    testRuntimeOnly( 'jaxen:jaxen:1.1' )
+    testRuntimeOnly( libraries.byteBuddy )
+    testRuntimeOnly( libraries.weld )
+    testRuntimeOnly( libraries.atomikos )
+    testRuntimeOnly( libraries.atomikos_jta )
+    testRuntimeOnly( libraries.wildfly_transaction_client )
 
-    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}" )
-    testRuntime( "com.nuodb.jdbc:nuodb-jdbc:24.1.0" )
+    testRuntimeOnly( "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}" )
+    testRuntimeOnly( "com.nuodb.jdbc:nuodb-jdbc:24.1.0" )
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
-    testCompile libraries.shrinkwrap_descriptors_api_javaee
-    testCompile libraries.shrinkwrap_descriptors_impl_javaee
+    testImplementation libraries.shrinkwrap_descriptors_api_javaee
+    testImplementation libraries.shrinkwrap_descriptors_impl_javaee
 
-    testCompile libraries.jboss_ejb_spec_jar
-    testCompile libraries.jboss_annotation_spec_jar
+    testImplementation libraries.jboss_ejb_spec_jar
+    testImplementation libraries.jboss_annotation_spec_jar
 
     // Additional tests requiring Javassist
     // folder in src/javassist/java
-    testCompile "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}"
+    testImplementation "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}"
 }
 
 jar {

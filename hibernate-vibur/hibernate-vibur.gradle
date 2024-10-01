@@ -11,12 +11,12 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.vibur )
+    implementation project( ':hibernate-core' )
+    implementation( libraries.vibur )
 
-    testCompile( libraries.vibur + ':tests' )
-    testCompile( 'com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2' )
-    testCompile project( ':hibernate-testing' )
-    testCompile( libraries.mockito )
+    testImplementation( libraries.vibur + ':tests' )
+    testImplementation( 'com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2' )
+    testImplementation project( ':hibernate-testing' )
+    testImplementation( libraries.mockito )
 }
 

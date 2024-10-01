@@ -14,11 +14,11 @@ apply plugin: 'maven'
 
 
 dependencies {
-	compile( project( ':hibernate-core' ) )
-	compile( libraries.jpa )
-	compile( libraries.byteBuddy )
-	compile gradleApi()
-	compile localGroovy()
+	implementation( project( ':hibernate-core' ) )
+	implementation( libraries.jpa )
+	implementation( libraries.byteBuddy )
+	implementation gradleApi()
+	implementation localGroovy()
 }
 
 tasks.withType( GroovyCompile ) {

@@ -20,7 +20,7 @@ configurations {
 }
 
 dependencies {
-	compile( libraries.jakarta_jta )
+	implementation( libraries.jakarta_jta )
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',
@@ -28,13 +28,13 @@ dependencies {
 			'org.slf4j:slf4j-api:1.7.26',
 			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
 			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
-	testCompile ( libraries.wildfly_transaction_client ) {
+	testImplementation ( libraries.wildfly_transaction_client ) {
 		transitive=false;
 	}
 }
 
 jar {
-	def sourceJarPath = project.configurations.testCompile.find { it.name.startsWith("wildfly-transaction-client-") }
+	def sourceJarPath = project.configurations.testImplementation.find { it.name.startsWith("wildfly-transaction-client-") }
 	inputs.files(sourceJarPath).skipWhenEmpty()
 	outputs.dir project.buildDir
 	doLast {

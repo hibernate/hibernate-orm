@@ -11,10 +11,18 @@ buildscript {
         mavenCentral()
         maven {
             name 'jboss-snapshots'
-            url 'http://repository.jboss.org/nexus/content/repositories/snapshots/'
+            url 'https://repository.jboss.org/nexus/content/repositories/snapshots/'
         }
-	mavenLocal()
+
+        // Location of org.codehaus.groovy.modules.http-builder:http-builder:0.7.2
+        maven {
+            name "cern"
+            url "https://nexus.web.cern.ch/nexus/content/repositories/public"
+        }
+
+	    mavenLocal()
     }
+
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
@@ -24,6 +32,9 @@ buildscript {
         classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.3'
         classpath 'de.thetaphi:forbiddenapis:2.5'
+
+        // Force a leter version of this JAR, 1.0.2 no longer available
+        classpath 'nu.studer:java-ordered-properties:1.0.4'
     }
 }
 
@@ -101,7 +112,11 @@ allprojects {
         mavenCentral()
         maven {
             name "jboss-snapshots"
-            url "http://repository.jboss.org/nexus/content/repositories/snapshots/"
+            url "https://repository.jboss.org/nexus/content/repositories/snapshots/"
+        }
+        maven {
+            name "mvnrepository"
+            url "https://mvnrepository.com/artifact"
         }
         //Allow loading additional dependencies from a local path;
         //useful to load JDBC drivers which can not be distributed in public.

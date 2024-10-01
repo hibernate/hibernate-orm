@@ -14,30 +14,30 @@ apply plugin: 'hibernate-matrix-testing'
 
 
 dependencies {
-    compile( project(':hibernate-core') )
-    compile( libraries.geolatte )
+    implementation( project(':hibernate-core') )
+    implementation( libraries.geolatte )
 
-    compile( libraries.postgresql )
+    implementation( libraries.postgresql )
 
-    testCompile(libraries.junit)
-    testCompile(project(':hibernate-testing'))
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
-    testCompile([group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.8.0'])
-    testCompile(libraries.validation)
-    testCompile(libraries.jandex)
-    testCompile(libraries.classmate)
-    testCompile(libraries.validator) {
+    testImplementation(libraries.junit)
+    testImplementation(project(':hibernate-testing'))
+    testImplementation( project( path: ':hibernate-core', configuration: 'tests' ) )
+    testImplementation([group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.8.0'])
+    testImplementation(libraries.validation)
+    testImplementation(libraries.jandex)
+    testImplementation(libraries.classmate)
+    testImplementation(libraries.validator) {
         // for test runtime
         transitive = true
     }
-    testCompile(libraries.dom4j) {
+    testImplementation(libraries.dom4j) {
         transitive = false
     }
 
-    testRuntime( libraries.expression_language )
+    testRuntimeOnly( libraries.expression_language )
 
-    testRuntime('jaxen:jaxen:1.1')
-    testRuntime(libraries.byteBuddy)
+    testRuntimeOnly('jaxen:jaxen:1.1')
+    testRuntimeOnly(libraries.byteBuddy)
 }
 
 sourceSets.test.resources {

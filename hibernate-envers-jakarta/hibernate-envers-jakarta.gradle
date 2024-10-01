@@ -16,7 +16,7 @@ configurations {
 }
 
 dependencies {
-	compile( project( ':hibernate-core-jakarta' ) )
+	implementation( project( ':hibernate-core-jakarta' ) )
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',
@@ -25,9 +25,9 @@ dependencies {
 			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
 			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
 
-	testCompile( project( ':hibernate-envers-jakarta' ) )
-	testCompile( project( ':hibernate-testing-jakarta' ) )
-	testCompile( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
+	testImplementation( project( ':hibernate-envers-jakarta' ) )
+	testImplementation( project( ':hibernate-testing-jakarta' ) )
+	testImplementation( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
 }
 
 jar {

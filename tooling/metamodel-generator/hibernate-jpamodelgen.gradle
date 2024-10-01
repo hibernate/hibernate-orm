@@ -20,18 +20,18 @@ ext {
 dependencies {
 
     // JAXB
-    compile( libraries.jaxb_api )
-    compile( libraries.jaxb_runtime )
+    implementation( libraries.jaxb_api )
+    implementation( libraries.jaxb_runtime )
     xjc( libraries.jaxb_runtime )
     xjc( libraries.jaxb_xjc )
     xjc( libraries.jaxb2_basics )
     xjc( libraries.jaxb2_basics_ant )
     xjc( libraries.activation )
 
-    testCompile libraries.junit
-    testCompile libraries.jpa
-    testCompile libraries.validation
-    testCompile project( ':hibernate-core' )
+    testImplementation libraries.junit
+    testImplementation libraries.jpa
+    testImplementation libraries.validation
+    testImplementation project( ':hibernate-core' )
 }
 
 sourceSets.main {

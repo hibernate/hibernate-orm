@@ -19,25 +19,25 @@ configurations {
 }
 
 dependencies {
-	compile( libraries.jakarta_jpa )
+	implementation( libraries.jakarta_jpa )
 	// Could be made optional?
-	compile( libraries.byteBuddy )
-	compile( libraries.antlr )
-	compile( libraries.jakarta_jta )
-	compile( libraries.jandex )
-	compile( libraries.classmate )
-	compile( libraries.jakarta_activation )
+	implementation( libraries.byteBuddy )
+	implementation( libraries.antlr )
+	implementation( libraries.jakarta_jta )
+	implementation( libraries.jandex )
+	implementation( libraries.classmate )
+	implementation( libraries.jakarta_activation )
 
 	provided( libraries.jakarta_jacc )
 	provided( libraries.jakarta_validation )
 	provided( libraries.ant )
 	provided( libraries.jakarta_cdi )
 
-	compile( libraries.dom4j )
-	compile( libraries.commons_annotations )
+	implementation( libraries.dom4j )
+	implementation( libraries.commons_annotations )
 
-	compile( libraries.jakarta_jaxb_api )
-	compile( libraries.jakarta_jaxb_runtime )
+	implementation( libraries.jakarta_jaxb_api )
+	implementation( libraries.jakarta_jaxb_runtimeOnly )
 
 	jakartaeeTransformTool 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',
@@ -46,46 +46,46 @@ dependencies {
 			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
 			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
 
-	testCompile( project(':hibernate-testing-jakarta') )
-	testCompile fileTree(dir: 'libs', include: '*.jar')
+	testImplementation( project(':hibernate-testing-jakarta') )
+	testImplementation fileTree(dir: 'libs', include: '*.jar')
 
-	testCompile( libraries.shrinkwrap_api )
-	testCompile( libraries.shrinkwrap )
-	testCompile( libraries.jakarta_jacc )
-	testCompile( libraries.jakarta_validation )
-	testCompile( libraries.jandex )
-	testCompile( libraries.classmate )
-	testCompile( libraries.mockito )
-	testCompile( libraries.mockito_inline )
-	testCompile( libraries.jodaTime )
-	testCompile( libraries.assertj )
+	testImplementation( libraries.shrinkwrap_api )
+	testImplementation( libraries.shrinkwrap )
+	testImplementation( libraries.jakarta_jacc )
+	testImplementation( libraries.jakarta_validation )
+	testImplementation( libraries.jandex )
+	testImplementation( libraries.classmate )
+	testImplementation( libraries.mockito )
+	testImplementation( libraries.mockito_inline )
+	testImplementation( libraries.jodaTime )
+	testImplementation( libraries.assertj )
 
-	testCompile( libraries.jakarta_cdi )
+	testImplementation( libraries.jakarta_cdi )
 
-	testCompile( libraries.jakarta_validator ) {
+	testImplementation( libraries.jakarta_validator ) {
 		// for test runtime
 		transitive = true
 	}
 
 	// for testing stored procedure support
-	testCompile( libraries.derby )
+	testImplementation( libraries.derby )
 
-	testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
-	testRuntime( libraries.jakarta_el )
-	testRuntime( 'jaxen:jaxen:1.1' )
-	testRuntime( libraries.byteBuddy )
-	testRuntime( libraries.jakarta_weld )
-	testRuntime( libraries.atomikos )
-	testRuntime( libraries.atomikos_jta )
+	testRuntimeOnly( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
+	testRuntimeOnly( libraries.jakarta_el )
+	testRuntimeOnly( 'jaxen:jaxen:1.1' )
+	testRuntimeOnly( libraries.byteBuddy )
+	testRuntimeOnly( libraries.jakarta_weld )
+	testRuntimeOnly( libraries.atomikos )
+	testRuntimeOnly( libraries.atomikos_jta )
 // todo (jakarta): replace this when the jakarta artifact is released
-	testRuntime( project(':hibernate-transaction-client') )
-//	testRuntime( libraries.wildfly_transaction_client_jakarta )
+	testRuntimeOnly( project(':hibernate-transaction-client') )
+//	testRuntimeOnly( libraries.wildfly_transaction_client_jakarta )
 
-	testCompile libraries.shrinkwrap_descriptors_api_javaee
-	testCompile libraries.shrinkwrap_descriptors_impl_javaee
+	testImplementation libraries.shrinkwrap_descriptors_api_javaee
+	testImplementation libraries.shrinkwrap_descriptors_impl_javaee
 
-	testCompile libraries.jboss_ejb_spec_jar
-	testCompile libraries.jboss_annotation_spec_jar
+	testImplementation libraries.jboss_ejb_spec_jar
+	testImplementation libraries.jboss_annotation_spec_jar
 }
 
 // we do not want the much of the normal java plugin's behavior
@@ -124,7 +124,7 @@ task transformJar(type: JakartaJarTransformation) {
 }
 
 configurations {
-	[apiElements, runtimeElements].each {
+	[apiElements, runtimeOnlyElements].each {
 		it.outgoing.artifacts.removeIf {
 			it.buildDependencies.getDependencies(null).contains(jar)
 		}

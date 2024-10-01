@@ -3,11 +3,11 @@ description = '(deprecated - use hibernate-core instead) Hibernate O/RM implemen
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
-	compile( project( ':hibernate-core' ) )
-	compile( libraries.commons_annotations )
-	compile( libraries.jpa )
-	compile( libraries.byteBuddy )
-	compile( libraries.jta )
+	implementation( project( ':hibernate-core' ) )
+	implementation( libraries.commons_annotations )
+	implementation( libraries.jpa )
+	implementation( libraries.byteBuddy )
+	implementation( libraries.jta )
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -58,7 +58,7 @@ configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
 
 
 dependencies {
-	compile libraries.logging
+	implementation libraries.logging
 
 	provided libraries.logging_annotations
 
@@ -66,44 +66,44 @@ dependencies {
 	annotationProcessor( libraries.logging )
 	annotationProcessor( libraries.logging_annotations )
 
-	testCompile( libraries.junit )
-	testCompile( libraries.byteman )
-	testCompile( libraries.byteman_install )
-	testCompile( libraries.byteman_bmunit )
+	testImplementation( libraries.junit )
+	testImplementation( libraries.byteman )
+	testImplementation( libraries.byteman_install )
+	testImplementation( libraries.byteman_bmunit )
 
-	testRuntime( libraries.log4j2 )
-	testRuntime( libraries.byteBuddy )
+	testRuntimeOnly( libraries.log4j2 )
+	testRuntimeOnly( libraries.byteBuddy )
 
 	//Databases
-	testRuntime( libraries.h2 )
-	testRuntime( libraries.derby )
-	testRuntime( libraries.hsqldb )
-	testRuntime( libraries.postgresql )
-	testRuntime( libraries.mysql )
-	testRuntime( libraries.mariadb )
-	testRuntime( libraries.mssql )
-	testRuntime( libraries.informix )
-	testRuntime( libraries.hana )
-	testRuntime( libraries.cockroachdb )
+	testRuntimeOnly( libraries.h2 )
+	testRuntimeOnly( libraries.derby )
+	testRuntimeOnly( libraries.hsqldb )
+	testRuntimeOnly( libraries.postgresql )
+	testRuntimeOnly( libraries.mysql )
+	testRuntimeOnly( libraries.mariadb )
+	testRuntimeOnly( libraries.mssql )
+	testRuntimeOnly( libraries.informix )
+	testRuntimeOnly( libraries.hana )
+	testRuntimeOnly( libraries.cockroachdb )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
-	testRuntime( libraries.oracle )
+	testRuntimeOnly( libraries.oracle )
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
 
 	if ( db.startsWith( 'db2' ) ) {
-		testRuntime( libraries.db2 )
+		testRuntimeOnly( libraries.db2 )
 	}
 	else if ( db.startsWith( 'hana' ) ) {
-		testRuntime( libraries.hana )
+		testRuntimeOnly( libraries.hana )
 	}
 
 	// Mac-specific
 	project.ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
 	if ( project.toolsJar.exists() ) {
-		testCompile files( project.toolsJar )
+		testImplementation files( project.toolsJar )
 	}
 }
 
@@ -219,7 +219,7 @@ convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet 
 final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
 if ( ext.toolsJar.exists() ) {
 	dependencies{
-		testCompile files( toolsJar )
+		testImplementation files( toolsJar )
 	}
 }
 

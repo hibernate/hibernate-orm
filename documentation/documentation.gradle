@@ -38,35 +38,35 @@ defaultTasks 'buildDocs'
 dependencies {
 	ext.pressgangVersion = '3.0.0'
 
-	compile( libraries.jpa )
-	compile( project( ':hibernate-core' ) )
+	implementation( libraries.jpa )
+	implementation( project( ':hibernate-core' ) )
 	annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
-	testCompile( 'org.apache.commons:commons-lang3:3.4' )
+	testImplementation( 'org.apache.commons:commons-lang3:3.4' )
 
-	testCompile( project(':hibernate-envers') )
-	testCompile( project(':hibernate-spatial') )
-	testCompile( project(path: ':hibernate-core', configuration: 'tests') )
+	testImplementation( project(':hibernate-envers') )
+	testImplementation( project(':hibernate-spatial') )
+	testImplementation( project(path: ':hibernate-core', configuration: 'tests') )
 
-	testCompile( project(':hibernate-testing') )
+	testImplementation( project(':hibernate-testing') )
 
-	testCompile "org.osgi:org.osgi.core:4.3.1"
+	testImplementation "org.osgi:org.osgi.core:4.3.1"
 
-	testCompile( libraries.mockito )
-	testCompile( libraries.mockito_inline )
+	testImplementation( libraries.mockito )
+	testImplementation( libraries.mockito_inline )
 
-	testRuntime( libraries.wildfly_transaction_client )
-	testRuntime( libraries.h2 )
-	testRuntime( libraries.hsqldb )
-	testRuntime( libraries.postgresql )
-	testRuntime( libraries.mysql )
-	testRuntime( libraries.mariadb )
-	testRuntime( libraries.mssql )
-	testRuntime( libraries.hana )
-	testRuntime( libraries.cockroachdb )
+	testRuntimeOnly( libraries.wildfly_transaction_client )
+	testRuntimeOnly( libraries.h2 )
+	testRuntimeOnly( libraries.hsqldb )
+	testRuntimeOnly( libraries.postgresql )
+	testRuntimeOnly( libraries.mysql )
+	testRuntimeOnly( libraries.mariadb )
+	testRuntimeOnly( libraries.mssql )
+	testRuntimeOnly( libraries.hana )
+	testRuntimeOnly( libraries.cockroachdb )
 
-	testCompile( project( ':hibernate-jcache' ) )
-	testRuntime( libraries.ehcache3 )
+	testImplementation( project( ':hibernate-jcache' ) )
+	testRuntimeOnly( libraries.ehcache3 )
 }
 
 

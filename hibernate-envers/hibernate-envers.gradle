@@ -11,17 +11,17 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'hibernate-matrix-testing'
 
 dependencies {
-    compile( project( ':hibernate-core' ) )
+    implementation( project( ':hibernate-core' ) )
 
     // TODO HHH-13703: get rid of this dependency
-    compile( libraries.dom4j )
+    implementation( libraries.dom4j )
 
     provided( libraries.ant )
     annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
-    testCompile( project( ':hibernate-testing' ) )
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
-    testCompile( libraries.assertj )
+    testImplementation( project( ':hibernate-testing' ) )
+    testImplementation( project( path: ':hibernate-core', configuration: 'tests' ) )
+    testImplementation( libraries.assertj )
 }
 
 sourceSets {

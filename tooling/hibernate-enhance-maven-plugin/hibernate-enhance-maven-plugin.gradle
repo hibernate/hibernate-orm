@@ -21,24 +21,24 @@ processResources {
 }
 
 dependencies {
-    compile( libraries.maven_core ) { transitive = false }
-    compile( libraries.maven_artifact ) { transitive = false }
-    compile( libraries.maven_plugin ) { transitive = false }
-    compile( libraries.maven_plugin_tools ) { transitive = false }
-    compile( project(':hibernate-core') ) { transitive = false }
-    compile( libraries.jpa ) { transitive = false }
-    compile( libraries.byteBuddy ) { transitive = false }
-    compile 'org.codehaus.plexus:plexus-utils:3.0.24'
-    compile 'org.sonatype.plexus:plexus-build-api:0.0.7'
-    runtime( libraries.maven_core )
-    runtime( libraries.maven_artifact )
-    runtime( libraries.maven_plugin )
-    runtime( libraries.maven_plugin_tools )
-    runtime( project(':hibernate-core') )
-    runtime( libraries.jpa )
-    runtime( libraries.jta )
-    runtime( libraries.byteBuddy )
-    runtime 'org.codehaus.plexus:plexus-utils:3.0.24'
+    implementation( libraries.maven_core ) { transitive = false }
+    implementation( libraries.maven_artifact ) { transitive = false }
+    implementation( libraries.maven_plugin ) { transitive = false }
+    implementation( libraries.maven_plugin_tools ) { transitive = false }
+    implementation( project(':hibernate-core') ) { transitive = false }
+    implementation( libraries.jpa ) { transitive = false }
+    implementation( libraries.byteBuddy ) { transitive = false }
+    implementation 'org.codehaus.plexus:plexus-utils:3.0.24'
+    implementation 'org.sonatype.plexus:plexus-build-api:0.0.7'
+    runtimeOnly( libraries.maven_core )
+    runtimeOnly( libraries.maven_artifact )
+    runtimeOnly( libraries.maven_plugin )
+    runtimeOnly( libraries.maven_plugin_tools )
+    runtimeOnly( project(':hibernate-core') )
+    runtimeOnly( libraries.jpa )
+    runtimeOnly( libraries.jta )
+    runtimeOnly( libraries.byteBuddy )
+    runtimeOnly 'org.codehaus.plexus:plexus-utils:3.0.24'
 }
 
 // Inject dependencies into plugin.xml
@@ -78,7 +78,7 @@ processResources.doLast {
 	configurations {
 		// avoiding test dependencies in generated pom
 		compile
-		runtime
+		runtimeOnly
 	}
 
        project {

@@ -14,11 +14,11 @@ apply plugin: "groovy"
 buildDir = "target"
 
 dependencies {
-	compile gradleApi()
-	compile localGroovy()
+	implementation gradleApi()
+	implementation localGroovy()
 
-	compile 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
-	compile 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
+	implementation 'org.hibernate.build.gradle:gradle-animalSniffer-plugin:1.0.1.Final'
+	implementation 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
 }
 
 tasks.withType( GroovyCompile ) {

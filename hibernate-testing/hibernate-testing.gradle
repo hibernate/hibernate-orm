@@ -11,18 +11,18 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.jta )
-    compile( libraries.junit )
-    compile( libraries.byteman )
-    compile( libraries.byteman_install )
-    compile( libraries.byteman_bmunit )
-    compile( libraries.xapool )
-    compile( libraries.log4j2 )
-    compile( libraries.jboss_tx_spi ) {
+    implementation project( ':hibernate-core' )
+    implementation( libraries.jta )
+    implementation( libraries.junit )
+    implementation( libraries.byteman )
+    implementation( libraries.byteman_install )
+    implementation( libraries.byteman_bmunit )
+    implementation( libraries.xapool )
+    implementation( libraries.log4j2 )
+    implementation( libraries.jboss_tx_spi ) {
         transitive=false;
     }
-    compile ( libraries.jboss_jta ) {
+    implementation( libraries.jboss_jta ) {
         transitive=false;
     }
 }

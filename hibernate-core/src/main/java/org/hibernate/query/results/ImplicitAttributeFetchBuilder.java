@@ -14,6 +14,7 @@ import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
@@ -40,7 +41,7 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
+			BiFunction<String, Fetchable, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		assert fetchPath.equals( navigablePath );
 

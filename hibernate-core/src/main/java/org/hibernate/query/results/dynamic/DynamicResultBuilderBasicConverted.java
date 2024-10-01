@@ -11,6 +11,7 @@ import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.results.ResultsHelper;
@@ -92,7 +93,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
+			BiFunction<String, Fetchable, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final TypeConfiguration typeConfiguration = domainResultCreationState.getSqlAstCreationState()
 				.getCreationContext()

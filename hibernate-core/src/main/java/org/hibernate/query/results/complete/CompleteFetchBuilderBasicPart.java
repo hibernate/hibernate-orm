@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
@@ -74,7 +75,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
+			BiFunction<String, Fetchable, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 

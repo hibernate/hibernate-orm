@@ -14,6 +14,7 @@ import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
@@ -38,7 +39,7 @@ public class ImplicitFetchBuilderEntityPart implements ImplicitFetchBuilder {
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
+			BiFunction<String, Fetchable, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
 		return parent.generateFetchableFetch(
 				fetchable,

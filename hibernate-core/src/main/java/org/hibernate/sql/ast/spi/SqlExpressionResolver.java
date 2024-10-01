@@ -9,6 +9,7 @@ import java.util.function.Function;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
@@ -126,7 +127,12 @@ public interface SqlExpressionResolver {
 		public ColumnReferenceKey(String tableQualifier, SelectablePath selectablePath, JdbcMapping jdbcMapping) {
 			this.tableQualifier = tableQualifier;
 			this.selectablePath = selectablePath;
-			this.jdbcMapping = jdbcMapping;
+			if ( jdbcMapping instanceof DiscriminatorTypeImpl discriminatorType ) {
+				this.jdbcMapping = discriminatorType.getUnderlyingJdbcMapping();
+			}
+			else {
+				this.jdbcMapping = jdbcMapping;
+			}
 		}
 
 		@Override

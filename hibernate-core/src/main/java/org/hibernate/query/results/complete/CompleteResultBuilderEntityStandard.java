@@ -22,6 +22,7 @@ import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
@@ -34,7 +35,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
 	private final BasicValuedFetchBuilder discriminatorFetchBuilder;
-	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
+	private final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityStandard(
 			String tableAlias,
@@ -42,7 +43,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
 			BasicValuedFetchBuilder discriminatorFetchBuilder,
-			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
+			HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap) {
 		this.tableAlias = tableAlias;
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
@@ -120,7 +121,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
+			BiFunction<String, Fetchable, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl impl = ResultsHelper.impl( domainResultCreationState );
 		impl.disallowPositionalSelections();
@@ -169,7 +170,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 		explicitFetchBuilderMap.forEach( consumer );
 	}
 

@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -118,7 +119,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
+			BiFunction<String, Fetchable, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final SessionFactoryImplementor sessionFactory = domainResultCreationState.getSqlAstCreationState()
 				.getCreationContext()

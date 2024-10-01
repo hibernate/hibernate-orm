@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
 
@@ -504,6 +505,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 		String getTableAlias();
 
 		String getOwnerAlias();
+
+		Fetchable getFetchable();
 
 		String getFetchableName();
 

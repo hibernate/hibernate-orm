@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.results;
 
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -19,16 +18,11 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
-import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -80,7 +74,6 @@ public class DomainResultCreationStateImpl
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final Stack<Function> fetchBuilderResolverStack = new StandardStack<>( Function.class, fetchableName -> null );
-	private final Stack<Map.Entry> relativePathStack = new StandardStack<>( Map.Entry.class );
 	private Map<String, LockMode> registeredLockModes;
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
@@ -89,7 +82,7 @@ public class DomainResultCreationStateImpl
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
+			Map<String, Map<Fetchable, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
@@ -130,30 +123,26 @@ public class DomainResultCreationStateImpl
 		return jdbcResultsMetadata;
 	}
 
-	public Map.Entry<String, NavigablePath> getCurrentRelativePath() {
-		return relativePathStack.getCurrent();
-	}
-
-	public void pushExplicitFetchMementoResolver(Function<String, FetchBuilder> resolver) {
+	public void pushExplicitFetchMementoResolver(Function<Fetchable, FetchBuilder> resolver) {
 		fetchBuilderResolverStack.push( resolver );
 	}
 
-	public Function<String, FetchBuilder> getCurrentExplicitFetchMementoResolver() {
+	public Function<Fetchable, FetchBuilder> getCurrentExplicitFetchMementoResolver() {
 		return fetchBuilderResolverStack.getCurrent();
 	}
 
-	public Function<String, FetchBuilder> popExplicitFetchMementoResolver() {
+	public Function<Fetchable, FetchBuilder> popExplicitFetchMementoResolver() {
 		return fetchBuilderResolverStack.pop();
 	}
 
 	@SuppressWarnings( "unused" )
-	public void withExplicitFetchMementoResolver(Function<String, FetchBuilder> resolver, Runnable runnable) {
+	public void withExplicitFetchMementoResolver(Function<Fetchable, FetchBuilder> resolver, Runnable runnable) {
 		pushExplicitFetchMementoResolver( resolver );
 		try {
 			runnable.run();
 		}
 		finally {
-			final Function<String, FetchBuilder> popped = popExplicitFetchMementoResolver();
+			final Function<Fetchable, FetchBuilder> popped = popExplicitFetchMementoResolver();
 			assert popped == resolver;
 		}
 	}
@@ -283,8 +272,7 @@ public class DomainResultCreationStateImpl
 			sqlSelectionMap.put( key, (ResultSetMappingSqlSelection) created );
 			sqlSelectionConsumer.accept( (ResultSetMappingSqlSelection) created );
 		}
-		else if ( created instanceof ColumnReference ) {
-			final ColumnReference columnReference = (ColumnReference) created;
+		else if ( created instanceof ColumnReference columnReference) {
 			final String selectableName = columnReference.getSelectableName();
 			final int valuesArrayPosition;
 			if ( nestingFetchParent != null ) {
@@ -342,19 +330,19 @@ public class DomainResultCreationStateImpl
 	}
 
 	private static class LegacyFetchResolverImpl implements LegacyFetchResolver {
-		private final Map<String,Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
+		private final Map<String,Map<Fetchable, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
 
-		public LegacyFetchResolverImpl(Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders) {
+		public LegacyFetchResolverImpl(Map<String, Map<Fetchable, DynamicFetchBuilderLegacy>> legacyFetchBuilders) {
 			this.legacyFetchBuilders = legacyFetchBuilders;
 		}
 
 		@Override
-		public DynamicFetchBuilderLegacy resolve(String ownerTableAlias, String fetchedPartPath) {
+		public DynamicFetchBuilderLegacy resolve(String ownerTableAlias, Fetchable fetchedPartPath) {
 			if ( legacyFetchBuilders == null ) {
 				return null;
 			}
 
-			final Map<String, DynamicFetchBuilderLegacy> fetchBuilders = legacyFetchBuilders.get( ownerTableAlias );
+			final Map<Fetchable, DynamicFetchBuilderLegacy> fetchBuilders = legacyFetchBuilders.get( ownerTableAlias );
 			if ( fetchBuilders == null ) {
 				return null;
 			}
@@ -377,28 +365,17 @@ public class DomainResultCreationStateImpl
 		final EntityValuedModelPart parentModelPart = fetchParent.getEntityValuedModelPart();
 		final EntityIdentifierMapping identifierMapping = parentModelPart.getEntityMappingType().getIdentifierMapping();
 		final String identifierAttributeName = attributeName( identifierMapping );
-		final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();
-		final String fullPath;
-		if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
-			fullPath = oldEntry == null ? "" : oldEntry.getKey();
-		}
-		else {
-			fullPath = oldEntry == null ?
-					identifierAttributeName :
-					oldEntry.getKey() + "." + identifierAttributeName;
-		}
 
-		final Fetchable identifierFetchable = (Fetchable) identifierMapping;
 		final FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
 				.getCurrent()
-				.apply( fullPath );
+				.apply( identifierMapping );
 		DynamicFetchBuilderLegacy fetchBuilderLegacy;
 		if ( explicitFetchBuilder == null ) {
 			fetchBuilderLegacy = legacyFetchResolver.resolve(
 					fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
 							.getPrimaryTableReference()
 							.getIdentificationVariable(),
-					identifierAttributeName
+					identifierMapping
 			);
 		}
 		else {
@@ -412,9 +389,6 @@ public class DomainResultCreationStateImpl
 
 		final boolean processingKeyFetches = this.processingKeyFetches;
 		this.processingKeyFetches = true;
-		if ( identifierMapping instanceof CompositeIdentifierMapping ) {
-			relativePathStack.push( new AbstractMap.SimpleEntry<>( fullPath, fetchPath ) );
-		}
 
 		try {
 			final FetchBuilder fetchBuilder;
@@ -423,7 +397,7 @@ public class DomainResultCreationStateImpl
 			}
 			else {
 				if ( fetchBuilderLegacy == null ) {
-					fetchBuilder = Builders.implicitFetchBuilder( fetchPath, identifierFetchable, this );
+					fetchBuilder = Builders.implicitFetchBuilder( fetchPath, identifierMapping, this );
 				}
 				else {
 					fetchBuilder = fetchBuilderLegacy;
@@ -441,9 +415,6 @@ public class DomainResultCreationStateImpl
 		}
 		finally {
 			this.processingKeyFetches = processingKeyFetches;
-			if ( identifierMapping instanceof CompositeIdentifierMapping ) {
-				this.relativePathStack.pop();
-			}
 		}
 	}
 
@@ -462,108 +433,62 @@ public class DomainResultCreationStateImpl
 			if ( !fetchable.isSelectable() ) {
 				return;
 			}
-			final String fetchableName = fetchable.getFetchableName();
-			Map.Entry<String, NavigablePath> currentEntry;
-			if ( relativePathStack.isEmpty() ) {
-				currentEntry = new AbstractMap.SimpleEntry<>(
-						getRelativePath( "", fetchable ),
-						new NavigablePath( fetchableName )
-				);
-			}
-			else {
-				final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();
-				final String key = oldEntry.getKey();
-				currentEntry = new AbstractMap.SimpleEntry<>(
-						getRelativePath( key, fetchable ),
-						oldEntry.getValue().append( fetchableName )
-				);
-			}
-			// todo (6.0): figure out if we can somehow create the navigable paths in a better way
-			final String fullPath = currentEntry.getKey();
 			FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
 					.getCurrent()
-					.apply( fullPath );
+					.apply( fetchable );
 			DynamicFetchBuilderLegacy fetchBuilderLegacy;
 			if ( explicitFetchBuilder == null ) {
 				fetchBuilderLegacy = legacyFetchResolver.resolve(
 						fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
 								.getPrimaryTableReference()
 								.getIdentificationVariable(),
-						fetchableName
+						fetchable
 				);
 			}
 			else {
 				fetchBuilderLegacy = null;
 			}
-			if ( fetchable instanceof Association && fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
-				final Association association = (Association) fetchable;
+			if ( fetchable instanceof Association association && fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
 				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
-
-				final String partName = attributeName(
-						foreignKeyDescriptor.getSide( association.getSideNature().inverse() ).getModelPart()
-				);
-
 				// If there are no fetch builders for this association, we only want to fetch the FK
-				if ( explicitFetchBuilder == null && fetchBuilderLegacy == null && partName != null ) {
-					currentEntry = new AbstractMap.SimpleEntry<>(
-							currentEntry.getKey() + "." + partName,
-							currentEntry.getValue().append( partName )
-					);
+				if ( explicitFetchBuilder == null && fetchBuilderLegacy == null  ) {
 					explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
 							.getCurrent()
-							.apply( currentEntry.getKey() );
+							.apply( foreignKeyDescriptor.getSide( association.getSideNature().inverse() ).getModelPart() );
 					if ( explicitFetchBuilder == null ) {
 						fetchBuilderLegacy = legacyFetchResolver.resolve(
 								fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
 										.getPrimaryTableReference()
 										.getIdentificationVariable(),
-								fetchableName
+								fetchable
 						);
 					}
 				}
 			}
-			relativePathStack.push( currentEntry );
-			try {
-
-				final NavigablePath fetchPath = fetchParent.resolveNavigablePath( fetchable );
-				final FetchBuilder fetchBuilder;
-				if ( explicitFetchBuilder != null ) {
-					fetchBuilder = explicitFetchBuilder;
+			final NavigablePath fetchPath = fetchParent.resolveNavigablePath( fetchable );
+			final FetchBuilder fetchBuilder;
+			if ( explicitFetchBuilder != null ) {
+				fetchBuilder = explicitFetchBuilder;
+			}
+			else {
+				if ( fetchBuilderLegacy == null ) {
+					fetchBuilder = Builders.implicitFetchBuilder( fetchPath, fetchable, this );
 				}
 				else {
-					if ( fetchBuilderLegacy == null ) {
-						fetchBuilder = Builders.implicitFetchBuilder( fetchPath, fetchable, this );
-					}
-					else {
-						fetchBuilder = fetchBuilderLegacy;
-					}
+					fetchBuilder = fetchBuilderLegacy;
 				}
-				final Fetch fetch = fetchBuilder.buildFetch(
-						fetchParent,
-						fetchPath,
-						jdbcResultsMetadata,
-						(s, s2) -> {
-							throw new UnsupportedOperationException();
-						},
-						this
-				);
-				fetches.add( fetch );
 			}
-			finally {
-				relativePathStack.pop();
-			}
-
+			final Fetch fetch = fetchBuilder.buildFetch(
+					fetchParent,
+					fetchPath,
+					jdbcResultsMetadata,
+					(s, s2) -> {
+						throw new UnsupportedOperationException();
+					},
+					this
+			);
+			fetches.add( fetch );
 		};
-	}
-
-	private String getRelativePath(String oldEntry, Fetchable fetchable) {
-		if ( fetchable instanceof AttributeMapping || fetchable instanceof SingleAttributeIdentifierMapping || fetchable instanceof BasicValuedCollectionPart ) {
-			if ( !oldEntry.equals( "" ) ) {
-				return oldEntry + '.' + fetchable.getFetchableName();
-			}
-			return fetchable.getFetchableName();
-		}
-		return oldEntry;
 	}
 
 	@Override

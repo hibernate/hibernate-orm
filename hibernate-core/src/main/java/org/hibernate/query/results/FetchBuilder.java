@@ -14,6 +14,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
@@ -29,10 +30,10 @@ public interface FetchBuilder {
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
+			BiFunction<String, Fetchable, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 
-	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	default void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 	}
 
 	FetchBuilder cacheKeyInstance();

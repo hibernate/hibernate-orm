@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -20,6 +21,12 @@ import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -90,6 +97,7 @@ import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.transform.ResultTransformer;
@@ -127,6 +135,7 @@ public class NativeQueryImpl<R>
 
 	private final ResultSetMapping resultSetMapping;
 	private final boolean resultMappingSuppliedToCtor;
+	private final HashMap<String, EntityMappingType> entityMappingTypeByTableAlias = new HashMap<>();
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
@@ -1044,6 +1053,7 @@ public class NativeQueryImpl<R>
 				getSessionFactory()
 		);
 		resultSetMapping.addResultBuilder( resultBuilder );
+		entityMappingTypeByTableAlias.put( tableAlias, resultBuilder.getEntityMapping() );
 		return resultBuilder;
 	}
 
@@ -1059,13 +1069,19 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
-		registerBuilder( Builders.entityCalculated( tableAlias, entityName, getSessionFactory() ) );
+		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName,
+				getSessionFactory() );
+		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
+		registerBuilder( builder );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
-		registerBuilder( Builders.entityCalculated( tableAlias, entityName, lockMode, getSessionFactory() ) );
+		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName, lockMode,
+				getSessionFactory() );
+		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
+		registerBuilder( builder );
 		return this;
 	}
 
@@ -1091,9 +1107,27 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		final DynamicFetchBuilderLegacy fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, joinPropertyName );
+		final ModelPart subPart = entityMappingTypeByTableAlias.get( ownerTableAlias ).findSubPart( joinPropertyName );
+		addEntityMappingType( tableAlias, subPart );
+		final DynamicFetchBuilderLegacy fetchBuilder = Builders.fetch( tableAlias, ownerTableAlias, (Fetchable) subPart );
 		resultSetMapping.addLegacyFetchBuilder( fetchBuilder );
 		return fetchBuilder;
+	}
+
+	private void addEntityMappingType(String tableAlias, ModelPart part) {
+		if ( part instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			final MappingType partMappingType = pluralAttributeMapping.getElementDescriptor()
+					.getPartMappingType();
+			if ( partMappingType instanceof EntityMappingType entityMappingType ) {
+				entityMappingTypeByTableAlias.put( tableAlias, entityMappingType );
+			}
+		}
+		else if ( part instanceof EntityAssociationMapping entityAssociationMapping ) {
+			entityMappingTypeByTableAlias.put( tableAlias, entityAssociationMapping.asEntityMappingType() );
+		}
+		else if ( part instanceof EmbeddedAttributeMapping ) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	@Override

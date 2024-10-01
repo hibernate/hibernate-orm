@@ -5,6 +5,7 @@
 package org.hibernate.query.results.dynamic;
 
 import org.hibernate.query.NativeQuery;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Contract for handling Hibernate's legacy way of representing fetches through
@@ -17,5 +18,5 @@ import org.hibernate.query.NativeQuery;
  */
 @FunctionalInterface
 public interface LegacyFetchResolver {
-	DynamicFetchBuilderLegacy resolve(String ownerTableAlias, String fetchedPartPath);
+	DynamicFetchBuilderLegacy resolve(String ownerTableAlias, Fetchable fetched);
 }

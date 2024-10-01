@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
@@ -42,9 +43,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
-		this.fetchBuilder =
-				impl( creationState ).getCurrentExplicitFetchMementoResolver()
-						.apply( fetchable.getFetchableName() );
+		this.fetchBuilder = impl( creationState ).getCurrentExplicitFetchMementoResolver().apply( fetchable );
 	}
 
 	@Override
@@ -135,9 +134,9 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 		if ( fetchBuilder != null ) {
-			consumer.accept( fetchPath.getLocalName(), fetchBuilder );
+			consumer.accept( fetchable, fetchBuilder );
 		}
 	}
 }

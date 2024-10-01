@@ -7,13 +7,12 @@ package org.hibernate.query.results.internal.dynamic;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
@@ -34,7 +33,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -47,9 +45,6 @@ import static org.hibernate.query.results.internal.ResultsHelper.impl;
 public class DynamicResultBuilderEntityStandard
 		extends AbstractFetchBuilderContainer<DynamicResultBuilderEntityStandard>
 		implements DynamicResultBuilderEntity, NativeQuery.RootReturn {
-
-	private static final String ELEMENT_PREFIX = CollectionPart.Nature.ELEMENT.getName() + ".";
-	private static final String INDEX_PREFIX = CollectionPart.Nature.INDEX.getName() + ".";
 
 	private final NavigablePath navigablePath;
 
@@ -82,18 +77,6 @@ public class DynamicResultBuilderEntityStandard
 		this.lockMode = original.lockMode;
 		this.idColumnNames = original.idColumnNames == null ? null : List.copyOf( original.idColumnNames );
 		this.discriminatorColumnName = original.discriminatorColumnName;
-	}
-
-	static String prefix(DomainResultCreationStateImpl creationState, String elementPrefix, String indexPrefix) {
-		final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
-		if ( currentRelativePath == null ) {
-			return "";
-		}
-		else {
-			return currentRelativePath.getKey()
-					.replace( elementPrefix, "" )
-					.replace( indexPrefix, "" ) + ".";
-		}
 	}
 
 	@Override
@@ -277,7 +260,7 @@ public class DynamicResultBuilderEntityStandard
 		}
 
 		if ( discriminatorColumnName != null ) {
-			resolveSqlSelection(
+			resolveDiscriminatorSqlSelection(
 					discriminatorColumnName,
 					tableReference,
 					entityMapping.getDiscriminatorMapping(),
@@ -287,18 +270,10 @@ public class DynamicResultBuilderEntityStandard
 		}
 
 		try {
-			final String prefix = prefix( creationState, ELEMENT_PREFIX, INDEX_PREFIX );
 			creationState.pushExplicitFetchMementoResolver(
-					relativePath -> {
-						if ( relativePath.startsWith( prefix ) ) {
-							final int startIndex;
-							if ( relativePath.regionMatches( prefix.length(), ELEMENT_PREFIX, 0, ELEMENT_PREFIX.length() ) ) {
-								startIndex = prefix.length() + ELEMENT_PREFIX.length();
-							}
-							else {
-								startIndex = prefix.length();
-							}
-							return findFetchBuilder( relativePath.substring( startIndex ) );
+					f -> {
+						if ( f != null ) {
+							return findFetchBuilder( f );
 						}
 						return null;
 					}
@@ -310,12 +285,27 @@ public class DynamicResultBuilderEntityStandard
 		}
 	}
 
+	private static void resolveDiscriminatorSqlSelection(String columnAlias, TableReference tableReference, EntityDiscriminatorMapping discriminatorMapping, JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationState domainResultCreationState) {
+		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		creationStateImpl.resolveSqlSelection(
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						jdbcResultsMetadata,
+						tableReference,
+						discriminatorMapping,
+						columnAlias
+				),
+				discriminatorMapping.getJdbcMapping().getJdbcJavaType(),
+				null,
+				domainResultCreationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
+		);
+	}
+
 	private FetchBuilder findIdFetchBuilder() {
-		final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			return findFetchBuilder( ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName() );
-		}
-		return findFetchBuilder( identifierMapping.getPartName() );
+		return findFetchBuilder( entityMapping.getIdentifierMapping() );
 	}
 
 	private void resolveSqlSelection(
@@ -352,6 +342,18 @@ public class DynamicResultBuilderEntityStandard
 	public DynamicResultBuilderEntityStandard setDiscriminatorAlias(String columnName) {
 		this.discriminatorColumnName = columnName;
 		return this;
+	}
+
+	@Override
+	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
+		final ModelPart subPart = entityMapping.findSubPart( propertyName );
+		addProperty( (Fetchable) subPart, columnAlias );
+		return this;
+	}
+
+	@Override
+	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+		return addProperty( (Fetchable) entityMapping.findSubPart( propertyName ) );
 	}
 
 	@Override

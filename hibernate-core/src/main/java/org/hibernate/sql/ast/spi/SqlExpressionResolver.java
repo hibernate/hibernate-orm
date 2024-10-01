@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
@@ -88,6 +89,15 @@ public interface SqlExpressionResolver {
 		assert tableReference.containsAffectedTableName( selectable.getContainingTableExpression() )
 				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), selectable.getContainingTableExpression() );
 		return createColumnReferenceKey( tableReference, selectable.getSelectablePath(), selectable.getJdbcMapping() );
+	}
+
+	/**
+	 * Convenience form for creating a key from TableReference and EntityDiscriminatorMapping
+	 */
+	static ColumnReferenceKey createDiscriminatorColumnReferenceKey(TableReference tableReference, EntityDiscriminatorMapping discriminatorMapping) {
+		assert tableReference.containsAffectedTableName( discriminatorMapping.getContainingTableExpression() )
+				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), discriminatorMapping.getContainingTableExpression() );
+		return createColumnReferenceKey( tableReference, discriminatorMapping.getSelectablePath(), discriminatorMapping.getUnderlyingJdbcMapping() );
 	}
 
 	default Expression resolveSqlExpression(TableReference tableReference, SelectableMapping selectableMapping) {

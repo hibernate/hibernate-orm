@@ -37,7 +37,7 @@ dependencies {
 	implementation( libraries.commons_annotations )
 
 	implementation( libraries.jakarta_jaxb_api )
-	implementation( libraries.jakarta_jaxb_runtimeOnly )
+	implementation( libraries.jakarta_jaxb_runtime )
 
 	jakartaeeTransformTool 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',

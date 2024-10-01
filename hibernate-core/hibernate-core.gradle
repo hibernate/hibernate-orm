@@ -82,8 +82,8 @@ dependencies {
 
     // JAXB
     implementation( libraries.jaxb_api )
-    implementation( libraries.jaxb_runtimeOnly )
-    xjc( libraries.jaxb_runtimeOnly )
+    implementation( libraries.jaxb_runtime )
+    xjc( libraries.jaxb_runtime )
     xjc( libraries.jaxb_xjc )
     xjc( libraries.jaxb2_basics )
     xjc( libraries.jaxb2_basics_ant )

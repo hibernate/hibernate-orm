@@ -33,16 +33,6 @@ public class TreatedNavigablePath extends NavigablePath {
 		assert !( parent instanceof TreatedNavigablePath );
 	}
 
-	/**
-	 * @deprecated No longer used
-	 */
-	@Deprecated( since = "6.6", forRemoval = true )
-	protected static String calculateTreatedFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		return alias == null
-				? "treat(" + parent + " as " + localName + ")"
-				: "treat(" + parent + " as " + localName + ")(" + alias + ")";
-	}
-
 	@Override
 	public NavigablePath treatAs(String entityName) {
 		return new TreatedNavigablePath( castNonNull( getRealParent() ), entityName );

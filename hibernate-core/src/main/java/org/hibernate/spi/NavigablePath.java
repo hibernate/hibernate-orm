@@ -12,8 +12,6 @@ import org.hibernate.internal.util.StringHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-
 /**
  * A compound name where the root path element is an entity name or a collection role
  * and each the path sub-path from the root references a domain or mapping model part
@@ -76,20 +74,6 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		}
 	}
 
-	/**
-	 * @deprecated Since {@link FullPathCalculator} is no longer used
-	 */
-	@Deprecated( since = "6.6", forRemoval = true )
-	public NavigablePath(
-			@Nullable NavigablePath parent,
-			String localName,
-			@Nullable String alias,
-			String identifierForTableGroup,
-			FullPathCalculator fullPathCalculator,
-			int hashCode) {
-		this( parent, localName, alias, identifierForTableGroup, hashCode );
-	}
-
 	public NavigablePath(
 			@Nullable NavigablePath parent,
 			String localName,
@@ -145,8 +129,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			return false;
 		}
 
-		if ( otherPath instanceof NavigablePath ) {
-			final NavigablePath otherNavigablePath = (NavigablePath) otherPath;
+		if ( otherPath instanceof NavigablePath otherNavigablePath ) {
 			if ( ! Objects.equals( getAlias(), otherNavigablePath.getAlias() ) ) {
 				return false;
 			}
@@ -328,51 +311,5 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	@Override
 	public String toString() {
 		return getFullPath();
-	}
-
-	/**
-	 * Effectively a tri-function
-	 *
-	 * @deprecated No longer used
-	 */
-	@FunctionalInterface
-	@Deprecated( since = "6.6", forRemoval = true )
-	protected interface FullPathCalculator extends Serializable {
-		String calculateFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias);
-	}
-
-	/**
-	 * The pattern used for root NavigablePaths
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated( since = "6.6", forRemoval = true )
-	protected static String calculateRootFullPath(@Nullable NavigablePath parent, String rootName, @Nullable String alias) {
-		assert parent == null;
-		return alias == null ? rootName : rootName + "(" + alias + ")";
-	}
-
-	/**
-	 * The normal pattern used for the "full path"
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated( since = "6.6", forRemoval = true )
-	private static String calculateNormalFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		final String parentFullPath = castNonNull( parent ).getFullPath();
-		final String baseFullPath = StringHelper.isEmpty( parentFullPath )
-				? localName
-				: parentFullPath + "." + localName;
-		return alias == null ? baseFullPath : baseFullPath + "(" + alias + ")";
-	}
-
-	/**
-	 * Pattern used for `_identifierMapper`
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated( since = "6.6", forRemoval = true )
-	protected static String calculateIdMapperFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		return parent != null ? parent.getFullPath() : "";
 	}
 }

@@ -19,6 +19,7 @@ import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityStandard;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole
@@ -64,11 +65,11 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 				? (BasicValuedFetchBuilder) discriminatorMemento.resolve( this, querySpaceConsumer, context )
 				: null;
 
-		final HashMap<String, FetchBuilder> fetchBuilderMap = new HashMap<>();
+		final HashMap<Fetchable, FetchBuilder> fetchBuilderMap = new HashMap<>();
 
 		fetchMementoMap.forEach(
 				(attrName, fetchMemento) -> fetchBuilderMap.put(
-						attrName,
+						(Fetchable) entityDescriptor.findByPath( attrName ),
 						fetchMemento.resolve(this, querySpaceConsumer, context )
 				)
 		);

@@ -11,6 +11,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
@@ -31,6 +32,6 @@ public interface ResultBuilder {
 
 	ResultBuilder cacheKeyInstance();
 
-	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	default void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 	}
 }

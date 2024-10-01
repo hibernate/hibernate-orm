@@ -235,8 +235,8 @@ public class Builders {
 		return new DynamicResultBuilderEntityCalculated( entityMapping, tableAlias, explicitLockMode );
 	}
 
-	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, new ArrayList<>(), new HashMap<>() );
+	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, Fetchable fetchable) {
+		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, fetchable, new ArrayList<>(), new HashMap<>() );
 	}
 
 	public static ResultBuilder resultClassBuilder(
@@ -269,7 +269,7 @@ public class Builders {
 			DomainResultCreationState creationState) {
 		final BasicValuedModelPart basicValuedFetchable = fetchable.asBasicValuedModelPart();
 		if ( basicValuedFetchable != null ) {
-			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable, creationState );
+			return new ImplicitFetchBuilderBasic( fetchPath, fetchable, basicValuedFetchable, creationState );
 		}
 
 		if ( fetchable instanceof EmbeddableValuedFetchable ) {

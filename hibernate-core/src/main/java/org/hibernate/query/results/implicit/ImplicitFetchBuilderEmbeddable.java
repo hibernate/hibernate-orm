@@ -36,7 +36,7 @@ import static org.hibernate.query.results.ResultsHelper.impl;
 public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 	private final NavigablePath fetchPath;
 	private final EmbeddableValuedFetchable fetchable;
-	private final Map<NavigablePath, FetchBuilder> fetchBuilders;
+	private final Map<Fetchable, FetchBuilder> fetchBuilders;
 
 	public ImplicitFetchBuilderEmbeddable(
 			NavigablePath fetchPath,
@@ -45,22 +45,20 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final Map.Entry<String, NavigablePath> relativePath = creationStateImpl.getCurrentRelativePath();
-		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
+		final Function<Fetchable, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		final int size = fetchable.getNumberOfFetchables();
-		final Map<NavigablePath, FetchBuilder> fetchBuilders = CollectionHelper.linkedMapOfSize( size );
+		final Map<Fetchable, FetchBuilder> fetchBuilders = CollectionHelper.linkedMapOfSize( size );
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable subFetchable = fetchable.getFetchable( i );
-			final NavigablePath subFetchPath = relativePath.getValue().append( subFetchable.getFetchableName() );
-			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchPath.getFullPath() );
+			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchable );
 			if ( explicitFetchBuilder == null ) {
 				fetchBuilders.put(
-						subFetchPath,
+						subFetchable,
 						Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
 				);
 			}
 			else {
-				fetchBuilders.put( subFetchPath, explicitFetchBuilder );
+				fetchBuilders.put( subFetchable, explicitFetchBuilder );
 			}
 		}
 		this.fetchBuilders = fetchBuilders;
@@ -69,13 +67,13 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 	private ImplicitFetchBuilderEmbeddable(ImplicitFetchBuilderEmbeddable original) {
 		this.fetchPath = original.fetchPath;
 		this.fetchable = original.fetchable;
-		final Map<NavigablePath, FetchBuilder> fetchBuilders;
+		final Map<Fetchable, FetchBuilder> fetchBuilders;
 		if ( original.fetchBuilders.isEmpty() ) {
 			fetchBuilders = Collections.emptyMap();
 		}
 		else {
 			fetchBuilders = new HashMap<>( original.fetchBuilders.size() );
-			for ( Map.Entry<NavigablePath, FetchBuilder> entry : original.fetchBuilders.entrySet() ) {
+			for ( Map.Entry<Fetchable, FetchBuilder> entry : original.fetchBuilders.entrySet() ) {
 				fetchBuilders.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
 			}
 		}
@@ -168,7 +166,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
-		fetchBuilders.forEach( (k, v) -> consumer.accept( k.getLocalName(), v ) );
+	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
+		fetchBuilders.forEach( (k, v) -> consumer.accept( k, v ) );
 	}
 }

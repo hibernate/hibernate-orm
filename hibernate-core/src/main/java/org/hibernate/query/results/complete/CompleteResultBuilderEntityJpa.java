@@ -21,6 +21,7 @@ import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
@@ -39,14 +40,14 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
 	private final BasicValuedFetchBuilder discriminatorFetchBuilder;
-	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
+	private final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityJpa(
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
 			BasicValuedFetchBuilder discriminatorFetchBuilder,
-			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
+			HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap) {
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
@@ -139,7 +140,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 		explicitFetchBuilderMap.forEach( consumer );
 	}
 

@@ -7,7 +7,6 @@ package org.hibernate.query.results.dynamic;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -15,13 +14,11 @@ import java.util.function.Function;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
@@ -278,27 +275,10 @@ public class DynamicResultBuilderEntityStandard
 		}
 
 		try {
-			final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
-			final String prefix;
-			if ( currentRelativePath == null ) {
-				prefix = "";
-			}
-			else {
-				prefix = currentRelativePath.getKey()
-						.replace( ELEMENT_PREFIX, "" )
-						.replace( INDEX_PREFIX, "" ) + ".";
-			}
 			creationState.pushExplicitFetchMementoResolver(
-					relativePath -> {
-						if ( relativePath.startsWith( prefix ) ) {
-							final int startIndex;
-							if ( relativePath.regionMatches( prefix.length(), ELEMENT_PREFIX, 0, ELEMENT_PREFIX.length() ) ) {
-								startIndex = prefix.length() + ELEMENT_PREFIX.length();
-							}
-							else {
-								startIndex = prefix.length();
-							}
-							return findFetchBuilder( relativePath.substring( startIndex ) );
+					f -> {
+						if ( f != null ) {
+							return findFetchBuilder( f );
 						}
 						return null;
 					}
@@ -311,11 +291,7 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	private FetchBuilder findIdFetchBuilder() {
-		final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			return findFetchBuilder( ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName() );
-		}
-		return findFetchBuilder( identifierMapping.getPartName() );
+		return findFetchBuilder( entityMapping.getIdentifierMapping() );
 	}
 
 	private void resolveSqlSelection(
@@ -352,6 +328,18 @@ public class DynamicResultBuilderEntityStandard
 	public DynamicResultBuilderEntityStandard setDiscriminatorAlias(String columnName) {
 		this.discriminatorColumnName = columnName;
 		return this;
+	}
+
+	@Override
+	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
+		final ModelPart subPart = entityMapping.findSubPart( propertyName );
+		addProperty( (Fetchable) subPart, columnAlias );
+		return this;
+	}
+
+	@Override
+	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+		return addProperty( (Fetchable) entityMapping.findSubPart( propertyName ) );
 	}
 
 	@Override

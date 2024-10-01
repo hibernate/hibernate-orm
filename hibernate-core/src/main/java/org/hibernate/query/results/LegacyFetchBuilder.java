@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.results;
 
+import org.hibernate.sql.results.graph.Fetchable;
+
 /**
  * Specialized FetchBuilder implementations which handle building fetches defined via:<ul>
  *     <li>{@code hbm.xml} definitions</li>
@@ -30,4 +32,6 @@ public interface LegacyFetchBuilder extends FetchBuilder {
 
 	@Override
 	LegacyFetchBuilder cacheKeyInstance();
+
+	Fetchable getFetchable();
 }

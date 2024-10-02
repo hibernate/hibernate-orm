@@ -653,4 +653,9 @@ public class XmlMetaEntity implements Metamodel {
 	public List<AnnotationMirror> inheritedAnnotations() {
 		return emptyList();
 	}
+
+	@Override
+	public String javadoc() {
+		return "/**\n * Static metamodel for {@link " + clazzName + "}\n **/";
+	}
 }

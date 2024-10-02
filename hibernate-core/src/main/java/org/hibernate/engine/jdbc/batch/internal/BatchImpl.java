@@ -290,12 +290,10 @@ public class BatchImpl implements Batch {
 				}
 				catch (SQLException e) {
 					abortBatch( e );
-					BATCH_MESSAGE_LOGGER.unableToExecuteBatch( e, sql );
 					throw sqlExceptionHelper.convert( e, "could not execute batch", sql );
 				}
 				catch (RuntimeException re) {
 					abortBatch( re );
-					BATCH_MESSAGE_LOGGER.unableToExecuteBatch( re, sql );
 					throw re;
 				}
 			} );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.tenantid;
 
+import jakarta.persistence.Column;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -115,6 +116,7 @@ public class TenantIdToOneBidirectionalTest implements SessionFactoryProducer {
 		private Long id;
 
 		@TenantId
+		@Column(name="tenant_col")
 		private String tenant;
 
 		@OneToOne( cascade = CascadeType.PERSIST )
@@ -143,6 +145,7 @@ public class TenantIdToOneBidirectionalTest implements SessionFactoryProducer {
 		private Long id;
 
 		@TenantId
+		@Column(name="tenant_col")
 		private String tenant;
 
 		@OneToOne( mappedBy = "child" )

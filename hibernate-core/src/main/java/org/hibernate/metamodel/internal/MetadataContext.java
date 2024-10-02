@@ -55,7 +55,6 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Objects.nonNull;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
 
 /**
@@ -274,9 +273,9 @@ public class MetadataContext {
 			attribute = factoryFunction.apply( entityType, genericProperty );
 			if ( !property.isGeneric() ) {
 				final PersistentAttribute<X, ?> concreteAttribute = factoryFunction.apply( entityType, property );
-				if (nonNull(concreteAttribute)) {
+				if ( concreteAttribute != null ) {
 					@SuppressWarnings("unchecked") final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
-					attributeContainer.getInFlightAccess().addConcreteGenericAttribute(concreteAttribute);
+					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
 				}
 			}
 		}

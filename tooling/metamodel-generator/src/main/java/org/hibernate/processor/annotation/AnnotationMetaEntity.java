@@ -3145,4 +3145,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return emptyList();
 		}
 	}
+
+	@Override
+	public String javadoc() {
+		if ( jakartaDataRepository ) {
+			return "/**\n * Implements Jakarta Data repository {@link " + qualifiedName + "}\n **/";
+		}
+		else if ( repository ) {
+			return "/**\n * Implements repository {@link " + qualifiedName + "}\n **/";
+		}
+		else if ( jakartaDataStaticModel ) {
+			return "/**\n * Jakarta Data static metamodel for {@link " + qualifiedName + "}\n **/";
+		}
+		else {
+			return "/**\n * Static metamodel for {@link " + qualifiedName + "}\n **/";
+		}
+	}
 }

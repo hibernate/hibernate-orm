@@ -172,4 +172,9 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	public List<AnnotationMirror> inheritedAnnotations() {
 		return emptyList();
 	}
+
+	@Override
+	public String javadoc() {
+		return "/**\n * Static metamodel package {@link " + element.getQualifiedName() + "}\n **/";
+	}
 }

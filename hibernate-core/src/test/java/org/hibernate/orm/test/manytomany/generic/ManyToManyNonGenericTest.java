@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -102,7 +103,7 @@ public class ManyToManyNonGenericTest {
 
 		@Override
 		public String toString() {
-			return "node [%s] parent of %s".formatted(id, children.stream().map(n -> n.id).toList());
+			return String.format("node [%s] parent of %s", id, children.stream().map(n -> n.id).collect(Collectors.toList()));
 		}
 	}
 }

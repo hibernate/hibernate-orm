@@ -537,7 +537,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				);
 			}
 			methodVisitor.visitInsn( Opcodes.RETURN );
-			return new Size( 2, instrumentedMethod.getStackSize() );
+			return new Size(
+					is64BitType( type ) ? 3 : 2,
+					instrumentedMethod.getStackSize()
+			);
 		}
 
 		private int getLoadOpCode(Class<?> type) {
@@ -553,6 +556,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				return Opcodes.ILOAD;
 			}
 			return Opcodes.ALOAD;
+		}
+
+		private boolean is64BitType(Class<?> type) {
+			return type == long.class || type == double.class;
 		}
 	}
 

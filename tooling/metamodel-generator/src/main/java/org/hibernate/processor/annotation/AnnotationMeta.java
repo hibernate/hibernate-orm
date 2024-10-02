@@ -187,18 +187,20 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void addAuxiliaryMembersForMirror(AnnotationMirror mirror, String prefix) {
-		mirror.getElementValues().forEach((key, value) -> {
-			if ( key.getSimpleName().contentEquals("name") ) {
-				final String name = value.getValue().toString();
-				if ( !name.isEmpty() ) {
-					putMember( prefix + name, auxiliaryMember( mirror, prefix, name ) );
+		if ( !isJakartaDataStyle() ) {
+			mirror.getElementValues().forEach((key, value) -> {
+				if ( key.getSimpleName().contentEquals("name") ) {
+					final String name = value.getValue().toString();
+					if ( !name.isEmpty() ) {
+						putMember( prefix + name, auxiliaryMember( mirror, prefix, name ) );
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 
 	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {
-		if ( !isJakartaDataStyle() && "QUERY_".equals(prefix) ) {
+		if ( "QUERY_".equals(prefix) ) {
 			final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
 			// if there is no explicit result class, we will infer it later by
 			// type checking the query (this is allowed but not required by JPA)
@@ -207,7 +209,7 @@ public abstract class AnnotationMeta implements Metamodel {
 					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
 					"jakarta.persistence.TypedQueryReference", null );
 		}
-		else if ( !isJakartaDataStyle() && "GRAPH_".equals(prefix) ) {
+		else if ( "GRAPH_".equals(prefix) ) {
 			return new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
 					"jakarta.persistence.EntityGraph", null );
 		}

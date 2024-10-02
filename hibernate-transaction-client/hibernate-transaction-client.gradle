@@ -34,6 +34,7 @@ dependencies {
 }
 
 jar {
+    project.configurations.testImplementation.setCanBeResolved(true);
 	def sourceJarPath = project.configurations.testImplementation.find { it.name.startsWith("wildfly-transaction-client-") }
 	inputs.files(sourceJarPath).skipWhenEmpty()
 	outputs.dir project.buildDir

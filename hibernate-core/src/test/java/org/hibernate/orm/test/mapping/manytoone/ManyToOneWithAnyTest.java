@@ -8,7 +8,6 @@ import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Any;
-import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.cfg.JdbcSettings;
 
@@ -45,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		integrationSettings = @Setting(name = JdbcSettings.SHOW_SQL, value = "true")
 )
 @JiraKey("HHH-15722")
+@JiraKey("HHH-18684")
 class ManyToOneWithAnyTest {
 
 	@Test
@@ -117,8 +117,6 @@ class ManyToOneWithAnyTest {
 
 		@Any
 		@AnyKeyJavaClass(Long.class)
-		@AnyDiscriminatorValue(entity = Shop.class, discriminator = "S")
-		@AnyDiscriminatorValue(entity = Library.class, discriminator = "L")
 		@Column(name = "STORE_ROLE")
 		@JoinColumn(name = "STORE_ID")
 		private Store store;

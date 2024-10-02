@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -57,6 +58,16 @@ public class MetaType extends AbstractType {
 
 	public Map<String,Object> getEntityNameToDiscriminatorValueMap(){
 		return entityNameToDiscriminatorValueMap;
+	}
+
+	public Object resolveDiscriminatorValue(String entityName) {
+		return Optional.ofNullable(
+				getEntityNameToDiscriminatorValueMap().get( entityName ) ).orElse( entityName );
+	}
+
+	public String resolveEntityName(String discriminatorValue) {
+		return Optional.ofNullable(
+				getDiscriminatorValuesToEntityNameMap().get( discriminatorValue ) ).orElse( discriminatorValue );
 	}
 
 	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {

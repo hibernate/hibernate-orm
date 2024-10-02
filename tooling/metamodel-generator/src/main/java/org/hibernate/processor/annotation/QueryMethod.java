@@ -268,7 +268,13 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		StringBuilder sb = new StringBuilder(queryString.length() + 100)
+		StringBuilder declaration = new StringBuilder( queryString.length() + 200 );
+		declaration
+				.append("\n/**\n * @see ")
+				.append("#");
+		signature( declaration );
+		declaration
+				.append( "\n **/\n" )
 				.append( "static final String " )
 				.append( getConstantName() )
 				.append( " = \"" );
@@ -276,23 +282,23 @@ public class QueryMethod extends AbstractQueryMethod {
 			final char c = queryString.charAt( i );
 			switch ( c ) {
 				case '\r':
-					sb.append( "\\r" );
+					declaration.append( "\\r" );
 					break;
 				case '\n':
-					sb.append( "\\n" );
+					declaration.append( "\\n" );
 					break;
 				case '\\':
-					sb.append( "\\\\" );
+					declaration.append( "\\\\" );
 					break;
 				case '"':
-					sb.append( "\\\"" );
+					declaration.append( "\\\"" );
 					break;
 				default:
-					sb.append( c );
+					declaration.append( c );
 					break;
 			}
 		}
-		return sb.append("\";").toString();
+		return declaration.append("\";").toString();
 	}
 
 	private String getConstantName() {

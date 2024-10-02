@@ -103,7 +103,8 @@ public final class ClassWriter {
 			final List<MetaAttribute> members = entity.getMembers();
 			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember.hasStringAttribute() ) {
-					pw.println( '\t' + metaMember.getAttributeNameDeclarationString() );
+					metaMember.getAttributeNameDeclarationString().lines()
+							.forEach(line -> pw.println('\t' + line));
 				}
 			}
 

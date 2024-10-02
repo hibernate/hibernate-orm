@@ -24,11 +24,11 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 	@Override
 	public String getAttributeDeclarationString() {
 		return new StringBuilder()
-				.append("\n/**\n * @see ")
+				.append("\n/**\n * Static metamodel for attribute {@link ")
 				.append( parent.getQualifiedName() )
 				.append("#")
 				.append( element.getSimpleName() )
-				.append("\n **/\n")
+				.append("}\n **/\n")
 				.append("public static volatile ")
 				.append( parent.importType( getMetaType() ) )
 				.append("<")

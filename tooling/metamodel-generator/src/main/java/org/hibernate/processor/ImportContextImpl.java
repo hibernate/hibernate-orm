@@ -150,7 +150,7 @@ public class ImportContextImpl implements ImportContext {
 		StringBuilder acc = new StringBuilder();
 		StringTokenizer args = new StringTokenizer( originalArgList, "," );
 		while ( args.hasMoreTokens() ) {
-			if ( acc.length() > 0 ) {
+			if ( !acc.isEmpty() ) {
 				acc.append( ',' );
 			}
 			acc.append( args.nextToken() );
@@ -166,7 +166,7 @@ public class ImportContextImpl implements ImportContext {
 				}
 			}
 			if ( nesting == 0 ) {
-				if ( argList.length() > 0 ) {
+				if ( !argList.isEmpty() ) {
 					argList.append(',');
 				}
 				argList.append( importType( acc.toString() ) );
@@ -177,16 +177,10 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public String staticImport(String fqcn, String member) {
-		String local = fqcn + "." + member;
+		final String local = fqcn + "." + member;
 		imports.add( local );
 		staticImports.add( local );
-
-		if ( member.equals( "*" ) ) {
-			return "";
-		}
-		else {
-			return member;
-		}
+		return "*".equals(member) ? "" : member;
 	}
 
 	private boolean inDefaultPackage(String className) {
@@ -206,8 +200,7 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public String generateImports() {
-		StringBuilder builder = new StringBuilder();
-
+		final StringBuilder builder = new StringBuilder();
 		for ( String next : imports ) {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
@@ -219,15 +212,14 @@ public class ImportContextImpl implements ImportContext {
 				}
 			}
 		}
-
-		if ( builder.indexOf( "$" ) >= 0 ) {
-			return builder.toString();
-		}
 		return builder.toString();
 	}
 
 	private boolean isAutoImported(String next) {
-		return isPrimitive( next ) || inDefaultPackage( next ) || inJavaLang( next ) || inSamePackage( next );
+		return isPrimitive( next )
+			|| inDefaultPackage( next )
+			|| inJavaLang( next )
+			|| inSamePackage( next );
 	}
 
 	public static String unqualify(String qualifiedName) {

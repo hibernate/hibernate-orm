@@ -58,4 +58,6 @@ public interface Metamodel extends ImportContext {
 	boolean isJakartaDataStyle();
 
 	List<AnnotationMirror> inheritedAnnotations();
+
+	String javadoc();
 }

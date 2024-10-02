@@ -80,6 +80,8 @@ public final class ClassWriter {
 		final StringWriter sw = new StringWriter();
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
+			pw.println( entity.javadoc() );
+
 			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
 				pw.println( writeScopeAnnotation( entity ) );
 			}

@@ -39,9 +39,26 @@ class TypedMetaAttribute extends NameMetaAttribute {
 		return true;
 	}
 
+	private boolean isQuery() {
+		return "QUERY_".equals(prefix);  //UGLY!
+	}
+
+	@Override
+	public String getAttributeNameDeclarationString() {
+		StringBuilder declaration = new StringBuilder();
+		declaration
+				.append("\n/**\n * @see ")
+				.append("#");
+		appendFieldName( declaration, isQuery() );
+		return declaration
+				.append( "\n **/\n" )
+				.append(super.getAttributeNameDeclarationString())
+				.toString();
+	}
+
 	@Override
 	public String getAttributeDeclarationString() {
-		final boolean isQuery = "QUERY_".equals(prefix);  //UGLY!
+		final boolean isQuery = isQuery();
 		final Metamodel entity = getHostingEntity();
 		final StringBuilder declaration = new StringBuilder();
 		declaration
@@ -67,13 +84,18 @@ class TypedMetaAttribute extends NameMetaAttribute {
 				.append('<')
 				.append(entity.importType(resultType))
 				.append('>')
-				.append(' ')
+				.append(' ');
+		appendFieldName( declaration, isQuery );
+		declaration.append(';');
+		return declaration.toString();
+	}
+
+	private void appendFieldName(StringBuilder declaration, boolean isQuery) {
+		declaration
 				.append('_')
 				.append(nameToMethodName(getPropertyName()));
 		if ( isQuery ) {
 			declaration.append('_');
 		}
-		declaration.append(';');
-		return declaration.toString();
 	}
 }

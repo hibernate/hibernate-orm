@@ -56,12 +56,11 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				? parent.importType("jakarta.data.metamodel.impl.TextAttributeRecord")
 				: parent.importType("jakarta.data.metamodel.impl.SortableAttributeRecord");
 		return new StringBuilder()
-				.append("\n/**\n * @see ")
+				.append("\n/**\n * Static metamodel for attribute {@link ")
 				.append(className)
-				.append( "#")
+				.append("#")
 				.append(memberName)
-				.append( "\n **/\n" )
-//				.append( "public static final " )
+				.append( "}\n **/\n" )
 				.append( parent.importType( getMetaType() ) )
 				.append( "<" )
 				.append( className )
@@ -78,7 +77,10 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 	@Override
 	public String getAttributeNameDeclarationString(){
 		return new StringBuilder()
-//				.append("public static final ")
+				.append("\n/**\n * @see ")
+				.append("#")
+				.append( getPropertyName().replace('.','_') )
+				.append( "\n **/\n" )
 				.append(parent.importType(String.class.getName()))
 				.append(" ")
 				.append(fieldName())

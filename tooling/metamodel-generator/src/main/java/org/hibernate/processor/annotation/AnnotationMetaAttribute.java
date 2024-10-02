@@ -44,11 +44,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 	@Override
 	public String getAttributeDeclarationString() {
 		return new StringBuilder()
-				.append("\n/**\n * @see ")
+				.append("\n/**\n * Static metamodel for attribute {@link ")
 				.append(parent.getQualifiedName())
 				.append('#')
 				.append(element.getSimpleName())
-				.append("\n **/\n")
+				.append("}\n **/\n")
 				.append("public static volatile ")
 				.append(parent.importType(getMetaType()))
 				.append('<')
@@ -65,6 +65,10 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 	@Override
 	public String getAttributeNameDeclarationString(){
 		return new StringBuilder()
+				.append("\n/**\n * @see ")
+				.append("#")
+				.append(getPropertyName())
+				.append( "\n **/\n" )
 				.append("public static final ")
 				.append(parent.importType(String.class.getName()))
 				.append(' ')

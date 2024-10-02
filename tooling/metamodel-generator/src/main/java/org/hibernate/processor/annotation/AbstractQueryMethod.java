@@ -105,10 +105,21 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				.orElse("");
 	}
 
-	String strip(String type) {
-		int index = type.indexOf("<");
-		String stripped = index > 0 ? type.substring(0, index) : type;
-		return type.endsWith("...") ? stripped + "..." : stripped;
+	String strip(final String fullType) {
+		String type = fullType;
+		// strip off type annotations
+		while ( type.charAt(0) == '@' ) {
+			int startIndex = type.indexOf( ' ' );
+			if ( startIndex > 0 ) {
+				type = type.substring(startIndex+1);
+			}
+		}
+		// strip off type arguments
+		int endIndex = type.indexOf("<");
+		if ( endIndex > 0 ) {
+			type = type.substring(0, endIndex);
+		}
+		return fullType.endsWith("...") ? type + "..." : type;
 	}
 
 	void preamble(StringBuilder declaration, List<String> paramTypes) {
@@ -175,7 +186,12 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		declaration
 				.append("\n * @see ")
 				.append(annotationMetaEntity.getQualifiedName())
-				.append("#")
+				.append("#");
+		signature(declaration);
+	}
+
+	void signature(StringBuilder declaration) {
+		declaration
 				.append(methodName)
 				.append("(")
 				.append(parameterList())

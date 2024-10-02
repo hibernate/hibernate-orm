@@ -67,14 +67,17 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	protected void registerResolutionListener(BatchEntitySelectFetchInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final InitializerData owningData = owningEntityInitializer.getData( rowProcessingState );
+		HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+		if ( toBatchLoad == null ) {
+			toBatchLoad = data.toBatchLoad = new HashMap<>();
+		}
+		// Always register the entity key for resolution
+		final List<ParentInfo> parentInfos = toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() );
 		final AttributeMapping parentAttribute;
+		// But only add the parent info if the parent entity is not already initialized
 		if ( owningData.getState() != State.INITIALIZED
 				&& ( parentAttribute = parentAttributes[owningEntityInitializer.getConcreteDescriptor( owningData ).getSubclassId()] ) != null ) {
-			HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
-			if ( toBatchLoad == null ) {
-				toBatchLoad = data.toBatchLoad = new HashMap<>();
-			}
-			toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() ).add(
+			parentInfos.add(
 					new ParentInfo(
 							owningEntityInitializer.getTargetInstance( owningData ),
 							parentAttribute.getStateArrayPosition()

@@ -1779,7 +1779,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 	}
 
-	private static PersistentAttributeInterceptor getAttributeInterceptor(Object entity) {
+	public static PersistentAttributeInterceptor getAttributeInterceptor(Object entity) {
 		return asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 	}
 

@@ -1486,7 +1486,7 @@ Let's pause to remember the annotations we've met so far.
 | Annotation | Purpose | JPA-standard
 
 | `@GeneratedValue` | Specify that an identifier is system-generated | &#10004;
-| `@SequenceGenerator` | Define an id generated backed by a database sequence | &#10004;
+| `@SequenceGenerator` | Define an id generator backed by a database sequence | &#10004;
 | `@TableGenerator` | Define an id generated backed by a database table | &#10004;
 | `@IdGeneratorType`  | Declare an annotation that associates a custom `Generator` with each `@Id` attribute it annotates | &#10006;
 | `@ValueGenerationType` | Declare an annotation that associates a custom `Generator` with each `@Basic` attribute it annotates | &#10006;

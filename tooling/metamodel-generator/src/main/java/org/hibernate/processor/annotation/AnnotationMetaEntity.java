@@ -1900,25 +1900,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					);
 					break;
 				case NATURAL_ID:
-					putMember( methodKey,
-							new NaturalIdFinderMethod(
-									this, method,
-									methodName,
-									returnType.toString(),
-									containerType,
-									paramNames,
-									paramTypes,
-									parameterNullability(method, entity),
-									repository,
-									sessionType[0],
-									sessionType[1],
-									profiles,
-									context.addNonnullAnnotation(),
-									jakartaDataRepository,
-									fullReturnType(method)
-							)
-					);
-					break;
+					if ( !usingStatelessSession( sessionType[0] ) ) {// no byNaturalId() lookup API for SS
+						putMember( methodKey,
+								new NaturalIdFinderMethod(
+										this, method,
+										methodName,
+										returnType.toString(),
+										containerType,
+										paramNames,
+										paramTypes,
+										parameterNullability(method, entity),
+										repository,
+										sessionType[0],
+										sessionType[1],
+										profiles,
+										context.addNonnullAnnotation(),
+										jakartaDataRepository,
+										fullReturnType(method)
+								)
+						);
+						break;
+					}
+					// else intentionally fall through
 				case BASIC:
 				case MULTIVALUED:
 					final List<Boolean> paramPatterns = parameterPatterns( method );

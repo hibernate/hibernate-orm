@@ -8,8 +8,8 @@ package org.hibernate.orm.test.envers.integration.reventity.removal;
 
 import java.util.Map;
 
-import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;
 
+import org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntityImpl;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 
@@ -26,6 +26,6 @@ public class RemoveTrackingRevisionEntity extends AbstractRevisionEntityRemovalT
 
 	@Override
 	protected Class<?> getRevisionEntityClass() {
-		return SequenceIdTrackingModifiedEntitiesRevisionEntity.class;
+		return SequenceIdTrackingModifiedEntitiesRevisionEntityImpl.class;
 	}
 }

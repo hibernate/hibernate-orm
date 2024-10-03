@@ -39,6 +39,10 @@ import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.RevisionTimestampData;
+import org.hibernate.envers.internal.entities.mappings.DefaultRevisionEntityImpl;
+import org.hibernate.envers.internal.entities.mappings.DefaultTrackingModifiedEntitiesRevisionEntityImpl;
+import org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdRevisionEntityImpl;
+import org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntityImpl;
 import org.hibernate.envers.internal.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.DefaultTrackingModifiedEntitiesRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
@@ -285,7 +289,6 @@ public class RevisionInfoConfiguration {
 		public RevisionEntityResolver(MetadataImplementor metadata, ReflectionManager reflectionManager) {
 			this.metadata = metadata;
 			this.reflectionManager = reflectionManager;
-			this.revisionInfoEntityName = getDefaultEntityName();
 			this.revisionInfoIdData = createPropertyData( "id", "field" );
 			this.revisionInfoTimestampData = createPropertyData( "timestamp", "field" );
 			this.modifiedEntityNamesData = createPropertyData( "modifiedEntityNames", "field" );
@@ -294,15 +297,6 @@ public class RevisionInfoConfiguration {
 
 			// automatically initiates a revision entity search over metadata sources
 			locateRevisionEntityMapping();
-		}
-
-		private String getDefaultEntityName() {
-			if ( configuration.isNativeIdEnabled() ) {
-				return DefaultRevisionEntity.class.getName();
-			}
-			else {
-				return SequenceIdRevisionEntity.class.getName();
-			}
 		}
 
 		private void locateRevisionEntityMapping() {
@@ -388,15 +382,15 @@ public class RevisionInfoConfiguration {
 
 				if ( configuration.isTrackEntitiesChanged() ) {
 					revisionInfoClass = configuration.isNativeIdEnabled()
-							? DefaultTrackingModifiedEntitiesRevisionEntity.class
-							: SequenceIdTrackingModifiedEntitiesRevisionEntity.class;
-					revisionInfoEntityName = revisionInfoClass.getName();
+							? DefaultTrackingModifiedEntitiesRevisionEntityImpl.class
+							: SequenceIdTrackingModifiedEntitiesRevisionEntityImpl.class;
 				}
 				else {
 					revisionInfoClass = configuration.isNativeIdEnabled()
-							? DefaultRevisionEntity.class
-							: SequenceIdRevisionEntity.class;
+							? DefaultRevisionEntityImpl.class
+							: SequenceIdRevisionEntityImpl.class;
 				}
+				revisionInfoEntityName = revisionInfoClass.getName();
 
 				timestampValueResolver = createRevisionTimestampResolver(
 						revisionInfoClass,

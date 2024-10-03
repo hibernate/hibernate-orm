@@ -1087,6 +1087,12 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 			else {
 				data.setInstance( proxy );
+				/* uncommenting this branch fixes my situation (but might break others)
+				if ( data.entityHolder.isInitialized() ) {
+					data.setState( State.INITIALIZED );
+					data.entityInstanceForNotify = data.entityHolder.getEntity();
+				}
+				else */
 				if ( Hibernate.isInitialized( proxy ) ) {
 					data.setState( State.INITIALIZED );
 					data.entityInstanceForNotify = Hibernate.unproxy( proxy );

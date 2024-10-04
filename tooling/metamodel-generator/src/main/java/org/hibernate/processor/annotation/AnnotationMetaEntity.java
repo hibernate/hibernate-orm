@@ -2109,7 +2109,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean finderParameterNullable(TypeElement entity, VariableElement param) {
 		final Element member = memberMatchingPath( entity, parameterName( param ) );
-		return member == null || isNullable(member);
+		return isNullable( param )
+			&& ( member == null || isNullable( member ) );
 	}
 
 	private AccessType getAccessType(TypeElement entity) {
@@ -2932,30 +2933,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return false;
 				}
 			case FIELD:
+			case PARAMETER:
 				if ( member.asType().getKind().isPrimitive() ) {
 					return false;
 				}
 		}
-		boolean nullable = true;
 		for ( AnnotationMirror mirror : member.getAnnotationMirrors() ) {
 			final TypeElement annotationType = (TypeElement) mirror.getAnnotationType().asElement();
 			final Name name = annotationType.getQualifiedName();
-			if ( name.contentEquals(Constants.ID) ) {
-				nullable = false;
+			if ( name.contentEquals(Constants.ID)
+				|| name.contentEquals(Constants.NOT_NULL)
+				|| name.contentEquals(Constants.NONNULL) ) {
+				return false;
 			}
-			if ( name.contentEquals("jakarta.validation.constraints.NotNull")) {
-				nullable = false;
-			}
-			if ( name.contentEquals(Constants.BASIC)
+			else if ( name.contentEquals(Constants.BASIC)
 					|| name.contentEquals(Constants.MANY_TO_ONE)
 					|| name.contentEquals(Constants.ONE_TO_ONE)) {
-				AnnotationValue optional = getAnnotationValue(mirror, "optional");
+				final AnnotationValue optional = getAnnotationValue(mirror, "optional");
 				if ( optional != null && optional.getValue().equals(FALSE) ) {
-					nullable = false;
+					return false;
 				}
 			}
 		}
-		return nullable;
+		return true;
 	}
 
 	private void checkParameters(

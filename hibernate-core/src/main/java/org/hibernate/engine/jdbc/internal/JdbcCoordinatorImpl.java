@@ -80,7 +80,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			JdbcServices jdbcServices) {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 
-		final ResourceRegistry resourceRegistry = new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
+		final ResourceRegistry resourceRegistry =
+				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
 		if ( isUserSuppliedConnection ) {
 			this.logicalConnection = new LogicalConnectionProvidedImpl( userSuppliedConnection, resourceRegistry );
 		}
@@ -191,11 +192,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void conditionallyExecuteBatch(BatchKey key) {
-		if ( currentBatch == null ) {
-			return;
-		}
-
-		if ( !currentBatch.getKey().equals( key ) ) {
+		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
 			JdbcBatchLogging.BATCH_LOGGER.debugf( "Conditionally executing batch - %s", currentBatch.getKey() );
 			currentBatch.execute();
 		}
@@ -262,30 +259,34 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		final ConnectionReleaseMode connectionReleaseMode = getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
+		final ConnectionReleaseMode connectionReleaseMode = connectionReleaseMode();
 		LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
 				LOG.debug( "Skipping aggressive release due to manual disabling" );
-				return;
 			}
-			if ( hasRegisteredResources() ) {
+			else if ( hasRegisteredResources() ) {
 				LOG.debug( "Skipping aggressive release due to registered resources" );
-				return;
 			}
-			getLogicalConnection().afterStatement();
+			else {
+				getLogicalConnection().afterStatement();
+			}
 		}
 	}
 
 	@Override
 	public void afterTransaction() {
 		transactionTimeOutInstant = -1;
-		switch ( getLogicalConnection().getConnectionHandlingMode().getReleaseMode() ) {
+		switch ( connectionReleaseMode() ) {
 			case AFTER_STATEMENT:
 			case AFTER_TRANSACTION:
 			case BEFORE_TRANSACTION_COMPLETION:
 				logicalConnection.afterTransaction();
 		}
+	}
+
+	private ConnectionReleaseMode connectionReleaseMode() {
+		return getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
 	}
 
 	private boolean hasRegisteredResources() {
@@ -319,9 +320,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		if ( statement instanceof JdbcWrapper ) {
 			final JdbcWrapper<Statement> wrapper = (JdbcWrapper<Statement>) statement;
 			registerLastQuery( wrapper.getWrappedObject() );
-			return;
 		}
-		lastQuery = statement;
+		else {
+			lastQuery = statement;
+		}
 	}
 
 	@Override
@@ -355,7 +357,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		releasesEnabled = false;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected void close(Statement statement) {
 		LOG.tracev( "Closing prepared statement [{0}]", statement );
 
@@ -364,38 +365,39 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		sqlExceptionHelper().logAndClearWarnings( statement );
 
 		if ( statement instanceof InvalidatableWrapper ) {
+			@SuppressWarnings("unchecked")
 			final InvalidatableWrapper<Statement> wrapper = (InvalidatableWrapper<Statement>) statement;
 			close( wrapper.getWrappedObject() );
 			wrapper.invalidate();
-			return;
 		}
-
-		try {
-			// if we are unable to "clean" the prepared statement,
-			// we do not close it
+		else {
 			try {
-				if ( statement.getMaxRows() != 0 ) {
-					statement.setMaxRows( 0 );
+				// if we are unable to "clean" the prepared statement,
+				// we do not close it
+				try {
+					if ( statement.getMaxRows() != 0 ) {
+						statement.setMaxRows( 0 );
+					}
+					if ( statement.getQueryTimeout() != 0 ) {
+						statement.setQueryTimeout( 0 );
+					}
 				}
-				if ( statement.getQueryTimeout() != 0 ) {
-					statement.setQueryTimeout( 0 );
+				catch( SQLException sqle ) {
+					// there was a problem "cleaning" the prepared statement
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf( "Exception clearing maxRows/queryTimeout [%s]", sqle.getMessage() );
+					}
+					// EARLY EXIT!!!
+					return;
+				}
+				statement.close();
+				if ( lastQuery == statement ) {
+					lastQuery = null;
 				}
 			}
-			catch( SQLException sqle ) {
-				// there was a problem "cleaning" the prepared statement
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf( "Exception clearing maxRows/queryTimeout [%s]", sqle.getMessage() );
-				}
-				// EARLY EXIT!!!
-				return;
+			catch ( Exception e ) {
+				LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
 			}
-			statement.close();
-			if ( lastQuery == statement ) {
-				lastQuery = null;
-			}
-		}
-		catch ( Exception e ) {
-			LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
 		}
 	}
 

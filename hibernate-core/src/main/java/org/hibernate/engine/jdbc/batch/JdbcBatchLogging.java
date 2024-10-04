@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -36,10 +37,22 @@ public interface JdbcBatchLogging extends BasicLogger {
 	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcBatchLogging.class, NAME );
 
 	@LogMessage(level = WARN)
-	@Message(id = 100502, value = "Unable to release batch statement...")
+	@Message(id = 100502, value = "Unable to release batch statement")
 	void unableToReleaseBatchStatement();
 
 	@LogMessage(level = INFO)
 	@Message(id=100503, value = "On release of batch it still contained JDBC statements")
 	void batchContainedStatementsOnRelease();
+
+	@LogMessage(level = TRACE)
+	@Message("Created JDBC batch (%s) - [%s]")
+	void createBatch(int batchSize, String string);
+
+	@LogMessage(level = TRACE)
+	@Message("Adding to JDBC batch (%s / %s) - [%s]")
+	void addToBatch(int batchPosition, int batchSize, String string);
+
+	@LogMessage(level = TRACE)
+	@Message("Executing JDBC batch (%s / %s) - [%s]")
+	void executeBatch(int batchPosition, int batchSize, String string);
 }

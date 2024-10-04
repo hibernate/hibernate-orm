@@ -997,7 +997,8 @@ The `getResultCount()` method is useful for displaying the number of pages of re
 SelectionQuery<Book> query =
         session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern);
-long pages = (long) Math.ceil(query.getResultCount() * 1.0 / MAX_RESULTS);
+long results = query.getResultCount();
+long pages = results / MAX_RESULTS + (results % MAX_RESULTS == 0 ? 0 : 1);
 List<Book> books = query.setMaxResults(MAX_RESULTS).getResultList();
 ----
 

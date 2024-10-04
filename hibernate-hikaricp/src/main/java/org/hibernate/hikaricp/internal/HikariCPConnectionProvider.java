@@ -52,18 +52,11 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "HikariCP" );
 
 			hcfg = HikariConfigurationUtil.loadConfiguration( props );
-
-			boolean initializedHikariDataSource = false;
-
 			// Support a HikariDataSource already configured by classes which extend this class
-			if(props.containsKey("HikariDataSource")) {
-				Object ohds = props.get("HikariDataSource");
-				if(ohds instanceof HikariDataSource) {
-					hds = (HikariDataSource) ohds;
-					initializedHikariDataSource = true;
-				}
+			if ( props.get("HikariDataSource") instanceof HikariDataSource hikariDataSource ) {
+				hds = hikariDataSource;
 			}
-			if(!initializedHikariDataSource) {
+			else {
 				// Default logic if no subclass has configured a HikariDataSource, do so now
 				hds = new HikariDataSource( hcfg );
 			}

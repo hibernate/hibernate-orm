@@ -1233,7 +1233,7 @@ class Book {
 
 Remember, if we wish to the modify the collection we must <<bidirectional-problem,change the owning side>>.
 
-We've again used `Set` to represent the association.
+We've again used ``Set``s to represent the association.
 As before, we have the option to use `Collection` or `List`.
 But in this case it _does_ make a difference to the semantics of the association.
 

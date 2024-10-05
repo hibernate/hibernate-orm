@@ -1064,7 +1064,7 @@ if (!firstPage.isLastPage()) {
 ----
 
 The "key" in key-based pagination refers to a unique key of the result set which determines a total order on the query results.
-In this example, `Book_.isbn` is the key.
+In this example, `Book.isbn` is the key.
 
 Since this code is a little bit fiddly, key-based pagination works best with <<key-based-paging,generated query or finder methods>>.
 

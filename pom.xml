@@ -13,8 +13,8 @@
     <url>http://hibernate.org</url>
   
     <properties>
-      <maven-plugin-api.version>2.0</maven-plugin-api.version>
-      <junit-jupiter.version>3.8.1</junit-jupiter.version>
+      <maven-plugin-api.version>3.9.9</maven-plugin-api.version>
+      <junit-jupiter.version>5.11.2</junit-jupiter.version>
     </properties>
   
     <dependencies>
@@ -24,8 +24,8 @@
         <version>${maven-plugin-api.version}</version>
       </dependency>
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
         <version>${junit-jupiter.version}</version>
         <scope>test</scope>
       </dependency>

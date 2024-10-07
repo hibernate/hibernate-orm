@@ -116,7 +116,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
 				// LSB bits 2-15 - counter
-				| ( state.lastSequence & 0x3FFFL ) << 48
+				| (long) state.lastSequence << 48
 				// LSB bits 16-63 - pseudorandom data
 				| randomNode()
 		);

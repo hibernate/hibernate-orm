@@ -1,4 +1,4 @@
-package org.hibernate.orm;
+package org.hibernate.orm.tooling.maven.enhance;
 
 /*
  * Copyright 20024 The Apache Software Foundation.
@@ -16,8 +16,11 @@ package org.hibernate.orm;
  * limitations under the License.
  */
 
+import org.apache.maven.api.plugin.annotations.Mojo;
+import org.apache.maven.api.plugin.annotations.Parameter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,19 +28,14 @@ import java.io.IOException;
 
 /**
  * Maven mojo for performing build-time enhancement of entity objects.
- *
- * @goal enhance
- * 
- * @phase process-sources
  */
-public class EnhanceMojo
-    extends AbstractMojo
-{
-    /**
-     * Location of the file.
-     * @parameter expression="${project.build.directory}"
-     * @required
-     */
+@Mojo(name = "enhance", defaultPhase = "PROCESS_SOURCES")
+public class EnhanceMojo extends AbstractMojo {
+
+	@Parameter(
+			defaultValue = "${project.build.directory}", 
+			readonly = true, 
+			required = true)
     private File outputDirectory;
 
     public void execute()

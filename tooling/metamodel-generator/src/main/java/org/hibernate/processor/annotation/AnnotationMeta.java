@@ -13,16 +13,18 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
-import org.hibernate.query.criteria.JpaEntityJoin;
-import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ModuleElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import java.util.List;
 
 import static java.lang.Character.isJavaIdentifierStart;
@@ -31,6 +33,7 @@ import static org.hibernate.processor.util.Constants.NAMED_QUERY;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.processor.validation.ProcessorSessionFactory.findEntityByUnqualifiedName;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -136,24 +139,23 @@ public abstract class AnnotationMeta implements Metamodel {
 		}
 	}
 
-	private static @Nullable String resultType(SqmSelectStatement<?> selectStatement) {
-		final JpaSelection<?> selection = selectStatement.getSelection();
-		if (selection == null) {
-			return null;
-		}
-		else if (selection instanceof SqmSelectClause from) {
-			return from.getSelectionItems().size() > 1
-					? "Object[]"
-					: from.getSelectionItems().get(0).getJavaTypeName();
-		}
-		else if (selection instanceof JpaRoot<?> root) {
-			return root.getModel().getTypeName();
-		}
-		else if (selection instanceof JpaEntityJoin<?, ?> join) {
-			return join.getModel().getTypeName();
+	private @Nullable String resultType(SqmSelectStatement<?> selectStatement) {
+		final JavaType<?> javaType = selectStatement.getSelection().getJavaTypeDescriptor();
+		if ( javaType != null ) {
+			return javaType.getTypeName();
 		}
 		else {
-			return selection.getJavaTypeName();
+			final List<SqmSelectableNode<?>> items =
+					selectStatement.getQuerySpec().getSelectClause().getSelectionItems();
+			final SqmExpressible<?> expressible;
+			if ( items.size() == 1 && ( expressible = items.get( 0 ).getExpressible() ) != null ) {
+				final String typeName = expressible.getTypeName();
+				final TypeElement entityType = entityType( typeName );
+				return entityType == null ? typeName : entityType.getQualifiedName().toString();
+			}
+			else {
+				return "Object[]";
+			}
 		}
 	}
 
@@ -282,5 +284,27 @@ public abstract class AnnotationMeta implements Metamodel {
 				super.syntaxError( recognizer, offendingSymbol, line, charPositionInLine, message, e );
 			}
 		}
+	}
+
+	private @Nullable TypeElement entityType(String entityName) {
+		final Context context = getContext();
+		final Elements elementUtils = context.getElementUtils();
+		final String qualifiedName = context.qualifiedNameForEntityName(entityName);
+		if ( qualifiedName != null ) {
+			return elementUtils.getTypeElement(qualifiedName);
+		}
+		TypeElement symbol =
+				findEntityByUnqualifiedName( entityName,
+						elementUtils.getModuleElement("") );
+		if ( symbol != null ) {
+			return symbol;
+		}
+		for ( ModuleElement module : elementUtils.getAllModuleElements() ) {
+			symbol = findEntityByUnqualifiedName( entityName, module );
+			if ( symbol != null ) {
+				return symbol;
+			}
+		}
+		return null;
 	}
 }

@@ -35,7 +35,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -47,6 +47,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * @author Vlad Mihalcea
@@ -388,7 +389,6 @@ public class CacheEntityLoaderHelper {
 			EntityKey entityKey) {
 
 		final SessionFactoryImplementor factory = source.getFactory();
-		final EntityPersister subclassPersister;
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
@@ -398,19 +398,20 @@ public class CacheEntityLoaderHelper {
 			);
 		}
 
-		final Object entity;
+		final EntityPersister subclassPersister =
+				factory.getRuntimeMetamodels().getMappingMetamodel()
+						.getEntityDescriptor( entry.getSubclass() );
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
+		final EntityHolder oldHolder = persistenceContext.getEntityHolder( entityKey );
 
-		subclassPersister = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entry.getSubclass() );
+		final Object entity;
 		if ( instanceToLoad != null ) {
 			entity = instanceToLoad;
 		}
 		else {
-			final EntityHolder holder = source.getPersistenceContextInternal().getEntityHolder( entityKey );
-			if ( holder != null && holder.getEntity() != null ) {
+			if ( oldHolder != null && oldHolder.getEntity() != null ) {
 				// Use the entity which might already be
-				entity = holder.getEntity();
+				entity = oldHolder.getEntity();
 			}
 			else {
 				entity = source.instantiate( subclassPersister, entityId );
@@ -430,23 +431,39 @@ public class CacheEntityLoaderHelper {
 		}
 
 		// make it circular-reference safe
-		TwoPhaseLoad.addUninitializedCachedEntity(
-				entityKey,
-				entity,
-				subclassPersister,
-				LockMode.NONE,
-				entry.getVersion(),
-				source
-		);
-
-		final PersistenceContext persistenceContext = source.getPersistenceContext();
-		final Object[] values;
-		final Object version;
+		final EntityHolder holder = persistenceContext.addEntityHolder( entityKey, entity );
+		final Object proxy = holder.getProxy();
 		final boolean isReadOnly;
+		if ( proxy != null ) {
+			// there is already a proxy for this impl
+			// only set the status to read-only if the proxy is read-only
+			final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+			assert lazyInitializer != null;
+			lazyInitializer.setImplementation( entity );
+
+			isReadOnly = lazyInitializer.isReadOnly();
+		}
+		else {
+			isReadOnly = source.isDefaultReadOnly();
+		}
+		holder.setEntityEntry(
+				persistenceContext.addEntry(
+						entity,
+						Status.LOADING,
+						null,
+						null,
+						entityKey.getIdentifier(),
+						entry.getVersion(),
+						LockMode.NONE,
+						true,
+						persister,
+						false
+				)
+		);
 
 		final Type[] types = subclassPersister.getPropertyTypes();
 		// initializes the entity by (desired) side-effect
-		values = ( (StandardCacheEntryImpl) entry ).assemble(
+		final Object[] values = ( (StandardCacheEntryImpl) entry ).assemble(
 				entity,
 				entityId,
 				subclassPersister,
@@ -462,32 +479,23 @@ public class CacheEntityLoaderHelper {
 					source
 			);
 		}
-		version = getVersion( values, subclassPersister );
+		final Object version = getVersion( values, subclassPersister );
 		LOG.tracef( "Cached Version : %s", version );
 
-		final Object proxy = persistenceContext.getProxy( entityKey );
-		if ( proxy != null ) {
-			// there is already a proxy for this impl
-			// only set the status to read-only if the proxy is read-only
-			isReadOnly = HibernateProxy.extractLazyInitializer( proxy ).isReadOnly();
-		}
-		else {
-			isReadOnly = source.isDefaultReadOnly();
-		}
-
-		EntityEntry entityEntry = persistenceContext.addEntry(
-				entity,
-				( isReadOnly ? Status.READ_ONLY : Status.MANAGED ),
-				values,
-				null,
-				entityId,
-				version,
-				LockMode.NONE,
-				true,
-				subclassPersister,
-				false
+		holder.setEntityEntry(
+				persistenceContext.addEntry(
+						entity,
+						isReadOnly ? Status.READ_ONLY : Status.MANAGED,
+						values,
+						null,
+						entityId,
+						version,
+						LockMode.NONE,
+						true,
+						subclassPersister,
+						false
+				)
 		);
-		persistenceContext.getEntityHolder( entityKey ).setEntityEntry( entityEntry );
 		subclassPersister.afterInitialize( entity, source );
 		persistenceContext.initializeNonLazyCollections();
 

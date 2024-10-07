@@ -7,10 +7,16 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.LazyInitializer;
+
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Functionality relating to the Hibernate two-phase loading process, that may be reused by persisters
@@ -39,16 +45,27 @@ public final class TwoPhaseLoad {
 			final LockMode lockMode,
 			final Object version,
 			final SharedSessionContractImplementor session) {
-		session.getPersistenceContextInternal().addEntity(
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final EntityHolder entityHolder = persistenceContext.addEntityHolder( key, object );
+		final EntityEntry entityEntry = persistenceContext.addEntry(
 				object,
 				Status.LOADING,
 				null,
-				key,
+				null,
+				key.getIdentifier(),
 				version,
 				lockMode,
 				true,
 				persister,
 				false
 		);
+		entityHolder.setEntityEntry( entityEntry );
+		final Object proxy = entityHolder.getProxy();
+		if ( proxy != null ) {
+			// there is already a proxy for this impl
+			final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+			assert lazyInitializer != null;
+			lazyInitializer.setImplementation( object );
+		}
 	}
 }

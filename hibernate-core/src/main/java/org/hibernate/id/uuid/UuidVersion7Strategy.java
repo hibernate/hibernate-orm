@@ -44,31 +44,31 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	}
 
-	public record State(Instant timestamp, int sequence) {
+	public record State(Instant lastTimestamp, int lastSequence) {
 		public long millis() {
-			return timestamp.toEpochMilli();
+			return lastTimestamp.toEpochMilli();
 		}
 
 		public long nanos() {
-			return (long) ( ( timestamp.getNano() % 1_000_000L ) * 0.004096 );
+			return (long) ( ( lastTimestamp.getNano() % 1_000_000L ) * 0.004096 );
 		}
 
 		public State getNextState() {
 			final Instant now = Instant.now();
-			if ( timestamp.toEpochMilli() < now.toEpochMilli() ) {
+			if ( lastTimestamp.toEpochMilli() < now.toEpochMilli() ) {
 				return new State(
 						now.truncatedTo( MILLIS ),
 						randomSequence()
 				);
 			}
-			else if ( sequence == 0x3FFF ) {
+			else if ( lastSequence == 0x3FFF ) {
 				return new State(
-						timestamp.plusMillis( 1 ),
+						lastTimestamp.plusMillis( 1 ),
 						Holder.numberGenerator.nextInt( 1 << 14 )
 				);
 			}
 			else {
-				return new State( timestamp, sequence + 1 );
+				return new State( lastTimestamp, lastSequence + 1 );
 			}
 		}
 
@@ -116,7 +116,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
 				// LSB bits 2-15 - counter
-				| ( state.sequence & 0x3FFFL ) << 48
+				| ( state.lastSequence & 0x3FFFL ) << 48
 				// LSB bits 16-63 - pseudorandom data
 				| randomNode()
 		);

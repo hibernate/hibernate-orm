@@ -13,8 +13,9 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 
+import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
+import static org.hibernate.internal.util.ReflectHelper.overridesHashCode;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
@@ -325,17 +326,15 @@ public class RootClass extends PersistentClass implements TableOwner, SoftDeleta
 	 * <em>correct</em>) we simply log a warning.
 	 */
 	private void checkCompositeIdentifier() {
-		if ( getIdentifier() instanceof Component id ) {
-			if ( !id.isDynamic() ) {
-				final Class<?> idClass = id.getComponentClass();
-				if ( idClass != null ) {
-					final String idComponentClassName = idClass.getName();
-					if ( !ReflectHelper.overridesEquals( idClass ) ) {
-						LOG.compositeIdClassDoesNotOverrideEquals( idComponentClassName );
-					}
-					if ( !ReflectHelper.overridesHashCode( idClass ) ) {
-						LOG.compositeIdClassDoesNotOverrideHashCode( idComponentClassName );
-					}
+		if ( getIdentifier() instanceof Component id
+				&& !id.isDynamic() ) {
+			final Class<?> idClass = id.getComponentClass();
+			if ( idClass != null ) {
+				if ( !overridesEquals( idClass ) ) {
+					LOG.compositeIdClassDoesNotOverrideEquals( idClass.getName() );
+				}
+				else if ( !overridesHashCode( idClass ) ) {
+					LOG.compositeIdClassDoesNotOverrideHashCode( idClass.getName() );
 				}
 			}
 		}

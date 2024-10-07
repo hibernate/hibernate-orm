@@ -13,8 +13,12 @@
     <url>http://hibernate.org</url>
   
     <properties>
-      <maven-plugin-api.version>3.9.9</maven-plugin-api.version>
+      <maven-plugin-api.version>4.0.0-beta-4</maven-plugin-api.version>
       <junit-jupiter.version>5.11.2</junit-jupiter.version>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+      <maven.compiler.target>17</maven.compiler.target>
+      <maven.compiler.source>17</maven.compiler.source>
     </properties>
   
     <dependencies>
@@ -22,6 +26,7 @@
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
         <version>${maven-plugin-api.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>

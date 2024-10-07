@@ -215,7 +215,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	 *
 	 * @see JdbcSettings#ALLOW_METADATA_ON_BOOT
 	 */
-	private static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
+	public static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
 		final Boolean allow = getBooleanWrapper( ALLOW_METADATA_ON_BOOT, configurationValues, null );
 		if ( allow != null ) {
 			return allow;

@@ -8,6 +8,7 @@
 package org.hibernate.vibur.internal;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
@@ -17,6 +18,7 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.log.ConnectionInfoLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -29,6 +31,7 @@ import static org.hibernate.cfg.AvailableSettings.ISOLATION;
 import static org.hibernate.cfg.AvailableSettings.PASS;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
  * <p>ViburDBCP connection provider for Hibernate integration.
@@ -60,9 +63,12 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	private static final String VIBUR_PREFIX = VIBUR_CONFIG_PREFIX + ".";
 
 	private ViburDBCPDataSource dataSource = null;
+	private boolean isMetadataAccessAllowed = true;
 
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
+		isMetadataAccessAllowed = allowJdbcMetadataAccess( configurationValues );
+
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Vibur" );
 
 		dataSource = new ViburDBCPDataSource( transform( configurationValues ) );
@@ -97,13 +103,28 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
 				dataSource.getJdbcUrl(),
-				dataSource.getDriverClassName(),
+				// Attempt to resolve the driver name from the dialect, in case it wasn't explicitly set and access to
+				// the database metadata is allowed
+				!StringHelper.isBlank( dataSource.getDriverClassName() ) ? dataSource.getDriverClassName() : extractDriverNameFromMetadata(),
 				dialect.getVersion(),
 				String.valueOf( dataSource.getDefaultAutoCommit() ),
 				dataSource.getDefaultTransactionIsolation(),
 				dataSource.getPoolInitialSize(),
 				dataSource.getPoolMaxSize()
 		);
+	}
+
+	private String extractDriverNameFromMetadata() {
+		if (isMetadataAccessAllowed) {
+			try ( Connection conn = getConnection() ) {
+				DatabaseMetaData dbmd = conn.getMetaData();
+				return dbmd.getDriverName();
+			}
+			catch (SQLException e) {
+				// Do nothing
+			}
+		}
+		return null;
 	}
 
 	@Override

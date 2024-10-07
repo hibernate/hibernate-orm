@@ -42,23 +42,23 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	}
 
-	private record State(long timestamp, int sequence) {
+	private record State(long lastTimestamp, int lastSequence) {
 		public State getNextState() {
 			final long now = instantToTimestamp();
-			if ( this.timestamp < now ) {
+			if ( this.lastTimestamp < now ) {
 				return new State(
 						now,
 						randomSequence()
 				);
 			}
-			else if ( sequence == 0x3FFF ) {
+			else if ( lastSequence == 0x3FFF ) {
 				return new State(
-						this.timestamp + 1,
+						this.lastTimestamp + 1,
 						randomSequence()
 				);
 			}
 			else {
-				return new State( timestamp, sequence + 1 );
+				return new State( lastTimestamp, lastSequence + 1 );
 			}
 		}
 
@@ -104,15 +104,15 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 		return new UUID(
 				// MSB bits 0-47 - most significant 32 bits of the 60-bit starting timestamp
-				state.timestamp << 4 & 0xFFFF_FFFF_FFFF_0000L
+				state.lastTimestamp << 4 & 0xFFFF_FFFF_FFFF_0000L
 				// MSB bits 48-51 - version = 6
 				| 0x6000L
 				// MSB bits 52-63 - least significant 12 bits from the 60-bit starting timestamp
-				| state.timestamp & 0x0FFFL,
+				| state.lastTimestamp & 0x0FFFL,
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
 				// LSB bits 2-15 - clock sequence
-				| ( state.sequence & 0x3FFFL ) << 48
+				| ( state.lastSequence & 0x3FFFL ) << 48
 				// LSB bits 16-63 - pseudorandom data, least significant bit of the first octet is set to 1
 				| randomNode()
 		);

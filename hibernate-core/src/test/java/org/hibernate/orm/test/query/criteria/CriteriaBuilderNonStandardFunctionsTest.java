@@ -521,7 +521,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<EntityOfBasics> from = query.from(EntityOfBasics.class);
-			ParameterExpression<List<Integer>> ids = cb.parameterList(Integer.class);
+			ParameterExpression<List<Integer>> ids = cb.listParameter(Integer.class);
 			query.where( from.get("id").in(ids));
 			assertEquals(3,
 					session.createQuery( query )

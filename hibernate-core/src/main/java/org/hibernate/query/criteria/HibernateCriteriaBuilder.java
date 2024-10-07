@@ -644,7 +644,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param <T> the type of each argument to the parameter
 	 * @since 7.0
 	 */
-	<T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass);
+	<T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass);
 
 	/**
 	 * Create a multivalued parameter accepting multiple arguments
@@ -654,7 +654,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param <T> the type of each argument to the parameter
 	 * @since 7.0
 	 */
-	<T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass, String name);
+	<T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, String name);
 
 	@Override
 	JpaExpression<String> concat(Expression<String> x, Expression<String> y);

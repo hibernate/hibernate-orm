@@ -502,7 +502,7 @@ public class CteTests {
 		scope.inTransaction(
 				session -> {
 					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
-					final JpaParameterExpression<List<Integer>> param = cb.parameterList( Integer.class );
+					final JpaParameterExpression<List<Integer>> param = cb.listParameter( Integer.class );
 					final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
 
 					final JpaCriteriaQuery<Tuple> baseQuery = cb.createTupleQuery();

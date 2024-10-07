@@ -56,3 +56,5 @@ databases/postgis/
 *.swo
 =======
 .java-version
+.vscode
+target

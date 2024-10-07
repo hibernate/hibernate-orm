@@ -54,3 +54,5 @@ databases/postgis/
 # Vim
 *.swp
 *.swo
+=======
+.java-version

@@ -14,6 +14,7 @@
   
     <properties>
       <maven-plugin-api.version>4.0.0-beta-4</maven-plugin-api.version>
+      <maven-invoker-plugin.version>3.8.0</maven-invoker-plugin.version>
       <junit-jupiter.version>5.11.2</junit-jupiter.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -34,6 +35,32 @@
         <version>${junit-jupiter.version}</version>
         <scope>test</scope>
       </dependency>
-  </dependencies>
+    </dependencies>
 
+    <build>
+      <plugins>
+        <plugin>
+          <artifactId>maven-invoker-plugin</artifactId>
+          <version>${maven-invoker-plugin.version}</version>
+          <configuration>
+            <debug>true</debug>
+            <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+            <settingsFile>src/it/settings.xml</settingsFile>
+            <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
+            <preBuildHookScript>verifyBefore</preBuildHookScript>
+            <postBuildHookScript>verifyAfter</postBuildHookScript>
+            <goal>install</goal>
+          </configuration>
+          <executions>
+            <execution>
+              <id>integration-test</id>
+              <goals>
+                <goal>run</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>  
+      </plugins>
+  </build>
+    
 </project>

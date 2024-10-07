@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.hibernate.orm.tooling.maven</groupId>
+  <artifactId>enhance-test</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+
+  <build>
+    <plugins>   
+      <plugin>
+        <groupId>org.hibernate.orm</groupId>
+        <artifactId>hibernate-maven-plugin</artifactId>
+        <version>@project.version@</version>
+        <executions>
+          <execution>
+            <id>enhance</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>enhance</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>targetFolder</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>           
+    </plugins>    
+  </build>
+
+</project>

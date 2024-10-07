@@ -9,10 +9,11 @@ package org.hibernate.agroal.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.DatabaseMetaData;
+import javax.sql.DataSource;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AgroalSettings;
@@ -36,6 +37,7 @@ import io.agroal.api.security.NamePrincipal;
 import io.agroal.api.security.SimplePassword;
 
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
+import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
  * ConnectionProvider based on Agroal connection pool
@@ -64,6 +66,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	public static final String CONFIG_PREFIX = AGROAL_CONFIG_PREFIX + ".";
 	private static final long serialVersionUID = 1L;
 	private AgroalDataSource agroalDataSource = null;
+	private boolean isMetadataAccessAllowed = true;
 
 	// --- Configurable
 
@@ -92,6 +95,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
+		isMetadataAccessAllowed = allowJdbcMetadataAccess( props );
+
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
 			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
@@ -139,9 +144,12 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		final AgroalConnectionPoolConfiguration acpc = agroalDataSource.getConfiguration().connectionPoolConfiguration();
 		final AgroalConnectionFactoryConfiguration acfc = acpc.connectionFactoryConfiguration();
 
+
 		return new DatabaseConnectionInfoImpl(
 				acfc.jdbcUrl(),
-				acfc.connectionProviderClass().toString(),
+				// Attempt to resolve the driver name from the dialect, in case it wasn't explicitly set and access to
+				// the database metadata is allowed
+				acfc.connectionProviderClass() != null ? acfc.connectionProviderClass().toString() : extractDriverNameFromMetadata(),
 				dialect.getVersion(),
 				Boolean.toString( acfc.autoCommit() ),
 				acfc.jdbcTransactionIsolation() != null
@@ -150,6 +158,19 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 				acpc.minSize(),
 				acpc.minSize()
 		);
+	}
+
+	private String extractDriverNameFromMetadata() {
+		if (isMetadataAccessAllowed) {
+			try ( Connection conn = getConnection() ) {
+				DatabaseMetaData dbmd = conn.getMetaData();
+				return dbmd.getDriverName();
+			}
+			catch (SQLException e) {
+				// Do nothing
+			}
+		}
+		return null;
 	}
 
 	@Override

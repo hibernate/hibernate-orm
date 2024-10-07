@@ -8,9 +8,10 @@
 package org.hibernate.hikaricp.internal;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Map;
 import javax.sql.DataSource;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -18,12 +19,15 @@ import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.log.ConnectionInfoLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
+import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
  * HikariCP Connection provider for Hibernate.
@@ -34,6 +38,7 @@ import com.zaxxer.hikari.HikariDataSource;
 public class HikariCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
 	private static final long serialVersionUID = -9131625057941275711L;
+	private boolean isMetadataAccessAllowed = true;
 
 	/**
 	 * HikariCP configuration.
@@ -52,6 +57,8 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
 		try {
+			isMetadataAccessAllowed = allowJdbcMetadataAccess( props );
+
 			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "HikariCP" );
 
 			hcfg = HikariConfigurationUtil.loadConfiguration( props );
@@ -86,13 +93,28 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
 				hcfg.getJdbcUrl(),
-				hcfg.getDriverClassName(),
+				// Attempt to resolve the driver name from the dialect, in case it wasn't explicitly set and access to
+				// the database metadata is allowed
+				!StringHelper.isBlank( hcfg.getDriverClassName() ) ? hcfg.getDriverClassName() : extractDriverNameFromMetadata(),
 				dialect.getVersion(),
 				Boolean.toString( hcfg.isAutoCommit() ),
 				hcfg.getTransactionIsolation(),
 				hcfg.getMinimumIdle(),
 				hcfg.getMaximumPoolSize()
 		);
+	}
+
+	private String extractDriverNameFromMetadata() {
+		if (isMetadataAccessAllowed) {
+			try ( Connection conn = getConnection() ) {
+				DatabaseMetaData dbmd = conn.getMetaData();
+				return dbmd.getDriverName();
+			}
+			catch (SQLException e) {
+				// Do nothing
+			}
+		}
+		return null;
 	}
 
 	@Override

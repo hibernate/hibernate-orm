@@ -15,5 +15,8 @@ public class InnerClassTest extends CompilationTest {
 	@Test
 	public void test() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Person.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Person.PersonId.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Dummy.DummyEmbeddable.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Dummy.Inner.class ) );
 	}
 }

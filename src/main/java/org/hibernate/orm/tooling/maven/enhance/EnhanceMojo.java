@@ -1,5 +1,3 @@
-package org.hibernate.orm.tooling.maven.enhance;
-
 /*
  * Copyright 20024 The Apache Software Foundation.
  *
@@ -15,6 +13,7 @@ package org.hibernate.orm.tooling.maven.enhance;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.hibernate.orm.tooling.maven.enhance;
 
 import org.apache.maven.api.plugin.annotations.Mojo;
 import org.apache.maven.api.plugin.annotations.Parameter;

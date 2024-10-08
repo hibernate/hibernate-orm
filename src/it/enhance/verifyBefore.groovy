@@ -1,10 +1,6 @@
 import java.io.*;
 
-File outputDirectory = new File(basedir, "outputDirectory");
-if (outputDirectory.exists()) {
-    throw new FileNotFoundException("Folder should not exist: " + outputDirectory);
-}
-File targetFolder = new File(basedir, "targetFolder");
+File targetFolder = new File(basedir, "target");
 if (targetFolder.exists()) {
     throw new FileNotFoundException("Folder should not exist: " + targetFolder);
 }

@@ -162,26 +162,11 @@ public class BatchImpl implements Batch {
 		if ( batchPosition == batchSizeToUse ) {
 			notifyObserversImplicitExecution();
 			performExecution();
-			batchPosition = 0;
-			batchExecuted = true;
 		}
 	}
 
 	protected void releaseStatements() {
-		statementGroup.forEachStatement( (tableName, statementDetails) -> {
-			if ( statementDetails.getStatement() == null ) {
-				BATCH_LOGGER.debugf(
-						"PreparedStatementDetails did not contain PreparedStatement on #releaseStatements : %s",
-						statementDetails.getSqlString()
-				);
-			}
-			else {
-				clearBatch( statementDetails );
-			}
-		} );
-
 		statementGroup.release();
-		jdbcCoordinator.afterStatementExecution();
 	}
 
 	protected void clearBatch(PreparedStatementDetails statementDetails) {
@@ -299,8 +284,10 @@ public class BatchImpl implements Batch {
 					}
 				}
 			} );
+			batchExecuted = true;
 		}
 		finally {
+			jdbcCoordinator.afterStatementExecution();
 			batchPosition = 0;
 		}
 	}

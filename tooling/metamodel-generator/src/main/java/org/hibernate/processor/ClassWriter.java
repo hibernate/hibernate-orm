@@ -162,7 +162,7 @@ public final class ClassWriter {
 	}
 
 	private static String getGeneratedClassName(Metamodel entity) {
-		final String className = entity.getSimpleName();
+		final String className = entity.getSimpleName().replace( '.', '_' );
 		return entity.isJakartaDataStyle() ? '_' + className : className + '_';
 	}
 

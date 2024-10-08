@@ -410,7 +410,9 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 			for (final  Element child : element.getEnclosedElements()) {
-				processElement( child );
+				if ( isClassOrRecordType( child ) ) {
+					processElement( child );
+				}
 			}
 		}
 		catch ( ProcessLaterException processLaterException ) {

@@ -20,9 +20,6 @@
             <goals>
               <goal>enhance</goal>
             </goals>
-            <configuration>
-              <outputDirectory>targetFolder</outputDirectory>
-            </configuration>
           </execution>
         </executions>
       </plugin>           

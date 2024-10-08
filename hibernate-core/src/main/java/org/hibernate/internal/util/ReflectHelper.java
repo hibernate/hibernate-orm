@@ -117,6 +117,9 @@ public final class ReflectHelper {
 	 * @return True if clazz defines an equals override.
 	 */
 	public static boolean overridesEquals(Class<?> clazz) {
+		if ( clazz.isRecord() || clazz.isEnum() ) {
+			return true;
+		}
 		Method equals;
 		try {
 			equals = extractEqualsMethod( clazz );
@@ -134,6 +137,9 @@ public final class ReflectHelper {
 	 * @return True if clazz defines an hashCode override.
 	 */
 	public static boolean overridesHashCode(Class<?> clazz) {
+		if ( clazz.isRecord() || clazz.isEnum() ) {
+			return true;
+		}
 		Method hashCode;
 		try {
 			hashCode = extractHashCodeMethod( clazz );

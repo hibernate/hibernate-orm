@@ -1,4 +1,5 @@
 .classpath
+.gradle
 .java-version
 .project
 .vscode

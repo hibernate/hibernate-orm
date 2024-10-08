@@ -1,0 +1,9 @@
+new ByteArrayOutputStream().withStream { os ->
+  exec {
+    executable = 'mvn'
+    args = ['clean', 'install']
+    standardOutput = os
+  }
+  def outputAsString = os.toString()
+  println(outputAsString)
+}

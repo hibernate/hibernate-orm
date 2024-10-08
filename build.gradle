@@ -1,9 +1,8 @@
-new ByteArrayOutputStream().withStream { os ->
-  exec {
-    executable = 'mvn'
-    args = ['clean', 'install']
-    standardOutput = os
+tasks.register("build") {
+  doLast {
+    exec {
+      executable = './mvnw'
+      args = ['clean', 'install']
+    }
   }
-  def outputAsString = os.toString()
-  println(outputAsString)
 }

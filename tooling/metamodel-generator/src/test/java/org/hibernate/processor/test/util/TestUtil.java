@@ -351,9 +351,12 @@ public class TestUtil {
 	}
 
 	private static String getMetaModelClassName(Class<?> clazz, boolean prefix) {
-		return prefix
-				? clazz.getPackageName() + '.' + META_MODEL_CLASS_POSTFIX + clazz.getSimpleName()
-				: clazz.getName() + META_MODEL_CLASS_POSTFIX;
+		final String packageName = clazz.getPackageName();
+		if ( prefix ) {
+			return packageName + '.' + META_MODEL_CLASS_POSTFIX + clazz.getSimpleName();
+		}
+		return packageName
+				+ clazz.getName().substring( packageName.length() ).replace( '$', '_' ) + META_MODEL_CLASS_POSTFIX;
 	}
 
 	private static String getMetaModelClassName(String className) {

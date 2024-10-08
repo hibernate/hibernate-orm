@@ -15,11 +15,11 @@
  */
 package org.hibernate.orm.tooling.maven.enhance;
 
-import org.apache.maven.api.plugin.annotations.Mojo;
-import org.apache.maven.api.plugin.annotations.Parameter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,7 +28,7 @@ import java.io.IOException;
 /**
  * Maven mojo for performing build-time enhancement of entity objects.
  */
-@Mojo(name = "enhance", defaultPhase = "PROCESS_SOURCES")
+@Mojo(name = "enhance", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class EnhanceMojo extends AbstractMojo {
 
 	@Parameter(

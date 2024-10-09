@@ -15,6 +15,7 @@
  */
 package org.hibernate.orm.tooling.maven.enhance;
 
+import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -37,7 +38,14 @@ public class EnhanceMojo extends AbstractMojo {
 			required = true)
     private File outputDirectory;
 
+    @Parameter
+    private FileSet[] fileSets;
+
     public void execute() throws MojoExecutionException {
+        touch();
+    }
+
+    private void touch() throws MojoExecutionException {
         File f = outputDirectory;
         if (!f.exists()) {
             f.mkdirs();
@@ -62,4 +70,5 @@ public class EnhanceMojo extends AbstractMojo {
             }
         }
     }
+
 }

@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,17 +32,19 @@ public class EnhanceMojoTest {
     File tempDir;
 	
     @Test
-    void testExecute() throws Exception {
-    	File buildDir = new File(tempDir, "build");
+    void testTouch() throws Exception {
+        Method m = EnhanceMojo.class.getDeclaredMethod("touch");
+        m.setAccessible(true);
+        Field f = EnhanceMojo.class.getDeclaredField("classesDirectory");
+        f.setAccessible(true);
+        File buildDir = new File(tempDir, "build");
         assertFalse(buildDir.exists());
     	File touchFile = new File(buildDir.getParentFile(), "touch.txt");
         assertFalse(touchFile.exists());
-        Field f = EnhanceMojo.class.getDeclaredField("classesDirectory");
-        f.setAccessible(true);
         EnhanceMojo mojo = new EnhanceMojo();
         assertNull(f.get(mojo));
         f.set(mojo, buildDir);
-        mojo.execute();
+        m.invoke(mojo);
         assertTrue(touchFile.exists());
     }
 

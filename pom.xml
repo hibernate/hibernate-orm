@@ -67,8 +67,7 @@
             <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
             <settingsFile>src/it/settings.xml</settingsFile>
             <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
-            <preBuildHookScript>verifyBefore</preBuildHookScript>
-            <postBuildHookScript>verifyAfter</postBuildHookScript>
+            <postBuildHookScript>verify</postBuildHookScript>
             <goal>install</goal>
           </configuration>
           <executions>

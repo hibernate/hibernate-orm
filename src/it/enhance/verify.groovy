@@ -15,3 +15,7 @@ File classesFolder = new File(targetFolder, "classes");
 if (!classesFolder.exists()) {
      throw new FileNotFoundException("Folder should exist: " + classesFolder);  
 }
+File barClassFile = new File(classesFolder, "org/foo/Bar.class");
+if (!barClassFile.exists()) {
+    throw new FileNotFoundException("File should exist: " + barClassFile);
+}

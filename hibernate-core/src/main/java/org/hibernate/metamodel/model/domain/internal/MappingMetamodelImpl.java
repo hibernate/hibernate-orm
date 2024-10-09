@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -896,5 +897,18 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		}
 
 		return null;
+	}
+
+	/**
+	 * Internal method, allows mapping a persister for one entity name to another entity name
+	 * @deprecated Workaround for hibernate-envers, should be removed after migrating to the new entity classes
+	 */
+	@Internal
+	@Deprecated( forRemoval = true, since = "6.6" )
+	public void copyPersisterForEntityName(String oldEntityName, String newEntityName) {
+		final EntityPersister entityPersister = entityPersisterMap.get( oldEntityName );
+		if ( entityPersister != null ) {
+			entityPersisterMap.put( newEntityName, entityPersister );
+		}
 	}
 }

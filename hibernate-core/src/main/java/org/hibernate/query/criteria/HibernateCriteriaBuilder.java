@@ -4193,6 +4193,37 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	<T> JpaExpression<T> named(Expression<T> expression, String name);
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Set-Returning functions
+
+	/**
+	 * Create a new set-returning function expression.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E> JpaSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args);
+
+	/**
+	 * Creates an unnest function expression to turn an array into a set of rows.
+	 *
+	 * @since 7.0
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E> JpaSetReturningFunction<E> unnestArray(Expression<E[]> array);
+
+	/**
+	 * Creates an unnest function expression to turn an array into a set of rows.
+	 *
+	 * @since 7.0
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

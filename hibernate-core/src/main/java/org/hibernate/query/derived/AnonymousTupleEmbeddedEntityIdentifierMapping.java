@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.derived;
 
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Incubating;
@@ -13,11 +12,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.sql.ast.spi.SqlSelection;
 
 import jakarta.persistence.metamodel.Attribute;
 
@@ -32,7 +31,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 
 	public AnonymousTupleEmbeddedEntityIdentifierMapping(
 			SqmExpressible<?> sqmExpressible,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
@@ -41,7 +40,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 			CompositeIdentifierMapping delegate) {
 		super(
 				sqmExpressible,
-				sqlSelections,
+				sqlTypedMappings,
 				selectionIndex,
 				selectionExpression,
 				compatibleTableExpressions,

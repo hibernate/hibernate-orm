@@ -27,6 +27,7 @@ public class StrictJpaComplianceViolation extends SemanticException {
 		COLLATIONS( "use of collations" ),
 		SUBQUERY_ORDER_BY( "use of ORDER BY clause in subquery" ),
 		FROM_SUBQUERY( "use of subquery in FROM clause" ),
+		FROM_FUNCTION( "use of functions in FROM clause" ),
 		SET_OPERATIONS( "use of set operations" ),
 		CTES( "use of CTEs (common table expressions)" ),
 		LIMIT_OFFSET_CLAUSE( "use of LIMIT/OFFSET clause" ),

@@ -16,6 +16,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 import org.postgresql.util.PGobject;
@@ -23,10 +24,12 @@ import org.postgresql.util.PGobject;
 /**
  * @author Christian Beikov
  */
-public abstract class AbstractPostgreSQLJsonArrayPGObjectType extends JsonArrayJdbcType {
+public class PostgreSQLJsonArrayPGObjectType extends JsonArrayJdbcType {
 
 	private final boolean jsonb;
-	protected AbstractPostgreSQLJsonArrayPGObjectType(boolean jsonb) {
+
+	public PostgreSQLJsonArrayPGObjectType(JdbcType elementJdbcType, boolean jsonb) {
+		super( elementJdbcType );
 		this.jsonb = jsonb;
 	}
 
@@ -41,7 +44,7 @@ public abstract class AbstractPostgreSQLJsonArrayPGObjectType extends JsonArrayJ
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ( (AbstractPostgreSQLJsonArrayPGObjectType) getJdbcType() ).toString(
+				final String stringValue = ( (PostgreSQLJsonArrayPGObjectType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -55,7 +58,7 @@ public abstract class AbstractPostgreSQLJsonArrayPGObjectType extends JsonArrayJ
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ( (AbstractPostgreSQLJsonArrayPGObjectType) getJdbcType() ).toString(
+				final String stringValue = ( (PostgreSQLJsonArrayPGObjectType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -91,7 +94,7 @@ public abstract class AbstractPostgreSQLJsonArrayPGObjectType extends JsonArrayJ
 				if ( object == null ) {
 					return null;
 				}
-				return ( (AbstractPostgreSQLJsonArrayPGObjectType) getJdbcType() ).fromString(
+				return ( (PostgreSQLJsonArrayPGObjectType) getJdbcType() ).fromString(
 						object.toString(),
 						getJavaType(),
 						options

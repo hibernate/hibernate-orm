@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.cte;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
@@ -67,7 +68,15 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
-		return new CteTupleTableGroupProducer( this, aliasStem, sqlSelections, fromClauseAccess );
+		return new CteTupleTableGroupProducer( this, aliasStem, toSqlTypedMappings( sqlSelections ), fromClauseAccess );
+	}
+
+	@Override
+	public CteTupleTableGroupProducer resolveTableGroupProducer(
+			String aliasStem,
+			SqlTypedMapping[] sqlTypedMappings,
+			FromClauseAccess fromClauseAccess) {
+		return new CteTupleTableGroupProducer( this, aliasStem, sqlTypedMappings, fromClauseAccess );
 	}
 
 	public String getCteName() {

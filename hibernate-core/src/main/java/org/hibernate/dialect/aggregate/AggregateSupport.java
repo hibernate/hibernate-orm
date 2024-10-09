@@ -13,6 +13,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -39,13 +41,51 @@ public interface AggregateSupport {
 	 * @param aggregateColumn The type information for the aggregate column
 	 * @param column The column within the aggregate type, for which to return the read expression
 	 */
-	String aggregateComponentCustomReadExpression(
+	default String aggregateComponentCustomReadExpression(
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
 			String columnExpression,
 			AggregateColumn aggregateColumn,
-			Column column);
+			Column column) {
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				columnExpression,
+				aggregateColumn.getTypeCode(),
+				new SqlTypedMappingImpl(
+						column.getTypeName(),
+						column.getLength(),
+						column.getPrecision(),
+						column.getScale(),
+						column.getTemporalPrecision(),
+						column.getType()
+				)
+		);
+	}
+
+	/**
+	 * Returns the custom read expression to use for {@code column}.
+	 * Replaces the given {@code placeholder} in the given {@code template}
+	 * by the custom read expression to use for {@code column}.
+	 *
+	 * @param template The custom read expression template of the column
+	 * @param placeholder The placeholder to replace with the actual read expression
+	 * @param aggregateParentReadExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the read expression
+	 * @param aggregateColumnTypeCode The SQL type code of the aggregate column
+	 * @param column The column within the aggregate type, for which to return the read expression
+	 *
+	 * @since 7.0
+	 */
+	String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column);
 
 	/**
 	 * Returns the assignment expression to use for {@code column},

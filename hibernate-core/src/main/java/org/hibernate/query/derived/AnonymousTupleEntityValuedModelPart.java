@@ -83,7 +83,6 @@ public class AnonymousTupleEntityValuedModelPart
 
 	private final EntityIdentifierMapping identifierMapping;
 	private final DomainType<?> domainType;
-	private final String componentName;
 	private final EntityValuedModelPart delegate;
 //	private final Set<String> targetKeyPropertyNames;
 //	private final int fetchableIndex;
@@ -91,12 +90,10 @@ public class AnonymousTupleEntityValuedModelPart
 	public AnonymousTupleEntityValuedModelPart(
 			EntityIdentifierMapping identifierMapping,
 			DomainType<?> domainType,
-			String componentName,
 			EntityValuedModelPart delegate,
 			int fetchableIndex) {
 		this.identifierMapping = identifierMapping;
 		this.domainType = domainType;
-		this.componentName = componentName;
 		this.delegate = delegate;
 		final EntityPersister persister = ((EntityMappingType) delegate.getPartMappingType())
 				.getEntityPersister();
@@ -158,7 +155,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public String getPartName() {
-		return componentName;
+		return delegate.getPartName();
 	}
 
 	@Override
@@ -500,7 +497,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 	@Override
 	public String getSqlAliasStem() {
-		return getPartName();
+		return ((TableGroupJoinProducer) delegate).getSqlAliasStem();
 	}
 
 	@Override

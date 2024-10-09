@@ -85,8 +85,11 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
@@ -103,7 +106,6 @@ import org.jboss.jandex.Indexer;
 import jakarta.persistence.AttributeConverter;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForInstant;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForUuid;
@@ -763,9 +765,6 @@ public class MetadataBuildingProcess {
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
-		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
-		// which has precedence over the fallback and preferred type registrations
-		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
 
 		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
@@ -790,17 +789,23 @@ public class MetadataBuildingProcess {
 			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
 		}
 
-		final int preferredSqlTypeCodeForArray = getPreferredSqlTypeCodeForArray( serviceRegistry );
-		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
-			adaptToPreferredSqlTypeCode(
-					jdbcTypeRegistry,
-					dialectArrayDescriptor,
-					SqlTypes.ARRAY,
-					preferredSqlTypeCodeForArray
-			);
+		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.JSON_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.JSON ).getDdlTypeCode() == SqlTypes.JSON ) {
+				jdbcTypeRegistry.addTypeConstructor( JsonArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( JsonAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
 		}
-		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.ARRAY, SqlTypes.VARBINARY );
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.XML_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML ).getDdlTypeCode() == SqlTypes.SQLXML ) {
+				jdbcTypeRegistry.addTypeConstructor( XmlArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( XmlAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
 		}
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
@@ -822,10 +827,6 @@ public class MetadataBuildingProcess {
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOMETRY, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOGRAPHY, SqlTypes.GEOMETRY );
-
-		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( JsonArrayAsStringJdbcType.VARCHAR_INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
 
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_BLOB, SqlTypes.BLOB );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_CLOB, SqlTypes.CLOB );

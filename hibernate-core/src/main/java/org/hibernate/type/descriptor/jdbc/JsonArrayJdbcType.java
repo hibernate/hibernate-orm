@@ -9,10 +9,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.JsonHelper;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -20,18 +23,20 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Christian Beikov
  */
-public class JsonArrayJdbcType implements JdbcType {
-	/**
-	 * Singleton access
-	 */
-	public static final JsonArrayJdbcType INSTANCE = new JsonArrayJdbcType();
+public class JsonArrayJdbcType extends ArrayJdbcType {
 
-	protected JsonArrayJdbcType() {
+	public JsonArrayJdbcType(JdbcType elementJdbcType) {
+		super( elementJdbcType );
 	}
 
 	@Override
 	public int getJdbcTypeCode() {
 		return SqlTypes.VARCHAR;
+	}
+
+	@Override
+	public int getDdlTypeCode() {
+		return SqlTypes.JSON;
 	}
 
 	@Override
@@ -54,19 +59,21 @@ public class JsonArrayJdbcType implements JdbcType {
 		if ( string == null ) {
 			return null;
 		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return JsonHelper.arrayFromString( javaType, this, string, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		final JdbcType elementJdbcType = getElementJdbcType();
+		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
+		if ( elementJdbcType instanceof JsonJdbcType jsonElementJdbcType ) {
+			final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
+			return JsonHelper.arrayToString( embeddableMappingType, domainObjects, options );
+		}
+		else {
+			assert !( elementJdbcType instanceof AggregateJdbcType );
+			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
+			return JsonHelper.arrayToString( elementJavaType, elementJdbcType, domainObjects, options );
+		}
 	}
 
 	@Override
@@ -93,17 +100,25 @@ public class JsonArrayJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return fromString( rs.getString( paramIndex ), getJavaType(), options );
+				return getObject( rs.getString( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return fromString( statement.getString( index ), getJavaType(), options );
+				return getObject( statement.getString( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return fromString( statement.getString( name ), getJavaType(), options );
+				return getObject( statement.getString( name ), options );
+			}
+
+			private X getObject(String json, WrapperOptions options) throws SQLException {
+				return ( (JsonArrayJdbcType) getJdbcType() ).fromString(
+						json,
+						getJavaType(),
+						options
+				);
 			}
 
 		};

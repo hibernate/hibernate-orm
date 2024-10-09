@@ -8,10 +8,13 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -20,6 +23,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -47,10 +51,9 @@ import static org.junit.Assert.assertThat;
 )
 @DomainModel(annotatedClasses = EnumSetTest.TableWithEnumSet.class)
 @SessionFactory
-@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase or the driver are trimming trailing zeros in byte arrays")
 public class EnumSetTest {
 
-	private BindableType<Set<MyEnum>> enumSetType;
+	private BasicType<Set<MyEnum>> enumSetType;
 
 	@BeforeAll
 	public void startUp(SessionFactoryScope scope) {
@@ -121,11 +124,17 @@ public class EnumSetTest {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			QueryImplementor<TableWithEnumSet> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_enum_set t WHERE the_set " + op + " :data",
+					"SELECT * FROM table_with_enum_set t WHERE the_set " + op + " " + param,
 					TableWithEnumSet.class
 			);
 			tq.setParameter( "data", EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ), enumSetType );

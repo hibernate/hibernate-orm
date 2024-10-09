@@ -488,18 +488,28 @@ public class HANALegacyDialect extends Dialect {
 				typeConfiguration
 		);
 
-		if ( getVersion().isSameOrAfter(2, 0, 20) ) {
-			// Introduced in 2.0 SPS 02
+		if ( getVersion().isSameOrAfter( 2, 0 ) ) {
+			// Introduced in 2.0 SPS 00
 			functionFactory.jsonValue_no_passing();
 			functionFactory.jsonQuery_no_passing();
 			functionFactory.jsonExists_hana();
-			if ( getVersion().isSameOrAfter(2, 0, 40) ) {
-				// Introduced in 2.0 SPS 04
-				functionFactory.jsonObject_hana();
-				functionFactory.jsonArray_hana();
-				functionFactory.jsonArrayAgg_hana();
-				functionFactory.jsonObjectAgg_hana();
+
+			functionFactory.unnest_hana();
+//			functionFactory.json_table();
+
+			if ( getVersion().isSameOrAfter(2, 0, 20 ) ) {
+				if ( getVersion().isSameOrAfter( 2, 0, 40 ) ) {
+					// Introduced in 2.0 SPS 04
+					functionFactory.jsonObject_hana();
+					functionFactory.jsonArray_hana();
+					functionFactory.jsonArrayAgg_hana();
+					functionFactory.jsonObjectAgg_hana();
+				}
+
+//				functionFactory.xmltable();
 			}
+
+//			functionFactory.xmlextract();
 		}
 	}
 

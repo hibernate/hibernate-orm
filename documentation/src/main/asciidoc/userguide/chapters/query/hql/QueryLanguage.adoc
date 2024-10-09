@@ -8,6 +8,7 @@
 :array-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
 :json-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/json
 :xml-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/xml
+:srf-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
 :extrasdir: extras
 
 This chapter describes Hibernate Query Language (HQL) and Jakarta Persistence Query Language (JPQL).
@@ -1197,32 +1198,33 @@ The following functions deal with SQL array types, which are not supported on ev
 |===
 | Function | Purpose
 
-| `array()` | Creates an array based on the passed arguments
-| `array_list()` | Like `array`, but returns the result as `List<?>`
-| `array_agg()` | Aggregates row values into an array
-| `array_position()` | Determines the position of an element in an array
-| `array_positions()` | Determines all positions of an element in an array
-| `array_positions_list()` | Like `array_positions`, but returns the result as `List<Integer>`
-| `array_length()` | Determines the length of an array
-| `array_concat()` | Concatenates array with each other in order
-| `array_prepend()` | Prepends element to array
-| `array_append()` | Appends element to array
-| `array_contains()` | Whether an array contains an element
-| `array_contains_nullable()` | Whether an array contains an element, supporting `null` element
-| `array_includes()` | Whether an array contains another array
-| `array_includes_nullable()` | Whether an array contains another array, supporting `null` elements
-| `array_intersects()` | Whether an array holds at least one element of another array
-| `array_intersects_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
-| `array_get()` | Accesses the element of an array by index
-| `array_set()` | Creates array copy with given element at given index
-| `array_remove()` | Creates array copy with given element removed
-| `array_remove_index()` | Creates array copy with the element at the given index removed
-| `array_slice()` | Creates a sub-array of the based on lower and upper index
-| `array_replace()` | Creates array copy replacing a given element with another
-| `array_trim()` | Creates array copy trimming the last _N_ elements
-| `array_fill()` | Creates array filled with the same element _N_ times
-| `array_fill_list()` | Like `array_fill`, but returns the result as `List<?>`
-| `array_to_string()` | String representation of array
+| <<hql-array-constructor-functions,`array()`>> | Creates an array based on the passed arguments
+| <<hql-array-constructor-functions,`array_list()`>> | Like `array`, but returns the result as `List<?>`
+| <<hql-array-aggregate-functions,`array_agg()`>> | Aggregates row values into an array
+| <<hql-array-position-functions,`array_position()`>> | Determines the position of an element in an array
+| <<hql-array-positions-functions,`array_positions()`>> | Determines all positions of an element in an array
+| <<hql-array-positions-functions,`array_positions_list()`>> | Like `array_positions`, but returns the result as `List<Integer>`
+| <<hql-array-length-functions,`array_length()`>> | Determines the length of an array
+| <<hql-array-concat-functions,`array_concat()`>> | Concatenates array with each other in order
+| <<hql-array-prepend-functions,`array_prepend()`>> | Prepends element to array
+| <<hql-array-append-functions,`array_append()`>> | Appends element to array
+| <<hql-array-contains-functions,`array_contains()`>> | Whether an array contains an element
+| <<hql-array-contains-functions,`array_contains_nullable()`>> | Whether an array contains an element, supporting `null` element
+| <<hql-array-includes-example,`array_includes()`>> | Whether an array contains another array
+| <<hql-array-includes-example,`array_includes_nullable()`>> | Whether an array contains another array, supporting `null` elements
+| <<hql-array-intersects-functions,`array_intersects()`>> | Whether an array holds at least one element of another array
+| <<hql-array-intersects-functions,`array_intersects_nullable()`>> | Whether an array holds at least one element of another array, supporting `null` elements
+| <<hql-array-get-functions,`array_get()`>> | Accesses the element of an array by index
+| <<hql-array-set-functions,`array_set()`>> | Creates array copy with given element at given index
+| <<hql-array-remove-functions,`array_remove()`>> | Creates array copy with given element removed
+| <<hql-array-remove-index-functions,`array_remove_index()`>> | Creates array copy with the element at the given index removed
+| <<hql-array-slice-functions,`array_slice()`>> | Creates a sub-array of the based on lower and upper index
+| <<hql-array-replace-functions,`array_replace()`>> | Creates array copy replacing a given element with another
+| <<hql-array-trim-functions,`array_trim()`>> | Creates array copy trimming the last _N_ elements
+| <<hql-array-fill-functions,`array_fill()`>> | Creates array filled with the same element _N_ times
+| <<hql-array-fill-functions,`array_fill_list()`>> | Like `array_fill`, but returns the result as `List<?>`
+| <<hql-array-to-string-functions,`array_to_string()`>> | String representation of array
+| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
 |===
 
 [[hql-array-constructor-functions]]
@@ -1634,6 +1636,32 @@ which is a short version of `concat('[', array_to_string(array, ',', 'null'), ']
 [source, java, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-hql-example]
+----
+====
+
+[[hql-array-unnest]]
+===== `unnest()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which turns the single array argument into rows.
+Returns no rows if the array argument is `null` or an empty array.
+The `index()` function can be used to access the 1-based array index of an array element.
+
+[[hql-array-unnest-struct-example]]
+====
+[source, java, indent=0]
+----
+include::{array-example-dir-hql}/ArrayUnnestStructTest.java[tags=hql-array-unnest-aggregate-with-ordinality-example]
+----
+====
+
+The `lateral` keyword is mandatory if the argument refers to a from node item of the same query level.
+Basic plural attributes can also be joined directly, which is syntax sugar for `lateral unnest(...)`.
+
+[[hql-array-unnest-example]]
+====
+[source, java, indent=0]
+----
+include::{array-example-dir-hql}/ArrayUnnestTest.java[tags=hql-array-unnest-example]
 ----
 ====
 
@@ -2916,6 +2944,48 @@ The CTE name can be used for a `from` clause root or a `join`, similar to entity
 
 Refer to the <<hql-with-cte,with clause>> chapter for details about CTEs.
 
+[[hql-from-set-returning-functions]]
+==== Set-returning functions in `from` clause
+
+A set-returning function is a function that produces rows instead of a single scalar value
+and is exclusively used in the `from` clause, either as root node or join target.
+
+The `index()` function can be used to access the 1-based index of a returned row.
+
+The following set-returning functions are available on many platforms:
+
+|===
+| Function | purpose
+
+| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
+//| `generate_series()` | Creates a series of values as rows
+|===
+
+To use set returning functions defined in the database, it is required to register them in a `FunctionContributor`:
+
+[[hql-from-set-returning-functions-contributor-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/CustomSetReturningFunctionTest.java[tags=hql-set-returning-function-contributor-example]
+----
+====
+
+After that, the function can be used in the `from` clause:
+
+[[hql-from-set-returning-functions-custom-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/CustomSetReturningFunctionTest.java[tags=hql-set-returning-function-custom-example]
+----
+====
+
+NOTE: The `index()` function represents the idea of the `with ordinality` SQL syntax,
+which is not supported on some databases for user defined functions.
+Hibernate ORM tries to emulate this feature by wrapping invocations as lateral subqueries and using `row_number()`,
+which may lead to worse performance.
+
 [[hql-join]]
 === Declaring joined entities
 
@@ -3130,6 +3200,17 @@ Lateral joins are particularly useful for computing top-N elements of multiple g
 Most databases support some flavor of `join lateral`, and Hibernate emulates the feature for databases which don't.
 But emulation is neither very efficient, nor does it support all possible query shapes, so it's important to test on your target database.
 ====
+
+[[hql-join-set-returning-function]]
+==== Set-returning functions in joins
+
+A `join` clause may contain a set-returning function, either:
+
+- an uncorrelated set-returning function, which is almost the same as a <<hql-from-set-returning-functions,set-returning function in the `from` clause>>, except that it may have an `on` restriction, or
+- a _lateral join_, which is a correlated set-returning function, and may refer to other roots declared earlier in the same `from` clause.
+
+The `lateral` keyword just distinguishes the two cases.
+A lateral join may be an inner or left outer join, but not a right join, nor a full join.
 
 [[hql-implicit-join]]
 ==== Implicit association joins (path expressions)

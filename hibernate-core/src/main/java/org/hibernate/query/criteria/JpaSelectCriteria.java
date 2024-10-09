@@ -45,6 +45,15 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 */
 	<X> JpaRoot<X> from(JpaCteCriteria<X> cte);
 
+	/**
+	 * Create and add a query root corresponding to the given set-returning function,
+	 * forming a cartesian product with any existing roots.
+	 *
+	 * @param function the set-returning function
+	 * @return query root corresponding to the given function
+	 */
+	<X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function);
+
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);
 

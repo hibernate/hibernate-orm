@@ -52,6 +52,7 @@ import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSetJoin;
+import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaValues;
@@ -3733,5 +3734,23 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Incubating
 	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
 		return criteriaBuilder.named( expression, name );
+	}
+
+	@Incubating
+	@Override
+	public <E> JpaSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args) {
+		return criteriaBuilder.setReturningFunction( name, args );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaSetReturningFunction<E> unnestArray(Expression<E[]> array) {
+		return criteriaBuilder.unnestArray( array );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
+		return criteriaBuilder.unnestCollection( collection );
 	}
 }

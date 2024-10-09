@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -26,8 +27,10 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -35,12 +38,14 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -621,10 +626,90 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join;
 	}
 
+	@Override
+	public <X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function, SqmJoinType joinType) {
+		return join( function, joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function) {
+		return join( function, SqmJoinType.INNER, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType) {
+		return join( function, joinType, false );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function) {
+		return join( function, SqmJoinType.INNER, false );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType, boolean lateral) {
+		validateComplianceFromFunction();
+		//noinspection unchecked
+		final SqmFunctionJoin<X> join = new SqmFunctionJoin<>( (SqmSetReturningFunction<X>) function, alias, joinType, lateral, (SqmRoot<Object>) findRoot() );
+		//noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) join );
+		return join;
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(String arrayAttributeName) {
+		return joinArray( arrayAttributeName, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(String arrayAttributeName, SqmJoinType joinType) {
+		return join( nodeBuilder().unnestArray( get( arrayAttributeName ) ), joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute) {
+		return joinArray( arrayAttribute, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute, SqmJoinType joinType) {
+		return join( nodeBuilder().unnestArray( get( arrayAttribute ) ), joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName) {
+		return joinArrayCollection( collectionAttributeName, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName, SqmJoinType joinType) {
+		return join( nodeBuilder().unnestCollection( get( collectionAttributeName ) ), joinType, true );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute) {
+		return joinArrayCollection( collectionAttribute, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaFunctionJoin<X> joinArrayCollection(
+			SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute,
+			SqmJoinType joinType) {
+		return join( nodeBuilder().unnestCollection( get( collectionAttribute ) ), joinType, true );
+	}
+
 	private void validateComplianceFromSubQuery() {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries in the from clause. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
+	}
+
+	private void validateComplianceFromFunction() {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support functions in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
 		}
 	}

@@ -284,6 +284,14 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		addTypeConstructor( jdbcTypeConstructor.getDefaultSqlTypeCode(), jdbcTypeConstructor );
 	}
 
+	public void addTypeConstructorIfAbsent(int jdbcTypeCode, JdbcTypeConstructor jdbcTypeConstructor) {
+		descriptorConstructorMap.putIfAbsent( jdbcTypeCode, jdbcTypeConstructor );
+	}
+
+	public void addTypeConstructorIfAbsent(JdbcTypeConstructor jdbcTypeConstructor) {
+		addTypeConstructorIfAbsent( jdbcTypeConstructor.getDefaultSqlTypeCode(), jdbcTypeConstructor );
+	}
+
 	private static final class TypeConstructedJdbcTypeKey {
 		private final int typeConstructorTypeCode;
 		private final Object jdbcTypeOrBasicType;

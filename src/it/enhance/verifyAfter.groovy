@@ -11,3 +11,7 @@ File touchFile = new File(targetFolder, "touch.txt");
 if (!touchFile.exists()) {
     throw new FileNotFoundException("File should exist: " + touchFile);
 }
+File classesFolder = new File(targetFolder, "classes");
+if (!classesFolder.exists()) {
+     throw new FileNotFoundException("Folder should exist: " + classesFolder);  
+}

@@ -25,6 +25,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Maven mojo for performing build-time enhancement of entity objects.
@@ -32,7 +34,9 @@ import java.io.IOException;
 @Mojo(name = "enhance", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class EnhanceMojo extends AbstractMojo {
 
-	@Parameter(
+	private List<File> sourceSet = new ArrayList<File>();
+
+    @Parameter(
 			defaultValue = "${project.build.directory}/classes", 
 			readonly = true, 
 			required = true)
@@ -42,7 +46,24 @@ public class EnhanceMojo extends AbstractMojo {
     private FileSet[] fileSets;
 
     public void execute() throws MojoExecutionException {
+        assembleSourceSet();
         touch();
+    }
+
+    private void assembleSourceSet() {
+        addToSourceSetIfNeeded(classesDirectory);
+    }
+
+    private void addToSourceSetIfNeeded(File file) {
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                addToSourceSetIfNeeded(child);
+            }
+        } else {
+            if (file.getName().endsWith(".class")) {
+                sourceSet.add(file);
+            }
+        }
     }
 
     private void touch() throws MojoExecutionException {

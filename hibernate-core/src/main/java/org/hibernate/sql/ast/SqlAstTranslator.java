@@ -54,5 +54,7 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	 */
 	Set<String> getAffectedTableNames();
 
+	void addAffectedTableName(String tableName);
+
 	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 }

@@ -183,6 +183,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
@@ -494,6 +495,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public Set<String> getAffectedTableNames() {
 		return affectedTableNames;
+	}
+
+	@Override
+	public void addAffectedTableName(String tableName) {
+		affectedTableNames.add( tableName );
 	}
 
 	protected Statement getStatement() {
@@ -1227,11 +1233,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitSetAssignment(Assignment assignment) {
-		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		final Assignable assignable = assignment.getAssignable();
+		if ( assignable instanceof SqmPathInterpretation<?> ) {
+			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+			if ( affectedTableName != null ) {
+				addAffectedTableName( affectedTableName );
+			}
+		}
+		final List<ColumnReference> columnReferences = assignable.getColumnReferences();
+		final Expression assignedValue = assignment.getAssignedValue();
 		if ( columnReferences.size() == 1 ) {
 			columnReferences.get( 0 ).appendColumnForWrite( this, null );
 			appendSql( '=' );
-			final Expression assignedValue = assignment.getAssignedValue();
 			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
 			if ( sqlTuple != null ) {
 				assert sqlTuple.getExpressions().size() == 1;
@@ -1241,7 +1254,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				assignedValue.accept( this );
 			}
 		}
-		else {
+		else if ( assignedValue instanceof SelectStatement ) {
 			char separator = OPEN_PARENTHESIS;
 			for ( ColumnReference columnReference : columnReferences ) {
 				appendSql( separator );
@@ -1249,11 +1262,31 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = COMMA_SEPARATOR_CHAR;
 			}
 			appendSql( ")=" );
-			assignment.getAssignedValue().accept( this );
+			assignedValue.accept( this );
+		}
+		else {
+			assert assignedValue instanceof SqlTupleContainer;
+			final List<? extends Expression> expressions = ( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
+			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendSql( '=' );
+			expressions.get( 0 ).accept( this );
+			for ( int i = 1; i < columnReferences.size(); i++ ) {
+				appendSql( ',' );
+				columnReferences.get( i ).appendColumnForWrite( this, null );
+				appendSql( '=' );
+				expressions.get( i ).accept( this );
+			}
 		}
 	}
 
 	protected void visitSetAssignmentEmulateJoin(Assignment assignment, UpdateStatement statement) {
+		final Assignable assignable = assignment.getAssignable();
+		if ( assignable instanceof SqmPathInterpretation<?> ) {
+			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+			if ( affectedTableName != null ) {
+				addAffectedTableName( affectedTableName );
+			}
+		}
 		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 		final Expression valueExpression;
 		if ( columnReferences.size() == 1 ) {
@@ -2135,17 +2168,39 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					visitSetAssignment( assignment );
 				}
 				else {
-					assert assignment.getAssignable().getColumnReferences().size() == 1;
-					final Expression expression = new CaseSearchedExpression(
-							(MappingModelExpressible) assignment.getAssignedValue().getExpressionType(),
-							List.of(
-									new CaseSearchedExpression.WhenFragment(
-											predicate, assignment.getAssignedValue()
+					final Assignable assignable = assignment.getAssignable();
+					final Expression assignedValue = assignment.getAssignedValue();
+					final Expression expression;
+					if ( assignable.getColumnReferences().size() == 1 ) {
+						expression = new CaseSearchedExpression(
+								(MappingModelExpressible) assignedValue.getExpressionType(),
+								List.of( new CaseSearchedExpression.WhenFragment( predicate, assignedValue ) ),
+								assignable.getColumnReferences().get( 0 )
+						);
+					}
+					else {
+						assert assignedValue instanceof SqlTupleContainer;
+						final List<? extends Expression> expressions =
+								( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
+						final List<Expression> tupleExpressions = new ArrayList<>( expressions.size() );
+						for ( int i = 0; i < expressions.size(); i++ ) {
+							tupleExpressions.add(
+									new CaseSearchedExpression(
+											(MappingModelExpressible) expressions.get( i ).getExpressionType(),
+											List.of( new CaseSearchedExpression.WhenFragment(
+													predicate,
+													expressions.get( i )
+											) ),
+											assignable.getColumnReferences().get( i )
 									)
-							),
-							assignment.getAssignable().getColumnReferences().get( 0 )
-					);
-					visitSetAssignment( new Assignment( assignment.getAssignable(), expression ) );
+							);
+						}
+						expression = new SqlTuple(
+								tupleExpressions,
+								(MappingModelExpressible) assignedValue.getExpressionType()
+						);
+					}
+					visitSetAssignment( new Assignment( assignable, expression ) );
 				}
 			}
 		}

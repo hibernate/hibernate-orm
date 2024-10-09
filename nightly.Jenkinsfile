@@ -32,7 +32,7 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'mariadb_10_4' ),
 		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_12' ),
-// 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
+		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
 		new BuildEnvironment( dbName: 'sybase_jconn' ),
@@ -137,8 +137,8 @@ stage('Build') {
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "db2_10_5":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
+									docker.withRegistry('https://quay.io', 'hibernate.quay.io') {
+										docker.image('hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
 									}
 									sh "./docker_db.sh db2_10_5"
 									state[buildEnv.tag]['containerName'] = "db2"

@@ -232,7 +232,7 @@ db2_11_5() {
 db2_10_5() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f db2 || true
     # The sha represents the tag 10.5.0.5-3.10.0
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e LICENSE=accept -p 50000:50000 -d ${DB_IMAGE_DB2_10_5:-docker.io/ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b} db2start
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e LICENSE=accept -p 50000:50000 -d ${DB_IMAGE_DB2_10_5:-quay.io/hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b} db2start
     # Give the container some time to start
     OUTPUT=
     while [[ $OUTPUT != *"DB2START"* ]]; do

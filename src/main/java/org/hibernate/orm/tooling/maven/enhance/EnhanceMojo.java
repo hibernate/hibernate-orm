@@ -33,10 +33,10 @@ import java.io.IOException;
 public class EnhanceMojo extends AbstractMojo {
 
 	@Parameter(
-			defaultValue = "${project.build.directory}", 
+			defaultValue = "${project.build.directory}/classes", 
 			readonly = true, 
 			required = true)
-    private File outputDirectory;
+    private File classesDirectory;
 
     @Parameter
     private FileSet[] fileSets;
@@ -46,7 +46,7 @@ public class EnhanceMojo extends AbstractMojo {
     }
 
     private void touch() throws MojoExecutionException {
-        File f = outputDirectory;
+        File f = classesDirectory.getParentFile();
         if (!f.exists()) {
             f.mkdirs();
         }

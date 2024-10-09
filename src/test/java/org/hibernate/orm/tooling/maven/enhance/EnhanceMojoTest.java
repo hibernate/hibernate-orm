@@ -34,15 +34,14 @@ public class EnhanceMojoTest {
     void testExecute() throws Exception {
     	File buildDir = new File(tempDir, "build");
         assertFalse(buildDir.exists());
-    	File touchFile = new File(buildDir, "touch.txt");
+    	File touchFile = new File(buildDir.getParentFile(), "touch.txt");
         assertFalse(touchFile.exists());
-        Field f = EnhanceMojo.class.getDeclaredField("outputDirectory");
+        Field f = EnhanceMojo.class.getDeclaredField("classesDirectory");
         f.setAccessible(true);
         EnhanceMojo mojo = new EnhanceMojo();
         assertNull(f.get(mojo));
         f.set(mojo, buildDir);
         mojo.execute();
-        assertTrue(buildDir.exists());
         assertTrue(touchFile.exists());
     }
 

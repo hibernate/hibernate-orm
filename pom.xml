@@ -13,6 +13,7 @@
     <url>http://hibernate.org</url>
   
     <properties>
+      <hibernate-core.version>7.0.0.Beta1</hibernate-core.version>
       <maven-file-management.version>3.1.0</maven-file-management.version>
       <maven-invoker-plugin.version>3.8.0</maven-invoker-plugin.version>
       <maven-plugin-api.version>3.9.9</maven-plugin-api.version>
@@ -43,6 +44,11 @@
         <version>${maven-plugin-annotations.version}</version>
         <scope>provided</scope>
       </dependency>      
+      <dependency>
+        <groupId>org.hibernate.orm</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>${hibernate-core.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>

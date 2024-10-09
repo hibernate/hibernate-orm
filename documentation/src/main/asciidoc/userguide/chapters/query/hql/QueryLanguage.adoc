@@ -820,7 +820,23 @@ The function `str(x)` is a synonym for `cast(x as String)`.
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-str-function-example]
 ----
+
 ====
+
+[[hql-function-ordinal]]
+===== `ordinal()`
+
+The function `ordinal(x)` extracts the ordinal value of an enum.
+It supports both enum fields mapped as `ORDINAL` and `STRING`.
+
+====
+[source, java, indent=0]
+----
+include::{example-dir-hql}/EnumTest.java[tags=hql-ordinal-function-example]
+----
+
+====
+
 
 [[hql-functions-null]]
 ==== Functions for working with null values

@@ -76,15 +76,21 @@ public class EnumTest {
 	@Test
 	public void testOrdinalFunctionOnStringEnum(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//tag::hql-ordinal-function-example[]
+			// enum Gender {
+			//	MALE,
+			//	FEMALE,
+			//	OTHER
+			//}
 			List<Integer> femaleOrdinalFromString = session.createQuery(
-							"select ordinal(gender)" +
-									"from EntityOfBasics e " +
-									"where e.gender = :gender",
-							Integer.class
-					)
+					"select ordinal(gender)" +
+					"from EntityOfBasics e " +
+					"where e.gender = :gender",
+					Integer.class )
 					.setParameter( "gender", EntityOfBasics.Gender.FEMALE )
 					.getResultList();
-
+			//	This will return List.of(1)
+			//end::hql-ordinal-function-example[]
 			assertThat( femaleOrdinalFromString ).hasSize( 1 );
 			assertThat( femaleOrdinalFromString ).hasSameElementsAs( List.of( 1 ) );
 		} );

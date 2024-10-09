@@ -7,24 +7,30 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Christian Beikov
  */
 public class SqlTypedMappingImpl implements SqlTypedMapping {
 
-	private final String columnDefinition;
-	private final Long length;
-	private final Integer precision;
-	private final Integer scale;
-	private final Integer temporalPrecision;
+	private final @Nullable String columnDefinition;
+	private final @Nullable Long length;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
+	private final @Nullable Integer temporalPrecision;
 	private final JdbcMapping jdbcMapping;
 
+	public SqlTypedMappingImpl(JdbcMapping jdbcMapping) {
+		this( null, null, null, null, null, jdbcMapping );
+	}
+
 	public SqlTypedMappingImpl(
-			String columnDefinition,
-			Long length,
-			Integer precision,
-			Integer scale,
-			Integer temporalPrecision,
+			@Nullable String columnDefinition,
+			@Nullable Long length,
+			@Nullable Integer precision,
+			@Nullable Integer scale,
+			@Nullable Integer temporalPrecision,
 			JdbcMapping jdbcMapping) {
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
 		this.columnDefinition = columnDefinition == null ? null : columnDefinition.intern();
@@ -36,27 +42,27 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 	}
 
 	@Override
-	public String getColumnDefinition() {
+	public @Nullable String getColumnDefinition() {
 		return columnDefinition;
 	}
 
 	@Override
-	public Long getLength() {
+	public @Nullable Long getLength() {
 		return length;
 	}
 
 	@Override
-	public Integer getPrecision() {
+	public @Nullable Integer getPrecision() {
 		return precision;
 	}
 
 	@Override
-	public Integer getTemporalPrecision() {
+	public @Nullable Integer getTemporalPrecision() {
 		return temporalPrecision;
 	}
 
 	@Override
-	public Integer getScale() {
+	public @Nullable Integer getScale() {
 		return scale;
 	}
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.derived;
 
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Incubating;
@@ -14,11 +13,11 @@ import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.sql.ast.spi.SqlSelection;
 
 import jakarta.persistence.metamodel.Attribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,7 +33,7 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 
 	public AnonymousTupleNonAggregatedEntityIdentifierMapping(
 			SqmExpressible<?> sqmExpressible,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
@@ -44,7 +43,7 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 			NonAggregatedIdentifierMapping delegate) {
 		super(
 				sqmExpressible,
-				sqlSelections,
+				sqlTypedMappings,
 				selectionIndex,
 				selectionExpression,
 				compatibleTableExpressions,

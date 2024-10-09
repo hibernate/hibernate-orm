@@ -73,7 +73,9 @@ public class PostgreSQLArrayJdbcType extends ArrayJdbcType {
 					);
 					objects = new Object[domainObjects.length];
 					for ( int i = 0; i < domainObjects.length; i++ ) {
-						objects[i] = aggregateJdbcType.createJdbcValue( domainObjects[i], options );
+						if ( domainObjects[i] != null ) {
+							objects[i] = aggregateJdbcType.createJdbcValue( domainObjects[i], options );
+						}
 					}
 				}
 				else {

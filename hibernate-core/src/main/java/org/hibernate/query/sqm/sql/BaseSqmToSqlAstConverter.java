@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.sql;
 
-import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
@@ -184,6 +183,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -231,6 +231,7 @@ import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
@@ -244,6 +245,7 @@ import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
@@ -354,6 +356,7 @@ import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.EmbeddableFunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
@@ -430,6 +433,7 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static java.util.Collections.singletonList;
@@ -722,6 +726,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public @Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable) {
+		return getFromClauseAccess().findTableGroupByIdentificationVariable( identificationVariable );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlAstCreationState
@@ -2783,7 +2791,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqlSelections,
 					lastPoppedFromClauseIndex
 			);
-			final List<String> columnNames = tupleType.determineColumnNames();
+			final List<String> columnNames = tableGroupProducer.getColumnNames();
 			final SqlAliasBase sqlAliasBase = getSqlAliasBaseGenerator().createSqlAliasBase(
 					derivedRoot.getExplicitAlias() == null ? "derived" : derivedRoot.getExplicitAlias()
 			);
@@ -2798,6 +2806,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					false,
 					true,
 					creationContext.getSessionFactory()
+			);
+		}
+		else if ( sqmRoot instanceof SqmFunctionRoot functionRoot ) {
+			tableGroup = createFunctionTableGroup(
+					functionRoot.getFunction(),
+					functionRoot.getNavigablePath(),
+					functionRoot.getExplicitAlias(),
+					false,
+					true
 			);
 		}
 		else if ( sqmRoot instanceof SqmCteRoot<?> ) {
@@ -2844,6 +2861,39 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// We also need to register the table group for the treats
 		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
 			getFromClauseAccess().registerTableGroup( sqmTreat.getNavigablePath(), tableGroup );
+		}
+	}
+
+	private TableGroup createFunctionTableGroup(
+			SqmSetReturningFunction<?> function,
+			NavigablePath navigablePath,
+			String explicitAlias,
+			boolean lateral,
+			boolean canUseInnerJoins) {
+		if ( !lateral ) {
+			// Temporarily push an empty FromClauseIndex to disallow access to aliases from the top query
+			// Only lateral subqueries are allowed to see the aliases
+			fromClauseIndexStack.push( new FromClauseIndex( null ) );
+		}
+		final boolean oldInNestedContext = inNestedContext;
+		inNestedContext = true;
+		final Supplier<MappingModelExpressible<?>> oldFunctionImpliedResultTypeAccess = functionImpliedResultTypeAccess;
+		functionImpliedResultTypeAccess = inferrableTypeAccessStack.getCurrent();
+		inferrableTypeAccessStack.push( () -> null );
+		try {
+			final SqlAliasBase sqlAliasBase = getSqlAliasBaseGenerator().createSqlAliasBase(
+					explicitAlias == null ? "derived" : explicitAlias
+			);
+			final String identifierVariable = sqlAliasBase.generateNewAlias();
+			return function.convertToSqlAst( navigablePath, identifierVariable, lateral, canUseInnerJoins, this );
+		}
+		finally {
+			inferrableTypeAccessStack.pop();
+			functionImpliedResultTypeAccess = oldFunctionImpliedResultTypeAccess;
+			inNestedContext = oldInNestedContext;
+			if ( !lateral ) {
+				fromClauseIndexStack.pop();
+			}
 		}
 	}
 
@@ -3298,6 +3348,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( sqmJoin instanceof SqmDerivedJoin<?> ) {
 			return consumeDerivedJoin( ( (SqmDerivedJoin<?>) sqmJoin ), lhsTableGroup, transitive );
 		}
+		else if ( sqmJoin instanceof SqmFunctionJoin<?> functionJoin ) {
+			return consumeFunctionJoin( functionJoin, lhsTableGroup, transitive );
+		}
 		else if ( sqmJoin instanceof SqmCteJoin<?> ) {
 			return consumeCteJoin( ( (SqmCteJoin<?>) sqmJoin ), lhsTableGroup, transitive );
 		}
@@ -3574,7 +3627,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqlSelections,
 				lastPoppedFromClauseIndex
 		);
-		final List<String> columnNames = tupleType.determineColumnNames();
+		final List<String> columnNames = tableGroupProducer.getColumnNames();
 		final SqlAliasBase sqlAliasBase = getSqlAliasBaseGenerator().createSqlAliasBase(
 				sqmJoin.getExplicitAlias() == null ? "derived" : sqmJoin.getExplicitAlias()
 		);
@@ -3612,6 +3665,39 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			consumeExplicitJoins( sqmJoin, queryPartTableGroup );
 		}
 		return queryPartTableGroup;
+	}
+
+	private TableGroup consumeFunctionJoin(SqmFunctionJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {
+		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
+		final TableGroup tableGroup = createFunctionTableGroup(
+				sqmJoin.getFunction(),
+				sqmJoin.getNavigablePath(),
+				sqmJoin.getExplicitAlias(),
+				sqmJoin.isLateral(),
+				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS
+		);
+		getFromClauseIndex().register( sqmJoin, tableGroup );
+
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				tableGroup.getNavigablePath(),
+				correspondingSqlJoinType,
+				tableGroup,
+				null
+		);
+		parentTableGroup.addTableGroupJoin( tableGroupJoin );
+
+		// add any additional join restrictions
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
+			currentlyProcessingJoin = sqmJoin;
+			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
+			currentlyProcessingJoin = oldJoin;
+		}
+
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin, tableGroup );
+		}
+		return tableGroup;
 	}
 
 	private TableGroup consumeCteJoin(SqmCteJoin<?> sqmJoin, TableGroup parentTableGroup, boolean transitive) {
@@ -4040,6 +4126,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public Object visitRootFunction(SqmFunctionRoot sqmRoot) {
+		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
+		if ( resolved != null ) {
+			log.tracef( "SqmFunctionRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
+			return visitTableGroup( resolved, sqmRoot );
+		}
+
+		throw new InterpretationException( "SqmFunctionRoot not yet resolved to TableGroup" );
+	}
+
+	@Override
 	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
 		if ( resolved != null ) {
@@ -4070,6 +4167,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		throw new InterpretationException( "SqmDerivedJoin not yet resolved to TableGroup" );
+	}
+
+	@Override
+	public Object visitQualifiedFunctionJoin(SqmFunctionJoin<?> sqmJoin) {
+		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
+		if ( existing != null ) {
+			log.tracef( "SqmFunctionJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+			return visitTableGroup( existing, sqmJoin );
+		}
+
+		throw new InterpretationException( "SqmFunctionJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
@@ -4129,7 +4237,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			actualModelPart = tableGroupModelPart;
 			navigablePath = tableGroup.getNavigablePath();
 		}
+		return createExpression( tableGroup, navigablePath, actualModelPart, path );
+	}
 
+	private Expression createExpression(
+			TableGroup tableGroup,
+			NavigablePath navigablePath,
+			ModelPart actualModelPart,
+			SqmPath<?> path) {
 		final Expression result;
 		if ( actualModelPart instanceof EntityValuedModelPart ) {
 			final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) actualModelPart;
@@ -4334,12 +4449,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						tableGroup
 				);
 			}
-			else if ( actualModelPart instanceof AnonymousTupleTableGroupProducer ) {
-				throw new SemanticException(
-						"The derived SqmFrom" + ( (AnonymousTupleType<?>) path.getReferencedPathSource() ).getComponentNames() + " can not be used in a context where the expression needs to " +
-								"be expanded to identifying parts, because a derived model part does not have identifying parts. " +
-								"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
+			else if ( actualModelPart instanceof AnonymousTupleTableGroupProducer tableGroupProducer ) {
+				final ModelPart subPart = tableGroupProducer.findSubPart(
+						CollectionPart.Nature.ELEMENT.getName(),
+						null
 				);
+				if ( subPart != null ) {
+					return createExpression( tableGroup, navigablePath, subPart, path );
+				}
+				else {
+					throw new SemanticException(
+							"The derived SqmFrom" + ( (AnonymousTupleType<?>) path.getReferencedPathSource() ).getComponentNames() + " can not be used in a context where the expression needs to " +
+									"be expanded to identifying parts, because a derived model part does not have identifying parts. " +
+									"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
+					);
+				}
 			}
 			else {
 				throw new SemanticException(
@@ -6462,6 +6586,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			functionImpliedResultTypeAccess = oldFunctionImpliedResultTypeAccess;
 			inNestedContext = oldInNestedContext;
 		}
+	}
+
+	@Override
+	public FunctionTableGroup visitSetReturningFunction(SqmSetReturningFunction<?> sqmFunction) {
+		throw new UnsupportedOperationException("Should be handled by #consumeFromClauseRoot");
 	}
 
 	@Override

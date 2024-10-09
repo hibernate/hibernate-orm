@@ -1,0 +1,61 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.function.array;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.SqlTypes;
+
+
+/**
+ * PostgreSQL unnest function.
+ */
+public class PostgreSQLUnnestFunction extends UnnestFunction {
+
+	public PostgreSQLUnnestFunction() {
+		super( (String) null );
+	}
+
+	@Override
+	protected void renderJsonTable(
+			SqlAppender sqlAppender,
+			Expression array,
+			BasicPluralType<?, ?> pluralType,
+			@Nullable SqlTypedMapping sqlTypedMapping,
+			AnonymousTupleTableGroupProducer tupleType,
+			String tableIdentifierVariable,
+			SqlAstTranslator<?> walker) {
+		final AggregateSupport aggregateSupport = walker.getSessionFactory().getJdbcServices().getDialect()
+				.getAggregateSupport();
+		sqlAppender.appendSql( "(select" );
+		tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
+			if ( selectionIndex == 0 ) {
+				sqlAppender.append( ' ' );
+			}
+			else {
+				sqlAppender.append( ',' );
+			}
+			sqlAppender.append( aggregateSupport.aggregateComponentCustomReadExpression(
+					"",
+					"",
+					"t.value",
+					selectableMapping.getSelectableName(),
+					SqlTypes.JSON,
+					selectableMapping
+			) );
+			sqlAppender.append( ' ' );
+			sqlAppender.append( selectableMapping.getSelectableName() );
+		} );
+		sqlAppender.appendSql( " from jsonb_array_elements(" );
+		array.accept( walker );
+		sqlAppender.appendSql( ") t)" );
+	}
+}

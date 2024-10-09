@@ -32,6 +32,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -75,6 +76,7 @@ import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
@@ -88,6 +90,7 @@ import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -159,6 +162,8 @@ public interface SemanticQueryWalker<T> {
 
 	T visitRootDerived(SqmDerivedRoot<?> sqmRoot);
 
+	T visitRootFunction(SqmFunctionRoot sqmRoot);
+
 	T visitRootCte(SqmCteRoot<?> sqmRoot);
 
 	T visitCrossJoin(SqmCrossJoin<?> joinedFromElement);
@@ -222,6 +227,8 @@ public interface SemanticQueryWalker<T> {
 	}
 
 	T visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement);
+
+	T visitQualifiedFunctionJoin(SqmFunctionJoin<?> joinedFromElement);
 
 	T visitQualifiedCteJoin(SqmCteJoin<?> joinedFromElement);
 
@@ -332,6 +339,8 @@ public interface SemanticQueryWalker<T> {
 	T visitUnaryOperationExpression(SqmUnaryOperation<?> expression);
 
 	T visitFunction(SqmFunction<?> tSqmFunction);
+
+	T visitSetReturningFunction(SqmSetReturningFunction<?> tSqmFunction);
 
 	T visitExtractUnit(SqmExtractUnit<?> extractUnit);
 

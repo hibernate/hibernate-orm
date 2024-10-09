@@ -18,6 +18,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.OwnedValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.spi.NavigablePath;
@@ -44,9 +47,8 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	private static final FetchOptions FETCH_OPTIONS = FetchOptions.valueOf( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 	private final MappingType declaringType;
 	private final String partName;
-	private final String selectionExpression;
+	private final SelectableMapping selectableMapping;
 	private final SqmExpressible<?> expressible;
-	private final JdbcMapping jdbcMapping;
 	private final int fetchableIndex;
 
 	public AnonymousTupleBasicValuedModelPart(
@@ -56,11 +58,43 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 			SqmExpressible<?> expressible,
 			JdbcMapping jdbcMapping,
 			int fetchableIndex) {
+		this(
+				declaringType,
+				partName,
+				new SelectableMappingImpl(
+						"",
+						selectionExpression,
+						new SelectablePath( partName ),
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						false,
+						true,
+						false,
+						false,
+						false,
+						false,
+						jdbcMapping
+				),
+				expressible,
+				fetchableIndex
+		);
+	}
+
+	public AnonymousTupleBasicValuedModelPart(
+			MappingType declaringType,
+			String partName,
+			SelectableMapping selectableMapping,
+			SqmExpressible<?> expressible,
+			int fetchableIndex) {
 		this.declaringType = declaringType;
 		this.partName = partName;
-		this.selectionExpression = selectionExpression;
+		this.selectableMapping = selectableMapping;
 		this.expressible = expressible;
-		this.jdbcMapping = jdbcMapping;
 		this.fetchableIndex = fetchableIndex;
 	}
 
@@ -101,82 +135,82 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return jdbcMapping;
+		return selectableMapping.getJdbcMapping();
 	}
 
 	@Override
 	public String getContainingTableExpression() {
-		return "";
+		return selectableMapping.getContainingTableExpression();
 	}
 
 	@Override
 	public String getSelectionExpression() {
-		return selectionExpression;
+		return selectableMapping.getSelectionExpression();
 	}
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return selectableMapping.getCustomReadExpression();
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return selectableMapping.getCustomWriteExpression();
 	}
 
 	@Override
 	public boolean isFormula() {
-		return false;
+		return selectableMapping.isFormula();
 	}
 
 	@Override
 	public boolean isNullable() {
-		return false;
+		return selectableMapping.isNullable();
 	}
 
 	@Override
 	public boolean isInsertable() {
-		return true;
+		return selectableMapping.isInsertable();
 	}
 
 	@Override
 	public boolean isUpdateable() {
-		return false;
+		return selectableMapping.isUpdateable();
 	}
 
 	@Override
 	public boolean isPartitioned() {
-		return false;
+		return selectableMapping.isPartitioned();
 	}
 
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
-		return false;
+		return selectableMapping.isPartitioned();
 	}
 
 	@Override
 	public String getColumnDefinition() {
-		return null;
+		return selectableMapping.getColumnDefinition();
 	}
 
 	@Override
 	public Long getLength() {
-		return null;
+		return selectableMapping.getLength();
 	}
 
 	@Override
 	public Integer getPrecision() {
-		return null;
+		return selectableMapping.getPrecision();
 	}
 
 	@Override
 	public Integer getScale() {
-		return null;
+		return selectableMapping.getScale();
 	}
 
 	@Override
 	public Integer getTemporalPrecision() {
-		return null;
+		return selectableMapping.getTemporalPrecision();
 	}
 
 	@Override
@@ -215,7 +249,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				jdbcMapping,
+				getJdbcMapping(),
 				navigablePath,
 				false,
 				!sqlSelection.isVirtual()

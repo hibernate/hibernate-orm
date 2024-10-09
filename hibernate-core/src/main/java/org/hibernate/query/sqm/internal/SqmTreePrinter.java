@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
@@ -64,6 +65,7 @@ import org.hibernate.query.sqm.tree.expression.SqmOver;
 import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
@@ -78,6 +80,7 @@ import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
@@ -556,6 +559,18 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
+	public Object visitRootFunction(SqmFunctionRoot sqmRoot) {
+		processStanza(
+				"derived",
+				"`" + sqmRoot.getNavigablePath() + "`",
+				() -> {
+					processJoins( sqmRoot );
+				}
+		);
+		return null;
+	}
+
+	@Override
 	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
 		processStanza(
 				"cte",
@@ -654,6 +669,24 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement) {
+		if ( inJoinPredicate ) {
+			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+		}
+		else {
+			processStanza(
+					"derived",
+					"`" + joinedFromElement.getNavigablePath() + "`",
+					() -> {
+						processJoinPredicate( joinedFromElement );
+						processJoins( joinedFromElement );
+					}
+			);
+		}
+		return null;
+	}
+
+	@Override
+	public Object visitQualifiedFunctionJoin(SqmFunctionJoin<?> joinedFromElement) {
 		if ( inJoinPredicate ) {
 			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
 		}
@@ -825,6 +858,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitFunction(SqmFunction<?> tSqmFunction) {
+		return null;
+	}
+
+	@Override
+	public Object visitSetReturningFunction(SqmSetReturningFunction<?> tSqmFunction) {
 		return null;
 	}
 

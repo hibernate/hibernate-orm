@@ -12,6 +12,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class AggregateSupportImpl implements AggregateSupport {
@@ -26,6 +27,11 @@ public class AggregateSupportImpl implements AggregateSupport {
 			String columnExpression,
 			AggregateColumn aggregateColumn,
 			Column column) {
+		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
+	}
+
+	@Override
+	public String aggregateComponentCustomReadExpression(String template, String placeholder, String aggregateParentReadExpression, String columnExpression, int aggregateColumnTypeCode, SqlTypedMapping column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
 	}
 

@@ -14,6 +14,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -53,10 +55,35 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			String columnExpression,
 			AggregateColumn aggregateColumn,
 			Column column) {
-		switch ( aggregateColumn.getTypeCode() ) {
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				columnExpression,
+				aggregateColumn.getTypeCode(),
+				new SqlTypedMappingImpl(
+						column.getTypeName(),
+						column.getLength(),
+						column.getPrecision(),
+						column.getScale(),
+						column.getTemporalPrecision(),
+						(JdbcMapping) column.getValue().getType()
+				)
+		);
+	}
+
+	@Override
+	public String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column) {
+		switch ( aggregateColumnTypeCode ) {
 			case JSON_ARRAY:
 			case JSON:
-				switch ( column.getTypeCode() ) {
+				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case JSON:
 						return template.replace(
 								placeholder,
@@ -71,7 +98,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 								"decode(" + aggregateParentReadExpression + "->>'" + columnExpression + "','hex')"
 						);
 					case ARRAY:
-						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getValue().getType();
+						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
 						switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
 							case BOOLEAN:
 							case TINYINT:
@@ -85,7 +112,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 								// because casting a jsonb[] to text[] will not omit the quotes of the jsonb text values
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getTypeName() + ')'
+										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
 								);
 							case BINARY:
 							case VARBINARY:
@@ -98,13 +125,13 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 							default:
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getTypeName() + ')'
+										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
 								);
 						}
 					default:
 						return template.replace(
 								placeholder,
-								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + column.getTypeName() + ')'
+								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + column.getColumnDefinition() + ')'
 						);
 				}
 			case STRUCT:
@@ -112,7 +139,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			case STRUCT_TABLE:
 				return template.replace( placeholder, '(' + aggregateParentReadExpression + ")." + columnExpression );
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {

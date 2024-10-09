@@ -44,10 +44,11 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 					+ " (attribute is not annotated '@ElementCollection', '@OneToMany', or '@ManyToMany')");
 		}
 		// Always determine the recommended type to make sure this is a valid basic java type
+		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
 		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
-				indicators.getPreferredSqlTypeCodeForArray(),
+				indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
 				indicators.getTypeConfiguration().getBasicTypeRegistry().resolve(
-						componentJavaType, componentJavaType.getRecommendedJdbcType( indicators ) ),
+						componentJavaType, recommendedComponentJdbcType ),
 				ColumnTypeInformation.EMPTY
 		);
 	}
@@ -89,7 +90,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		return new ConvertedBasicArrayType<>(
 				elementType,
 				typeConfiguration.getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
-						stdIndicators.getExplicitJdbcTypeCode(),
+						stdIndicators.getPreferredSqlTypeCodeForArray( elementType.getJdbcType().getDefaultSqlTypeCode() ),
 						elementType,
 						columnTypeInformation
 				),
@@ -106,7 +107,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators) {
 		final JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
-				stdIndicators.getExplicitJdbcTypeCode(),
+				stdIndicators.getPreferredSqlTypeCodeForArray( elementType.getJdbcType().getDefaultSqlTypeCode() ),
 				elementType,
 				columnTypeInformation
 		);

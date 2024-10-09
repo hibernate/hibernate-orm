@@ -32,6 +32,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.MappingContext;
@@ -316,10 +318,22 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return sqlTypeCode;
 	}
 
-	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, MappingContext mapping) {
+	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, MappingContext mapping) {
 		if ( sqlTypeName == null ) {
-			final int typeCode = getSqlTypeCode( mapping );
-			final DdlType descriptor = ddlTypeRegistry.getDescriptor( typeCode );
+			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+			final int sqlTypeCode = getSqlTypeCode( mapping );
+			final JdbcTypeConstructor constructor = jdbcTypeRegistry.getConstructor( sqlTypeCode );
+			final JdbcType jdbcType;
+			if ( constructor == null ) {
+				jdbcType = jdbcTypeRegistry.findDescriptor( sqlTypeCode );
+			}
+			else {
+				jdbcType = ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) ).getJdbcType();
+			}
+			final DdlType descriptor = jdbcType == null
+					? null
+					: ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
 			if ( descriptor == null ) {
 				throw new MappingException(
 						String.format(
@@ -327,8 +341,8 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 								"Unable to determine SQL type name for column '%s' of table '%s' because there is no type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
 								getName(),
 								getValue().getTable().getName(),
-								typeCode,
-								JdbcTypeNameMapper.getTypeName( typeCode )
+								sqlTypeCode,
+								JdbcTypeNameMapper.getTypeName( sqlTypeCode )
 						)
 				);
 			}
@@ -400,7 +414,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	public String getSqlType(Metadata mapping) {
 		final Database database = mapping.getDatabase();
-		return getSqlTypeName( database.getTypeConfiguration().getDdlTypeRegistry(), database.getDialect(), mapping );
+		return getSqlTypeName( database.getTypeConfiguration(), database.getDialect(), mapping );
 	}
 
 	/**
@@ -408,7 +422,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	 */
 	@Deprecated(since = "6.2")
 	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
-		return getSqlTypeName( typeConfiguration.getDdlTypeRegistry(), dialect, mapping );
+		return getSqlTypeName( typeConfiguration, dialect, mapping );
 	}
 
 	@Override

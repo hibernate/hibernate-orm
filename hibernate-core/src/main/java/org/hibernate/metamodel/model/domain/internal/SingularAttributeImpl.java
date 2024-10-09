@@ -27,10 +27,13 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
@@ -143,7 +146,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmAttributeJoin<D,J> createSqmJoin(
+	public SqmJoin<D,J> createSqmJoin(
 			SqmFrom<?,D> lhs,
 			SqmJoinType joinType,
 			String alias,
@@ -151,6 +154,19 @@ public class SingularAttributeImpl<D,J>
 			SqmCreationState creationState) {
 		if ( getType() instanceof AnyMappingDomainType ) {
 			throw new SemanticException( "An @Any attribute cannot be join fetched" );
+		}
+		else if ( sqmPathSource.getSqmPathType() instanceof BasicPluralType<?,?> ) {
+			//noinspection unchecked
+			return (SqmJoin<D, J>) new SqmFunctionJoin<>(
+					createNavigablePath( lhs, alias ),
+					creationState.getCreationContext().getNodeBuilder()
+							.unnestArray( lhs.get( getName() ) ),
+					true,
+					this,
+					alias,
+					joinType,
+					(SqmRoot<Object>) lhs
+			);
 		}
 		else {
 			return new SqmSingularJoin<>(

@@ -38,7 +38,7 @@ public class JsonArrayAggFunction extends AbstractSqmSelfRenderingFunctionDescri
 				FunctionKind.ORDERED_SET_AGGREGATE,
 				StandardArgumentsValidators.between( 1, 2 ),
 				StandardFunctionReturnTypeResolvers.invariant(
-						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON_ARRAY )
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
 				),
 				null
 		);

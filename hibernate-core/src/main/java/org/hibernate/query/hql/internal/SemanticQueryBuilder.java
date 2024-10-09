@@ -1298,12 +1298,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private EntityDomainType<R> getResultEntity() {
 		final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
 		if ( expectedResultEntity != null ) {
-			final EntityDomainType<R> entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
+			final EntityDomainType<?> entityDescriptor = jpaMetamodel.findEntityType( expectedResultEntity );
 			if ( entityDescriptor == null ) {
 				throw new SemanticException( "Query has no 'from' clause, and the result type '"
 						+ expectedResultEntity + "' is not an entity type", query );
 			}
-			return entityDescriptor;
+			//noinspection unchecked
+			return (EntityDomainType<R>) entityDescriptor;
 		}
 		else if ( expectedResultType != null ) {
 			final EntityDomainType<R> entityDescriptor = jpaMetamodel.findEntityType( expectedResultType );

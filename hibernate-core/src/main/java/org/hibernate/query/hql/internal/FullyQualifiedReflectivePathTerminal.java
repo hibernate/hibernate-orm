@@ -75,7 +75,7 @@ public class FullyQualifiedReflectivePathTerminal
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is an entity-type literal
 
-			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().entity( fullPath );
+			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().findEntityType( fullPath );
 			if ( entityDescriptor != null ) {
 				return new SqmLiteralEntityType<>( entityDescriptor, creationContext.getNodeBuilder() );
 			}

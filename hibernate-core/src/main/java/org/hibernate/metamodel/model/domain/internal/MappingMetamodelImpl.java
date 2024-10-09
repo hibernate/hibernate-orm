@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -491,13 +492,28 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
+	public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
+		return jpaMetamodel.findManagedType( typeName );
+	}
+
+	@Override
 	public <X> ManagedDomainType<X> managedType(String typeName) {
 		return jpaMetamodel.managedType( typeName );
 	}
 
 	@Override
+	public @Nullable EntityDomainType<?> findEntityType(@Nullable String entityName) {
+		return jpaMetamodel.findEntityType( entityName );
+	}
+
+	@Override
 	public <X> EntityDomainType<X> entity(String entityName) {
 		return jpaMetamodel.entity( entityName );
+	}
+
+	@Override
+	public @Nullable EmbeddableDomainType<?> findEmbeddableType(@Nullable String embeddableName) {
+		return jpaMetamodel.findEmbeddableType( embeddableName );
 	}
 
 	@Override
@@ -523,6 +539,11 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	@Override
 	public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
 		return jpaMetamodel.findEntityType( cls );
+	}
+
+	@Override
+	public @Nullable <X> EmbeddableDomainType<X> findEmbeddableType(Class<X> cls) {
+		return jpaMetamodel.findEmbeddableType( cls );
 	}
 
 	@Override

@@ -816,9 +816,13 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public <X> ManagedDomainType<X> managedType(String typeName) {
-			final String entityName = findEntityName( typeName );
-			return entityName == null ? null : entity( entityName );
+		public @Nullable EntityDomainType<?> findEntityType(@Nullable String entityName) {
+			if ( isEntityDefined(entityName) ) {
+				return new MockEntityDomainType<>(entityName);
+			}
+			else {
+				return null;
+			}
 		}
 
 		@Override
@@ -830,6 +834,22 @@ public abstract class MockSessionFactory
 				return qualifyName(queryName);
 			}
 			return null;
+		}
+
+		@Override
+		public <X> ManagedDomainType<X> managedType(String typeName) {
+			final ManagedDomainType<X> managedType = findManagedType( typeName );
+			if ( managedType == null ) {
+				throw new IllegalArgumentException("Not a managed type: " + typeName);
+			}
+			return managedType;
+		}
+
+		@Override
+		public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
+			final String entityName = qualifyName( typeName );
+			//noinspection unchecked
+			return entityName == null ? null : (ManagedDomainType<X>) findEntityType( entityName );
 		}
 
 		@Override

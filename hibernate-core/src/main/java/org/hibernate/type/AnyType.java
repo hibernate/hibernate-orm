@@ -149,7 +149,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		final EntityPersister concretePersister = guessEntityPersister( entity, factory );
 		return concretePersister == null
 				? null
-				: concretePersister.getIdentifier( entity, null );
+				: concretePersister.getIdentifier( entity, (SharedSessionContractImplementor) null );
 	}
 
 	private EntityPersister guessEntityPersister(Object object, SessionFactoryImplementor factory) {

@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
@@ -183,7 +179,7 @@ public class StatisticalLoggingSessionEventListenerTest {
 		// Number of lines
 		assertThat( sessionMetricsLog.lines().count() )
 				.as( "The StatisticalLoggingSessionEventListener should write a line per metric ("
-					 + numberOfMetrics + " lines) plus a header and a footer (2 lines)" )
+					+ numberOfMetrics + " lines) plus a header and a footer (2 lines)" )
 				.isEqualTo( numberOfMetrics + 2 );
 		// Total time
 		long sumDuration = metricList.stream().map( SessionMetric::getDuration ).mapToLong( Long::longValue ).sum();

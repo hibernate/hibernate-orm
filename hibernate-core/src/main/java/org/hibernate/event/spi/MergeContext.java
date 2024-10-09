@@ -366,4 +366,8 @@ public class MergeContext implements Map<Object,Object> {
 		// Entity was not found in current persistence context. Use Object#toString() method.
 		return "[" + entity + "]";
 	}
+
+	public EventSource getEventSource() {
+		return session;
+	}
 }

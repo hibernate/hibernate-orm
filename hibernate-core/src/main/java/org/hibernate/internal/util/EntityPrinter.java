@@ -15,6 +15,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -53,7 +54,7 @@ public final class EntityPrinter {
 			result.put(
 					entityPersister.getIdentifierPropertyName(),
 					entityPersister.getIdentifierType().toLoggableString(
-							entityPersister.getIdentifier( entity, null ),
+							entityPersister.getIdentifier( entity, (SharedSessionContractImplementor) null ),
 							factory
 					)
 			);

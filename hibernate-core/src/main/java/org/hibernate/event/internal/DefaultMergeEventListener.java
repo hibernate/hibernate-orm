@@ -164,7 +164,7 @@ public class DefaultMergeEventListener
 		final Object originalId;
 		if ( entry == null ) {
 			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-			originalId = persister.getIdentifier( entity, source );
+			originalId = persister.getIdentifier( entity, copiedAlready );
 			if ( originalId != null ) {
 				final EntityKey entityKey;
 				if ( persister.getIdentifierType() instanceof ComponentType ) {

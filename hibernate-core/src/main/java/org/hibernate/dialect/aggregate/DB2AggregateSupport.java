@@ -26,6 +26,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -47,13 +48,13 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			String placeholder,
 			String aggregateParentReadExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
-			Column column) {
-		switch ( aggregateColumn.getTypeCode() ) {
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column) {
+		switch ( aggregateColumnTypeCode ) {
 			case STRUCT:
 				return template.replace( placeholder, aggregateParentReadExpression + ".." + columnExpression );
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
 	@Override

@@ -28,7 +28,7 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 				FunctionKind.NORMAL,
 				null,
 				StandardFunctionReturnTypeResolvers.invariant(
-						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON_ARRAY )
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
 				),
 				null
 		);

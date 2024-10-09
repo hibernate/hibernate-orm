@@ -11,6 +11,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
@@ -34,6 +36,16 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 			return tableGroupBySqlAlias.get( alias );
 		}
 
+		return null;
+	}
+
+	@Override
+	public @Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable) {
+		for ( TableGroup tableGroup : tableGroupByPath.values() ) {
+			if ( tableGroup.findTableReference( identificationVariable ) != null ) {
+				return tableGroup;
+			}
+		}
 		return null;
 	}
 

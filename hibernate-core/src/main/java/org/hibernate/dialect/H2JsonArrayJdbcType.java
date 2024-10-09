@@ -13,18 +13,16 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 /**
  * H2 requires binding JSON via {@code setBytes} methods.
  */
 public class H2JsonArrayJdbcType extends JsonArrayJdbcType {
-	/**
-	 * Singleton access
-	 */
-	public static final H2JsonArrayJdbcType INSTANCE = new H2JsonArrayJdbcType();
 
-	protected H2JsonArrayJdbcType() {
+	public H2JsonArrayJdbcType(JdbcType elementJdbcType) {
+		super( elementJdbcType );
 	}
 
 	@Override

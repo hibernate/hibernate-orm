@@ -24,12 +24,9 @@ import java.sql.SQLException;
  * @author Christian Beikov
  */
 public class OracleJsonArrayBlobJdbcType extends JsonArrayJdbcType {
-	/**
-	 * Singleton access
-	 */
-	public static final OracleJsonArrayBlobJdbcType INSTANCE = new OracleJsonArrayBlobJdbcType();
 
-	protected OracleJsonArrayBlobJdbcType() {
+	public OracleJsonArrayBlobJdbcType(JdbcType elementJdbcType) {
+		super( elementJdbcType );
 	}
 
 	@Override

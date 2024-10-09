@@ -31,6 +31,8 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
@@ -38,6 +40,9 @@ import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
 import static org.hibernate.dialect.StructHelper.instantiate;
@@ -54,6 +59,43 @@ public class JsonHelper {
 		}
 		final StringBuilder sb = new StringBuilder();
 		toString( embeddableMappingType, value, options, new JsonAppender( sb ) );
+		return sb.toString();
+	}
+
+	public static String arrayToString(MappingType elementMappingType, Object[] values, WrapperOptions options) {
+		if ( values.length == 0 ) {
+			return "[]";
+		}
+		final StringBuilder sb = new StringBuilder();
+		final JsonAppender jsonAppender = new JsonAppender( sb );
+		char separator = '[';
+		for ( Object value : values ) {
+			sb.append( separator );
+			toString( elementMappingType, value, options, jsonAppender );
+			separator = ',';
+		}
+		sb.append( ']' );
+		return sb.toString();
+	}
+
+	public static String arrayToString(
+			JavaType<?> elementJavaType,
+			JdbcType elementJdbcType,
+			Object[] values,
+			WrapperOptions options) {
+		if ( values.length == 0 ) {
+			return "[]";
+		}
+		final StringBuilder sb = new StringBuilder();
+		final JsonAppender jsonAppender = new JsonAppender( sb );
+		char separator = '[';
+		for ( Object value : values ) {
+			sb.append( separator );
+			//noinspection unchecked
+			convertedValueToString( (JavaType<Object>) elementJavaType, elementJdbcType, value, options, jsonAppender );
+			separator = ',';
+		}
+		sb.append( ']' );
 		return sb.toString();
 	}
 
@@ -130,25 +172,22 @@ public class JsonHelper {
 	}
 
 	private static void convertedValueToString(
-			MappingType mappedType,
+			JavaType<Object> javaType,
+			JdbcType jdbcType,
 			Object value,
 			WrapperOptions options,
 			JsonAppender appender) {
 		if ( value == null ) {
 			appender.append( "null" );
 		}
-		else if ( mappedType instanceof EmbeddableMappingType ) {
-			toString( (EmbeddableMappingType) mappedType, value, options, appender );
-		}
-		else if ( mappedType instanceof BasicType<?> ) {
-			//noinspection unchecked
-			final BasicType<Object> basicType = (BasicType<Object>) mappedType;
-			convertedBasicValueToString( value, options, appender, basicType );
+		else if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
+			toString( aggregateJdbcType.getEmbeddableMappingType(), value, options, appender );
 		}
 		else {
-			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
+			convertedBasicValueToString( value, options, appender, javaType, jdbcType );
 		}
 	}
+
 
 	private static void convertedBasicValueToString(
 			Object value,
@@ -156,8 +195,22 @@ public class JsonHelper {
 			JsonAppender appender,
 			BasicType<Object> basicType) {
 		//noinspection unchecked
-		final JavaType<Object> javaType = (JavaType<Object>) basicType.getJdbcJavaType();
-		switch ( basicType.getJdbcType().getDefaultSqlTypeCode() ) {
+		convertedBasicValueToString(
+				value,
+				options,
+				appender,
+				(JavaType<Object>) basicType.getJdbcJavaType(),
+				basicType.getJdbcType()
+		);
+	}
+
+	private static void convertedBasicValueToString(
+			Object value,
+			WrapperOptions options,
+			JsonAppender appender,
+			JavaType<Object> javaType,
+			JdbcType jdbcType) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:
@@ -272,19 +325,21 @@ public class JsonHelper {
 				final int length = Array.getLength( value );
 				appender.append( '[' );
 				if ( length != 0 ) {
-					final BasicType<Object> elementType = ( (BasicPluralType<?, Object>) basicType ).getElementType();
+					//noinspection unchecked
+					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) javaType ).getElementJavaType();
+					final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
 					Object arrayElement = Array.get( value, 0 );
-					convertedValueToString( elementType, arrayElement, options, appender );
+					convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
 					for ( int i = 1; i < length; i++ ) {
 						arrayElement = Array.get( value, i );
 						appender.append( ',' );
-						convertedValueToString( elementType, arrayElement, options, appender );
+						convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
 					}
 				}
 				appender.append( ']' );
 				break;
 			default:
-				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + basicType.getJdbcType() );
+				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + jdbcType );
 		}
 	}
 
@@ -312,6 +367,39 @@ public class JsonHelper {
 		}
 		//noinspection unchecked
 		return (X) values;
+	}
+
+	public static <X> X arrayFromString(
+			JavaType<X> javaType,
+			JsonArrayJdbcType jsonArrayJdbcType,
+			String string,
+			WrapperOptions options) throws SQLException {
+		if ( string == null ) {
+			return null;
+		}
+		final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
+		final Class<?> preferredJavaTypeClass = jsonArrayJdbcType.getElementJdbcType().getPreferredJavaTypeClass( options );
+		final JavaType<?> jdbcJavaType;
+		if ( preferredJavaTypeClass == null || preferredJavaTypeClass == elementJavaType.getJavaTypeClass() ) {
+			jdbcJavaType = elementJavaType;
+		}
+		else {
+			jdbcJavaType = options.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
+					.resolveDescriptor( preferredJavaTypeClass );
+		}
+		final CustomArrayList arrayList = new CustomArrayList();
+		final int i = fromArrayString(
+				string,
+				false,
+				options,
+				0,
+				arrayList,
+				elementJavaType,
+				jdbcJavaType,
+				jsonArrayJdbcType.getElementJdbcType()
+		);
+		assert string.charAt( i - 1 ) == ']';
+		return javaType.wrap( arrayList, options );
 	}
 
 	private static int fromString(
@@ -559,7 +647,30 @@ public class JsonHelper {
 			int begin,
 			CustomArrayList arrayList,
 			BasicType<?> elementType) throws SQLException {
+		return fromArrayString(
+				string,
+				returnEmbeddable,
+				options,
+				begin,
+				arrayList,
+				elementType.getMappedJavaType(),
+				elementType.getJdbcJavaType(),
+				elementType.getJdbcType()
+		);
+	}
 
+	private static int fromArrayString(
+			String string,
+			boolean returnEmbeddable,
+			WrapperOptions options,
+			int begin,
+			CustomArrayList arrayList,
+			JavaType<?> javaType,
+			JavaType<?> jdbcJavaType,
+			JdbcType jdbcType) throws SQLException {
+		if ( string.length() == begin + 2 ) {
+			return begin + 2;
+		}
 		boolean hasEscape = false;
 		assert string.charAt( begin ) == '[';
 		int start = begin + 1;
@@ -586,7 +697,9 @@ public class JsonHelper {
 							s = State.VALUE_END;
 							arrayList.add(
 									fromString(
-											elementType,
+											javaType,
+											jdbcJavaType,
+											jdbcType,
 											string,
 											start,
 											i,
@@ -693,7 +806,9 @@ public class JsonHelper {
 									string,
 									i,
 									arrayList.getUnderlyingArray(),
-									elementType,
+									javaType,
+									jdbcJavaType,
+									jdbcType,
 									elementIndex,
 									returnEmbeddable,
 									options
@@ -728,6 +843,29 @@ public class JsonHelper {
 			int selectableIndex,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
+		return consumeLiteral(
+				string,
+				start,
+				values,
+				jdbcMapping.getMappedJavaType(),
+				jdbcMapping.getJdbcJavaType(),
+				jdbcMapping.getJdbcType(),
+				selectableIndex,
+				returnEmbeddable,
+				options
+		);
+	}
+
+	private static int consumeLiteral(
+			String string,
+			int start,
+			Object[] values,
+			JavaType<?> javaType,
+			JavaType<?> jdbcJavaType,
+			JdbcType jdbcType,
+			int selectableIndex,
+			boolean returnEmbeddable,
+			WrapperOptions options) throws SQLException {
 		final char c = string.charAt( start );
 		switch ( c ) {
 			case 'n':
@@ -750,7 +888,9 @@ public class JsonHelper {
 								start,
 								start + 1,
 								values,
-								jdbcMapping,
+								javaType,
+								jdbcJavaType,
+								jdbcType,
 								selectableIndex,
 								returnEmbeddable,
 								options
@@ -762,14 +902,18 @@ public class JsonHelper {
 								start,
 								start + 1,
 								values,
-								jdbcMapping,
+								javaType,
+								jdbcJavaType,
+								jdbcType,
 								selectableIndex,
 								returnEmbeddable,
 								options
 						);
 				}
 				values[selectableIndex] = fromString(
-						jdbcMapping,
+						javaType,
+						jdbcJavaType,
+						jdbcType,
 						string,
 						start,
 						start + 1,
@@ -806,7 +950,9 @@ public class JsonHelper {
 									start,
 									i,
 									values,
-									jdbcMapping,
+									javaType,
+									jdbcJavaType,
+									jdbcType,
 									selectableIndex,
 									returnEmbeddable,
 									options
@@ -818,7 +964,9 @@ public class JsonHelper {
 									start,
 									i,
 									values,
-									jdbcMapping,
+									javaType,
+									jdbcJavaType,
+									jdbcType,
 									selectableIndex,
 									returnEmbeddable,
 									options
@@ -836,7 +984,9 @@ public class JsonHelper {
 							break;
 						default:
 							values[selectableIndex] = fromString(
-									jdbcMapping,
+									javaType,
+									jdbcJavaType,
+									jdbcType,
 									string,
 									start,
 									i,
@@ -856,7 +1006,9 @@ public class JsonHelper {
 			int start,
 			int dotIndex,
 			Object[] values,
-			JdbcMapping jdbcMapping,
+			JavaType<?> javaType,
+			JavaType<?> jdbcJavaType,
+			JdbcType jdbcType,
 			int selectableIndex,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
@@ -870,7 +1022,9 @@ public class JsonHelper {
 							start,
 							i,
 							values,
-							jdbcMapping,
+							javaType,
+							jdbcJavaType,
+							jdbcType,
 							selectableIndex,
 							returnEmbeddable,
 							options
@@ -888,7 +1042,9 @@ public class JsonHelper {
 					break;
 				default:
 					values[selectableIndex] = fromString(
-							jdbcMapping,
+							javaType,
+							jdbcJavaType,
+							jdbcType,
 							string,
 							start,
 							i,
@@ -906,7 +1062,9 @@ public class JsonHelper {
 			int start,
 			int eIndex,
 			Object[] values,
-			JdbcMapping jdbcMapping,
+			JavaType<?> javaType,
+			JavaType<?> jdbcJavaType,
+			JdbcType jdbcType,
 			int selectableIndex,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
@@ -933,7 +1091,9 @@ public class JsonHelper {
 					break;
 				default:
 					values[selectableIndex] = fromString(
-							jdbcMapping,
+							javaType,
+							jdbcJavaType,
+							jdbcType,
 							string,
 							start,
 							i,
@@ -1001,10 +1161,35 @@ public class JsonHelper {
 			boolean hasEscape,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
+		return fromString(
+				jdbcMapping.getMappedJavaType(),
+				jdbcMapping.getJdbcJavaType(),
+				jdbcMapping.getJdbcType(),
+				string,
+				start,
+				end,
+				hasEscape,
+				returnEmbeddable,
+				options
+		);
+	}
+
+	private static Object fromString(
+			JavaType<?> javaType,
+			JavaType<?> jdbcJavaType,
+			JdbcType jdbcType,
+			String string,
+			int start,
+			int end,
+			boolean hasEscape,
+			boolean returnEmbeddable,
+			WrapperOptions options) throws SQLException {
 		if ( hasEscape ) {
 			final String unescaped = unescape( string, start, end );
 			return fromString(
-					jdbcMapping,
+					javaType,
+					jdbcJavaType,
+					jdbcType,
 					unescaped,
 					0,
 					unescaped.length(),
@@ -1012,22 +1197,33 @@ public class JsonHelper {
 					options
 			);
 		}
-		return fromString( jdbcMapping, string, start, end, returnEmbeddable, options );
+		return fromString(
+				javaType,
+				jdbcJavaType,
+				jdbcType,
+				string,
+				start,
+				end,
+				returnEmbeddable,
+				options
+		);
 	}
 
 	private static Object fromString(
-			JdbcMapping jdbcMapping,
+			JavaType<?> javaType,
+			JavaType<?> jdbcJavaType,
+			JdbcType jdbcType,
 			String string,
 			int start,
 			int end,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
-		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.BINARY:
 			case SqlTypes.VARBINARY:
 			case SqlTypes.LONGVARBINARY:
 			case SqlTypes.LONG32VARBINARY:
-				return jdbcMapping.getJdbcJavaType().wrap(
+				return jdbcJavaType.wrap(
 						PrimitiveByteArrayJavaType.INSTANCE.fromEncodedString(
 							string,
 							start,
@@ -1036,7 +1232,7 @@ public class JsonHelper {
 						options
 				);
 			case SqlTypes.DATE:
-				return jdbcMapping.getJdbcJavaType().wrap(
+				return jdbcJavaType.wrap(
 						JdbcDateJavaType.INSTANCE.fromEncodedString(
 								string,
 								start,
@@ -1047,7 +1243,7 @@ public class JsonHelper {
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
 			case SqlTypes.TIME_UTC:
-				return jdbcMapping.getJdbcJavaType().wrap(
+				return jdbcJavaType.wrap(
 						JdbcTimeJavaType.INSTANCE.fromEncodedString(
 								string,
 								start,
@@ -1056,7 +1252,7 @@ public class JsonHelper {
 						options
 				);
 			case SqlTypes.TIMESTAMP:
-				return jdbcMapping.getJdbcJavaType().wrap(
+				return jdbcJavaType.wrap(
 						JdbcTimestampJavaType.INSTANCE.fromEncodedString(
 								string,
 								start,
@@ -1066,7 +1262,7 @@ public class JsonHelper {
 				);
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 			case SqlTypes.TIMESTAMP_UTC:
-				return jdbcMapping.getJdbcJavaType().wrap(
+				return jdbcJavaType.wrap(
 						OffsetDateTimeJavaType.INSTANCE.fromEncodedString(
 								string,
 								start,
@@ -1077,28 +1273,21 @@ public class JsonHelper {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:
-				if ( jdbcMapping.getValueConverter() == null ) {
-					Class<?> javaTypeClass = jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass();
-					if ( javaTypeClass == Boolean.class ) {
-						// BooleanJavaType has this as an implicit conversion
-						return Integer.parseInt( string, start, end, 10 ) == 1;
-					}
-					if ( javaTypeClass.isEnum() ) {
-						return javaTypeClass.getEnumConstants()[Integer.parseInt( string, start, end, 10 )];
-					}
+				if ( jdbcJavaType.getJavaTypeClass() == Boolean.class ) {
+					return jdbcJavaType.wrap( Integer.parseInt( string, start, end, 10 ), options );
+				}
+				else if ( jdbcJavaType instanceof EnumJavaType<?> ) {
+					return jdbcJavaType.wrap( Integer.parseInt( string, start, end, 10 ), options );
 				}
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
 			case SqlTypes.VARCHAR:
 			case SqlTypes.NVARCHAR:
-				if ( jdbcMapping.getValueConverter() == null
-						&& jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass() == Boolean.class ) {
-					// BooleanJavaType has this as an implicit conversion
-					return end == start + 1 && string.charAt( start ) == 'Y';
+				if ( jdbcJavaType.getJavaTypeClass() == Boolean.class && end == start + 1 ) {
+					return jdbcJavaType.wrap( string.charAt( start ), options );
 				}
 			default:
-				if ( jdbcMapping.getJdbcType() instanceof AggregateJdbcType ) {
-					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) jdbcMapping.getJdbcType();
+				if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
 					final Object[] subValues = aggregateJdbcType.extractJdbcValues(
 							CharSequenceHelper.subSequence(
 									string,
@@ -1119,7 +1308,7 @@ public class JsonHelper {
 					return subValues;
 				}
 
-				return jdbcMapping.getJdbcJavaType().fromEncodedString(
+				return jdbcJavaType.fromEncodedString(
 						string,
 						start,
 						end

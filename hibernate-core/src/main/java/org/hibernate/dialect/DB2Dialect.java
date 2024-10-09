@@ -78,6 +78,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -440,6 +441,14 @@ public class DB2Dialect extends Dialect {
 			functionFactory.xmlexists_db2_legacy();
 		}
 		functionFactory.xmlagg();
+
+		functionFactory.unnest_emulated();
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Even if DB2 11 supports JSON functions, it's not possible to unnest a JSON array to rows, so stick to XML
+		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override

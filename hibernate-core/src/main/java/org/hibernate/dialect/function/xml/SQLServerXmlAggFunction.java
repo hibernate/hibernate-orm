@@ -119,8 +119,10 @@ public class SQLServerXmlAggFunction extends XmlAggFunction {
 									),
 									alias,
 									List.of("v"),
+									Set.of(),
 									true,
 									true,
+									false,
 									null
 							);
 							tableGroup.addTableGroupJoin(

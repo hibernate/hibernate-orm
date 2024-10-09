@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
@@ -275,6 +276,11 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		emulateQueryPartTableReferenceColumnAliasing( tableReference );
+	}
+
+	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
+		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override

@@ -287,6 +287,28 @@ The default precision for SQL Server timestamps was changed to 7 i.e. 100 nanose
 
 Note that these changes only affect DDL generation.
 
+[[array-mapping-changes-on-db2-sap-hana-and-sybase-ase]]
+== Array mapping changes on DB2, SAP HANA and Sybase ASE
+
+On DB2, SAP HANA and Sybase ASE, basic arrays now map to the `SqlTypes.XML_ARRAY` type code,
+whereas previously, the dialect mapped arrays to `SqlTypes.VARBINARY`.
+The `SqlTypes.XML_ARRAY` type uses the `xml` DDL type which enables using arrays in other features through the various XML functions.
+
+The migration requires to read data and re-save it. Note that XML support on Sybase ASE is not enabled by default
+and requires to run `sp_configure 'enable xml', 1`.
+
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_array_jdbc_type` to `VARBINARY`.
+
+[[array-mapping-changes-on-mysql-mariadb]]
+== Array mapping changes on MySQL/MariaDB
+
+On MySQL and MariaDB, basic arrays now map to the `SqlTypes.JSON_ARRAY` type code,
+whereas previously, the dialect mapped arrays to `SqlTypes.VARBINARY`.
+The `SqlTypes.JSON_ARRAY` type uses the `json` DDL type which enables using arrays in other features through the various JSON functions.
+
+The migration requires to read data and re-save it.
+
+To retain backwards compatibility, configure the setting `hibernate.type.preferred_array_jdbc_type` to `VARBINARY`.
 
 [[sf-name]]
 == SessionFactory Name (and JNDI)

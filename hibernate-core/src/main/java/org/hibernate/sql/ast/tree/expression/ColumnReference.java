@@ -20,6 +20,8 @@ import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.sql.Template.TEMPLATE;
 
@@ -35,7 +37,7 @@ public class ColumnReference implements Expression, Assignable {
 	private final String columnExpression;
 	private final SelectablePath selectablePath;
 	private final boolean isFormula;
-	private final String readExpression;
+	private final @Nullable String readExpression;
 	private final JdbcMapping jdbcMapping;
 
 	public ColumnReference(TableReference tableReference, SelectableMapping selectableMapping) {
@@ -148,7 +150,7 @@ public class ColumnReference implements Expression, Assignable {
 		return columnExpression;
 	}
 
-	protected String getReadExpression() {
+	public @Nullable String getReadExpression() {
 		return readExpression;
 	}
 

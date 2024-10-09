@@ -27,7 +27,11 @@ public class LiteralAsParameter<T> implements SelfRenderingExpression {
 
 	@Override
 	public void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sessionFactory) {
-		sqlAppender.append( parameterMarker );
+		literal.getJdbcMapping().getJdbcType().appendWriteExpression(
+				parameterMarker,
+				sqlAppender,
+				sessionFactory.getJdbcServices().getDialect()
+		);
 	}
 
 	@Override

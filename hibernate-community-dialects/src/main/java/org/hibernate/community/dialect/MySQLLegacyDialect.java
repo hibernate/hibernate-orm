@@ -537,6 +537,11 @@ public class MySQLLegacyDialect extends Dialect {
 		return Types.BIT;
 	}
 
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return getMySQLVersion().isSameOrAfter( 5, 7 ) ? SqlTypes.JSON_ARRAY : super.getPreferredSqlTypeCodeForArray();
+	}
+
 //	@Override
 //	public int getDefaultDecimalPrecision() {
 //		//this is the maximum, but I guess it's too high
@@ -667,6 +672,10 @@ public class MySQLLegacyDialect extends Dialect {
 			functionFactory.jsonMergepatch_mysql();
 			functionFactory.jsonArrayAppend_mysql();
 			functionFactory.jsonArrayInsert_mysql();
+
+			if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
+				functionFactory.unnest_emulated();
+			}
 		}
 	}
 
@@ -678,7 +687,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, MySQLCastingJsonArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type

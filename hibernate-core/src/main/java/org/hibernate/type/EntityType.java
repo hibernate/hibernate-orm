@@ -360,8 +360,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			assert uniqueKeyPropertyName != null;
+			final Object uniqueKeyProperty;
 			final Type keyType = persister.getPropertyType( uniqueKeyPropertyName );
-			return keyType.getHashCode( x, factory );
+			if ( keyType.getReturnedClass().isAssignableFrom( x.getClass() ) ) {
+				uniqueKeyProperty = x;
+			}
+			else {
+				uniqueKeyProperty = persister.getPropertyValue( x, uniqueKeyPropertyName );
+			}
+			return keyType.getHashCode( uniqueKeyProperty, factory );
 		}
 	}
 

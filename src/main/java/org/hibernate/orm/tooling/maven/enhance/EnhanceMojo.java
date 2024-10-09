@@ -47,7 +47,6 @@ public class EnhanceMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         assembleSourceSet();
-        touch();
     }
 
     private void assembleSourceSet() {
@@ -62,32 +61,6 @@ public class EnhanceMojo extends AbstractMojo {
         } else {
             if (file.getName().endsWith(".class")) {
                 sourceSet.add(file);
-            }
-        }
-    }
-
-    private void touch() throws MojoExecutionException {
-        File f = classesDirectory.getParentFile();
-        if (!f.exists()) {
-            f.mkdirs();
-        }
-        File touch = new File( f, "touch.txt" );
-        FileWriter w = null;
-        try {
-            w = new FileWriter( touch );
-            w.write( "touch.txt" );
-        }
-        catch (IOException e) {
-            throw new MojoExecutionException( "Error creating file " + touch, e );
-        }
-        finally {
-            if (w != null) {
-                try {
-                    w.close();
-                }
-                catch ( IOException e ) {
-                    // ignore
-                }
             }
         }
     }

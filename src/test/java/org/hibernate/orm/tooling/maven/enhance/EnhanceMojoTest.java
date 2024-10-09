@@ -17,7 +17,6 @@ package org.hibernate.orm.tooling.maven.enhance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -33,23 +32,6 @@ public class EnhanceMojoTest {
     @TempDir
     File tempDir;
 	
-    @Test
-    void testTouch() throws Exception {
-        Method m = EnhanceMojo.class.getDeclaredMethod("touch");
-        m.setAccessible(true);
-        Field f = EnhanceMojo.class.getDeclaredField("classesDirectory");
-        f.setAccessible(true);
-        File buildDir = new File(tempDir, "build");
-        assertFalse(buildDir.exists());
-    	File touchFile = new File(buildDir.getParentFile(), "touch.txt");
-        assertFalse(touchFile.exists());
-        EnhanceMojo mojo = new EnhanceMojo();
-        assertNull(f.get(mojo));
-        f.set(mojo, buildDir);
-        m.invoke(mojo);
-        assertTrue(touchFile.exists());
-    }
-
     @Test
     void testAssembleSourceSet() throws Exception {
         Method assembleSourceSetMethod = EnhanceMojo.class.getDeclaredMethod("assembleSourceSet");

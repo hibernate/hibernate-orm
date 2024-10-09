@@ -3114,9 +3114,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
 			persister = null;
 			final EmbeddableDomainType<?> embeddableDomainType = creationContext.getSessionFactory()
-					.getRuntimeMetamodels()
 					.getJpaMetamodel()
-					.embeddable( treatTargetTypeName );
+					.findEmbeddableType( treatTargetTypeName );
 			if ( embeddableDomainType == null || !embeddableDomainType.isPolymorphic() ) {
 				return;
 			}

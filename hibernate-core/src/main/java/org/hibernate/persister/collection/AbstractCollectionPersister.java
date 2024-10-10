@@ -309,7 +309,7 @@ public abstract class AbstractCollectionPersister
 				final BasicValue discriminatorDescriptor = any.getDiscriminatorDescriptor();
 				final AnyType anyType = any.getType();
 				final MetaType metaType = (MetaType) anyType.getDiscriminatorType();
-				final Object discriminatorValue = metaType.getEntityNameToDiscriminatorValueMap().get( ownerPersister.getEntityName() );
+				Object discriminatorValue = metaType.resolveDiscriminatorValue( ownerPersister.getEntityName() );
 				final BasicType<Object> discriminatorBaseType = (BasicType<Object>) metaType.getBaseType();
 				final String discriminatorLiteral = discriminatorBaseType.getJdbcLiteralFormatter().toJdbcLiteral(
 						discriminatorValue,

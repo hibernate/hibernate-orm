@@ -15,9 +15,9 @@
  */
 package org.hibernate.orm.tooling.maven.enhance;
 
-import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * Maven mojo for performing build-time enhancement of entity objects.
  */
-@Mojo(name = "enhance", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+@Mojo(name = "enhance", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 public class EnhanceMojo extends AbstractMojo {
 
 	private List<File> sourceSet = new ArrayList<File>();
@@ -44,6 +44,7 @@ public class EnhanceMojo extends AbstractMojo {
     private File classesDirectory;
 
     public void execute() throws MojoExecutionException {
+        logConfiguration();
         assembleSourceSet();
         EnhancementContext enhancementContext = createEnhancementContext();
         ClassLoader classLoader = enhancementContext.getLoadingClassLoader();
@@ -52,7 +53,13 @@ public class EnhanceMojo extends AbstractMojo {
         } catch (ClassNotFoundException e) {
             throw new MojoExecutionException(e);
         }
-   }
+    }
+
+    private void logConfiguration() {
+        Log log = getLog();
+        log.info("Starting 'enhance' mojo execution with the following parameters :");
+        log.info("  classesDirectory: " + classesDirectory);
+    }
 
     private void assembleSourceSet() {
         addToSourceSetIfNeeded(classesDirectory);

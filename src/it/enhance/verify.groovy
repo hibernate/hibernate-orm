@@ -27,5 +27,7 @@ if (!buildLog.exists()) {
 }
 List<String> listOfStrings = new ArrayList<String>();
 listOfStrings = Files.readAllLines(buildLog.toPath());
-assert listOfStrings.contains("[INFO] BUILD SUCCESS")
+assert listOfStrings.contains("[INFO] Starting 'enhance' mojo execution with the following parameters :");
+assert listOfStrings.contains("[INFO]   classesDirectory: " + classesFolder);
+
 

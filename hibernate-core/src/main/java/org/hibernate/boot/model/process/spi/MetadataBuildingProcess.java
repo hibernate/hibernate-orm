@@ -787,7 +787,7 @@ public class MetadataBuildingProcess {
 			);
 		}
 		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
+			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.VARBINARY_UUID );
 		}
 
 		final int preferredSqlTypeCodeForArray = getPreferredSqlTypeCodeForArray( serviceRegistry );

@@ -424,6 +424,13 @@ public class SqlTypes {
 	public static final int UUID = 3000;
 
 	/**
+	 * A type code representing the generic SQL type {@code UUID} when it's being stored as a VARBINARY type.
+	 *
+	 * @see org.hibernate.type.descriptor.jdbc.UUIDasVarBinaryJdbcType
+	 */
+	public static final int VARBINARY_UUID = 3020;
+
+	/**
 	 * A type code representing the generic SQL type {@code JSON}.
 	 *
 	 * @see org.hibernate.type.descriptor.jdbc.JsonJdbcType

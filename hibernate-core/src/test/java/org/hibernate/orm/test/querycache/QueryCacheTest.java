@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.querycache;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.stat.EntityStatistics;
@@ -24,6 +27,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -38,6 +43,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  * @author Brett Meyer
+ * @author Réda Housni Alaoui
  */
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/querycache/Item.hbm.xml",
@@ -62,7 +69,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		settings = {
 				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
 				@Setting(name = AvailableSettings.CACHE_REGION_PREFIX, value = "foo"),
-				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = JdbcSettings.CONNECTION_PROVIDER, value = "org.hibernate.orm.test.querycache.QueryCacheTest$ProxyConnectionProvider")
 		}
 )
 public class QueryCacheTest {
@@ -701,6 +709,45 @@ public class QueryCacheTest {
 //		assertEquals( "Item2", fetched.getName() );
 //	}
 
+	@Test
+	@JiraKey("HHH-18371")
+	public void testConnectionFailure(SessionFactoryScope scope) {
+		scope.getSessionFactory().getCache().evictQueryRegions();
+		scope.getSessionFactory().getStatistics().clear();
+
+		Item item = new Item();
+		scope.inTransaction(
+				session -> {
+					item.setName( "widget" );
+					item.setDescription( "A really top-quality, full-featured widget." );
+					session.persist( item );
+				}
+		);
+
+		scope.inTransaction(
+				session -> ProxyConnectionProvider.runWithConnectionRetrievalFailure( new SQLException(
+						"Too many connections" ), () -> {
+					try {
+						session.createQuery( queryString ).setCacheable( true ).list();
+						fail( "Failure expected" );
+					}
+					catch (RuntimeException e) {
+						assertTrue( e.getMessage().contains( "Too many connections" ) );
+					}
+				} )
+		);
+
+		scope.inTransaction(
+				session -> {
+					List result = session.createQuery( queryString ).setCacheable( true ).list();
+					assertEquals( 1, result.size() );
+					Item i = session.get( Item.class, item.getId() );
+					assertEquals( "widget", i.getName() );
+					session.remove( i );
+				}
+		);
+	}
+
 	protected Item findByDescription(SessionBuilder sessionBuilder, final String description) {
 		try (Session s = sessionBuilder.openSession()) {
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
@@ -760,6 +807,34 @@ public class QueryCacheTest {
 			if ( blockLatch != null ) {
 				blockLatch.countDown();
 			}
+		}
+	}
+
+	public static class ProxyConnectionProvider extends ConnectionProviderDelegate {
+
+		private static final ThreadLocal<SQLException> CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW = new ThreadLocal<>();
+
+		public ProxyConnectionProvider() {
+			setConnectionProvider( SharedDriverManagerConnectionProviderImpl.getInstance() );
+		}
+
+		static void runWithConnectionRetrievalFailure(SQLException exceptionToThrow, Runnable runnable) {
+			CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW.set( exceptionToThrow );
+			try {
+				runnable.run();
+			}
+			finally {
+				CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW.remove();
+			}
+		}
+
+		@Override
+		public Connection getConnection() throws SQLException {
+			SQLException exceptionToSend = CONNECTION_RETRIEVAL_EXCEPTION_TO_THROW.get();
+			if ( exceptionToSend != null ) {
+				throw exceptionToSend;
+			}
+			return super.getConnection();
 		}
 	}
 }

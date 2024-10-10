@@ -105,6 +105,16 @@ public class EnhanceMojoTest {
         assertFalse(enhancementContext.hasLazyLoadableAttributes(null));
         assertFalse(enhancementContext.isLazyLoadable(null));
         assertFalse(enhancementContext.doExtendedEnhancement(null));
-    }
+        Field enableAssociationManagementField = EnhanceMojo.class.getDeclaredField("enableAssociationManagement");
+        enableAssociationManagementField.setAccessible(true);
+        enableAssociationManagementField.set(enhanceMojo, Boolean.TRUE);
+        enhancementContext = (EnhancementContext)createEnhancementContextMethod.invoke(enhanceMojo);
+        assertEquals(classesDirectory.toURI().toURL(), classLoader.getURLs()[0]);
+        assertTrue(enhancementContext.doBiDirectionalAssociationManagement(null));
+        assertFalse(enhancementContext.doDirtyCheckingInline(null));
+        assertFalse(enhancementContext.hasLazyLoadableAttributes(null));
+        assertFalse(enhancementContext.isLazyLoadable(null));
+        assertFalse(enhancementContext.doExtendedEnhancement(null));
+}
 
 }

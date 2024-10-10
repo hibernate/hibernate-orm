@@ -43,6 +43,12 @@ public class EnhanceMojo extends AbstractMojo {
 			required = true)
     private File classesDirectory;
 
+    @Parameter(
+            defaultValue = "false",
+            readonly = true,
+            required = true)
+    private boolean enableAssociationManagement;
+
     public void execute() throws MojoExecutionException {
         logConfiguration();
         assembleSourceSet();
@@ -59,6 +65,7 @@ public class EnhanceMojo extends AbstractMojo {
         Log log = getLog();
         log.info("Starting 'enhance' mojo execution with the following parameters :");
         log.info("  classesDirectory: " + classesDirectory);
+        log.info("  enableAssociationManagement: " + enableAssociationManagement);
     }
 
     private void assembleSourceSet() {
@@ -92,7 +99,7 @@ public class EnhanceMojo extends AbstractMojo {
     private EnhancementContext createEnhancementContext() {
         return new EnhancementContext(
             createClassLoader(), 
-            false, 
+            enableAssociationManagement, 
             false, 
             false, 
             false);

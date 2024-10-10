@@ -5,18 +5,14 @@
 package org.hibernate.id.uuid;
 
 import java.security.SecureRandom;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
 
-import static java.time.Instant.EPOCH;
 import static java.time.temporal.ChronoUnit.MILLIS;
 
 /**
@@ -34,33 +30,63 @@ import static java.time.temporal.ChronoUnit.MILLIS;
  *     <li>48 bits - pseudorandom data to provide uniqueness.</li>
  * </ul>
  *
+ * @author Cedomir Igaly
  * @apiNote Version 7 features a time-ordered value field derived from the widely implemented and
  * well-known Unix Epoch timestamp source, the number of milliseconds since midnight 1 Jan 1970 UTC,
  * leap seconds excluded.
- *
- * @author Cedomir Igaly
  */
 public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
 
 	public static final UuidVersion7Strategy INSTANCE = new UuidVersion7Strategy();
 
 	private static class Holder {
-		static final SecureRandom numberGenerator = new SecureRandom();
+		private static final SecureRandom numberGenerator = new SecureRandom();
+
 	}
 
-	private final Lock lock = new ReentrantLock( true );
-	private final AtomicLong clockSequence;
-	private Duration currentTimestamp;
+	public record State(Instant lastTimestamp, int lastSequence) {
+		public long millis() {
+			return lastTimestamp.toEpochMilli();
+		}
+
+		public long nanos() {
+			return (long) ( ( lastTimestamp.getNano() % 1_000_000L ) * 0.004096 );
+		}
+
+		public State getNextState() {
+			final Instant now = Instant.now();
+			if ( lastTimestamp.toEpochMilli() < now.toEpochMilli() ) {
+				return new State(
+						now.truncatedTo( MILLIS ),
+						randomSequence()
+				);
+			}
+			else if ( lastSequence == 0x3FFF ) {
+				return new State(
+						lastTimestamp.plusMillis( 1 ),
+						Holder.numberGenerator.nextInt( 1 << 14 )
+				);
+			}
+			else {
+				return new State( lastTimestamp, lastSequence + 1 );
+			}
+		}
+
+		private static int randomSequence() {
+			return Holder.numberGenerator.nextInt( 1 << 14 );
+		}
+	}
+
+	private final AtomicReference<State> lastState;
 
 	@Internal
 	public UuidVersion7Strategy() {
-		this( getCurrentTimestamp(), 0 );
+		this( Instant.EPOCH, Integer.MIN_VALUE );
 	}
 
 	@Internal
-	public UuidVersion7Strategy(final Duration currentTimestamp, final long clockSequence) {
-		this.currentTimestamp = currentTimestamp;
-		this.clockSequence = new AtomicLong( clockSequence );
+	public UuidVersion7Strategy(final Instant initialTimestamp, final int initialSequence) {
+		this.lastState = new AtomicReference<>( new State( initialTimestamp, initialSequence ) );
 	}
 
 	/**
@@ -72,50 +98,31 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 	}
 
 	@Override
-	public UUID generateUUID(SharedSessionContractImplementor session) {
+	public UUID generateUUID(final SharedSessionContractImplementor session) {
 		return generateUuid( session );
 	}
 
 	@Override
-	public UUID generateUuid(SharedSessionContractImplementor session) {
-		final Duration currentTimestamp = getCurrentTimestamp();
-
-		final long seq = getSequence( currentTimestamp );
-
-		final long millis = currentTimestamp.getSeconds() * 1000 + currentTimestamp.getNano() / 1_000_000;
-		final long nanosPart = Math.round( ( currentTimestamp.getNano() % 1_000_000L ) * 0.004096 );
+	public UUID generateUuid(final SharedSessionContractImplementor session) {
+		final State state = lastState.updateAndGet( State::getNextState );
 
 		return new UUID(
 				// MSB bits 0-47 - 48-bit big-endian unsigned number of the Unix Epoch timestamp in milliseconds
-				millis << 16 & 0xFFFF_FFFF_FFFF_0000L
+				state.millis() << 16 & 0xFFFF_FFFF_FFFF_0000L
 				// MSB bits 48-51 - version = 7
 				| 0x7000L
 				// MSB bits 52-63 - sub-milliseconds part of timestamp
-				| nanosPart & 0xFFFL,
+				| state.nanos() & 0xFFFL,
 				// LSB bits 0-1 - variant = 4
 				0x8000_0000_0000_0000L
 				// LSB bits 2-15 - counter
-				| ( seq & 0x3FFFL ) << 48
+				| (long) state.lastSequence << 48
 				// LSB bits 16-63 - pseudorandom data
-				| Holder.numberGenerator.nextLong() & 0xFFFF_FFFF_FFFFL
+				| randomNode()
 		);
 	}
 
-	private long getSequence(final Duration currentTimestamp) {
-		lock.lock();
-		try {
-			if ( !this.currentTimestamp.equals( currentTimestamp ) ) {
-				this.currentTimestamp = currentTimestamp;
-				clockSequence.set( 0 );
-			}
-		}
-		finally {
-			lock.unlock();
-		}
-		return clockSequence.getAndIncrement();
-	}
-
-	private static Duration getCurrentTimestamp() {
-		return Duration.between( EPOCH, Instant.now() ).truncatedTo( MILLIS );
+	private static long randomNode() {
+		return Holder.numberGenerator.nextLong( 0x1_0000_0000_0000L ) | 0x1000_0000_0000L;
 	}
 }

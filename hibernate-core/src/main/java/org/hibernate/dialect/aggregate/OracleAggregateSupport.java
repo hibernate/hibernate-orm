@@ -64,6 +64,7 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 public class OracleAggregateSupport extends AggregateSupportImpl {
@@ -209,6 +210,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									case BINARY:
 									case VARBINARY:
 									case LONG32VARBINARY:
+									case UUID:
 										return template.replace(
 												placeholder,
 												jdbcType.getSqlTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"

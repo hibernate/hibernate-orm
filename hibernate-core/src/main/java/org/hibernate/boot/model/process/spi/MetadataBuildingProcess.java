@@ -90,6 +90,7 @@ import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.UuidAsBinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -752,7 +753,7 @@ public class MetadataBuildingProcess {
 			);
 		}
 		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
+			jdbcTypeRegistry.addDescriptorIfAbsent( UuidAsBinaryJdbcType.INSTANCE );
 		}
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );

@@ -17,11 +17,14 @@ package org.hibernate.orm.tooling.maven.enhance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -59,6 +62,29 @@ public class EnhanceMojoTest {
         assertTrue(sourceSet.contains(barClassFile));
         assertFalse(sourceSet.contains(fooTxtFile));
         assertEquals(1, sourceSet.size());
+    }
+
+    @Test
+    void testCreateClassLoader() throws Exception {
+        Method createClassLoaderMethod = EnhanceMojo.class.getDeclaredMethod("createClassLoader");
+        createClassLoaderMethod.setAccessible(true);
+        Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
+        classesDirectoryField.setAccessible(true);
+        Field sourceSetField = EnhanceMojo.class.getDeclaredField("sourceSet");
+        sourceSetField.setAccessible(true);
+        EnhanceMojo enhanceMojo = new EnhanceMojo();
+        File classesDirectory = new File(tempDir, "classes");
+        classesDirectory.mkdirs();
+        classesDirectoryField.set(enhanceMojo, classesDirectory);
+        File barFolder = new File(classesDirectory, "bar");
+        barFolder.mkdirs();
+        File fooTxtFile = new File (barFolder, "Foo.txt");
+        fooTxtFile.createNewFile();
+        ClassLoader classLoader = (ClassLoader)createClassLoaderMethod.invoke(enhanceMojo);
+        assertNotNull(classLoader);
+        URL fooResource = classLoader.getResource("bar/Foo.txt");
+        assertNotNull(fooResource);
+        assertEquals(fooTxtFile.toURI().toURL(), fooResource);
     }
 
 }

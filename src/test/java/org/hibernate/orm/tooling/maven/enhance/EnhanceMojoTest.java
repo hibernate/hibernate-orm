@@ -125,6 +125,16 @@ public class EnhanceMojoTest {
         assertFalse(enhancementContext.hasLazyLoadableAttributes(null));
         assertFalse(enhancementContext.isLazyLoadable(null));
         assertFalse(enhancementContext.doExtendedEnhancement(null));
+        Field enableLazyInitializationField = EnhanceMojo.class.getDeclaredField("enableLazyInitialization");
+        enableLazyInitializationField.setAccessible(true);
+        enableLazyInitializationField.set(enhanceMojo, Boolean.TRUE);
+        enhancementContext = (EnhancementContext)createEnhancementContextMethod.invoke(enhanceMojo);
+        assertEquals(classesDirectory.toURI().toURL(), classLoader.getURLs()[0]);
+        assertTrue(enhancementContext.doBiDirectionalAssociationManagement(null));
+        assertTrue(enhancementContext.doDirtyCheckingInline(null));
+        assertTrue(enhancementContext.hasLazyLoadableAttributes(null));
+        assertTrue(enhancementContext.isLazyLoadable(null));
+        assertFalse(enhancementContext.doExtendedEnhancement(null));
     }
 
 }

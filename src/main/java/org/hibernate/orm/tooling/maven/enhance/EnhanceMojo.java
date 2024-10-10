@@ -17,7 +17,6 @@ package org.hibernate.orm.tooling.maven.enhance;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -55,8 +54,13 @@ public class EnhanceMojo extends AbstractMojo {
             required = true)
     private boolean enableDirtyTracking;
 
+    @Parameter(
+            defaultValue = "false",
+            readonly = true,
+            required = true)
+    private boolean enableLazyInitialization;
+
     public void execute() throws MojoExecutionException {
-        logConfiguration();
         assembleSourceSet();
         EnhancementContext enhancementContext = createEnhancementContext();
         ClassLoader classLoader = enhancementContext.getLoadingClassLoader();
@@ -65,14 +69,6 @@ public class EnhanceMojo extends AbstractMojo {
         } catch (ClassNotFoundException e) {
             throw new MojoExecutionException(e);
         }
-    }
-
-    private void logConfiguration() {
-        Log log = getLog();
-        log.info("Starting 'enhance' mojo execution with the following parameters :");
-        log.info("  classesDirectory: " + classesDirectory);
-        log.info("  enableAssociationManagement: " + enableAssociationManagement);
-        log.info("  enableDirtyTracking: " + enableDirtyTracking);
     }
 
     private void assembleSourceSet() {
@@ -108,7 +104,7 @@ public class EnhanceMojo extends AbstractMojo {
             createClassLoader(), 
             enableAssociationManagement, 
             enableDirtyTracking, 
-            false, 
+            enableLazyInitialization, 
             false);
     }
 

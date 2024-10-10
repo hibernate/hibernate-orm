@@ -7,9 +7,11 @@
 package org.hibernate.persister.entity;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -349,10 +351,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			);
 
 			// SUBCLASSES
-			final List<Subclass> subclasses = persistentClass.getSubclasses();
+			final List<Subclass> subclasses = persistentClass.getSubclasses().stream().sorted(Comparator.comparing(PersistentClass::getEntityName)).collect(Collectors.toList());
 			for ( int k = 0; k < subclasses.size(); k++ ) {
 				Subclass subclass = subclasses.get( k );
-				subclassClosure[k] = subclass.getEntityName();
+				subclassClosure[k+1] = subclass.getEntityName();
 				Object subclassDiscriminatorValue = DiscriminatorHelper.getDiscriminatorValue( subclass );
 				addSubclassByDiscriminatorValue(
 						subclassesByDiscriminatorValueLocal,

@@ -320,6 +320,7 @@ To make use of multi-tenancy, we'll usually need to set at least one of these co
 | `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
 |===
 
+Do not configure those properties if you would like the configured `BeanContainer` provide the implementation.
 A longer discussion of multi-tenancy may be found in the {multitenacy-doc}[User Guide].
 
 [[custom-sql]]

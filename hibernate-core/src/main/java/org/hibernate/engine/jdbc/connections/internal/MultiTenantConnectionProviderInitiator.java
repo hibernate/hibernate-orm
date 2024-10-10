@@ -12,6 +12,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.Helper;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -39,7 +43,36 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	@Override
 	public MultiTenantConnectionProvider<?> initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		if ( !configurationValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
-			// nothing to do, but given the separate hierarchies have to handle this here.
+			final BeanContainer beanContainer = Helper.allowExtensionsInCdi( registry ) ? registry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
+			if (beanContainer != null) {
+				return beanContainer.getBean(
+						MultiTenantConnectionProvider.class,
+						new BeanContainer.LifecycleOptions() {
+							@Override
+							public boolean canUseCachedReferences() {
+								return true;
+							}
+
+							@Override
+							public boolean useJpaCompliantCreation() {
+								return true;
+							}
+						},
+						new BeanInstanceProducer() {
+
+							@Override
+							public <B> B produceBeanInstance(Class<B> beanType) {
+								return null;
+							}
+
+							@Override
+							public <B> B produceBeanInstance(String name, Class<B> beanType) {
+								return null;
+							}
+
+						}
+				).getBeanInstance();
+			}
 			return null;
 		}
 

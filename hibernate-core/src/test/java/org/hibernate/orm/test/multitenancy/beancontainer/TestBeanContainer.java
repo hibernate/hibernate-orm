@@ -2,10 +2,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.idgen.userdefined;
+package org.hibernate.orm.test.multitenancy.beancontainer;
 
-import java.util.concurrent.atomic.AtomicLong;
-
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -14,17 +13,15 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
  * @author Yanming Zhou
  */
 @SuppressWarnings("unchecked")
-public class SimpleBeanContainer implements BeanContainer {
-
-	public static final long INITIAL_VALUE = 23L;
+public class TestBeanContainer implements BeanContainer {
 
 	@Override
 	public <B> ContainedBean<B> getBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
-		return () -> (B) ( beanType == SimpleGenerator.class ?
-				new SimpleGenerator( new AtomicLong( INITIAL_VALUE ) ) : fallbackProducer.produceBeanInstance( beanType ) );
+		return () -> (B) ( beanType == CurrentTenantIdentifierResolver.class ?
+				TestCurrentTenantIdentifierResolver.INSTANCE_FOR_BEAN_CONTAINER : fallbackProducer.produceBeanInstance( beanType ) );
 	}
 
 	@Override

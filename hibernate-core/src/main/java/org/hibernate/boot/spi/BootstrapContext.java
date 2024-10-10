@@ -25,8 +25,6 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
-
 /**
  * Defines a context for things available during the process of bootstrapping
  * a {@link org.hibernate.SessionFactory} which are expected to be cleaned up
@@ -151,14 +149,14 @@ public interface BootstrapContext {
 
 	/**
 	 * Access to the Jandex index passed by call to
-	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(IndexView)}, if any.
+	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(Object)}, if any.
 	 *
 	 * @apiNote Jandex is currently not used, see
 	 *          <a href="https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0">the roadmap</a>
 	 *
 	 * @return The Jandex index
 	 */
-	IndexView getJandexView();
+	Object getJandexView();
 
 	/**
 	 * Access to any SQL functions explicitly registered with the

@@ -14,14 +14,11 @@ import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
-import org.jboss.jandex.IndexView;
-
 /**
  * @author Steve Ebersole
  */
 public class DomainModelSource {
 	private final ClassDetailsRegistry classDetailsRegistry;
-	private final IndexView jandexIndex;
 	private final GlobalRegistrations globalRegistrations;
 	private final RootMappingDefaults effectiveMappingDefaults;
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
@@ -29,13 +26,11 @@ public class DomainModelSource {
 
 	public DomainModelSource(
 			ClassDetailsRegistry classDetailsRegistry,
-			IndexView jandexIndex,
 			List<String> allKnownClassNames,
 			GlobalRegistrations globalRegistrations,
 			RootMappingDefaults effectiveMappingDefaults,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
 		this.classDetailsRegistry = classDetailsRegistry;
-		this.jandexIndex = jandexIndex;
 		this.allKnownClassNames = allKnownClassNames;
 		this.globalRegistrations = globalRegistrations;
 		this.effectiveMappingDefaults = effectiveMappingDefaults;
@@ -44,10 +39,6 @@ public class DomainModelSource {
 
 	public ClassDetailsRegistry getClassDetailsRegistry() {
 		return classDetailsRegistry;
-	}
-
-	public IndexView getJandexIndex() {
-		return jandexIndex;
 	}
 
 	public GlobalRegistrations getGlobalRegistrations() {

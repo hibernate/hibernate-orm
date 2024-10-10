@@ -8,20 +8,22 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.internal.UrlInputStreamAccess;
+import org.hibernate.boot.archive.scan.internal.DisabledScanner;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
+import org.hibernate.boot.archive.scan.spi.ScannerFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
@@ -86,11 +88,18 @@ public class ScanningCoordinator {
 
 		if ( scannerSetting == null ) {
 			// No custom Scanner specified, use the StandardScanner
-			if ( archiveDescriptorFactory == null ) {
-				return new StandardScanner();
+			final Iterator<ScannerFactory> iterator = bootstrapContext.getServiceRegistry()
+					.requireService( ClassLoaderService.class )
+					.loadJavaServices( ScannerFactory.class )
+					.iterator();
+			if ( iterator.hasNext() ) {
+				// todo: check for multiple scanner and in case raise a warning?
+				final ScannerFactory factory = iterator.next();
+				return factory.getScanner( archiveDescriptorFactory );
 			}
 			else {
-				return new StandardScanner( archiveDescriptorFactory );
+				// todo: add a debug message that there is no Scanner?
+				return new DisabledScanner();
 			}
 		}
 		else {

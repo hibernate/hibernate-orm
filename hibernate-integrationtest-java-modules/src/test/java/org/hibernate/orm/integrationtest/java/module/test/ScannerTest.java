@@ -10,7 +10,7 @@ import java.util.Set;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
+import org.hibernate.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.orm.integrationtest.java.module.test.entity.Author;

@@ -30,15 +30,9 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.models.internal.BasicModelBuildingContextImpl;
-import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.ClassLoading;
-
-import org.jboss.jandex.CompositeIndex;
-import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
 
 import static org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder.createEntityHierarchies;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
@@ -100,7 +94,6 @@ public class ManagedResourcesProcessor {
 
 		// At this point we know all managed class names across all sources.
 		// Resolve the Jandex Index and build the SourceModelBuildingContext.
-		final IndexView jandexIndex = resolveJandexIndex( allKnownClassNames, bootstrapContext.getJandexView(), classLoading );
 		final BasicModelBuildingContextImpl sourceModelBuildingContext = new BasicModelBuildingContextImpl(
 				classLoading,
 				ModelsHelper::preFillRegistries
@@ -131,7 +124,6 @@ public class ManagedResourcesProcessor {
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				globalRegistrations,
-				jandexIndex,
 				sourceModelBuildingContext
 		);
 
@@ -220,31 +212,6 @@ public class ManagedResourcesProcessor {
 					entry.getKey()
 			);
 		}
-	}
-
-	public static IndexView resolveJandexIndex(
-			List<String> allKnownClassNames,
-			IndexView suppliedJandexIndex,
-			ClassLoading classLoading) {
-		// todo : we could build a new Jandex (Composite)Index that includes the `managedResources#getAnnotatedClassNames`
-		// 		and all classes from `managedResources#getXmlMappingBindings`.  Only really worth it in the case
-		//		of runtime enhancement.  This would definitely need to be toggle-able.
-		//		+
-		//		For now, let's not as it does not matter for this PoC
-		if ( 1 == 1 ) {
-			return suppliedJandexIndex;
-		}
-
-		final Indexer jandexIndexer = new Indexer();
-		for ( String knownClassName : allKnownClassNames ) {
-			JandexIndexerHelper.apply( knownClassName, jandexIndexer, classLoading );
-		}
-
-		if ( suppliedJandexIndex == null ) {
-			return jandexIndexer.complete();
-		}
-
-		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
 	}
 
 	/**

@@ -25,6 +25,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -85,6 +86,26 @@ public class EnhanceMojoTest {
         URL fooResource = classLoader.getResource("bar/Foo.txt");
         assertNotNull(fooResource);
         assertEquals(fooTxtFile.toURI().toURL(), fooResource);
+    }
+
+    @Test
+    void testCreateEnhancementContext() throws Exception {
+        Method createEnhancementContextMethod = EnhanceMojo.class.getDeclaredMethod("createEnhancementContext");
+        createEnhancementContextMethod.setAccessible(true);
+        Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
+        classesDirectoryField.setAccessible(true);
+        EnhanceMojo enhanceMojo = new EnhanceMojo();
+        File classesDirectory = new File(tempDir, "classes");
+        classesDirectory.mkdirs();
+        classesDirectoryField.set(enhanceMojo, classesDirectory);
+        EnhancementContext enhancementContext = (EnhancementContext)createEnhancementContextMethod.invoke(enhanceMojo);
+        URLClassLoader classLoader = (URLClassLoader)enhancementContext.getLoadingClassLoader();
+        assertEquals(classesDirectory.toURI().toURL(), classLoader.getURLs()[0]);
+        assertFalse(enhancementContext.doBiDirectionalAssociationManagement(null));
+        assertFalse(enhancementContext.doDirtyCheckingInline(null));
+        assertFalse(enhancementContext.hasLazyLoadableAttributes(null));
+        assertFalse(enhancementContext.isLazyLoadable(null));
+        assertFalse(enhancementContext.doExtendedEnhancement(null));
     }
 
 }

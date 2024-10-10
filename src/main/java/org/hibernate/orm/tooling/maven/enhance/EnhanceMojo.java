@@ -22,7 +22,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
-
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -44,18 +43,16 @@ public class EnhanceMojo extends AbstractMojo {
 			required = true)
     private File classesDirectory;
 
-    @Parameter
-    private FileSet[] fileSets;
-
     public void execute() throws MojoExecutionException {
         assembleSourceSet();
-        ClassLoader classLoader = createClassLoader();
+        EnhancementContext enhancementContext = createEnhancementContext();
+        ClassLoader classLoader = enhancementContext.getLoadingClassLoader();
         try {
             classLoader.loadClass("java.lang.Object");
         } catch (ClassNotFoundException e) {
             throw new MojoExecutionException(e);
         }
-    }
+   }
 
     private void assembleSourceSet() {
         addToSourceSetIfNeeded(classesDirectory);
@@ -72,6 +69,7 @@ public class EnhanceMojo extends AbstractMojo {
             }
         }
     }
+
     private ClassLoader createClassLoader() {
 		List<URL> urls = new ArrayList<>();
         try {
@@ -83,5 +81,14 @@ public class EnhanceMojo extends AbstractMojo {
             urls.toArray(new URL[urls.size()]), 
             Enhancer.class.getClassLoader());
 	}
+
+    private EnhancementContext createEnhancementContext() {
+        return new EnhancementContext(
+            createClassLoader(), 
+            false, 
+            false, 
+            false, 
+            false);
+    }
 
 }

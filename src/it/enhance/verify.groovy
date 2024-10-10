@@ -27,9 +27,10 @@ if (!buildLog.exists()) {
 }
 List<String> listOfStrings = new ArrayList<String>();
 listOfStrings = Files.readAllLines(buildLog.toPath());
-assert listOfStrings.contains("[INFO] Starting 'enhance' mojo execution with the following parameters :");
-assert listOfStrings.contains("[INFO]   classesDirectory: " + classesFolder);
-assert listOfStrings.contains("[INFO]   enableAssociationManagement: false");
-assert listOfStrings.contains("[INFO]   enableDirtyTracking: false");
+assert listOfStrings.contains("[DEBUG] Configuring mojo execution 'org.hibernate.orm:hibernate-maven-plugin:0.0.1-SNAPSHOT:enhance:enhance' with basic configurator -->");
+assert listOfStrings.contains("[DEBUG]   (f) classesDirectory = " + classesFolder);
+assert listOfStrings.contains("[DEBUG]   (f) enableAssociationManagement = false");
+assert listOfStrings.contains("[DEBUG]   (f) enableDirtyTracking = false");
+assert listOfStrings.contains("[DEBUG]   (f) enableLazyInitialization = false");
 
 

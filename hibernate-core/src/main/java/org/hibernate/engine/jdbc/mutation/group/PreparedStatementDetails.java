@@ -56,4 +56,8 @@ public interface PreparedStatementDetails {
 	}
 
 	void releaseStatement(SharedSessionContractImplementor session);
+
+	default boolean toRelease(){
+		return false;
+	}
 }

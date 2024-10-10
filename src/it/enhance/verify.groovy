@@ -30,5 +30,6 @@ listOfStrings = Files.readAllLines(buildLog.toPath());
 assert listOfStrings.contains("[INFO] Starting 'enhance' mojo execution with the following parameters :");
 assert listOfStrings.contains("[INFO]   classesDirectory: " + classesFolder);
 assert listOfStrings.contains("[INFO]   enableAssociationManagement: false");
+assert listOfStrings.contains("[INFO]   enableDirtyTracking: false");
 
 

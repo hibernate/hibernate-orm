@@ -4,14 +4,18 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
@@ -25,6 +29,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputNonExistentImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
+import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -81,7 +86,8 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 		doTruncate( metadata, options, contributableInclusionFilter, jdbcContext.getDialect(), targets );
 	}
 
-	private void doTruncate(
+	@Internal
+	public void doTruncate(
 			Metadata metadata,
 			ExecutionOptions options,
 			ContributableMatcher contributableInclusionFilter,
@@ -343,4 +349,57 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 		}
 	}
 
+	/**
+	 * Intended for use from tests
+	 */
+	@Internal
+	public void doTruncate(
+			Metadata metadata,
+			final boolean manageNamespaces,
+			GenerationTarget... targets) {
+		final ServiceRegistry serviceRegistry =
+				( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
+						.getServiceRegistry();
+		doTruncate(
+				metadata,
+				serviceRegistry,
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
+				manageNamespaces,
+				targets
+		);
+	}
+
+	/**
+	 * Intended for use from tests
+	 */
+	@Internal
+	public void doTruncate(
+			Metadata metadata,
+			final ServiceRegistry serviceRegistry,
+			final Map<String,Object> settings,
+			final boolean manageNamespaces,
+			GenerationTarget... targets) {
+		doTruncate(
+				metadata,
+				new ExecutionOptions() {
+					@Override
+					public boolean shouldManageNamespaces() {
+						return manageNamespaces;
+					}
+
+					@Override
+					public Map<String,Object> getConfigurationValues() {
+						return settings;
+					}
+
+					@Override
+					public ExceptionHandler getExceptionHandler() {
+						return ExceptionHandlerLoggedImpl.INSTANCE;
+					}
+				},
+				(contributed) -> true,
+				serviceRegistry.requireService( JdbcEnvironment.class ).getDialect(),
+				targets
+		);
+	}
 }

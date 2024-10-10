@@ -67,7 +67,10 @@ public abstract class AbstractMutationCoordinator {
 		if ( !dynamicUpdate
 				&& !entityPersister().optimisticLockStyle().isAllOrDirty()
 				&& session.getTransactionCoordinator() != null
-				&& session.getTransactionCoordinator().isTransactionActive() ) {
+				&& session.getTransactionCoordinator().isTransactionActive()
+				&& (
+						session.getSessionFactory().getSessionFactoryOptions().isJdbcBatchVersionedData()
+						|| !entityPersister().isVersioned() ) ) {
 			return this::getBatchKey;
 		}
 

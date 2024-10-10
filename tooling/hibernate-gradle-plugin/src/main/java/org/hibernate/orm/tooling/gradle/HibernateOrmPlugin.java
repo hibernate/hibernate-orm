@@ -14,7 +14,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.plugins.JvmEcosystemPlugin;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
@@ -25,24 +25,28 @@ import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
 public class HibernateOrmPlugin implements Plugin<Project> {
 	@Override
 	public void apply(Project project) {
-		// for SourceSet support and other JVM goodies
-		project.getPlugins().apply( JvmEcosystemPlugin.class );
+		project.getPlugins().withType( JavaPlugin.class, javaPlugin -> {
 
-		project.getLogger().debug( "Adding Hibernate extensions to the build [{}]", project.getPath() );
-		final HibernateOrmSpec ormDsl = project.getExtensions().create( HibernateOrmSpec.DSL_NAME,  HibernateOrmSpec.class, project );
+			project.getLogger().debug( "Adding Hibernate extensions to the build [{}]", project.getPath() );
+			final HibernateOrmSpec ormDsl = project.getExtensions().create(
+					HibernateOrmSpec.DSL_NAME,
+					HibernateOrmSpec.class,
+					project
+			);
 
-		prepareEnhancement( ormDsl, project );
-		prepareHbmTransformation( ormDsl, project );
+			prepareEnhancement( ormDsl, project );
+			prepareHbmTransformation( ormDsl, project );
 
 
-		//noinspection ConstantConditions
-		project.getDependencies().add(
-				"implementation",
-				ormDsl.getUseSameVersion().map( (use) -> use
-						? "org.hibernate.orm:hibernate-core:" + HibernateVersion.version
-						: null
-				)
-		);
+			//noinspection ConstantConditions
+			project.getDependencies().add(
+					"implementation",
+					ormDsl.getUseSameVersion().map( (use) -> use
+							? "org.hibernate.orm:hibernate-core:" + HibernateVersion.version
+							: null
+					)
+			);
+		} );
 	}
 
 	private void prepareEnhancement(HibernateOrmSpec ormDsl, Project project) {

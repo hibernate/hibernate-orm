@@ -85,6 +85,7 @@ import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -131,6 +132,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
@@ -2254,6 +2256,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private SqmFunctionDescriptor getFunctionDescriptor(String name) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( name );
+	}
+
+	private SqmSetReturningFunctionDescriptor getSetReturningFunctionDescriptor(String name) {
+		return queryEngine.getSqmFunctionRegistry().findSetReturningFunctionDescriptor( name );
 	}
 
 	@Override
@@ -5811,5 +5817,29 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
 		return functionWithinGroup( "xmlagg", String.class, order, filter, window, argument );
+	}
+
+	@Override
+	public <E> SqmSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args) {
+		return getSetReturningFunctionDescriptor( name ).generateSqmExpression(
+				expressionList( args ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E> SqmSetReturningFunction<E> unnestArray(Expression<E[]> array) {
+		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) array ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
+		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) collection ),
+				queryEngine
+		);
 	}
 }

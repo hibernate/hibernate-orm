@@ -277,6 +277,8 @@ public class HSQLLegacyDialect extends Dialect {
 			functionFactory.jsonObjectAgg_h2();
 		}
 
+		functionFactory.unnest( "c1" );
+
 		//trim() requires parameters to be cast when used as trim character
 		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
 				this,

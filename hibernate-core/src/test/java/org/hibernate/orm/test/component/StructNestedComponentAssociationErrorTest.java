@@ -33,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @JiraKey( "HHH-15831" )
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructAggregate.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
 public class StructNestedComponentAssociationErrorTest {
 
 	@Test

@@ -78,8 +78,8 @@ public class CharacterArrayNationalizedMappingTests {
 			}
 			else {
 				assertThat(
-						jdbcMapping.getJdbcType().getJdbcTypeCode(),
-						isOneOf( SqlTypes.ARRAY, SqlTypes.SQLXML, SqlTypes.VARBINARY )
+						jdbcMapping.getJdbcType().getDdlTypeCode(),
+						isOneOf( SqlTypes.ARRAY, SqlTypes.JSON, SqlTypes.SQLXML, SqlTypes.VARBINARY, SqlTypes.LONG32VARCHAR )
 				);
 			}
 		}

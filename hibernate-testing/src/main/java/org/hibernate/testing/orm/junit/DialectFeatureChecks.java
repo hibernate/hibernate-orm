@@ -75,6 +75,7 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -83,6 +84,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -94,15 +96,23 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.ObjectJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -652,6 +662,23 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			try {
+				final MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl(
+						ServiceRegistryUtil.serviceRegistry()
+				);
+				final BasicType<?> aggregateType = new BasicTypeImpl<>( ObjectJavaType.INSTANCE, JsonJdbcType.INSTANCE );
+				final BasicValue aggregateValue = new BasicValue( buildingContext ) {
+					@Override
+					public Type getType() throws MappingException {
+						return aggregateType;
+					}
+				};
+				final BasicType<?> columnType = new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE );
+				final BasicValue columnValue = new BasicValue( buildingContext ) {
+					@Override
+					public Type getType() throws MappingException {
+						return columnType;
+					}
+				};
 				return dialect.getAggregateSupport() != null
 						&& dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
 						"",
@@ -666,7 +693,12 @@ abstract public class DialectFeatureChecks {
 
 							@Override
 							public int getTypeCode() {
-								return SqlTypes.JSON;
+								return aggregateType.getJdbcType().getDdlTypeCode();
+							}
+
+							@Override
+							public Value getValue() {
+								return aggregateValue;
 							}
 
 							@Override
@@ -691,7 +723,12 @@ abstract public class DialectFeatureChecks {
 
 							@Override
 							public int getTypeCode() {
-								return Types.VARCHAR;
+								return columnType.getJdbcType().getDdlTypeCode();
+							}
+
+							@Override
+							public Value getValue() {
+								return columnValue;
 							}
 
 							@Override
@@ -886,6 +923,132 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsUnnest implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesSetReturningFunction( dialect, "unnest" );
+		}
+	}
+
+	public static class SupportsArrayAgg implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_agg" );
+		}
+	}
+
+	public static class SupportsArrayAppend implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_append" );
+		}
+	}
+
+	public static class SupportsArrayConcat implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_concat" );
+		}
+	}
+
+	public static class SupportsArrayConstructor implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array" );
+		}
+	}
+
+	public static class SupportsArrayContains implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_contains" );
+		}
+	}
+
+	public static class SupportsArrayFill implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_fill" );
+		}
+	}
+
+	public static class SupportsArrayGet implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_get" );
+		}
+	}
+
+	public static class SupportsArrayIncludes implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_includes" );
+		}
+	}
+
+	public static class SupportsArrayIntersects implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_intersects" );
+		}
+	}
+
+	public static class SupportsArrayLength implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_length" );
+		}
+	}
+
+	public static class SupportsArrayPositions implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_positions" );
+		}
+	}
+
+	public static class SupportsArrayPosition implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_position" );
+		}
+	}
+
+	public static class SupportsArrayPrepend implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_prepend" );
+		}
+	}
+
+	public static class SupportsArrayRemoveIndex implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_remove_index" );
+		}
+	}
+
+	public static class SupportsArrayRemove implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_remove" );
+		}
+	}
+
+	public static class SupportsArrayReplace implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_replace" );
+		}
+	}
+
+	public static class SupportsArraySet implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_set" );
+		}
+	}
+
+	public static class SupportsArraySlice implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_slice" );
+		}
+	}
+
+	public static class SupportsArrayToString implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_to_string" );
+		}
+	}
+
+	public static class SupportsArrayTrim implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_trim" );
+		}
+	}
+
 	public static class IsJtds implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
@@ -907,6 +1070,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsStructuralArrays implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getPreferredSqlTypeCodeForArray() != SqlTypes.VARBINARY;
+		}
+	}
+
+	public static class SupportsTypedArrays implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
 		}
 	}
 
@@ -933,6 +1102,14 @@ abstract public class DialectFeatureChecks {
 	private static final HashMap<Dialect, SqmFunctionRegistry> FUNCTION_REGISTRIES = new HashMap<>();
 
 	public static boolean definesFunction(Dialect dialect, String functionName) {
+		return getSqmFunctionRegistry( dialect ).findFunctionDescriptor( functionName ) != null;
+	}
+
+	public static boolean definesSetReturningFunction(Dialect dialect, String functionName) {
+		return getSqmFunctionRegistry( dialect ).findSetReturningFunctionDescriptor( functionName ) != null;
+	}
+
+	private static SqmFunctionRegistry getSqmFunctionRegistry(Dialect dialect) {
 		SqmFunctionRegistry sqmFunctionRegistry = FUNCTION_REGISTRIES.get( dialect );
 		if ( sqmFunctionRegistry == null ) {
 			final TypeConfiguration typeConfiguration = new TypeConfiguration();
@@ -948,7 +1125,7 @@ abstract public class DialectFeatureChecks {
 			dialect.initializeFunctionRegistry( functionContributions );
 			FUNCTION_REGISTRIES.put( dialect, sqmFunctionRegistry = functionContributions.functionRegistry );
 		}
-		return sqmFunctionRegistry.findFunctionDescriptor( functionName ) != null;
+		return sqmFunctionRegistry;
 	}
 
 	private static class FakeTypeContributions implements TypeContributions {

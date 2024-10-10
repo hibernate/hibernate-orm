@@ -1160,7 +1160,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		this.jdbcTypeCode = jdbcTypeCode;
 	}
 
-	@Override
 	public Integer getExplicitJdbcTypeCode() {
 		return jdbcTypeCode == null ? getPreferredSqlTypeCodeForArray() : jdbcTypeCode;
 	}

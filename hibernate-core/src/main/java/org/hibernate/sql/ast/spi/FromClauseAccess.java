@@ -10,6 +10,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Access to TableGroup indexing.  The indexing is defined in terms
  * of {@link NavigablePath}
@@ -76,4 +78,6 @@ public interface FromClauseAccess {
 		}
 		return tableGroup;
 	}
+
+	@Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable);
 }

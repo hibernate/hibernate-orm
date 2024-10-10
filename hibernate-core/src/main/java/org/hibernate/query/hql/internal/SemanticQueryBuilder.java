@@ -95,6 +95,7 @@ import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
@@ -119,6 +120,7 @@ import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -160,6 +162,7 @@ import org.hibernate.query.sqm.tree.expression.SqmOverflow;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
@@ -174,6 +177,7 @@ import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
@@ -2199,6 +2203,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public SqmRoot<?> visitRootFunction(HqlParser.RootFunctionContext ctx) {
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					"The JPA specification does not support functions in the from clause. " +
+							"Please disable the JPA query compliance if you want to use this feature.",
+					StrictJpaComplianceViolation.Type.FROM_FUNCTION
+			);
+		}
+
+		final SqmSetReturningFunction<?> function = (SqmSetReturningFunction<?>) ctx.setReturningFunction().accept( this );
+		final String alias = extractAlias( ctx.variable() );
+		final SqmFunctionRoot<?> sqmRoot = new SqmFunctionRoot<>( function, alias );
+		processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
+		return sqmRoot;
+	}
+
+	@Override
 	public String visitVariable(HqlParser.VariableContext ctx) {
 		return extractAlias( ctx );
 	}
@@ -2299,6 +2320,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext ) {
 			return ((HqlParser.JoinSubqueryContext) joinTargetContext).variable();
 		}
+		else if ( joinTargetContext instanceof HqlParser.JoinFunctionContext ) {
+			return ((HqlParser.JoinFunctionContext) joinTargetContext).variable();
+		}
 		else {
 			throw new ParsingException( "unexpected join type" );
 		}
@@ -2335,6 +2359,34 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final SqmJoin<X, ?> join = new SqmDerivedJoin<>( subQuery, alias, joinType, lateral, sqmRoot );
 			processingStateStack.getCurrent().getPathRegistry().register( join );
 			return join;
+		}
+		else if ( joinTargetContext instanceof HqlParser.JoinFunctionContext ) {
+			if ( fetch ) {
+				throw new SemanticException( "The 'from' clause of a set returning function has a 'fetch' join", query );
+			}
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation(
+						"The JPA specification does not support functions in the from clause. " +
+								"Please disable the JPA query compliance if you want to use this feature.",
+						StrictJpaComplianceViolation.Type.FROM_FUNCTION
+				);
+			}
+
+			final HqlParser.JoinFunctionContext joinFunctionContext = (HqlParser.JoinFunctionContext) joinTargetContext;
+			final boolean lateral = joinFunctionContext.LATERAL() != null;
+			final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
+			final SqmSetReturningFunction<?> function = (SqmSetReturningFunction<?>) joinFunctionContext.setReturningFunction().accept( this );
+			dotIdentifierConsumerStack.push( identifierConsumer );
+			final SqmFunctionJoin<?> join = new SqmFunctionJoin<>(
+					function,
+					alias,
+					joinType,
+					lateral,
+					(SqmRoot<Object>) sqmRoot
+			);
+			processingStateStack.getCurrent().getPathRegistry().register( join );
+			sqmRoot.addSqmJoin( (SqmJoin<X, ?>) join );
+			return (SqmJoin<X, ?>) join;
 		}
 		else {
 			throw new ParsingException( "unexpected join type" );
@@ -4491,6 +4543,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public SqmSetReturningFunction<?> visitSimpleSetReturningFunction(HqlParser.SimpleSetReturningFunctionContext ctx) {
+		final String functionName = visitIdentifier( ctx.identifier() );
+		final HqlParser.GenericFunctionArgumentsContext argumentsContext = ctx.genericFunctionArguments();
+		@SuppressWarnings("unchecked")
+		final List<SqmTypedNode<?>> functionArguments =
+				argumentsContext == null
+						? emptyList()
+						: (List<SqmTypedNode<?>>) argumentsContext.accept(this);
+
+		SqmSetReturningFunctionDescriptor functionTemplate = getSetReturningFunctionDescriptor( functionName );
+		if ( functionTemplate == null ) {
+			throw new SemanticException(
+					"The %s() set-returning function was not registered for the dialect".formatted( functionName ),
+					query
+			);
+		}
+		return functionTemplate.generateSqmExpression( functionArguments, creationContext.getQueryEngine() );
+	}
+
+	@Override
 	public SqmExpression<?> visitJpaNonstandardFunction(HqlParser.JpaNonstandardFunctionContext ctx) {
 		final String functionName = toName( ctx.jpaNonstandardFunctionName() );
 		final HqlParser.GenericFunctionArgumentsContext argumentsContext = ctx.genericFunctionArguments();
@@ -4832,6 +4904,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmFunctionDescriptor getFunctionDescriptor(String name) {
 		return creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( name );
+	}
+
+	private SqmSetReturningFunctionDescriptor getSetReturningFunctionDescriptor(String name) {
+		return creationContext.getQueryEngine().getSqmFunctionRegistry().findSetReturningFunctionDescriptor( name );
 	}
 
 	@Override

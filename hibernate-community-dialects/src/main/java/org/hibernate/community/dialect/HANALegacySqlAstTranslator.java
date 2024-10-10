@@ -20,7 +20,6 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -195,12 +194,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
 		// HANA does not support parameters in lateral subqueries for some reason, so inline all the parameters in this case
 		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
-	}
-
-	@Override
-	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		tableReference.getFunctionExpression().accept( this );
-		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override

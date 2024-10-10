@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
@@ -194,14 +195,24 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
 	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
 		// HANA does not support parameters in lateral subqueries for some reason, so inline all the parameters in this case
 		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
 	}
 
 	@Override
-	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		tableReference.getFunctionExpression().accept( this );
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
 		renderTableReferenceIdentificationVariable( tableReference );
 	}
 

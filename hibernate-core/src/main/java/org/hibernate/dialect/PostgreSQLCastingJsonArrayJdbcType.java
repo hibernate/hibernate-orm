@@ -5,6 +5,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 /**
@@ -12,12 +13,10 @@ import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
  */
 public class PostgreSQLCastingJsonArrayJdbcType extends JsonArrayJdbcType {
 
-	public static final PostgreSQLCastingJsonArrayJdbcType JSON_INSTANCE = new PostgreSQLCastingJsonArrayJdbcType( false );
-	public static final PostgreSQLCastingJsonArrayJdbcType JSONB_INSTANCE = new PostgreSQLCastingJsonArrayJdbcType( true );
-
 	private final boolean jsonb;
 
-	public PostgreSQLCastingJsonArrayJdbcType(boolean jsonb) {
+	public PostgreSQLCastingJsonArrayJdbcType(JdbcType elementJdbcType, boolean jsonb) {
+		super( elementJdbcType );
 		this.jsonb = jsonb;
 	}
 

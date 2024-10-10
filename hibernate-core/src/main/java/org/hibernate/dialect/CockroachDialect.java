@@ -95,7 +95,6 @@ import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -260,7 +259,6 @@ public class CockroachDialect extends Dialect {
 		// Prefer jsonb if possible
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "jsonb", this ) );
 
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
@@ -356,13 +354,13 @@ public class CockroachDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 			}
 		}
 		else {
@@ -370,7 +368,7 @@ public class CockroachDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 		}
 
 		// Force Blob binding to byte[] for CockroachDB
@@ -391,6 +389,7 @@ public class CockroachDialect extends Dialect {
 				)
 		);
 
+		// Replace the standard array constructor
 		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
@@ -484,6 +483,8 @@ public class CockroachDialect extends Dialect {
 //		functionFactory.jsonMergepatch_postgresql();
 		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
+
+		functionFactory.unnest_postgresql();
 
 		// Postgres uses # instead of ^ for XOR
 		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )

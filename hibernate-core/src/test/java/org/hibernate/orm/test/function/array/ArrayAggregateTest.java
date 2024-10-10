@@ -56,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayAgg.class)
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Doesn't support array_agg ordering yet")
 public class ArrayAggregateTest {
 

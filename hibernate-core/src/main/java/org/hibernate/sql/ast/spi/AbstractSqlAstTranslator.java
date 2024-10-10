@@ -17,7 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -32,10 +31,8 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
+import org.hibernate.engine.spi.LazySessionWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.QuotingHelper;
@@ -400,61 +397,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					.resolve( StandardBasicTypes.BOOLEAN );
 		}
 		return booleanType;
-	}
-
-	/**
-	 * A lazy session implementation that is needed for rendering literals.
-	 * Usually, only the {@link WrapperOptions} interface is needed,
-	 * but for creating LOBs, it might be to have a full-blown session.
-	 */
-	private static class LazySessionWrapperOptions extends AbstractDelegatingWrapperOptions {
-
-		private final SessionFactoryImplementor sessionFactory;
-		private SessionImplementor session;
-
-		public LazySessionWrapperOptions(SessionFactoryImplementor sessionFactory) {
-			this.sessionFactory = sessionFactory;
-		}
-
-		public void cleanup() {
-			if ( session != null ) {
-				session.close();
-				session = null;
-			}
-		}
-
-		@Override
-		protected SessionImplementor delegate() {
-			if ( session == null ) {
-				session = sessionFactory.openTemporarySession();
-			}
-			return session;
-		}
-
-		@Override
-		public SharedSessionContractImplementor getSession() {
-			return delegate();
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
-			return sessionFactory;
-		}
-
-		@Override
-		public boolean useStreamForLobBinding() {
-			return sessionFactory.getFastSessionServices().useStreamForLobBinding();
-		}
-
-		@Override
-		public int getPreferredSqlTypeCodeForBoolean() {
-			return sessionFactory.getFastSessionServices().getPreferredSqlTypeCodeForBoolean();
-		}
-
-		@Override
-		public TimeZone getJdbcTimeZone() {
-			return sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
-		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -5850,7 +5792,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderCasted( jdbcParameter );
 			}
 			else {
-				appendSql( PARAM_MARKER );
+				jdbcParameter.renderToSql( this, this, sessionFactory );
 			}
 		}
 		else {
@@ -6219,10 +6161,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( tableReference instanceof NamedTableReference ) {
 			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
 		}
-		final DerivedTableReference derivedTableReference = (DerivedTableReference) tableReference;
-		if ( derivedTableReference.isLateral() ) {
+		renderDerivedTableReference( (DerivedTableReference) tableReference );
+		return false;
+	}
+
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference.isLateral() ) {
 			if ( dialect.supportsLateral() ) {
 				appendSql( "lateral " );
+				tableReference.accept( this );
 			}
 			else if ( tableReference instanceof QueryPartTableReference queryPartTableReference ) {
 				final SelectStatement emulationStatement = stripToSelectClause( queryPartTableReference.getStatement() );
@@ -6261,11 +6208,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						sessionFactory
 				);
 				emulationTableReference.accept( this );
-				return false;
+			}
+			else {
+				// Assume there is no need for a lateral keyword
+				tableReference.accept( this );
 			}
 		}
-		tableReference.accept( this );
-		return false;
+		else {
+			tableReference.accept( this );
+		}
 	}
 
 	protected void inlineCteTableGroup(TableGroup tableGroup, LockMode lockMode) {
@@ -6317,7 +6268,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		append( '(' );
 		visitValuesList( tableReference.getValuesList() );
 		append( ')' );
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
@@ -6330,13 +6281,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			tableReference.getStatement().accept( this );
 		}
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
 	public void visitFunctionTableReference(FunctionTableReference tableReference) {
 		tableReference.getFunctionExpression().accept( this );
-		renderDerivedTableReference( tableReference );
+		if ( !tableReference.rendersIdentifierVariable() ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
 	}
 
 	protected void emulateQueryPartTableReferenceColumnAliasing(QueryPartTableReference tableReference) {
@@ -6391,7 +6344,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
-	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
 			append( WHITESPACE );

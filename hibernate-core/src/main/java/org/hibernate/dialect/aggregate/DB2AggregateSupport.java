@@ -23,9 +23,12 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -49,11 +52,36 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			String columnExpression,
 			AggregateColumn aggregateColumn,
 			Column column) {
-		switch ( aggregateColumn.getTypeCode() ) {
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				columnExpression,
+				aggregateColumn.getTypeCode(),
+				new SqlTypedMappingImpl(
+						column.getTypeName(),
+						column.getLength(),
+						column.getPrecision(),
+						column.getScale(),
+						column.getTemporalPrecision(),
+						(JdbcMapping) column.getValue().getType()
+				)
+		);
+	}
+
+	@Override
+	public String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column) {
+		switch ( aggregateColumnTypeCode ) {
 			case STRUCT:
 				return template.replace( placeholder, aggregateParentReadExpression + ".." + columnExpression );
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
 	@Override

@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
@@ -98,6 +99,15 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		final SqmExpressibleAccessor<?> current = inferenceBasis;
 		inferenceBasis = null;
 		super.visitFunction( sqmFunction );
+		inferenceBasis = current;
+		return sqmFunction;
+	}
+
+	@Override
+	public Object visitSetReturningFunction(SqmSetReturningFunction<?> sqmFunction) {
+		final SqmExpressibleAccessor<?> current = inferenceBasis;
+		inferenceBasis = null;
+		super.visitSetReturningFunction( sqmFunction );
 		inferenceBasis = current;
 		return sqmFunction;
 	}

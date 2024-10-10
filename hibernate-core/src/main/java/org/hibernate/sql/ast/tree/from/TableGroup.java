@@ -226,4 +226,19 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	default boolean isVirtual() {
 		return false;
 	}
+
+	default TableReference findTableReference(String identificationVariable) {
+		final TableReference primaryTableReference = getPrimaryTableReference();
+		if ( identificationVariable.equals( primaryTableReference.getIdentificationVariable() ) ) {
+			return primaryTableReference;
+		}
+		for ( TableReferenceJoin tableReferenceJoin : getTableReferenceJoins() ) {
+			final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
+			if ( identificationVariable.equals( joinedTableReference.getIdentificationVariable() ) ) {
+				return joinedTableReference;
+			}
+		}
+
+		return null;
+	}
 }

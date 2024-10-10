@@ -120,7 +120,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
 			final Time time = value instanceof java.sql.Time
 					? ( (java.sql.Time) value )
-					: new java.sql.Time( value.getTime() % 86_400_000 );
+					: millisToSqlTime( value.getTime() );
 			final LocalTime localTime = time.toLocalTime();
 			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
@@ -135,9 +135,15 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
-			return value instanceof Time
-					? value
-					: new Time( value.getTime() % 86_400_000 );
+			return millisToSqlTime( value.getTime() );
+		}
+
+		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
+			return new java.sql.Timestamp( value.getTime() );
+		}
+
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			throw new IllegalArgumentException( "Illegal attempt to treat `java.sql.Time` as `java.sql.Date`" );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
@@ -158,14 +164,6 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return cal;
 		}
 
-		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			return new java.sql.Timestamp( value.getTime() );
-		}
-
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			throw new IllegalArgumentException( "Illegal attempt to treat `java.sql.Time` as `java.sql.Date`" );
-		}
-
 		throw unknownUnwrap( type );
 	}
 
@@ -175,12 +173,8 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return null;
 		}
 
-		if ( value instanceof Time ) {
-			return (Date) value;
-		}
-
 		if ( value instanceof Date ) {
-			return new Time( ( (Date) value ).getTime() % 86_400_000 );
+			return millisToSqlTime( ( (Date) value ).getTime() );
 		}
 
 		if ( value instanceof LocalTime ) {
@@ -198,7 +192,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( value instanceof Calendar ) {
-			return new Time( ( (Calendar) value ).getTimeInMillis() % 86_400_000 );
+			return millisToSqlTime( ( (Calendar) value ).getTimeInMillis() );
 		}
 
 		throw unknownWrap( value.getClass() );

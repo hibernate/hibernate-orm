@@ -128,6 +128,18 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 					: new Timestamp( value.getTime() );
 		}
 
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			return value instanceof java.sql.Date
+					? ( java.sql.Date ) value
+					: new java.sql.Date( value.getTime() );
+		}
+
+		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
+			return value instanceof java.sql.Time
+					? ( java.sql.Time ) value
+					: millisToSqlTime( value.getTime() );
+		}
+
 		if ( Date.class.isAssignableFrom( type ) ) {
 			return value;
 		}
@@ -145,18 +157,6 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 		if ( Long.class.isAssignableFrom( type ) ) {
 			return value.getTime();
-		}
-
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return value instanceof java.sql.Date
-					? ( java.sql.Date ) value
-					: new java.sql.Date( value.getTime() );
-		}
-
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return value instanceof java.sql.Time
-					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() % 86_400_000 );
 		}
 
 		throw unknownUnwrap( type );

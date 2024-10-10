@@ -49,6 +49,12 @@ public class EnhanceMojo extends AbstractMojo {
             required = true)
     private boolean enableAssociationManagement;
 
+    @Parameter(
+            defaultValue = "false",
+            readonly = true,
+            required = true)
+    private boolean enableDirtyTracking;
+
     public void execute() throws MojoExecutionException {
         logConfiguration();
         assembleSourceSet();
@@ -66,6 +72,7 @@ public class EnhanceMojo extends AbstractMojo {
         log.info("Starting 'enhance' mojo execution with the following parameters :");
         log.info("  classesDirectory: " + classesDirectory);
         log.info("  enableAssociationManagement: " + enableAssociationManagement);
+        log.info("  enableDirtyTracking: " + enableDirtyTracking);
     }
 
     private void assembleSourceSet() {
@@ -100,7 +107,7 @@ public class EnhanceMojo extends AbstractMojo {
         return new EnhancementContext(
             createClassLoader(), 
             enableAssociationManagement, 
-            false, 
+            enableDirtyTracking, 
             false, 
             false);
     }

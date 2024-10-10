@@ -115,6 +115,16 @@ public class EnhanceMojoTest {
         assertFalse(enhancementContext.hasLazyLoadableAttributes(null));
         assertFalse(enhancementContext.isLazyLoadable(null));
         assertFalse(enhancementContext.doExtendedEnhancement(null));
-}
+        Field enableDirtyTrackingField = EnhanceMojo.class.getDeclaredField("enableDirtyTracking");
+        enableDirtyTrackingField.setAccessible(true);
+        enableDirtyTrackingField.set(enhanceMojo, Boolean.TRUE);
+        enhancementContext = (EnhancementContext)createEnhancementContextMethod.invoke(enhanceMojo);
+        assertEquals(classesDirectory.toURI().toURL(), classLoader.getURLs()[0]);
+        assertTrue(enhancementContext.doBiDirectionalAssociationManagement(null));
+        assertTrue(enhancementContext.doDirtyCheckingInline(null));
+        assertFalse(enhancementContext.hasLazyLoadableAttributes(null));
+        assertFalse(enhancementContext.isLazyLoadable(null));
+        assertFalse(enhancementContext.doExtendedEnhancement(null));
+    }
 
 }

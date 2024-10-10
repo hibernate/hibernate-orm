@@ -21,10 +21,12 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +49,12 @@ public class EnhanceMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         assembleSourceSet();
+        ClassLoader classLoader = createClassLoader();
+        try {
+            classLoader.loadClass("java.lang.Object");
+        } catch (ClassNotFoundException e) {
+            throw new MojoExecutionException(e);
+        }
     }
 
     private void assembleSourceSet() {
@@ -64,5 +72,16 @@ public class EnhanceMojo extends AbstractMojo {
             }
         }
     }
+    private ClassLoader createClassLoader() {
+		List<URL> urls = new ArrayList<>();
+        try {
+            urls.add(classesDirectory.toURI().toURL());
+        } catch (MalformedURLException e) {
+            // swallow it?
+        }
+		return new URLClassLoader(
+            urls.toArray(new URL[urls.size()]), 
+            Enhancer.class.getClassLoader());
+	}
 
 }

@@ -60,6 +60,12 @@ public class EnhanceMojo extends AbstractMojo {
             required = true)
     private boolean enableLazyInitialization;
 
+    @Parameter(
+        defaultValue = "false",
+        readonly = true,
+        required = true)
+    private boolean enableExtendedEnhancement;
+
     public void execute() throws MojoExecutionException {
         assembleSourceSet();
         EnhancementContext enhancementContext = createEnhancementContext();
@@ -105,7 +111,7 @@ public class EnhanceMojo extends AbstractMojo {
             enableAssociationManagement, 
             enableDirtyTracking, 
             enableLazyInitialization, 
-            false);
+            enableExtendedEnhancement);
     }
 
 }

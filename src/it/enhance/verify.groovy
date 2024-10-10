@@ -32,5 +32,4 @@ assert listOfStrings.contains("[DEBUG]   (f) classesDirectory = " + classesFolde
 assert listOfStrings.contains("[DEBUG]   (f) enableAssociationManagement = false");
 assert listOfStrings.contains("[DEBUG]   (f) enableDirtyTracking = false");
 assert listOfStrings.contains("[DEBUG]   (f) enableLazyInitialization = false");
-
-
+assert listOfStrings.contains("[DEBUG]   (f) enableExtendedEnhancement = false");

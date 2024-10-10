@@ -7,6 +7,8 @@ package org.hibernate.persister.entity.mutation;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
@@ -19,6 +21,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.MissingAttributeException;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -427,13 +430,20 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		insertGroupBuilder.forEachTableMutationBuilder( (tableMutationBuilder) -> {
 			final TableInsertBuilder tableInsertBuilder = (TableInsertBuilder) tableMutationBuilder;
 			final EntityTableMapping tableMapping = (EntityTableMapping) tableInsertBuilder.getMutatingTable().getTableMapping();
+			EntityTableMapping.KeyMapping keyMapping = tableMapping.getKeyMapping();
 			if ( tableMapping.isIdentifierTable() && entityPersister().isIdentifierAssignedByInsert() && !forceIdentifierBinding ) {
 				assert entityPersister().getInsertDelegate() != null;
 				final OnExecutionGenerator generator = (OnExecutionGenerator) entityPersister().getGenerator();
 				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
+					if ( columnValues == null ) {
+						// We cannot handle any further
+						throw new MissingAttributeException( "Column value is missing. Could not generate value for " + keyMapping.getKeyColumns()
+								.stream().map( Objects::toString ).collect(
+										Collectors.joining( ", " ) ) );
+					}
+					keyMapping.forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
 							column.getColumnName(),
 							columnValues[i],
 							identifierMapping.getJdbcMapping()
@@ -441,7 +451,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				}
 			}
 			else {
-				tableMapping.getKeyMapping().forEachKeyColumn( tableInsertBuilder::addKeyColumn );
+				keyMapping.forEachKeyColumn( tableInsertBuilder::addKeyColumn );
 			}
 		} );
 	}

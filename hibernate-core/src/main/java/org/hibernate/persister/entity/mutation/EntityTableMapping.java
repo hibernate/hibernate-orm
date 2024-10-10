@@ -410,5 +410,10 @@ public class EntityTableMapping implements TableMapping {
 		public String getCustomWriteExpression() {
 			return null;
 		}
+
+		@Override
+		public String toString() {
+			return "{%s - %s}".formatted( tableName, columnName );
+		}
 	}
 }

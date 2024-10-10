@@ -36,6 +36,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -74,12 +75,10 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 
 		scope.inTransaction(
 				session -> {
-					UnversionedNoCascadeOne one = (UnversionedNoCascadeOne) session.merge( unversionedNoCascadeOne );
+					UnversionedNoCascadeOne one = session.merge( unversionedNoCascadeOne );
 
-					// after merging, one.getManies() should still be null;
-					// the EntityEntry loaded state should contain a PersistentCollection though.
+					assertThat( one.getManies().size() ).isEqualTo( 0 );
 
-					assertNull( one.getManies() );
 					EntityEntry eeOne = getEntityEntry( session, one );
 					AbstractPersistentCollection maniesEEOneStateOrig = (AbstractPersistentCollection) eeOne.getLoadedValue(
 							"manies" );
@@ -107,27 +106,8 @@ public class UnversionedNoCascadeDereferencedCollectionTest extends AbstractDere
 					// Ensure the same EntityEntry is being used.
 					assertSame( eeOne, getEntityEntry( session, one ) );
 
-					// Ensure one.getManies() is still null.
-					assertNull( one.getManies() );
+					assertThat( one.getManies().size() ).isEqualTo( 0 );
 
-					// Ensure CollectionEntry for maniesEEOneStateOrig is no longer in the PersistenceContext.
-					assertNull( getCollectionEntry( session, maniesEEOneStateOrig ) );
-
-					// Ensure the original CollectionEntry has role, persister, and key set to null.
-					assertNull( ceManiesOrig.getRole() );
-					assertNull( ceManiesOrig.getLoadedPersister() );
-					assertNull( ceManiesOrig.getKey() );
-
-					// Ensure the PersistentCollection (that was previously returned by eeOne.getLoadedState())
-					// has key and role set to null.
-					assertNull( maniesEEOneStateOrig.getKey() );
-					assertNull( maniesEEOneStateOrig.getRole() );
-
-					// Ensure eeOne.getLoadedState() returns null for collection after flush.
-					assertNull( eeOne.getLoadedValue( "manies" ) );
-
-					// Ensure the session in maniesEEOneStateOrig has been unset.
-					assertNull( maniesEEOneStateOrig.getSession() );
 				}
 		);
 	}

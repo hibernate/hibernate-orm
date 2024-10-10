@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -49,8 +50,8 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  * @author Gavin King
  */
 public class ComponentType extends AbstractType implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
-	private final Class<?> componentClass;
-	private final boolean mutable;
+	private Supplier<Class<?>> componentClass;
+	private Supplier<Boolean> mutable;
 
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
@@ -69,14 +70,48 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private EmbeddableValuedModelPart mappingModelPart;
 
 	public ComponentType(Component component, int[] originalPropertyOrder) {
-		this( component, originalPropertyOrder,
-				component.getComponentClassName() != null
-						&& !isRecord( component.getComponentClass() ) );
+		this( component, originalPropertyOrder, (Boolean) null);
 	}
 
 	public ComponentType(Component component, int[] originalPropertyOrder, boolean mutable) {
-		this.componentClass = component.isDynamic() ? Map.class : component.getComponentClass();
-		this.mutable = mutable;
+		this(component, originalPropertyOrder, (Boolean) mutable);
+	}
+	
+	private ComponentType(final Component component, int[] originalPropertyOrder, Boolean mutable) {
+		// As mutable and componentClass are based on the actual component
+		// type, both variables must be lazily initialized in some cases.
+		// E.g. on code generation by hibernate-tools, the component type
+		// might not yet exist (compound keys), resulting in a
+		// ClassNotFoundException.
+		//
+		// The lazy initialization is performance optimized as far as possible.
+
+		if(mutable != null) {
+			this.mutable = () -> mutable;
+		}
+		else {
+			this.mutable = () -> {
+				final Class<?> clazz = component.getComponentClass();
+				final boolean mutableVal = ( clazz != null && !isRecord(clazz) );
+				
+				this.mutable = () -> mutableVal;
+				
+				return mutableVal;
+			};
+		}
+		
+		if(component.isDynamic()) {
+			this.componentClass = () -> Map.class;
+		}
+		else {
+			this.componentClass = () -> {
+				final Class<?> clazz = component.getComponentClass();
+				this.componentClass = () -> clazz;
+				
+				return clazz;
+			};
+		}
+
 		this.isAggregate = component.getAggregateColumn() != null;
 		this.isKey = component.isKey();
 		this.propertySpan = component.getPropertySpan();
@@ -155,7 +190,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	public Class<?> getReturnedClass() {
-		return componentClass;
+		return componentClass.get();
 	}
 
 	@Override
@@ -581,7 +616,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public boolean isMutable() {
-		return mutable;
+		return mutable.get();
 	}
 
 	@Override
@@ -818,7 +853,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		if ( embeddableTypeDescriptor().isPolymorphic() ) {
 			final String compositeClassName = compositeInstance != null ?
 					compositeInstance.getClass().getName() :
-					componentClass.getName();
+					componentClass.get().getName();
 			return representationStrategy.getInstantiatorForClass( compositeClassName );
 		}
 		else {

@@ -24,6 +24,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -433,11 +434,13 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
-							column.getColumnName(),
-							columnValues[i],
-							identifierMapping.getJdbcMapping()
-					) );
+					if ( columnValues != null ) {
+						tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
+								column.getColumnName(),
+								columnValues[i],
+								identifierMapping.getJdbcMapping()
+						) );
+					}
 				}
 			}
 			else {

@@ -6,15 +6,7 @@ package org.hibernate.query.sql.internal;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -133,6 +125,8 @@ public class NativeQueryImpl<R>
 	private Boolean startsWithSelect;
 	private Set<String> querySpaces;
 	private Callback callback;
+
+	private Class<?> resultEntityClass;
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
@@ -352,6 +346,10 @@ public class NativeQueryImpl<R>
 			boolean isDynamic,
 			SharedSessionContractImplementor session) {
 		return ResultSetMapping.resolveResultSetMapping( registeredName, isDynamic, session.getFactory() );
+	}
+
+	public void setResultEntityClass(Class<?> resultEntityClass) {
+		this.resultEntityClass = resultEntityClass;
 	}
 
 	public List<ParameterOccurrence> getParameterOccurrences() {
@@ -644,6 +642,18 @@ public class NativeQueryImpl<R>
 	}
 
 	protected SelectQueryPlan<R> resolveSelectQueryPlan() {
+		if ( resultEntityClass != null ) {
+			boolean exists = false;
+			for ( ResultBuilder existing : resultSetMapping.getResultBuilders() ) {
+				if ( Objects.equals( resultEntityClass, existing.getJavaType() ) ) {
+					exists = true;
+					break;
+				}
+			}
+			if ( !exists ) {
+				addEntity( (Class<R>) resultEntityClass, LockMode.READ );
+			}
+		}
 		if ( isCacheableQuery() ) {
 			final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 			return getSession().getFactory().getQueryEngine().getInterpretationCache()

@@ -180,6 +180,58 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	}
 
 	@Override
+	public void queueRemoveOperation(Object o) {
+		if ( !isInitialized() ) {
+			final DelayedOperation operation = new DelayedOperation() {
+				@Override
+				public void operate() {
+					remove( o );
+				}
+
+				@Override
+				public Object getAddedInstance() {
+					return null;
+				}
+
+				@Override
+				public Object getOrphan() {
+					return null;
+				}
+			};
+			queueOperation( operation );
+		}
+		else {
+			remove( o );
+		}
+	}
+
+	@Override
+	public void queueAddOperation(E o){
+		if ( !isInitialized() ) {
+			final DelayedOperation operation = new DelayedOperation() {
+				@Override
+				public void operate() {
+					add( o );
+				}
+
+				@Override
+				public Object getAddedInstance() {
+					return null;
+				}
+
+				@Override
+				public Object getOrphan() {
+					return null;
+				}
+			};
+			queueOperation( operation );
+		}
+		else {
+			add( o );
+		}
+	}
+
+	@Override
 	public boolean removeAll(Collection c) {
 		if ( c.size() > 0 ) {
 			boolean result = false;

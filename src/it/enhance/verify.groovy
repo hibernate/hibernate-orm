@@ -1,4 +1,9 @@
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.ArrayList;
+
 
 File targetFolder = new File(basedir, "target");
 if (!targetFolder.exists()) {
@@ -15,3 +20,12 @@ File barClassFile = new File(classesFolder, "org/foo/Bar.class");
 if (!barClassFile.exists()) {
     throw new FileNotFoundException("File should exist: " + barClassFile);
 }
+
+File buildLog = new File(basedir, "build.log");
+if (!buildLog.exists()) {
+    throw new FileNotFoundException("File should exist: " + buildLog);
+}
+List<String> listOfStrings = new ArrayList<String>();
+listOfStrings = Files.readAllLines(buildLog.toPath());
+assert listOfStrings.contains("[INFO] BUILD SUCCESS")
+

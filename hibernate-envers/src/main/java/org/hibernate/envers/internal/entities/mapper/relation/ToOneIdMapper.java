@@ -194,6 +194,9 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			EntityInfo referencedEntity,
 			Map data,
 			Object primaryKey) {
+		if (referencedEntity.isAudited()) {
+			return false;
+		}
 		final String referencingEntityName = enversService.getEntitiesConfigurations()
 				.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
 

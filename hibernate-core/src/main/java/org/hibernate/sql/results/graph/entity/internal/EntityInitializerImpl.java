@@ -91,6 +91,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * @author Andrea Boriero
+ * @author Réda Housni Alaoui
  */
 public class EntityInitializerImpl extends AbstractInitializer<EntityInitializerImpl.EntityInitializerData>
 		implements EntityInitializer<EntityInitializerImpl.EntityInitializerData> {

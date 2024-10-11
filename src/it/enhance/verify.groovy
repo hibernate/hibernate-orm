@@ -33,3 +33,16 @@ assert listOfStrings.contains("[DEBUG]   (f) enableAssociationManagement = false
 assert listOfStrings.contains("[DEBUG]   (f) enableDirtyTracking = false");
 assert listOfStrings.contains("[DEBUG]   (f) enableLazyInitialization = false");
 assert listOfStrings.contains("[DEBUG]   (f) enableExtendedEnhancement = false");
+assert listOfStrings.contains("[DEBUG] Starting execution of enhance mojo");
+assert listOfStrings.contains("[DEBUG] Starting assembly of the source set");
+assert listOfStrings.contains("[INFO] Added file to source set: " + barClassFile);
+assert listOfStrings.contains("[DEBUG] Ending the assembly of the source set");
+assert listOfStrings.contains("[DEBUG] Creating bytecode enhancer");
+assert listOfStrings.contains("[DEBUG] Creating enhancement context");
+assert listOfStrings.contains("[DEBUG] Creating URL ClassLoader for folder: " + classesFolder);
+assert listOfStrings.contains("[DEBUG] Starting type discovery");
+assert listOfStrings.contains("[DEBUG] Trying to discover types for classes in file: " + barClassFile);
+assert listOfStrings.contains("[DEBUG] Determining class name for file: " + barClassFile);
+assert listOfStrings.contains("[INFO] Succesfully discovered types for classes in file: " + barClassFile);
+assert listOfStrings.contains("[DEBUG] Ending type discovery");
+assert listOfStrings.contains("[DEBUG] Ending execution of enhance mojo");

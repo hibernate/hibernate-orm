@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -36,27 +37,42 @@ public class EnhanceMojoTest {
 
     @TempDir
     File tempDir;
-	
+
+    private Field classesDirectoryField;
+    private Field sourceSetField;
+
+    private File classesDirectory;  // folder '${tempDir}/classes'
+    private File fooFolder;         // folder '${classesDirectory}/org/foo'
+    private File barFolder;         // folder '${classesDirectory}/bar'
+    private File barClassFile;      // file '${fooFolder}/Bar.class'
+    private File fooTxtFile;        // file '${barFolder}/Foo.txt'
+
+    private EnhanceMojo enhanceMojo;
+
+    @BeforeEach
+    void beforeEach() throws Exception {
+        classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
+        classesDirectoryField.setAccessible(true);
+        sourceSetField = EnhanceMojo.class.getDeclaredField("sourceSet");
+        sourceSetField.setAccessible(true);  
+        enhanceMojo = new EnhanceMojo();             
+        classesDirectory = new File(tempDir, "classes");
+        classesDirectory.mkdirs();
+        classesDirectoryField.set(enhanceMojo, classesDirectory);
+        fooFolder = new File(classesDirectory, "org/foo");
+        fooFolder.mkdirs();
+        barFolder = new File(classesDirectory, "bar");
+        barFolder.mkdirs();
+        barClassFile = new File(fooFolder, "Bar.class");
+        barClassFile.createNewFile();
+        fooTxtFile = new File (barFolder, "Foo.txt");
+        fooTxtFile.createNewFile();
+    }
+ 	
     @Test
     void testAssembleSourceSet() throws Exception {
         Method assembleSourceSetMethod = EnhanceMojo.class.getDeclaredMethod("assembleSourceSet");
         assembleSourceSetMethod.setAccessible(true);
-        Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
-        classesDirectoryField.setAccessible(true);
-        Field sourceSetField = EnhanceMojo.class.getDeclaredField("sourceSet");
-        sourceSetField.setAccessible(true);
-        EnhanceMojo enhanceMojo = new EnhanceMojo();
-        File classesDirectory = new File(tempDir, "classes");
-        classesDirectory.mkdirs();
-        classesDirectoryField.set(enhanceMojo, classesDirectory);
-        File fooFolder = new File(classesDirectory, "org/foo");
-        fooFolder.mkdirs();
-        File barClassFile = new File(fooFolder, "Bar.class");
-        barClassFile.createNewFile();
-        File barFolder = new File(classesDirectory, "bar");
-        barFolder.mkdirs();
-        File fooTxtFile = new File (barFolder, "Foo.txt");
-        fooTxtFile.createNewFile();
         List<?> sourceSet = (List<?>)sourceSetField.get(enhanceMojo);
         assertTrue(sourceSet.isEmpty());
         assembleSourceSetMethod.invoke(enhanceMojo);
@@ -70,16 +86,6 @@ public class EnhanceMojoTest {
     void testCreateClassLoader() throws Exception {
         Method createClassLoaderMethod = EnhanceMojo.class.getDeclaredMethod("createClassLoader");
         createClassLoaderMethod.setAccessible(true);
-        Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
-        classesDirectoryField.setAccessible(true);
-        EnhanceMojo enhanceMojo = new EnhanceMojo();
-        File classesDirectory = new File(tempDir, "classes");
-        classesDirectory.mkdirs();
-        classesDirectoryField.set(enhanceMojo, classesDirectory);
-        File barFolder = new File(classesDirectory, "bar");
-        barFolder.mkdirs();
-        File fooTxtFile = new File (barFolder, "Foo.txt");
-        fooTxtFile.createNewFile();
         ClassLoader classLoader = (ClassLoader)createClassLoaderMethod.invoke(enhanceMojo);
         assertNotNull(classLoader);
         URL fooResource = classLoader.getResource("bar/Foo.txt");
@@ -91,12 +97,6 @@ public class EnhanceMojoTest {
     void testCreateEnhancementContext() throws Exception {
         Method createEnhancementContextMethod = EnhanceMojo.class.getDeclaredMethod("createEnhancementContext");
         createEnhancementContextMethod.setAccessible(true);
-        Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
-        classesDirectoryField.setAccessible(true);
-        EnhanceMojo enhanceMojo = new EnhanceMojo();
-        File classesDirectory = new File(tempDir, "classes");
-        classesDirectory.mkdirs();
-        classesDirectoryField.set(enhanceMojo, classesDirectory);
         EnhancementContext enhancementContext = (EnhancementContext)createEnhancementContextMethod.invoke(enhanceMojo);
         URLClassLoader classLoader = (URLClassLoader)enhancementContext.getLoadingClassLoader();
         assertEquals(classesDirectory.toURI().toURL(), classLoader.getURLs()[0]);
@@ -150,16 +150,6 @@ public class EnhanceMojoTest {
     public void testCreateEnhancer() throws Exception {
         Method createEnhancerMethod = EnhanceMojo.class.getDeclaredMethod("createEnhancer");
         createEnhancerMethod.setAccessible(true);
-        Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
-        classesDirectoryField.setAccessible(true);
-        EnhanceMojo enhanceMojo = new EnhanceMojo();
-        File classesDirectory = new File(tempDir, "classes");
-        classesDirectory.mkdirs();
-        classesDirectoryField.set(enhanceMojo, classesDirectory);
-        File barFolder = new File(classesDirectory, "bar");
-        barFolder.mkdirs();
-        File fooTxtFile = new File (barFolder, "Foo.txt");
-        fooTxtFile.createNewFile();
         Enhancer enhancer = (Enhancer)createEnhancerMethod.invoke(enhanceMojo);
         assertNotNull(enhancer);
         Field byteByddyEnhancementContextField = EnhancerImpl.class.getDeclaredField("enhancementContext");
@@ -176,6 +166,6 @@ public class EnhanceMojoTest {
         URL fooResource = classLoader.getResource("bar/Foo.txt");
         assertNotNull(fooResource);
         assertEquals(fooTxtFile.toURI().toURL(), fooResource);
-}
+    }
 
 }

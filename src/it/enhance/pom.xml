@@ -16,7 +16,7 @@
         <executions>
           <execution>
             <id>enhance</id>
-            <phase>generate-sources</phase>
+            <phase>process-classes</phase>
             <goals>
               <goal>enhance</goal>
             </goals>

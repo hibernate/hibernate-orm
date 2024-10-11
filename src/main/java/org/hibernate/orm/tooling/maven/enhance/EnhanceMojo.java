@@ -71,28 +71,38 @@ public class EnhanceMojo extends AbstractMojo {
     private boolean enableExtendedEnhancement;
 
     public void execute() throws MojoExecutionException {
+        getLog().debug("Starting execution of enhance mojo");
         assembleSourceSet();
         Enhancer enhancer = createEnhancer();
         discoverTypes(enhancer);
+        getLog().debug("Ending execution of enhance mojo");
    }
 
     private void assembleSourceSet() {
+        getLog().debug("Starting assembly of the source set");
         addToSourceSetIfNeeded(classesDirectory);
+        getLog().debug("Ending the assembly of the source set");
     }
 
     private void addToSourceSetIfNeeded(File file) {
+        getLog().debug("Considering candidate source: " + file);
         if (file.isDirectory()) {
+            getLog().debug("Iterating over the children of folder: " + file);
             for (File child : file.listFiles()) {
                 addToSourceSetIfNeeded(child);
             }
         } else {
             if (file.getName().endsWith(".class")) {
                 sourceSet.add(file);
+                getLog().info("Added file to source set: " + file);
+            } else {
+                getLog().debug("Skipping non '.class' file: " + file);
             }
         }
     }
 
     private ClassLoader createClassLoader() {
+        getLog().debug("Creating URL ClassLoader for folder: " + classesDirectory) ;
 		List<URL> urls = new ArrayList<>();
         try {
             urls.add(classesDirectory.toURI().toURL());
@@ -105,6 +115,7 @@ public class EnhanceMojo extends AbstractMojo {
 	}
 
     private EnhancementContext createEnhancementContext() {
+        getLog().debug("Creating enhancement context") ;
         return new EnhancementContext(
             createClassLoader(), 
             enableAssociationManagement, 
@@ -114,29 +125,34 @@ public class EnhanceMojo extends AbstractMojo {
     }
 
     private Enhancer createEnhancer() {
+        getLog().debug("Creating bytecode enhancer") ;
         return BytecodeProviderInitiator
             .buildDefaultBytecodeProvider()
             .getEnhancer(createEnhancementContext());
     }
 
     private void discoverTypes(Enhancer enhancer) {
+        getLog().debug("Starting type discovery") ;
         for (File classFile : sourceSet) {
             discoverTypesForClass(classFile, enhancer);
         }
+        getLog().debug("Ending type discovery") ;
     }
 
     private void discoverTypesForClass(File classFile, Enhancer enhancer) {
+        getLog().debug("Trying to discover types for classes in file: " + classFile);
         try {
             enhancer.discoverTypes(
                 determineClassName(classFile), 
                 Files.readAllBytes( classFile.toPath()));
-            getLog().info("Succesfully discovered types for classes in file " + classFile);
+            getLog().info("Succesfully discovered types for classes in file: " + classFile);
         } catch (IOException e) {
-           getLog().error("Unable to discover types for classes in file " + classFile, e);
+            getLog().error("Unable to discover types for classes in file: " + classFile, e);
         }
     }
 
     private String determineClassName(File classFile) {
+        getLog().debug("Determining class name for file: " + classFile);
         String classFilePath = classFile.getAbsolutePath();
         String classesDirectoryPath = classesDirectory.getAbsolutePath();
         return classFilePath.substring(

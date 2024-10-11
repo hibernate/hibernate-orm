@@ -22,10 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -177,6 +181,31 @@ public class EnhanceMojoTest {
             new Class[] { File.class });
         determineClassNameMethod.setAccessible(true);
         assertEquals("org.foo.Bar", determineClassNameMethod.invoke(enhanceMojo, barClassFile));
+    }
+
+    @Test
+    public void testDiscoverTypesForClass() throws Exception {
+        final List<Boolean> hasRun = new ArrayList<Boolean>();
+        Method discoverTypesForClassMethod = EnhanceMojo.class.getDeclaredMethod(
+            "discoverTypesForClass", 
+            new Class[] { File.class, Enhancer.class});
+        discoverTypesForClassMethod.setAccessible(true);
+        Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
+            getClass().getClassLoader(), 
+            new Class[] { Enhancer.class }, 
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    if (method.getName().equals("discoverTypes")) {
+                        assertEquals("org.foo.Bar", args[0]);
+                        hasRun.add(0, true);
+                    }
+                    return null;
+                 }               
+            });
+        assertFalse(hasRun.contains(true));
+        discoverTypesForClassMethod.invoke(enhanceMojo, barClassFile, enhancer);
+        assertTrue(hasRun.contains(true));
     }
 
 }

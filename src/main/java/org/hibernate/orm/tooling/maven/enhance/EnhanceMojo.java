@@ -161,4 +161,26 @@ public class EnhanceMojo extends AbstractMojo {
             .replace(File.separatorChar, '.');
     }
 
+    private boolean clearFile(File file) {
+        getLog().debug("Trying to clear the contents of file: " + file);
+        boolean success = false;
+        if ( file.delete() ) {
+            try {
+                if ( !file.createNewFile() ) {
+                    getLog().error( "Unable to create file: " + file);
+                } else {
+                    getLog().info("Succesfully cleared the contents of file: " + file);
+                    success = true;
+                }
+            }
+            catch (IOException e) {
+                getLog().warn( "Problem clearing file for writing out enhancements [" + file + "]", e);
+            }
+        }
+        else {
+            getLog().error( "Unable to delete file : " + file);
+        }
+    return success;
+    }
+
 }

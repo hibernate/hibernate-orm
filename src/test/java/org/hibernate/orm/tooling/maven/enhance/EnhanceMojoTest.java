@@ -28,6 +28,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
@@ -234,6 +235,22 @@ public class EnhanceMojoTest {
         sourceSetField.set(enhanceMojo, sourceSet);
         discoverTypesMethod.invoke(enhanceMojo, enhancer);
         assertTrue(hasRun.contains(true));
+    }
+
+    @Test
+    public void testClearFile() throws Exception {
+        Method clearFileMethod = EnhanceMojo.class.getDeclaredMethod(
+            "clearFile", 
+            new Class[] { File.class });
+        clearFileMethod.setAccessible(true);
+        Files.writeString(fooTxtFile.toPath(), "foobar");
+        assertEquals("foobar", new String(Files.readAllBytes(fooTxtFile.toPath())));
+        boolean result = (boolean)clearFileMethod.invoke(enhanceMojo, new File("foobar"));
+        assertFalse(result);
+        result = (boolean)clearFileMethod.invoke(enhanceMojo, fooTxtFile);
+        assertTrue(result);
+        // File should be empty
+        assertTrue(Files.readAllBytes(fooTxtFile.toPath()).length == 0);
     }
 
 }

@@ -24,9 +24,11 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,16 +73,8 @@ public class EnhanceMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         assembleSourceSet();
         Enhancer enhancer = createEnhancer();
-        getLog().info("Enhancer is created: " + enhancer);
-        enhancer.discoverTypes(ROLE, null);
-        EnhancementContext enhancementContext = createEnhancementContext();
-        ClassLoader classLoader = enhancementContext.getLoadingClassLoader();
-        try {
-            classLoader.loadClass("java.lang.Object");
-        } catch (ClassNotFoundException e) {
-            throw new MojoExecutionException(e);
-        }
-    }
+        discoverTypes(enhancer);
+   }
 
     private void assembleSourceSet() {
         addToSourceSetIfNeeded(classesDirectory);
@@ -103,7 +97,7 @@ public class EnhanceMojo extends AbstractMojo {
         try {
             urls.add(classesDirectory.toURI().toURL());
         } catch (MalformedURLException e) {
-            // swallow it?
+            getLog().error("An unexpected error occurred while constructing the classloader", e);
         }
 		return new URLClassLoader(
             urls.toArray(new URL[urls.size()]), 
@@ -123,6 +117,31 @@ public class EnhanceMojo extends AbstractMojo {
         return BytecodeProviderInitiator
             .buildDefaultBytecodeProvider()
             .getEnhancer(createEnhancementContext());
+    }
+
+    private void discoverTypes(Enhancer enhancer) {
+        for (File classFile : sourceSet) {
+            discoverTypesForClass(classFile, enhancer);
+        }
+    }
+
+    private void discoverTypesForClass(File classFile, Enhancer enhancer) {
+        try {
+            enhancer.discoverTypes(
+                determineClassName(classFile), 
+                Files.readAllBytes( classFile.toPath()));
+            getLog().info("Succesfully discovered types for classes in file " + classFile);
+        } catch (IOException e) {
+           getLog().error("Unable to discover types for classes in file " + classFile, e);
+        }
+    }
+
+    private String determineClassName(File classFile) {
+        String classFilePath = classFile.getAbsolutePath();
+        String classesDirectoryPath = classesDirectory.getAbsolutePath();
+        return classFilePath.substring(
+            classesDirectoryPath.length() + 1,
+            classFilePath.length() - ".class".length());
     }
 
 }

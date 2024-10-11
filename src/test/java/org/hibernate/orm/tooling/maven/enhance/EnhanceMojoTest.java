@@ -27,6 +27,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 
+import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
+import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -70,8 +72,6 @@ public class EnhanceMojoTest {
         createClassLoaderMethod.setAccessible(true);
         Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
         classesDirectoryField.setAccessible(true);
-        Field sourceSetField = EnhanceMojo.class.getDeclaredField("sourceSet");
-        sourceSetField.setAccessible(true);
         EnhanceMojo enhanceMojo = new EnhanceMojo();
         File classesDirectory = new File(tempDir, "classes");
         classesDirectory.mkdirs();
@@ -146,5 +146,36 @@ public class EnhanceMojoTest {
         assertTrue(enhancementContext.isLazyLoadable(null));
         assertTrue(enhancementContext.doExtendedEnhancement(null));
     }
+
+    public void testCreateEnhancer() throws Exception {
+        Method createEnhancerMethod = EnhanceMojo.class.getDeclaredMethod("createEnhancer");
+        createEnhancerMethod.setAccessible(true);
+        Field classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
+        classesDirectoryField.setAccessible(true);
+        EnhanceMojo enhanceMojo = new EnhanceMojo();
+        File classesDirectory = new File(tempDir, "classes");
+        classesDirectory.mkdirs();
+        classesDirectoryField.set(enhanceMojo, classesDirectory);
+        File barFolder = new File(classesDirectory, "bar");
+        barFolder.mkdirs();
+        File fooTxtFile = new File (barFolder, "Foo.txt");
+        fooTxtFile.createNewFile();
+        Enhancer enhancer = (Enhancer)createEnhancerMethod.invoke(enhanceMojo);
+        assertNotNull(enhancer);
+        Field byteByddyEnhancementContextField = EnhancerImpl.class.getDeclaredField("enhancementContext");
+        byteByddyEnhancementContextField.setAccessible(true);
+        Object byteByddyEnhancementContext = byteByddyEnhancementContextField.get(enhancer);
+        assertNotNull(byteByddyEnhancementContext);
+        Field enhancementContextField = byteByddyEnhancementContext.getClass().getDeclaredField("enhancementContext");
+        enhancementContextField.setAccessible(true);
+        EnhancementContext enhancementContext = (EnhancementContext)enhancementContextField.get(byteByddyEnhancementContext);
+        assertNotNull(enhancementContext);
+        ClassLoader classLoader = enhancementContext.getLoadingClassLoader();
+        assertNotNull(classLoader);
+        assertNotNull(classLoader);
+        URL fooResource = classLoader.getResource("bar/Foo.txt");
+        assertNotNull(fooResource);
+        assertEquals(fooTxtFile.toURI().toURL(), fooResource);
+}
 
 }

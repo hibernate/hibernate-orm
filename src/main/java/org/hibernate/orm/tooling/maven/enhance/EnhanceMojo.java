@@ -21,6 +21,8 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -68,6 +70,9 @@ public class EnhanceMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         assembleSourceSet();
+        Enhancer enhancer = createEnhancer();
+        getLog().info("Enhancer is created: " + enhancer);
+        enhancer.discoverTypes(ROLE, null);
         EnhancementContext enhancementContext = createEnhancementContext();
         ClassLoader classLoader = enhancementContext.getLoadingClassLoader();
         try {
@@ -112,6 +117,12 @@ public class EnhanceMojo extends AbstractMojo {
             enableDirtyTracking, 
             enableLazyInitialization, 
             enableExtendedEnhancement);
+    }
+
+    private Enhancer createEnhancer() {
+        return BytecodeProviderInitiator
+            .buildDefaultBytecodeProvider()
+            .getEnhancer(createEnhancementContext());
     }
 
 }

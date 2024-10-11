@@ -140,8 +140,9 @@ public class EnhanceMojo extends AbstractMojo {
         String classFilePath = classFile.getAbsolutePath();
         String classesDirectoryPath = classesDirectory.getAbsolutePath();
         return classFilePath.substring(
-            classesDirectoryPath.length() + 1,
-            classFilePath.length() - ".class".length());
+                classesDirectoryPath.length() + 1,
+                classFilePath.length() - ".class".length())
+            .replace(File.separatorChar, '.');
     }
 
 }

@@ -31,6 +31,7 @@ import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.io.TempDir;
 
 public class EnhanceMojoTest {
@@ -147,6 +148,7 @@ public class EnhanceMojoTest {
         assertTrue(enhancementContext.doExtendedEnhancement(null));
     }
 
+    @Test
     public void testCreateEnhancer() throws Exception {
         Method createEnhancerMethod = EnhanceMojo.class.getDeclaredMethod("createEnhancer");
         createEnhancerMethod.setAccessible(true);
@@ -166,6 +168,15 @@ public class EnhanceMojoTest {
         URL fooResource = classLoader.getResource("bar/Foo.txt");
         assertNotNull(fooResource);
         assertEquals(fooTxtFile.toURI().toURL(), fooResource);
+    }
+
+    @Test
+    public void testDetermineClassName() throws Exception {
+        Method determineClassNameMethod = EnhanceMojo.class.getDeclaredMethod(
+            "determineClassName", 
+            new Class[] { File.class });
+        determineClassNameMethod.setAccessible(true);
+        assertEquals("org.foo.Bar", determineClassNameMethod.invoke(enhanceMojo, barClassFile));
     }
 
 }

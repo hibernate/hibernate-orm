@@ -18,6 +18,7 @@ package org.hibernate.orm.tooling.maven.enhance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -29,13 +30,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BooleanSupplier;
-
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.io.TempDir;
 
 public class EnhanceMojoTest {
@@ -205,6 +203,36 @@ public class EnhanceMojoTest {
             });
         assertFalse(hasRun.contains(true));
         discoverTypesForClassMethod.invoke(enhanceMojo, barClassFile, enhancer);
+        assertTrue(hasRun.contains(true));
+    }
+
+    @Test
+    public void testDiscoverTypes() throws Exception {
+        final List<Boolean> hasRun = new ArrayList<Boolean>();
+        Method discoverTypesMethod = EnhanceMojo.class.getDeclaredMethod(
+            "discoverTypes", 
+            new Class[] { Enhancer.class});
+        discoverTypesMethod.setAccessible(true);
+        Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
+            getClass().getClassLoader(), 
+            new Class[] { Enhancer.class }, 
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    if (method.getName().equals("discoverTypes")) {
+                        assertEquals("org.foo.Bar", args[0]);
+                        hasRun.add(0, true);
+                    }
+                    return null;
+                 }               
+            });
+        assertFalse(hasRun.contains(true));
+        discoverTypesMethod.invoke(enhanceMojo, enhancer);
+        assertFalse(hasRun.contains(true));
+        List<File> sourceSet = new ArrayList<File>();
+        sourceSet.add(barClassFile);
+        sourceSetField.set(enhanceMojo, sourceSet);
+        discoverTypesMethod.invoke(enhanceMojo, enhancer);
         assertTrue(hasRun.contains(true));
     }
 

@@ -16,10 +16,9 @@ lib
 
 # IntelliJ specific files/directories
 out
-.idea/modules
-.idea/shelf
-.idea/*.xml
-.idea/.gitignore
+.idea
+!.idea/codeStyles/Project.xml
+!.idea/inspectionProfiles/Project_Default.xml
 *.ipr
 *.iws
 *.iml

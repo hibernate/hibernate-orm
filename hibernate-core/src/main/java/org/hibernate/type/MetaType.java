@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.DiscriminatorType;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Gavin King
@@ -60,7 +61,8 @@ public class MetaType extends AbstractType {
 		return entityNameToDiscriminatorValueMap;
 	}
 
-	public Object resolveDiscriminatorValue(String entityName) {
+	public Object resolveDiscriminatorValue(EntityPersister ownerPersister) {
+		String entityName = ownerPersister.getEntityName();
 		return Optional.ofNullable(
 				getEntityNameToDiscriminatorValueMap().get( entityName ) ).orElse( entityName );
 	}

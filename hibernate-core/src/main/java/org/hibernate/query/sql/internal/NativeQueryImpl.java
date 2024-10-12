@@ -88,6 +88,7 @@ import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
@@ -368,7 +369,8 @@ public class NativeQueryImpl<R>
 		return interpretationCache.resolveNativeQueryParameters(
 					sqlString,
 					s -> {
-						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
+						final ParameterMarkerStrategy parameterMarkerStrategy = sessionFactory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
+						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( parameterMarkerStrategy );
 
 						session.getFactory().getServiceRegistry()
 								.requireService( NativeQueryInterpreter.class )
@@ -734,23 +736,36 @@ public class NativeQueryImpl<R>
 		// Some DBs limit number of IN expressions.  For now, warn...
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+
+		final ParameterMarkerStrategy parameterMarkerStrategy = sessionFactory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
+
 		final boolean paddingEnabled = sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
 		StringBuilder sb = null;
+		StringBuilder occurrenceExpansionSB = null;
 
 		// Handle parameter lists
-		int offset = 0;
-		for ( ParameterOccurrence occurrence : parameterOccurrences ) {
+		int sourceOffset = 0;
+		int expandedParamPosition = 1;
+		for ( int originalParamPosition = 1; originalParamPosition <= parameterOccurrences.size(); originalParamPosition++ ) {
+			final ParameterOccurrence occurrence = parameterOccurrences.get( originalParamPosition - 1 );
 			final QueryParameterImplementor<?> queryParameter = occurrence.getParameter();
 			final QueryParameterBinding<?> binding = parameterBindings.getBinding( queryParameter );
 			if ( !binding.isMultiValued() ) {
+				if ( originalParamPosition != expandedParamPosition ) {
+					if ( sb == null ) {
+						sb = new StringBuilder( sqlString );
+					}
+					sourceOffset = getNewSourceOffsetAfterReplacement( sb, sourceOffset, occurrence, parameterMarkerStrategy.createMarker( expandedParamPosition, null ) );
+				}
+				expandedParamPosition++;
 				continue;
 			}
 			final Collection<?> bindValues = binding.getBindValues();
 
-			int bindValueCount = bindValues.size();
-			int bindValueMaxCount = determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
+			final int bindValueCount = bindValues.size();
+			final int bindValueMaxCount = determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
 
 			if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
 				log.tooManyInExpressions(
@@ -765,6 +780,7 @@ public class NativeQueryImpl<R>
 
 			final int sourcePosition = occurrence.getSourcePosition();
 			if ( sourcePosition < 0 ) {
+				expandedParamPosition++;
 				continue;
 			}
 
@@ -779,7 +795,7 @@ public class NativeQueryImpl<R>
 				}
 			}
 			if ( isEnclosedInParens ) {
-				for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
+				for ( int i = sourcePosition + occurrence.getLength(); i < sqlString.length(); i++ ) {
 					final char ch = sqlString.charAt( i );
 					if ( !Character.isWhitespace( ch ) ) {
 						isEnclosedInParens = ch == ')';
@@ -788,60 +804,60 @@ public class NativeQueryImpl<R>
 				}
 			}
 
-			if ( bindValueCount == 1 && isEnclosedInParens ) {
+			if ( bindValueCount == 1 && isEnclosedInParens && expandedParamPosition == originalParamPosition ) {
 				// short-circuit for performance when only 1 value and the
 				// placeholder is already enclosed in parentheses...
+				expandedParamPosition++;
 				continue;
 			}
 
 			if ( sb == null ) {
-				sb = new StringBuilder( sqlString.length() + 20 );
-				sb.append( sqlString );
+				sb = new StringBuilder( sqlString );
 			}
 
-			final String expansionListAsString;
-			// HHH-8901
-			if ( bindValueMaxCount == 0 ) {
-				if ( isEnclosedInParens ) {
-					expansionListAsString = "null";
-				}
-				else {
-					expansionListAsString = "(null)";
-				}
+			if ( occurrenceExpansionSB == null ) {
+				occurrenceExpansionSB = new StringBuilder();
 			}
 			else {
-				// Shift 1 bit instead of multiplication by 2
-				char[] chars;
-				if ( isEnclosedInParens ) {
-					chars = new char[( bindValueMaxCount << 1 ) - 1];
-					chars[0] = '?';
-					for ( int i = 1; i < bindValueMaxCount; i++ ) {
-						final int index = i << 1;
-						chars[index - 1] = ',';
-						chars[index] = '?';
-					}
-				}
-				else {
-					chars = new char[( bindValueMaxCount << 1 ) + 1];
-					chars[0] = '(';
-					chars[1] = '?';
-					for ( int i = 1; i < bindValueMaxCount; i++ ) {
-						final int index = i << 1;
-						chars[index] = ',';
-						chars[index + 1] = '?';
-					}
-					chars[chars.length - 1] = ')';
-				}
-
-				expansionListAsString = new String(chars);
+				occurrenceExpansionSB.setLength( 0 );
 			}
 
-			final int start = sourcePosition + offset;
-			final int end = start + 1;
-			sb.replace( start, end, expansionListAsString );
-			offset += expansionListAsString.length() - 1;
+			if ( !isEnclosedInParens ) {
+				occurrenceExpansionSB.append( '(' );
+			}
+
+			// HHH-8901
+			if ( bindValueMaxCount == 0 ) {
+				occurrenceExpansionSB.append( "null" );
+			}
+			else {
+				for ( int i = 0; i < bindValueMaxCount; i++ ) {
+					final String marker = parameterMarkerStrategy.createMarker(
+							expandedParamPosition + i,
+							null
+					);
+					occurrenceExpansionSB.append( marker );
+					if ( i + 1 < bindValueMaxCount ) {
+						occurrenceExpansionSB.append( ',' );
+					}
+				}
+			}
+			if ( !isEnclosedInParens ) {
+				occurrenceExpansionSB.append( ')' );
+			}
+
+			sourceOffset = getNewSourceOffsetAfterReplacement( sb, sourceOffset, occurrence, occurrenceExpansionSB.toString() );
+
+			expandedParamPosition += bindValueMaxCount;
 		}
 		return sb == null ? sqlString : sb.toString();
+	}
+
+	private int getNewSourceOffsetAfterReplacement(StringBuilder sb, int sourceOffset, ParameterOccurrence occurrence, String replacement) {
+		final int start = occurrence.getSourcePosition() + sourceOffset;
+		final int end = start + occurrence.getLength();
+		sb.replace( start, end, replacement );
+		return sourceOffset + ( replacement.length() - occurrence.getLength() );
 	}
 
 	public static int determineBindValueMaxCount(boolean paddingEnabled, int inExprLimit, int bindValueCount) {

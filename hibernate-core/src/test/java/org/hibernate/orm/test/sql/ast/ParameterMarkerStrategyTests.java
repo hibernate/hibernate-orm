@@ -16,7 +16,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -125,7 +124,6 @@ public class ParameterMarkerStrategyTests {
 	}
 
 	@Test
-	@FailureExpected
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16283" )
 	public void testNativeQuery(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
@@ -148,8 +146,8 @@ public class ParameterMarkerStrategyTests {
 					.uniqueResult();
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
+			assertThat( count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 2 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1", "?2" );
 		} );
 	}
 

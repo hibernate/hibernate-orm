@@ -18,6 +18,8 @@ import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * @author Steve Ebersole
@@ -34,13 +36,15 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	private Map<String, QueryParameterImplementor<?>> namedQueryParameters;
 	private Map<Integer, QueryParameterImplementor<?>> positionalQueryParameters;
 
-	private int ordinalParameterImplicitPosition;
+	private int parameterImplicitPosition;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
 
 	private List<ParameterOccurrence> parameterList;
 	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
-	public ParameterRecognizerImpl() {
-		ordinalParameterImplicitPosition = 1;
+	public ParameterRecognizerImpl(ParameterMarkerStrategy parameterMarkerStrategy) {
+		this.parameterMarkerStrategy = parameterMarkerStrategy == null ? ParameterMarkerStrategyStandard.INSTANCE : parameterMarkerStrategy;
+		parameterImplicitPosition = 1;
 	}
 
 	@Override
@@ -101,7 +105,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			throw new ParameterRecognitionException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
 		}
 
-		int implicitPosition = ordinalParameterImplicitPosition++;
+		int implicitPosition = parameterImplicitPosition++;
 
 		QueryParameterImplementor<?> parameter = null;
 
@@ -117,12 +121,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			positionalQueryParameters.put( implicitPosition, parameter );
 		}
 
-		if ( parameterList == null ) {
-			parameterList = new ArrayList<>();
-		}
-
-		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		recognizeParameter( parameter, implicitPosition );
 	}
 
 	@Override
@@ -148,12 +147,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			namedQueryParameters.put( name, parameter );
 		}
 
-		if ( parameterList == null ) {
-			parameterList = new ArrayList<>();
-		}
-
-		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		recognizeParameter( parameter, parameterImplicitPosition++ );
 	}
 
 	@Override
@@ -183,16 +177,21 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			positionalQueryParameters.put( position, parameter );
 		}
 
-		if ( parameterList == null ) {
-			parameterList = new ArrayList<>();
-		}
-
-		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		recognizeParameter( parameter, parameterImplicitPosition++ );
 	}
 
 	@Override
 	public void other(char character) {
 		sqlStringBuffer.append( character );
+	}
+
+	private void recognizeParameter(QueryParameterImplementor parameter, int position) {
+		final String marker = parameterMarkerStrategy.createMarker( position, null );
+		final int markerLength = marker.length();
+		if ( parameterList == null ) {
+			parameterList = new ArrayList<>();
+		}
+		sqlStringBuffer.append( marker );
+		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() - markerLength, markerLength ) );
 	}
 }

@@ -108,37 +108,57 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
 	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
-	public synchronized void resetAndReactivate(BootstrapServiceRegistry bootstrapServiceRegistry,
+	public void resetAndReactivate(BootstrapServiceRegistry bootstrapServiceRegistry,
 												List<StandardServiceInitiator<?>> serviceInitiators,
 												List<ProvidedService<?>> providedServices,
 												Map<?, ?> configurationValues) {
-		if ( super.isActive() ) {
-			throw new IllegalStateException( "Can't reactivate an active registry" );
-		}
-		super.resetParent( bootstrapServiceRegistry );
-		this.configurationValues = new HashMap( configurationValues );
-		super.reactivate();
-		applyServiceRegistrations( serviceInitiators, providedServices );
-	}
-
-
-	@Override
-	public synchronized <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		// todo : add check/error for unexpected initiator types?
-		return ( (StandardServiceInitiator<R>) serviceInitiator ).initiateService( configurationValues, this );
-	}
-
-	@Override
-	public synchronized <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( serviceBinding.getService() instanceof Configurable ) {
-			( (Configurable) serviceBinding.getService() ).configure( configurationValues );
+		thisLock.lock();
+		try {
+			if ( super.isActive() ) {
+				throw new IllegalStateException( "Can't reactivate an active registry" );
+			}
+			super.resetParent( bootstrapServiceRegistry );
+			this.configurationValues = new HashMap( configurationValues );
+			super.reactivate();
+			applyServiceRegistrations( serviceInitiators, providedServices );
+		} finally {
+			thisLock.unlock();
 		}
 	}
 
+
 	@Override
-	public synchronized void destroy() {
-		super.destroy();
-		this.configurationValues = null;
+	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
+		thisLock.lock();
+		try {
+			// todo : add check/error for unexpected initiator types?
+			return ( (StandardServiceInitiator<R>) serviceInitiator ).initiateService( configurationValues, this );
+		} finally {
+			thisLock.unlock();
+		}
+	}
+
+	@Override
+	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
+		thisLock.lock();
+		try {
+			if ( serviceBinding.getService() instanceof Configurable ) {
+				( (Configurable) serviceBinding.getService() ).configure( configurationValues );
+			}
+		} finally {
+			thisLock.unlock();
+		}
+	}
+
+	@Override
+	public void destroy() {
+		thisLock.lock();
+		try {
+			super.destroy();
+			this.configurationValues = null;
+		} finally {
+			thisLock.unlock();
+		}
 	}
 
 	private static Map<String, Object> normalize(Map<String, Object> configurationValues) {

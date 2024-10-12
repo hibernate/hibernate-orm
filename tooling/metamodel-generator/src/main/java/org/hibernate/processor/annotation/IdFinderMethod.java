@@ -58,7 +58,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 
 	@Override
 	boolean singleResult() {
-		return false; // we don't need to convert Query exceptions
+		return true;
 	}
 
 	@Override
@@ -90,35 +90,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		}
 		else if (!nullable) {
 			declaration
-					.append(";\n");
-			if (dataRepository) {
-				declaration
-						.append("\t\tif (_result == null) throw new ")
-						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(\"No '")
-						.append(annotationMetaEntity.importType(entity))
-						.append("' for given id [\" + ")
-						.append(paramName)
-						.append(" + \"]\",\n\t\t\t\tnew ")
-						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
-						.append("((Object) ")
-						.append(paramName)
-						.append(", \"")
-						.append(entity)
-						.append("\"));\n")
-						.append("\t\treturn _result");
-			}
-			else {
-				declaration
-						.append("\tif (_result == null) throw new ")
-						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
-						.append("((Object) ")
-						.append(paramName)
-						.append(", \"")
-						.append(entity)
-						.append("\");\n")
-						.append("\treturn _result");
-			}
+					.append(", \"")
+					.append(entity)
+					.append("\", ")
+					.append(paramName)
+					.append(')');
 		}
 		declaration
 				.append(";\n");
@@ -137,7 +113,9 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		}
 		else if (!nullable) {
 			declaration
-					.append("\tvar _result = ");
+					.append("\treturn ")
+					.append(annotationMetaEntity.staticImport("org.hibernate.exception.spi.Exceptions", "require"))
+					.append('(');
 		}
 		else {
 			declaration
@@ -145,6 +123,31 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		}
 		declaration
 				.append(sessionName);
+	}
+
+	@Override
+	void convertExceptions(StringBuilder declaration) {
+		if (dataRepository) {
+			if ( !nullable && containerType==null ) {
+				declaration
+						.append("\t}\n")
+						.append("\tcatch (")
+						.append(annotationMetaEntity.importType("org.hibernate.ObjectNotFoundException"))
+						.append(" exception) {\n")
+						.append("\t\tthrow new ")
+						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
+						.append("(exception.getMessage(), exception);\n");
+			}
+			declaration
+					.append("\t}\n")
+					.append("\tcatch (")
+					.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceException"))
+					.append(" exception) {\n")
+					.append("\t\tthrow new ")
+					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
+					.append("(exception.getMessage(), exception);\n")
+					.append("\t}\n");
+		}
 	}
 
 	private void findWithFetchProfiles(StringBuilder declaration) {
@@ -179,14 +182,5 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		}
 		declaration
 				.append(")");
-	}
-
-	private static void nullCheck(StringBuilder declaration, String parameterName) {
-		declaration
-				.append("\tif (")
-				.append(parameterName)
-				.append(" == null) throw new IllegalArgumentException(\"Null ")
-				.append(parameterName)
-				.append("\");\n");
 	}
 }

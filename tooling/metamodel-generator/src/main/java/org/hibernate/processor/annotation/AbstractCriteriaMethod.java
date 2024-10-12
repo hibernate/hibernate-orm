@@ -114,15 +114,6 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		}
 	}
 
-	private static void nullCheck(StringBuilder declaration, String paramName) {
-		declaration
-				.append("\tif (")
-				.append(paramName.replace('.', '$'))
-				.append(" == null) throw new IllegalArgumentException(\"Null ")
-				.append(paramName)
-				.append("\");\n");
-	}
-
 	void where(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append("\t_query.where(");

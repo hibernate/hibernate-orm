@@ -76,4 +76,15 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 			return emptyList();
 		}
 	}
+
+	void nullCheck(StringBuilder declaration, String parameterName) {
+		declaration
+				.append('\t')
+				.append(annotationMetaEntity.staticImport("org.hibernate.exception.spi.Exceptions", "require"))
+				.append('(')
+				.append(parameterName.replace('.', '$'))
+				.append(", \"")
+				.append(parameterName)
+				.append("\");\n");
+	}
 }

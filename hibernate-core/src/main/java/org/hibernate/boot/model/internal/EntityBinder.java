@@ -1646,10 +1646,28 @@ public class EntityBinder {
 	}
 
 	private void bindWhere() {
-		final SQLRestriction restriction = getOverridableAnnotation( annotatedClass, SQLRestriction.class, context );
+		final SQLRestriction restriction = extractSQLRestriction( annotatedClass, context );
 		if ( restriction != null ) {
 			this.where = restriction.value();
 		}
+	}
+
+	private static SQLRestriction extractSQLRestriction(ClassDetails classDetails, MetadataBuildingContext context) {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SQLRestriction fromClass = getOverridableAnnotation( classDetails, SQLRestriction.class, context );
+		if ( fromClass != null ) {
+			return fromClass;
+		}
+		ClassDetails classToCheck = classDetails.getSuperClass();
+		while ( classToCheck != null
+				&& classToCheck.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, sourceModelContext ) ) {
+			final SQLRestriction fromSuper = getOverridableAnnotation( classToCheck, SQLRestriction.class, context );
+			if ( fromSuper != null ) {
+				return fromSuper;
+			}
+			classToCheck = classToCheck.getSuperClass();
+		}
+		return null;
 	}
 
 	private void bindNaturalIdCache() {

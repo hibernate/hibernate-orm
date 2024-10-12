@@ -323,18 +323,25 @@ public class EntityBinder {
 		if ( fromClass != null ) {
 			return fromClass;
 		}
+		SoftDelete fromSuper = extractAnnotationFromMappedSuperclass( classDetails, SoftDelete.class, sourceModelContext );
+		if ( fromSuper != null ) {
+			return fromSuper;
+		}
+		return extractFromPackage( SoftDelete.class, classDetails, context );
+	}
 
+	private static <A extends Annotation> A extractAnnotationFromMappedSuperclass(ClassDetails classDetails, Class<A> annotationClass, SourceModelBuildingContext sourceModelContext) {
 		ClassDetails classToCheck = classDetails.getSuperClass();
 		while ( classToCheck != null ) {
-			final SoftDelete fromSuper = classToCheck.getAnnotationUsage( SoftDelete.class, sourceModelContext );
-			if ( fromSuper != null && classToCheck.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, sourceModelContext ) ) {
+			final A fromSuper = classToCheck.getAnnotationUsage( annotationClass, sourceModelContext );
+			if ( fromSuper != null
+					&& classToCheck.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, sourceModelContext ) ) {
 				return fromSuper;
 			}
 
 			classToCheck = classToCheck.getSuperClass();
 		}
-
-		return extractFromPackage( SoftDelete.class, classDetails, context );
+		return null;
 	}
 
 	private void handleCheckConstraints() {
@@ -1594,10 +1601,19 @@ public class EntityBinder {
 	}
 
 	public void bindWhere() {
-		final SQLRestriction restriction = getOverridableAnnotation( annotatedClass, SQLRestriction.class, context );
+		final SQLRestriction restriction = extractSQLRestriction( annotatedClass, context );
 		if ( restriction != null ) {
 			this.where = restriction.value();
 		}
+	}
+
+	private static SQLRestriction extractSQLRestriction(ClassDetails classDetails, MetadataBuildingContext context) {
+		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SQLRestriction fromClass = classDetails.getAnnotationUsage( SQLRestriction.class, sourceModelContext );
+		if ( fromClass != null ) {
+			return fromClass;
+		}
+		return extractAnnotationFromMappedSuperclass( classDetails, SQLRestriction.class, sourceModelContext );
 	}
 
 	public void setWrapIdsInEmbeddedComponents(boolean wrapIdsInEmbeddedComponents) {

@@ -27,8 +27,7 @@ import static java.util.stream.Collectors.toList;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.CLASS;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.LIST;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.MAP;
-import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
-import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isInjectionCompatible;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.*;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.
@@ -139,7 +138,23 @@ public class SqmDynamicInstantiation<T>
 		}
 	}
 
-	private List<Class<?>> argumentTypes() {
+	public List<MismatchConstructorFieldPositionInfo> findMismatchConstructorFieldPositions(TypeConfiguration typeConfiguration) {
+		if (getInstantiationTarget().getNature() == CLASS) {
+			if (getJavaType().isArray()) {
+				// hack to accommodate the needs of jpamodelgen
+				// where Class objects not available during build
+				return null;
+			}
+			final List<Class<?>> argTypes = argumentTypes();
+
+			return findMismatchConstructorFieldPosition(getJavaType(), argTypes, typeConfiguration);
+		} else {
+			// TODO: is there anything we need to check for list/map instantiation?
+			return null;
+		}
+	}
+
+	public List<Class<?>> argumentTypes() {
 		return getArguments().stream()
 				.map( arg -> {
 					final SqmExpressible<?> expressible = arg.getExpressible();

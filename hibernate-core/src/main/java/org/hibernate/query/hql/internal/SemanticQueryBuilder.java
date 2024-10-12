@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.QuerySettings;
@@ -38,6 +39,7 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.CharSequenceHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
@@ -219,6 +221,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -1544,12 +1547,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		if ( !dynamicInstantiation.checkInstantiation( creationContext.getTypeConfiguration() ) ) {
-			final String typeName = dynamicInstantiation.getJavaType().getSimpleName();
+			final String qualifiedName = dynamicInstantiation.getJavaType().getName();
 			if ( dynamicInstantiation.isFullyAliased() ) {
-				throw new SemanticException( "Missing constructor or attributes for injection into type '" + typeName + "'", query );
+				throw new SemanticException( "Missing constructor or attributes for injection into class '" + qualifiedName + "'" +
+						" of selected types [" + dynamicInstantiation.argumentTypes() + "]", query );
 			}
 			else {
-				throw new SemanticException( "Missing constructor for type '" + typeName  + "'", query );
+				List<InstantiationHelper.MismatchConstructorFieldPositionInfo> list = dynamicInstantiation.findMismatchConstructorFieldPositions(creationContext.getTypeConfiguration());
+
+				String conjecture = "";
+				if ( list != null && !list.isEmpty() ) {
+					conjecture = "mismatch at position " + StringHelper.join( ",", list );
+				}
+
+				throw new SemanticException( "Missing constructor for class '" + qualifiedName + "' with parameter types ["
+						+ dynamicInstantiation.argumentTypes() + "] (" + conjecture + ")", query );
 			}
 		}
 

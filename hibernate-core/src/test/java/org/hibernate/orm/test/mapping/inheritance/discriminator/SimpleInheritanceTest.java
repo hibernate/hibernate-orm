@@ -182,7 +182,7 @@ public class SimpleInheritanceTest {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
 					Root<Person> root = criteria.from( Person.class );
-					criteria.where( criteriaBuilder.gt( root.get( "salary" ), new BigDecimal( 100 ) ) );
+					criteria.where( criteriaBuilder.gt( criteriaBuilder.treat( root, Employee.class ).get( "salary" ), new BigDecimal( 100 ) ) );
 
 					result = s.createQuery( criteria ).list();
 //					result = s.createCriteria( Person.class )

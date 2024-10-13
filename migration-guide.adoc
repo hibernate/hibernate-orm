@@ -318,6 +318,13 @@ must be explicitly set to true.
 
 The signature of the `Configurable#configure` method changed from accepting just a `ServiceRegistry` instance to the new `GeneratorCreationContext` interface, which exposes a lot more useful information when configuring the generator itself. The old signature has been deprecated for removal, so you should migrate any custom `Configurable` generator implementation to the new one.
 
+[[criteria-implicit-treat]]
+== Criteria API and inheritance subtypes attributes
+
+It was previously possible to use the string version of the `jakarta.persistence.criteria.Path#get` and `jakarta.persistence.criteria.From#join` methods with names of attributes defined in an inheritance subtype of the type represented by the path expression. This was handled internally by implicitly treating the path as the subtype which defines said attribute. Since Hibernate 7.0, the Criteria API will no longer allow retrieving subtype attributes this way, and it's going to require an explicit `jakarta.persistence.criteria.CriteriaBuilder#treat` to be called on the path first to downcast it to the subtype which defines the attribute.
+
+Implicit treats are still going to be applied when an HQL query dereferences a path belonging to an inheritance subtype.
+
 [[hbm-transform]]
 == hbm.xml Transformation
 

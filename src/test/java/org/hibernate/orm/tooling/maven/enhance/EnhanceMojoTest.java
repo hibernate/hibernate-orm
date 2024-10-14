@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,6 +46,7 @@ public class EnhanceMojoTest {
 
     private Field classesDirectoryField;
     private Field sourceSetField;
+    private Field enhancerField;
 
     private File classesDirectory;  // folder '${tempDir}/classes'
     private File fooFolder;         // folder '${classesDirectory}/org/foo'
@@ -60,6 +62,8 @@ public class EnhanceMojoTest {
         classesDirectoryField.setAccessible(true);
         sourceSetField = EnhanceMojo.class.getDeclaredField("sourceSet");
         sourceSetField.setAccessible(true);  
+        enhancerField = EnhanceMojo.class.getDeclaredField("enhancer");
+        enhancerField.setAccessible(true);
         enhanceMojo = new EnhanceMojo();             
         classesDirectory = new File(tempDir, "classes");
         classesDirectory.mkdirs();
@@ -156,7 +160,10 @@ public class EnhanceMojoTest {
     public void testCreateEnhancer() throws Exception {
         Method createEnhancerMethod = EnhanceMojo.class.getDeclaredMethod("createEnhancer");
         createEnhancerMethod.setAccessible(true);
-        Enhancer enhancer = (Enhancer)createEnhancerMethod.invoke(enhanceMojo);
+        Enhancer enhancer = (Enhancer)enhancerField.get(enhanceMojo);
+        assertNull(enhancer);
+        createEnhancerMethod.invoke(enhanceMojo);
+        enhancer = (Enhancer)enhancerField.get(enhanceMojo);
         assertNotNull(enhancer);
         Field byteByddyEnhancementContextField = EnhancerImpl.class.getDeclaredField("enhancementContext");
         byteByddyEnhancementContextField.setAccessible(true);
@@ -188,7 +195,7 @@ public class EnhanceMojoTest {
         final List<Boolean> hasRun = new ArrayList<Boolean>();
         Method discoverTypesForClassMethod = EnhanceMojo.class.getDeclaredMethod(
             "discoverTypesForClass", 
-            new Class[] { File.class, Enhancer.class});
+            new Class[] { File.class });
         discoverTypesForClassMethod.setAccessible(true);
         Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
             getClass().getClassLoader(), 
@@ -203,8 +210,9 @@ public class EnhanceMojoTest {
                     return null;
                  }               
             });
+        enhancerField.set(enhanceMojo, enhancer);
         assertFalse(hasRun.contains(true));
-        discoverTypesForClassMethod.invoke(enhanceMojo, barClassFile, enhancer);
+        discoverTypesForClassMethod.invoke(enhanceMojo, barClassFile);
         assertTrue(hasRun.contains(true));
     }
 
@@ -213,7 +221,7 @@ public class EnhanceMojoTest {
         final List<Boolean> hasRun = new ArrayList<Boolean>();
         Method discoverTypesMethod = EnhanceMojo.class.getDeclaredMethod(
             "discoverTypes", 
-            new Class[] { Enhancer.class});
+            new Class[] { });
         discoverTypesMethod.setAccessible(true);
         Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
             getClass().getClassLoader(), 
@@ -228,13 +236,14 @@ public class EnhanceMojoTest {
                     return null;
                  }               
             });
+        enhancerField.set(enhanceMojo, enhancer);
         assertFalse(hasRun.contains(true));
-        discoverTypesMethod.invoke(enhanceMojo, enhancer);
+        discoverTypesMethod.invoke(enhanceMojo);
         assertFalse(hasRun.contains(true));
         List<File> sourceSet = new ArrayList<File>();
         sourceSet.add(barClassFile);
         sourceSetField.set(enhanceMojo, sourceSet);
-        discoverTypesMethod.invoke(enhanceMojo, enhancer);
+        discoverTypesMethod.invoke(enhanceMojo);
         assertTrue(hasRun.contains(true));
     }
 

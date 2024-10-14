@@ -40,6 +40,7 @@ import java.util.List;
 public class EnhanceMojo extends AbstractMojo {
 
 	private List<File> sourceSet = new ArrayList<File>();
+    private Enhancer enhancer;
 
     @Parameter(
 			defaultValue = "${project.build.directory}/classes", 
@@ -74,8 +75,8 @@ public class EnhanceMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         getLog().debug("Starting execution of enhance mojo");
         assembleSourceSet();
-        Enhancer enhancer = createEnhancer();
-        discoverTypes(enhancer);
+        createEnhancer();
+        discoverTypes();
         getLog().debug("Ending execution of enhance mojo");
    }
 
@@ -125,22 +126,22 @@ public class EnhanceMojo extends AbstractMojo {
             enableExtendedEnhancement);
     }
 
-    private Enhancer createEnhancer() {
+    private void createEnhancer() {
         getLog().debug("Creating bytecode enhancer") ;
-        return BytecodeProviderInitiator
+        enhancer = BytecodeProviderInitiator
             .buildDefaultBytecodeProvider()
             .getEnhancer(createEnhancementContext());
     }
 
-    private void discoverTypes(Enhancer enhancer) {
+    private void discoverTypes() {
         getLog().debug("Starting type discovery") ;
         for (File classFile : sourceSet) {
-            discoverTypesForClass(classFile, enhancer);
+            discoverTypesForClass(classFile);
         }
         getLog().debug("Ending type discovery") ;
     }
 
-    private void discoverTypesForClass(File classFile, Enhancer enhancer) {
+    private void discoverTypesForClass(File classFile) {
         getLog().debug("Trying to discover types for classes in file: " + classFile);
         try {
             enhancer.discoverTypes(

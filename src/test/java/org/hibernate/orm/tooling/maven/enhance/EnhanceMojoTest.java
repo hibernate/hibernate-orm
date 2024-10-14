@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -33,12 +34,20 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+
+import org.apache.maven.plugin.MojoExecutionException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import jakarta.persistence.Entity;
 
 public class EnhanceMojoTest {
 
@@ -78,7 +87,7 @@ public class EnhanceMojoTest {
         fooTxtFile = new File (barFolder, "Foo.txt");
         fooTxtFile.createNewFile();
     }
- 	
+    
     @Test
     void testAssembleSourceSet() throws Exception {
         Method assembleSourceSetMethod = EnhanceMojo.class.getDeclaredMethod("assembleSourceSet");
@@ -158,7 +167,7 @@ public class EnhanceMojoTest {
     }
 
     @Test
-    public void testCreateEnhancer() throws Exception {
+    void testCreateEnhancer() throws Exception {
         Method createEnhancerMethod = EnhanceMojo.class.getDeclaredMethod("createEnhancer");
         createEnhancerMethod.setAccessible(true);
         Enhancer enhancer = (Enhancer)enhancerField.get(enhanceMojo);
@@ -183,7 +192,7 @@ public class EnhanceMojoTest {
     }
 
     @Test
-    public void testDetermineClassName() throws Exception {
+    void testDetermineClassName() throws Exception {
         Method determineClassNameMethod = EnhanceMojo.class.getDeclaredMethod(
             "determineClassName", 
             new Class[] { File.class });
@@ -192,7 +201,7 @@ public class EnhanceMojoTest {
     }
 
     @Test
-    public void testDiscoverTypesForClass() throws Exception {
+    void testDiscoverTypesForClass() throws Exception {
         final List<Boolean> hasRun = new ArrayList<Boolean>();
         Method discoverTypesForClassMethod = EnhanceMojo.class.getDeclaredMethod(
             "discoverTypesForClass", 
@@ -218,7 +227,7 @@ public class EnhanceMojoTest {
     }
 
     @Test
-    public void testDiscoverTypes() throws Exception {
+    void testDiscoverTypes() throws Exception {
         final List<Boolean> hasRun = new ArrayList<Boolean>();
         Method discoverTypesMethod = EnhanceMojo.class.getDeclaredMethod(
             "discoverTypes", 
@@ -249,46 +258,46 @@ public class EnhanceMojoTest {
     }
 
     @Test
-    public void testClearFile() throws Exception {
+    void testClearFile() throws Exception {
         Method clearFileMethod = EnhanceMojo.class.getDeclaredMethod(
             "clearFile", 
             new Class[] { File.class });
         clearFileMethod.setAccessible(true);
         Files.writeString(fooTxtFile.toPath(), "foobar");
-        long before = fooTxtFile.lastModified();
+        fooTxtFile.setLastModified(0);
         assertEquals("foobar", new String(Files.readAllBytes(fooTxtFile.toPath())));
         boolean result = (boolean)clearFileMethod.invoke(enhanceMojo, new File("foobar"));
         assertFalse(result);
         result = (boolean)clearFileMethod.invoke(enhanceMojo, fooTxtFile);
-        long after = fooTxtFile.lastModified();
+        long modified = fooTxtFile.lastModified();
         assertTrue(result);
         // File should be empty
         assertTrue(Files.readAllBytes(fooTxtFile.toPath()).length == 0);
         // last modification 'after' should be after 'before'
-        assertNotEquals(before, after);
-        assertTrue(after > before);
+        assertNotEquals(0, modified);
+        assertTrue(modified > 0);
     }
 
     @Test
-    public void testWriteByteCodeToFile() throws Exception {
+    void testWriteByteCodeToFile() throws Exception {
         Method writeByteCodeToFileMethod = EnhanceMojo.class.getDeclaredMethod(
             "writeByteCodeToFile", 
             new Class[] { byte[].class, File.class});
         writeByteCodeToFileMethod.setAccessible(true);
-        long before = fooTxtFile.lastModified();
+        fooTxtFile.setLastModified(0);
         // File fooTxtFile is empty
         assertTrue(Files.readAllBytes(fooTxtFile.toPath()).length == 0);
         writeByteCodeToFileMethod.invoke(enhanceMojo, "foobar".getBytes(), fooTxtFile);
-        long after = fooTxtFile.lastModified();
+        long modified = fooTxtFile.lastModified();
         // last modification 'after' should be after 'before'
-        assertNotEquals(before, after);
-        assertTrue(after > before);
+        assertNotEquals(0, modified);
+        assertTrue(modified > 0);
         // File should be contain 'foobar'
         assertEquals(new String(Files.readAllBytes(fooTxtFile.toPath())), "foobar");
     }
 
     @Test
-    public void testEnhanceClass() throws Exception {
+    void testEnhanceClass() throws Exception {
         final List<Integer> calls = new ArrayList<Integer>();
         calls.add(0, 0);
         Method enhanceClassMethod = EnhanceMojo.class.getDeclaredMethod(
@@ -327,15 +336,20 @@ public class EnhanceMojoTest {
         assertEquals(2, calls.get(0));
         assertEquals(afterSecondRun, afterFirstRun);
         assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
-        enhanceClassMethod.invoke(enhanceMojo, barClassFile);
-        long afterThirdRun = barClassFile.lastModified();
-        assertEquals(3, calls.get(0));
-        assertEquals(afterThirdRun, afterFirstRun);
-        assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+        try {
+        	enhanceClassMethod.invoke(enhanceMojo, barClassFile);
+        	fail();
+        } catch (Throwable e) {
+        	System.out.println(e.getMessage());
+	        long afterThirdRun = barClassFile.lastModified();
+	        assertEquals(3, calls.get(0));
+	        assertEquals(afterThirdRun, afterFirstRun);
+	        assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+        }
     }
 
     @Test
-    public void testPerformEnhancement() throws Exception {
+    void testPerformEnhancement() throws Exception {
         final List<Boolean> hasRun = new ArrayList<Boolean>();
         Method performEnhancementMethod = EnhanceMojo.class.getDeclaredMethod(
             "performEnhancement", 
@@ -366,5 +380,64 @@ public class EnhanceMojoTest {
         assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
         assertEquals(lastModified, barClassFile.lastModified());
     }
+
+    @Test
+    void testExecute() throws Exception {
+    	Method executeMethod = EnhanceMojo.class.getDeclaredMethod("execute", new Class[] {});
+    	executeMethod.setAccessible(true);
+    	final String barSource = 
+    		"package org.foo;" +
+    	    "import jakarta.persistence.Entity;" + 
+    	    "@Entity public class Bar { "+ 
+    	    "    private String foo; " +
+    	    "    String getFoo() {  return foo; } " +
+    	    "    public void setFoo(String f) { foo = f; } " +
+    	    "}";
+        File barJavaFile = new File(fooFolder, "Bar.java");
+        Files.writeString(barJavaFile.toPath(), barSource);
+    	final String fooSource = 
+    		"package org.foo;" +
+        	"public class Foo { "+ 
+        	"    private Bar bar; " +
+        	"    Bar getBar() {  return bar; } " +
+        	"    public void setBar(Bar b) { bar = b; } " +
+        	"}";
+        File fooJavaFile = new File(fooFolder, "Foo.java");
+        Files.writeString(fooJavaFile.toPath(), fooSource);
+        File fooClassFile = new File(fooFolder, "Foo.class");
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        URL url = Entity.class.getProtectionDomain().getCodeSource().getLocation();
+        String classpath = new File(url.toURI()).getAbsolutePath();
+        String[] options = List.of(
+        		"-cp",
+        		classpath,
+        		barJavaFile.getAbsolutePath(),
+        		fooJavaFile.getAbsolutePath()).toArray(new String[] {});
+        compiler.run(null, null, null, options);
+        String barBytesString = new String(Files.readAllBytes(barClassFile.toPath()));
+        String fooBytesString = new String(Files.readAllBytes(fooClassFile.toPath()));
+        List<File> sourceSet = new ArrayList<File>();
+        sourceSet.add(barClassFile);
+        sourceSet.add(fooClassFile);
+        sourceSetField.set(enhanceMojo, sourceSet);
+        executeMethod.invoke(enhanceMojo);
+        assertNotEquals(barBytesString, new String(Files.readAllBytes(barClassFile.toPath())));
+        assertEquals(fooBytesString, new String(Files.readAllBytes(fooClassFile.toPath())));
+        URLClassLoader classLoader = new URLClassLoader(
+        		new URL[] {classesDirectory.toURI().toURL()}, 
+        		getClass().getClassLoader());
+        Class<?> barClass = classLoader.loadClass("org.foo.Bar");
+        assertNotNull(barClass);
+        Method m = barClass.getMethod("$$_hibernate_getEntityInstance", new Class[]{});
+        assertNotNull(m);
+        Class<?> fooClass = classLoader.loadClass("org.foo.Foo");
+        try {
+        	m = fooClass.getMethod("$$_hibernate_getEntityInstance", new Class[]{});
+        	fail();
+        } catch (NoSuchMethodException e) {
+        	assertEquals("org.foo.Foo.$$_hibernate_getEntityInstance()", e.getMessage());
+        }
+        classLoader.close();
+    } 
 
 }

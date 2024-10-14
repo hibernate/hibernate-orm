@@ -37,13 +37,11 @@ import java.util.List;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -54,6 +52,8 @@ public class EnhanceMojoTest {
     @TempDir
     File tempDir;
 
+    private List<String> logMessages = new ArrayList<String>();
+ 
     private Field classesDirectoryField;
     private Field sourceSetField;
     private Field enhancerField;
@@ -74,7 +74,8 @@ public class EnhanceMojoTest {
         sourceSetField.setAccessible(true);  
         enhancerField = EnhanceMojo.class.getDeclaredField("enhancer");
         enhancerField.setAccessible(true);
-        enhanceMojo = new EnhanceMojo();             
+        enhanceMojo = new EnhanceMojo();     
+        enhanceMojo.setLog(createLog());        
         classesDirectory = new File(tempDir, "classes");
         classesDirectory.mkdirs();
         classesDirectoryField.set(enhanceMojo, classesDirectory);
@@ -439,5 +440,51 @@ public class EnhanceMojoTest {
         }
         classLoader.close();
     } 
+
+    @Test
+    void testVerifyParameters() throws Exception {
+        String lazyInitializationDeprecatedWarning = 
+            "[WARNING] The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning";
+        String dirtyTrackingDeprecatedWarning = 
+            "[WARNING] The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning";
+        Method verifyParametersMethod = EnhanceMojo.class.getDeclaredMethod(
+            "verifyParameters", 
+            new Class[] {});
+        verifyParametersMethod.setAccessible(true);
+        Field enableLazyInitializationField = EnhanceMojo.class.getDeclaredField("enableLazyInitialization");
+        enableLazyInitializationField.setAccessible(true);
+        Field enableDirtyTrackingField = EnhanceMojo.class.getDeclaredField("enableDirtyTracking");
+        enableDirtyTrackingField.setAccessible(true);
+        assertTrue(logMessages.isEmpty());
+        verifyParametersMethod.invoke(enhanceMojo);
+        assertEquals(2, logMessages.size());
+        assertTrue(logMessages.contains(lazyInitializationDeprecatedWarning));
+        assertTrue(logMessages.contains(dirtyTrackingDeprecatedWarning));
+        logMessages.clear();
+        assertTrue(logMessages.isEmpty());
+        enableLazyInitializationField.set(enhanceMojo, Boolean.TRUE);
+        enableDirtyTrackingField.set(enhanceMojo, Boolean.TRUE);
+        verifyParametersMethod.invoke(enhanceMojo);
+        assertTrue(logMessages.isEmpty());
+    }
+
+    private Log createLog() {
+        return (Log)Proxy.newProxyInstance(
+            getClass().getClassLoader(), 
+            new Class[] { Log.class}, 
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    if ("info".equals(method.getName())) {
+                        logMessages.add("[INFO] " + args[0]);
+                    } else if ("warn".equals(method.getName())) {
+                        logMessages.add("[WARNING] " + args[0]);
+                    } else if ("error".equals(method.getName())) {
+                        logMessages.add("[ERROR] " +args[0]);
+                    }
+                    return null;
+                }             
+            });
+    }
 
 }

@@ -79,7 +79,16 @@ public class EnhanceMojo extends AbstractMojo {
         discoverTypes();
         performEnhancement();
         getLog().debug("Ending execution of enhance mojo");
-   }
+    }
+
+    private void verifyParameters() {
+        if (!enableLazyInitialization) {
+			getLog().warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+		}
+		if (!enableDirtyTracking) {
+			getLog().warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
+		}
+    }
 
     private void assembleSourceSet() {
         getLog().debug("Starting assembly of the source set");

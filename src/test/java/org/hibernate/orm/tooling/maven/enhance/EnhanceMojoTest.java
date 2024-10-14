@@ -17,6 +17,7 @@ package org.hibernate.orm.tooling.maven.enhance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -244,13 +245,36 @@ public class EnhanceMojoTest {
             new Class[] { File.class });
         clearFileMethod.setAccessible(true);
         Files.writeString(fooTxtFile.toPath(), "foobar");
+        long before = fooTxtFile.lastModified();
         assertEquals("foobar", new String(Files.readAllBytes(fooTxtFile.toPath())));
         boolean result = (boolean)clearFileMethod.invoke(enhanceMojo, new File("foobar"));
         assertFalse(result);
         result = (boolean)clearFileMethod.invoke(enhanceMojo, fooTxtFile);
+        long after = fooTxtFile.lastModified();
         assertTrue(result);
         // File should be empty
         assertTrue(Files.readAllBytes(fooTxtFile.toPath()).length == 0);
+        // last modification 'after' should be after 'before'
+        assertNotEquals(before, after);
+        assertTrue(after > before);
+    }
+
+    @Test
+    public void testWriteByteCodeToFile() throws Exception {
+        Method writeByteCodeToFileMethod = EnhanceMojo.class.getDeclaredMethod(
+            "writeByteCodeToFile", 
+            new Class[] { byte[].class, File.class});
+        writeByteCodeToFileMethod.setAccessible(true);
+        long before = fooTxtFile.lastModified();
+        // File fooTxtFile is empty
+        assertTrue(Files.readAllBytes(fooTxtFile.toPath()).length == 0);
+        writeByteCodeToFileMethod.invoke(enhanceMojo, "foobar".getBytes(), fooTxtFile);
+        long after = fooTxtFile.lastModified();
+        // last modification 'after' should be after 'before'
+        assertNotEquals(before, after);
+        assertTrue(after > before);
+        // File should be contain 'foobar'
+        assertEquals(new String(Files.readAllBytes(fooTxtFile.toPath())), "foobar");
     }
 
 }

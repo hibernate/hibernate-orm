@@ -48,6 +48,16 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		Column line2Column = classMapping.getProperty( "line2" ).getColumns().get(0);
 		assertFalse("Validator annotations are applied on line2 as it is @NotBlank", line2Column.isNullable());
+
+		Column line3Column = classMapping.getProperty("line3").getColumns().get(0);
+		assertTrue(
+				"Validator composition of type OR should result in line3 being nullable",
+				line3Column.isNullable());
+
+		Column line4Column = classMapping.getProperty("line4" ).getColumns().get(0);
+		assertFalse(
+				"Validator composition of type AND should result in line4 being not-null",
+				line4Column.isNullable());
 	}
 
 	@Test

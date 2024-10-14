@@ -18,6 +18,8 @@ public class Address {
 
 	private String line1;
 	private String line2;
+	private String line3;
+	private String line4;
 	private String zip;
 	private String state;
 	@Size(max = 20)
@@ -53,6 +55,24 @@ public class Address {
 
 	public void setLine2(String line2) {
 		this.line2 = line2;
+	}
+
+	@NullOrNotBlank
+	public String getLine3() {
+		return line3;
+	}
+
+	public void setLine3(String line3) {
+		this.line3 = line3;
+	}
+
+	@NullAndNotBlank
+	public String getLine4() {
+		return line4;
+	}
+
+	public void setLine4(String line4) {
+		this.line4 = line4;
 	}
 
 	@Size(max = 3)

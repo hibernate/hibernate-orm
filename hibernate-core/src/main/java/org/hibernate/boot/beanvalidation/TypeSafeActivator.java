@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.beanvalidation;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +16,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import jakarta.validation.constraints.*;
 import org.hibernate.AssertionFailure;
@@ -206,8 +210,15 @@ class TypeSafeActivator {
 			boolean hasNotNull;
 			if ( property != null ) {
 				hasNotNull = applyConstraints(
-						propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull, dialect
+						propertyDesc.getConstraintDescriptors(),
+						property,
+						propertyDesc,
+						groups,
+						activateNotNull,
+						false,
+						dialect
 				);
+
 				if ( property.isComposite() && propertyDesc.isCascaded() ) {
 					Class<?> componentClass = ( (Component) property.getValue() ).getComponentClass();
 
@@ -237,15 +248,23 @@ class TypeSafeActivator {
 			PropertyDescriptor propertyDesc,
 			Set<Class<?>> groups,
 			boolean canApplyNotNull,
+			boolean useOrLogicForComposedConstraint,
 			Dialect dialect) {
 		boolean hasNotNull = false;
 		for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
+			// If the composition logic is OR, then all the nested constraints need to be not-null in order
+			// for the property to be marked not-null.
+			// If the composition logic is AND (default), then only one needs to be not-null.
+			BiFunction<Boolean, Boolean, Boolean> compositionLogic = useOrLogicForComposedConstraint ?
+					Boolean::logicalAnd :
+					Boolean::logicalOr;
+
 			if ( groups != null && Collections.disjoint( descriptor.getGroups(), groups ) ) {
 				continue;
 			}
 
 			if ( canApplyNotNull ) {
-				hasNotNull = hasNotNull || applyNotNull( property, descriptor );
+				hasNotNull = compositionLogic.apply( hasNotNull, isNotNullDescriptor( descriptor ) );
 			}
 
 			// apply bean validation specific constraints
@@ -264,12 +283,43 @@ class TypeSafeActivator {
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
 					canApplyNotNull,
+					isConstraintCompositionOfTypeOr(descriptor),
 					dialect
 			);
 
-			hasNotNull = hasNotNull || hasNotNullFromComposingConstraints;
+			hasNotNull = compositionLogic.apply( hasNotNull, hasNotNullFromComposingConstraints );
+		}
+		if ( hasNotNull ) {
+			markNotNull( property );
 		}
 		return hasNotNull;
+	}
+
+	/**
+	 * Determines if a constraint composition is of the type OR.
+	 * Assumes that Hibernate Validator is being used, providing
+	 * the required method that results in the proper determination of the
+	 * ConstraintComposition type that is being used.
+	 * @param descriptor The descriptor to check against.
+	 * @return true if the constraint composition is of type OR, false otherwise.
+	 */
+	private static boolean isConstraintCompositionOfTypeOr(ConstraintDescriptor<?> descriptor) {
+		if ( descriptor.getComposingConstraints() == null ||
+				descriptor.getComposingConstraints().isEmpty() ) {
+			return false;
+		}
+
+		try {
+			Method compositionTypeMethod = descriptor.getClass()
+					.getMethod( "getCompositionType" );
+			Object result = compositionTypeMethod.invoke( descriptor );
+			if ( result != null && "or".equalsIgnoreCase( result.toString() ) ) {
+				return true;
+			}
+		} catch ( NoSuchMethodException | IllegalAccessException | InvocationTargetException ex ) {
+			LOG.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
+		}
+		return false;
 	}
 
 	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
@@ -315,34 +365,31 @@ class TypeSafeActivator {
 		col.addCheckConstraint( new CheckConstraint( checkConstraint ) );
 	}
 
-	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
-		boolean hasNotNull = false;
-		// NotNull, NotEmpty, and NotBlank annotation add not-null on column
-		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType())
-				|| NotEmpty.class.equals( descriptor.getAnnotation().annotationType())
-				|| NotBlank.class.equals( descriptor.getAnnotation().annotationType())) {
-			// single table inheritance should not be forced to null due to shared state
-			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
-				//composite should not add not-null on all columns
-				if ( !property.isComposite() ) {
-					for ( Selectable selectable : property.getSelectables() ) {
-						if ( selectable instanceof Column ) {
-							((Column) selectable).setNullable( false );
-						}
-						else {
-							LOG.debugf(
-									"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
-											"by formula(s); formula portions will be skipped",
-									property.getName()
-							);
-						}
+	private static boolean isNotNullDescriptor(ConstraintDescriptor<?> descriptor) {
+		return Stream.of( NotNull.class, NotEmpty.class, NotBlank.class )
+				.anyMatch( val -> val.equals( descriptor.getAnnotation().annotationType() ) );
+	}
+
+	private static void markNotNull(Property property) {
+		// single table inheritance should not be forced to null due to shared state
+		if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
+			//composite should not add not-null on all columns
+			if ( !property.isComposite() ) {
+				for ( Selectable selectable : property.getSelectables() ) {
+					if ( selectable instanceof Column ) {
+						((Column) selectable).setNullable( false );
+					}
+					else {
+						LOG.debugf(
+								"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
+										"by formula(s); formula portions will be skipped",
+								property.getName()
+						);
 					}
 				}
 			}
-			hasNotNull = true;
 		}
-		property.setOptional( !hasNotNull );
-		return hasNotNull;
+		property.setOptional( false );
 	}
 
 	private static void applyDigits(Property property, ConstraintDescriptor<?> descriptor) {

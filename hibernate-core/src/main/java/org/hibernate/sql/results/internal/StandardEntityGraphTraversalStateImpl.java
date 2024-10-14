@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -20,6 +21,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -51,7 +53,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 
 	@Override
 	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
-		assert !(fetchable instanceof CollectionPart);
+		assert !( fetchable instanceof CollectionPart );
 		if ( fetchable instanceof NonAggregatedIdentifierMapping ) {
 			return new TraversalResult( currentGraphContext, new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
 		}
@@ -84,7 +86,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 				subgraphMapKey = fetchable.getJavaType().getJavaTypeClass();
 			}
 			if ( subgraphMap != null && subgraphMapKey != null ) {
-				currentGraphContext = subgraphMap.get( subgraphMapKey );
+				currentGraphContext = getMergedSubGraphs( subgraphMap, subgraphMapKey );
 			}
 		}
 		else if ( graphSemantic == GraphSemantic.FETCH ) {
@@ -94,6 +96,25 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			fetchStrategy = null;
 		}
 		return new TraversalResult( previousContextRoot, fetchStrategy );
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private GraphImplementor<?> getMergedSubGraphs(
+			Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap,
+			Class<?> subgraphMapKey) {
+		ManagedDomainType<?> managedDomainType = metamodel.findManagedType( subgraphMapKey );
+
+		if ( managedDomainType == null ) {
+			return null;
+		}
+
+		GraphImplementor mergedSubgraph = new SubGraphImpl<>( managedDomainType, true );
+
+		for ( GraphImplementor subgraph : subgraphMap.values() ) {
+			mergedSubgraph.merge( subgraph );
+		}
+
+		return mergedSubgraph;
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {

@@ -334,4 +334,37 @@ public class EnhanceMojoTest {
         assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
     }
 
+    @Test
+    public void testPerformEnhancement() throws Exception {
+        final List<Boolean> hasRun = new ArrayList<Boolean>();
+        Method performEnhancementMethod = EnhanceMojo.class.getDeclaredMethod(
+            "performEnhancement", 
+            new Class[] { });
+            performEnhancementMethod.setAccessible(true);
+        Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
+            getClass().getClassLoader(), 
+            new Class[] { Enhancer.class }, 
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    if (method.getName().equals("enhance")) {
+                        assertEquals("org.foo.Bar", args[0]);
+                        hasRun.add(0, true);
+                    }
+                    return "foobar".getBytes();
+                 }               
+            });
+        enhancerField.set(enhanceMojo, enhancer);
+        List<File> sourceSet = new ArrayList<File>();
+        sourceSet.add(barClassFile);
+        sourceSetField.set(enhanceMojo, sourceSet);
+        long lastModified = barClassFile.lastModified();
+        assertFalse(hasRun.contains(true));
+        assertNotEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+        performEnhancementMethod.invoke(enhanceMojo);
+        assertTrue(hasRun.contains(true));
+        assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+        assertEquals(lastModified, barClassFile.lastModified());
+    }
+
 }

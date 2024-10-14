@@ -164,6 +164,19 @@ public class EnhanceMojo extends AbstractMojo {
             .replace(File.separatorChar, '.');
     }
 
+    private void performEnhancement() {
+        getLog().debug("Starting class enhancement") ;
+        for (File classFile : sourceSet) {
+            long lastModified = classFile.lastModified();
+            enhanceClass(classFile);
+            final boolean timestampReset = classFile.setLastModified( lastModified );
+            if ( !timestampReset ) {
+                getLog().debug( "Setting lastModified failed for class file: " + classFile);
+            }
+        }
+        getLog().debug("Ending class enhancement") ;
+     }
+
     private void enhanceClass(File classFile) {
         getLog().debug("Trying to enhance class file: " + classFile);
         try {

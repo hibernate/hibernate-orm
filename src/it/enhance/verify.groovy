@@ -19,6 +19,12 @@ if (!classesFolder.exists()) {
 File barClassFile = new File(classesFolder, "org/foo/Bar.class");
 if (!barClassFile.exists()) {
     throw new FileNotFoundException("File should exist: " + barClassFile);
+} 
+int amountOfBytes = Files.readAllBytes(barClassFile.toPath()).length;
+
+File fooClassFile = new File(classesFolder, "org/foo/Foo.class");
+if (!fooClassFile.exists()) {
+    throw new FileNotFoundException("File should exist: " + fooClassFile);
 }
 
 File buildLog = new File(basedir, "build.log");
@@ -31,7 +37,7 @@ assert listOfStrings.contains("[DEBUG] Configuring mojo execution 'org.hibernate
 assert listOfStrings.contains("[DEBUG]   (f) classesDirectory = " + classesFolder);
 assert listOfStrings.contains("[DEBUG]   (f) enableAssociationManagement = false");
 assert listOfStrings.contains("[DEBUG]   (f) enableDirtyTracking = false");
-assert listOfStrings.contains("[DEBUG]   (f) enableLazyInitialization = false");
+assert listOfStrings.contains("[DEBUG]   (f) enableLazyInitialization = true");
 assert listOfStrings.contains("[DEBUG]   (f) enableExtendedEnhancement = false");
 assert listOfStrings.contains("[DEBUG] Starting execution of enhance mojo");
 assert listOfStrings.contains("[DEBUG] Starting assembly of the source set");
@@ -44,5 +50,16 @@ assert listOfStrings.contains("[DEBUG] Starting type discovery");
 assert listOfStrings.contains("[DEBUG] Trying to discover types for classes in file: " + barClassFile);
 assert listOfStrings.contains("[DEBUG] Determining class name for file: " + barClassFile);
 assert listOfStrings.contains("[INFO] Succesfully discovered types for classes in file: " + barClassFile);
+assert listOfStrings.contains("[DEBUG] Trying to discover types for classes in file: " + fooClassFile);
+assert listOfStrings.contains("[DEBUG] Determining class name for file: " + fooClassFile);
+assert listOfStrings.contains("[INFO] Succesfully discovered types for classes in file: " + fooClassFile);
 assert listOfStrings.contains("[DEBUG] Ending type discovery");
+assert listOfStrings.contains("[DEBUG] Starting class enhancement");
+assert listOfStrings.contains("[DEBUG] Trying to enhance class file: " + barClassFile);
+assert listOfStrings.contains("[INFO] Succesfully cleared the contents of file: " + barClassFile);
+assert listOfStrings.contains("[DEBUG] " + amountOfBytes + " bytes were succesfully written to file: " +barClassFile);
+assert listOfStrings.contains("[INFO] Succesfully enhanced class file: " + barClassFile);
+assert listOfStrings.contains("[DEBUG] Trying to enhance class file: " + fooClassFile);
+assert listOfStrings.contains("[INFO] Skipping file: " + fooClassFile);
+assert listOfStrings.contains("[DEBUG] Ending class enhancement");
 assert listOfStrings.contains("[DEBUG] Ending execution of enhance mojo");

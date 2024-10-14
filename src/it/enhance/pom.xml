@@ -6,6 +6,13 @@
   <artifactId>enhance-test</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>@hibernate-core.version@</version>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>   
@@ -17,6 +24,9 @@
           <execution>
             <id>enhance</id>
             <phase>process-classes</phase>
+            <configuration>
+              <enableLazyInitialization>true</enableLazyInitialization>
+            </configuration>
             <goals>
               <goal>enhance</goal>
             </goals>

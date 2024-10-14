@@ -74,6 +74,7 @@ public class EnhanceMojo extends AbstractMojo {
 
     public void execute() {
         getLog().debug("Starting execution of enhance mojo");
+        verifyParameters();
         assembleSourceSet();
         createEnhancer();
         discoverTypes();

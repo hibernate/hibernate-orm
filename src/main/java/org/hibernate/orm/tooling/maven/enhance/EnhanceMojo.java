@@ -16,7 +16,6 @@
 package org.hibernate.orm.tooling.maven.enhance;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -73,11 +72,12 @@ public class EnhanceMojo extends AbstractMojo {
         required = true)
     private boolean enableExtendedEnhancement;
 
-    public void execute() throws MojoExecutionException {
+    public void execute() {
         getLog().debug("Starting execution of enhance mojo");
         assembleSourceSet();
         createEnhancer();
         discoverTypes();
+        performEnhancement();
         getLog().debug("Ending execution of enhance mojo");
    }
 

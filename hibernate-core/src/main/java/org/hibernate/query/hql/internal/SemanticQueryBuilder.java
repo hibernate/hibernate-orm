@@ -5681,9 +5681,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			final List<SqmSelection<?>> selections = subQuery.getQuerySpec().getSelectClause().getSelections();
 			if ( selections.size() == 1 ) {
-				subQuery.applyInferableType( selections.get( 0 ).getExpressible().getSqmType() );
+				final SqmExpressible<?> expressible = selections.get( 0 ).getExpressible();
+				if ( expressible != null ) {
+					subQuery.applyInferableType( expressible.getSqmType() );
+				}
 			}
-
 			return subQuery;
 		}
 		finally {

@@ -386,6 +386,10 @@ public class EnhanceMojoTest {
     void testExecute() throws Exception {
     	Method executeMethod = EnhanceMojo.class.getDeclaredMethod("execute", new Class[] {});
     	executeMethod.setAccessible(true);
+        String lazyInitializationDeprecatedWarning = 
+            "[WARNING] The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning";
+        String dirtyTrackingDeprecatedWarning = 
+            "[WARNING] The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning";
     	final String barSource = 
     		"package org.foo;" +
     	    "import jakarta.persistence.Entity;" + 
@@ -421,7 +425,10 @@ public class EnhanceMojoTest {
         sourceSet.add(barClassFile);
         sourceSet.add(fooClassFile);
         sourceSetField.set(enhanceMojo, sourceSet);
+        assertTrue(logMessages.isEmpty());
         executeMethod.invoke(enhanceMojo);
+        assertTrue(logMessages.contains(lazyInitializationDeprecatedWarning));
+        assertTrue(logMessages.contains(dirtyTrackingDeprecatedWarning));
         assertNotEquals(barBytesString, new String(Files.readAllBytes(barClassFile.toPath())));
         assertEquals(fooBytesString, new String(Files.readAllBytes(fooClassFile.toPath())));
         URLClassLoader classLoader = new URLClassLoader(

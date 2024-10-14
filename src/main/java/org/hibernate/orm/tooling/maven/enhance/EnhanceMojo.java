@@ -24,6 +24,7 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -159,6 +160,22 @@ public class EnhanceMojo extends AbstractMojo {
                 classesDirectoryPath.length() + 1,
                 classFilePath.length() - ".class".length())
             .replace(File.separatorChar, '.');
+    }
+
+    private void writeByteCodeToFile(byte[] bytes, File file) {
+        getLog().debug("Writing byte code to file: " + file);
+        if (clearFile(file)) {
+            try {
+                Files.write( file.toPath(), bytes);
+                getLog().debug("" + bytes.length + " bytes were succesfully written to file: " + file);
+            }
+            catch (FileNotFoundException e) {
+                getLog().error( "Error opening file for writing : " + file, e );
+            }
+            catch (IOException e) {
+                getLog().error( "Error writing bytes to file : " + file, e );
+            }
+        }
     }
 
     private boolean clearFile(File file) {

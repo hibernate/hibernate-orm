@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -33,7 +32,9 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
+import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -284,6 +285,53 @@ public class EnhanceMojoTest {
         assertTrue(after > before);
         // File should be contain 'foobar'
         assertEquals(new String(Files.readAllBytes(fooTxtFile.toPath())), "foobar");
+    }
+
+    @Test
+    public void testEnhanceClass() throws Exception {
+        final List<Integer> calls = new ArrayList<Integer>();
+        calls.add(0, 0);
+        Method enhanceClassMethod = EnhanceMojo.class.getDeclaredMethod(
+            "enhanceClass", 
+            new Class[] { File.class });
+        enhanceClassMethod.setAccessible(true);
+        Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
+            getClass().getClassLoader(), 
+            new Class[] { Enhancer.class }, 
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                	calls.set(0, calls.get(0) + 1);
+                    if (method.getName().equals("enhance")) {
+                        assertEquals("org.foo.Bar", args[0]);
+                    }
+                    if (calls.get(0) == 1) {
+                    	return "foobar".getBytes();
+                    } else if (calls.get(0) == 2) {
+                    	return null;
+                    } else {
+                    	throw new EnhancementException("foobar");
+                    }
+                 }               
+            });
+        long beforeRuns = barClassFile.lastModified();
+        enhancerField.set(enhanceMojo, enhancer);
+        assertEquals(0, calls.get(0));
+        enhanceClassMethod.invoke(enhanceMojo, barClassFile);
+        long afterFirstRun = barClassFile.lastModified();
+        assertEquals(1, calls.get(0));
+        assertTrue(afterFirstRun > beforeRuns);
+        assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+        enhanceClassMethod.invoke(enhanceMojo, barClassFile);
+        long afterSecondRun = barClassFile.lastModified();
+        assertEquals(2, calls.get(0));
+        assertEquals(afterSecondRun, afterFirstRun);
+        assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+        enhanceClassMethod.invoke(enhanceMojo, barClassFile);
+        long afterThirdRun = barClassFile.lastModified();
+        assertEquals(3, calls.get(0));
+        assertEquals(afterThirdRun, afterFirstRun);
+        assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
     }
 
 }

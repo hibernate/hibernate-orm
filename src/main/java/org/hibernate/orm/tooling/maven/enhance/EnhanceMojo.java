@@ -20,6 +20,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 
@@ -161,6 +162,23 @@ public class EnhanceMojo extends AbstractMojo {
                 classesDirectoryPath.length() + 1,
                 classFilePath.length() - ".class".length())
             .replace(File.separatorChar, '.');
+    }
+
+    private void enhanceClass(File classFile) {
+        getLog().debug("Trying to enhance class file: " + classFile);
+        try {
+            byte[] newBytes = enhancer.enhance(
+                determineClassName(classFile), 
+                Files.readAllBytes(classFile.toPath()));
+            if (newBytes != null) {
+                writeByteCodeToFile(newBytes, classFile);
+                getLog().info("Succesfully enhanced class file: " + classFile);
+            } else {
+                getLog().info("Skipping file: " + classFile);
+            }
+        } catch (EnhancementException | IOException e) {
+            getLog().error("An exception occurred while trying to class file: " + classFile, e);;
+         }
     }
 
     private void writeByteCodeToFile(byte[] bytes, File file) {

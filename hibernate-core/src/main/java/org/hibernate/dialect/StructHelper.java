@@ -10,6 +10,7 @@ import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -127,13 +128,13 @@ public class StructHelper {
 
 	private static int injectJdbcValues(
 			EmbeddableMappingType embeddableMappingType,
-			Object domainValue,
+			@Nullable Object domainValue,
 			Object[] jdbcValues,
 			int jdbcIndex,
 			WrapperOptions options) throws SQLException {
 		return injectJdbcValues(
 				embeddableMappingType,
-				embeddableMappingType.getValues( domainValue ),
+				domainValue == null ? null : embeddableMappingType.getValues( domainValue ),
 				jdbcValues,
 				jdbcIndex,
 				options
@@ -142,12 +143,15 @@ public class StructHelper {
 
 	private static int injectJdbcValues(
 			EmbeddableMappingType embeddableMappingType,
-			Object[] values,
+			@Nullable Object[] values,
 			Object[] jdbcValues,
 			int jdbcIndex,
 			WrapperOptions options) throws SQLException {
 		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 		final int valueCount = jdbcValueCount + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+		if ( values == null ) {
+			return valueCount;
+		}
 		int offset = 0;
 		for ( int i = 0; i < values.length; i++ ) {
 			offset += injectJdbcValue(
@@ -252,22 +256,13 @@ public class StructHelper {
 						);
 			}
 			else {
-				jdbcValueCount = embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
-				final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-				final int numberOfValues = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
-				final Object[] subValues = embeddableMappingType.getValues( attributeValues[attributeIndex] );
-				int offset = 0;
-				for ( int i = 0; i < numberOfValues; i++ ) {
-					offset += injectJdbcValue(
-							getEmbeddedPart( embeddableMappingType, i ),
-							subValues,
-							i,
-							jdbcValues,
-							jdbcIndex + offset,
-							options
-					);
-				}
-				assert offset == jdbcValueCount;
+				jdbcValueCount = injectJdbcValues(
+						embeddableMappingType,
+						attributeValues[attributeIndex],
+						jdbcValues,
+						jdbcIndex,
+						options
+				);
 			}
 		}
 		else {

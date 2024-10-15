@@ -4,47 +4,68 @@
  */
 package org.hibernate.type;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.DiscriminatorConverter;
-import org.hibernate.persister.entity.DiscriminatorMetadata;
-import org.hibernate.persister.entity.DiscriminatorType;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Gavin King
- *
- * @deprecated The functionality of MetaType, {@link DiscriminatorType} and {@link DiscriminatorMetadata}  have been
- * consolidated into {@link EntityDiscriminatorMapping} and {@link DiscriminatorConverter}
  */
-@Deprecated( since = "6.2", forRemoval = true )
+@Internal
 public class MetaType extends AbstractType {
 	public static final String[] REGISTRATION_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
-	private final Type baseType;
+	private final Type valueType;
+	private final AnyDiscriminatorValueStrategy valueStrategy;
 	private final Map<Object,String> discriminatorValuesToEntityNameMap;
 	private final Map<String,Object> entityNameToDiscriminatorValueMap;
 
-	public MetaType(Map<Object,String> discriminatorValuesToEntityNameMap, Type baseType) {
-		this.baseType = baseType;
-		this.discriminatorValuesToEntityNameMap = discriminatorValuesToEntityNameMap;
-		this.entityNameToDiscriminatorValueMap = new HashMap<>();
-		for ( Map.Entry<Object,String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
-			entityNameToDiscriminatorValueMap.put( entry.getValue(), entry.getKey() );
+	public MetaType(
+			Type valueType,
+			AnyDiscriminatorValueStrategy valueStrategy,
+			Map<Object,String> explicitValueMappings) {
+		this.valueType = valueType;
+
+		if ( explicitValueMappings == null || explicitValueMappings.isEmpty() ) {
+			if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
+				valueStrategy = AnyDiscriminatorValueStrategy.IMPLICIT;
+			}
+			this.discriminatorValuesToEntityNameMap = new HashMap<>();
+			this.entityNameToDiscriminatorValueMap = new HashMap<>();
 		}
+		else {
+			if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
+				valueStrategy = AnyDiscriminatorValueStrategy.EXPLICIT;
+			}
+			this.discriminatorValuesToEntityNameMap = explicitValueMappings;
+			this.entityNameToDiscriminatorValueMap = new HashMap<>();
+			for ( Map.Entry<Object,String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
+				entityNameToDiscriminatorValueMap.put( entry.getValue(), entry.getKey() );
+			}
+		}
+
+		this.valueStrategy = valueStrategy;
+	}
+
+	public MetaType(Map<Object,String> discriminatorValuesToEntityNameMap, Type baseType) {
+		this( baseType, AnyDiscriminatorValueStrategy.AUTO, discriminatorValuesToEntityNameMap );
 	}
 
 	public Type getBaseType() {
-		return baseType;
+		return valueType;
+	}
+
+	public AnyDiscriminatorValueStrategy getValueStrategy() {
+		return valueStrategy;
 	}
 
 	public String[] getRegistrationKeys() {
@@ -60,12 +81,12 @@ public class MetaType extends AbstractType {
 	}
 
 	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
-		return baseType.getSqlTypeCodes( mappingContext );
+		return valueType.getSqlTypeCodes( mappingContext );
 	}
 
 	@Override
 	public int getColumnSpan(MappingContext mapping) throws MappingException {
-		return baseType.getColumnSpan(mapping);
+		return valueType.getColumnSpan(mapping);
 	}
 
 	@Override
@@ -84,7 +105,8 @@ public class MetaType extends AbstractType {
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		baseType.nullSafeSet(st, value==null ? null : entityNameToDiscriminatorValueMap.get(value), index, session);
+		throw new UnsupportedOperationException();
+//		baseType.nullSafeSet(st, value==null ? null : entityNameToDiscriminatorValueMap.get(value), index, session);
 	}
 
 	@Override
@@ -122,7 +144,7 @@ public class MetaType extends AbstractType {
 
 	@Override
 	public String getName() {
-		return baseType.getName(); //TODO!
+		return valueType.getName(); //TODO!
 	}
 
 	@Override

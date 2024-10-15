@@ -195,7 +195,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// after *all* persisters and named queries are registered
 
-		MappingModelCreationProcess.process( entityPersisterMap, context );
+		MappingModelCreationProcess.process( entityPersisterMap, collectionPersisterMap, context );
 
 		for ( EntityPersister persister : entityPersisterMap.values() ) {
 			persister.postInstantiate();

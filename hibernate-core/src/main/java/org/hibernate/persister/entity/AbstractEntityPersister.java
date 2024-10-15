@@ -165,7 +165,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -185,6 +184,7 @@ import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.ExplicitDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor;
 import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
@@ -337,6 +337,7 @@ public abstract class AbstractEntityPersister
 	private final EntityEntryFactory entityEntryFactory;
 
 	private final String sqlAliasStem;
+	private final String jpaEntityName;
 
 	private SingleIdEntityLoader<?> singleIdLoader;
 	private MultiIdEntityLoader<?> multiIdLoader;
@@ -473,6 +474,7 @@ public abstract class AbstractEntityPersister
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
+		this.jpaEntityName = persistentClass.getJpaEntityName();
 
 		//set it here, but don't call it, since it's still uninitialized!
 		factory = creationContext.getSessionFactory();
@@ -2279,10 +2281,10 @@ public abstract class AbstractEntityPersister
 		}
 
 		//noinspection rawtypes
-		final DiscriminatorConverter converter = MappedDiscriminatorConverter.fromValueMappings(
+		final DiscriminatorConverter converter = new ExplicitDiscriminatorConverter(
 				getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 				domainJavaType,
-				underlingJdbcMapping,
+				underlingJdbcMapping.getRelationalJavaType(),
 				getSubclassByDiscriminatorValue(),
 				factory.getMappingMetamodel()
 		);
@@ -3774,6 +3776,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final String getEntityName() {
 		return entityMetamodel.getName();
+	}
+
+	@Override
+	public @Nullable String getJpaEntityName() {
+		return jpaEntityName;
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
@@ -301,9 +302,13 @@ public class Any extends SimpleValue {
 		}
 	}
 
+	/**
+	 * The discriminator {@linkplain Value}
+	 */
 	public static class MetaValue extends SimpleValue {
 		private String typeName;
 		private String columnName;
+		private AnyDiscriminatorValueStrategy valueStrategy;
 
 		private final Consumer<Selectable> selectableConsumer;
 
@@ -395,6 +400,10 @@ public class Any extends SimpleValue {
 		public boolean isValid(MappingContext mappingContext) {
 			return columnName != null
 				&& getType().getColumnSpan( mappingContext ) == 1;
+		}
+
+		public AnyDiscriminatorValueStrategy getValueStrategy() {
+			return valueStrategy;
 		}
 	}
 

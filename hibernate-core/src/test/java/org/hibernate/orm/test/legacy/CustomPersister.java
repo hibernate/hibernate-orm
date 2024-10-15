@@ -135,6 +135,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public @Nullable String getJpaEntityName() {
+		return Custom.class.getSimpleName();
+	}
+
+	@Override
 	public TableDetails getMappedTableDetails() {
 		throw new UnsupportedOperationException();
 	}

@@ -22,6 +22,7 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
@@ -123,15 +124,22 @@ public final class MappingHelper {
 	}
 
 	public static AnyType anyMapping(
-			Type metaType,
+			Type discriminatorType,
 			Type identifierType,
-			Map<Object, String> metaValueToEntityNameMap,
+			Map<Object, String> explicitValeMappings,
 			boolean lazy,
 			MetadataBuildingContext buildingContext) {
-		if ( metaValueToEntityNameMap != null ) {
-			metaType = new MetaType( metaValueToEntityNameMap, metaType );
-		}
+		return anyMapping( discriminatorType, identifierType, AnyDiscriminatorValueStrategy.AUTO, explicitValeMappings, lazy, buildingContext );
+	}
 
+	public static AnyType anyMapping(
+			Type discriminatorType,
+			Type identifierType,
+			AnyDiscriminatorValueStrategy discriminatorValueStrategy,
+			Map<Object, String> explicitValeMappings,
+			boolean lazy,
+			MetadataBuildingContext buildingContext) {
+		final MetaType metaType = new MetaType( discriminatorType, discriminatorValueStrategy, explicitValeMappings );
 		return new AnyType( buildingContext.getBootstrapContext().getTypeConfiguration(), metaType, identifierType, lazy );
 	}
 

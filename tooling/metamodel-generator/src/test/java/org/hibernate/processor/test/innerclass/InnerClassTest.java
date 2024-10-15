@@ -21,5 +21,26 @@ public class InnerClassTest extends CompilationTest {
 		assertNoMetamodelClassGeneratedFor( Dummy.class );
 		assertMetamodelClassGeneratedFor( Dummy.DummyEmbeddable.class );
 		assertMetamodelClassGeneratedFor( Dummy.Inner.class );
+		/*assertMetamodelClassGeneratedFor( Dummy.Persona.class );*/
+//		assertMetamodelClassGeneratedFor( Persona.class );
 	}
+
+//	@MappedSuperclass
+//	public abstract static class Persona {
+//		private String name;
+//
+//		public String getName() {
+//			return name;
+//		}
+//
+//		public void setName(String name) {
+//			this.name = name;
+//		}
+//
+//		public abstract void setId(Long id);
+//
+//		public abstract String getCity();
+//
+//		public abstract void setCity(String city);
+//	}
 }

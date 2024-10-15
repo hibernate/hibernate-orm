@@ -7,14 +7,34 @@ package org.hibernate.processor.test.innerclass;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 public class Dummy {
 	@Entity
-	public static class Inner {
+	public static class Inner extends Persona {
 		@Id
 		Integer id;
 
 		String name;
+
+		public Integer getId() {
+			return id;
+		}
+
+		@Override
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	@Embeddable
@@ -37,5 +57,24 @@ public class Dummy {
 		public void setValue(int value) {
 			this.value = value;
 		}
+	}
+
+	@MappedSuperclass
+	public abstract static class Persona {
+		private String city;
+
+		public String getCity() {
+			return city;
+		}
+
+		public void setCity(String city) {
+			this.city = city;
+		}
+
+		public abstract void setId(Integer id);
+
+		public abstract String getName();
+
+		public abstract void setName(String name);
 	}
 }

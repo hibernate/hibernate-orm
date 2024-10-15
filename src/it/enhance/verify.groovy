@@ -27,6 +27,11 @@ if (!fooClassFile.exists()) {
     throw new FileNotFoundException("File should exist: " + fooClassFile);
 }
 
+File bazClassFile = new File(classesFolder, "org/foo/Baz.class");
+if (!bazClassFile.exists()) {
+    throw new FileNotFoundException("File should exist: " + bazClassFile);
+}
+
 File buildLog = new File(basedir, "build.log");
 if (!buildLog.exists()) {
     throw new FileNotFoundException("File should exist: " + buildLog);
@@ -41,7 +46,12 @@ assert listOfStrings.contains("[DEBUG]   (f) enableLazyInitialization = true");
 assert listOfStrings.contains("[DEBUG]   (f) enableExtendedEnhancement = false");
 assert listOfStrings.contains("[DEBUG] Starting execution of enhance mojo");
 assert listOfStrings.contains("[DEBUG] Starting assembly of the source set");
+assert listOfStrings.contains("[DEBUG] Processing FileSet");
+assert listOfStrings.contains("[DEBUG] Using base directory: " + classesFolder);
 assert listOfStrings.contains("[INFO] Added file to source set: " + barClassFile);
+assert listOfStrings.contains("[INFO] Added file to source set: " + fooClassFile);
+assert !listOfStrings.contains("[INFO] Added file to source set: " + bazClassFile);
+assert listOfStrings.contains("[DEBUG] FileSet was processed succesfully");
 assert listOfStrings.contains("[DEBUG] Ending the assembly of the source set");
 assert listOfStrings.contains("[DEBUG] Creating bytecode enhancer");
 assert listOfStrings.contains("[DEBUG] Creating enhancement context");

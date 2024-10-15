@@ -5,8 +5,11 @@
 package org.hibernate.boot.beanvalidation;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -187,12 +190,23 @@ class TypeSafeActivator {
 		final Class<?>[] groupsArray =
 				buildGroupsForOperation( GroupsPerOperation.Operation.DDL, settings, classLoaderAccess );
 		final Set<Class<?>> groups = new HashSet<>( asList( groupsArray ) );
+		final Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache = new HashMap<>();
+
 		for ( PersistentClass persistentClass : persistentClasses ) {
 			final String className = persistentClass.getClassName();
 			if ( isNotEmpty( className ) ) {
 				final Class<?> clazz = entityClass( classLoaderAccess, className );
 				try {
-					applyDDL( "", persistentClass, clazz, factory, groups, true, dialect );
+					applyDDL(
+							"",
+							persistentClass,
+							clazz,
+							factory,
+							groups,
+							true,
+							dialect,
+							constraintCompositionTypeCache
+					);
 				}
 				catch (Exception e) {
 					LOG.unableToApplyConstraints( className, e );
@@ -217,7 +231,9 @@ class TypeSafeActivator {
 			ValidatorFactory factory,
 			Set<Class<?>> groups,
 			boolean activateNotNull,
-			Dialect dialect) {
+			Dialect dialect,
+			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache
+	) {
 		final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass( clazz );
 		//cno bean level constraints can be applied, go to the properties
 		for ( PropertyDescriptor propertyDesc : descriptor.getConstrainedProperties() ) {
@@ -230,7 +246,9 @@ class TypeSafeActivator {
 						propertyDesc,
 						groups,
 						activateNotNull,
-						dialect
+						false,
+						dialect,
+						constraintCompositionTypeCache
 				);
 				if ( property.isComposite() && propertyDesc.isCascaded() ) {
 					final Component component = (Component) property.getValue();
@@ -244,7 +262,8 @@ class TypeSafeActivator {
 							// activate not null and if the property is not null.
 							// Otherwise, all sub columns should be left nullable
 							activateNotNull && hasNotNull,
-							dialect
+							dialect,
+							constraintCompositionTypeCache
 					);
 				}
 			}
@@ -257,12 +276,18 @@ class TypeSafeActivator {
 			PropertyDescriptor propertyDesc,
 			Set<Class<?>> groups,
 			boolean canApplyNotNull,
-			Dialect dialect) {
-		boolean hasNotNull = false;
+			boolean useOrLogicForComposedConstraint,
+			Dialect dialect,
+			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache) {
+
+		boolean firstItem = true;
+		boolean composedResultHasNotNull = false;
 		for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
+			boolean hasNotNull = false;
+
 			if ( groups == null || !disjoint( descriptor.getGroups(), groups ) ) {
 				if ( canApplyNotNull ) {
-					hasNotNull = hasNotNull || applyNotNull( property, descriptor );
+					hasNotNull = isNotNullDescriptor( descriptor );
 				}
 
 				// apply bean validation specific constraints
@@ -276,19 +301,70 @@ class TypeSafeActivator {
 				// will be taken care later.
 				applyLength( property, descriptor, propertyDesc );
 
-				// pass an empty set as composing constraints inherit the main constraint and thus are matching already
-				final boolean hasNotNullFromComposingConstraints = applyConstraints(
-						descriptor.getComposingConstraints(),
-						property, propertyDesc, null,
-						canApplyNotNull,
-						dialect
-				);
-
-				hasNotNull = hasNotNull || hasNotNullFromComposingConstraints;
+				// Composing constraints
+				if ( !descriptor.getComposingConstraints().isEmpty() ) {
+					// pass an empty set as composing constraints inherit the main constraint and thus are matching already
+					final boolean hasNotNullFromComposingConstraints = applyConstraints(
+							descriptor.getComposingConstraints(),
+							property, propertyDesc, null,
+							canApplyNotNull,
+							isConstraintCompositionOfTypeOr( descriptor, constraintCompositionTypeCache ),
+							dialect,
+							constraintCompositionTypeCache
+					);
+					hasNotNull |= hasNotNullFromComposingConstraints;
+				}
 			}
 
+			if ( firstItem ) {
+				composedResultHasNotNull = hasNotNull;
+				firstItem = false;
+			}
+			else if ( !useOrLogicForComposedConstraint ) {
+				// If the constraint composition is of type AND (default) then only ONE constraint needs to
+				// be non-nullable for the property to be marked as 'not-null'.
+				composedResultHasNotNull |= hasNotNull;
+			}
+			else {
+				// If the constraint composition is of type OR then ALL constraints need to
+				// be non-nullable for the property to be marked as 'not-null'.
+				composedResultHasNotNull &= hasNotNull;
+			}
 		}
-		return hasNotNull;
+
+		if ( composedResultHasNotNull ) {
+			markNotNull( property );
+		}
+
+		return composedResultHasNotNull;
+	}
+
+	private static boolean isConstraintCompositionOfTypeOr(
+			ConstraintDescriptor<?> descriptor,
+			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache
+	) {
+		if ( descriptor.getComposingConstraints().size() < 2 ) {
+			return false;
+		}
+
+		final Class<? extends Annotation> composedAnnotation = descriptor.getAnnotation().annotationType();
+		return constraintCompositionTypeCache.computeIfAbsent( composedAnnotation, value -> {
+			for ( Annotation annotation : value.getAnnotations() ) {
+				if ( "org.hibernate.validator.constraints.ConstraintComposition"
+						.equals( annotation.annotationType().getName() ) ) {
+					try {
+						Method valueMethod = annotation.annotationType().getMethod( "value" );
+						Object result = valueMethod.invoke( annotation );
+						return result != null && "OR".equals( result.toString() );
+					}
+					catch ( NoSuchMethodException | IllegalAccessException | InvocationTargetException ex ) {
+						LOG.debug( "ConstraintComposition type could not be determined. Assuming AND", ex );
+						return false;
+					}
+				}
+			}
+			return false;
+		});
 	}
 
 	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
@@ -328,35 +404,33 @@ class TypeSafeActivator {
 		column.addCheckConstraint( new CheckConstraint( checkConstraint ) );
 	}
 
-	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
-		boolean hasNotNull = false;
-		// NotNull, NotEmpty, and NotBlank annotation add not-null on column
+	private static boolean isNotNullDescriptor(ConstraintDescriptor<?> descriptor) {
 		final Class<? extends Annotation> annotationType = descriptor.getAnnotation().annotationType();
-		if ( NotNull.class.equals(annotationType)
+		return NotNull.class.equals(annotationType)
 				|| NotEmpty.class.equals(annotationType)
-				|| NotBlank.class.equals(annotationType)) {
-			// single table inheritance should not be forced to null due to shared state
-			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
-				// composite should not add not-null on all columns
-				if ( !property.isComposite() ) {
-					for ( Selectable selectable : property.getSelectables() ) {
-						if ( selectable instanceof Column column ) {
-							column.setNullable( false );
-						}
-						else {
-							LOG.debugf(
-									"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
-											"by formula(s); formula portions will be skipped",
-									property.getName()
-							);
-						}
+				|| NotBlank.class.equals(annotationType);
+	}
+
+	private static void markNotNull(Property property) {
+		// single table inheritance should not be forced to null due to shared state
+		if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
+			// composite should not add not-null on all columns
+			if ( !property.isComposite() ) {
+				for ( Selectable selectable : property.getSelectables() ) {
+					if ( selectable instanceof Column column ) {
+						column.setNullable( false );
+					}
+					else {
+						LOG.debugf(
+								"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
+										"by formula(s); formula portions will be skipped",
+								property.getName()
+						);
 					}
 				}
 			}
-			hasNotNull = true;
 		}
-		property.setOptional( !hasNotNull );
-		return hasNotNull;
+		property.setOptional( false );
 	}
 
 	private static void applyDigits(Property property, ConstraintDescriptor<?> descriptor) {

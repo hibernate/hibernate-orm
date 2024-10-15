@@ -25,6 +25,14 @@
             <id>enhance</id>
             <phase>process-classes</phase>
             <configuration>
+              <fileSets>
+                <fileSet>
+                  <directory>${project.build.directory}/classes</directory>
+                  <excludes>
+                    <exclude>**/Baz.class</exclude>
+                  </excludes>
+                </fileSet>
+              </fileSets>
               <enableLazyInitialization>true</enableLazyInitialization>
             </configuration>
             <goals>

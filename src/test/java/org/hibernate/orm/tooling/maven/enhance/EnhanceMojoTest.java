@@ -56,6 +56,7 @@ public class EnhanceMojoTest {
     private List<String> logMessages = new ArrayList<String>();
  
     private Field classesDirectoryField;
+    private Field fileSetsField;
     private Field sourceSetField;
     private Field enhancerField;
 
@@ -71,6 +72,8 @@ public class EnhanceMojoTest {
     void beforeEach() throws Exception {
         classesDirectoryField = EnhanceMojo.class.getDeclaredField("classesDirectory");
         classesDirectoryField.setAccessible(true);
+        fileSetsField = EnhanceMojo.class.getDeclaredField("fileSets");
+        fileSetsField.setAccessible(true);
         sourceSetField = EnhanceMojo.class.getDeclaredField("sourceSet");
         sourceSetField.setAccessible(true);  
         enhancerField = EnhanceMojo.class.getDeclaredField("enhancer");
@@ -94,6 +97,10 @@ public class EnhanceMojoTest {
     void testAssembleSourceSet() throws Exception {
         Method assembleSourceSetMethod = EnhanceMojo.class.getDeclaredMethod("assembleSourceSet");
         assembleSourceSetMethod.setAccessible(true);
+        FileSet[] fileSets = new FileSet[1];
+        fileSets[0] = new FileSet();
+        fileSets[0].setDirectory(classesDirectory.getAbsolutePath());
+        fileSetsField.set(enhanceMojo, fileSets);
         List<?> sourceSet = (List<?>)sourceSetField.get(enhanceMojo);
         assertTrue(sourceSet.isEmpty());
         assembleSourceSetMethod.invoke(enhanceMojo);
@@ -492,8 +499,6 @@ public class EnhanceMojoTest {
         enableLazyInitializationField.setAccessible(true);
         Field enableDirtyTrackingField = EnhanceMojo.class.getDeclaredField("enableDirtyTracking");
         enableDirtyTrackingField.setAccessible(true);
-        Field fileSetsField = EnhanceMojo.class.getDeclaredField("fileSets");
-        fileSetsField.setAccessible(true);
         assertTrue(logMessages.isEmpty());
         assertNull(fileSetsField.get(enhanceMojo));
         verifyParametersMethod.invoke(enhanceMojo);

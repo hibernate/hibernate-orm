@@ -104,7 +104,9 @@ public class EnhanceMojo extends AbstractMojo {
 
     private void assembleSourceSet() {
         getLog().debug("Starting assembly of the source set");
-        addToSourceSetIfNeeded(classesDirectory);
+        for (FileSet fileSet : fileSets) {
+            addFileSetToSourceSet(fileSet);
+        }
         getLog().debug("Ending the assembly of the source set");
     }
 

@@ -36,7 +36,6 @@
         <groupId>org.apache.maven.shared</groupId>
         <artifactId>file-management</artifactId>
         <version>${maven-file-management.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.maven.plugin-tools</groupId>

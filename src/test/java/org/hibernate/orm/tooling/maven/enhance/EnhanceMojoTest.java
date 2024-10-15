@@ -312,6 +312,12 @@ public class EnhanceMojoTest {
         // last modification 'after' should be after 'before'
         assertNotEquals(0, modified);
         assertTrue(modified > 0);
+        // check log messages
+        assertEquals(4, logMessages.size());
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_CLEAR_FILE.formatted("foobar")));
+        assertTrue(logMessages.contains(ERROR + EnhanceMojo.UNABLE_TO_DELETE_FILE.formatted("foobar")));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_CLEAR_FILE.formatted(fooTxtFile)));
+        assertTrue(logMessages.contains(INFO + EnhanceMojo.SUCCESFULLY_CLEARED_FILE.formatted(fooTxtFile)));
     }
 
     @Test
@@ -528,17 +534,22 @@ public class EnhanceMojoTest {
                 @Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                     if ("info".equals(method.getName())) {
-                        logMessages.add("[INFO] " + args[0]);
+                        logMessages.add(INFO + args[0]);
                     } else if ("warn".equals(method.getName())) {
-                        logMessages.add("[WARNING] " + args[0]);
+                        logMessages.add(WARNING + args[0]);
                     } else if ("error".equals(method.getName())) {
-                        logMessages.add("[ERROR] " + args[0]);
+                        logMessages.add(ERROR + args[0]);
                     } else if ("debug".equals(method.getName())) {
-                    	logMessages.add("[DEBUG] " + args[0]);
+                    	logMessages.add(DEBUG + args[0]);
                     }
                     return null;
                 }             
             });
     }
+    
+    static final String DEBUG = "[DEBUG] ";
+    static final String ERROR = "[ERROR] ";
+    static final String WARNING = "[WARNING] ";
+    static final String INFO = "[INFO] ";
 
 }

@@ -411,10 +411,12 @@ public class HibernateProcessor extends AbstractProcessor {
 					}
 				}
 			}
-			for (final  Element child : element.getEnclosedElements()) {
-				if ( isClassOrRecordType( child ) ) {
-					System.out.printf( "[416] Processing child element %s%n", child );
-					processElement( child );
+			if ( isClassOrRecordType( element ) ) {
+				for ( final Element child : element.getEnclosedElements() ) {
+					if ( isClassOrRecordType( child ) ) {
+						System.out.printf( "[416] Processing child element %s%n", child );
+						processElement( child );
+					}
 				}
 			}
 		}

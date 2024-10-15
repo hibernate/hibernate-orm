@@ -19,6 +19,8 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
@@ -41,6 +43,9 @@ public class EnhanceMojo extends AbstractMojo {
 
 	private List<File> sourceSet = new ArrayList<File>();
     private Enhancer enhancer;
+
+    @Parameter
+    private FileSet[] fileSets;
 
     @Parameter(
 			defaultValue = "${project.build.directory}/classes", 
@@ -112,6 +117,27 @@ public class EnhanceMojo extends AbstractMojo {
                 getLog().debug("Skipping non '.class' file: " + file);
             }
         }
+    }
+
+    private void addFileSetToSourceSet(FileSet fileSet) {
+        getLog().debug("Processing FileSet");
+        String directory = fileSet.getDirectory();
+        FileSetManager fileSetManager = new FileSetManager();
+        File baseDir = classesDirectory;
+        if (directory != null && classesDirectory != null) {
+            baseDir = new File(directory);
+        } 
+        getLog().debug("Using base directory: " + baseDir);
+        for (String fileName : fileSetManager.getIncludedFiles(fileSet)) {
+            File candidateFile = new File(baseDir, fileName); 
+            if (fileName.endsWith(".class")) {
+                sourceSet.add(candidateFile);
+                getLog().info("Added file to source set: " + candidateFile);
+            } else {
+                getLog().debug("Skipping non '.class' file: " + candidateFile);
+            }
+        }
+        getLog().debug("FileSet was processed succesfully");
     }
 
     private ClassLoader createClassLoader() {

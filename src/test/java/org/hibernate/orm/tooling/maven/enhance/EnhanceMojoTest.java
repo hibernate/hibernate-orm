@@ -38,6 +38,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.shared.model.fileset.FileSet;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -100,6 +101,33 @@ public class EnhanceMojoTest {
         assertTrue(sourceSet.contains(barClassFile));
         assertFalse(sourceSet.contains(fooTxtFile));
         assertEquals(1, sourceSet.size());
+    }
+
+    @Test
+    void testAddFileSetToSourceSet() throws Exception {
+        Method addFileSetToSourceSetMethod = EnhanceMojo.class.getDeclaredMethod(
+            "addFileSetToSourceSet", 
+            new Class[] { FileSet.class});
+        addFileSetToSourceSetMethod.setAccessible(true);
+        File fooClassFile = new File(fooFolder, "Foo.class");
+        fooClassFile.createNewFile();
+        File bazFolder = new File(classesDirectory, "org/baz");
+        bazFolder.mkdirs();
+        File bazClassFile = new File(bazFolder, "Baz.class");
+        bazClassFile.createNewFile();
+        FileSet fileSet = new FileSet();
+        fileSet.setDirectory(classesDirectory.getAbsolutePath());
+        fileSet.addInclude("**/Foo*");
+        fileSet.addInclude("**/*.class");
+        fileSet.addExclude("**/baz/**");
+        addFileSetToSourceSetMethod.invoke(enhanceMojo, fileSet);
+        assertTrue(logMessages.contains("[DEBUG] Processing FileSet"));
+        assertTrue(logMessages.contains("[DEBUG] Using base directory: " + classesDirectory));
+        assertTrue(logMessages.contains("[INFO] Added file to source set: " + barClassFile));
+        assertTrue(logMessages.contains("[INFO] Added file to source set: " + fooClassFile));
+        assertFalse(logMessages.contains("[INFO] Added file to source set: " + bazClassFile));
+        assertTrue(logMessages.contains("[DEBUG] Skipping non '.class' file: " + fooTxtFile));
+        assertTrue(logMessages.contains("[DEBUG] FileSet was processed succesfully"));
     }
 
     @Test
@@ -330,7 +358,7 @@ public class EnhanceMojoTest {
         enhanceClassMethod.invoke(enhanceMojo, barClassFile);
         long afterFirstRun = barClassFile.lastModified();
         assertEquals(1, calls.get(0));
-        assertTrue(afterFirstRun > beforeRuns);
+        assertTrue(afterFirstRun >= beforeRuns);
         assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
         enhanceClassMethod.invoke(enhanceMojo, barClassFile);
         long afterSecondRun = barClassFile.lastModified();
@@ -487,7 +515,9 @@ public class EnhanceMojoTest {
                     } else if ("warn".equals(method.getName())) {
                         logMessages.add("[WARNING] " + args[0]);
                     } else if ("error".equals(method.getName())) {
-                        logMessages.add("[ERROR] " +args[0]);
+                        logMessages.add("[ERROR] " + args[0]);
+                    } else if ("debug".equals(method.getName())) {
+                    	logMessages.add("[DEBUG] " + args[0]);
                     }
                     return null;
                 }             

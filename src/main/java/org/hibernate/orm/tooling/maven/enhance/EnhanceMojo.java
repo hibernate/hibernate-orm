@@ -79,7 +79,7 @@ public class EnhanceMojo extends AbstractMojo {
 
     public void execute() {
         getLog().debug("Starting execution of enhance mojo");
-        verifyParameters();
+        processParameters();
         assembleSourceSet();
         createEnhancer();
         discoverTypes();
@@ -87,13 +87,19 @@ public class EnhanceMojo extends AbstractMojo {
         getLog().debug("Ending execution of enhance mojo");
     }
 
-    private void verifyParameters() {
+    private void processParameters() {
         if (!enableLazyInitialization) {
 			getLog().warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
 		if (!enableDirtyTracking) {
 			getLog().warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
+        if (fileSets == null) {
+            fileSets = new FileSet[1];
+            fileSets[0] = new FileSet();
+            fileSets[0].setDirectory(classesDirectory.getAbsolutePath());
+            getLog().debug("Addded a default FileSet with base directory: " + fileSets[0].getDirectory());
+        }
     }
 
     private void assembleSourceSet() {

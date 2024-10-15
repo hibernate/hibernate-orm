@@ -238,25 +238,38 @@ public class EnhanceMojo extends AbstractMojo {
     }
 
     private boolean clearFile(File file) {
-        getLog().debug("Trying to clear the contents of file: " + file);
+        getLog().debug(TRYING_TO_CLEAR_FILE.formatted(file));
         boolean success = false;
         if ( file.delete() ) {
             try {
                 if ( !file.createNewFile() ) {
-                    getLog().error( "Unable to create file: " + file);
+                    getLog().error(UNABLE_TO_CREATE_FILE.formatted(file));
                 } else {
-                    getLog().info("Succesfully cleared the contents of file: " + file);
+                    getLog().info(SUCCESFULLY_CLEARED_FILE.formatted(file));
                     success = true;
                 }
             }
             catch (IOException e) {
-                getLog().warn( "Problem clearing file for writing out enhancements [" + file + "]", e);
+                getLog().warn(PROBLEM_CLEARING_FILE.formatted(file), e);
             }
         }
         else {
-            getLog().error( "Unable to delete file : " + file);
+            getLog().error(UNABLE_TO_DELETE_FILE.formatted(file));
         }
     return success;
     }
+    
+    // info messages
+    static final String SUCCESFULLY_CLEARED_FILE = "Succesfully cleared the contents of file: %s";
+    
+    // warning messages
+    static final String PROBLEM_CLEARING_FILE = "Problem clearing file for writing out enhancements [ %s ]";
+    
+    // error messages
+    static final String UNABLE_TO_CREATE_FILE = "Unable to create file: %s"; 
+    static final String UNABLE_TO_DELETE_FILE = "Unable to delete file: %s"; 
+    
+    // debug messages
+    static final String TRYING_TO_CLEAR_FILE = "Trying to clear the contents of file: %s";
 
 }

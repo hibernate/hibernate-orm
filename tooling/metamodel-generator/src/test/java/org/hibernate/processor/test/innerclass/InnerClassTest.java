@@ -9,7 +9,7 @@ import org.hibernate.processor.test.util.WithClasses;
 import org.junit.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
-import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
+import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 
 public class InnerClassTest extends CompilationTest {
 
@@ -18,11 +18,8 @@ public class InnerClassTest extends CompilationTest {
 	public void test() {
 		assertMetamodelClassGeneratedFor( Person.class );
 		assertMetamodelClassGeneratedFor( Person.PersonId.class );
+		assertNoMetamodelClassGeneratedFor( Dummy.class );
 		assertMetamodelClassGeneratedFor( Dummy.DummyEmbeddable.class );
 		assertMetamodelClassGeneratedFor( Dummy.Inner.class );
-		System.out.println( getMetaModelSourceAsString( Person.class ) );
-		System.out.println( getMetaModelSourceAsString( Person.PersonId.class ) );
-		System.out.println( getMetaModelSourceAsString( Dummy.DummyEmbeddable.class ) );
-		System.out.println( getMetaModelSourceAsString( Dummy.Inner.class ) );
 	}
 }

@@ -362,6 +362,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
+			System.out.printf( "[365] Processing element %s%n", element );
 			processElement( element );
 		}
 	}
@@ -374,6 +375,7 @@ public class HibernateProcessor extends AbstractProcessor {
 				// skip it completely
 			}
 			else if ( isEntityOrEmbeddable( element ) ) {
+				System.out.printf( "[378] Processing annotated entity class %s%n", element );
 				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
 				handleRootElementAnnotationMirrors( element );
 			}
@@ -411,6 +413,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 			for (final  Element child : element.getEnclosedElements()) {
 				if ( isClassOrRecordType( child ) ) {
+					System.out.printf( "[416] Processing child element %s%n", child );
 					processElement( child );
 				}
 			}
@@ -570,6 +573,8 @@ public class HibernateProcessor extends AbstractProcessor {
 				final String qualifiedName = typeElement.getQualifiedName().toString();
 				final Metamodel alreadyExistingMetaEntity =
 						tryGettingExistingEntityFromContext( typeElement, qualifiedName );
+				System.out.printf( "Metamodel for %s, %s => %s%n",
+						typeElement, qualifiedName, alreadyExistingMetaEntity );
 				if ( alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete() ) {
 					context.logMessage(
 							Diagnostic.Kind.OTHER,
@@ -583,6 +588,7 @@ public class HibernateProcessor extends AbstractProcessor {
 							AnnotationMetaEntity.create( typeElement, context,
 									requiresLazyMemberInitialization,
 									true, false );
+					System.out.printf( "Meta entity => %s%n", metaEntity );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}

@@ -170,7 +170,8 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
 					final SqmTypedNode<?> firstSqmSelection = typedNodes.get( j );
 					final JavaType<?> firstJavaType = firstSqmSelection.getNodeJavaType();
-					if ( firstJavaType != selections.get( j ).getNodeJavaType() ) {
+					final JavaType<?> nodeJavaType = selections.get( j ).getNodeJavaType();
+					if ( nodeJavaType != null && firstJavaType != null && firstJavaType != nodeJavaType ) {
 						throw new SemanticException(
 								"Select items of the same index must have the same java type across all query parts"
 						);

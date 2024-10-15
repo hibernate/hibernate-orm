@@ -110,23 +110,6 @@ public class EnhanceMojo extends AbstractMojo {
         getLog().debug("Ending the assembly of the source set");
     }
 
-    private void addToSourceSetIfNeeded(File file) {
-        getLog().debug("Considering candidate source: " + file);
-        if (file.isDirectory()) {
-            getLog().debug("Iterating over the children of folder: " + file);
-            for (File child : file.listFiles()) {
-                addToSourceSetIfNeeded(child);
-            }
-        } else {
-            if (file.getName().endsWith(".class")) {
-                sourceSet.add(file);
-                getLog().info("Added file to source set: " + file);
-            } else {
-                getLog().debug("Skipping non '.class' file: " + file);
-            }
-        }
-    }
-
     private void addFileSetToSourceSet(FileSet fileSet) {
         getLog().debug("Processing FileSet");
         String directory = fileSet.getDirectory();

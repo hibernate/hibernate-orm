@@ -104,7 +104,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@Table(name = "test_entity")
-	private static class TestEntity {
+	static class TestEntity {
 		@Id
 		private Long id;
 
@@ -141,7 +141,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@Table(name = "test_synonym")
-	private static class TestEntityWithSynonym {
+	static class TestEntityWithSynonym {
 		@Id
 		private Long id;
 

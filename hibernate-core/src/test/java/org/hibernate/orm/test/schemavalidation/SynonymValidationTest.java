@@ -154,7 +154,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 
 	@Entity
 	@Table(name = "test_entity")
-	private static class TestEntity {
+	static class TestEntity {
 		@Id
 		private Long id;
 
@@ -190,7 +190,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 
 	@Entity
 	@Table(name = "test_synonym")
-	private static class TestEntityWithSynonym {
+	static class TestEntityWithSynonym {
 		@Id
 		private Long id;
 

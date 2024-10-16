@@ -92,7 +92,7 @@ public class InheritedTest {
 	// --- //
 
 	@Entity
-	private static abstract class Person {
+	static abstract class Person {
 
 		Object anUnspecifiedObject;
 
@@ -116,7 +116,7 @@ public class InheritedTest {
 	}
 
 	@Entity
-	private static class Employee extends Person {
+	static class Employee extends Person {
 
 		String title;
 
@@ -134,7 +134,7 @@ public class InheritedTest {
 	}
 
 	@Entity
-	private static class Contractor extends Person {
+	static class Contractor extends Person {
 
 		Integer rate;
 

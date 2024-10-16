@@ -71,7 +71,7 @@ public class OneToOneAssociationTest {
 	// --- //
 
 	@Entity
-	private static class Customer {
+	static class Customer {
 
 		@Id
 		Long id;
@@ -89,7 +89,7 @@ public class OneToOneAssociationTest {
 	}
 
 	@Entity
-	private static class User {
+	static class User {
 
 		@Id
 		Long id;

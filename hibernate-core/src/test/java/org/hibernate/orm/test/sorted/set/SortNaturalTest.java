@@ -66,7 +66,7 @@ public class SortNaturalTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity(name = "Owner")
 	@Table(name = "Owner")
-	private static class Owner {
+	static class Owner {
 
 		@Id
 		@GeneratedValue
@@ -79,7 +79,7 @@ public class SortNaturalTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity(name = "Cat")
 	@Table(name = "Cat")
-	private static class Cat implements Comparable<Cat> {
+	static class Cat implements Comparable<Cat> {
 
 		@Id
 		@GeneratedValue

@@ -131,7 +131,7 @@ public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTest
 	@Table( name = "PERSON" )
 	@DynamicUpdate
 	@DynamicInsert
-	private static class Person {
+	static class Person {
 
 		@Id
 		Long id;
@@ -155,7 +155,7 @@ public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTest
 	@Table( name = "PERSON_ADDRESS" )
 	@DynamicUpdate
 	@DynamicInsert
-	private static class PersonAddress {
+	static class PersonAddress {
 
 		@Id
 		Long id;
@@ -168,7 +168,7 @@ public class MergeEnhancedEntityDynamicUpdateTest extends BaseCoreFunctionalTest
 	@Table(name = "NULLABLE_PERSON")
 	@DynamicUpdate
 	@DynamicInsert
-	private static class NullablePerson {
+	static class NullablePerson {
 
 		@Id
 		Long id;

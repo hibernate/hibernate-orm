@@ -122,7 +122,7 @@ public class PreUpdateCustomEntityDirtinessStrategyTest
 
 	@Entity(name = "Person")
 	@DynamicUpdate
-	private static class Person {
+	static class Person {
 		@Id
 		@GeneratedValue
 		private int id;

@@ -34,7 +34,7 @@ public class HibernateCallbacksTestAction extends HibernateLoadingTestAction {
 	}
 
 	@Entity(name = "booking")
-	private static class Booking {
+	static class Booking {
 		@Id Long id;
 		@Transient String legacyIdentifier;
 

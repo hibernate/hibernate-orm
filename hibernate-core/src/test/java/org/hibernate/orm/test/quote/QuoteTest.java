@@ -134,7 +134,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity( name = "Item" )
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-	private static abstract class Item {
+	static abstract class Item {
 
 		@Id @GeneratedValue
 		@Column(name = "`ID`")
@@ -150,7 +150,7 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity
 	@Table(name = "`CoNTaiNeR`")
-	private static class Container extends Item {
+	static class Container extends Item {
 
 		@OneToMany(mappedBy = "parent", targetEntity = Item.class)
 		private Set<Item> items = new HashSet<Item>( 0 );
@@ -158,6 +158,6 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity
 	@Table(name = "`SimpleItem`")
-	private static class SimpleItem extends Item {
+	static class SimpleItem extends Item {
 	}
 }

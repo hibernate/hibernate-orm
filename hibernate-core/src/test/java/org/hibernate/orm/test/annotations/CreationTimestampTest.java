@@ -38,7 +38,7 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity(name = "Event")
-	private static class Event {
+	static class Event {
 
 		@Id
 		@GeneratedValue

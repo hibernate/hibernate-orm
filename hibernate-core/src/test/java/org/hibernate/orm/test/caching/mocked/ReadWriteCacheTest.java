@@ -266,7 +266,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	@Entity(name = "Book")
 	@Cacheable
 	@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-	private static final class Book {
+	static final class Book {
 
 		@Id
 		private Long id;

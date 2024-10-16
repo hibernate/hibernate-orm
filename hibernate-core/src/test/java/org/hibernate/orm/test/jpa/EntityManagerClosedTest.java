@@ -661,7 +661,7 @@ public class EntityManagerClosedTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Entity(name = "AnEntity")
-	private static class AnEntity {
+	static class AnEntity {
 		@Id
 		private long id;
 

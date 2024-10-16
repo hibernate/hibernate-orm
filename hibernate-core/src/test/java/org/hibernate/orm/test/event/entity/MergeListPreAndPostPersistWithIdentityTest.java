@@ -74,7 +74,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 	}
 
 	@Entity
-	private static class Order {
+	static class Order {
 		@Id
 		public Long id;
 
@@ -106,7 +106,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 	}
 
 	@Entity
-	private static class Item {
+	static class Item {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		public Long id;

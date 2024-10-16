@@ -44,7 +44,7 @@ public class InheritedAttributeAssociationTest {
 	// --- //
 
 	@Entity
-	private static class Author {
+	static class Author {
 
 		@Id
 		@GeneratedValue
@@ -60,7 +60,7 @@ public class InheritedAttributeAssociationTest {
 	@MappedSuperclass
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
-	private static abstract class Item {
+	static abstract class Item {
 
 		@Id
 		@GeneratedValue
@@ -72,6 +72,6 @@ public class InheritedAttributeAssociationTest {
 
 	@Entity
 	@DiscriminatorValue("child")
-	private static class ChildItem extends Item {
+	static class ChildItem extends Item {
 	}
 }

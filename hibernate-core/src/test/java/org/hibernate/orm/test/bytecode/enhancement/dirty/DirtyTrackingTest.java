@@ -100,7 +100,7 @@ public class DirtyTrackingTest {
 	// --- //
 
 	@Embeddable
-	private static class Address {
+	static class Address {
 		@Embedded
 		Country country;
 		String street1;
@@ -112,12 +112,12 @@ public class DirtyTrackingTest {
 	}
 
 	@Embeddable
-	private static class Country {
+	static class Country {
 		String name;
 	}
 
 	@Entity
-	private static class SimpleEntity {
+	static class SimpleEntity {
 
 		@Id
 		Long id;
@@ -149,7 +149,7 @@ public class DirtyTrackingTest {
 	}
 
 	@Entity
-	private static class OtherEntity {
+	static class OtherEntity {
 		@Id
 		Long id;
 		String name;

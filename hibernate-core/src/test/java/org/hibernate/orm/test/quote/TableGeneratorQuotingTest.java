@@ -88,7 +88,7 @@ public class TableGeneratorQuotingTest {
 
 	@Entity
 	@Table(name = "test_entity")
-	private static class TestEntity {
+	static class TestEntity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.TABLE)
 		private int id;

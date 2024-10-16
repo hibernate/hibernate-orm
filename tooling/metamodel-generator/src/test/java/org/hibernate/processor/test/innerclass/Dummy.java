@@ -8,9 +8,11 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.NamedQuery;
 
 public class Dummy {
-	@Entity
+	@Entity(name = "Inner")
+	@NamedQuery(name = "allInner", query = "from Inner")
 	public static class Inner extends Persona {
 		@Id
 		Integer id;

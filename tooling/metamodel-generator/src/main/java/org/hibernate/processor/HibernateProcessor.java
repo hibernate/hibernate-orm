@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.lang.Boolean.parseBoolean;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATED_ANNOTATION;
@@ -362,57 +364,68 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
-			try {
-				if ( !included( element )
-						|| hasAnnotation( element, Constants.EXCLUDE )
-						|| hasPackageAnnotation( element, Constants.EXCLUDE ) ) {
-					// skip it completely
+			processElement( element );
+		}
+	}
+
+	private void processElement(Element element) {
+		try {
+			if ( !included( element )
+					|| hasAnnotation( element, Constants.EXCLUDE )
+					|| hasPackageAnnotation( element, Constants.EXCLUDE ) ) {
+				// skip it completely
+			}
+			else if ( isEntityOrEmbeddable( element ) ) {
+				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
+				handleRootElementAnnotationMirrors( element );
+			}
+			else if ( hasAuxiliaryAnnotations( element ) ) {
+				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
+				handleRootElementAuxiliaryAnnotationMirrors( element );
+			}
+			else if ( element instanceof TypeElement typeElement ) {
+				final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
+				if ( repository != null ) {
+					final AnnotationValue provider = getAnnotationValue( repository, "provider" );
+					if ( provider == null
+							|| provider.getValue().toString().isEmpty()
+							|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
+						context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
+						final AnnotationMetaEntity metaEntity =
+								AnnotationMetaEntity.create( typeElement, context );
+						if ( metaEntity.isInitialized() ) {
+							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+						}
+						// otherwise discard it (assume it has query by magical method name stuff)
+					}
 				}
-				else if ( isEntityOrEmbeddable( element ) ) {
-					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
-					handleRootElementAnnotationMirrors( element );
-				}
-				else if ( hasAuxiliaryAnnotations( element ) ) {
-					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
-					handleRootElementAuxiliaryAnnotationMirrors( element );
-				}
-				else if ( element instanceof TypeElement typeElement ) {
-					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
-					if ( repository != null ) {
-						final AnnotationValue provider = getAnnotationValue( repository, "provider" );
-						if ( provider == null
-								|| provider.getValue().toString().isEmpty()
-								|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
-							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
+				else {
+					for ( Element member : typeElement.getEnclosedElements() ) {
+						if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
+							context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 							final AnnotationMetaEntity metaEntity =
 									AnnotationMetaEntity.create( typeElement, context );
-							if ( metaEntity.isInitialized() ) {
-								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
-							}
-							// otherwise discard it (assume it has query by magical method name stuff)
-						}
-					}
-					else {
-						for ( Element member : typeElement.getEnclosedElements() ) {
-							if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
-								context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
-								final AnnotationMetaEntity metaEntity =
-										AnnotationMetaEntity.create( typeElement, context );
-								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
-								break;
-							}
+							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+							break;
 						}
 					}
 				}
 			}
-			catch ( ProcessLaterException processLaterException ) {
-				if ( element instanceof TypeElement ) {
-					context.logMessage(
-							Diagnostic.Kind.OTHER,
-							"Could not process '" + element + "' (will redo in next round)"
-					);
-					context.addElementToRedo( ( (TypeElement) element).getQualifiedName() );
+			if ( isClassOrRecordType( element ) ) {
+				for ( final Element child : element.getEnclosedElements() ) {
+					if ( isClassOrRecordType( child ) ) {
+						processElement( child );
+					}
 				}
+			}
+		}
+		catch ( ProcessLaterException processLaterException ) {
+			if ( element instanceof TypeElement ) {
+				context.logMessage(
+						Diagnostic.Kind.OTHER,
+						"Could not process '" + element + "' (will redo in next round)"
+				);
+				context.addElementToRedo( ( (TypeElement) element ).getQualifiedName() );
 			}
 		}
 	}
@@ -714,7 +727,7 @@ public class HibernateProcessor extends AbstractProcessor {
 					.createResource(
 							StandardLocation.SOURCE_OUTPUT,
 							ENTITY_INDEX,
-							entityName,
+							URLEncoder.encode(entityName, UTF_8),
 							processingEnvironment.getElementUtils().getTypeElement( className )
 					)
 					.openWriter()) {

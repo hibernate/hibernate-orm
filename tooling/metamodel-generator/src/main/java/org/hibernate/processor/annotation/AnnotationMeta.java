@@ -19,6 +19,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -147,7 +148,8 @@ public abstract class AnnotationMeta implements Metamodel {
 					: from.getSelectionItems().get(0).getJavaTypeName();
 		}
 		else if (selection instanceof JpaRoot<?> root) {
-			return root.getModel().getTypeName();
+			final JavaType<?> javaType = root.getModel().getExpressibleJavaType();
+			return javaType != null ? javaType.getTypeName() : root.getModel().getTypeName();
 		}
 		else if (selection instanceof JpaEntityJoin<?, ?> join) {
 			return join.getModel().getTypeName();

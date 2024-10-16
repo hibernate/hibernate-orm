@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.lang.Boolean.parseBoolean;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATED_ANNOTATION;
@@ -731,7 +733,7 @@ public class HibernateProcessor extends AbstractProcessor {
 					.createResource(
 							StandardLocation.SOURCE_OUTPUT,
 							ENTITY_INDEX,
-							entityName,
+							URLEncoder.encode(entityName, UTF_8),
 							processingEnvironment.getElementUtils().getTypeElement( className )
 					)
 					.openWriter()) {

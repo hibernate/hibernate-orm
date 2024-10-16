@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
@@ -43,7 +44,7 @@ public final class ClassWriter {
 					getFullyQualifiedClassName( entity, metaModelPackage ),
 					entity.getElement()
 			);
-//			System.out.printf( "Generating metadata for %s => %s%n", entity.getQualifiedName(), fo.getName() );
+			/*System.out.printf( "Generating metadata for %s => %s%n", entity.getQualifiedName(), fo.getName() );*/
 			OutputStream os = fo.openOutputStream();
 			PrintWriter pw = new PrintWriter( os );
 
@@ -144,8 +145,14 @@ public final class ClassWriter {
 
 		String superClassName = entity.getSupertypeName();
 		if ( superClassName != null ) {
-			System.out.printf( "Superclass %s, entity %s%n", superClassName, context.getMetaEntity( superClassName ) );
-			pw.print( " extends " + getGeneratedSuperclassName(entity, superClassName) );
+			/*System.out.printf( "Superclass %s, entity %s%n", superClassName, context.getMetaEntity( superClassName ) );*/
+			Metamodel superClassEntity = context.getMetaEntity( superClassName );
+			if (superClassEntity == null) {
+				superClassEntity = context.getMetaEmbeddable( superClassName );
+			}
+			/*if (superClassEntity==null)throw new NullPointerException(
+					"Class %s, superclass %s".formatted( entity.getQualifiedName(), superClassName ) );*/
+			pw.print( " extends " + getGeneratedSuperclassName(entity, superClassName, superClassEntity ) );
 		}
 		if ( entity.isImplementation() ) {
 			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
@@ -169,7 +176,7 @@ public final class ClassWriter {
 		return entity.isJakartaDataStyle() ? '_' + className : className + '_';
 	}
 
-	private static String getGeneratedSuperclassName(Metamodel entity, String superClassName) {
+	private static String getGeneratedSuperclassName(Metamodel entity, String superClassName, @Nullable Metamodel superClassEntity) {
 		if ( entity.isJakartaDataStyle() ) {
 			int lastDot = superClassName.lastIndexOf('.');
 			if ( lastDot<0 ) {
@@ -181,23 +188,26 @@ public final class ClassWriter {
 			}
 		}
 		else {
-			final Metamodel superClassEntity = entity.getContext().getMetaEntity( superClassName );
 			final String className =
 					superClassEntity == null ? null :
 							superClassEntity.getSimpleName().replace( '.', '_' );
-			System.out.printf( "Super class name for %s%n", entity.getQualifiedName() );
+			/*System.out.printf( "Super class name for %s%n", entity.getQualifiedName() );
 			System.out.printf( "Super class name %s, class name %s%n", superClassName, className );
 			System.out.printf( "Superclass name %s %s vs %s%n",
 					superClassEntity != null ? superClassEntity.getQualifiedName() : null,
 					superClassName + '_',
-					superClassEntity == null ? null : getGeneratedClassName( superClassEntity ) );
+					superClassEntity == null ? null : getGeneratedClassName( superClassEntity ) );*/
 			/*return entity.getSimpleName().replace( '.', '_' ) + '_';*/
 			/*return superClassName + '_';*/
 			if ( superClassEntity == null ) {
-				//throw new NullPointerException();
+//				throw new NullPointerException();
+				System.err.printf( "Super class entity is null for %s, class %s%n",
+						superClassName, entity.getQualifiedName() );
 				return superClassName + '_';
 			}
-			return getGeneratedClassName( superClassEntity );
+//			return getGeneratedClassName( superClassEntity );
+			return getFullyQualifiedClassName( superClassEntity, superClassEntity.getPackageName() );
+			//return superClassName + '_';
 		}
 	}
 

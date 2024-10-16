@@ -167,8 +167,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				return currentBatch;
 			}
 			else {
-				currentBatch.execute();
-				currentBatch.release();
+				try {
+					currentBatch.execute();
+				}
+				finally {
+					currentBatch.release();
+				}
 			}
 		}
 
@@ -194,7 +198,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void conditionallyExecuteBatch(BatchKey key) {
 		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
 			JdbcBatchLogging.BATCH_LOGGER.debugf( "Conditionally executing batch - %s", currentBatch.getKey() );
-			currentBatch.execute();
+			try {
+				currentBatch.execute();
+			}
+			finally {
+				currentBatch.release();
+			}
 		}
 	}
 

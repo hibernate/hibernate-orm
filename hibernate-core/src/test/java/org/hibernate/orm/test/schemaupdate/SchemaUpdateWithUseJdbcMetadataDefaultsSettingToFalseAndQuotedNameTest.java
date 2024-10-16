@@ -16,6 +16,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -38,6 +39,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 @TestForIssue(jiraKey = "HHH-13788")
+@Exclude
 public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameTest {
 
 	private File updateOutputFile;

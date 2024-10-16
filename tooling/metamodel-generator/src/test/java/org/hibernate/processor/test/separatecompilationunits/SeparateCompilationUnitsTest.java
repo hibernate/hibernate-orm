@@ -30,7 +30,12 @@ public class SeparateCompilationUnitsTest extends CompilationTest {
 		String entityMetaModel = getMetaModelSourceAsString( Entity.class );
 		assertTrue(
 				entityMetaModel.contains(
-						"extends org.hibernate.processor.test.separatecompilationunits.superclass.MappedSuperclass"
+						"import org.hibernate.processor.test.separatecompilationunits.superclass.MappedSuperclass_;"
+				)
+		);
+		assertTrue(
+				entityMetaModel.contains(
+						"extends MappedSuperclass_"
 				)
 		);
 	}

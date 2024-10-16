@@ -12,15 +12,13 @@ import jakarta.persistence.Table;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.internal.entities.mappings.DefaultRevisionEntityImpl;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 
 import org.junit.jupiter.api.Test;
-
-import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -47,7 +45,7 @@ public class ModelContributorSmokeTests {
 		);
 
 		checkModel(
-				domainModel.getEntityBinding( DefaultRevisionEntity.class.getName() ),
+				domainModel.getEntityBinding( DefaultRevisionEntityImpl.class.getName() ),
 				"envers"
 		);
 

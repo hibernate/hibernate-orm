@@ -13,6 +13,7 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdRevisionEntityImpl;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
@@ -70,7 +71,7 @@ public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testRevinfoSchemaName() {
-		Table revisionTable = metadata().getEntityBinding( "org.hibernate.envers.enhanced.SequenceIdRevisionEntity" )
+		Table revisionTable = metadata().getEntityBinding( SequenceIdRevisionEntityImpl.class.getName() )
 				.getTable();
 		assert SCHEMA_NAME.equals( revisionTable.getSchema() );
 	}

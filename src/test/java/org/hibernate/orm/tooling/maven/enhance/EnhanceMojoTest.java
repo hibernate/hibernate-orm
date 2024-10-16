@@ -336,6 +336,12 @@ public class EnhanceMojoTest {
         assertTrue(modified > 0);
         // File should be contain 'foobar'
         assertEquals(new String(Files.readAllBytes(fooTxtFile.toPath())), "foobar");
+        // check log messages
+        assertEquals(4, logMessages.size());
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.WRITING_BYTE_CODE_TO_FILE.formatted(fooTxtFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_CLEAR_FILE.formatted(fooTxtFile)));
+        assertTrue(logMessages.contains(INFO + EnhanceMojo.SUCCESFULLY_CLEARED_FILE.formatted(fooTxtFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.AMOUNT_BYTES_WRITTEN_TO_FILE.formatted(6, fooTxtFile)));
     }
 
     @Test

@@ -590,6 +590,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			if ( !entityKeyOnly ) {
 				notifySubInitializersToReusePreviousRowInstance( data );
 			}
+			return;
 		}
 		resolveEntityKey( data, id );
 		if ( !entityKeyOnly ) {

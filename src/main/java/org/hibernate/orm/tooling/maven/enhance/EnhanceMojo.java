@@ -182,7 +182,7 @@ public class EnhanceMojo extends AbstractMojo {
     }
 
     private String determineClassName(File classFile) {
-        getLog().debug("Determining class name for file: " + classFile);
+        getLog().debug(DETERMINE_CLASS_NAME_FOR_FILE.formatted(classFile));
         String classFilePath = classFile.getAbsolutePath();
         String classesDirectoryPath = classesDirectory.getAbsolutePath();
         return classFilePath.substring(
@@ -275,5 +275,6 @@ public class EnhanceMojo extends AbstractMojo {
     static final String TRYING_TO_CLEAR_FILE = "Trying to clear the contents of file: %s";
     static final String AMOUNT_BYTES_WRITTEN_TO_FILE = "%s bytes were succesfully written to file: %s";
     static final String WRITING_BYTE_CODE_TO_FILE = "Writing byte code to file: %s";
+    static final String DETERMINE_CLASS_NAME_FOR_FILE = "Determining class name for file: %s";
 
 }

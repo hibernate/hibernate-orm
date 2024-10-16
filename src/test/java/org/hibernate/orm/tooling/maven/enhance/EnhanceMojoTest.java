@@ -234,6 +234,9 @@ public class EnhanceMojoTest {
             new Class[] { File.class });
         determineClassNameMethod.setAccessible(true);
         assertEquals("org.foo.Bar", determineClassNameMethod.invoke(enhanceMojo, barClassFile));
+        // check log messages
+        assertEquals(1, logMessages.size());
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
     }
 
     @Test

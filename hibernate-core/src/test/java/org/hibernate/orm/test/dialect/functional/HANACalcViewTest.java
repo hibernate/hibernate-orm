@@ -165,7 +165,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "CVEntity")
 	@Table(name = CALC_VIEW_NAME)
-	private static class CVEntity {
+	static class CVEntity {
 
 		private String dummydummy;
 		private double dummydouble;

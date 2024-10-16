@@ -187,7 +187,7 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 
 	@Embeddable
 	public static class EntityId implements Serializable {
-		private int A;
-		private int B;
+		private int a;
+		private int b;
 	}
 }

@@ -68,7 +68,7 @@ public class ManyToManyAssociationTest {
 	// -- //
 
 	@Entity
-	private static class Group {
+	static class Group {
 
 		@Id
 		Long id;
@@ -90,7 +90,7 @@ public class ManyToManyAssociationTest {
 	}
 
 	@Entity
-	private static class User {
+	static class User {
 
 		@Id
 		Long id;

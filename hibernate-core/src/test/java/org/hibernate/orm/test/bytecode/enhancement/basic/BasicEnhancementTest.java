@@ -124,7 +124,7 @@ public class BasicEnhancementTest {
 	// --- //
 
 	@Entity
-	private static class SimpleEntity {
+	static class SimpleEntity {
 
 		Object anUnspecifiedObject;
 

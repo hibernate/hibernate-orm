@@ -2,10 +2,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.archive.scan.spi;
+package org.hibernate.archive.scan.spi;
 
-import org.hibernate.boot.archive.scan.internal.MappingFileDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
+import org.hibernate.archive.scan.internal.MappingFileDescriptorImpl;
+import org.hibernate.archive.scan.internal.ScanResultCollector;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveEntryHandler;

@@ -5,6 +5,7 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -13,6 +14,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.DataException;
@@ -44,6 +46,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	private final SqlSelection[] sqlSelections;
 	private final BitSet initializedIndexes;
+	private BitSet forceInitializedIndexes;
 	private final Object[] currentRowJdbcValues;
 	private final int[] valueIndexesToCacheIndexes;
 	// Is only meaningful if valueIndexesToCacheIndexes is not null
@@ -77,9 +80,36 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 		final int rowSize = valuesMapping.getRowSize();
 		this.sqlSelections = new SqlSelection[rowSize];
-		for ( SqlSelection selection : valuesMapping.getSqlSelections() ) {
-			this.sqlSelections[selection.getValuesArrayPosition()] = selection;
+		final boolean isOracleDialect = executionContext.getSession().getJdbcServices().getDialect() instanceof OracleDialect;
+		if ( isOracleDialect ) {
+			// When LONG RAW and LONG type columns are not read sequentially (e.g. a following column in the ResultSet is read first)
+			// Oracle raises a `ORA-17027: Stream has already been closed` exception , in order to avoid this
+			// Hibernate needs force their initialization
+			final ResultSetMetaData metaData = ( (AbstractResultSetAccess) resultSetAccess ).getMetaData();
+			for ( SqlSelection selection : valuesMapping.getSqlSelections() ) {
+				this.sqlSelections[selection.getValuesArrayPosition()] = selection;
+				if ( isOracleDialect ) {
+					try {
+						int columnType = metaData.getColumnType( selection.getJdbcResultSetIndex() );
+						if ( columnType == -4 || columnType == -1 ) {
+							if ( forceInitializedIndexes == null ) {
+								forceInitializedIndexes = new BitSet();
+							}
+							forceInitializedIndexes.set( selection.getValuesArrayPosition() );
+						}
+					}
+					catch (SQLException e) {
+						// ignore
+					}
+				}
+			}
 		}
+		else {
+			for ( SqlSelection selection : valuesMapping.getSqlSelections() ) {
+				this.sqlSelections[selection.getValuesArrayPosition()] = selection;
+			}
+		}
+
 		this.initializedIndexes = new BitSet( rowSize );
 		this.currentRowJdbcValues = new Object[rowSize];
 		if ( queryCachePutManager == null ) {
@@ -325,6 +355,31 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	public void readCurrentRowValues() {
 		initializedIndexes.clear();
+		if ( forceInitializedIndexes != null ) {
+			final ResultSet resultSet = resultSetAccess.getResultSet();
+			final SharedSessionContractImplementor session = executionContext.getSession();
+			for ( final SqlSelection sqlSelection : sqlSelections ) {
+				try {
+					final int valuesArrayPosition = sqlSelection.getValuesArrayPosition();
+					if ( forceInitializedIndexes.get( valuesArrayPosition ) ) {
+						currentRowJdbcValues[valuesArrayPosition] = sqlSelection.getJdbcValueExtractor().extract(
+								resultSet,
+								sqlSelection.getJdbcResultSetIndex(),
+								session
+						);
+						initializedIndexes.set( valuesArrayPosition );
+					}
+				}
+				catch (SQLException e) {
+					// do not want to wrap in ExecutionException here
+					throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
+							e,
+							"Could not extract column [" + sqlSelection.getJdbcResultSetIndex() + "] from JDBC ResultSet"
+					);
+				}
+			}
+		}
+
 	}
 
 	@Override

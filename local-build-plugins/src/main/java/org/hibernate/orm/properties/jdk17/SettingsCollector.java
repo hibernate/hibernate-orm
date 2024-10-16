@@ -24,6 +24,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import static org.hibernate.orm.properties.Utils.interpretCompatibility;
+import static org.hibernate.orm.properties.Utils.interpretDeprecation;
+import static org.hibernate.orm.properties.Utils.interpretIncubation;
+import static org.hibernate.orm.properties.Utils.interpretUnsafe;
 import static org.hibernate.orm.properties.jdk17.JavadocToAsciidocConverter.convertFieldJavadocHtmlToAsciidoc;
 
 /**
@@ -160,6 +164,8 @@ public class SettingsCollector {
 		);
 		settingDetails.setIncubating( interpretIncubation( fieldJavadocElement ) );
 		settingDetails.setDeprecated( interpretDeprecation( fieldJavadocElement ) );
+		settingDetails.setUnsafe( interpretUnsafe( fieldJavadocElement ) );
+		settingDetails.setCompatibility( interpretCompatibility( fieldJavadocElement ) );
 	}
 
 	public static Document loadConstants(File javadocDirectory) {
@@ -244,27 +250,4 @@ public class SettingsCollector {
 			noteConsumer.consumeNote( dtNode.text().trim(), ddNode.text().trim() );
 		}
 	}
-
-	private static boolean interpretIncubation(Element fieldJavadocElement) {
-		final Element incubatingMarkerElement = fieldJavadocElement.selectFirst( "[href*=.Incubating.html]" );
-		return incubatingMarkerElement != null;
-	}
-
-	private static boolean interpretDeprecation(Element fieldJavadocElement) {
-		// A setting is considered deprecated with either `@Deprecated`
-		final Element deprecationDiv = fieldJavadocElement.selectFirst( ".deprecation-block" );
-		// presence of this <div/> indicates the member is deprecated
-		if ( deprecationDiv != null ) {
-			return true;
-		}
-
-		// or `@Remove`
-		final Element removeMarkerElement = fieldJavadocElement.selectFirst( "[href*=.Remove.html]" );
-		if ( removeMarkerElement != null ) {
-			return true;
-		}
-
-		return false;
-	}
-
 }

@@ -42,7 +42,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
-import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -786,7 +786,7 @@ public class EmbeddableBinder {
 		for ( Property property : component.getProperties() ) {
 			sortedPropertyNames.add( property.getName() );
 			sortedPropertyTypes.add(
-					PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess(
+					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
 							compositeUserType.embeddable(),
 							property.getName(),
 							false

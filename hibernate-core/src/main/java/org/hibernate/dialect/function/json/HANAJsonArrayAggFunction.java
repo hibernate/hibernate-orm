@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * SQL Server json_arrayagg function.
+ * SAP HANA json_arrayagg function.
  */
 public class HANAJsonArrayAggFunction extends JsonArrayAggFunction {
 

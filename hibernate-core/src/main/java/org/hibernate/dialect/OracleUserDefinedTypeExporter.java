@@ -312,7 +312,8 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 	private String buildDropTypeSqlString(String arrayTypeName) {
 		if ( dialect.supportsIfExistsBeforeTypeName() ) {
 			return "drop type if exists " + arrayTypeName + " force";
-		} else {
+		}
+		else {
 			return "drop type " + arrayTypeName + " force";
 		}
 	}
@@ -320,7 +321,8 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 	private String buildDropFunctionSqlString(String functionTypeName) {
 		if ( supportsIfExistsBeforeFunctionName() ) {
 			return "drop function if exists " + functionTypeName;
-		} else {
+		}
+		else {
 			return "drop function " + functionTypeName;
 		}
 	}

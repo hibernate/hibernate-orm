@@ -141,7 +141,7 @@ But it's better to specify the projection explicitly, except in the simplest cas
 ==== Duplicate removal
 
 The `distinct` keyword helps remove duplicate results from the query result list.
-It's only effect is to add `distinct` to the generated SQL.
+Its only effect is to add `distinct` to the generated SQL.
 
 [[distinct-projection-query-example]]
 [source, hql]

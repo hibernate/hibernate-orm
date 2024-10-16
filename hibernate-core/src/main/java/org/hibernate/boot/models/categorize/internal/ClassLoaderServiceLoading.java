@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.Collection;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.models.spi.ClassLoading;
 
 /**
@@ -25,6 +26,16 @@ public class ClassLoaderServiceLoading implements ClassLoading {
 	@Override
 	public <T> Class<T> classForName(String name) {
 		return classLoaderService.classForName( name );
+	}
+
+	@Override
+	public <T> Class<T> findClassForName(String name) {
+		try {
+			return classLoaderService.classForName( name );
+		}
+		catch (ClassLoadingException e) {
+			return null;
+		}
 	}
 
 	@Override

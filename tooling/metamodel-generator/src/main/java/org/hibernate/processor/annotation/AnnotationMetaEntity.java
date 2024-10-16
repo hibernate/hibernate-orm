@@ -1900,25 +1900,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					);
 					break;
 				case NATURAL_ID:
-					putMember( methodKey,
-							new NaturalIdFinderMethod(
-									this, method,
-									methodName,
-									returnType.toString(),
-									containerType,
-									paramNames,
-									paramTypes,
-									parameterNullability(method, entity),
-									repository,
-									sessionType[0],
-									sessionType[1],
-									profiles,
-									context.addNonnullAnnotation(),
-									jakartaDataRepository,
-									fullReturnType(method)
-							)
-					);
-					break;
+					if ( !usingStatelessSession( sessionType[0] ) ) {// no byNaturalId() lookup API for SS
+						putMember( methodKey,
+								new NaturalIdFinderMethod(
+										this, method,
+										methodName,
+										returnType.toString(),
+										containerType,
+										paramNames,
+										paramTypes,
+										parameterNullability(method, entity),
+										repository,
+										sessionType[0],
+										sessionType[1],
+										profiles,
+										context.addNonnullAnnotation(),
+										jakartaDataRepository,
+										fullReturnType(method)
+								)
+						);
+						break;
+					}
+					// else intentionally fall through
 				case BASIC:
 				case MULTIVALUED:
 					final List<Boolean> paramPatterns = parameterPatterns( method );
@@ -2106,7 +2109,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean finderParameterNullable(TypeElement entity, VariableElement param) {
 		final Element member = memberMatchingPath( entity, parameterName( param ) );
-		return member == null || isNullable(member);
+		return isNullable( param )
+			&& ( member == null || isNullable( member ) );
 	}
 
 	private AccessType getAccessType(TypeElement entity) {
@@ -2929,30 +2933,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					return false;
 				}
 			case FIELD:
+			case PARAMETER:
 				if ( member.asType().getKind().isPrimitive() ) {
 					return false;
 				}
 		}
-		boolean nullable = true;
 		for ( AnnotationMirror mirror : member.getAnnotationMirrors() ) {
 			final TypeElement annotationType = (TypeElement) mirror.getAnnotationType().asElement();
 			final Name name = annotationType.getQualifiedName();
-			if ( name.contentEquals(Constants.ID) ) {
-				nullable = false;
+			if ( name.contentEquals(Constants.ID)
+				|| name.contentEquals(Constants.NOT_NULL)
+				|| name.contentEquals(Constants.NONNULL) ) {
+				return false;
 			}
-			if ( name.contentEquals("jakarta.validation.constraints.NotNull")) {
-				nullable = false;
-			}
-			if ( name.contentEquals(Constants.BASIC)
+			else if ( name.contentEquals(Constants.BASIC)
 					|| name.contentEquals(Constants.MANY_TO_ONE)
 					|| name.contentEquals(Constants.ONE_TO_ONE)) {
-				AnnotationValue optional = getAnnotationValue(mirror, "optional");
+				final AnnotationValue optional = getAnnotationValue(mirror, "optional");
 				if ( optional != null && optional.getValue().equals(FALSE) ) {
-					nullable = false;
+					return false;
 				}
 			}
 		}
-		return nullable;
+		return true;
 	}
 
 	private void checkParameters(
@@ -3105,6 +3108,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		else {
 			return emptyList();
+		}
+	}
+
+	@Override
+	public String javadoc() {
+		if ( jakartaDataRepository ) {
+			return "/**\n * Implements Jakarta Data repository {@link " + qualifiedName + "}\n **/";
+		}
+		else if ( repository ) {
+			return "/**\n * Implements repository {@link " + qualifiedName + "}\n **/";
+		}
+		else if ( jakartaDataStaticModel ) {
+			return "/**\n * Jakarta Data static metamodel for {@link " + qualifiedName + "}\n **/";
+		}
+		else {
+			return "/**\n * Static metamodel for {@link " + qualifiedName + "}\n **/";
 		}
 	}
 }

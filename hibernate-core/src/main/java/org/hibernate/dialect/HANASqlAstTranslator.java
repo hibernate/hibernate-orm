@@ -35,7 +35,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
- * A SQL AST translator for HANA.
+ * An SQL AST translator for HANA.
  *
  * @author Christian Beikov
  */

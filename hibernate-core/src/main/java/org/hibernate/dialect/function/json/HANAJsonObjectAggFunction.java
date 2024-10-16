@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * HANA json_objectagg function.
+ * SAP HANA json_objectagg function.
  */
 public class HANAJsonObjectAggFunction extends JsonObjectAggFunction {
 

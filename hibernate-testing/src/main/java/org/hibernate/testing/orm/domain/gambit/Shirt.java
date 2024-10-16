@@ -62,7 +62,7 @@ public class Shirt {
 		@Override
 		public String convertToEntityAttribute(Integer dbData) {
 			if ( dbData != null ) {
-				switch ( Integer.valueOf( dbData ) ) {
+				switch ( dbData ) {
 					case 1:
 						return "X";
 					case 2:

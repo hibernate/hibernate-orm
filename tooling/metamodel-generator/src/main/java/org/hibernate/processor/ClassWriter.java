@@ -80,6 +80,8 @@ public final class ClassWriter {
 		final StringWriter sw = new StringWriter();
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
+			pw.println( entity.javadoc() );
+
 			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
 				pw.println( writeScopeAnnotation( entity ) );
 			}
@@ -101,7 +103,8 @@ public final class ClassWriter {
 			final List<MetaAttribute> members = entity.getMembers();
 			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember.hasStringAttribute() ) {
-					pw.println( '\t' + metaMember.getAttributeNameDeclarationString() );
+					metaMember.getAttributeNameDeclarationString().lines()
+							.forEach(line -> pw.println('\t' + line));
 				}
 			}
 

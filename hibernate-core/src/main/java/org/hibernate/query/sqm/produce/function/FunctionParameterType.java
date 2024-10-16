@@ -99,6 +99,12 @@ public enum FunctionParameterType {
 	 */
 	IMPLICIT_JSON,
 	/**
+	 * Indicates that the argument should be an ENUM type
+	 * @see org.hibernate.type.SqlTypes#isEnumType(int)
+	 * @since 7.0
+	 */
+	ENUM,
+	/**
 	 * Indicates that the argument should be a XML type
 	 * @see org.hibernate.type.SqlTypes#isXmlType(int)
 	 * @since 7.0

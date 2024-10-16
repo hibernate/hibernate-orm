@@ -1665,12 +1665,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass) {
-		return parameterList( paramClass, null );
+	public <T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass) {
+		return listParameter( paramClass, null );
 	}
 
 	@Override
-	public <T> JpaParameterExpression<List<T>> parameterList(Class<T> paramClass, String name) {
+	public <T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, String name) {
 		final BindableType<List<T>> parameterType = new MultiValueParameterType<>( (Class<List<T>>) (Class) List.class );
 		return new JpaCriteriaParameter<>( name, parameterType, true, this );
 	}

@@ -94,6 +94,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
@@ -276,6 +277,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -1181,6 +1183,15 @@ public abstract class AbstractEntityPersister
 						final int index = attributeMapping.getStateArrayPosition();
 						final Type type = aep.getPropertyTypes()[index];
 						uniqueKeys.add( new UniqueKeyEntry( ukName, index, type ) );
+					}
+				}
+				else if ( associationType instanceof ManyToOneType manyToOneType
+						&& manyToOneType.isLogicalOneToOne() && manyToOneType.isReferenceToPrimaryKey() ) {
+					final AttributeMapping attributeMapping = aep.findAttributeMapping( manyToOneType.getPropertyName() );
+					if ( attributeMapping != null ) {
+						final int index = attributeMapping.getStateArrayPosition();
+						final Type type = aep.getPropertyTypes()[index];
+						uniqueKeys.add( new UniqueKeyEntry( manyToOneType.getPropertyName(), index, type ) );
 					}
 				}
 			}
@@ -4285,6 +4296,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		return identifierMapping.getIdentifier( entity );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return identifierMapping.getIdentifier( entity, mergeContext );
 	}
 
 	@Override

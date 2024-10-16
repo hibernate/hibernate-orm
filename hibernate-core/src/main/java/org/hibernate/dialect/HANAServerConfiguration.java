@@ -18,7 +18,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import static org.hibernate.cfg.DialectSpecificSettings.HANA_MAX_LOB_PREFETCH_SIZE;
 
 /**
- * Utility class that extract some initial configuration from the database for {@link HANADialect}.
+ * Utility class that extracts some initial configuration from the database for {@link HANADialect}.
  */
 public class HANAServerConfiguration {
 

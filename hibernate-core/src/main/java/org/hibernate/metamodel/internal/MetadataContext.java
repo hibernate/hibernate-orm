@@ -57,7 +57,6 @@ import java.util.function.BiFunction;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
 
-
 /**
  * Defines a context for storing information during the building of the {@link MappingMetamodelImpl}.
  * <p>
@@ -274,9 +273,10 @@ public class MetadataContext {
 			attribute = factoryFunction.apply( entityType, genericProperty );
 			if ( !property.isGeneric() ) {
 				final PersistentAttribute<X, ?> concreteAttribute = factoryFunction.apply( entityType, property );
-				@SuppressWarnings("unchecked")
-				final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
-				attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
+				if ( concreteAttribute != null ) {
+					@SuppressWarnings("unchecked") final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
+					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
+				}
 			}
 		}
 		else {

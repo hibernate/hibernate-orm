@@ -220,7 +220,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	@Internal
 	public static void checkArgumentType(
 			int paramNumber, String functionName, FunctionParameterType type, JdbcType jdbcType, Type javaType) {
-		if ( !isCompatible( type, jdbcType )
+		if ( !isCompatible( type, jdbcType, javaType )
 				// as a special case, we consider a binary column
 				// comparable when it is mapped by a Java UUID
 				&& !( type == COMPARABLE && isBinaryUuid( jdbcType, javaType ) ) ) {
@@ -234,7 +234,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	}
 
 	@Internal
-	private static boolean isCompatible(FunctionParameterType type, JdbcType jdbcType) {
+	private static boolean isCompatible(FunctionParameterType type, JdbcType jdbcType, Type javaType) {
 		return switch (type) {
 			case COMPARABLE -> jdbcType.isComparable();
 			case STRING -> jdbcType.isStringLikeExcludingClob();
@@ -253,6 +253,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case IMPLICIT_JSON -> jdbcType.isImplicitJson();
 			case XML -> jdbcType.isXml();
 			case IMPLICIT_XML -> jdbcType.isImplicitXml();
+			case ENUM -> javaType instanceof Class<?> clz && clz.isEnum();
 			default -> true; // TODO: should we throw here?
 		};
 	}

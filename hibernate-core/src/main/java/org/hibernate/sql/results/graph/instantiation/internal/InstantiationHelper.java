@@ -55,12 +55,20 @@ public class InstantiationHelper {
 	}
 
 	public static boolean isConstructorCompatible(Class<?> javaClass, List<Class<?>> argTypes, TypeConfiguration typeConfiguration) {
-		for ( Constructor<?> constructor : javaClass.getDeclaredConstructors() ) {
-			if ( isConstructorCompatible( constructor, argTypes, typeConfiguration) ) {
-				return true;
+		return findMatchingConstructor( javaClass, argTypes, typeConfiguration ) != null;
+	}
+
+	public static <T> Constructor<T> findMatchingConstructor(
+			Class<T> type,
+			List<Class<?>> argumentTypes,
+			TypeConfiguration typeConfiguration) {
+		for ( final Constructor<?> constructor : type.getDeclaredConstructors() ) {
+			if ( isConstructorCompatible( constructor, argumentTypes, typeConfiguration ) ) {
+				//noinspection unchecked
+				return (Constructor<T>) constructor;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	public static boolean isConstructorCompatible(

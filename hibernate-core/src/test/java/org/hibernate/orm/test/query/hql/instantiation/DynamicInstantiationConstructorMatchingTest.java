@@ -19,36 +19,52 @@ import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(
-		annotatedClasses = { MatchingConstructorTest.TestEntity.class }
-)
+@DomainModel( annotatedClasses = { DynamicInstantiationConstructorMatchingTest.TestEntity.class } )
 @SessionFactory
-@Jira("https://hibernate.atlassian.net/browse/HHH-18322")
-public class MatchingConstructorTest {
-
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18322" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18664" )
+public class DynamicInstantiationConstructorMatchingTest {
 	@BeforeAll
 	public void prepareData(final SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.persist( new TestEntity( 1, 42, "test", 13 ) )
-		);
+		scope.inTransaction( session -> session.persist( new TestEntity( 1, 42, "test", 13 ) ) );
 	}
 
 	@AfterAll
 	public void cleanUpData(final SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "delete TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
+
+	@Test
+	void testExplicitConstructor(final SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var result = session.createQuery(
+					"select new ConstructorDto(num, str) from TestEntity",
+					ConstructorDto.class
+			).getSingleResult();
+			assertEquals( 42, result.getNum() );
+			assertEquals( "test", result.getStr() );
+		} );
 	}
 
 	@Test
 	void testImplicitConstructor(final SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			final var result = session.createQuery(
-							"select num, str from TestEntity",
-							ConstructorDto.class
-					)
-					.setMaxResults( 1 ).getSingleResult();
+			final var result = session.createQuery( "select num, str from TestEntity", ConstructorDto.class )
+					.getSingleResult();
 			assertEquals( 42, result.getNum() );
+			assertEquals( "test", result.getStr() );
+		} );
+	}
+
+	@Test
+	void testExplicitConstructorWithPrimitive(final SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var result = session.createQuery(
+							"select new ConstructorWithPrimitiveDto(intValue, str) from TestEntity",
+							ConstructorWithPrimitiveDto.class
+					)
+					.getSingleResult();
+			assertEquals( 13, result.getIntValue() );
 			assertEquals( "test", result.getStr() );
 		} );
 	}
@@ -60,13 +76,13 @@ public class MatchingConstructorTest {
 							"select intValue, str from TestEntity",
 							ConstructorWithPrimitiveDto.class
 					)
-					.setMaxResults( 1 ).getSingleResult();
+					.getSingleResult();
 			assertEquals( 13, result.getIntValue() );
 			assertEquals( "test", result.getStr() );
 		} );
 	}
 
-	@Entity(name = "TestEntity")
+	@Entity( name = "TestEntity" )
 	public static class TestEntity {
 		@Id
 		private Integer id;
@@ -84,38 +100,6 @@ public class MatchingConstructorTest {
 			this.id = id;
 			this.num = num;
 			this.str = str;
-			this.intValue = intValue;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public void setId(final Integer id) {
-			this.id = id;
-		}
-
-		public Integer getNum() {
-			return num;
-		}
-
-		public void setNum(final Integer num) {
-			this.num = num;
-		}
-
-		public String getStr() {
-			return str;
-		}
-
-		public void setStr(final String str) {
-			this.str = str;
-		}
-
-		public int getIntValue() {
-			return intValue;
-		}
-
-		public void setIntValue(final int intValue) {
 			this.intValue = intValue;
 		}
 	}

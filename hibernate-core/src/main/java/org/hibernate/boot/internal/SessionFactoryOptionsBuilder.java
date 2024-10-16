@@ -68,8 +68,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.format.FormatMapper;
-import org.hibernate.type.format.jackson.JacksonIntegration;
-import org.hibernate.type.format.jakartajson.JakartaJsonIntegration;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
@@ -142,6 +140,9 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.type.format.jackson.JacksonIntegration.getJsonJacksonFormatMapperOrNull;
+import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJacksonFormatMapperOrNull;
+import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull;
 
 /**
  * In-flight state of {@link SessionFactoryOptions} during {@link org.hibernate.boot.SessionFactoryBuilder}
@@ -648,10 +649,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private boolean disallowBatchUpdates(Dialect dialect, ExtractedDatabaseMetaData meta) {
 		final Boolean dialectAnswer = dialect.supportsBatchUpdates();
-		if ( dialectAnswer != null ) {
-			return !dialectAnswer;
-		}
-		return !meta.supportsBatchUpdates();
+		return dialectAnswer != null ? !dialectAnswer : !meta.supportsBatchUpdates();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -759,19 +757,20 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		if ( isEmpty( producerName ) ) {
 			return null;
 		}
-
-		//noinspection Convert2Lambda
-		return strategySelector.resolveDefaultableStrategy(
-				HqlTranslator.class,
-				producerName,
-				new Callable<>() {
-					@Override
-					public HqlTranslator call() throws Exception {
-						return (HqlTranslator) serviceRegistry.requireService( ClassLoaderService.class )
-								.classForName( producerName ).newInstance();
+		else {
+			//noinspection Convert2Lambda
+			return strategySelector.resolveDefaultableStrategy(
+					HqlTranslator.class,
+					producerName,
+					new Callable<>() {
+						@Override
+						public HqlTranslator call() throws Exception {
+							return (HqlTranslator) serviceRegistry.requireService( ClassLoaderService.class )
+									.classForName( producerName ).newInstance();
+						}
 					}
-				}
-		);
+			);
+		}
 	}
 
 	private SqmTranslatorFactory resolveSqmTranslator(
@@ -780,21 +779,20 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		if ( isEmpty( translatorImplFqn ) ) {
 			return null;
 		}
-
-		return strategySelector.resolveStrategy(
-				SqmTranslatorFactory.class,
-				translatorImplFqn
-		);
+		else {
+			return strategySelector.resolveStrategy(
+					SqmTranslatorFactory.class,
+					translatorImplFqn
+			);
+		}
 	}
 
 	private static Interceptor determineInterceptor(
 			Map<String,Object> configurationSettings,
 			StrategySelector strategySelector) {
-		Object setting = configurationSettings.get( INTERCEPTOR );
-
 		return strategySelector.resolveStrategy(
 				Interceptor.class,
-				setting
+				configurationSettings.get( INTERCEPTOR )
 		);
 	}
 
@@ -811,8 +809,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			return (Supplier<? extends Interceptor>) setting;
 		}
 		else if ( setting instanceof Class ) {
-			Class<? extends Interceptor> clazz = (Class<? extends Interceptor>) setting;
-			return interceptorSupplier( clazz );
+			return interceptorSupplier( (Class<? extends Interceptor>) setting );
 		}
 		else {
 			return interceptorSupplier(
@@ -839,15 +836,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 			Map<String,Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
-		final PhysicalConnectionHandlingMode specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
-				configurationSettings.get( CONNECTION_HANDLING )
-		);
-
-		if ( specifiedHandlingMode != null ) {
-			return specifiedHandlingMode;
-		}
-
-		return serviceRegistry.requireService( TransactionCoordinatorBuilder.class ).getDefaultConnectionHandlingMode();
+		final PhysicalConnectionHandlingMode specifiedHandlingMode =
+				PhysicalConnectionHandlingMode.interpret( configurationSettings.get( CONNECTION_HANDLING ) );
+		return specifiedHandlingMode != null
+				? specifiedHandlingMode
+				: serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
+						.getDefaultConnectionHandlingMode();
 	}
 
 	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {
@@ -855,13 +849,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					final FormatMapper jsonJacksonFormatMapper = JacksonIntegration.getJsonJacksonFormatMapperOrNull();
-					if (jsonJacksonFormatMapper != null) {
-						return jsonJacksonFormatMapper;
-					}
-					else {
-						return JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull();
-					}
+					final FormatMapper jsonJacksonFormatMapper = getJsonJacksonFormatMapperOrNull();
+					return jsonJacksonFormatMapper != null ? jsonJacksonFormatMapper : getJakartaJsonBFormatMapperOrNull();
 				}
 		);
 	}
@@ -871,11 +860,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					final FormatMapper jacksonFormatMapper = JacksonIntegration.getXMLJacksonFormatMapperOrNull();
-					if (jacksonFormatMapper != null) {
-						return jacksonFormatMapper;
-					}
-					return new JaxbXmlFormatMapper();
+					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull();
+					return jacksonFormatMapper != null ? jacksonFormatMapper : new JaxbXmlFormatMapper();
 				}
 		);
 	}
@@ -1393,7 +1379,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void addSessionFactoryObservers(SessionFactoryObserver... observers) {
-		Collections.addAll( this.sessionFactoryObserverList, observers );
+		Collections.addAll( sessionFactoryObserverList, observers );
 	}
 
 	public void applyInterceptor(Interceptor interceptor) {
@@ -1401,13 +1387,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
-		this.applyStatelessInterceptorSupplier(
+		applyStatelessInterceptorSupplier(
 				() -> {
 					try {
 						return statelessInterceptorClass.newInstance();
 					}
 					catch (InstantiationException | IllegalAccessException e) {
-						throw new HibernateException( String.format( "Could not supply stateless Interceptor of class %s", statelessInterceptorClass.getName()), e );
+						throw new HibernateException( "Could not supply stateless Interceptor of class '"
+								+ statelessInterceptorClass.getName() + "'", e );
 					}
 				}
 		);
@@ -1563,10 +1550,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void applySqlFunction(String registrationName, SqmFunctionDescriptor sqlFunction) {
-		if ( this.sqlFunctions == null ) {
-			this.sqlFunctions = new HashMap<>();
+		if ( sqlFunctions == null ) {
+			sqlFunctions = new HashMap<>();
 		}
-		this.sqlFunctions.put( registrationName, sqlFunction );
+		sqlFunctions.put( registrationName, sqlFunction );
 	}
 
 	public void allowOutOfTransactionUpdateOperations(boolean allow) {
@@ -1582,11 +1569,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	private MutableJpaCompliance mutableJpaCompliance() {
-		if ( !(this.jpaCompliance instanceof MutableJpaCompliance) ) {
+		if ( jpaCompliance instanceof MutableJpaCompliance mutableJpaCompliance ) {
+			return mutableJpaCompliance;
+		}
+		else {
 			throw new IllegalStateException( "JpaCompliance is no longer mutable" );
 		}
-
-		return (MutableJpaCompliance) this.jpaCompliance;
 	}
 
 	public void enableJpaTransactionCompliance(boolean enabled) {
@@ -1627,10 +1615,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public SessionFactoryOptions buildOptions() {
-		if ( this.jpaCompliance instanceof MutableJpaCompliance ) {
-			this.jpaCompliance = mutableJpaCompliance().immutableCopy();
+		if ( jpaCompliance instanceof MutableJpaCompliance ) {
+			jpaCompliance = mutableJpaCompliance().immutableCopy();
 		}
-
 		return this;
 	}
 }

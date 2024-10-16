@@ -17,8 +17,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.internal.LobCreationLogging;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.service.Service;
@@ -57,14 +55,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "JTASessionContext being used with JDBC transactions; auto-flush will not operate correctly with getCurrentSession()",
 			id = 8)
 	void autoFlushWillNotWork();
-
-	/**
-	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#batchContainedStatementsOnRelease} instead
-	 */
-	@Deprecated
-	@LogMessage(level = INFO)
-	@Message(value = "Releases batch still contained JDBC statements", id = 10)
-	void batchContainedStatementsOnRelease();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Configuration settings with for connection provider '%s' are set, but the connection provider is not on the classpath; these properties will be ignored",
@@ -482,14 +472,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not deserialize cache file [%s]: %s", id = 307)
 	void unableToDeserializeCache(String path, SerializationException error);
 
-	/**
-	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#unableToExecuteBatch} instead
-	 */
-	@LogMessage(level = ERROR)
-	@Message(value = "Exception executing batch [%s], SQL: %s", id = 315)
-	@Deprecated
-	void unableToExecuteBatch(Exception e, String sql );
-
 	@LogMessage(level = INFO)
 	@Message(value = "Could not find any META-INF/persistence.xml file in the classpath", id = 318)
 	void unableToFindPersistenceXmlInClasspath();
@@ -542,14 +524,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Could not read or init a hi value", id = 351)
 	void unableToReadOrInitHiValue(@Cause SQLException e);
 
-	/**
-	 * @deprecated Use {@link org.hibernate.engine.jdbc.batch.JdbcBatchLogging#unableToReleaseBatchStatement} instead
-	 */
-	@LogMessage(level = ERROR)
-	@Message(value = "Unable to release batch statement...", id = 352)
-	@Deprecated
-	void unableToReleaseBatchStatement();
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not release a cache lock: %s", id = 353)
 	void unableToReleaseCacheLock(CacheException ce);
@@ -594,14 +568,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "I/O reported error writing cached file: %s: %s", id = 378)
 	void unableToWriteCachedFile(String path, String message);
 
-	/**
-	 * @deprecated Use {@link org.hibernate.engine.jdbc.JdbcLogging#unexpectedRowCounts} instead
-	 */
-	@LogMessage(level = WARN)
-	@Message(value = "JDBC driver did not return the expected number of row counts", id = 381)
-	@Deprecated
-	void unexpectedRowCounts();
-
 	@LogMessage(level = WARN)
 	@Message(value = "ResultSet had no statement associated with it, but was not yet registered", id = 386)
 	void unregisteredResultSetWithoutStatement();
@@ -623,14 +589,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Explicit segment value for id generator [%s.%s] suggested; using default [%s]", id = 398)
 	void usingDefaultIdGeneratorSegmentValue(String tableName, String segmentColumnName, String defaultToUse);
-
-	/**
-	 * @deprecated Use {@link org.hibernate.dialect.DialectLogging#usingDialect} instead
-	 */
-	@LogMessage(level = DEBUG)
-	@Message(value = "Using dialect: %s", id = 400)
-	@Deprecated
-	void usingDialect(Dialect dialect);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
@@ -657,41 +615,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Closing un-released batch", id = 420)
 	void closingUnreleasedBatch();
 
-
-	/**
-	 * @deprecated Use {@link LobCreationLogging#disablingContextualLOBCreation} instead
-	 */
-	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual LOB creation as %s is true", id = 421)
-	@Deprecated
-	void disablingContextualLOBCreation(String nonContextualLobCreation);
-
-	/**
-	 * @deprecated Use {@link LobCreationLogging#disablingContextualLOBCreationSinceConnectionNull} instead
-	 */
-	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual LOB creation as connection was null", id = 422)
-	@Deprecated
-	void disablingContextualLOBCreationSinceConnectionNull();
-
-	/**
-	 * @deprecated Use {@link LobCreationLogging#nonContextualLobCreationJdbcVersion} instead
-	 */
-	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual LOB creation as JDBC driver reported JDBC version [%s] less than 4", id = 423)
-	@Deprecated
-	void disablingContextualLOBCreationSinceOldJdbcVersion(int jdbcMajorVersion);
-
-	/**
-	 * @deprecated Use {@link LobCreationLogging#contextualClobCreationFailed} instead
-	 *
-	 * @see LobCreationLogging#contextualClobCreationFailed
-	 * @see LobCreationLogging#contextualNClobCreationFailed
-	 */
-	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual LOB creation as createClob() method threw error: %s", id = 424)
-	@Deprecated
-	void disablingContextualLOBCreationSinceCreateClobFailed(Throwable t);
 	@LogMessage(level = INFO)
 	@Message(value = "update timestamps cache puts: %s", id = 433)
 	void timestampCachePuts(long updateTimestampsCachePutCount);

@@ -49,6 +49,3 @@ dependencies {
     annotationProcessor project( ':hibernate-processor' )
 }
 
-tasks.checkstyleMain {
-    exclude '**/org/hibernate/orm/test/legacy/**'
-}

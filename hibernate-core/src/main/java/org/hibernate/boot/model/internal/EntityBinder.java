@@ -1310,10 +1310,8 @@ public class EntityBinder {
 		if ( persistentClass instanceof RootClass ) {
 			bindRootEntity();
 		}
-		else if ( !isMutable() ) {
-			throw new AnnotationException("Entity class '" + annotatedClass.getName()
-					+ "' is annotated '@Immutable' but it is a subclass in an entity inheritance hierarchy"
-					+ " (only root classes may declare mutability)");
+		else {
+			checkSubclassEntity();
 		}
 
 		ensureNoMutabilityPlan();
@@ -1321,6 +1319,19 @@ public class EntityBinder {
 		registerImportName();
 
 		processNamedEntityGraphs();
+	}
+
+	private void checkSubclassEntity() {
+		if ( !isMutable() ) {
+			throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+					+ "' is annotated '@Immutable' but it is a subclass in an entity inheritance hierarchy"
+					+ " (only a root class may declare its mutability)" );
+		}
+		if ( isNotEmpty( where ) ) {
+			throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+					+ "' specifies an '@SQLRestriction' but it is a subclass in an entity inheritance hierarchy"
+					+ " (only a root class may be specify a restriction)" );
+		}
 	}
 
 	private void ensureNoMutabilityPlan() {

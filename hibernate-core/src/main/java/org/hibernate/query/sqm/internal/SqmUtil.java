@@ -827,9 +827,14 @@ public class SqmUtil {
 	}
 
 	public static boolean isSelectionAssignableToResultType(SqmSelection<?> selection, Class<?> expectedResultType) {
-		if ( expectedResultType == null
-				|| selection != null && selection.getSelectableNode() instanceof SqmParameter ) {
+		if ( expectedResultType == null ) {
 			return true;
+		}
+		else if ( selection != null && selection.getSelectableNode() instanceof SqmParameter<?> sqmParameter ) {
+			final Class<?> anticipatedClass = sqmParameter.getAnticipatedType() != null ?
+					sqmParameter.getAnticipatedType().getBindableJavaType() :
+					null;
+			return anticipatedClass != null && expectedResultType.isAssignableFrom( anticipatedClass );
 		}
 		else if ( selection == null
 				|| !isHqlTuple( selection ) && selection.getSelectableNode().isCompoundSelection() ) {

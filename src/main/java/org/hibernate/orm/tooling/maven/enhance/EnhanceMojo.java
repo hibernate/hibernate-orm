@@ -222,17 +222,17 @@ public class EnhanceMojo extends AbstractMojo {
     }
 
     private void writeByteCodeToFile(byte[] bytes, File file) {
-        getLog().debug("Writing byte code to file: " + file);
+        getLog().debug(WRITING_BYTE_CODE_TO_FILE.formatted(file));
         if (clearFile(file)) {
             try {
                 Files.write( file.toPath(), bytes);
-                getLog().debug("" + bytes.length + " bytes were succesfully written to file: " + file);
+                getLog().debug(AMOUNT_BYTES_WRITTEN_TO_FILE.formatted(bytes.length, file));
             }
             catch (FileNotFoundException e) {
-                getLog().error( "Error opening file for writing : " + file, e );
+                getLog().error(ERROR_OPENING_FILE_FOR_WRITING.formatted(file), e );
             }
             catch (IOException e) {
-                getLog().error( "Error writing bytes to file : " + file, e );
+                getLog().error(ERROR_WRITING_BYTES_TO_FILE.formatted(file), e );
             }
         }
     }
@@ -268,8 +268,12 @@ public class EnhanceMojo extends AbstractMojo {
     // error messages
     static final String UNABLE_TO_CREATE_FILE = "Unable to create file: %s"; 
     static final String UNABLE_TO_DELETE_FILE = "Unable to delete file: %s"; 
+    static final String ERROR_WRITING_BYTES_TO_FILE = "Error writing bytes to file : %s";
+    static final String ERROR_OPENING_FILE_FOR_WRITING = "Error opening file for writing : %s";
     
     // debug messages
     static final String TRYING_TO_CLEAR_FILE = "Trying to clear the contents of file: %s";
+    static final String AMOUNT_BYTES_WRITTEN_TO_FILE = "%s bytes were succesfully written to file: %s";
+    static final String WRITING_BYTE_CODE_TO_FILE = "Writing byte code to file: %s";
 
 }

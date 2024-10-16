@@ -255,4 +255,9 @@ public abstract class MockEntityPersister implements EntityPersister, Queryable,
 	public Type getDiscriminatorType() {
 		return factory.getTypeConfiguration().getBasicTypeForJavaType(String.class);
 	}
+
+	@Override
+	public boolean isMutable() {
+		return true;
+	}
 }

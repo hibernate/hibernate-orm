@@ -375,9 +375,14 @@ public class EnhanceMojoTest {
                  }               
             });
         long beforeRuns = barClassFile.lastModified();
+        // First Run -> file is modified
         enhancerField.set(enhanceMojo, enhancer);
         assertEquals(0, calls.get(0));
         enhanceClassMethod.invoke(enhanceMojo, barClassFile);
+        // check log messages
+        for (String s: logMessages) {
+        	System.out.println(s);
+        }
         long afterFirstRun = barClassFile.lastModified();
         assertEquals(1, calls.get(0));
         assertTrue(afterFirstRun >= beforeRuns);

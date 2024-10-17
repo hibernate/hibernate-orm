@@ -148,7 +148,9 @@ public class ArrayJdbcType implements JdbcType {
 			final T[] domainObjects = (T[]) javaType.unwrap( value, Object[].class, options );
 			final Object[] objects = new Object[domainObjects.length];
 			for ( int i = 0; i < domainObjects.length; i++ ) {
-				objects[i] = elementBinder.getBindValue( domainObjects[i], options );
+				if ( domainObjects[i] != null ) {
+					objects[i] = elementBinder.getBindValue( domainObjects[i], options );
+				}
 			}
 			return objects;
 		}

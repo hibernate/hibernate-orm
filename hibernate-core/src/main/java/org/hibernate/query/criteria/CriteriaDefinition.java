@@ -470,6 +470,11 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
+	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
+		return query.from( function );
+	}
+
+	@Override
 	public JpaCriteriaQuery<Long> createCountQuery() {
 		return query.createCountQuery();
 	}

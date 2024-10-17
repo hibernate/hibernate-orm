@@ -4,10 +4,13 @@
  */
 package org.hibernate.sql.ast;
 
+import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -27,6 +30,14 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	 * @since 7.0
 	 */
 	<X> X getLiteralValue(Expression expression);
+
+	/**
+	 * Renders a named set returning function.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode);
 
 	/**
 	 * Renders the given SQL AST node with the given rendering mode.

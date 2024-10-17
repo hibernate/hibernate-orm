@@ -239,7 +239,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 		);
 
 		//---------------------------------------------------------
-		// PostgrePlus
+		// PostgresPlus
 		//---------------------------------------------------------
 
 		contributions.contributeAuxiliaryDatabaseObject(

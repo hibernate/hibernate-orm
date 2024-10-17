@@ -6,7 +6,6 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
@@ -18,9 +17,6 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -107,17 +103,8 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
-		if ( shouldInlineCte( tableGroup ) ) {
-			inlineCteTableGroup( tableGroup, lockMode );
-			return false;
-		}
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		if ( tableReference instanceof NamedTableReference ) {
-			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
-		}
-		final DerivedTableReference derivedTableReference = (DerivedTableReference) tableReference;
-		final boolean correlated = derivedTableReference.isLateral();
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		final boolean correlated = tableReference.isLateral();
 		final boolean oldCorrelated = this.correlated;
 		if ( correlated ) {
 			this.correlated = true;
@@ -128,7 +115,6 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			this.correlated = oldCorrelated;
 			appendSql( CLOSE_PARENTHESIS );
 		}
-		return false;
 	}
 
 	@Override

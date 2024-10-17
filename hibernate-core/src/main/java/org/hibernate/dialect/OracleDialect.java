@@ -83,13 +83,10 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
-import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.OracleJsonArrayBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -134,7 +131,6 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
@@ -425,6 +421,8 @@ public class OracleDialect extends Dialect {
 		functionFactory.xmlquery_oracle();
 		functionFactory.xmlexists();
 		functionFactory.xmlagg();
+
+		functionFactory.unnest_oracle();
 	}
 
 	@Override
@@ -821,11 +819,9 @@ public class OracleDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		}
 		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "blob", this ) );
 		}
 
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
@@ -995,16 +991,16 @@ public class OracleDialect extends Dialect {
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( OracleJsonArrayJdbcType.INSTANCE );
+			typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
-			typeContributions.contributeJdbcType( OracleJsonArrayBlobJdbcType.INSTANCE );
+			typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.BLOB_INSTANCE );
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			// Register a JdbcType to allow reading from native queries
-			typeContributions.contributeJdbcType( new ArrayJdbcType( ObjectJdbcType.INSTANCE ) );
+//			typeContributions.contributeJdbcType( new ArrayJdbcType( ObjectJdbcType.INSTANCE ) );
 			typeContributions.contributeJdbcTypeConstructor( getArrayJdbcTypeConstructor( serviceRegistry ) );
 			typeContributions.contributeJdbcTypeConstructor( getNestedTableJdbcTypeConstructor( serviceRegistry ) );
 		}

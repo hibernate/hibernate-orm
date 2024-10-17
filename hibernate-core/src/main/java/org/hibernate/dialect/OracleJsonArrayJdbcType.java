@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonArrayBlobJdbcType;
 
 /**
@@ -14,12 +15,9 @@ import org.hibernate.type.descriptor.jdbc.OracleJsonArrayBlobJdbcType;
  * @author Christian Beikov
  */
 public class OracleJsonArrayJdbcType extends OracleJsonArrayBlobJdbcType {
-	/**
-	 * Singleton access
-	 */
-	public static final OracleJsonArrayJdbcType INSTANCE = new OracleJsonArrayJdbcType();
 
-	private OracleJsonArrayJdbcType() {
+	public OracleJsonArrayJdbcType(JdbcType elementJdbcType) {
+		super( elementJdbcType );
 	}
 
 	@Override

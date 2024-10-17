@@ -139,6 +139,26 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * When mapping a basic array or collection type to the database what is the preferred SQL type code to use,
+	 * given the element SQL type code?
+	 * <p>
+	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForArray()
+	 *
+	 * @since 7.0
+	 */
+	default int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+		return resolveJdbcTypeCode(
+				switch ( elementSqlTypeCode ) {
+					case SqlTypes.JSON -> SqlTypes.JSON_ARRAY;
+					case SqlTypes.SQLXML -> SqlTypes.XML_ARRAY;
+					default -> getExplicitJdbcTypeCode();
+				}
+		);
+	}
+
+	/**
 	 * Useful for resolutions based on column length.
 	 * <p>
 	 * E.g. for choosing between a {@code VARCHAR} ({@code String}) and {@code CHAR(1)} ({@code Character}/{@code char}).

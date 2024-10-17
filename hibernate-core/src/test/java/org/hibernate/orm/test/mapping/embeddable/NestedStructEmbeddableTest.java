@@ -117,7 +117,7 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 		);
 
 		//---------------------------------------------------------
-		// PostgrePlus
+		// PostgresPlus
 		//---------------------------------------------------------
 
 		contributions.contributeAuxiliaryDatabaseObject(

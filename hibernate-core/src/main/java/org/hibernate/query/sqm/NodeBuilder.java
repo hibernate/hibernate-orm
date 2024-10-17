@@ -46,6 +46,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -800,6 +801,15 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument);
+
+	@Override
+	<E> SqmSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args);
+
+	@Override
+	<E> SqmSetReturningFunction<E> unnestArray(Expression<E[]> array);
+
+	@Override
+	<E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

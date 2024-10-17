@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -113,9 +114,9 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			String placeholder,
 			String aggregateParentReadExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
-			Column column) {
-		switch ( aggregateColumn.getTypeCode() ) {
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column) {
+		switch ( aggregateColumnTypeCode ) {
 			case JSON:
 				String jsonTypeName = "json";
 				switch ( jsonSupport ) {
@@ -132,14 +133,14 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						else {
 							parentPartExpression = aggregateParentReadExpression + ",'$.";
 						}
-						switch ( column.getTypeCode() ) {
+						switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 							case BIT:
 								return template.replace(
 										placeholder,
 										"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',1,'false',0,null)"
 								);
 							case BOOLEAN:
-								if ( column.getTypeName().toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
+								if ( column.getColumnDefinition().toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
 									return template.replace(
 											placeholder,
 											"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',1,'false',0,null)"
@@ -152,7 +153,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case BIGINT:
 								return template.replace(
 										placeholder,
-										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getTypeName() + ')'
+										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
 								);
 							case DATE:
 								return template.replace(
@@ -189,10 +190,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								// We encode binary data as hex, so we have to decode here
 								return template.replace(
 										placeholder,
-										"(select * from json_table(" + aggregateParentReadExpression + ",'$' columns (" + columnExpression + " " + column.getTypeName() + " path '$." + columnExpression + "')))"
+										"(select * from json_table(" + aggregateParentReadExpression + ",'$' columns (" + columnExpression + " " + column.getColumnDefinition() + " path '$." + columnExpression + "')))"
 								);
 							case ARRAY:
-								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getValue().getType();
+								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
 								final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
 								switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
 									case BOOLEAN:
@@ -211,7 +212,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									default:
 										return template.replace(
 												placeholder,
-												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getTypeName() + ')'
+												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
 										);
 								}
 							case JSON:
@@ -222,7 +223,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							default:
 								return template.replace(
 										placeholder,
-										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getTypeName() + ')'
+										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
 								);
 						}
 					case NONE:
@@ -233,7 +234,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			case STRUCT_TABLE:
 				return template.replace( placeholder, aggregateParentReadExpression + "." + columnExpression );
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
 	@Override

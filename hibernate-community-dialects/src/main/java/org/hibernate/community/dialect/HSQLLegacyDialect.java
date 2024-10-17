@@ -9,6 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -277,12 +278,19 @@ public class HSQLLegacyDialect extends Dialect {
 			functionFactory.jsonObjectAgg_h2();
 		}
 
+		functionFactory.unnest( "c1", "c2" );
+
 		//trim() requires parameters to be cast when used as trim character
 		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
 				this,
 				functionContributions.getTypeConfiguration(),
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
 		) );
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "c2";
 	}
 
 	@Override

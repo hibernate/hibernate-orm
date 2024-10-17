@@ -4,10 +4,13 @@
  */
 package org.hibernate.query.criteria;
 
+import java.util.Collection;
+
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Subquery;
@@ -61,6 +64,130 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 
 	@Incubating
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral);
+
+	/**
+	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link SqmJoinType#INNER}.
+	 *
+	 * @see #join(JpaSetReturningFunction, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function);
+
+	/**
+	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType, boolean)} passing {@code false}
+	 * for the {@code lateral} parameter.
+	 *
+	 * @see #join(JpaSetReturningFunction, SqmJoinType, boolean)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType);
+
+	/**
+	 * Like calling the overload {@link #joinLateral(JpaSetReturningFunction, SqmJoinType)} with {@link SqmJoinType#INNER}.
+	 *
+	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function);
+
+	/**
+	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType, boolean)} passing {@code true}
+	 * for the {@code lateral} parameter.
+	 *
+	 * @see #join(JpaSetReturningFunction, SqmJoinType, boolean)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function, SqmJoinType joinType);
+
+	/**
+	 * Creates and returns a join node for the given set returning function.
+	 * If function arguments refer to correlated paths, the {@code lateral} argument must be set to {@code true}.
+	 * Failing to do so when necessary may lead to an error during query compilation or execution.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType, boolean lateral);
+
+	/**
+	 * Like calling the overload {@link #joinArray(String, SqmJoinType)} with {@link SqmJoinType#INNER}.
+	 *
+	 * @see #joinArray(String, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArray(String arrayAttributeName);
+
+	/**
+	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestArray(Expression)}
+	 * with the result of {@link #get(String)} passing the given attribute name.
+	 *
+	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArray(String arrayAttributeName, SqmJoinType joinType);
+
+	/**
+	 * Like calling the overload {@link #joinArray(SingularAttribute, SqmJoinType)} with {@link SqmJoinType#INNER}.
+	 *
+	 * @see #joinArray(SingularAttribute, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute);
+
+	/**
+	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestArray(Expression)}
+	 * with the given attribute.
+	 *
+	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute, SqmJoinType joinType);
+
+	/**
+	 * Like calling the overload {@link #joinArrayCollection(String, SqmJoinType)} with {@link SqmJoinType#INNER}.
+	 *
+	 * @see #joinArrayCollection(String, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName);
+
+	/**
+	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestCollection(Expression)}
+	 * with the result of {@link #get(String)} passing the given attribute name.
+	 *
+	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName, SqmJoinType joinType);
+
+	/**
+	 * Like calling the overload {@link #joinArrayCollection(SingularAttribute, SqmJoinType)} with {@link SqmJoinType#INNER}.
+	 *
+	 * @see #joinArrayCollection(SingularAttribute, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArrayCollection(SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute);
+
+	/**
+	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestCollection(Expression)}
+	 * with the given attribute.
+	 *
+	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
+	 * @since 7.0
+	 */
+	@Incubating
+	<X> JpaFunctionJoin<X> joinArrayCollection(SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute, SqmJoinType joinType);
 
 	@Incubating
 	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte);

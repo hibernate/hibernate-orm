@@ -15,6 +15,8 @@ import java.util.Base64;
 import java.util.List;
 
 import org.hibernate.Internal;
+import org.hibernate.engine.spi.LazySessionWrapperOptions;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -24,6 +26,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
@@ -32,6 +35,8 @@ import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
+import static java.lang.Character.isLetter;
+import static java.lang.Character.isLetterOrDigit;
 import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
 import static org.hibernate.dialect.StructHelper.instantiate;
 
@@ -486,7 +491,6 @@ public class XmlHelper {
 			WrapperOptions options,
 			XMLAppender sb) {
 		final Object[] array = embeddableMappingType.getValues( value );
-		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < array.length; i++ ) {
 			if ( array[i] == null ) {
 				continue;
@@ -646,6 +650,28 @@ public class XmlHelper {
 		return selectableIndex;
 	}
 
+	public static boolean isValidXmlName(String name) {
+		if ( name.isEmpty()
+				|| !isValidXmlNameStart( name.charAt( 0 ) )
+				|| name.regionMatches( true, 0, "xml", 0, 3 ) ) {
+			return false;
+		}
+		for ( int i = 1; i < name.length(); i++ ) {
+			if ( !isValidXmlNameChar( name.charAt( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static boolean isValidXmlNameStart(char c) {
+		return isLetter( c ) || c == '_' || c == ':';
+	}
+
+	public static boolean isValidXmlNameChar(char c) {
+		return isLetterOrDigit( c ) || c == '_' || c == ':' || c == '-' || c == '.';
+	}
+
 	private static class XMLAppender extends OutputStream implements SqlAppender {
 
 		private final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
@@ -780,5 +806,48 @@ public class XmlHelper {
 			}
 		}
 	}
+
+	public static CollectionTags determineCollectionTags(BasicPluralJavaType<?> pluralJavaType, SessionFactoryImplementor sessionFactory) {
+		//noinspection unchecked
+		final JavaType<Object> javaType = (JavaType<Object>) pluralJavaType;
+		final LazySessionWrapperOptions lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory );
+		// Produce the XML string for a collection with a null element to find out the root and element tag names
+		final String nullElementXml;
+		try {
+			nullElementXml = sessionFactory.getSessionFactoryOptions().getXmlFormatMapper().toString(
+					javaType.fromString( "{null}" ),
+					javaType,
+					lazySessionWrapperOptions
+			);
+		}
+		finally {
+			lazySessionWrapperOptions.cleanup();
+		}
+
+		// There must be an end tag for the root, so find that first
+		final int rootCloseTagPosition = nullElementXml.lastIndexOf( '<' );
+		assert nullElementXml.charAt( rootCloseTagPosition + 1 ) == '/';
+		final int rootNameStart = rootCloseTagPosition + 2;
+		final int rootCloseTagEnd = nullElementXml.indexOf( '>', rootCloseTagPosition );
+		final String rootTag = nullElementXml.substring( rootNameStart, rootCloseTagEnd );
+
+		// Then search for the open tag of the root and determine the start of the first item
+		final int itemTagStart = nullElementXml.indexOf(
+				'<',
+				nullElementXml.indexOf( "<" + rootTag + ">" ) + rootTag.length() + 2
+		);
+		final int itemNameStart = itemTagStart + 1;
+		int itemNameEnd = itemNameStart;
+		for ( int i = itemNameStart + 1; i < nullElementXml.length(); i++ ) {
+			if ( !isValidXmlNameChar( nullElementXml.charAt( i ) ) ) {
+				itemNameEnd = i;
+				break;
+			}
+		}
+		final String elementNodeName = nullElementXml.substring( itemNameStart, itemNameEnd );
+		return new CollectionTags( rootTag, elementNodeName );
+	}
+
+	public record CollectionTags(String rootName, String elementName) {}
 
 }

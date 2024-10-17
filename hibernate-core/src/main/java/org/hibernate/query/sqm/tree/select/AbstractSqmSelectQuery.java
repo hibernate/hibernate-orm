@@ -14,8 +14,10 @@ import java.util.function.Function;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaFunctionRoot;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
@@ -23,6 +25,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
@@ -251,6 +255,13 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
 		final SqmCteRoot<X> root = new SqmCteRoot<>( ( SqmCteStatement<X> ) cte, null );
+		addRoot( root );
+		return root;
+	}
+
+	@Override
+	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
+		final SqmFunctionRoot<X> root = new SqmFunctionRoot<>( (SqmSetReturningFunction<X>) function, null );
 		addRoot( root );
 		return root;
 	}

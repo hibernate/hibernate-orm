@@ -114,7 +114,7 @@ public class StructWithArrayEmbeddableTest implements AdditionalMappingContribut
 		);
 
 		//---------------------------------------------------------
-		// PostgrePlus
+		// PostgresPlus
 		//---------------------------------------------------------
 
 		contributions.contributeAuxiliaryDatabaseObject(

@@ -1871,7 +1871,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 
 		if ( supportsStandardArrays() ) {
-			jdbcTypeRegistry.addTypeConstructor( ArrayJdbcTypeConstructor.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( ArrayJdbcTypeConstructor.INSTANCE );
 		}
 		if ( supportsMaterializedLobAccess() ) {
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
@@ -5287,6 +5287,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsRefCursors
 	 */
 	public Boolean supportsRefCursors() {
+		return null;
+	}
+
+	/**
+	 * Returns the default name of the ordinality column for a set-returning function
+	 * if it supports that, otherwise returns {@code null}.
+	 */
+	public @Nullable String getDefaultOrdinalityColumnName() {
 		return null;
 	}
 

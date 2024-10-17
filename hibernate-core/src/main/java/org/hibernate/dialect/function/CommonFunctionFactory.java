@@ -7,75 +7,11 @@ package org.hibernate.dialect.function;
 import java.util.Date;
 import java.util.Arrays;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.dialect.function.array.ArrayAggFunction;
-import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
-import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
-import org.hibernate.dialect.function.array.ArrayArgumentValidator;
-import org.hibernate.dialect.function.array.ArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.ArrayConcatFunction;
-import org.hibernate.dialect.function.array.ArrayConstructorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayIncludesUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayIntersectsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayIntersectsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayReplaceUnnestFunction;
-import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
-import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayToStringFunction;
-import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
-import org.hibernate.dialect.function.array.CockroachArrayFillFunction;
-import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
-import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
-import org.hibernate.dialect.function.array.H2ArrayFillFunction;
-import org.hibernate.dialect.function.array.H2ArrayIncludesFunction;
-import org.hibernate.dialect.function.array.H2ArrayIntersectsFunction;
-import org.hibernate.dialect.function.array.H2ArrayPositionFunction;
-import org.hibernate.dialect.function.array.H2ArrayPositionsFunction;
-import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
-import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
-import org.hibernate.dialect.function.array.H2ArrayReplaceFunction;
-import org.hibernate.dialect.function.array.H2ArraySetFunction;
-import org.hibernate.dialect.function.array.H2ArrayToStringFunction;
-import org.hibernate.dialect.function.array.HSQLArrayConstructorFunction;
-import org.hibernate.dialect.function.array.HSQLArrayFillFunction;
-import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
-import org.hibernate.dialect.function.array.HSQLArrayPositionsFunction;
-import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
-import org.hibernate.dialect.function.array.HSQLArraySetFunction;
-import org.hibernate.dialect.function.array.HSQLArrayToStringFunction;
-import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
-import org.hibernate.dialect.function.array.OracleArrayFillFunction;
-import org.hibernate.dialect.function.array.OracleArrayIncludesFunction;
-import org.hibernate.dialect.function.array.OracleArrayIntersectsFunction;
-import org.hibernate.dialect.function.array.OracleArrayGetFunction;
-import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
-import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
-import org.hibernate.dialect.function.array.OracleArrayPositionsFunction;
-import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
-import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
-import org.hibernate.dialect.function.array.OracleArrayReplaceFunction;
-import org.hibernate.dialect.function.array.OracleArraySetFunction;
-import org.hibernate.dialect.function.array.OracleArraySliceFunction;
-import org.hibernate.dialect.function.array.OracleArrayToStringFunction;
-import org.hibernate.dialect.function.array.OracleArrayTrimFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayFillFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConstructorFunction;
-import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
-import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
-import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
+import org.hibernate.dialect.function.array.*;
 import org.hibernate.dialect.function.json.CockroachDBJsonExistsFunction;
 import org.hibernate.dialect.function.json.CockroachDBJsonQueryFunction;
 import org.hibernate.dialect.function.json.CockroachDBJsonRemoveFunction;
@@ -4293,5 +4229,62 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlagg_sqlserver() {
 		functionRegistry.register( "xmlagg", new SQLServerXmlAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard unnest() function
+	 */
+	public void unnest(@Nullable String defaultBasicArrayElementColumnName, String defaultIndexSelectionExpression) {
+		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression ) );
+	}
+
+	/**
+	 * Standard unnest() function for databases that don't support arrays natively
+	 */
+	public void unnest_emulated() {
+		// Pass an arbitrary value
+		unnest( "v", "i" );
+	}
+
+	/**
+	 * H2 unnest() function
+	 */
+	public void unnest_h2(int maxArraySize) {
+		functionRegistry.register( "unnest", new H2UnnestFunction( maxArraySize ) );
+	}
+
+	/**
+	 * Oracle unnest() function
+	 */
+	public void unnest_oracle() {
+		functionRegistry.register( "unnest", new OracleUnnestFunction() );
+	}
+
+	/**
+	 * PostgreSQL unnest() function
+	 */
+	public void unnest_postgresql() {
+		functionRegistry.register( "unnest", new PostgreSQLUnnestFunction() );
+	}
+
+	/**
+	 * SQL Server unnest() function
+	 */
+	public void unnest_sqlserver() {
+		functionRegistry.register( "unnest", new SQLServerUnnestFunction() );
+	}
+
+	/**
+	 * Sybase ASE unnest() function
+	 */
+	public void unnest_sybasease() {
+		functionRegistry.register( "unnest", new SybaseASEUnnestFunction() );
+	}
+
+	/**
+	 * HANA unnest() function
+	 */
+	public void unnest_hana() {
+		functionRegistry.register( "unnest", new HANAUnnestFunction() );
 	}
 }

@@ -60,6 +60,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.derived.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.derived.AnonymousTupleSqmPathSource;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -742,7 +743,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
 		}
 
-		if ( sqmExpressible instanceof BasicSqmPathSource<?> ) {
+		if ( sqmExpressible instanceof BasicSqmPathSource<?>
+				|| sqmExpressible instanceof AnonymousTupleSimpleSqmPathSource<?> ) {
 			return resolveMappingExpressible( sqmExpressible.getSqmType(), tableGroupLocator );
 		}
 

@@ -22,18 +22,17 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
  *
  * @author Christian Beikov
  */
-public class JsonArrayAsStringJdbcType extends JsonArrayJdbcType implements AdjustableJdbcType {
-	/**
-	 * Singleton access
-	 */
-	public static final JsonArrayAsStringJdbcType VARCHAR_INSTANCE = new JsonArrayAsStringJdbcType( SqlTypes.LONG32VARCHAR );
-	public static final JsonArrayAsStringJdbcType NVARCHAR_INSTANCE = new JsonArrayAsStringJdbcType( SqlTypes.LONG32NVARCHAR );
-	public static final JsonArrayAsStringJdbcType CLOB_INSTANCE = new JsonArrayAsStringJdbcType( SqlTypes.CLOB );
-	public static final JsonArrayAsStringJdbcType NCLOB_INSTANCE = new JsonArrayAsStringJdbcType( SqlTypes.NCLOB );
+public class JsonAsStringArrayJdbcType extends JsonArrayJdbcType implements AdjustableJdbcType {
 
 	private final boolean nationalized;
 	private final int ddlTypeCode;
-	protected JsonArrayAsStringJdbcType(int ddlTypeCode) {
+
+	public JsonAsStringArrayJdbcType(JdbcType elementJdbcType) {
+		this( elementJdbcType, SqlTypes.LONG32VARCHAR );
+	}
+
+	public JsonAsStringArrayJdbcType(JdbcType elementJdbcType, int ddlTypeCode) {
+		super( elementJdbcType );
 		this.ddlTypeCode = ddlTypeCode;
 		this.nationalized = ddlTypeCode == SqlTypes.LONG32NVARCHAR
 				|| ddlTypeCode == SqlTypes.NCLOB;
@@ -60,10 +59,14 @@ public class JsonArrayAsStringJdbcType extends JsonArrayJdbcType implements Adju
 		// In some DBMS we can compare LOBs with special functions which is handled in the SqlAstTranslators,
 		// but that requires the correct jdbc type code to be available, which we ensure this way
 		if ( needsLob( indicators ) ) {
-			return indicators.isNationalized() ? NCLOB_INSTANCE : CLOB_INSTANCE;
+			return indicators.isNationalized()
+					? new JsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.NCLOB )
+					: new JsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.CLOB );
 		}
 		else {
-			return indicators.isNationalized() ? NVARCHAR_INSTANCE : VARCHAR_INSTANCE;
+			return indicators.isNationalized()
+					? new JsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.LONG32NVARCHAR )
+					: new JsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.LONG32VARCHAR );
 		}
 	}
 
@@ -90,7 +93,7 @@ public class JsonArrayAsStringJdbcType extends JsonArrayJdbcType implements Adju
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final String json = ( (JsonArrayAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
+					final String json = ( (JsonAsStringArrayJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( index, json );
 					}
@@ -102,7 +105,7 @@ public class JsonArrayAsStringJdbcType extends JsonArrayJdbcType implements Adju
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final String json = ( (JsonArrayAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
+					final String json = ( (JsonAsStringArrayJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( name, json );
 					}
@@ -124,10 +127,10 @@ public class JsonArrayAsStringJdbcType extends JsonArrayJdbcType implements Adju
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return fromString( rs.getNString( paramIndex ), getJavaType(), options );
+						return getObject( rs.getNString( paramIndex ), options );
 					}
 					else {
-						return fromString( rs.getString( paramIndex ), getJavaType(), options );
+						return getObject( rs.getString( paramIndex ), options );
 					}
 				}
 
@@ -135,10 +138,10 @@ public class JsonArrayAsStringJdbcType extends JsonArrayJdbcType implements Adju
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return fromString( statement.getNString( index ), getJavaType(), options );
+						return getObject( statement.getNString( index ), options );
 					}
 					else {
-						return fromString( statement.getString( index ), getJavaType(), options );
+						return getObject( statement.getString( index ), options );
 					}
 				}
 
@@ -146,11 +149,19 @@ public class JsonArrayAsStringJdbcType extends JsonArrayJdbcType implements Adju
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						return fromString( statement.getNString( name ), getJavaType(), options );
+						return getObject( statement.getNString( name ), options );
 					}
 					else {
-						return fromString( statement.getString( name ), getJavaType(), options );
+						return getObject( statement.getString( name ), options );
 					}
+				}
+
+				private X getObject(String json, WrapperOptions options) throws SQLException {
+					return ( (JsonAsStringArrayJdbcType) getJdbcType() ).fromString(
+							json,
+							getJavaType(),
+							options
+					);
 				}
 
 			};

@@ -12,6 +12,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 
 /**
  * The following class provides some convenience methods for accessing JdbcType instance,
@@ -52,12 +53,12 @@ public final class PgJdbcHelper {
 		return createJdbcType( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType" );
 	}
 
-	public static JdbcType getJsonArrayJdbcType(ServiceRegistry serviceRegistry) {
-		return createJdbcType( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonArrayPGObjectJsonType" );
+	public static JdbcTypeConstructor getJsonArrayJdbcType(ServiceRegistry serviceRegistry) {
+		return createJdbcTypeConstructor( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonArrayPGObjectJsonJdbcTypeConstructor" );
 	}
 
-	public static JdbcType getJsonbArrayJdbcType(ServiceRegistry serviceRegistry) {
-		return createJdbcType( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonArrayPGObjectJsonbType" );
+	public static JdbcTypeConstructor getJsonbArrayJdbcType(ServiceRegistry serviceRegistry) {
+		return createJdbcTypeConstructor( serviceRegistry, "org.hibernate.dialect.PostgreSQLJsonArrayPGObjectJsonbJdbcTypeConstructor" );
 	}
 
 	public static JdbcType createJdbcType(ServiceRegistry serviceRegistry, String className) {
@@ -72,6 +73,21 @@ public final class PgJdbcHelper {
 		}
 		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			throw new HibernateError( "Could not construct JdbcType", e );
+		}
+	}
+
+	public static JdbcTypeConstructor createJdbcTypeConstructor(ServiceRegistry serviceRegistry, String className) {
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		try {
+			final Class<?> clazz = classLoaderService.classForName( className );
+			final Constructor<?> constructor = clazz.getConstructor();
+			return (JdbcTypeConstructor) constructor.newInstance();
+		}
+		catch (NoSuchMethodException e) {
+			throw new HibernateError( "Class does not have an empty constructor", e );
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateError( "Could not construct JdbcTypeConstructor", e );
 		}
 	}
 }

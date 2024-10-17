@@ -225,6 +225,7 @@ entityWithJoins
 fromRoot
 	: entityName variable?							# RootEntity
 	| LEFT_PAREN subquery RIGHT_PAREN variable?		# RootSubquery
+	| setReturningFunction variable?				# RootFunction
 	;
 
 /**
@@ -275,8 +276,9 @@ joinType
  * The joined path, with an optional identification variable
  */
 joinTarget
-	: path variable?										#JoinPath
-	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	#JoinSubquery
+	: path variable?										# JoinPath
+	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	# JoinSubquery
+	| LATERAL? setReturningFunction variable?				# JoinFunction
 	;
 
 /**
@@ -1112,6 +1114,17 @@ function
 	| jsonFunction
 	| xmlFunction
 	| genericFunction
+	;
+
+setReturningFunction
+	: simpleSetReturningFunction
+	;
+
+/**
+ * A simple set returning function invocation without special syntax.
+ */
+simpleSetReturningFunction
+	: identifier LEFT_PAREN genericFunctionArguments? RIGHT_PAREN
 	;
 
 /**

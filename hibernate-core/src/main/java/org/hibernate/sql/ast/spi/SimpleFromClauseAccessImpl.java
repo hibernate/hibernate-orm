@@ -18,6 +18,8 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Simple implementation of FromClauseAccess
  *
@@ -48,6 +50,16 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 			return tableGroup;
 		}
 		return parent.findTableGroup( navigablePath );
+	}
+
+	@Override
+	public @Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable) {
+		for ( TableGroup tableGroup : tableGroupMap.values() ) {
+			if ( tableGroup.findTableReference( identificationVariable ) != null ) {
+				return tableGroup;
+			}
+		}
+		return parent == null ? null : parent.findTableGroupByIdentificationVariable( identificationVariable );
 	}
 
 	@Override

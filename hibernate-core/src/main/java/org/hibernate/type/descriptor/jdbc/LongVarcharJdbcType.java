@@ -19,14 +19,14 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class LongVarcharJdbcType extends VarcharJdbcType {
 	public static final LongVarcharJdbcType INSTANCE = new LongVarcharJdbcType();
 
-	private final int jdbcTypeCode;
+	private final int defaultSqlTypeCode;
 
 	public LongVarcharJdbcType() {
-		this(Types.LONGVARCHAR);
+		this( SqlTypes.LONGVARCHAR );
 	}
 
-	public LongVarcharJdbcType(int jdbcTypeCode) {
-		this.jdbcTypeCode = jdbcTypeCode;
+	public LongVarcharJdbcType(final int defaultSqlTypeCode) {
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
 	}
 
 	@Override
@@ -36,7 +36,12 @@ public class LongVarcharJdbcType extends VarcharJdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcTypeCode;
+		return SqlTypes.LONGVARCHAR;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override

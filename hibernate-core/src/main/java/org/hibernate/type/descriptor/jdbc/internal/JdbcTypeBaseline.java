@@ -85,12 +85,12 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( BinaryJdbcType.INSTANCE );
 		target.addDescriptor( VarbinaryJdbcType.INSTANCE );
 		target.addDescriptor( LongVarbinaryJdbcType.INSTANCE );
-		target.addDescriptor( new LongVarbinaryJdbcType(SqlTypes.LONG32VARBINARY) );
+		target.addDescriptor( new LongVarbinaryJdbcType( SqlTypes.LONG32VARBINARY) );
 
 		target.addDescriptor( CharJdbcType.INSTANCE );
 		target.addDescriptor( VarcharJdbcType.INSTANCE );
 		target.addDescriptor( LongVarcharJdbcType.INSTANCE );
-		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32VARCHAR) );
+		target.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32VARCHAR) );
 
 		target.addDescriptor( BlobJdbcType.DEFAULT );
 		target.addDescriptor( ClobJdbcType.DEFAULT );
@@ -101,7 +101,7 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharJdbcType.INSTANCE );
 		target.addDescriptor( Types.NCLOB, ClobJdbcType.DEFAULT );
-		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32NVARCHAR) );
+		target.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32NVARCHAR) );
 
 		target.addDescriptor( RowIdJdbcType.INSTANCE );
 	}

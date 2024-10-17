@@ -205,19 +205,19 @@ public class EnhanceMojo extends AbstractMojo {
      }
 
     private void enhanceClass(File classFile) {
-        getLog().debug("Trying to enhance class file: " + classFile);
+        getLog().debug(TRYING_TO_ENHANCE_CLASS_FILE.formatted(classFile));
         try {
             byte[] newBytes = enhancer.enhance(
                 determineClassName(classFile), 
                 Files.readAllBytes(classFile.toPath()));
             if (newBytes != null) {
                 writeByteCodeToFile(newBytes, classFile);
-                getLog().info("Succesfully enhanced class file: " + classFile);
+                getLog().info(SUCCESFULLY_ENHANCED_CLASS_FILE.formatted(classFile));
             } else {
-                getLog().info("Skipping file: " + classFile);
+                getLog().info(SKIPPING_FILE.formatted(classFile));
             }
         } catch (EnhancementException | IOException e) {
-            getLog().error("An exception occurred while trying to class file: " + classFile, e);;
+            getLog().error(ERROR_WHILE_ENHANCING_CLASS_FILE.formatted(classFile), e);;
          }
     }
 
@@ -261,6 +261,8 @@ public class EnhanceMojo extends AbstractMojo {
     
     // info messages
     static final String SUCCESFULLY_CLEARED_FILE = "Succesfully cleared the contents of file: %s";
+    static final String SUCCESFULLY_ENHANCED_CLASS_FILE = "Succesfully enhanced class file: %s";
+    static final String SKIPPING_FILE = "Skipping file: %s";
     
     // warning messages
     static final String PROBLEM_CLEARING_FILE = "Problem clearing file for writing out enhancements [ %s ]";
@@ -270,11 +272,13 @@ public class EnhanceMojo extends AbstractMojo {
     static final String UNABLE_TO_DELETE_FILE = "Unable to delete file: %s"; 
     static final String ERROR_WRITING_BYTES_TO_FILE = "Error writing bytes to file : %s";
     static final String ERROR_OPENING_FILE_FOR_WRITING = "Error opening file for writing : %s";
+    static final String ERROR_WHILE_ENHANCING_CLASS_FILE = "An exception occurred while trying to class file: %s";
     
     // debug messages
     static final String TRYING_TO_CLEAR_FILE = "Trying to clear the contents of file: %s";
     static final String AMOUNT_BYTES_WRITTEN_TO_FILE = "%s bytes were succesfully written to file: %s";
     static final String WRITING_BYTE_CODE_TO_FILE = "Writing byte code to file: %s";
     static final String DETERMINE_CLASS_NAME_FOR_FILE = "Determining class name for file: %s";
+    static final String TRYING_TO_ENHANCE_CLASS_FILE = "Trying to enhance class file: %s";
 
 }

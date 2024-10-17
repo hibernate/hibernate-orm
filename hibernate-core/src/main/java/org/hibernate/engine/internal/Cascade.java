@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -19,6 +20,7 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteContext;
@@ -27,8 +29,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -38,13 +38,13 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
-import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTrackerOrNull;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.spi.CascadingActions.CHECK_ON_FLUSH;
 import static org.hibernate.pretty.MessageHelper.infoString;
-import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -97,15 +97,29 @@ public final class Cascade {
 			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
 			final boolean enhancedForLazyLoading = persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 			final EntityEntry entry;
+			final Set<String> dirtyAttributes;
 			if ( enhancedForLazyLoading ) {
 				entry = persistenceContext.getEntry( parent );
-				if ( entry != null
-						&& entry.getLoadedState() == null
-						&& entry.getStatus() == Status.MANAGED ) {
-					return;
+				if ( entry != null && entry.getLoadedState() == null && entry.getStatus() == Status.MANAGED ) {
+					final SelfDirtinessTracker selfDirtinessTracker = asSelfDirtinessTrackerOrNull( parent );
+					if ( selfDirtinessTracker == null  ) {
+						return;
+					}
+					else {
+						if ( asManagedEntity( parent ).$$_hibernate_useTracker() ) {
+							dirtyAttributes = Set.of( selfDirtinessTracker.$$_hibernate_getDirtyAttributes() );
+						}
+						else {
+							dirtyAttributes = null;
+						}
+					}
+				}
+				else {
+					dirtyAttributes = null;
 				}
 			}
 			else {
+				dirtyAttributes = null;
 				entry = null;
 			}
 			final Type[] types = persister.getPropertyTypes();
@@ -114,8 +128,11 @@ public final class Cascade {
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
 
 			for ( int i = 0; i < types.length; i++) {
-				final CascadeStyle style = cascadeStyles[ i ];
 				final String propertyName = propertyNames[ i ];
+				if ( dirtyAttributes != null && !dirtyAttributes.contains( propertyName ) ) {
+					return;
+				}
+				final CascadeStyle style = cascadeStyles[ i ];
 				final Type type = types[i];
 				final boolean isUninitializedProperty =
 						hasUninitializedLazyProperties &&

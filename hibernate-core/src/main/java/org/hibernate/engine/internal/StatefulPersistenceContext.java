@@ -78,6 +78,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * A <em>stateful</em> implementation of the {@link PersistenceContext} contract, meaning that we maintain this
@@ -231,8 +232,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( entitiesByKey != null ) {
 			//Strictly avoid lambdas in this case
 			for ( EntityHolderImpl value : entitiesByKey.values() ) {
-				if ( value != null && value.proxy != null ) {
-					HibernateProxy.extractLazyInitializer( value.proxy ).unsetSession();
+				if ( value != null ) {
+					value.state = EntityHolderState.DETACHED;
+					if ( value.proxy != null ) {
+						final LazyInitializer lazyInitializer = extractLazyInitializer( value.proxy );
+						if ( lazyInitializer != null ) {
+							lazyInitializer.unsetSession();
+						}
+					}
 				}
 			}
 		}
@@ -2243,6 +2250,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return state == EntityHolderState.INITIALIZED || entityInitializer != null;
 		}
 
+		@Override
+		public boolean isDetached() {
+			return state == EntityHolderState.DETACHED;
+		}
+
 		public static EntityHolderImpl forProxy(EntityKey entityKey, EntityPersister descriptor, Object proxy) {
 			return new EntityHolderImpl( entityKey, descriptor, null, proxy );
 		}
@@ -2255,7 +2267,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	enum EntityHolderState {
 		UNINITIALIZED,
 		ENHANCED_PROXY,
-		INITIALIZED
+		INITIALIZED,
+		DETACHED
 	}
 
 	// NATURAL ID RESOLUTION HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2269,6 +2282,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			naturalIdResolutions = new NaturalIdResolutionsImpl( this );
 		}
 		return naturalIdResolutions;
+	}
+
+	@Override
+	public EntityHolder detachEntity(EntityKey key) {
+		final EntityHolderImpl entityHolder = removeEntityHolder( key );
+		if ( entityHolder != null ) {
+			entityHolder.state = EntityHolderState.DETACHED;
+		}
+		return entityHolder;
 	}
 
 }

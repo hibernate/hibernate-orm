@@ -7,7 +7,7 @@
 
 description = 'Integration for JDK JFR into Hibernate O/RM'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )

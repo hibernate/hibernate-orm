@@ -22,6 +22,11 @@ dependencies {
 	implementation 'jakarta.json:jakarta.json-api:2.0.1'
 	implementation 'org.eclipse:yasson:2.0.4'
 	implementation 'org.jsoup:jsoup:1.15.3'
+
+	implementation "org.apache.maven:maven-embedder:3.9.9"
+	implementation "org.apache.maven:maven-compat:3.9.9"
+	implementation "org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18"
+	implementation "org.apache.maven.resolver:maven-resolver-transport-http:1.9.18"
 }
 
 tasks.compileJava {
@@ -79,6 +84,10 @@ gradlePlugin {
 		javaModulePlugin {
 			id = 'org.hibernate.orm.build.java-module'
 			implementationClass = 'org.hibernate.orm.toolchains.JavaModulePlugin'
+		}
+		register( "mavenEmbedder" ) {
+			id = "org.hibernate.build.maven-embedder"
+			implementationClass = "org.hibernate.build.maven.embedder.MavenEmbedderPlugin"
 		}
 	}
 }

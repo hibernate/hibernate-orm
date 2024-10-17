@@ -354,8 +354,8 @@ project(':metamodel-generator').name = 'hibernate-processor'
 include 'hibernate-gradle-plugin'
 project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")
 
-include 'hibernate-enhance-maven-plugin'
-project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
+include 'hibernate-maven-plugin'
+project(':hibernate-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-maven-plugin")
 
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")

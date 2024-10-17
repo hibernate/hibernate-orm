@@ -50,7 +50,7 @@ public class IdentityGenerationValidationTest extends BaseCoreFunctionalTestCase
 
 	@Entity
 	@Table(name = "test_entity")
-	private static class TestEntity {
+	static class TestEntity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;

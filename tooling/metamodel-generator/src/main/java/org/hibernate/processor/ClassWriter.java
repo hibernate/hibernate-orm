@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
@@ -96,7 +97,7 @@ public final class ClassWriter {
 			}
 			entity.inheritedAnnotations().forEach(pw::println);
 
-			printClassDeclaration( entity, pw );
+			printClassDeclaration( entity, pw, context );
 
 			pw.println();
 
@@ -132,7 +133,7 @@ public final class ClassWriter {
 		}
 	}
 
-	private static void printClassDeclaration(Metamodel entity, PrintWriter pw) {
+	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
 		pw.print( "public " );
 		if ( !entity.isImplementation() && !entity.isJakartaDataStyle() ) {
 			pw.print( "abstract " );
@@ -142,7 +143,11 @@ public final class ClassWriter {
 
 		String superClassName = entity.getSupertypeName();
 		if ( superClassName != null ) {
-			pw.print( " extends " + getGeneratedSuperclassName(entity, superClassName) );
+			Metamodel superClassEntity = context.getMetaEntity( superClassName );
+			if (superClassEntity == null) {
+				superClassEntity = context.getMetaEmbeddable( superClassName );
+			}
+			pw.print( " extends " + getGeneratedSuperclassName(entity, superClassName, superClassEntity ) );
 		}
 		if ( entity.isImplementation() ) {
 			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
@@ -162,11 +167,11 @@ public final class ClassWriter {
 	}
 
 	private static String getGeneratedClassName(Metamodel entity) {
-		final String className = entity.getSimpleName();
+		final String className = entity.getSimpleName().replace( '.', '_' );
 		return entity.isJakartaDataStyle() ? '_' + className : className + '_';
 	}
 
-	private static String getGeneratedSuperclassName(Metamodel entity, String superClassName) {
+	private static String getGeneratedSuperclassName(Metamodel entity, String superClassName, @Nullable Metamodel superClassEntity) {
 		if ( entity.isJakartaDataStyle() ) {
 			int lastDot = superClassName.lastIndexOf('.');
 			if ( lastDot<0 ) {
@@ -178,7 +183,8 @@ public final class ClassWriter {
 			}
 		}
 		else {
-			return superClassName + '_';
+			return superClassEntity == null ? superClassName + '_'
+					: getFullyQualifiedClassName( superClassEntity, superClassEntity.getPackageName() );
 		}
 	}
 

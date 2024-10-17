@@ -54,6 +54,7 @@ import javax.tools.Diagnostic;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -217,11 +218,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public final String getSimpleName() {
-		return removeDollar( element.getSimpleName().toString() );
+		if ( element.getNestingKind().isNested() ) {
+			final var strings = new ArrayList<String>();
+			for ( TypeElement el = element;; el = (TypeElement) el.getEnclosingElement() ) {
+				strings.add( removeDollar( el.getSimpleName().toString() ) );
+				if ( !el.getNestingKind().isNested() ) {
+					break;
+				}
+			}
+			Collections.reverse( strings );
+			return String.join( ".", strings );
+		}
+		else {
+			return removeDollar( element.getSimpleName().toString() );
+		}
 	}
 
 	private String getConstructorName() {
-		return getSimpleName() + '_';
+		return getSimpleName().replace( '.', '_' ) + '_';
 	}
 
 	/**

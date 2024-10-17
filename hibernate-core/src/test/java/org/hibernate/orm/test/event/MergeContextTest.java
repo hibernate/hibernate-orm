@@ -425,7 +425,7 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	private static class Simple {
+	static class Simple {
 		@Id
 		private int value;
 

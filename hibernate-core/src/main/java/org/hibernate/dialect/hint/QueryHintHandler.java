@@ -5,10 +5,9 @@
 package org.hibernate.dialect.hint;
 
 /**
- * Contract defining how query hints get applied.
- *
- * @author Vlad Mihalcea
+ * @deprecated Moved to {@link org.hibernate.dialect.Dialect}
  */
+@Deprecated(since = "7.0", forRemoval = true)
 public interface QueryHintHandler {
 
 	/**

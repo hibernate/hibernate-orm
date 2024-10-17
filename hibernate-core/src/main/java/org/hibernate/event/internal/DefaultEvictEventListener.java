@@ -59,7 +59,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 					.getMappingMetamodel()
 					.getEntityDescriptor( lazyInitializer.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
-			final EntityHolder holder = persistenceContext.removeEntityHolder( key );
+			final EntityHolder holder = persistenceContext.detachEntity( key );
 			// if the entity has been evicted then its holder is null
 			if ( holder != null && !lazyInitializer.isUninitialized() ) {
 				final Object entity = holder.getEntity();

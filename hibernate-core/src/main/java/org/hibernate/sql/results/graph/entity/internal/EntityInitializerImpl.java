@@ -565,7 +565,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 
 		if ( oldEntityKey != null && previousRowReuse && oldEntityInstance != null
-				&& areKeysEqual( oldEntityKey.getIdentifier(), id ) ) {
+				&& areKeysEqual( oldEntityKey.getIdentifier(), id ) && !oldEntityHolder.isDetached() ) {
 			data.setState( State.INITIALIZED );
 			data.entityKey = oldEntityKey;
 			data.setInstance( oldEntityInstance );

@@ -864,4 +864,12 @@ public interface PersistenceContext {
 	 * @return This persistence context's natural-id helper
 	 */
 	NaturalIdResolutions getNaturalIdResolutions();
+
+	/**
+		Remove the {@link EntityHolder} and set its state to DETACHED
+	 */
+	default @Nullable EntityHolder detachEntity(EntityKey key) {
+		EntityHolder entityHolder = removeEntityHolder( key );
+		return entityHolder;
+	}
 }

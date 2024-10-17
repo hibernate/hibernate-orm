@@ -67,4 +67,9 @@ public interface EntityHolder {
 	 * Whether the entity is already initialized or will be initialized through an initializer eventually.
 	 */
 	boolean isEventuallyInitialized();
+
+	/**
+	 * Whether the entity is detached.
+	 */
+	boolean isDetached();
 }

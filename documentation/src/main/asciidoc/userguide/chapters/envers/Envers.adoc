@@ -982,7 +982,7 @@ include::{example-dir-envers}/QueryAuditTest.java[tags=revisions-of-entity-query
 The second additional feature you can use in queries for revisions is the ability to _maximize_/_minimize_ a property.
 
 For example, if you want to select the smallest possible revision at which the value of the `createdOn`
-attribute was larger then a given value,
+attribute was larger than a given value,
 you can run the following query:
 
 [[revisions-of-entity-query-minimize-example]]

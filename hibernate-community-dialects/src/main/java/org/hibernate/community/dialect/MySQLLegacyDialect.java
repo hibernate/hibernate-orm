@@ -17,7 +17,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -864,7 +863,7 @@ public class MySQLLegacyDialect extends Dialect {
 	public String getQueryHintString(String query, String hints) {
 		return getMySQLVersion().isBefore( 5 )
 				? super.getQueryHintString( query, hints )
-				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+				: addQueryHints( query, hints );
 	}
 
 	/**

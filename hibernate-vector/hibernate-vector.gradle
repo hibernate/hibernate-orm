@@ -7,7 +7,7 @@
 
 description = 'Hibernate\'s extensions for vector support'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
     api project( ':hibernate-core' )

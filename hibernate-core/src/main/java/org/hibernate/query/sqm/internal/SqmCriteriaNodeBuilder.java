@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -5841,5 +5842,114 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				asList( (SqmTypedNode<?>) collection ),
 				queryEngine
 		);
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return getSetReturningFunctionDescriptor( "generate_series" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) start, (SqmTypedNode<?>) stop, (SqmTypedNode<?>) step ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step) {
+		return generateTimeSeries( value( start ), value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step) {
+		return generateTimeSeries( value( start ), stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step) {
+		return generateTimeSeries( start, value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step) {
+		return generateTimeSeries( start, stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step) {
+		return generateTimeSeries( value( start ), value( stop ), step );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step) {
+		return generateTimeSeries( start, value( stop ), step );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return generateTimeSeries( value( start ), stop, step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step) {
+		return getSetReturningFunctionDescriptor( "generate_series" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) start, (SqmTypedNode<?>) stop, (SqmTypedNode<?>) step ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, E step) {
+		return generateSeries( value( start ), value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step) {
+		return generateSeries( value( start ), value( stop ), step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step) {
+		return generateSeries( start, value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step) {
+		return generateSeries( value( start ), stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step) {
+		return generateSeries( start, stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step) {
+		return generateSeries( start, value( stop ), step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step) {
+		return generateSeries( value( start ), stop, step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop) {
+		return getSetReturningFunctionDescriptor( "generate_series" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) start, (SqmTypedNode<?>) stop ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop) {
+		return generateSeries( start, value( stop ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop) {
+		return generateSeries( value( start ), stop );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop) {
+		return generateSeries( value( start ), value( stop ) );
 	}
 }

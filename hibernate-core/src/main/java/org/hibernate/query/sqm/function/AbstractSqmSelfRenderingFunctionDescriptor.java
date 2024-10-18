@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -28,9 +29,9 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 
 	public AbstractSqmSelfRenderingFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 		this.functionKind = FunctionKind.NORMAL;
 	}
@@ -38,9 +39,9 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	public AbstractSqmSelfRenderingFunctionDescriptor(
 			String name,
 			FunctionKind functionKind,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 		this.functionKind = functionKind;
 	}

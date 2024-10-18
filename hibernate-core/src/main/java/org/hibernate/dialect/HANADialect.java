@@ -497,23 +497,32 @@ public class HANADialect extends Dialect {
 				typeConfiguration
 		);
 
-			// Introduced in 2.0 SPS 00
-			functionFactory.jsonValue_no_passing();
-			functionFactory.jsonQuery_no_passing();
-			functionFactory.jsonExists_hana();
+		// Introduced in 2.0 SPS 00
+		functionFactory.jsonValue_no_passing();
+		functionFactory.jsonQuery_no_passing();
+		functionFactory.jsonExists_hana();
 
-			functionFactory.unnest_hana();
-//			functionFactory.json_table();
+		functionFactory.unnest_hana();
+//		functionFactory.json_table();
 
-			// Introduced in 2.0 SPS 04
-			functionFactory.jsonObject_hana();
-			functionFactory.jsonArray_hana();
-			functionFactory.jsonArrayAgg_hana();
-			functionFactory.jsonObjectAgg_hana();
+		// Introduced in 2.0 SPS 04
+		functionFactory.jsonObject_hana();
+		functionFactory.jsonArray_hana();
+		functionFactory.jsonArrayAgg_hana();
+		functionFactory.jsonObjectAgg_hana();
 
-//			functionFactory.xmltable();
+//		functionFactory.xmltable();
 
-//			functionFactory.xmlextract();
+//		functionFactory.xmlextract();
+		functionFactory.generateSeries_hana( getMaximumSeriesSize() );
+	}
+
+	/**
+	 * HANA doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with the {@code xmltable} and {@code lpad} functions.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override

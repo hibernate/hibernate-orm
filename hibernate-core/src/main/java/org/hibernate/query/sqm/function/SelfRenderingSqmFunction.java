@@ -238,7 +238,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 		@Override
 		public MappingModelExpressible<?> get() {
-			return argumentTypeResolver.resolveFunctionArgumentType( function, argumentIndex, converter );
+			return argumentTypeResolver.resolveFunctionArgumentType( function.getArguments(), argumentIndex, converter );
 		}
 	}
 

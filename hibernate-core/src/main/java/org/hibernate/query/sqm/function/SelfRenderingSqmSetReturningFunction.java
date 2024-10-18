@@ -6,15 +6,18 @@ package org.hibernate.query.sqm.function;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -98,13 +101,59 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		if ( sqmArguments.isEmpty() ) {
 			return emptyList();
 		}
-		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
-		for ( int i = 0; i < sqmArguments.size(); i++ ) {
-			sqlAstArguments.add(
-					(SqlAstNode) sqmArguments.get( i ).accept( walker )
-			);
+		final FunctionArgumentTypeResolver argumentTypeResolver;
+		if ( getFunctionDescriptor() instanceof AbstractSqmSetReturningFunctionDescriptor ) {
+			argumentTypeResolver = ( (AbstractSqmSetReturningFunctionDescriptor) getFunctionDescriptor() ).getArgumentTypeResolver();
 		}
-		return sqlAstArguments;
+		else {
+			argumentTypeResolver = null;
+		}
+		if ( argumentTypeResolver == null ) {
+			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
+			for ( int i = 0; i < sqmArguments.size(); i++ ) {
+				sqlAstArguments.add(
+						(SqlAstNode) sqmArguments.get( i ).accept( walker )
+				);
+			}
+			return sqlAstArguments;
+		}
+		else {
+			final FunctionArgumentTypeResolverTypeAccess typeAccess = new FunctionArgumentTypeResolverTypeAccess(
+					walker,
+					this,
+					argumentTypeResolver
+			);
+			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
+			for ( int i = 0; i < sqmArguments.size(); i++ ) {
+				typeAccess.argumentIndex = i;
+				sqlAstArguments.add(
+						(SqlAstNode) walker.visitWithInferredType( sqmArguments.get( i ), typeAccess )
+				);
+			}
+			return sqlAstArguments;
+		}
+	}
+
+	private static class FunctionArgumentTypeResolverTypeAccess implements Supplier<MappingModelExpressible<?>> {
+
+		private final SqmToSqlAstConverter converter;
+		private final SqmSetReturningFunction<?> function;
+		private final FunctionArgumentTypeResolver argumentTypeResolver;
+		private int argumentIndex;
+
+		public FunctionArgumentTypeResolverTypeAccess(
+				SqmToSqlAstConverter converter,
+				SqmSetReturningFunction<?> function,
+				FunctionArgumentTypeResolver argumentTypeResolver) {
+			this.converter = converter;
+			this.function = function;
+			this.argumentTypeResolver = argumentTypeResolver;
+		}
+
+		@Override
+		public MappingModelExpressible<?> get() {
+			return argumentTypeResolver.resolveFunctionArgumentType( function.getArguments(), argumentIndex, converter );
+		}
 	}
 
 	@Override
@@ -123,8 +172,9 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		final SelectableMapping[] selectableMappings = getSetReturningTypeResolver().resolveFunctionReturnType(
 				arguments,
 				identifierVariable,
+				lateral,
 				withOrdinality,
-				walker.getCreationContext().getTypeConfiguration()
+				walker
 		);
 		final AnonymousTupleTableGroupProducer tableGroupProducer = getType().resolveTableGroupProducer(
 				identifierVariable,

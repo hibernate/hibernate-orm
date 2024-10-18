@@ -10,6 +10,8 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -810,6 +812,66 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	<E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

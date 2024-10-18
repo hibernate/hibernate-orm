@@ -162,7 +162,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitRootDerived(SqmDerivedRoot<?> sqmRoot);
 
-	T visitRootFunction(SqmFunctionRoot sqmRoot);
+	T visitRootFunction(SqmFunctionRoot<?> sqmRoot);
 
 	T visitRootCte(SqmCteRoot<?> sqmRoot);
 

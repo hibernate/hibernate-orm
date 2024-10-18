@@ -711,6 +711,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		else {
 			functionFactory.unnest_postgresql();
 		}
+		functionFactory.generateSeries( null, "ordinality", false );
 	}
 
 	@Override

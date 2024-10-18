@@ -28,6 +28,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
@@ -288,6 +289,22 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
+	@Override
+	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+		if ( isParameter( comparisonPredicate.getLeftHandExpression() )
+				&& isParameter( comparisonPredicate.getRightHandExpression() ) ) {
+			// HSQLDB doesn't like comparing two parameters with each other
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+					() -> super.visitRelationalPredicate( comparisonPredicate )
+			);
+		}
+		else {
+			super.visitRelationalPredicate( comparisonPredicate );
+		}
+	}
+
+	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType == null || lhsExpressionType.getJdbcTypeCount() != 1 ) {

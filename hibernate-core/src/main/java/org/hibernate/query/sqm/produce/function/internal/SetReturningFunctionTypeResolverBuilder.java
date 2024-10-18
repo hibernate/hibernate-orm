@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -116,12 +117,13 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 		public SelectableMapping[] resolveFunctionReturnType(
 				List<? extends SqlAstNode> arguments,
 				String tableIdentifierVariable,
+				boolean lateral,
 				boolean withOrdinality,
-				TypeConfiguration typeConfiguration) {
+				SqmToSqlAstConverter converter) {
 			final SelectableMapping[] selectableMappings = new SelectableMapping[typeResolvers.length + (withOrdinality ? 1 : 0)];
 			int i = 0;
 			for ( TypeResolver typeResolver : typeResolvers ) {
-				final JdbcMapping jdbcMapping = typeResolver.resolveFunctionReturnType( arguments, typeConfiguration );
+				final JdbcMapping jdbcMapping = typeResolver.resolveFunctionReturnType( arguments, converter );
 				selectableMappings[i] = new SelectableMappingImpl(
 						"",
 						typeResolver.selectionExpression(),
@@ -146,7 +148,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			if ( withOrdinality ) {
 				selectableMappings[i] = new SelectableMappingImpl(
 						"",
-						determineIndexSelectionExpression( selectableMappings, tableIdentifierVariable, typeConfiguration ),
+						determineIndexSelectionExpression( selectableMappings, tableIdentifierVariable, converter ),
 						new SelectablePath( CollectionPart.Nature.INDEX.getName() ),
 						null,
 						null,
@@ -161,14 +163,15 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 						false,
 						false,
 						false,
-						typeConfiguration.getBasicTypeForJavaType( Long.class )
+						converter.getCreationContext().getTypeConfiguration().getBasicTypeForJavaType( Long.class )
 				);
 			}
 			return selectableMappings;
 		}
 
-		private String determineIndexSelectionExpression(SelectableMapping[] selectableMappings, String tableIdentifierVariable, TypeConfiguration typeConfiguration) {
-			final String defaultOrdinalityColumnName = typeConfiguration.getSessionFactory().getJdbcServices()
+		private String determineIndexSelectionExpression(SelectableMapping[] selectableMappings, String tableIdentifierVariable, SqmToSqlAstConverter walker) {
+			final String defaultOrdinalityColumnName = walker.getCreationContext().getSessionFactory()
+					.getJdbcServices()
 					.getDialect()
 					.getDefaultOrdinalityColumnName();
 			String name = defaultOrdinalityColumnName == null ? "i" : defaultOrdinalityColumnName;
@@ -195,7 +198,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 
 		SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration);
 
-		JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, TypeConfiguration typeConfiguration);
+		JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker);
 	}
 
 	private record BasicTypeReferenceTypeResolver(
@@ -210,8 +213,8 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			}
 
 			@Override
-			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, TypeConfiguration typeConfiguration) {
-				return typeConfiguration.getBasicTypeRegistry().resolve( basicTypeReference );
+			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
+				return walker.getCreationContext().getTypeConfiguration().getBasicTypeRegistry().resolve( basicTypeReference );
 			}
 		}
 
@@ -227,7 +230,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			}
 
 			@Override
-			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, TypeConfiguration typeConfiguration) {
+			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
 				return basicType;
 			}
 		}
@@ -244,7 +247,7 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 			}
 
 			@Override
-			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, TypeConfiguration typeConfiguration) {
+			public JdbcMapping resolveFunctionReturnType(List<? extends SqlAstNode> arguments, SqmToSqlAstConverter walker) {
 				return ((Expression) arguments.get( argPosition )).getExpressionType().getSingleJdbcMapping();
 			}
 		}

@@ -2958,7 +2958,7 @@ The following set-returning functions are available on many platforms:
 | Function | purpose
 
 | <<hql-array-unnest,`unnest()`>> | Turns an array into rows
-//| `generate_series()` | Creates a series of values as rows
+| <<hql-from-set-returning-functions-generate-series,`generate_series()`>> | Creates a series of values as rows
 |===
 
 To use set returning functions defined in the database, it is required to register them in a `FunctionContributor`:
@@ -2985,6 +2985,43 @@ NOTE: The `index()` function represents the idea of the `with ordinality` SQL sy
 which is not supported on some databases for user defined functions.
 Hibernate ORM tries to emulate this feature by wrapping invocations as lateral subqueries and using `row_number()`,
 which may lead to worse performance.
+
+[[hql-from-set-returning-functions-generate-series]]
+==== `generate_series` set-returning function
+
+A <<hql-from-set-returning-functions,set-returning function>>, which generates rows from a given start value (inclusive)
+up to a given stop value (inclusive). The function has 2 variants:
+
+* `generate_series(numeric, numeric [,numeric])` - Arguments are `start`, `stop` and `step` with a default of `1` for the optional `step` argument
+* `generate_series(temporal, temporal, duration)` - Like the numeric variant, but for temporal types and `step` is required
+
+[[hql-generate-series-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-example]
+----
+====
+
+To obtain the "row number" of a generated value i.e. ordinality, it is possible to use the `index()` function.
+
+[[hql-generate-series-ordinality-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-ordinality-example]
+----
+====
+
+The `step` argument can be a negative value and progress from a higher `start` value to a lower `stop` value.
+
+[[hql-generate-series-temporal-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-temporal-example]
+----
+====
 
 [[hql-join]]
 === Declaring joined entities

@@ -835,6 +835,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsGenerateSeries implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesSetReturningFunction( dialect, "generate_series" );
+		}
+	}
+
 	public static class SupportsArrayAgg implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "array_agg" );

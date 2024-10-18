@@ -41,7 +41,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * H2 unnest function.
@@ -193,8 +192,9 @@ public class H2UnnestFunction extends UnnestFunction {
 		public SelectableMapping[] resolveFunctionReturnType(
 				List<? extends SqlAstNode> arguments,
 				String tableIdentifierVariable,
+				boolean lateral,
 				boolean withOrdinality,
-				TypeConfiguration typeConfiguration) {
+				SqmToSqlAstConverter converter) {
 			final Expression expression = (Expression) arguments.get( 0 );
 			final JdbcMappingContainer expressionType = expression.getExpressionType();
 			if ( expressionType == null ) {
@@ -221,7 +221,7 @@ public class H2UnnestFunction extends UnnestFunction {
 					false,
 					false,
 					false,
-					typeConfiguration.getBasicTypeForJavaType( Long.class )
+					converter.getCreationContext().getTypeConfiguration().getBasicTypeForJavaType( Long.class )
 			) : null;
 
 			final BasicType<?> elementType = pluralType.getElementType();

@@ -185,7 +185,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -5618,11 +5621,102 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link Duration}.
 	 */
 	public void appendIntervalLiteral(SqlAppender appender, Duration literal) {
+		final int nano = literal.getNano();
+		final int secondsPart = literal.toSecondsPart();
+		final int minutesPart = literal.toMinutesPart();
+		final int hoursPart = literal.toHoursPart();
+		final long daysPart = literal.toDaysPart();
+		enum Unit { day, hour, minute }
+		final Unit unit;
+		if ( daysPart != 0 ) {
+			unit = hoursPart == 0 && minutesPart == 0 && secondsPart == 0 && nano == 0
+					? Unit.day
+					: null;
+		}
+		else if ( hoursPart != 0 ) {
+			unit = minutesPart == 0 && secondsPart == 0 && nano == 0
+					? Unit.hour
+					: null;
+		}
+		else if ( minutesPart != 0 ) {
+			unit = secondsPart == 0 && nano == 0
+					? Unit.minute
+					: null;
+		}
+		else {
+			unit = null;
+		}
 		appender.appendSql( "interval '" );
-		appender.appendSql( literal.getSeconds() );
-		appender.appendSql( '.' );
-		appender.appendSql( literal.getNano() );
-		appender.appendSql( "' second" );
+		if ( unit != null ) {
+			appender.appendSql( switch( unit ) {
+				case day -> daysPart;
+				case hour -> hoursPart;
+				case minute -> minutesPart;
+			});
+			appender.appendSql( "' " );
+			appender.appendSql( unit.toString() );
+		}
+		else {
+			appender.appendSql( "interval '" );
+			appender.appendSql( literal.getSeconds() );
+			if ( nano > 0 ) {
+				appender.appendSql( '.' );
+				appender.appendSql( nano );
+			}
+			appender.appendSql( "' second" );
+		}
+	}
+
+	/**
+	 * Append a literal SQL {@code interval} representing the given Java
+	 * {@link TemporalAmount}.
+	 */
+	public void appendIntervalLiteral(SqlAppender appender, TemporalAmount literal) {
+		if ( literal instanceof Duration duration ) {
+			appendIntervalLiteral( appender, duration );
+		}
+		else if ( literal instanceof Period period ) {
+			final int years = period.getYears();
+			final int months = period.getMonths();
+			final int days = period.getDays();
+			final boolean parenthesis = years != 0 && months != 0
+					|| years != 0 && days != 0
+					|| months != 0 && days != 0;
+			if ( parenthesis ) {
+				appender.appendSql( '(' );
+			}
+			boolean first = true;
+			for ( java.time.temporal.TemporalUnit unit : literal.getUnits() ) {
+				final long value = literal.get( unit );
+				if ( value != 0 ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						appender.appendSql( "+" );
+					}
+					appender.appendSql( "interval '" );
+					appender.appendSql( value );
+					appender.appendSql( "' " );
+					if ( unit == ChronoUnit.YEARS ) {
+						appender.appendSql( "year" );
+					}
+					else if ( unit == ChronoUnit.MONTHS ) {
+						appender.appendSql( "month" );
+					}
+					else {
+						assert unit == ChronoUnit.DAYS;
+						appender.appendSql( "day" );
+					}
+				}
+			}
+			if ( parenthesis ) {
+				appender.appendSql( ')' );
+			}
+		}
+		else {
+			throw new IllegalArgumentException( "Unsupported temporal amount type: " + literal );
+		}
 	}
 
 	/**

@@ -53,7 +53,7 @@ public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAs
 	 * Returns the function return type implied from the context within which it is used.
 	 * If there is no current function being processed or no context implied type, the return is <code>null</code>.
 	 */
-	MappingModelExpressible<?> resolveFunctionImpliedReturnType();
+	@Nullable MappingModelExpressible<?> resolveFunctionImpliedReturnType();
 
 	MappingModelExpressible<?> determineValueMapping(SqmExpression<?> sqmExpression);
 

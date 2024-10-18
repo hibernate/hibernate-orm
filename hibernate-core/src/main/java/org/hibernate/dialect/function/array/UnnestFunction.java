@@ -36,7 +36,7 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 	protected UnnestFunction(SetReturningFunctionTypeResolver setReturningFunctionTypeResolver) {
 		super(
 				"unnest",
-				null,
+				ArrayArgumentValidator.DEFAULT_INSTANCE,
 				setReturningFunctionTypeResolver,
 				null
 		);

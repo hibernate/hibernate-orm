@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -33,22 +34,22 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator) {
+			@Nullable ArgumentsValidator argumentsValidator) {
 		this( name, argumentsValidator, null, null );
 	}
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		this( name, argumentsValidator, null, argumentTypeResolver );
 	}
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		this.name = name;
 		this.argumentsValidator = argumentsValidator == null
 				? StandardArgumentsValidators.NONE

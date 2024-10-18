@@ -486,6 +486,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.jsonArrayInsert_postgresql();
 
 		functionFactory.unnest_postgresql();
+		functionFactory.generateSeries( null, "ordinality", true );
 
 		// Postgres uses # instead of ^ for XOR
 		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )

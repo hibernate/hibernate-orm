@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
@@ -41,8 +42,8 @@ public class NamedSqmFunctionDescriptor
 	public NamedSqmFunctionDescriptor(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver) {
 		this(
 				functionName,
 				useParenthesesWhenNoArgs,
@@ -59,9 +60,9 @@ public class NamedSqmFunctionDescriptor
 	public NamedSqmFunctionDescriptor(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		this(
 				functionName,
 				useParenthesesWhenNoArgs,
@@ -78,9 +79,9 @@ public class NamedSqmFunctionDescriptor
 	public NamedSqmFunctionDescriptor(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver,
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver,
 			String name,
 			FunctionKind functionKind,
 			String argumentListSignature,

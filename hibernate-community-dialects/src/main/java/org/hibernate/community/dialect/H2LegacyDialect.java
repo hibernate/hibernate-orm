@@ -428,6 +428,7 @@ public class H2LegacyDialect extends Dialect {
 		}
 
 		functionFactory.unnest_h2( getMaximumArraySize() );
+		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
 	}
 
 	/**
@@ -438,6 +439,16 @@ public class H2LegacyDialect extends Dialect {
 	 */
 	protected int getMaximumArraySize() {
 		return 1000;
+	}
+
+	/**
+	 * Since H2 doesn't support ordinality for the {@code system_range} function or {@code lateral},
+	 * it's impossible to use {@code system_range} for non-constant cases.
+	 * Luckily, correlation can be emulated, but requires that there is an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override

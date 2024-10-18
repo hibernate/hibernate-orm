@@ -76,7 +76,9 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 
 	@Override
 	public SqmPath<Long> index() {
-		return get( CollectionPart.Nature.INDEX.getName() );
+		//noinspection unchecked
+		final SqmPathSource<Long> indexPathSource = (SqmPathSource<Long>) function.getType().getSubPathSource( CollectionPart.Nature.INDEX.getName() );
+		return resolvePath( indexPathSource.getPathName(), indexPathSource );
 	}
 
 	@Override

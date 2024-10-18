@@ -440,6 +440,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			functionFactory.leastGreatest();
 			functionFactory.dateTrunc_datetrunc();
 			functionFactory.trunc_round_datetrunc();
+			functionFactory.generateSeries_sqlserver( getMaximumSeriesSize() );
 		}
 		else {
 			functionContributions.getFunctionRegistry().register(
@@ -447,6 +448,24 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 					new SqlServerConvertTruncFunction( functionContributions.getTypeConfiguration() )
 			);
 			functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+			if ( supportsRecursiveCTE() ) {
+				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+			}
+		}
+	}
+
+	/**
+	 * SQL Server doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
+			return 10000;
+		}
+		else {
+			// The maximum recursion depth of SQL Server
+			return 100;
 		}
 	}
 

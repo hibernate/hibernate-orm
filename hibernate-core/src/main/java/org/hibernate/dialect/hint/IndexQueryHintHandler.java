@@ -25,8 +25,7 @@ public class IndexQueryHintHandler implements QueryHintHandler {
 
 	public static final IndexQueryHintHandler INSTANCE = new IndexQueryHintHandler();
 
-	private static final Pattern QUERY_PATTERN = Pattern.compile( "^\\s*(select\\b.+?\\bfrom\\b.+?)(\\bwhere\\b.+?)$" );
-
+	private static final Pattern QUERY_PATTERN = Pattern.compile( "^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(where|join)\\b.+?)$" );
 	@Override
 	public String addQueryHints(String query, String hints) {
 		Matcher matcher = QUERY_PATTERN.matcher( query );

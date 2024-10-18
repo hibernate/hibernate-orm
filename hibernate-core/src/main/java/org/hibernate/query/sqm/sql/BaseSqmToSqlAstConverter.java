@@ -7085,7 +7085,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 		else {
-			BasicValuedMapping durationType = (BasicValuedMapping) toDuration.getNodeType();
+			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
+			final BasicValuedMapping durationType = inferredValueMapping != null
+					? (BasicValuedMapping) inferredValueMapping
+					: (BasicValuedMapping) toDuration.getNodeType();
 			Duration duration;
 			if ( scaledMagnitude.getExpressionType().getSingleJdbcMapping().getJdbcType().isInterval() ) {
 				duration = new Duration( extractEpoch( scaledMagnitude ), SECOND, durationType );

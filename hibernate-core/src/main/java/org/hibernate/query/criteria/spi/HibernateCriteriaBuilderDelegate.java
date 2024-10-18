@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -3752,5 +3753,125 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Incubating
 	public <E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
 		return criteriaBuilder.unnestCollection( collection );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop) {
+		return criteriaBuilder.generateSeries( start, stop );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, E step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step) {
+		return criteriaBuilder.generateSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
+	}
+
+	@Incubating
+	@Override
+	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 }

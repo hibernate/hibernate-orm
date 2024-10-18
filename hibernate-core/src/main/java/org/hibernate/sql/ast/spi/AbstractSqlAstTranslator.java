@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
@@ -59,6 +60,7 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.spi.Limit;
@@ -230,7 +232,10 @@ import jakarta.persistence.criteria.Nulls;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.jdbcLiteral;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.MONTH;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
 
@@ -7299,13 +7304,58 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitDuration(Duration duration) {
-		duration.getMagnitude().accept( this );
-		if ( !duration.getExpressionType().getJdbcMapping().getJdbcType().isInterval() ) {
+		if ( duration.getExpressionType().getJdbcMapping().getJdbcType().isInterval() ) {
+			if ( duration.getMagnitude() instanceof Literal literal ) {
+				renderIntervalLiteral( literal, duration.getUnit() );
+			}
+			else {
+				renderInterval( duration );
+			}
+		}
+		else {
+			duration.getMagnitude().accept( this );
 			// Convert to NANOSECOND because DurationJavaType requires values in that unit
 			appendSql(
 					duration.getUnit().conversionFactor( NANOSECOND, dialect )
 			);
 		}
+	}
+
+	protected void renderInterval(Duration duration) {
+		final TemporalUnit unit = duration.getUnit();
+		appendSql( "(interval '1' " );
+		final TemporalUnit targetResolution = switch ( unit ) {
+			case NANOSECOND -> SECOND;
+			case SECOND, MINUTE, HOUR, DAY, MONTH, YEAR -> unit;
+			case WEEK -> DAY;
+			case QUARTER -> MONTH;
+			case DATE, TIME, EPOCH, DAY_OF_MONTH, DAY_OF_WEEK, DAY_OF_YEAR, WEEK_OF_MONTH, WEEK_OF_YEAR, OFFSET,
+				TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
+					throw new IllegalArgumentException( "Invalid duration unit: " + unit );
+		};
+		appendSql( targetResolution.toString() );
+		appendSql( '*' );
+		duration.getMagnitude().accept( this );
+		appendSql( duration.getUnit().conversionFactor( targetResolution, dialect ) );
+		appendSql( ')' );
+	}
+
+	protected void renderIntervalLiteral(Literal literal, TemporalUnit unit) {
+		final Number value = (Number) literal.getLiteralValue();
+		dialect.appendIntervalLiteral( this, switch ( unit ) {
+			case NANOSECOND -> java.time.Duration.ofNanos( value.longValue() );
+			case SECOND -> java.time.Duration.ofSeconds( value.longValue() );
+			case MINUTE -> java.time.Duration.ofMinutes( value.longValue() );
+			case HOUR -> java.time.Duration.ofHours( value.longValue() );
+			case DAY -> Period.ofDays( value.intValue() );
+			case WEEK -> Period.ofWeeks( value.intValue() );
+			case MONTH -> Period.ofMonths( value.intValue() );
+			case YEAR -> Period.ofYears( value.intValue() );
+			case QUARTER -> Period.ofMonths( value.intValue() * 3 );
+			case DATE, TIME, EPOCH, DAY_OF_MONTH, DAY_OF_WEEK, DAY_OF_YEAR, WEEK_OF_MONTH, WEEK_OF_YEAR, OFFSET,
+				TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
+					throw new IllegalArgumentException( "Invalid duration unit: " + unit );
+		} );
 	}
 
 	@Override

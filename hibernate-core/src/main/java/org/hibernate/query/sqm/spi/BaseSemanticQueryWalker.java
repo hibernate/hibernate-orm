@@ -283,8 +283,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
-		if ( sqmRoot instanceof SqmDerivedRoot<?> ) {
-			( (SqmDerivedRoot<?>) sqmRoot ).getQueryPart().accept( this );
+		if ( sqmRoot instanceof SqmDerivedRoot<?> derivedRoot ) {
+			derivedRoot.getQueryPart().accept( this );
+		}
+		else if ( sqmRoot instanceof SqmFunctionRoot<?> functionRoot ) {
+			functionRoot.getFunction().accept( this );
 		}
 		consumeJoins( sqmRoot );
 	}
@@ -416,7 +419,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitRootFunction(SqmFunctionRoot<?>sqmRoot) {
+	public Object visitRootFunction(SqmFunctionRoot<?> sqmRoot) {
 		return sqmRoot;
 	}
 

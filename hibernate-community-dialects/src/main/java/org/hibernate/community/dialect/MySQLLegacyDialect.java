@@ -675,7 +675,20 @@ public class MySQLLegacyDialect extends Dialect {
 			if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 				functionFactory.unnest_emulated();
 			}
+			if ( supportsRecursiveCTE() ) {
+				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+			}
 		}
+	}
+
+	/**
+	 * MySQL doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum recursion depth of MySQL
+		return 1000;
 	}
 
 	@Override

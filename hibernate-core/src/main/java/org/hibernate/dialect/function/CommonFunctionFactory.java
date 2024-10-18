@@ -4287,4 +4287,46 @@ public class CommonFunctionFactory {
 	public void unnest_hana() {
 		functionRegistry.register( "unnest", new HANAUnnestFunction() );
 	}
+
+	/**
+	 * Standard generate_series() function
+	 */
+	public void generateSeries(@Nullable String defaultValueColumnName, String defaultIndexSelectionExpression, boolean coerceToTimestamp) {
+		functionRegistry.register( "generate_series", new GenerateSeriesFunction( defaultValueColumnName, defaultIndexSelectionExpression, coerceToTimestamp, typeConfiguration ) );
+	}
+
+	/**
+	 * Recursive CTE generate_series() function
+	 */
+	public void generateSeries_recursive(int maxSeriesSize, boolean supportsInterval, boolean coerceToTimestamp) {
+		functionRegistry.register( "generate_series", new CteGenerateSeriesFunction( maxSeriesSize, supportsInterval, coerceToTimestamp, typeConfiguration ) );
+	}
+
+	/**
+	 * H2 generate_series() function
+	 */
+	public void generateSeries_h2(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new H2GenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server generate_series() function
+	 */
+	public void generateSeries_sqlserver(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new SQLServerGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * Sybase ASE generate_series() function
+	 */
+	public void generateSeries_sybasease(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new SybaseASEGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * HANA generate_series() function
+	 */
+	public void generateSeries_hana(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new HANAGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
 }

@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
@@ -43,7 +44,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Incubating
 public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, ReturnableType<T>, SqmPathSource<T> {
 
-	private final ObjectArrayJavaType javaTypeDescriptor;
+	private final JavaType<T> javaTypeDescriptor;
 	private final @Nullable NavigablePath[] componentSourcePaths;
 	private final SqmExpressible<?>[] expressibles;
 	private final String[] componentNames;
@@ -65,7 +66,8 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		this.expressibles = expressibles;
 		this.componentSourcePaths = componentSourcePaths;
 		this.componentNames = new String[components.length];
-		this.javaTypeDescriptor = new ObjectArrayJavaType( getTypeDescriptors( components ) );
+		//noinspection unchecked
+		this.javaTypeDescriptor = (JavaType<T>) new ObjectArrayJavaType( getTypeDescriptors( components ) );
 		final Map<String, Integer> map = CollectionHelper.linkedMapOfSize( components.length );
 		for ( int i = 0; i < components.length; i++ ) {
 			final SqmSelectableNode<?> component = components[i];
@@ -84,10 +86,22 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		this.componentSourcePaths = new NavigablePath[componentNames.length];
 		this.expressibles = expressibles;
 		this.componentNames = componentNames;
-		this.javaTypeDescriptor = new ObjectArrayJavaType( getTypeDescriptors( expressibles ) );
 		final Map<String, Integer> map = CollectionHelper.linkedMapOfSize( expressibles.length );
+		int elementIndex = -1;
 		for ( int i = 0; i < componentNames.length; i++ ) {
+			if ( CollectionPart.Nature.ELEMENT.getName().equals( componentNames[i] ) ) {
+				elementIndex = i;
+			}
 			map.put( componentNames[i], i );
+		}
+		// The expressible java type of this tuple type must be equal to the element type if it exists
+		if ( elementIndex == -1 ) {
+			//noinspection unchecked
+			this.javaTypeDescriptor = (JavaType<T>) new ObjectArrayJavaType( getTypeDescriptors( expressibles ) );
+		}
+		else {
+			//noinspection unchecked
+			this.javaTypeDescriptor = (JavaType<T>) expressibles[elementIndex].getExpressibleJavaType();
 		}
 		this.componentIndexMap = map;
 	}

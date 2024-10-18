@@ -83,7 +83,8 @@ A set-returning function is a new type of function that can return rows and is e
 The concept is known in many different database SQL dialects and is sometimes referred to as table valued function or table function.
 
 Custom set-returning functions can be registered via a `FunctionContributor` and Hibernate ORM
-also comes with out-of-the-box support for the set-returning function `unnest()`, which allows to turn an array into rows.
+also comes with out-of-the-box support for the set-returning functions `unnest()`, which allows to turn an array into rows,
+and `generate_series()`, which can be used to create a series of values as rows.
 
 [[cleanup]]
 == Clean-up

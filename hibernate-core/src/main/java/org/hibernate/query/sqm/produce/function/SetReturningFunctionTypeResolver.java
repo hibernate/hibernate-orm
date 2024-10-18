@@ -9,6 +9,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.produce.function.internal.SetReturningFunctionTypeResolverBuilder;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
@@ -40,8 +41,9 @@ public interface SetReturningFunctionTypeResolver {
 	SelectableMapping[] resolveFunctionReturnType(
 			List<? extends SqlAstNode> arguments,
 			String tableIdentifierVariable,
+			boolean lateral,
 			boolean withOrdinality,
-			TypeConfiguration typeConfiguration);
+			SqmToSqlAstConverter converter);
 
 	/**
 	 * Creates a builder for a type resolver.

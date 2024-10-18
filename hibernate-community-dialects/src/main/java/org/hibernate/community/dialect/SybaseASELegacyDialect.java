@@ -166,6 +166,17 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions);
 
 		functionFactory.unnest_sybasease();
+		functionFactory.generateSeries_sybasease( getMaximumSeriesSize() );
+	}
+
+	/**
+	 * Sybase ASE doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with the {@code xmltable} and {@code replicate} functions.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum possible value for replicating an XML tag, so that the resulting string stays below the 16K limit
+		// https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug31.htm
+		return 4094;
 	}
 
 	private static boolean isAnsiNull(DatabaseMetaData databaseMetaData) {

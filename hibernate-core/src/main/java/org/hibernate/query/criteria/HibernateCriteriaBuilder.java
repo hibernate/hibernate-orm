@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -4223,6 +4224,206 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	<E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, E step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step);
+
+	/**
+	 * Creates a {@code generate_series} function expression to generate a set of values as rows.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step);
 
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);

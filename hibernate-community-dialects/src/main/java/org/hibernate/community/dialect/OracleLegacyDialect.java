@@ -335,6 +335,16 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.xmlagg();
 
 		functionFactory.unnest_oracle();
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+	}
+
+	/**
+	 * Oracle doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override

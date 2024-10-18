@@ -497,6 +497,8 @@ public class HANALegacyDialect extends Dialect {
 			functionFactory.unnest_hana();
 //			functionFactory.json_table();
 
+			functionFactory.generateSeries_hana( getMaximumSeriesSize() );
+
 			if ( getVersion().isSameOrAfter(2, 0, 20 ) ) {
 				if ( getVersion().isSameOrAfter( 2, 0, 40 ) ) {
 					// Introduced in 2.0 SPS 04
@@ -511,6 +513,14 @@ public class HANALegacyDialect extends Dialect {
 
 //			functionFactory.xmlextract();
 		}
+	}
+
+	/**
+	 * HANA doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with the {@code xmltable} and {@code lpad} functions.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override

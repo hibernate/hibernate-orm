@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -84,8 +85,9 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 	public SelectableMapping[] resolveFunctionReturnType(
 			List<? extends SqlAstNode> arguments,
 			String tableIdentifierVariable,
+			boolean lateral,
 			boolean withOrdinality,
-			TypeConfiguration typeConfiguration) {
+			SqmToSqlAstConverter converter) {
 		final Expression expression = (Expression) arguments.get( 0 );
 		final JdbcMappingContainer expressionType = expression.getExpressionType();
 		if ( expressionType == null ) {
@@ -112,7 +114,7 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 				false,
 				false,
 				false,
-				typeConfiguration.getBasicTypeForJavaType( Long.class )
+				converter.getCreationContext().getTypeConfiguration().getBasicTypeForJavaType( Long.class )
 		) : null;
 
 		final BasicType<?> elementType = pluralType.getElementType();

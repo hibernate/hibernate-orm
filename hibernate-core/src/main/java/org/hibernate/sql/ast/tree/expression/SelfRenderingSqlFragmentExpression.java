@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -16,9 +17,15 @@ import org.hibernate.sql.ast.spi.SqlAppender;
  */
 public class SelfRenderingSqlFragmentExpression implements SelfRenderingExpression {
 	private final String expression;
+	private final @Nullable JdbcMappingContainer expressionType;
 
 	public SelfRenderingSqlFragmentExpression(String expression) {
+		this( expression, null );
+	}
+
+	public SelfRenderingSqlFragmentExpression(String expression, @Nullable JdbcMappingContainer expressionType) {
 		this.expression = expression;
+		this.expressionType = expressionType;
 	}
 
 	public String getExpression() {
@@ -27,7 +34,7 @@ public class SelfRenderingSqlFragmentExpression implements SelfRenderingExpressi
 
 	@Override
 	public JdbcMappingContainer getExpressionType() {
-		return null;
+		return expressionType;
 	}
 
 	@Override

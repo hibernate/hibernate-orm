@@ -20,21 +20,21 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
-@DomainModel(annotatedClasses = FindAllTest.Record.class)
-public class FindAllTest {
+@DomainModel(annotatedClasses = FindMutipleTest.Record.class)
+public class FindMutipleTest {
 	@Test void test(SessionFactoryScope scope) {
 		scope.inTransaction(s-> {
 			s.persist(new Record(123L,"hello earth"));
 			s.persist(new Record(456L,"hello mars"));
 		});
 		scope.inTransaction(s-> {
-			List<Record> all = s.findAll(Record.class, List.of(456L, 123L, 2L));
+			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L, 2L));
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);
 			assertNull(all.get(2));
 		});
 		scope.inTransaction(s-> {
-			List<Record> all = s.findAll(Record.class, List.of(456L, 123L), READ_ONLY);
+			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L), READ_ONLY);
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);
 			assertTrue(s.isReadOnly(all.get(0)));
@@ -42,7 +42,7 @@ public class FindAllTest {
 		});
 		scope.inTransaction(s-> {
 			Record record = s.getReference(Record.class, 456L);
-			List<Record> all = s.findAll(Record.class, List.of(456L, 123L));
+			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L));
 			assertSame(record, all.get(0));
 		});
 	}

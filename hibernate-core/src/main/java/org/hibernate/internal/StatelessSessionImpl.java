@@ -511,7 +511,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public <T> List<T> getAll(Class<T> entityClass, List<Object> ids) {
+	public <T> List<T> getMultiple(Class<T> entityClass, List<Object> ids) {
 		for (Object id : ids) {
 			if ( id == null ) {
 				throw new IllegalArgumentException("Null id");

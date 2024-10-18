@@ -697,8 +697,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * matching a given identifier. If an instance is already associated with the session, that
 	 * instance is returned. This method never returns an uninitialized instance.
 	 * <p>
-	 * Every object returned by {@code findAll()} is either an unproxied instance of the given
-	 * entity class, or a fully-fetched proxy object.
+	 * Every object returned by {@code findMultiple()} is either an unproxied instance of the
+	 * given entity class, or a fully-fetched proxy object.
 	 * <p>
 	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
 	 * {@link MultiIdentifierLoadAccess}.
@@ -711,7 +711,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @see #byMultipleIds(Class)
 	 * @since 7.0
 	 */
-	<E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options);
+	<E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -922,7 +922,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 *
-	 * @see #findAll(Class, List, FindOption...)
+	 * @see #findMultiple(Class, List, FindOption...)
 	 */
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 

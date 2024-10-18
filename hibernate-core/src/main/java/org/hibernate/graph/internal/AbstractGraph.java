@@ -33,7 +33,7 @@ import static java.util.Collections.emptyList;
  * @author Steve Ebersole
  */
 public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements GraphImplementor<J> {
-	private final ManagedDomainType<J> managedType;
+	protected final ManagedDomainType<J> managedType;
 	private Map<PersistentAttribute<?,?>, AttributeNodeImplementor<?>> attrNodeMap;
 
 	public AbstractGraph(ManagedDomainType<J> managedType, boolean mutable) {
@@ -124,7 +124,12 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
-		PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+		PersistentAttribute<?, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+
+		if ( attribute == null ) {
+			attribute = managedType.findSubTypesAttribute( attributeName );
+		}
+
 		if ( attribute instanceof SqmPathSource && ( (SqmPathSource<?>) attribute ).isGeneric() ) {
 			attribute = managedType.findConcreteGenericAttribute( attributeName );
 		}

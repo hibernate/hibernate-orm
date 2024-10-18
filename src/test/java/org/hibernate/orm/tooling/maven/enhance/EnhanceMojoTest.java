@@ -379,28 +379,46 @@ public class EnhanceMojoTest {
         enhancerField.set(enhanceMojo, enhancer);
         assertEquals(0, calls.get(0));
         enhanceClassMethod.invoke(enhanceMojo, barClassFile);
-        // check log messages
-        for (String s: logMessages) {
-        	System.out.println(s);
-        }
         long afterFirstRun = barClassFile.lastModified();
         assertEquals(1, calls.get(0));
         assertTrue(afterFirstRun >= beforeRuns);
         assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+       // verify log messages 
+        assertEquals(7, logMessages.size());
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_ENHANCE_CLASS_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.WRITING_BYTE_CODE_TO_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_CLEAR_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(INFO + EnhanceMojo.SUCCESFULLY_CLEARED_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.AMOUNT_BYTES_WRITTEN_TO_FILE.formatted("foobar".length(), barClassFile)));
+        assertTrue(logMessages.contains(INFO + EnhanceMojo.SUCCESFULLY_ENHANCED_CLASS_FILE.formatted(barClassFile)));
+        // Second Run -> file is not modified
+        logMessages.clear();
         enhanceClassMethod.invoke(enhanceMojo, barClassFile);
         long afterSecondRun = barClassFile.lastModified();
         assertEquals(2, calls.get(0));
         assertEquals(afterSecondRun, afterFirstRun);
         assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+        // verify log messages
+        assertEquals(3, logMessages.size());
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_ENHANCE_CLASS_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(INFO + EnhanceMojo.SKIPPING_FILE.formatted(barClassFile)));
+        // Third Run -> exception!
+        logMessages.clear();
         try {
         	enhanceClassMethod.invoke(enhanceMojo, barClassFile);
         	fail();
         } catch (Throwable e) {
-        	System.out.println(e.getMessage());
 	        long afterThirdRun = barClassFile.lastModified();
 	        assertEquals(3, calls.get(0));
 	        assertEquals(afterThirdRun, afterFirstRun);
 	        assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
+	        // verify log messages
+	        assertEquals(3, logMessages.size());
+	        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_ENHANCE_CLASS_FILE.formatted(barClassFile)));
+	        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
+	        assertTrue(logMessages.contains(ERROR + EnhanceMojo.ERROR_WHILE_ENHANCING_CLASS_FILE.formatted(barClassFile)));
         }
     }
 
@@ -435,6 +453,17 @@ public class EnhanceMojoTest {
         assertTrue(hasRun.contains(true));
         assertEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
         assertEquals(lastModified, barClassFile.lastModified());
+        // verify the log messages
+        assertEquals(9, logMessages.size());
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.STARTING_CLASS_ENHANCEMENT));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_ENHANCE_CLASS_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.WRITING_BYTE_CODE_TO_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.TRYING_TO_CLEAR_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(INFO + EnhanceMojo.SUCCESFULLY_CLEARED_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.AMOUNT_BYTES_WRITTEN_TO_FILE.formatted("foobar".length(), barClassFile)));
+        assertTrue(logMessages.contains(INFO + EnhanceMojo.SUCCESFULLY_ENHANCED_CLASS_FILE.formatted(barClassFile)));
+        assertTrue(logMessages.contains(DEBUG + EnhanceMojo.ENDING_CLASS_ENHANCEMENT));
     }
 
     @Test

@@ -517,7 +517,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToObtainConnectionMetadata(SQLException error);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection to query metadata", id = 342)
+	@Message(value = "Could not obtain connection to query JDBC database metadata", id = 342)
 	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
 
 	@LogMessage(level = ERROR)

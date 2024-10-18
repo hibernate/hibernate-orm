@@ -295,7 +295,7 @@ ext {
                         'jdbc.driver': 'com.informix.jdbc.IfxDriver',
                         'jdbc.user'  : 'informix',
                         'jdbc.pass'  : 'in4mix',
-                        'jdbc.url'   : 'jdbc:informix-sqli://' + dbHost + ':9088/dev:INFORMIXSERVER=informix;user=informix;password=in4mix;DELIMIDENT=Y;DB_LOCALE=en_US.utf8',
+                        'jdbc.url'   : 'jdbc:informix-sqli://' + dbHost + ':9088/dev:INFORMIXSERVER=informix;user=informix;password=in4mix;DBDATE=Y4MD-;DELIMIDENT=Y;DB_LOCALE=en_US.utf8',
                         'jdbc.datasource' : 'com.informix.jdbc.IfxDriver',
 //                        'jdbc.datasource' : 'com.informix.jdbcx.IfxDataSource',
                         'connection.init_sql' : ''

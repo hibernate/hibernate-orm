@@ -73,8 +73,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * Insert a record.
 	 * <p>
 	 * If the entity {@code @Id} field is declared to be generated,
-	 * for example, if it is annotated {@code @GeneratedId}, the id
-	 * is generated and assigned to the given instance.
+	 * for example, if it is annotated {@code @GeneratedValue}, the
+	 * id is generated and assigned to the given instance.
 	 * <p>
 	 * The {@link jakarta.persistence.PostPersist} callback will be
 	 * triggered if the operation is successful.
@@ -152,8 +152,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * On the other hand, {@code upsert()} does accept an entity
 	 * instance with an assigned identifier value, even if the entity
 	 * {@code @Id} field is declared to be generated, for example, if
-	 * it is annotated {@code @GeneratedId}. Thus, this method may be
-	 * used to import data from an external source.
+	 * it is annotated {@code @GeneratedValue}. Thus, this method may
+	 * be used to import data from an external source.
 	 *
 	 * @param entity a detached entity instance, or a new instance
 	 *               with an assigned identifier

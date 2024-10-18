@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {FindAllFetchProfileTest.Record.class, FindAllFetchProfileTest.Owner.class})
-public class FindAllFetchProfileTest {
+@DomainModel(annotatedClasses = {FindMultipleFetchProfileTest.Record.class, FindMultipleFetchProfileTest.Owner.class})
+public class FindMultipleFetchProfileTest {
 	@Test void test(SessionFactoryScope scope) {
 		scope.inTransaction(s-> {
 			Owner gavin = new Owner("gavin");
@@ -35,7 +35,7 @@ public class FindAllFetchProfileTest {
 			s.persist(new Record(456L,gavin,"hello mars"));
 		});
 		scope.inTransaction(s-> {
-			List<Record> all = s.findAll(Record.class, List.of(456L, 123L, 2L));
+			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L, 2L));
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);
 			assertNull(all.get(2));
@@ -43,7 +43,7 @@ public class FindAllFetchProfileTest {
 			assertFalse(Hibernate.isInitialized(all.get(1).owner));
 		});
 		scope.inTransaction(s-> {
-			List<Record> all = s.findAll(Record.class, List.of(456L, 123L),
+			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L),
 					new EnabledFetchProfile("withOwner"));
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);

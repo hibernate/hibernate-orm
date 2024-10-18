@@ -988,7 +988,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public <E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options) {
+	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
 		return multiloadAccessWithOptions( entityType, options ).multiLoad( ids );
 	}
 

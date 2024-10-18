@@ -952,8 +952,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options) {
-		return delegate.findAll( entityType, ids, options );
+	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
+		return delegate.findMultiple( entityType, ids, options );
 	}
 
 	@Override

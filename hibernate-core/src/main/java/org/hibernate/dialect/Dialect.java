@@ -2061,12 +2061,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * The native type of generation supported by this Dialect.
+	 * The native type of generation supported by this Dialect.  Generally speaking,<ol>
+	 *     <li></li>
+	 * </ol>
+	 *
+	 * @since 7.0
 	 */
+	@Incubating
 	public GenerationType getNativeValueGenerationStrategy() {
-		return getIdentityColumnSupport().supportsIdentityColumns()
-				? GenerationType.IDENTITY
-				: GenerationType.SEQUENCE;
+		if ( getSequenceSupport().supportsSequences() ) {
+			return GenerationType.SEQUENCE;
+		}
+
+		if ( getIdentityColumnSupport().supportsIdentityColumns() ) {
+			return GenerationType.IDENTITY;
+		}
+
+		return GenerationType.TABLE;
 	}
 
 	// IDENTITY support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

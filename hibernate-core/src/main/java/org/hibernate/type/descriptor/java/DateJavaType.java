@@ -124,7 +124,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			final java.sql.Time rtn = value instanceof java.sql.Time
 					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() % 86_400_000 );
+					: millisToSqlTime( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {

@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
@@ -60,6 +61,19 @@ public class MixedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R
 	}
 
 	@Override
+	public AnyDiscriminatorValueStrategy getValueStrategy() {
+		return AnyDiscriminatorValueStrategy.MIXED;
+	}
+
+	public Map<Object, DiscriminatorValueDetails> getDetailsByValue() {
+		return detailsByValue;
+	}
+
+	public Map<String, DiscriminatorValueDetails> getDetailsByEntityName() {
+		return detailsByEntityName;
+	}
+
+	@Override
 	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm) {
 		if ( relationalForm == null ) {
 			return detailsByValue.get( NULL_DISCRIMINATOR );
@@ -79,13 +93,13 @@ public class MixedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R
 		if ( relationalForm.getClass().isEnum() ) {
 			final Object enumValue;
 			if ( getRelationalJavaType() instanceof StringJavaType ) {
-				enumValue = ( (Enum) relationalForm ).name();
+				enumValue = ( (Enum<?>) relationalForm ).name();
 			}
 			else if ( getRelationalJavaType() instanceof CharacterJavaType ) {
-				enumValue = ( (Enum) relationalForm ).name().charAt( 0 );
+				enumValue = ( (Enum<?>) relationalForm ).name().charAt( 0 );
 			}
 			else {
-				enumValue = ( (Enum) relationalForm ).ordinal();
+				enumValue = ( (Enum<?>) relationalForm ).ordinal();
 			}
 			final DiscriminatorValueDetails enumMatch = detailsByValue.get( enumValue );
 			if ( enumMatch != null ) {

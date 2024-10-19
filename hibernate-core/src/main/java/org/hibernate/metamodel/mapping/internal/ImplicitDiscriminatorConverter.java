@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.Map;
@@ -52,16 +53,27 @@ public class ImplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 	}
 
 	@Override
+	public AnyDiscriminatorValueStrategy getValueStrategy() {
+		return AnyDiscriminatorValueStrategy.IMPLICIT;
+	}
+
+	public Map<Object, DiscriminatorValueDetails> getDetailsByValue() {
+		return detailsByValue;
+	}
+
+	public Map<String, DiscriminatorValueDetails> getDetailsByEntityName() {
+		return detailsByEntityName;
+	}
+
+	@Override
 	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object value) {
 		if ( value instanceof String incoming ) {
 			final DiscriminatorValueDetails existingDetails = detailsByValue.get( incoming );
 			if ( existingDetails != null ) {
 				return existingDetails;
 			}
-			final String entityName = mappingMetamodel.getImportedName( incoming );
-			final EntityPersister persister = mappingMetamodel.findEntityDescriptor( entityName );
+			final EntityPersister persister = mappingMetamodel.findEntityDescriptor( incoming );
 			if ( persister != null ) {
-				assert persister.getImportedName().equals( incoming );
 				return register( incoming, persister );
 			}
 		}
@@ -76,7 +88,7 @@ public class ImplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 	private DiscriminatorValueDetails register(Object value, EntityPersister entityDescriptor) {
 		final DiscriminatorValueDetails details = new DiscriminatorValueDetailsImpl( value, entityDescriptor );
 		detailsByValue.put( value, details );
-		detailsByEntityName.put( entityDescriptor.getImportedName(), details );
+		detailsByEntityName.put( entityDescriptor.getEntityName(), details );
 		return details;
 	}
 
@@ -88,7 +100,7 @@ public class ImplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 		}
 		final EntityPersister persister = mappingMetamodel.findEntityDescriptor( entityName );
 		if ( persister!= null ) {
-			return register( persister.getImportedName(), persister );
+			return register( persister.getEntityName(), persister );
 		}
 		throw new HibernateException( String.format(
 				ROOT,

@@ -4,7 +4,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -16,7 +18,6 @@ import java.util.function.Function;
  * @author Gavin King
  */
 public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
-
 	private final String discriminatorName;
 	private final JavaType<O> domainJavaType;
 	private final JavaType<R> relationalJavaType;
@@ -29,6 +30,9 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		this.domainJavaType = domainJavaType;
 		this.relationalJavaType = relationalJavaType;
 	}
+
+	@Incubating
+	public abstract AnyDiscriminatorValueStrategy getValueStrategy();
 
 	public String getDiscriminatorName() {
 		return discriminatorName;

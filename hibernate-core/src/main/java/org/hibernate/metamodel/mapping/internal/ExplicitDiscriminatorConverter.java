@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
@@ -61,6 +62,19 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 	}
 
 	@Override
+	public AnyDiscriminatorValueStrategy getValueStrategy() {
+		return AnyDiscriminatorValueStrategy.EXPLICIT;
+	}
+
+	public Map<Object, DiscriminatorValueDetails> getDetailsByValue() {
+		return detailsByValue;
+	}
+
+	public Map<String, DiscriminatorValueDetails> getDetailsByEntityName() {
+		return detailsByEntityName;
+	}
+
+	@Override
 	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm) {
 		if ( relationalForm == null ) {
 			return detailsByValue.get( NULL_DISCRIMINATOR );
@@ -80,13 +94,13 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 		if ( relationalForm.getClass().isEnum() ) {
 			final Object enumValue;
 			if ( getRelationalJavaType() instanceof StringJavaType ) {
-				enumValue = ( (Enum) relationalForm ).name();
+				enumValue = ( (Enum<?>) relationalForm ).name();
 			}
 			else if ( getRelationalJavaType() instanceof CharacterJavaType ) {
-				enumValue = ( (Enum) relationalForm ).name().charAt( 0 );
+				enumValue = ( (Enum<?>) relationalForm ).name().charAt( 0 );
 			}
 			else {
-				enumValue = ( (Enum) relationalForm ).ordinal();
+				enumValue = ( (Enum<?>) relationalForm ).ordinal();
 			}
 			final DiscriminatorValueDetails enumMatch = detailsByValue.get( enumValue );
 			if ( enumMatch != null ) {
@@ -108,7 +122,7 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 		if ( valueDetails != null) {
 			return valueDetails;
 		}
-		throw new HibernateException( "Unknown entity name (" + discriminatorRole + ") : " + entityName );
+		throw new HibernateException( "Entity not explicitly mapped for ANY discriminator (" + discriminatorRole + ") : " + entityName );
 	}
 
 

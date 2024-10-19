@@ -4,20 +4,21 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorValueDetailsImpl;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorValueDetailsImpl;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Handles conversion of discriminator values for embeddable subtype classes
@@ -63,6 +64,12 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 			discriminatorValueToDetailsMap.put( valueDetails.getValue(), valueDetails );
 			embeddableClassNameToDetailsMap.put( valueDetails.getIndicatedEntityName(), valueDetails );
 		} );
+	}
+
+	@Override
+	public AnyDiscriminatorValueStrategy getValueStrategy() {
+		// discriminators for embeddables are always explicit
+		return AnyDiscriminatorValueStrategy.EXPLICIT;
 	}
 
 	@Override

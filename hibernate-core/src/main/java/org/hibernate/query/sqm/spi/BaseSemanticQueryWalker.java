@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.spi;
 
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.sqm.InterpretationException;
@@ -227,11 +228,14 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	protected Object visitSelectQuery(SqmSelectQuery<?> selectQuery) {
-		if ( selectQuery instanceof SqmSelectStatement<?> ) {
-			return visitSelectStatement( (SqmSelectStatement<?>) selectQuery );
+		if ( selectQuery instanceof SqmSelectStatement<?> statement ) {
+			return visitSelectStatement( statement );
+		}
+		else if ( selectQuery instanceof SqmSubQuery<?> subquery ) {
+			return visitSubQueryExpression( subquery );
 		}
 		else {
-			return visitSubQueryExpression( (SqmSubQuery<?>) selectQuery );
+			throw new AssertionFailure( "Unrecognized SQM select query type" );
 		}
 	}
 
@@ -297,11 +301,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	protected void consumeExplicitJoins(SqmFrom<?, ?> sqmFrom) {
-		sqmFrom.visitSqmJoins(
-				sqmJoin -> {
-					consumeExplicitJoin( sqmJoin, true );
-				}
-		);
+		sqmFrom.visitSqmJoins( sqmJoin -> consumeExplicitJoin( sqmJoin, true ) );
 		final List<SqmTreatedFrom<?,?,?>> sqmTreats = sqmFrom.getSqmTreats();
 		if ( !sqmTreats.isEmpty() ) {
 			for ( SqmFrom<?, ?> sqmTreat : sqmTreats ) {
@@ -317,26 +317,26 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	protected void consumeExplicitJoin(
 			SqmJoin<?, ?> sqmJoin,
 			boolean transitive) {
-		if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-			consumeAttributeJoin( ( (SqmAttributeJoin<?, ?>) sqmJoin ), transitive );
+		if ( sqmJoin instanceof SqmAttributeJoin<?, ?> join ) {
+			consumeAttributeJoin( join, transitive );
 		}
-		else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
-			consumeCrossJoin( ( (SqmCrossJoin<?>) sqmJoin ), transitive );
+		else if ( sqmJoin instanceof SqmCrossJoin<?> crossJoin ) {
+			consumeCrossJoin( crossJoin, transitive );
 		}
-		else if ( sqmJoin instanceof SqmEntityJoin<?,?> ) {
-			consumeEntityJoin( ( (SqmEntityJoin<?,?>) sqmJoin ), transitive );
+		else if ( sqmJoin instanceof SqmEntityJoin<?,?> entityJoin ) {
+			consumeEntityJoin( entityJoin, transitive );
 		}
-		else if ( sqmJoin instanceof SqmDerivedJoin<?> ) {
-			consumeDerivedJoin( ( (SqmDerivedJoin<?>) sqmJoin ), transitive );
+		else if ( sqmJoin instanceof SqmDerivedJoin<?> derivedJoin ) {
+			consumeDerivedJoin( derivedJoin, transitive );
 		}
-		else if ( sqmJoin instanceof SqmFunctionJoin<?> ) {
-			consumeFunctionJoin( (SqmFunctionJoin<?>) sqmJoin, transitive );
+		else if ( sqmJoin instanceof SqmFunctionJoin<?> functionJoin ) {
+			consumeFunctionJoin( functionJoin, transitive );
 		}
-		else if ( sqmJoin instanceof SqmCteJoin<?> ) {
-			consumeCteJoin( ( (SqmCteJoin<?>) sqmJoin ), transitive );
+		else if ( sqmJoin instanceof SqmCteJoin<?> cteJoin ) {
+			consumeCteJoin( cteJoin, transitive );
 		}
-		else if ( sqmJoin instanceof SqmPluralPartJoin<?, ?> ) {
-			consumePluralPartJoin( ( (SqmPluralPartJoin<?, ?>) sqmJoin ), transitive );
+		else if ( sqmJoin instanceof SqmPluralPartJoin<?, ?> pluralPartJoin ) {
+			consumePluralPartJoin( pluralPartJoin, transitive );
 		}
 		else {
 			throw new InterpretationException( "Could not visit SqmJoin [" + sqmJoin.getNavigablePath() + "] of type [" + sqmJoin.getClass().getName() + "]" );
@@ -416,7 +416,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitRootFunction(SqmFunctionRoot sqmRoot) {
+	public Object visitRootFunction(SqmFunctionRoot<?>sqmRoot) {
 		return sqmRoot;
 	}
 

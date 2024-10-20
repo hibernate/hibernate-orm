@@ -302,6 +302,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	SchemaManager getSchemaManager();
 
 	/**
@@ -327,6 +328,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @throws HibernateException Indicates an issue closing the factory.
 	 */
+	@Override
 	void close() throws HibernateException;
 
 	/**

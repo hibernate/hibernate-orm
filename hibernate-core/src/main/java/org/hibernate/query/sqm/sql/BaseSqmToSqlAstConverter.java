@@ -1686,7 +1686,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			targetJavaType = (Class<X>) Map.class;
 		}
 		else {
-			targetJavaType = instantiationTarget.getJavaType();
+			targetJavaType = (Class<X>) instantiationTarget.getJavaType();
 		}
 
 		return getCreationContext().getMappingMetamodel()

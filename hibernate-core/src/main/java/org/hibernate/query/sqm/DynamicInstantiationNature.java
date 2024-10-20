@@ -10,6 +10,8 @@ import java.util.Map;
 /**
  * Represents the type of instantiation to be performed.
  *
+ * @see org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget#getNature
+ *
  * @author Steve Ebersole
  */
 public enum DynamicInstantiationNature {

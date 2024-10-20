@@ -872,6 +872,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T find(Class<T> entityType, Object id, LockMode lockMode) {
+		return delegate.find( entityType, id, lockMode );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return delegate.find( entityType, id, lockOptions );
+	}
+
+	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		return delegate.getReference( entityClass, id );
 	}

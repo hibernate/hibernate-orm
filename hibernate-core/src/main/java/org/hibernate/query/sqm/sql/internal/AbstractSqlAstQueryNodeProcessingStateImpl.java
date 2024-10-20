@@ -48,9 +48,8 @@ public abstract class AbstractSqlAstQueryNodeProcessingStateImpl
 	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
 		if ( !( sqmFrom instanceof SqmTreatedPath<?, ?> ) ) {
 			if ( !sqmFromRegistrations.containsKey( sqmFrom ) ) {
-				final SqlAstProcessingState parentState = getParentState();
-				if ( parentState instanceof SqlAstQueryPartProcessingState ) {
-					( (SqlAstQueryPartProcessingState) parentState ).registerFromUsage( sqmFrom, downgradeTreatUses );
+				if ( getParentState() instanceof SqlAstQueryPartProcessingState parentState ) {
+					parentState.registerFromUsage( sqmFrom, downgradeTreatUses );
 				}
 			}
 			else {

@@ -828,7 +828,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param id an identifier
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated Because the semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object)} instead.
 	 */
+	@Deprecated(since = "7")
 	<T> T get(Class<T> entityType, Object id);
 
 	/**
@@ -848,7 +852,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return a persistent instance or null
 	 *
 	 * @see #get(Class, Object, LockOptions)
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object, LockMode)} instead.
 	 */
+	@Deprecated(since = "7")
 	<T> T get(Class<T> entityType, Object id, LockMode lockMode);
 
 	/**
@@ -862,7 +870,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param lockOptions the lock mode
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object, LockOptions)} instead.
 	 */
+	@Deprecated(since = "7")
 	<T> T get(Class<T> entityType, Object id, LockOptions lockOptions);
 
 	/**
@@ -875,7 +887,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param id an identifier
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
+	@Deprecated(since = "7")
 	Object get(String entityName, Object id);
 
 	/**
@@ -893,7 +908,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return a persistent instance or null
 	 *
 	 * @see #get(String, Object, LockOptions)
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
+	@Deprecated(since = "7")
 	Object get(String entityName, Object id, LockMode lockMode);
 
 	/**
@@ -907,7 +925,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param lockOptions contains the lock mode
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
+	@Deprecated(since = "7")
 	Object get(String entityName, Object id, LockOptions lockOptions);
 
 	/**

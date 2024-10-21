@@ -91,7 +91,7 @@ The following table contrasts the two programming models.
 | Validation of JPQL | Runtime | Compile time
 |===
 
-The fundamental difference here that Jakarta Data does not feature stateful persistence contexts.
+The fundamental difference here is that Jakarta Data does not feature stateful persistence contexts.
 Among other consequences:
 
 - entity instances are always detached, and so

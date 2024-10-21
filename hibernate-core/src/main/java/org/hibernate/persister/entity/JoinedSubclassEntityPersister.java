@@ -121,7 +121,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	// the closure of all columns used by the entire hierarchy including
 	// subclasses and superclasses of this class
-	private final int[] subclassColumnTableNumberClosure;
+	private final int[] subclassColumnNaturalOrderTableNumberClosure;
 	private final String[] subclassColumnClosure;
 
 	private final boolean[] isNullableSubclassTable;
@@ -432,18 +432,19 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String tableName = property.getValue().getTable().
 					getQualifiedName( creationContext.getSqlStringGenerationContext() );
 			final Integer tableNumber = getTableId( tableName, subclassTableNameClosure );
+			final Integer naturalTableNumber = getTableId( tableName, naturalOrderSubclassTableNameClosure );
 			propTableNumbers.add( tableNumber );
 
 			for ( Selectable selectable : property.getSelectables() ) {
 				if ( !selectable.isFormula() ) {
-					columnTableNumbers.add( tableNumber );
+					columnTableNumbers.add( naturalTableNumber );
 					Column column = (Column) selectable;
 					columns.add( column.getQuotedName( dialect ) );
 				}
 			}
 		}
 
-		subclassColumnTableNumberClosure = toIntArray( columnTableNumbers );
+		subclassColumnNaturalOrderTableNumberClosure = toIntArray( columnTableNumbers );
 		subclassPropertyTableNumberClosure = toIntArray( propTableNumbers );
 		subclassColumnClosure = toStringArray( columns );
 
@@ -970,12 +971,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					&& subclassColumnClosure[i].endsWith( "\"" );
 			if ( quoted ) {
 				if ( subclassColumnClosure[i].equals( columnName ) ) {
-					return subclassColumnTableNumberClosure[i];
+					return subclassColumnNaturalOrderTableNumberClosure[i];
 				}
 			}
 			else {
 				if ( subclassColumnClosure[i].equalsIgnoreCase( columnName ) ) {
-					return subclassColumnTableNumberClosure[i];
+					return subclassColumnNaturalOrderTableNumberClosure[i];
 				}
 			}
 		}

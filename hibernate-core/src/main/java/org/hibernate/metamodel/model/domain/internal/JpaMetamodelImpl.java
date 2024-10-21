@@ -26,6 +26,7 @@ import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
@@ -69,6 +70,8 @@ import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
+
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  *
@@ -145,6 +148,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		final ManagedDomainType<?> managedType = managedTypeByName.get( entityName );
 		if ( !( managedType instanceof EntityDomainType<?> ) ) {
 			return null;
+		}
+		if ( managedType instanceof MappedSuperclassEntityTypeImpl<?> ) {
+			final MappedSuperclassEntityTypeImpl<?> customType = (MappedSuperclassEntityTypeImpl<?>) managedType;
+			log.warn( "Using unsupported entity type: " + customType.getTypeName() );
 		}
 		//noinspection unchecked
 		return (EntityDomainType<X>) managedType;
@@ -232,6 +239,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		final ManagedType<?> type = managedTypeByClass.get( cls );
 		if ( !( type instanceof EntityDomainType<?> ) ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls.getName() );
+		}
+		if ( type instanceof MappedSuperclassEntityTypeImpl<?> ) {
+			final MappedSuperclassEntityTypeImpl<?> customType = (MappedSuperclassEntityTypeImpl<?>) type;
+			log.warn( "Using unsupported entity type: " + customType.getTypeName() );
 		}
 		//noinspection unchecked
 		return (EntityDomainType<X>) type;
@@ -661,6 +672,69 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		} );
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
+
+		// UGH! This really sucks
+		registerEnversEntityTypes();
+	}
+
+	/**
+	 * @deprecated Workaround for hibernate-envers, should be removed after migrating to the new entity classes
+	 */
+	@Deprecated( forRemoval = true, since = "6.6" )
+	private void registerEnversEntityTypes() {
+		final ConfigurationService cfg = serviceRegistry.requireService( ConfigurationService.class );
+
+		final boolean trackEntitiesChanged = cfg.getSetting(
+				"org.hibernate.envers.track_entities_changed_in_revision",
+				BOOLEAN,
+				false
+		);
+		final boolean nativeIdEnabled = cfg.getSetting(
+				"org.hibernate.envers.use_revision_entity_with_native_id",
+				BOOLEAN,
+				true
+		);
+		final String mappedSuperclassName;
+		final String entityName;
+		if ( trackEntitiesChanged ) {
+			if ( nativeIdEnabled ) {
+				mappedSuperclassName = "org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity";
+				entityName = "org.hibernate.envers.internal.entities.mappings.DefaultTrackingModifiedEntitiesRevisionEntityImpl";
+			}
+			else {
+				mappedSuperclassName = "org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity";
+				entityName = "org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntityImpl";
+			}
+		}
+		else {
+			if ( nativeIdEnabled ) {
+				mappedSuperclassName = "org.hibernate.envers.DefaultRevisionEntity";
+				entityName = "org.hibernate.envers.internal.entities.mappings.DefaultRevisionEntityImpl";
+			}
+			else {
+				mappedSuperclassName = "org.hibernate.envers.enhanced.SequenceIdRevisionEntity";
+				entityName = "org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdRevisionEntityImpl";
+			}
+		}
+
+		final ManagedDomainType<?> domainType = managedTypeByName.get( entityName );
+		if ( domainType != null ) {
+			assert domainType instanceof EntityDomainType<?>;
+			final MappedSuperclassEntityTypeImpl<?> customType = new MappedSuperclassEntityTypeImpl<>(
+					(EntityDomainType<?>) domainType,
+					this
+			);
+			managedTypeByName.put( mappedSuperclassName, customType );
+			( (MappingMetamodelImpl) mappingMetamodel ).copyPersisterForEntityName( entityName, mappedSuperclassName );
+			try {
+				final Class<Object> mappedSuperclass = serviceRegistry.requireService( ClassLoaderService.class )
+						.classForName( mappedSuperclassName );
+				managedTypeByClass.put( mappedSuperclass, customType );
+			}
+			catch (ClassLoadingException e) {
+				// ignored
+			}
+		}
 	}
 
 	public static void addAllowedEnumLiteralsToEnumTypesMap(

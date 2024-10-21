@@ -1,0 +1,8 @@
+tasks.register("build") {
+  doLast {
+    exec {
+      executable = './mvnw'
+      args = ['clean', 'install']
+    }
+  }
+}

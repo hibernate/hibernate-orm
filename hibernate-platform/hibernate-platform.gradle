@@ -32,7 +32,7 @@ dependencies {
 
         api project( ":hibernate-processor" )
         api project( ":hibernate-gradle-plugin" )
-        api project( ":hibernate-enhance-maven-plugin" )
+        api project( ":hibernate-maven-plugin" )
         api project( ":hibernate-ant" )
 
         api libs.hibernateModels

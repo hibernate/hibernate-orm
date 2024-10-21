@@ -7,7 +7,7 @@
 
 description = 'Integration for c3p0 Connection pooling into Hibernate ORM'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )

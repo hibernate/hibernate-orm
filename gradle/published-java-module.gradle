@@ -33,71 +33,6 @@ java {
 	withSourcesJar()
 }
 
-publishing {
-	publications {
-		// main publication
-		publishedArtifacts {
-			from components.java
-		}
-
-		// relocation for the published artifacts based on the old groupId
-		relocationPom( MavenPublication ) {
-			pom {
-				name = project.name + ' - relocation'
-				groupId = 'org.hibernate'
-				artifactId = project.name
-				version = project.version
-
-				description = project.description
-				url = 'https://hibernate.org/orm'
-
-				organization {
-					name = 'Hibernate.org'
-					url = 'https://hibernate.org'
-				}
-
-				licenses {
-					license {
-						name = 'GNU Library General Public License v2.1 or later'
-						url = 'https://www.opensource.org/licenses/LGPL-2.1'
-						comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
-						distribution = 'repo'
-					}
-				}
-
-				scm {
-					url = 'https://github.com/hibernate/hibernate-orm'
-					connection = 'scm:git:https://github.com/hibernate/hibernate-orm.git'
-					developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
-				}
-
-				developers {
-					developer {
-						id = 'hibernate-team'
-						name = 'The Hibernate Development Team'
-						organization = 'Hibernate.org'
-						organizationUrl = 'https://hibernate.org'
-					}
-				}
-
-				issueManagement {
-					system = 'jira'
-					url = 'https://hibernate.atlassian.net/browse/HHH'
-				}
-
-				distributionManagement {
-					relocation {
-						groupId = 'org.hibernate.orm'
-						artifactId = project.name
-						version = project.version
-					}
-				}
-			}
-		}
-	}
-}
-
-
 var signingKey = resolveSigningKey()
 var signingPassword = findSigningProperty( "signingPassword" )
 
@@ -237,7 +172,6 @@ tasks.release.dependsOn tasks.test, tasks.publishToSonatype
 tasks.preVerifyRelease.dependsOn build
 tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
 tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
-tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
 
 tasks.publishToSonatype.mustRunAfter test
 

@@ -8,7 +8,7 @@ import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
  */
 description = 'Hibernate compile-time tooling'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 apply plugin: 'org.hibernate.build.version-injection'
 
 //java {

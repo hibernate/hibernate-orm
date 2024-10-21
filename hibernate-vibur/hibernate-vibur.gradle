@@ -7,7 +7,7 @@
 
 description = 'Integration for Vibur Connection pooling as a Hibernate ORM ConnectionProvider'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )

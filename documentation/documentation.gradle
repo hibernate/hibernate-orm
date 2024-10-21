@@ -137,7 +137,7 @@ dependencies {
 	reportAggregation project(':hibernate-spatial')
 	reportAggregation project(':hibernate-vibur')
 	reportAggregation project(':hibernate-ant')
-	reportAggregation project(':hibernate-enhance-maven-plugin')
+	reportAggregation project(':hibernate-maven-plugin')
 	reportAggregation project(':hibernate-processor')
 
 	asciidoctorGems 'rubygems:rouge:4.1.1'

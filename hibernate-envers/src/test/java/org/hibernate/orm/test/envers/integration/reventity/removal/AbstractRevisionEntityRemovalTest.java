@@ -34,8 +34,7 @@ public abstract class AbstractRevisionEntityRemovalTest extends BaseEnversJPAFun
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				StrTestEntity.class, ListOwnedEntity.class, ListOwningEntity.class,
-				getRevisionEntityClass()
+				StrTestEntity.class, ListOwnedEntity.class, ListOwningEntity.class
 		};
 	}
 

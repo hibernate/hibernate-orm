@@ -38,7 +38,7 @@ public class DirtyTrackingEmbeddableTest {
 	// --- //
 
 	@Embeddable
-	private static class Address1 {
+	static class Address1 {
 		String street1;
 		String street2;
 		String city;
@@ -47,7 +47,7 @@ public class DirtyTrackingEmbeddableTest {
 		String phone;
 	}
 
-	private static class Address2 {
+	static class Address2 {
 		String street1;
 		String street2;
 		String city;
@@ -57,7 +57,7 @@ public class DirtyTrackingEmbeddableTest {
 	}
 
 	@Entity
-	private static class SimpleEntity {
+	static class SimpleEntity {
 
 		@Id
 		Long id;

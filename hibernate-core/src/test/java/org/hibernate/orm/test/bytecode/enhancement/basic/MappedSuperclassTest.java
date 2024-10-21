@@ -79,7 +79,7 @@ public class MappedSuperclassTest {
 	// --- //
 
 	@MappedSuperclass
-	private static class Person {
+	static class Person {
 
 		Object anUnspecifiedObject;
 
@@ -102,7 +102,7 @@ public class MappedSuperclassTest {
 	}
 
 	@Entity
-	private static class Employee extends Person {
+	static class Employee extends Person {
 
 		String title;
 

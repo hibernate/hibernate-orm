@@ -67,7 +67,7 @@ public class OneToManyAssociationTest {
 	// --- //
 
 	@Entity
-	private static class Customer {
+	static class Customer {
 
 		@Id
 		Long id;
@@ -97,7 +97,7 @@ public class OneToManyAssociationTest {
 	}
 
 	@Entity
-	private static class CustomerInventory {
+	static class CustomerInventory {
 
 		@Id
 		Long id;

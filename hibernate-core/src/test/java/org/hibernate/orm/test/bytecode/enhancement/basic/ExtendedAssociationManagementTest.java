@@ -53,7 +53,7 @@ public class ExtendedAssociationManagementTest {
 	// --- //
 
 	@Entity
-	private static class Customer {
+	static class Customer {
 
 		@Id
 		Long id;
@@ -67,7 +67,7 @@ public class ExtendedAssociationManagementTest {
 	}
 
 	@Entity
-	private static class User {
+	static class User {
 
 		@Id
 		Long id;

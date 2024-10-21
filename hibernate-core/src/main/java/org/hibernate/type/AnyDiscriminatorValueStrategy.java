@@ -4,6 +4,7 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Incubating;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 
 /**
@@ -12,8 +13,10 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
  *
  * @see AnyDiscriminatorValue
  *
+ * @since 7.0
  * @author Steve Ebersole
  */
+@Incubating
 public enum AnyDiscriminatorValueStrategy {
 	/**
 	 * Pick between {@link #IMPLICIT} and {@link #EXPLICIT} based on

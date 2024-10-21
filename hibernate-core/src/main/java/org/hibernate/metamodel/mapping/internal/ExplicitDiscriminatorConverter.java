@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
@@ -58,6 +59,11 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 			detailsByValue.put( value, details );
 			detailsByEntityName.put( entityDescriptor.getEntityName(), details );
 		} );
+	}
+
+	@Override
+	public AnyDiscriminatorValueStrategy getValueStrategy() {
+		return AnyDiscriminatorValueStrategy.EXPLICIT;
 	}
 
 	@Override

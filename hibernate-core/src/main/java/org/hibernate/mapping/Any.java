@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -34,6 +35,7 @@ public class Any extends SimpleValue {
 
 	// common
 	private Map<Object,String> metaValueToEntityNameMap;
+	private AnyDiscriminatorValueStrategy discriminatorValueStrategy = AnyDiscriminatorValueStrategy.AUTO;
 	private boolean lazy = true;
 
 	private AnyType resolvedType;
@@ -73,6 +75,7 @@ public class Any extends SimpleValue {
 		this.metaValueToEntityNameMap = original.metaValueToEntityNameMap == null
 				? null
 				: new HashMap<>(original.metaValueToEntityNameMap);
+		this.discriminatorValueStrategy = original.discriminatorValueStrategy;
 		this.lazy = original.lazy;
 	}
 
@@ -128,6 +131,28 @@ public class Any extends SimpleValue {
 		this.keyMapping.setTypeName( identifierType );
 	}
 
+	/**
+	 * Current strategy for interpreting {@linkplain org.hibernate.annotations.AnyDiscriminatorValue} definitions,
+	 * especially in terms of implicit, explicit and potentially missing values.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	public AnyDiscriminatorValueStrategy getDiscriminatorValueStrategy() {
+		return discriminatorValueStrategy;
+	}
+
+	/**
+	 * Set the strategy
+	 *
+	 * @see #getDiscriminatorValueStrategy
+	 * @since 7.0
+	 */
+	@Incubating
+	public void setDiscriminatorValueStrategy(AnyDiscriminatorValueStrategy discriminatorValueStrategy) {
+		this.discriminatorValueStrategy = discriminatorValueStrategy;
+	}
+
 	@Override
 	public AnyType getType() throws MappingException {
 		if ( resolvedType == null ) {
@@ -150,6 +175,7 @@ public class Any extends SimpleValue {
 			resolvedType = MappingHelper.anyMapping(
 					discriminatorType,
 					identifierType,
+					discriminatorValueStrategy,
 					metaValueToEntityNameMap,
 					isLazy(),
 					getBuildingContext()

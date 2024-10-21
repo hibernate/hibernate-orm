@@ -12,7 +12,6 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.spi.NavigablePath;
@@ -87,11 +86,11 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		if ( CollectionPart.Nature.ELEMENT.getName().equals( name ) ) {
 			return elementPathSource;
 		}
-		return elementPathSource.findSubPathSource( name, metamodel );
+		return elementPathSource.findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

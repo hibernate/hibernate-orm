@@ -139,14 +139,13 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final PersistentAttribute<? super J,?> attribute = findAttribute( name );
+		final PersistentAttribute<? super J,?> attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
 		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 		}
-
 		else if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
 			return discriminatorPathSource;
 		}
@@ -156,18 +155,19 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		final PersistentAttribute<? super J,?> attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
 		else {
-			//TODO: eliminate this cast!
-			final PersistentAttribute<?, ?> subtypeAttribute = findSubtypeAttribute( name );
-			if ( subtypeAttribute != null ) {
-				return (SqmPathSource<?>) subtypeAttribute;
+			if ( includeSubtypes ) {
+				final PersistentAttribute<?, ?> subtypeAttribute = findSubtypeAttribute( name );
+				if ( subtypeAttribute != null ) {
+					return (SqmPathSource<?>) subtypeAttribute;
+				}
 			}
-			else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+			if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 				return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 			}
 			else if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {

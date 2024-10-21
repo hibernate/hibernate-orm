@@ -347,6 +347,8 @@ if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.nam
     include 'hibernate-jfr'
 }
 
+include 'hibernate-scan-jandex'
+
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-processor'
@@ -367,3 +369,5 @@ rootProject.children.each { project ->
     assert project.buildFile.isFile()
 }
 include 'hibernate-platform'
+
+

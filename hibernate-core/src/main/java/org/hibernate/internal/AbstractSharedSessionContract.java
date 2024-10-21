@@ -954,7 +954,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	//      the clashing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		final NativeQueryImpl query = createNativeQuery( sqlString );
-		addResultType( resultClass, query );
+		if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
+			query.setResultEntityClass( resultClass );
+		}
+		else {
+			addResultType(resultClass, query);
+		}
 		return query;
 	}
 
@@ -967,9 +972,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 		else if ( List.class.equals( resultClass ) ) {
 			query.setTupleTransformer( NativeQueryListTransformer.INSTANCE );
-		}
-		else if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
-			query.addEntity( resultClass, LockMode.READ );
 		}
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
 			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {

@@ -235,6 +235,9 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link Session} and use it to perform an action
 	 * within the bounds of a transaction.
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link #runInTransaction}
 	 */
 	default void inTransaction(Consumer<Session> action) {
 		inSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
@@ -273,6 +276,9 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link Session} and use it to obtain a value
 	 * within the bounds of a transaction.
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link #callInTransaction}
 	 */
 	default <R> R fromTransaction(Function<Session,R> action) {
 		return fromSession( session -> manageTransaction( session, session.beginTransaction(), action ) );

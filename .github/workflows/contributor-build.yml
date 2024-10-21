@@ -29,7 +29,67 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request_target' || github.repository != 'hibernate/hibernate-orm' }}
 
 jobs:
+  # Pre-requisite step that only runs format checks
+  format_checks:
+    permissions:
+      contents: read
+    name: Java 17
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Check out commit already pushed to branch
+        if: "! github.event.pull_request.number"
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        if: github.event.pull_request.number
+        with:
+          ref: "refs/pull/${{ github.event.pull_request.number }}/head"
+          persist-credentials: false
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Get year/month for cache key
+        id: get-date
+        run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        id: cache-maven
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gradle/caches/
+            ~/.gradle/wrapper/
+          # refresh cache every month to avoid unlimited growth
+          key: maven-localrepo-${{ steps.get-date.outputs.yearmonth }}
+      - name: Run format checks
+        env:
+          # Don't populate Develocity cache in pull requests as that's potentially dangerous
+          POPULATE_REMOTE_GRADLE_CACHE: "${{ github.event_name == 'push' }}"
+          # WARNING: exposes secrets, so must only be passed to a step that doesn't run unapproved code.
+          DEVELOCITY_ACCESS_KEY: "${{ github.event_name == 'push' && secrets.GRADLE_ENTERPRISE_ACCESS_KEY || '' }}"
+        run: |
+          ./gradlew formatChecks
+      - name: Upload test reports (if Gradle failed)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-reports-java11-${{ matrix.rdbms }}
+          path: |
+            ./**/target/reports/tests/
+      - name: Omit produced artifacts from build cache
+        run: ./ci/before-cache.sh
+  # Actual build that executes tests
   build:
+    needs: format_checks
     permissions:
       contents: read
     name: Java 17

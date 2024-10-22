@@ -141,28 +141,28 @@ public class JoinedInheritanceDiscriminatorSelectionTest {
 		inspector.clear();
 
 		scope.inTransaction( session -> {
-			// With type filters we still join all subclasses when selecting the entity instance
+			// With type filters we still join all subclasses that have properties when selecting the entity instance
 			// because we are not aware of the type restriction when processing the selection
 
 			assertThat( session.createQuery(
 					"from ParentEntity p where type(p) = ParentEntity",
 					ParentEntity.class
 			).getResultList() ).hasSize( 1 );
-			inspector.assertNumberOfJoins( 0, 3 );
+			inspector.assertNumberOfJoins( 0, 2 );
 			inspector.clear();
 
 			assertThat( session.createQuery(
 					"from ParentEntity p where type(p) = ChildA",
 					ParentEntity.class
 			).getResultList() ).hasSize( 1 );
-			inspector.assertNumberOfJoins( 0, 3 );
+			inspector.assertNumberOfJoins( 0, 2 );
 			inspector.clear();
 
 			assertThat( session.createQuery(
 					"from ParentEntity p where type(p) = SubChildA",
 					ParentEntity.class
 			).getResultList() ).hasSize( 1 );
-			inspector.assertNumberOfJoins( 0, 3 );
+			inspector.assertNumberOfJoins( 0, 2 );
 			inspector.clear();
 
 			// With treat() we only join the needed subclasses

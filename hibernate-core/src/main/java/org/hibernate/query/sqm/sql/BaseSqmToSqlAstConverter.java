@@ -3170,10 +3170,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 				);
-				actualTableGroup.resolveTableReference(
-						null,
-						subType.getEntityPersister().getMappedTableDetails().getTableName()
-				);
 			}
 		}
 	}
@@ -7141,6 +7137,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.push( () -> fixtureType );
 			final Expression checkValue = (Expression) whenFragment.getCheckValue().accept( this );
 			inferrableTypeAccessStack.pop();
+			handleTypeInCaseExpression( fixture, checkValue );
+
 			final MappingModelExpressible<?> alreadyKnown = resolved;
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
@@ -7174,6 +7172,42 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				whenFragments,
 				otherwise
 		);
+	}
+
+	private void handleTypeInCaseExpression(Expression fixture, Expression checkValue) {
+		if ( fixture instanceof DiscriminatorPathInterpretation<?> ) {
+			final DiscriminatorPathInterpretation<?> typeExpression = (DiscriminatorPathInterpretation<?>) fixture;
+			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
+			final MappingType partMappingType = tableGroup.getModelPart().getPartMappingType();
+			if ( !(partMappingType instanceof EntityMappingType) ) {
+				return;
+			}
+			final EntityMappingType entityMappingType = (EntityMappingType) partMappingType;
+			if ( entityMappingType.getDiscriminatorMapping().hasPhysicalColumn() ) {
+				// If the entity type has a physical type column we only need to register an expression
+				// usage for the root type to prevent pruning the table where the discriminator is found
+				registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						entityMappingType.getRootEntityDescriptor().getEntityName()
+				);
+			}
+			else if ( checkValue instanceof EntityTypeLiteral ) {
+				// Register an expression type usage for the literal subtype to prevent pruning its table group
+				registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						( (EntityTypeLiteral) checkValue ).getEntityTypeDescriptor().getEntityName()
+				);
+			}
+			else {
+				// We have to assume all types are possible and can't do optimizations
+				registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, entityMappingType.getEntityName() );
+				for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
+					registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, subMappingType.getEntityName() );
+				}
+			}
+		}
 	}
 
 	@Override

@@ -4,43 +4,9 @@
  */
 package org.hibernate.dialect;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.lang.invoke.MethodHandles;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.regex.Pattern;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
@@ -66,9 +32,9 @@ import org.hibernate.dialect.function.ExtractFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.LpadRpadPadEmulation;
+import org.hibernate.dialect.function.OrdinalFunction;
 import org.hibernate.dialect.function.SqlFunction;
 import org.hibernate.dialect.function.TrimFunction;
-import org.hibernate.dialect.function.OrdinalFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -194,12 +160,44 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.lang.invoke.MethodHandles;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
@@ -208,44 +206,7 @@ import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.type.SqlTypes.ARRAY;
-import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.DATE;
-import static org.hibernate.type.SqlTypes.DECIMAL;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
-import static org.hibernate.type.SqlTypes.INTEGER;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NUMERIC;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.REAL;
-import static org.hibernate.type.SqlTypes.ROWID;
-import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.TIME;
-import static org.hibernate.type.SqlTypes.TIMESTAMP;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_UTC;
-import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.isCharacterType;
-import static org.hibernate.type.SqlTypes.isEnumType;
-import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
-import static org.hibernate.type.SqlTypes.isIntegral;
-import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
-import static org.hibernate.type.SqlTypes.isVarbinaryType;
-import static org.hibernate.type.SqlTypes.isVarcharType;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -2054,10 +2015,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The name identifying the native generator strategy.
 	 *
 	 * @deprecated Use {@linkplain #getNativeValueGenerationStrategy()} instead
+	 *
+	 * @implNote Only used with {@code hbm.xml} and {@linkplain org.hibernate.annotations.GenericGenerator},
+	 * both of which have been deprecated
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	public String getNativeIdentifierGeneratorStrategy() {
-		return getNativeValueGenerationStrategy().name().toLowerCase( Locale.ROOT );
+		// this is the legacy determination
+		return getIdentityColumnSupport().supportsIdentityColumns()
+				? GenerationType.IDENTITY.name().toLowerCase( Locale.ROOT )
+				: GenerationType.SEQUENCE.name().toLowerCase( Locale.ROOT );
 	}
 
 	/**
@@ -2065,6 +2032,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *     <li></li>
 	 * </ol>
 	 *
+	 * @see org.hibernate.annotations.NativeGenerator
 	 * @since 7.0
 	 */
 	@Incubating

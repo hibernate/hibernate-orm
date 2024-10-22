@@ -438,6 +438,10 @@ public interface HibernateAnnotations {
 			Nationalized.class,
 			NationalizedAnnotation.class
 	);
+	OrmAnnotationDescriptor<NativeGenerator, NativeGeneratorAnnotation> NATIVE_GENERATOR = new OrmAnnotationDescriptor<>(
+			NativeGenerator.class,
+			NativeGeneratorAnnotation.class
+	);
 	OrmAnnotationDescriptor<NaturalId, NaturalIdAnnotation> NATURAL_ID = new OrmAnnotationDescriptor<>(
 			NaturalId.class,
 			NaturalIdAnnotation.class

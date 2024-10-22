@@ -28,9 +28,12 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 
 /**
- * Hibernate extension to the Jakarta Persistence PersistenceConfiguration contract.
+ * Hibernate extension to the Jakarta Persistence {@link PersistenceConfiguration}
+ * contract.
  *
  * @author Steve Ebersole
+ *
+ * @since 7.0
  */
 public class HibernatePersistenceConfiguration extends PersistenceConfiguration {
 	/**

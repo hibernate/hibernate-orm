@@ -60,6 +60,15 @@ import java.util.List;
  * <li>when an exception is thrown by a stateless session, the current
  *     transaction is not automatically marked for rollback.
  * </ul>
+ * <p>
+ * Since version 7, the configuration property
+ * {@value org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE} has no effect
+ * on a stateless session. Automatic batching may be enabled by explicitly
+ * {@linkplain #setJdbcBatchSize setting the batch size}. However, automatic
+ * batching has the side effect of delaying execution of the batched operation,
+ * thus undermining the synchronous nature of operations performed through a
+ * stateless session. A preferred approach is to explicitly batch operations via
+ * {@link #insertMultiple}, {@link #updateMultiple}, or {@link #deleteMultiple}.
  *
  * @author Gavin King
  */
@@ -86,6 +95,16 @@ public interface StatelessSession extends SharedSessionContract {
 	Object insert(Object entity);
 
 	/**
+	 * Insert multiple records.
+	 *
+	 * @param entities a list of transient instances to be inserted
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	void insertMultiple(List<Object> entities);
+
+	/**
 	 * Insert a record.
 	 * <p>
 	 * The {@link jakarta.persistence.PostPersist} callback will be
@@ -109,6 +128,16 @@ public interface StatelessSession extends SharedSessionContract {
 	void update(Object entity);
 
 	/**
+	 * Update multiple records.
+	 *
+	 * @param entities a list of detached instances to be updated
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	void updateMultiple(List<Object> entities);
+
+	/**
 	 * Update a record.
 	 * <p>
 	 * The {@link jakarta.persistence.PostUpdate} callback will be
@@ -128,6 +157,16 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param entity a detached entity instance
 	 */
 	void delete(Object entity);
+
+	/**
+	 * Delete multiple records.
+	 *
+	 * @param entities a list of detached instances to be deleted
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	void deleteMultiple(List<Object> entities);
 
 	/**
 	 * Delete a record.
@@ -163,6 +202,19 @@ public interface StatelessSession extends SharedSessionContract {
 	 */
 	@Incubating
 	void upsert(Object entity);
+
+	/**
+	 * Perform an upsert, that is, to insert the record if it does
+	 * not exist, or update the record if it already exists, for
+	 * each given record.
+	 *
+	 * @param entities a list of detached instances and new
+	 *                 instances with assigned identifiers
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	void upsertMultiple(List<Object> entities);
 
 	/**
 	 * Use a SQL {@code merge into} statement to perform an upsert.

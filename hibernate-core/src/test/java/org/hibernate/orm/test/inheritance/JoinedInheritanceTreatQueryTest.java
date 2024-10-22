@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.inheritance;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -28,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
-@SessionFactory
+@SessionFactory( useCollectingStatementInspector = true )
 @DomainModel( annotatedClasses = {
 		JoinedInheritanceTreatQueryTest.Product.class,
 		JoinedInheritanceTreatQueryTest.ProductOwner.class,
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		JoinedInheritanceTreatQueryTest.Description.class,
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16574" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18745" )
 public class JoinedInheritanceTreatQueryTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -63,6 +65,8 @@ public class JoinedInheritanceTreatQueryTest {
 
 	@Test
 	public void testTreatedJoin(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		scope.inTransaction( session -> {
 			final Product result = session.createQuery(
 					"from Product p " +
@@ -72,11 +76,14 @@ public class JoinedInheritanceTreatQueryTest {
 			).getSingleResult();
 			assertThat( result.getOwner() ).isInstanceOf( ProductOwner1.class );
 			assertThat( ( (ProductOwner1) result.getOwner() ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
 		} );
 	}
 
 	@Test
 	public void testImplicitTreatedJoin(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		scope.inTransaction( session -> {
 			final Product result = session.createQuery(
 					"from Product p " +
@@ -85,11 +92,14 @@ public class JoinedInheritanceTreatQueryTest {
 			).getSingleResult();
 			assertThat( result.getOwner() ).isInstanceOf( ProductOwner1.class );
 			assertThat( ( (ProductOwner1) result.getOwner() ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
 		} );
 	}
 
 	@Test
 	public void testTreatedRoot(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		scope.inTransaction( session -> {
 			final ProductOwner result = session.createQuery(
 					"from ProductOwner owner " +
@@ -98,11 +108,14 @@ public class JoinedInheritanceTreatQueryTest {
 			).getSingleResult();
 			assertThat( result ).isInstanceOf( ProductOwner1.class );
 			assertThat( ( (ProductOwner1) result ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
 		} );
 	}
 
 	@Test
 	public void testTreatedEntityJoin(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		scope.inTransaction( session -> {
 			final Product result = session.createQuery(
 					"from Product p " +
@@ -112,11 +125,14 @@ public class JoinedInheritanceTreatQueryTest {
 			).getSingleResult();
 			assertThat( result.getOwner() ).isInstanceOf( ProductOwner1.class );
 			assertThat( ( (ProductOwner1) result.getOwner() ).getDescription().getText() ).isEqualTo( "description" );
+			inspector.assertNumberOfJoins( 0, 3 );
 		} );
 	}
 
 	@Test
 	public void testBasicProperty(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		scope.inTransaction( session -> {
 			final Product result = session.createQuery(
 					"from Product p " +
@@ -126,6 +142,7 @@ public class JoinedInheritanceTreatQueryTest {
 			).getSingleResult();
 			assertThat( result.getOwner() ).isInstanceOf( ProductOwner2.class );
 			assertThat( ( (ProductOwner2) result.getOwner() ).getBasicProp() ).isEqualTo( "basic_prop" );
+			inspector.assertNumberOfJoins( 0, 2 );
 		} );
 	}
 

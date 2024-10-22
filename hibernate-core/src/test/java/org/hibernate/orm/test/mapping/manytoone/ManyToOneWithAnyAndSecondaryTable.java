@@ -38,13 +38,13 @@ import static jakarta.persistence.FetchType.LAZY;
  */
 @Jpa(
 		annotatedClasses = {
-				ManyToOneWithAnyAndSameEntityTest.Actor.class,
-				ManyToOneWithAnyAndSameEntityTest.Contact.class
+				ManyToOneWithAnyAndSecondaryTable.Actor.class,
+				ManyToOneWithAnyAndSecondaryTable.Contact.class
 		},
 		integrationSettings = @Setting(name = JdbcSettings.SHOW_SQL, value = "true")
 )
 @JiraKey("HHH-18750")
-class ManyToOneWithAnyAndSameEntityTest {
+class ManyToOneWithAnyAndSecondaryTable {
 
 	@Test
 	void testMappingManyToOneMappedByAnyPersistedInSecondaryTable(EntityManagerFactoryScope scope) {

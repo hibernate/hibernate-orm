@@ -145,7 +145,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				if ( pathRootByExposedNavigable != null ) {
 					// identifier is an "unqualified attribute reference"
 					validateAsRoot( pathRootByExposedNavigable );
-					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier );
+					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier, true );
 					return isTerminal ? sqmPath : new DomainPathPart( sqmPath );
 				}
 			}

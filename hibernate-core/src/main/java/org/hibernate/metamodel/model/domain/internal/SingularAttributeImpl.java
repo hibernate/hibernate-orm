@@ -14,7 +14,6 @@ import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -132,8 +131,8 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
-		return sqmPathSource.findSubPathSource( name, metamodel );
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		return sqmPathSource.findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

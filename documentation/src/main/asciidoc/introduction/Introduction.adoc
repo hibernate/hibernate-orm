@@ -625,11 +625,11 @@ configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
                           Action.SPEC_ACTION_DROP_AND_CREATE);
 ----
 
-Alternatively, in Hibernate 6, we may use the new link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API to export the schema, just as we did <<main-hibernate,above>>.
+Alternatively, we may use the new link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API to export the schema, just as we did <<main-hibernate,above>>.
 
 [source,java]
 ----
-sessionFactory.getSchemaManager().exportMappedObjects(true);
+sessionFactory.getSchemaManager().export(true);
 ----
 
 Since executing DDL statements is very slow on many databases, we don't want to do this before every test.
@@ -642,7 +642,7 @@ We may truncate all the tables, leaving an empty database schema, using the `Sch
 
 [source,java]
 ----
-sessionFactory.getSchemaManager().truncateMappedObjects();
+sessionFactory.getSchemaManager().truncate();
 ----
 
 After truncating tables, we might need to initialize our test data.
@@ -668,7 +668,7 @@ configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE,
                           "/org/example/test-data.sql");
 ----
 
-The SQL script will be executed every time `exportMappedObjects()` or `truncateMappedObjects()` is called.
+The SQL script will be executed every time `export()` or `truncate()` is called.
 
 [TIP]
 ====

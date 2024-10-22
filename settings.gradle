@@ -279,7 +279,7 @@ buildCache {
         enabled = !settings.ext.isCiEnvironment
     }
     remote(HttpBuildCache) {
-        enabled = true
+        enabled = settings.ext.useRemoteCache
         push = settings.ext.populateRemoteBuildCache
         url = 'https://ge.hibernate.org/cache/'
     }

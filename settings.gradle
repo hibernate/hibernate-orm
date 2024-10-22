@@ -287,7 +287,7 @@ buildCache {
         enabled = !settings.ext.isCiEnvironment
     }
     remote(HttpBuildCache) {
-        enabled = true
+        enabled = settings.ext.useRemoteCache
         // Check access key presence to avoid build cache errors on PR builds when access key is not present
         def accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
         push = settings.ext.populateRemoteBuildCache && accessKey

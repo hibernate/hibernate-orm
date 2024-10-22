@@ -7,11 +7,14 @@ package org.hibernate;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.naming.Referenceable;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.SynchronizationType;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.graph.RootGraph;
@@ -157,6 +160,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @return The created session.
 	 *
+	 * @apiNote This operation is very similar to {@link #createEntityManager()}
+	 *
 	 * @throws HibernateException Indicates a problem opening the session; pretty rare here.
 	 */
 	Session openSession() throws HibernateException;
@@ -293,6 +298,42 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	default <R> R fromStatelessTransaction(Function<StatelessSession,R> action) {
 		return fromStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
+
+	/**
+	 * Create a new {@link Session}.
+	 */
+	@Override
+	Session createEntityManager();
+
+	/**
+	 * Create a new {@link Session}, with the given
+	 * {@linkplain EntityManager#getProperties properties}.
+	 */
+	@Override
+	Session createEntityManager(Map<?, ?> map);
+
+	/**
+	 * Create a new {@link Session}, with the given
+	 * {@linkplain SynchronizationType synchronization type}.
+	 *
+	 * @throws IllegalStateException if the persistence unit has
+	 * {@linkplain jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 * resource-local} transaction management
+	 */
+	@Override
+	Session createEntityManager(SynchronizationType synchronizationType);
+
+	/**
+	 * Create a new {@link Session}, with the given
+	 * {@linkplain SynchronizationType synchronization type} and
+	 * {@linkplain EntityManager#getProperties properties}.
+	 *
+	 * @throws IllegalStateException if the persistence unit has
+	 * {@linkplain jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 * resource-local} transaction management
+	 */
+	@Override
+	Session createEntityManager(SynchronizationType synchronizationType, Map<?, ?> map);
 
 	/**
 	 * Retrieve the {@linkplain Statistics statistics} for this factory.

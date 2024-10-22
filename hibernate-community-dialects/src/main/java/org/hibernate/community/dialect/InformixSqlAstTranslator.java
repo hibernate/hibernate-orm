@@ -65,6 +65,10 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		super.visitSqlSelections( selectClause );
 	}
 
+	protected SqlAstNodeRenderingMode getSqlSelectionsDefaultParameterRenderingMode(){
+		return SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
+	}
+
 	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsSkipFirstClause();

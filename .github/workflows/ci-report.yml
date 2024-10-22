@@ -1,0 +1,72 @@
+name: GH Actions CI reporting
+
+on:
+  workflow_run:
+    workflows: [ "GH Actions CI" ]
+    types: [ completed ]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish-build-scans:
+    name: Publish Develocity build scans
+    if: github.repository == 'hibernate/hibernate-orm' && github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout target branch which has trusted code
+      - name: Check out target branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.ref }}
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Get year/month for cache key
+        id: get-date
+        run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
+        shell: bash
+      # Note we only restore the caches, we never populate them
+      - name: Restore Maven/Gradle local caches
+        uses: actions/cache/restore@v4
+        id: cache-maven-gradle
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            ~/.gradle/wrapper/
+          # refresh cache every month to avoid unlimited growth
+          # use a different key than workflows running untrusted code
+          key: trusted-maven-gradle-caches-${{ steps.get-date.outputs.yearmonth }}
+      - name: Download GitHub Actions artifacts for the Develocity build scans
+        id: downloadBuildScan
+        uses: actions/download-artifact@v4
+        with:
+          name: build-scan-data-${{ matrix.rdbms }}
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+          path: /tmp/downloaded-build-scan-data/
+          pattern: build-scan-data-*
+        # Don't fail the build if there are no matching artifacts
+        continue-on-error: true
+      - name: Publish Develocity build scans for previous builds
+        if: ${{ steps.downloadBuildScan.outcome != 'failure'}}
+        run: |
+          shopt -s nullglob # Don't run the loop below if there are no artifacts
+          status=0
+          for build_scan_data_directory in /tmp/downloaded-build-scan-data/*
+          do
+            rm -rf ~/.gradle/build-scan-data
+            mkdir -p ~/.gradle/build-scan-data
+            tar -xzf "$build_scan_data_directory/build-scan-data.tgz" -C ~/.gradle/build-scan-data \
+            && ./gradlew --no-build-cache buildScanPublishPrevious || status=1
+          done
+          exit $status
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY_PR }}

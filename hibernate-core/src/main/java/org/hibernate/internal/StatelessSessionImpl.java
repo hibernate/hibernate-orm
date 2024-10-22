@@ -105,6 +105,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		temporaryPersistenceContext = new StatefulPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
 		setUpMultitenancy( factory, influencers );
+		setJdbcBatchSize( 0 );
 	}
 
 	@Override
@@ -117,6 +118,20 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object insert(Object entity) {
 		return insert( null, entity );
+	}
+
+	@Override
+	public void insertMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				insert( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
+		}
 	}
 
 	@Override
@@ -181,6 +196,20 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public void deleteMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				delete( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
+		}
+	}
+
+	@Override
 	public void delete(String entityName, Object entity) {
 		checkOpen();
 		final EntityPersister persister = getEntityPersister( entityName, entity );
@@ -215,8 +244,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void upsert(Object entity) {
-		upsert( null, entity );
+	public void updateMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				update( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
+		}
 	}
 
 	@Override
@@ -254,6 +292,25 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( persister.getEntityName() );
 			}
+		}
+	}
+
+	@Override
+	public void upsert(Object entity) {
+		upsert( null, entity );
+	}
+
+	@Override
+	public void upsertMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				upsert( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
 		}
 	}
 

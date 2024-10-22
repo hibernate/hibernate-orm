@@ -497,7 +497,7 @@ The JPA specification defines a quite limited set of basic types:
 | Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc
 | Strings | `java.lang` | `String`
 | Arbitrary-precision numeric types | `java.math` | `BigInteger`, `BigDecimal`
-| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`
+| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`, `Year`
 | Deprecated date/time types 💀 | `java.util` | `Date`, `Calendar`
 | Deprecated JDBC date/time types 💀 | `java.sql` | `Date`, `Time`, `Timestamp`
 | Binary and character arrays | | `byte[]`, `char[]`
@@ -600,7 +600,23 @@ Status status;
 
 ----
 
-In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
+The `@EnumeratedValue` annotation allows the column value to be customized:
+
+[source,java]
+----
+enum Resolution {
+    UNRESOLVED(0), FIXED(1), REJECTED(-1);
+
+    @EnumeratedValue // store the code, not the enum ordinal() value
+    final int code;
+
+    Resolution(int code) {
+         this.code = code;
+    }
+}
+----
+
+Since Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
 
 - a `VARCHAR` column type with a `CHECK` constraint on most databases, or
 - an `ENUM` column type on MySQL.

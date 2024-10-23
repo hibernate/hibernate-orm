@@ -429,8 +429,29 @@ If you're new to Hibernate, frameworks which wrap JPA are quite likely to make y
 
 We prefer a _bottom-up_ approach to organizing our code.
 We like to start thinking about methods and functions, not about architectural layers and container-managed objects.
-To illustrate the sort of approach to code organization that we advocate, let's consider a service which queries the database using HQL or SQL.
 
+****
+When we wrote _An Introduction to Hibernate 6_, the predecessor of this document, we broke with a long practice of remaining agnostic in debates over application architecture.
+Into the vacuum created by our agnosticism had poured a wealth of advice which tended to encourage over-engineering and violation of the First Commandment of software engineering: _Don't Repeat Yourself._
+We felt compelled to speak up for a more elementary approach.
+
+At that time, we were especially frustrated with the limitations of popular frameworks which claimed to simplify the use of JPA by wrapping and hiding the `EntityManager`.
+In our considered opinion, such frameworks typically made JPA harder to use.
+
+The birth of the Jakarta Data specification has obsoleted our arguments against repositories, along with the older frameworks which were the source of our frustration.
+Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the Hibernate `StatelessSession`.
+
+That said, we reiterate our preference for design which emerges organically from the code itself, via a process of refactoring and iterative abstraction.
+The Extract Method refactoring is a far, far more powerful tool than drawing boxes on whiteboards.
+In particular, we hereby give you permission to write code which mixes business logic with persistence logic within the same architectural layer--every architectural layer comes with a high cost in boilerplate, and in many contexts a separate persistence layer is simply unnecessary.
+// In 2025 it no longer makes sense to shoehorn every system into an architecture advocated by some book written in the early 2000's.
+Both of the following architectures are allowed, and each has its place:
+
+image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
+
+In the case that a separate persistence layer _is_ helpful, we encourage you to consider the use of Jakarta Data repositories, in preference to older approaches.
+****
+To illustrate the sort of approach to code organization that we advocate, let's consider a service which queries the database using HQL or SQL.
 We might start with something like this, a mix of UI and persistence logic:
 
 [source,java]
@@ -614,7 +635,10 @@ Alternatively, if CDI isn't available, we may directly instantiate the generated
 
 [TIP]
 ====
-The Jakarta Data specification now formalizes this approach, and Hibernate Processor provides an implementation, which we've branded _Hibernate Data Repositories_.
+The Jakarta Data specification now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into Hibernate Processor.
+You probably already have it available in your program.
+
+Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to _Introducing Hibernate Data Repositories._
 ====
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
@@ -737,137 +761,6 @@ sessionFactory.getSchemaManager().validate();
 ----
 This "test" is one which many people like to run even in production, when the system starts up.
 =====
-
-[[architecture]]
-=== Architecture and the persistence layer
-
-Let's now consider a different approach to code organization, one we treat with suspicion.
-
-[WARNING]
-====
-In this section, we're going to give you our _opinion_.
-If you're only interested in objective facts,
-// , or if you prefer not to read things that might undermine the opinion you currently hold,
-please feel free to skip straight to the <<configuration,next chapter>>.
-====
-
-Hibernate is an architecture-agnostic library, not a framework, and therefore integrates comfortably with a wide range of Java frameworks and containers.
-Consistent with our place within the ecosystem, we've historically avoided giving out much advice on architecture.
-This is a practice we're now perhaps inclined to regret, since the resulting vacuum has come to be filled with advice from people advocating architectures, design patterns, and extra frameworks which we suspect make Hibernate a bit less pleasant to use than it should be.
-
-In particular, frameworks which wrap JPA seem to add bloat while subtracting some of the fine-grained control over data access that Hibernate works so hard to provide.
-These frameworks don't expose the full feature set of Hibernate--nor do they provide much interesting functionality of their own--and so the program is forced to work with a less powerful abstraction.
-
-The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for simple fear of pricking ourselves on the erect hackles that inevitably accompany such dogma-baiting is:
-
-> Code which interacts with the database belongs in a separate _persistence layer_.
-
-We lack the courage—perhaps even the conviction—to tell you categorically to _not_ follow this recommendation.
-But we do ask you to consider the cost in boilerplate of any architectural layer, and whether the benefits this cost buys are really worth it, in the context of your system.
-
-// To add a little background texture to this discussion, and at the risk of our Introduction degenerating into a rant at such an early stage, we're going ask you to humor us while talk a little more about ancient history.
-//
-// [%unbreakable]
-// .An epic tale of DAOs and Repositories
-// ****
-// Back in the dark days of Java EE 4, before the standardization of Hibernate, and subsequent ascendance of JPA in Java enterprise development, it was common to hand-code the messy JDBC interactions that Hibernate takes care of today.
-// In those terrible times, a pattern arose that we used to call _Data Access Objects_ (DAOs).
-// A DAO gave you a place to put all that nasty JDBC code, leaving the important program logic cleaner.
-//
-// When Hibernate arrived suddenly on the scene in 2001, developers loved it.
-// But Hibernate implemented no specification, and many wished to reduce or at least _localize_ the dependence of their project logic on Hibernate.
-// An obvious solution was to keep the DAOs around, but to replace the JDBC code inside them with calls to the Hibernate `Session`.
-//
-// We partly blame ourselves for what happened next.
-//
-// Back in 2002 and 2003 this really seemed like a pretty reasonable thing to do.
-// In fact, we contributed to the popularity of this approach by recommending—or at least not discouraging—the use of DAOs in _Hibernate in Action_.
-// We hereby apologize for this mistake, and for taking much too long to recognize it.
-//
-// Eventually, some folks came to believe that their DAOs shielded their program from depending in a hard way on ORM, allowing them to "swap out" Hibernate, and replace it with JDBC, or with something else.
-// In fact, this was never really true—there's quite a deep difference between the programming model of JDBC, where every interaction with the database is explicit and synchronous, and the programming model of stateful sessions in Hibernate, where updates are implicit, and SQL statements are executed asynchronously.
-//
-// But then the whole landscape for persistence in Java changed in April 2006, when the final draft of JPA 1.0 was approved.
-// Java now had a standard way to do ORM, with multiple high-quality implementations of the standard API.
-// This was the end of the line for the DAOs, right?
-//
-// Well, no.
-// It wasn't.
-// DAOs were rebranded "repositories", and continue to enjoy a sort-of zombie afterlife as a front-end to JPA.
-// But are they really pulling their weight, or are they just unnecessary extra complexity and bloat? An extra layer of indirection that makes stack traces harder to read and code harder to debug?
-//
-// Our considered view is that they're mostly just bloat.
-// The JPA `EntityManager` is a "repository", and it's a standard repository with a well-defined specification written by people who spend all day thinking about persistence.
-// If these repository frameworks offered anything actually _useful_—and not obviously foot-shooty—over and above what `EntityManager` provides, we would have already added it to `EntityManager` decades ago.
-// ****
-
-// Ultimately, we're not sure you need a separate persistence layer at all.
-That is to say, we beg you to please at least _consider_ the possibility that it might be OK to call the `EntityManager` directly from your business logic.
-
-image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
-
-We already hear you hissing at our heresy.
-But before slamming shut the lid of your laptop and heading off to fetch garlic and a pitchfork, take a couple of hours to weigh what we're proposing.
-
-Perhaps this is an argument we're bound to lose.
-If that's the case, we recommend the Jakarta Data specification as a foundation for your persistence layer.
-Our implementation of this specification, Hibernate Data Repositories, is built in to Hibernate Processor, and so you probably already have it available in your program.
-
-Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn't have: full compile-time type safety for your queries.
-To learn more, please refer to _Introducing Hibernate Data Repositories_.
-
-// OK, so, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
-// From this point of view, JPA _is_ your persistence layer.
-// And there's few good reasons to wrap this abstraction in a second abstraction that's _less_ generic.
-//
-// // We might even analogize `EntityManager` to `List`.
-// // Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
-// // They're a parallel class hierarchy that makes the data model harder to evolve over time.
-//
-// // Of course, such decisions are highly context-dependent: surely _some_ programs out there really do benefit from isolating the persistence logic into some sort of distinct layer; on the other hand, we're equally sure that there are others which simply _don't_.
-//
-// Even where a distinct persistence layer _is_ appropriate, DAO-style repositories aren't the unambiguously most-correct way to factorize the equation:
-//
-// - most nontrivial queries touch multiple entities, and so it's often quite ambiguous which repository such a query belongs to,
-// - most queries are extremely specific to a particular fragment of program logic, and aren't reused in different places across the system, and
-// - the various operations of a repository rarely interact or share common internal implementation details.
-//
-// Indeed, repositories, by nature, exhibit very low _cohesion_.
-// A layer of repository objects might make sense if you have multiple implementations of each repository, but in practice almost nobody ever does.
-// That's because they're also extremely highly _coupled_ to their clients, with a very large API surface.
-// And, on the contrary, a layer is only easily replaceable if it has a very _narrow_ API.
-//
-// [%unbreakable]
-// [TIP]
-// ====
-// Some people do indeed use mock repositories for testing, but we really struggle to see any value in this.
-// If we don't want to run our tests against our real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
-// This works even better in Hibernate 6 than in older versions of Hibernate, since HQL is now _much_ more portable between platforms.
-// ====
-//
-// // So even in cases where separation _is_ of benefit, we go on to question the notion that this must be achieved via a layer of container-managed objects.
-//
-// // That said, one thing we _do_ understand is the desire to package:
-// //
-// // - a HQL or SQL query string with
-// // - the code which binds its parameters
-// //
-// // as a typesafe function.
-// // DAO-style repositories seem to provide a very natural place to hang such functions, and we suspect that this accounts for at least some of their continued popularity.
-// // You're probably wondering how _we_ would go about defining such functions.
-//
-// // One thing that some repository frameworks offer is the ability to declare an abstract method that queries the database, and have the framework fill in an implementation of the method.
-// // But the way this works is that you must encode your query into the name of the method itself.
-// //
-// // Which, at least in principle, for a not-very-complicated query, leads to a method name like this:
-// //
-// // [.text-center]
-// // `findFirst10ByOrderDistinctPeopleByLastnameOrFirstnameAsc`
-// //
-// // This is a much worse query language than HQL.
-// // I think you can see why we didn't implement this idea in Hibernate.
-// //
-// _Phew_, let's move on.
 
 [[overview]]
 === Overview

@@ -11,7 +11,7 @@ Hibernate Data Repositories offers truly seamless integration of the ORM solutio
 
 Hibernate and Hibernate Reactive are core components of Quarkus 3, the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
 
-Unfortunately, the changes in Hibernate 6 obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
+Unfortunately, the changes in Hibernate 6 also obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
 
 
 This guide is an up-to-date, high-level discussion of the current feature set and recommended usage.

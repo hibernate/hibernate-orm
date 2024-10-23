@@ -443,7 +443,7 @@ The birth of the Jakarta Data specification has obsoleted our arguments against 
 Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the Hibernate `StatelessSession`.
 
 That said, we reiterate our preference for design which emerges organically from the code itself, via a process of refactoring and iterative abstraction.
-The Extract Method refactoring is a far, far more powerful tool than drawing boxes on whiteboards.
+The Extract Method refactoring is a far, far more powerful tool than drawing boxes and arrows on whiteboards.
 In particular, we hereby give you permission to write code which mixes business logic with persistence logic within the same architectural layer--every architectural layer comes with a high cost in boilerplate, and in many contexts a separate persistence layer is simply unnecessary.
 // In 2025 it no longer makes sense to shoehorn every system into an architecture advocated by some book written in the early 2000's.
 Both of the following architectures are allowed, and each has its place:

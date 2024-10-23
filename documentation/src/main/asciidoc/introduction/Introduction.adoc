@@ -518,8 +518,8 @@ We need a place to put the annotation, so let's move our query method to a new c
 [source,java]
 ----
 @CheckHQL // validate named queries at compile time
-@NamedQuery(name="findBooksByTitle",
-            query="from Book where title like :title order by title")
+@NamedQuery(name = "findBooksByTitle",
+            query = "from Book where title like :title order by title")
 class Queries {
 
     static List<Book> findBooksByTitleWithPagination(Session session,

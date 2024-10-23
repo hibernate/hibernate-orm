@@ -123,8 +123,8 @@ For example, if we had:
 [source,java]
 ----
 @CheckHQL // validate named queries at compile time
-@NamedQuery(name="findBooksByTitle",
-            query="from Book where title like :title order by title")
+@NamedQuery(name = "findBooksByTitle",
+            query = "from Book where title like :title order by title")
 @Entity
 class Book { ... }
 ----

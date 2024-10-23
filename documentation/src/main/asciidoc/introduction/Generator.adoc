@@ -1,19 +1,19 @@
 [[generator]]
 == Compile-time tooling
 
-The Metamodel Generator is a standard part of JPA.
+The _static metamodel generator_ is a standard part of JPA.
 // It's an annotation processor that produces a statically-typed metamodel of the entity classes in a Java program.
-We've actually already seen its handiwork in the code examples <<main-jpa,earlier>>: it's the author of the class `Book_`, which contains the static metamodel of the <<book,entity class>> `Book`.
+We've actually already seen its handiwork in the code examples <<main-hibernate,earlier>>: it's the author of the class `Book_`, which contains the static metamodel of the <<book,entity class>> `Book`.
 
 [[metamodel-generator]]
-.The Metamodel Generator
+.Hibernate Processor
 ****
 
 :generator: https://hibernate.org/orm/tooling/
 :generator-guide: {doc-user-guide-url}#tooling-modelgen
 
-Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
-That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
+{generator}[Hibernate Processor], the annotation processor formerly known as the Metamodel Generator, began its life as a code generator for what JPA calls a _static metamodel_.
+That is, it produces a typed model of the persistent classes in our program, giving us a type safe way to refer to their attributes in Java code.
 In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
 
 The history behind this thing is quite interesting.
@@ -25,20 +25,21 @@ And all the explicit generic types made user code quite verbose and difficult to
 For years, Gavin counted this as one of his more embarrassing missteps.
 
 But time has been kind to the static metamodel.
-In 2023, all Java compilers, build tools, and IDEs have robust support for annotation processing, and Java's local type inference (the `var` keyword) eliminates the verbose generic types.
+By now, all Java compilers, build tools, and IDEs have robust support for annotation processing, and Java's local type inference (the `var` keyword) eliminates the verbose generic types.
 JPA's `CriteriaBuilder` and `EntityGraph` APIs are still not quite perfect, but the imperfections aren't related to static type safety or annotation processing.
 The static metamodel itself is undeniably useful and elegant.
 
-And so now, in Hibernate 6.3, we're finally ready to go new places with the Metamodel Generator.
-And it turns out that there's quite a lot of unlocked potential there.
+And it turns out that there was quite a lot of unlocked potential there.
+Since Hibernate 6.3 the Processor has started taking on a much bigger role.
+Today, it even contains a complete implementation of the Jakarta Data specification.
 
-Now, you still don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned still also accept plain strings—but we find that it works well with Gradle and integrates smoothly with our IDE, and the advantage in type-safety is compelling.
+Now, you still don't have to use the Hibernate Processor with Hibernate—the APIs we just mentioned still also accept plain strings—but we find that it works well with Gradle and integrates smoothly with our IDE, and the advantage in type-safety is compelling.
 ****
 
 [TIP]
 ====
 We've already seen how to set up the annotation processor in the <<hello-hibernate,Gradle build>> we saw earlier.
-For more details on how to integrate the Metamodel Generator, check out the {generator-guide}[Static Metamodel Generator] section in the User Guide.
+For more details on how to integrate the Hibernate Processor, check out the {generator-guide}[Static Metamodel Generator] section in the User Guide.
 ====
 
 Here's an example of the sort of code that's generated for an entity class, as mandated by the JPA specification:
@@ -100,12 +101,9 @@ For each attribute of the entity, the `Book_` class has:
 1. a `String`-valued constant like `TITLE` , and
 2. a typesafe reference like `title` to a metamodel object of type `Attribute`.
 
-We've already been using metamodel references like `Book_.authors` and `Book.AUTHORS` in the previous chapters.
-So now let's see what else the Metamodel Generator can do for us.
-
 [TIP]
 ====
-The Metamodel Generator provides _statically-typed_ access to elements of the JPA `Metamodel`. But the `Metamodel` is also accessible in a "reflective" way, via the `EntityManagerFactory`.
+Hibernate Processor allows _statically-typed_ access to elements of the JPA `Metamodel`. But the `Metamodel` is also accessible in a "reflective" way, via the `EntityManagerFactory`.
 
 [source,java]
 ----
@@ -118,15 +116,20 @@ This is very useful for writing generic code in frameworks or libraries.
 For example, you could use it to create your own criteria query API.
 ====
 
-Automatic generation of _finder methods_ and _query methods_ is a new feature of Hibernate's implementation of the Metamodel Generator, and an extension to the functionality defined by the JPA specification.
-In this chapter, we're going to explore these features.
+We've already been using metamodel references like `Book_.authors` and `Book.AUTHORS` in the previous chapters.
+So now let's see what else Hibernate Processor can do for us.
 
-[CAUTION]
+[NOTE]
 ====
-The functionality described in the rest of this chapter depends on the use of the annotations described in <<entities>>.
-The Metamodel Generator is not currently able to generate finder methods and query methods for entities declared completely in XML, and it's not able to validate HQL which queries such entities.
-(On the other hand, the <<object-relational-mapping,O/R mappings>> may be specified in XML, since they're not needed by the Metamodel Generator.)
+The functionality we're about to describe was developed before Jakarta Data took on its current shape, and directly triggered the apocalypse which lead to the final form of the specification.
+Therefore, there's massive overlap between the functionality described in this chapter, and the functionality available via the Jakarta Data annotations.
+On the other hand, Jakarta Data can't do _everything_ described below, and in particular it doesn't yet come with built-in support for stateful persistence contexts or reactive sessions.
+
+We've therefore opted _not_ to rewrite this chapter in a Jakarta Data-centric way, and instead refer you to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].
 ====
+
+Automatic generation of _finder methods_ and _query methods_ is a relatively new feature of Hibernate Processor, and an extension to the functionality defined by the JPA specification.
+In this chapter, we're going to explore these features.
 
 We're going to meet three different kinds of generated method:
 
@@ -141,8 +144,15 @@ We're also going to see two ways that these methods can be called:
 
 To whet our appetites, let's see how this works for a `@NamedQuery`.
 
+[CAUTION]
+====
+The functionality described in the rest of this chapter depends on the use of the annotations described in <<entities>>.
+Hibernate Processor is not currently able to generate finder methods and query methods for entities declared completely in XML, and it's not able to validate HQL which queries such entities.
+(On the other hand, the <<object-relational-mapping,O/R mappings>> may be specified in XML, since they're not needed by the Processor.)
+====
+
 [[generated-named-queries]]
-=== Named queries and the Metamodel Generator
+=== Named queries and Hibernate Processor
 
 The very simplest way to generate a query method is to put a `@NamedQuery` annotation anywhere we like, with a `name` beginning with the magical character `#`.
 
@@ -157,7 +167,7 @@ Let's just stick it on the `Book` class:
 public class Book { ... }
 ----
 
-Now the Metamodel Generator adds the following method declaration to the metamodel class `Book_`.
+Now the Processor adds the following method declaration to the metamodel class `Book_`.
 
 [source,java]
 .Generated Code
@@ -187,7 +197,7 @@ Now, this is quite nice, but it's a bit inflexible in various ways, and so this 
 === Generated query methods
 
 The principal problem with generating the query method straight from the `@NamedQuery` annotation is that it doesn't let us explicitly specify the return type or parameter list.
-In the case we just saw, the Metamodel Generator does a reasonable job of inferring the query return type and parameter types, but we're often going to need a bit more control.
+In the case we just saw, Hibernate Processor does a reasonable job of inferring the query return type and parameter types, but we're often going to need a bit more control.
 
 The solution is to write down the signature of the query method _explicitly_, as an abstract method in Java.
 We'll need a place to put this method, and since our `Book` entity isn't an abstract class, we'll just introduce a new interface for this purpose:
@@ -228,7 +238,7 @@ public abstract class Queries_ {
 
 ----
 
-Notice that the signature differs just slightly from the one we wrote down in the `Queries` interface: the Metamodel Generator has prepended a parameter accepting `EntityManager` to the parameter list.
+Notice that the signature differs just slightly from the one we wrote down in the `Queries` interface: the Processor has prepended a parameter accepting `EntityManager` to the parameter list.
 
 If we want to explicitly specify the name and type of this parameter, we may declare it explicitly:
 
@@ -240,20 +250,20 @@ interface Queries {
 }
 ----
 
-The Metamodel Generator defaults to using `EntityManager` as the session type, but other types are allowed:
+Hibernate Processor defaults to using `EntityManager` as the session type, but other types are allowed:
 
 - `Session`,
 - `StatelessSession`, or
 - `Mutiny.Session` from Hibernate Reactive.
 
 The real value of all this is in the checks which can now be done at compile time.
-The Metamodel Generator verifies that the parameters of our abstract method declaration match the parameters of the HQL query, for example:
+Hibernate Processor verifies that the parameters of our abstract method declaration match the parameters of the HQL query, for example:
 
 - for a named parameter `:alice`, there must be a method parameter named `alice` with exactly the same type, or
 - for an ordinal parameter `?2`, the second method parameter must have exactly the same type.
 
 The query must also be syntactically legal and semantically well-typed, that is, the entities, attributes, and functions referenced in the query must actually exist and have compatible types.
-The Metamodel Generator determines this by inspecting the annotations of the entity classes at compile time.
+Hibernate Processor determines this by inspecting the annotations of the entity classes at compile time.
 
 [NOTE]
 ====
@@ -261,7 +271,7 @@ The `@CheckHQL` annotation which instructs Hibernate to validate named queries i
 ====
 
 The `@HQL` annotation has a friend named `@SQL` which lets us specify a query written in native SQL instead of in HQL.
-In this case there's a lot less the Metamodel Generator can do to check that the query is legal and well-typed.
+In this case there's a lot less the Processor can do to check that the query is legal and well-typed.
 
 We imagine you're wondering whether a `static` method is really the right thing to use here.
 
@@ -290,7 +300,7 @@ interface Queries {
 
 Here we've used `EntityManager` as the session type, but other types are allowed, as we saw above.
 
-Now the Metamodel Generator does something a bit different:
+Now Hibernate Processor does something a bit different:
 
 [source,java]
 .Generated Code
@@ -750,5 +760,5 @@ The Query Validator works in `javac`, Gradle, Maven, and the Eclipse Java Compil
 
 [CAUTION]
 ====
-Unlike the Metamodel Generator, which is a completely bog-standard Java annotation processor based on only standard Java APIs, the Query Validator makes use of internal compiler APIs in `javac` and `ecj`. This means it can't be guaranteed to work in every Java compiler. The current release is known to work in JDK 11 and above, though JDK 15 or above is preferred.
+Unlike Hibernate Processor, which is a completely bog-standard Java annotation processor based on only standard Java APIs, the Query Validator makes use of internal compiler APIs in `javac` and `ecj`. This means it can't be guaranteed to work in every Java compiler. The current release is known to work in JDK 11 and above, though JDK 15 or above is preferred.
 ====

@@ -430,6 +430,7 @@ If you're new to Hibernate, frameworks which wrap JPA are quite likely to make y
 We prefer a _bottom-up_ approach to organizing our code.
 We like to start thinking about methods and functions, not about architectural layers and container-managed objects.
 
+.Rethinking the persistence layer
 ****
 When we wrote _An Introduction to Hibernate 6_, the predecessor of this document, we broke with a long practice of remaining agnostic in debates over application architecture.
 Into the vacuum created by our agnosticism had poured a wealth of advice which tended to encourage over-engineering and violation of the First Commandment of software engineering: _Don't Repeat Yourself._
@@ -638,7 +639,7 @@ Alternatively, if CDI isn't available, we may directly instantiate the generated
 The Jakarta Data specification now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into Hibernate Processor.
 You probably already have it available in your program.
 
-Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to _Introducing Hibernate Data Repositories._
+Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].
 ====
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.

@@ -66,6 +66,7 @@ public class EnhanceMojo extends AbstractMojo {
 		required = true)
 	private boolean enableExtendedEnhancement;
 
+	@Override
 	public void execute() {
 		getLog().debug(STARTING_EXECUTION_OF_ENHANCE_MOJO);
 		processParameters();

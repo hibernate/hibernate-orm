@@ -24,7 +24,6 @@ import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;

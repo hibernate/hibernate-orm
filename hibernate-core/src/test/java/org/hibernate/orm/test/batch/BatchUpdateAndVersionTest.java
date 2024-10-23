@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.RollbackException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -135,6 +137,10 @@ public class BatchUpdateAndVersionTest {
 		}
 		catch (OptimisticLockException ole) {
 			assertTrue( ole.getCause() instanceof StaleObjectStateException );
+		}
+		//CockroachDB errors with a Serialization Exception
+		catch (RollbackException rbe) {
+			assertTrue( rbe.getCause() instanceof TransactionSerializationException );
 		}
 	}
 

@@ -769,6 +769,7 @@ This "test" is one which many people like to run even in production, when the sy
 It's now time to begin our journey toward actually _understanding_ the code we saw earlier.
 
 This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
+This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
 
 1. configuring and bootstrapping Hibernate, and obtaining an instance of `SessionFactory` or `EntityManagerFactory`,
 2. writing a _domain model_, that is, a set of _entity classes_ which represent the persistent types in your program, and which map to tables of your database,

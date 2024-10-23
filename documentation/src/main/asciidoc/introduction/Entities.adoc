@@ -250,7 +250,7 @@ This id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=IDENTITY) Long id;
+@Id @GeneratedValue(strategy = IDENTITY) Long id;
 ----
 
 The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over `SEQUENCE` and `TABLE` generation respectively.
@@ -259,7 +259,7 @@ Consider this sequence generator:
 
 [source,java]
 ----
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+@SequenceGenerator(name = "bookSeq", sequenceName = "seq_book", initialValue = 5, allocationSize=10)
 ----
 
 Values are generated using a database sequence defined as follows:
@@ -285,7 +285,7 @@ Any identifier attribute may now make use of the generator named `bookSeq`:
 [source,java]
 ----
 @Id
-@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined elsewhere
+@GeneratedValue(generator = "bookSeq")  // reference to generator defined elsewhere
 Long id;
 ----
 
@@ -294,18 +294,38 @@ Actually, it's extremely common to place the `@SequenceGenerator` annotation on 
 [source,java]
 ----
 @Id
-@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined below
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+@GeneratedValue  // uses the generator defined below
+@SequenceGenerator(sequenceName = "seq_book", initialValue = 5, allocationSize=10)
 Long id;
 ----
 
-[NOTE]
-// .JPA id generators may be shared between entities
-====
-JPA id generators may be shared between entities.
-A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
-This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
-====
+In this case, the `name` of the `@SequenceGenerator` should not be specified.
+
+We may even place a `@SequenceGenerator` or `@TableGenerator` annotation at the package level:
+
+[source,java]
+----
+@SequenceGenerator(sequenceName = "id_sequence", initialValue = 5, allocationSize=10)
+@TableGenerator(table = "id_table", initialValue = 5, allocationSize=10)
+package org.example.entities;
+----
+
+Then any entity in this package which specifies `strategy=SEQUENCE` or `strategy=TABLE` without also explicitly specifying a generator `name` will be assigned a generator based on the package-level annotation.
+
+[source,java]
+----
+@Id
+@GeneratedValue(strategy=SEQUENCE)  // uses the sequence generator defined at the package level
+Long id;
+----
+
+// [NOTE]
+// // .JPA id generators may be shared between entities
+// ====
+// JPA id generators may be shared between entities.
+// A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
+// This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
+// ====
 
 As you can see, JPA provides quite adequate support for the most common strategies for system-generated ids.
 However, the annotations themselves are a bit more intrusive than they should be, and there's no well-defined way to extend this framework to support custom strategies for id generation.

@@ -316,10 +316,10 @@ The operator precedence is given by this table, from highest to lowest precedenc
 [[concatenation]]
 ==== String concatenation
 
-HQL defines two ways to concatenate strings:
+JPQL defines two ways to concatenate strings:
 
 * the SQL-style concatenation operator, `||`, and
-* the JPQL-standard `concat()` function.
+* the standard `concat()` function.
 
 See <<string-functions, below>> for details of the `concat()` function.
 
@@ -545,7 +545,7 @@ The following special functions make it possible to discover or narrow expressio
 
 | `type()` | The (concrete) entity or embeddable type | `type(e)` | ✔
 | `treat()` | Narrow an entity or embeddable type | `treat(e as Entity)` | ✔
-| `cast()` | Narrow a basic type | `cast(x as Type)` | ✖
+| `cast()` | Narrow a basic type | `cast(x as Type)` | ✔
 | `str()` | Cast to a string | `str(x)` | ✖
 | `ordinal()` | Get the ordinal value of an enum | `ordinal(x)` | ✖
 |===
@@ -836,9 +836,9 @@ Naturally, there are a good number of functions for working with strings.
 `pad(str with len leading)`, +
 `pad(str with len trailing)`, or +
 `pad(str with len leading char)` | ✖ / ✖
-| `left()` | The leftmost characters of a string | `left(str, len)` | ✖ / ✖
-| `right()` | The rightmost characters of a string | `right(str, len)`  | ✖ / ✖
-| `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✖ / ✖
+| `left()` | The leftmost characters of a string | `left(str, len)` | ✔ / ✖
+| `right()` | The rightmost characters of a string | `right(str, len)`  | ✔ / ✖
+| `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✔ / ✖
 | `repeat()` | Concatenate a string with itself multiple times | `repeat(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
 |===

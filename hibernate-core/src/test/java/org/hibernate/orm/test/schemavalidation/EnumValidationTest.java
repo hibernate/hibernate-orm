@@ -177,8 +177,8 @@ public class EnumValidationTest implements ExecutionOptions {
 	}
 
 	@Override
-	public Map getConfigurationValues() {
-		return ssr.getService( ConfigurationService.class ).getSettings();
+	public Map<String,Object> getConfigurationValues() {
+		return ssr.requireService( ConfigurationService.class ).getSettings();
 	}
 
 	@Override
@@ -189,10 +189,5 @@ public class EnumValidationTest implements ExecutionOptions {
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return ExceptionHandlerLoggedImpl.INSTANCE;
-	}
-
-	@Override
-	public SchemaFilter getSchemaFilter() {
-		return SchemaFilter.ALL;
 	}
 }

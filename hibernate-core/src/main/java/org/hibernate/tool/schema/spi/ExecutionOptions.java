@@ -20,12 +20,4 @@ public interface ExecutionOptions {
 	boolean shouldManageNamespaces();
 
 	ExceptionHandler getExceptionHandler();
-
-	/**
-	 * @deprecated No longer used, see {@link org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_FILTER_PROVIDER}
-	 */
-	@Deprecated( forRemoval = true )
-	default SchemaFilter getSchemaFilter() {
-		throw new UnsupportedOperationException();
-	}
 }

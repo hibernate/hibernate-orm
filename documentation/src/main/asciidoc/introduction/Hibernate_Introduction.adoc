@@ -6,7 +6,7 @@ include::{shared-attributes-dir}/filesystem-attributes.adoc[]
 include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 
-= An Introduction to Hibernate 7
+= A Short Guide to Hibernate 7
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3

@@ -15,6 +15,12 @@ import org.hibernate.Incubating;
  *
  * @see org.hibernate.SessionFactory#getSchemaManager()
  *
+ * @apiNote This interface was added to JPA 3.2 as
+ * {@link jakarta.persistence.SchemaManager}, which it now inherits,
+ * with a minor change to the naming of its operations. It is retained
+ * for backward compatibility and as a place to define additional
+ * functionality in the future.
+ *
  * @since 6.2
  * @author Gavin King
  */
@@ -27,6 +33,8 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @param createSchemas if {@code true}, attempt to create schemas,
 	 *                      otherwise, assume the schemas already exist
+	 *
+	 * @apiNote This operation is a synonym for {@link #create}.
 	 */
 	void exportMappedObjects(boolean createSchemas);
 
@@ -38,6 +46,8 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @param dropSchemas if {@code true}, drop schemas,
 	 *                    otherwise, leave them be
+	 *
+	 * @apiNote This operation is a synonym for {@link #drop}.
 	 */
 	void dropMappedObjects(boolean dropSchemas);
 
@@ -46,6 +56,8 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * have the expected definitions.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaValidator}.
+	 *
+	 * @apiNote This operation is a synonym for {@link #validate}.
 	 */
 	void validateMappedObjects();
 
@@ -56,16 +68,8 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
+	 *
+	 * @apiNote This operation is a synonym for {@link #truncate}.
 	 */
 	void truncateMappedObjects();
-
-	@Override
-	default void create(boolean createSchemas) {
-		exportMappedObjects( createSchemas );
-	}
-
-	@Override
-	default void drop(boolean dropSchemas) {
-		dropMappedObjects( dropSchemas );
-	}
 }

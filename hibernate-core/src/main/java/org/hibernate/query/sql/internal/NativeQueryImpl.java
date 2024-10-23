@@ -134,6 +134,8 @@ public class NativeQueryImpl<R>
 	private Set<String> querySpaces;
 	private Callback callback;
 
+	private Class resultEntityClass;
+
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
 	 */
@@ -218,12 +220,19 @@ public class NativeQueryImpl<R>
 				session
 		);
 
+		if ( resultJavaType != null && getSessionFactory().getMappingMetamodel().isEntityClass( resultJavaType ) ) {
+			resultEntityClass = resultJavaType;
+		}
+
 		if ( resultJavaType == Tuple.class ) {
 			setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
 		else if ( resultJavaType != null && !resultJavaType.isArray() ) {
 			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
 				case 0: {
+					if (resultEntityClass != null) {
+						break;
+					}
 					throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
 				}
 				case 1: {
@@ -354,6 +363,10 @@ public class NativeQueryImpl<R>
 		return ResultSetMapping.resolveResultSetMapping( registeredName, isDynamic, session.getFactory() );
 	}
 
+	public void setResultEntityClass(Class<?> resultEntityClass) {
+		this.resultEntityClass = resultEntityClass;
+	}
+
 	public List<ParameterOccurrence> getParameterOccurrences() {
 		return parameterOccurrences;
 	}
@@ -459,7 +472,7 @@ public class NativeQueryImpl<R>
 	public NamedNativeQueryMemento<?> toMemento(String name) {
 		return new NamedNativeQueryMementoImpl<>(
 				name,
-				extractResultClass( resultSetMapping ),
+				resultEntityClass != null ? resultEntityClass : extractResultClass( resultSetMapping ),
 				sqlString,
 				originalSqlString,
 				resultSetMapping.getMappingIdentifier(),
@@ -644,13 +657,21 @@ public class NativeQueryImpl<R>
 	}
 
 	protected SelectQueryPlan<R> resolveSelectQueryPlan() {
-		if ( isCacheableQuery() ) {
-			final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
-			return getSession().getFactory().getQueryEngine().getInterpretationCache()
-					.resolveSelectQueryPlan( cacheKey, () -> createQueryPlan( resultSetMapping ) );
+		final ResultSetMapping mapping;
+		if ( resultEntityClass != null && resultSetMapping.isDynamic() && resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+			mapping = ResultSetMapping.resolveResultSetMapping( originalSqlString, true, getSessionFactory() );
+			mapping.addResultBuilder( Builders.entityCalculated( StringHelper.unqualify( resultEntityClass.getName() ), resultEntityClass.getName(), LockMode.READ, getSessionFactory() ) );
 		}
 		else {
-			return createQueryPlan( resultSetMapping );
+			mapping = resultSetMapping;
+		}
+		if ( isCacheableQuery() ) {
+			final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( mapping );
+			return getSession().getFactory().getQueryEngine().getInterpretationCache()
+					.resolveSelectQueryPlan( cacheKey, () -> createQueryPlan( mapping ) );
+		}
+		else {
+			return createQueryPlan( mapping );
 		}
 	}
 

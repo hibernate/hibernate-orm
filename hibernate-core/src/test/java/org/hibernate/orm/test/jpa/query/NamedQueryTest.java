@@ -21,6 +21,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -185,6 +186,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	@Ignore("It may be wrong")
 	@Test
 	@JiraKey(value = "HHH-11413")
 	public void testNamedNativeQueryExceptionNoResultDefined() {

@@ -120,10 +120,10 @@ public class Validation {
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {
 		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
-		hqlLexer.addErrorListener( handler );
+
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
-		hqlParser.addErrorListener( handler );
+
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
 
 		try {
@@ -137,6 +137,7 @@ public class Validation {
 			// fall back to LL(k)-based parsing
 			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
 			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
+			hqlParser.addErrorListener( handler );
 
 			return hqlParser.statement();
 		}

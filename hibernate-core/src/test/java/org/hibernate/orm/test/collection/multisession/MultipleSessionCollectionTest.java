@@ -37,12 +37,15 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.spi.CollectionEntry;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -284,6 +287,8 @@ public class MultipleSessionCollectionTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9518")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "The select triggered by the merge just hang without any exception")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The merge in the second session causes a deadlock")
 	public void testCopyPersistentCollectionReferenceAfterFlush(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		Child c = new Child();

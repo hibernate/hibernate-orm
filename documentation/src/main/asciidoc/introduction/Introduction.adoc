@@ -421,32 +421,22 @@ In a real program, persistence logic like the code shown above is usually interl
 Therefore, many developers quickly—even _too quickly_, in our opinion—reach for ways to isolate the persistence logic into some sort of separate architectural layer.
 We're going to ask you to suppress this urge for now.
 
-[TIP]
-====
-The _easiest_ way to use Hibernate is to call the `Session` or `EntityManager` directly.
-If you're new to Hibernate, frameworks which wrap JPA are quite likely to make your life more difficult.
-====
-
 We prefer a _bottom-up_ approach to organizing our code.
 We like to start thinking about methods and functions, not about architectural layers and container-managed objects.
 
 .Rethinking the persistence layer
 ****
 When we wrote _An Introduction to Hibernate 6_, the predecessor of this document, we broke with a long practice of remaining agnostic in debates over application architecture.
-Into the vacuum created by our agnosticism had poured a wealth of advice which tended to encourage over-engineering and violation of the First Commandment of software engineering: _Don't Repeat Yourself._
+Into the vacuum created by our agnosticism had poured a deluge of advice which tended to encourage over-engineering and violation of the First Commandment of software engineering: _Don't Repeat Yourself._
 We felt compelled to speak up for a more elementary approach.
 
-At that time, we were especially frustrated with the limitations of popular frameworks which claimed to simplify the use of JPA by wrapping and hiding the `EntityManager`.
-In our considered opinion, such frameworks typically made JPA harder to use.
-
-The birth of the Jakarta Data specification has obsoleted our arguments against repositories, along with the older frameworks which were the source of our frustration.
-Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the Hibernate `StatelessSession`.
-
-That said, we reiterate our preference for design which emerges organically from the code itself, via a process of refactoring and iterative abstraction.
+Here, we reiterate our preference for design which emerges organically from the code itself, via a process of refactoring and iterative abstraction.
 The Extract Method refactoring is a far, far more powerful tool than drawing boxes and arrows on whiteboards.
-In particular, we hereby give you permission to write code which mixes business logic with persistence logic within the same architectural layer--every architectural layer comes with a high cost in boilerplate, and in many contexts a separate persistence layer is simply unnecessary.
+
+In particular, we hereby give you permission to write code which mixes business logic with persistence logic within the same architectural layer.
+Every architectural layer comes with a high cost in boilerplate, and in many contexts a separate persistence layer is simply unnecessary.
 // In 2025 it no longer makes sense to shoehorn every system into an architecture advocated by some book written in the early 2000's.
-Both of the following architectures are allowed, and each has its place:
+Both of the following architectures represent allowed points within the design space:
 
 image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
 
@@ -584,7 +574,7 @@ interface Queries {
 ----
 
 Then Hibernate Processor automatically produces an implementation of the method annotated `@HQL` in a class named `Queries_`.
-We can call it just like we called our handwritten version:
+We can call it just like we were previously calling our handwritten version:
 
 [source,java]
 ----
@@ -636,11 +626,20 @@ Alternatively, if CDI isn't available, we may directly instantiate the generated
 
 [TIP]
 ====
-The Jakarta Data specification now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into Hibernate Processor.
+The Jakarta Data specification now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into <<generator,Hibernate Processor>>.
 You probably already have it available in your program.
 
 Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].
 ====
+
+.Why we changed our mind about repositories
+****
+At the time we wrote _An Introduction to Hibernate 6_, we were especially frustrated with the limitations of popular frameworks which claimed to simplify the use of JPA by wrapping and hiding the `EntityManager`.
+In our considered opinion, such frameworks typically made JPA harder to use, sometimes misleading users into misuse of the technology.
+
+The birth of the Jakarta Data specification has obsoleted our arguments against repositories, along with the older frameworks which were the source of our frustration.
+Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the `StatelessSession`.
+****
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
 
@@ -679,6 +678,7 @@ configuration.property(PersistenceConfiguration.SCHEMAGEN_DATABASE_ACTION,
 ----
 
 Alternatively, we may use the new link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API to export the schema, just as we did <<main-hibernate,above>>.
+This option is especially convenient when writing tests.
 
 [source,java]
 ----

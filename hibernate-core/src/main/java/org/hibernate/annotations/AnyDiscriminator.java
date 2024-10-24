@@ -54,4 +54,10 @@ public @interface AnyDiscriminator {
 	 * @since 7.0
 	 */
 	AnyDiscriminatorValueStrategy valueStrategy() default AUTO;
+
+	/**
+	 * Whether the entity's short-name should be used as the discriminator value
+	 * (as opposed to its full-name) in the case of implicit value mapping.
+	 */
+	boolean implicitEntityShortName() default false;
 }

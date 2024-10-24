@@ -129,17 +129,26 @@ public final class MappingHelper {
 			Map<Object, String> explicitValeMappings,
 			boolean lazy,
 			MetadataBuildingContext buildingContext) {
-		return anyMapping( discriminatorType, identifierType, AnyDiscriminatorValueStrategy.AUTO, explicitValeMappings, lazy, buildingContext );
+		return anyMapping(
+				discriminatorType,
+				identifierType,
+				AnyDiscriminatorValueStrategy.AUTO,
+				false,
+				explicitValeMappings,
+				lazy,
+				buildingContext
+		);
 	}
 
 	public static AnyType anyMapping(
 			Type discriminatorType,
 			Type identifierType,
 			AnyDiscriminatorValueStrategy discriminatorValueStrategy,
+			boolean implicitEntityShortName,
 			Map<Object, String> explicitValeMappings,
 			boolean lazy,
 			MetadataBuildingContext buildingContext) {
-		final MetaType metaType = new MetaType( discriminatorType, discriminatorValueStrategy, explicitValeMappings );
+		final MetaType metaType = new MetaType( discriminatorType, discriminatorValueStrategy, implicitEntityShortName, explicitValeMappings );
 		return new AnyType( buildingContext.getBootstrapContext().getTypeConfiguration(), metaType, identifierType, lazy );
 	}
 

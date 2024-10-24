@@ -26,6 +26,7 @@ import static java.util.Locale.ROOT;
  */
 public class ImplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R> {
 	private final NavigableRole discriminatorRole;
+	private final boolean implicitEntityShortName;
 	private final MappingMetamodelImplementor mappingMetamodel;
 	private final Map<Object, DiscriminatorValueDetails> detailsByValue;
 	private final Map<String,DiscriminatorValueDetails> detailsByEntityName;
@@ -35,9 +36,11 @@ public class ImplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 			JavaType<O> domainJavaType,
 			JavaType<R> relationalJavaType,
 			Map<Object,String> explicitValueMappings,
+			boolean implicitEntityShortName,
 			MappingMetamodelImplementor mappingMetamodel) {
 		super( discriminatorRole.getFullPath(), domainJavaType, relationalJavaType );
 		this.discriminatorRole = discriminatorRole;
+		this.implicitEntityShortName = implicitEntityShortName;
 		this.mappingMetamodel = mappingMetamodel;
 
 		if ( CollectionHelper.isNotEmpty( explicitValueMappings ) ) {
@@ -66,22 +69,47 @@ public class ImplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 	}
 
 	@Override
-	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object value) {
-		if ( value instanceof String incoming ) {
-			final DiscriminatorValueDetails existingDetails = detailsByValue.get( incoming );
-			if ( existingDetails != null ) {
-				return existingDetails;
+	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue) {
+		// entity-name : org.hibernate.Thing
+		// short-name : Thing
+
+		// in the case of full entity-name handling, we'd have
+		// 		detailsByValue["org.hibernate.Thing", DiscriminatorValueDetails( "org.hibernate.Thing", ... )]
+		//		detailsByEntityName["org.hibernate.Thing", DiscriminatorValueDetails( "org.hibernate.Thing", ... )]
+
+		// in the case of short-name "Thing", we'd have
+		// 		detailsByValue["Thing", DiscriminatorValueDetails( "Thing", ... )]
+		//		detailsByEntityName["org.hibernate.Thing", DiscriminatorValueDetails( "Thing", ... )]
+
+		final DiscriminatorValueDetails existing = detailsByValue.get( relationalValue );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		if ( relationalValue instanceof String incoming ) {
+			final EntityPersister persister;
+			if ( implicitEntityShortName ) {
+				// incoming - "Thing"
+				// importedName - "org.hibernate.Thing"
+				final String importedName = mappingMetamodel.getImportedName( incoming );
+				persister = mappingMetamodel.findEntityDescriptor( importedName );
 			}
-			final EntityPersister persister = mappingMetamodel.findEntityDescriptor( incoming );
+			else {
+				// incoming - "org.hibernate.Thing"
+				// importedName - "org.hibernate.Thing"
+				persister = mappingMetamodel.findEntityDescriptor( incoming );
+			}
+
 			if ( persister != null ) {
 				return register( incoming, persister );
 			}
 		}
+
 		throw new HibernateException( String.format(
 				ROOT,
-				"Unrecognized discriminator value (%s): %s",
+				"Unrecognized discriminator relationalValue (%s): %s",
 				discriminatorRole.getFullPath(),
-				value
+				relationalValue
 		) );
 	}
 
@@ -94,14 +122,19 @@ public class ImplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 
 	@Override
 	public DiscriminatorValueDetails getDetailsForEntityName(String entityName) {
+		// entityName - "org.hibernate.Thing"
+
 		final DiscriminatorValueDetails existingDetails = detailsByEntityName.get( entityName );
 		if ( existingDetails != null ) {
 			return existingDetails;
 		}
+
 		final EntityPersister persister = mappingMetamodel.findEntityDescriptor( entityName );
 		if ( persister!= null ) {
-			return register( persister.getEntityName(), persister );
+			final String implicitValue = implicitEntityShortName ? persister.getImportedName() : persister.getEntityName();
+			return register( implicitValue, persister );
 		}
+
 		throw new HibernateException( String.format(
 				ROOT,
 				"Unrecognized entity name (%s): %s",

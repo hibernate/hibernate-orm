@@ -4,19 +4,19 @@
  */
 package org.hibernate.mapping;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Consumer;
-
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * A mapping model object representing a {@linkplain org.hibernate.annotations.Any polymorphic association}
@@ -36,6 +36,7 @@ public class Any extends SimpleValue {
 	// common
 	private Map<Object,String> metaValueToEntityNameMap;
 	private AnyDiscriminatorValueStrategy discriminatorValueStrategy = AnyDiscriminatorValueStrategy.AUTO;
+	private boolean implicitEntityShortName = false;
 	private boolean lazy = true;
 
 	private AnyType resolvedType;
@@ -132,25 +133,24 @@ public class Any extends SimpleValue {
 	}
 
 	/**
-	 * Current strategy for interpreting {@linkplain org.hibernate.annotations.AnyDiscriminatorValue} definitions,
-	 * especially in terms of implicit, explicit and potentially missing values.
+	 * Set the strategy for interpreting {@linkplain org.hibernate.annotations.AnyDiscriminatorValue}
+	 * definitions in terms of implicit, explicit and potentially missing values.
 	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	public AnyDiscriminatorValueStrategy getDiscriminatorValueStrategy() {
-		return discriminatorValueStrategy;
-	}
-
-	/**
-	 * Set the strategy
-	 *
-	 * @see #getDiscriminatorValueStrategy
 	 * @since 7.0
 	 */
 	@Incubating
 	public void setDiscriminatorValueStrategy(AnyDiscriminatorValueStrategy discriminatorValueStrategy) {
 		this.discriminatorValueStrategy = discriminatorValueStrategy;
+	}
+
+	/**
+	 * Set whether to use the entity's short-name for implicit discriminator value mappings
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	public void setImplicitEntityShortName(boolean implicitEntityShortName) {
+		this.implicitEntityShortName = implicitEntityShortName;
 	}
 
 	@Override
@@ -176,6 +176,7 @@ public class Any extends SimpleValue {
 					discriminatorType,
 					identifierType,
 					discriminatorValueStrategy,
+					implicitEntityShortName,
 					metaValueToEntityNameMap,
 					isLazy(),
 					getBuildingContext()

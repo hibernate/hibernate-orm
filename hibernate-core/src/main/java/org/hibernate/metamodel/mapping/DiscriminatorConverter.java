@@ -90,7 +90,7 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		return (R) discriminatorValueDetails.getValue();
 	}
 
-	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm);
+	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue);
 
 	public abstract DiscriminatorValueDetails getDetailsForEntityName(String entityName);
 

@@ -498,8 +498,8 @@ Let's hit the code with our favorite thing, the Extract Method refactoring. We o
 
 [source,java]
 ----
-static List<Book> findBooksByTitleWithPagination(Session session,
-                                                 String titlePattern, Page page) {
+static List<Book> findBooksTitled(Session session,
+                                  String titlePattern, Page page) {
     return session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
             .setPage(page)
@@ -522,9 +522,9 @@ We need a place to put the annotation, so let's move our query method to a new c
             query = "from Book where title like :title order by title")
 class Queries {
 
-    static List<Book> findBooksByTitleWithPagination(Session session,
-                                                     String titlePattern, Page page) {
-        return session.createNamedQuery(Queries_._findBooksByTitle_)  //type safe reference to the named query
+    static List<Book> findBooksTitled(Session session,
+                                      String titlePattern, Page page) {
+        return session.createQuery(Queries_._findBooksByTitle_)  //type safe reference to the named query
                 .setParameter("title", titlePattern)
                 .setPage(page)
                 .getResultList();
@@ -549,7 +549,7 @@ Whatever the case, the code which orchestrates a unit of work usually just calls
 @Path("books/{titlePattern}")
 public List<Book> findBooks(String titlePattern) {
     var books = sessionFactory.fromTransaction(session ->
-            Queries.findBooksByTitleWithPagination(session, titlePattern,
+            Queries.findBooksTitled(session, titlePattern,
                     Page.page(RESULTS_PER_PAGE, page)));
     return books.isEmpty() ? Response.status(404).build() : books;
 }
@@ -569,7 +569,7 @@ Suppose we simplify `Queries` to just the following:
 ----
 interface Queries {
     @HQL("where title like :title order by title")
-    List<Book> findBooksByTitleWithPagination(String title, Page page);
+    List<Book> findBooksTitled(String title, Page page);
 }
 ----
 
@@ -582,7 +582,7 @@ We can call it just like we were previously calling our handwritten version:
 @Path("books/{titlePattern}")
 public List<Book> findBooks(String titlePattern) {
     var books = sessionFactory.fromTransaction(session ->
-            Queries_.findBooksByTitleWithPagination(session, titlePattern,
+            Queries_.findBooksTitled(session, titlePattern,
                     Page.page(RESULTS_PER_PAGE, page)));
     return books.isEmpty() ? Response.status(404).build() : books;
 }
@@ -602,7 +602,7 @@ interface Queries {
     EntityManager entityManager();
 
     @HQL("where title like :title order by title")
-    List<Book> findBooksByTitleWithPagination(String title, Page page);
+    List<Book> findBooksTitled(String title, Page page);
 }
 ----
 
@@ -616,7 +616,7 @@ The `Queries` interface is now considered a _repository_, and we may use CDI to 
 @Path("books/{titlePattern}")
 @Transactional
 public List<Book> findBooks(String titlePattern) {
-    var books = queries.findBooksByTitleWithPagination(session, titlePattern,
+    var books = queries.findBooksTitled(session, titlePattern,
                     Page.page(RESULTS_PER_PAGE, page));
     return books.isEmpty() ? Response.status(404).build() : books;
 }

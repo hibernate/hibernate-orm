@@ -572,7 +572,7 @@ This lets us declare which associations of `Book` should be pre-fetched by annot
 // ----
 // interface Queries {
 //     @HQL("from Book where title like :title order by title offset :start fetch first :max rows only")
-//     List<Book> findBooksByTitleWithPagination(String title, int max, int start);
+//     List<Book> findBooksTitled(String title, int max, int start);
 // }
 // ----
 //
@@ -583,7 +583,7 @@ This lets us declare which associations of `Book` should be pre-fetched by annot
 // [source,java]
 // ----
 // List<Book> books =
-//         Queries_.findBooksByTitleWithPagination(entityManager, titlePattern,
+//         Queries_.findBooksTitled(entityManager, titlePattern,
 //                         RESULTS_PER_PAGE, page*RESULTS_PER_PAGE);
 // ----
 

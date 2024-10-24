@@ -30,6 +30,8 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 
 	private PreparedStatement statement;
 
+	private boolean toRelease;
+
 	public PreparedStatementDetailsStandard(
 			PreparableMutationOperation tableMutation,
 			Supplier<PreparedStatement> jdbcStatementCreator,
@@ -66,6 +68,7 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 		if ( statement != null ) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
 			statement = null;
+			toRelease = false;
 		}
 	}
 
@@ -82,6 +85,7 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public PreparedStatement resolveStatement() {
 		if ( statement == null ) {
+			toRelease = true;
 			statement = jdbcStatementCreator.get();
 			try {
 				expectation.prepare( statement );
@@ -100,6 +104,11 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public Expectation getExpectation() {
 		return expectation;
+	}
+
+	@Override
+	public boolean toRelease() {
+		return toRelease;
 	}
 
 	@Override

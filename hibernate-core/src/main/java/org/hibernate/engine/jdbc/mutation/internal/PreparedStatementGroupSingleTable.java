@@ -8,7 +8,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -20,9 +19,8 @@ import org.hibernate.sql.model.TableMapping;
  *
  * @author Steve Ebersole
  */
-public class PreparedStatementGroupSingleTable implements PreparedStatementGroup {
+public class PreparedStatementGroupSingleTable extends AbstractPreparedStatementGroup {
 	private final PreparableMutationOperation jdbcMutation;
-	private final SharedSessionContractImplementor session;
 
 	private final PreparedStatementDetails statementDetails;
 
@@ -36,9 +34,9 @@ public class PreparedStatementGroupSingleTable implements PreparedStatementGroup
 			PreparableMutationOperation jdbcMutation,
 			GeneratedValuesMutationDelegate delegate,
 			SharedSessionContractImplementor session) {
+		super(session);
 		this.jdbcMutation = jdbcMutation;
 		this.statementDetails = ModelMutationHelper.standardPreparation( jdbcMutation, delegate, session );
-		this.session = session;
 	}
 
 	protected TableMapping getMutatingTableDetails() {
@@ -89,7 +87,7 @@ public class PreparedStatementGroupSingleTable implements PreparedStatementGroup
 	@Override
 	public void release() {
 		if ( statementDetails != null ) {
-			statementDetails.releaseStatement( session );
+			release( statementDetails );
 		}
 	}
 }

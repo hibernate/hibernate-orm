@@ -54,7 +54,8 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 		this.detailsByEntityName = CollectionHelper.concurrentMap( explicitValueMappings.size() );
 
 		explicitValueMappings.forEach( (value, entityName) -> {
-			final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( entityName );
+			final String importedEntityName = mappingMetamodel.getImportedName( entityName );
+			final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( importedEntityName );
 			final DiscriminatorValueDetails details = new DiscriminatorValueDetailsImpl( value, entityDescriptor );
 			detailsByValue.put( value, details );
 			detailsByEntityName.put( entityDescriptor.getEntityName(), details );
@@ -75,12 +76,12 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 	}
 
 	@Override
-	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm) {
-		if ( relationalForm == null ) {
+	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue) {
+		if ( relationalValue == null ) {
 			return detailsByValue.get( NULL_DISCRIMINATOR );
 		}
 
-		final DiscriminatorValueDetails existing = detailsByValue.get( relationalForm );
+		final DiscriminatorValueDetails existing = detailsByValue.get( relationalValue );
 		if ( existing != null ) {
 			// an explicit or previously-resolved mapping
 			return existing;
@@ -91,16 +92,16 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 			return notNullMatch;
 		}
 
-		if ( relationalForm.getClass().isEnum() ) {
+		if ( relationalValue.getClass().isEnum() ) {
 			final Object enumValue;
 			if ( getRelationalJavaType() instanceof StringJavaType ) {
-				enumValue = ( (Enum<?>) relationalForm ).name();
+				enumValue = ( (Enum<?>) relationalValue).name();
 			}
 			else if ( getRelationalJavaType() instanceof CharacterJavaType ) {
-				enumValue = ( (Enum<?>) relationalForm ).name().charAt( 0 );
+				enumValue = ( (Enum<?>) relationalValue).name().charAt( 0 );
 			}
 			else {
-				enumValue = ( (Enum<?>) relationalForm ).ordinal();
+				enumValue = ( (Enum<?>) relationalValue).ordinal();
 			}
 			final DiscriminatorValueDetails enumMatch = detailsByValue.get( enumValue );
 			if ( enumMatch != null ) {
@@ -112,7 +113,7 @@ public class ExplicitDiscriminatorConverter<O,R> extends DiscriminatorConverter<
 				ROOT,
 				"Unknown discriminator value (%s) : %s",
 				discriminatorRole,
-				relationalForm
+				relationalValue
 		) );
 	}
 

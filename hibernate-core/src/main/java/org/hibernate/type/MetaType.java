@@ -26,14 +26,17 @@ public class MetaType extends AbstractType {
 
 	private final Type valueType;
 	private final AnyDiscriminatorValueStrategy valueStrategy;
+	private final boolean implicitEntityShortName;
 	private final Map<Object,String> discriminatorValuesToEntityNameMap;
 	private final Map<String,Object> entityNameToDiscriminatorValueMap;
 
 	public MetaType(
 			Type valueType,
 			AnyDiscriminatorValueStrategy valueStrategy,
+			boolean implicitEntityShortName,
 			Map<Object,String> explicitValueMappings) {
 		this.valueType = valueType;
+		this.implicitEntityShortName = implicitEntityShortName;
 
 		if ( explicitValueMappings == null || explicitValueMappings.isEmpty() ) {
 			if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
@@ -56,16 +59,16 @@ public class MetaType extends AbstractType {
 		this.valueStrategy = valueStrategy;
 	}
 
-	public MetaType(Map<Object,String> discriminatorValuesToEntityNameMap, Type baseType) {
-		this( baseType, AnyDiscriminatorValueStrategy.AUTO, discriminatorValuesToEntityNameMap );
-	}
-
 	public Type getBaseType() {
 		return valueType;
 	}
 
 	public AnyDiscriminatorValueStrategy getValueStrategy() {
 		return valueStrategy;
+	}
+
+	public boolean isImplicitEntityShortName() {
+		return implicitEntityShortName;
 	}
 
 	public String[] getRegistrationKeys() {

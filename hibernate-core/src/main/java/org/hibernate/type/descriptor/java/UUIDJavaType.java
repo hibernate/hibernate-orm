@@ -37,10 +37,12 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 		return true;
 	}
 
+	@Override
 	public String toString(UUID value) {
 		return ToStringTransformer.INSTANCE.transform( value );
 	}
 
+	@Override
 	public UUID fromString(CharSequence string) {
 		return ToStringTransformer.INSTANCE.parse( string.toString() );
 	}

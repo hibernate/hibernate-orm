@@ -101,30 +101,9 @@ public class StandardHqlTranslator implements HqlTranslator {
 		// Build the parse tree
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
-		ANTLRErrorListener errorListener = new ANTLRErrorListener() {
-			@Override
-			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-				throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ), hql );
-			}
-
-			@Override
-			public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-			}
-
-			@Override
-			public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
-			}
-
-			@Override
-			public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-			}
-		};
-
 		// try to use SLL(k)-based parsing first - its faster
-		hqlLexer.addErrorListener( errorListener );
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
-		hqlParser.addErrorListener( errorListener );
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
 
 		try {
@@ -138,6 +117,26 @@ public class StandardHqlTranslator implements HqlTranslator {
 			// fall back to LL(k)-based parsing
 			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
 			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
+
+			ANTLRErrorListener errorListener = new ANTLRErrorListener() {
+				@Override
+				public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+					throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ), hql );
+				}
+
+				@Override
+				public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
+				}
+
+				@Override
+				public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
+				}
+
+				@Override
+				public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+				}
+			};
+			hqlParser.addErrorListener( errorListener );
 
 			return hqlParser.statement();
 		}

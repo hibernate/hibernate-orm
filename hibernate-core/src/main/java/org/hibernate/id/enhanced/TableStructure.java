@@ -31,6 +31,7 @@ import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
@@ -231,13 +232,20 @@ public class TableStructure implements DatabaseStructure {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		final EventManager eventManager = session.getEventManager();
 		final HibernateMonitoringEvent creationEvent = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final StatisticsImplementor stats = session.getFactory().getStatistics();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.prepareStatement();
+			}
 			return connection.prepareStatement( sql );
 		}
 		finally {
 			eventManager.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			statsCollector.jdbcPrepareStatementEnd();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.closeStatement();
+			}
 		}
 	}
 

@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Test;
 @DomainModel
 @SessionFactory
 @ServiceRegistry(
-		settingProviders = @SettingProvider(provider = StatisticsWithNoCachingTest.RegionFacrotySettingProvider.class, settingName = AvailableSettings.CACHE_REGION_FACTORY)
+		settingProviders = @SettingProvider(provider = StatisticsWithNoCachingTest.RegionFactorySettingProvider.class, settingName = AvailableSettings.CACHE_REGION_FACTORY)
 )
 public class StatisticsWithNoCachingTest {
 
-	public static class RegionFacrotySettingProvider implements SettingProvider.Provider<String> {
+	public static class RegionFactorySettingProvider implements SettingProvider.Provider<String> {
 
 		@Override
 		public String getSetting() {

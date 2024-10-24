@@ -65,8 +65,18 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 				dialect
 		);
 		final String valueExpression = determineValueExpression( "t.value", elementSqlTypeCode, elementType );
+		boolean isBooleanType = elementType.equalsIgnoreCase( "boolean" );
 		return new String[] {
 				"create or replace type " + arrayTypeName + " as varying array(" + arrayLength + ") of " + elementType,
+				!isBooleanType ? "" :
+				"create or replace function boolean_to_char(bool in boolean) return varchar2 is begin " +
+						"return " +
+						"case bool " +
+						"when true then 'true' " +
+						"when false then 'false' " +
+						"else 'null' " +
+						"end; " +
+						"end;",
 				"create or replace function " + arrayTypeName + "_cmp(a in " + arrayTypeName +
 						", b in " + arrayTypeName + ") return number deterministic is begin " +
 						"if a is null or b is null then return null; end if; " +
@@ -252,7 +262,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"for i in 1 .. arr.count loop " +
 						"if arr(i) is not null then " +
 						"if length(res)<>0 then res:=res||sep; end if; " +
-						"res:=res||arr(i); " +
+						(!isBooleanType ? "res:=res||arr(i); " : "res:=res||boolean_to_char(arr(i)); ") +
 						"elsif nullVal is not null then " +
 						"if length(res)<>0 then res:=res||sep; end if; " +
 						"res:=res||nullVal; " +

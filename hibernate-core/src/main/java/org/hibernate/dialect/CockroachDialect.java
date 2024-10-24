@@ -1090,11 +1090,9 @@ public class CockroachDialect extends Dialect {
 			}
 			return switch (sqlState) {
 				// Serialization Exception
-				case "40001" -> {
-					if ( message.contains("WriteTooOldError") )
-						yield new TransactionSerializationException( message, sqlException, sql );
-					else yield null;
-				}
+				case "40001" -> message.contains("WriteTooOldError")
+					? new TransactionSerializationException( message, sqlException, sql );
+					: null;
 				// DEADLOCK DETECTED
 				case "40P01" -> new LockAcquisitionException( message, sqlException, sql );
 				// LOCK NOT AVAILABLE

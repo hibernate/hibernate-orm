@@ -98,6 +98,9 @@ public final class StringUtil {
 	}
 
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString) {
+		if ( lowerCamelCaseString.length() == 1 && Character.isUpperCase( lowerCamelCaseString.charAt( 0 ) ) ) {
+			return "_" + lowerCamelCaseString;
+		}
 		final StringBuilder result = new StringBuilder();
 		int position = 0;
 		while ( position < lowerCamelCaseString.length() ) {

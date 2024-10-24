@@ -107,7 +107,8 @@ public abstract class AnnotationMeta implements Metamodel {
 					if ( statement instanceof SqmSelectStatement
 							&& isQueryMethodName( name ) ) {
 						putMember( name,
-								new NamedQueryMethod(
+								// TODO: respect @NamedQuery(resultClass)
+                                new NamedQueryMethod(
 										this,
 										(SqmSelectStatement<?>) statement,
 										name.substring(1),

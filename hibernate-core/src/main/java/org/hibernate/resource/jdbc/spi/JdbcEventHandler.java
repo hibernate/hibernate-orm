@@ -80,6 +80,10 @@ public class JdbcEventHandler {
 		if ( sessionListener != null ) {
 			sessionListener.jdbcPrepareStatementStart();
 		}
+
+		if ( statistics != null && statistics.isStatisticsEnabled() ) {
+			statistics.prepareStatement();
+		}
 	}
 
 	public void jdbcPrepareStatementEnd() {
@@ -88,7 +92,7 @@ public class JdbcEventHandler {
 		}
 
 		if ( statistics != null && statistics.isStatisticsEnabled() ) {
-			statistics.prepareStatement();
+			statistics.closeStatement();
 		}
 	}
 

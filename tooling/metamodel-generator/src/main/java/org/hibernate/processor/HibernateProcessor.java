@@ -22,6 +22,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
@@ -375,7 +376,7 @@ public class HibernateProcessor extends AbstractProcessor {
 					|| hasPackageAnnotation( element, Constants.EXCLUDE ) ) {
 				// skip it completely
 			}
-			else if ( isEntityOrEmbeddable( element ) ) {
+			else if ( isEntityOrEmbeddable( element ) && !element.getModifiers().contains( Modifier.PRIVATE )) {
 				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
 				handleRootElementAnnotationMirrors( element );
 			}

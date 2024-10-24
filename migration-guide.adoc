@@ -122,6 +122,34 @@ Previous versions allowed some questionable (at best) attribute naming patterns.
 String isDefault();
 ----
 
+[[envers-rev-types]]
+== Hibernate Envers and custom revision entities
+
+Users that wanted to customize the `@RevisionEntity` used by Envers could do so by extending one on the four default revision entity types:
+
+[source]
+----
+org.hibernate.envers.DefaultRevisionEntity
+org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity
+org.hibernate.envers.enhanced.SequenceIdRevisionEntity
+org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity
+----
+
+These types are annotated with `@MappedSuperclass` to enable this custom extension. When no custom revision entity was specified, though,
+the same class was mapped as an entity type by Envers internals. This caused problems when dealing with the domain metamodel and static
+metamodel aspect of these types, so we chose to create *new separate classes* annotated `@MappedSuperclass` from which revision entities,
+meaning the default ones as well as yours, *should extend from*. These types are (in the same order):
+
+[source]
+----
+org.hibernate.envers.RevisionMapping
+org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping
+org.hibernate.envers.enhanced.SequenceIdRevisionMapping
+org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionMapping
+----
+
+Also, you can now write HQL queries using the simple class name of default revision entities to retrieve all revision information.
+Find out more in link:{user-guide-url}#envers-querying-revision-info[this user guide chapter].
 
 [[create-query]]
 == Queries with implicit `select` list and no explicit result type

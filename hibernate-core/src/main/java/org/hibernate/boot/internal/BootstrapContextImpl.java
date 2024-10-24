@@ -38,7 +38,6 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 /**
@@ -66,7 +65,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private IndexView jandexView;
+	private Object jandexView;
 
 	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
@@ -182,7 +181,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public IndexView getJandexView() {
+	public Object getJandexView() {
 		return jandexView;
 	}
 
@@ -300,7 +299,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.archiveDescriptorFactory = factory;
 	}
 
-	void injectJandexView(IndexView jandexView) {
+	void injectJandexView(Object jandexView) {
 		log.debugf( "Injecting Jandex IndexView [%s] into BootstrapContext; was [%s]", jandexView, this.jandexView );
 		this.jandexView = jandexView;
 	}

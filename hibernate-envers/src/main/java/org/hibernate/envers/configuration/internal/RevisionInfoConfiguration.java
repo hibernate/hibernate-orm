@@ -34,6 +34,10 @@ import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.RevisionTimestampData;
+import org.hibernate.envers.internal.entities.mappings.DefaultRevisionEntityImpl;
+import org.hibernate.envers.internal.entities.mappings.DefaultTrackingModifiedEntitiesRevisionEntityImpl;
+import org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdRevisionEntityImpl;
+import org.hibernate.envers.internal.entities.mappings.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntityImpl;
 import org.hibernate.envers.internal.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.DefaultTrackingModifiedEntitiesRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
@@ -388,14 +392,14 @@ public class RevisionInfoConfiguration {
 
 				if ( configuration.isTrackEntitiesChanged() ) {
 					revisionInfoClass = configuration.isNativeIdEnabled()
-							? DefaultTrackingModifiedEntitiesRevisionEntity.class
-							: SequenceIdTrackingModifiedEntitiesRevisionEntity.class;
+							? DefaultTrackingModifiedEntitiesRevisionEntityImpl.class
+							: SequenceIdTrackingModifiedEntitiesRevisionEntityImpl.class;
 					revisionInfoEntityName = revisionInfoClass.getName();
 				}
 				else {
 					revisionInfoClass = configuration.isNativeIdEnabled()
-							? DefaultRevisionEntity.class
-							: SequenceIdRevisionEntity.class;
+							? DefaultRevisionEntityImpl.class
+							: SequenceIdRevisionEntityImpl.class;
 				}
 
 				timestampValueResolver = createRevisionTimestampResolver(

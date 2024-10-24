@@ -111,6 +111,7 @@ public class AnyBinder {
 		final AnyDiscriminator anyDiscriminator = property.getDirectAnnotationUsage( AnyDiscriminator.class );
 		if ( anyDiscriminator != null ) {
 			value.setDiscriminatorValueStrategy( anyDiscriminator.valueStrategy() );
+			value.setImplicitEntityShortName( anyDiscriminator.implicitEntityShortName() );
 		}
 
 		final PropertyBinder binder = new PropertyBinder();

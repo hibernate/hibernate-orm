@@ -49,6 +49,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 						discriminatorBaseType,
 						bootAnyMapping.getMetaValues(),
 						discriminatorType.getValueStrategy(),
+						discriminatorType.isImplicitEntityShortName(),
 						mappingMetamodel
 				)
 		);

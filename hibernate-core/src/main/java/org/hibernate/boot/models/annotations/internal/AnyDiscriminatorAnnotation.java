@@ -16,6 +16,7 @@ import org.hibernate.type.AnyDiscriminatorValueStrategy;
 public class AnyDiscriminatorAnnotation implements AnyDiscriminator {
 	private jakarta.persistence.DiscriminatorType value;
 	private AnyDiscriminatorValueStrategy valueStrategy;
+	private boolean implicitEntityShortName;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -23,6 +24,7 @@ public class AnyDiscriminatorAnnotation implements AnyDiscriminator {
 	public AnyDiscriminatorAnnotation(SourceModelBuildingContext modelContext) {
 		this.value = jakarta.persistence.DiscriminatorType.STRING;
 		this.valueStrategy = AnyDiscriminatorValueStrategy.AUTO;
+		this.implicitEntityShortName = false;
 	}
 
 	/**
@@ -31,6 +33,7 @@ public class AnyDiscriminatorAnnotation implements AnyDiscriminator {
 	public AnyDiscriminatorAnnotation(AnyDiscriminator annotation, SourceModelBuildingContext modelContext) {
 		this.value = annotation.value();
 		this.valueStrategy = annotation.valueStrategy();
+		this.implicitEntityShortName = annotation.implicitEntityShortName();
 	}
 
 	/**
@@ -38,6 +41,8 @@ public class AnyDiscriminatorAnnotation implements AnyDiscriminator {
 	 */
 	public AnyDiscriminatorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
 		this.value = (jakarta.persistence.DiscriminatorType) attributeValues.get( "value" );
+		this.valueStrategy = (AnyDiscriminatorValueStrategy) attributeValues.get( "valueStrategy" );
+		this.implicitEntityShortName = (boolean) attributeValues.get( "implicitEntityShortName" );
 	}
 
 	@Override
@@ -63,5 +68,12 @@ public class AnyDiscriminatorAnnotation implements AnyDiscriminator {
 		this.valueStrategy = valueStrategy;
 	}
 
+	@Override
+	public boolean implicitEntityShortName() {
+		return implicitEntityShortName;
+	}
 
+	public void implicitEntityShortName(boolean implicitEntityShortName) {
+		this.implicitEntityShortName = implicitEntityShortName;
+	}
 }

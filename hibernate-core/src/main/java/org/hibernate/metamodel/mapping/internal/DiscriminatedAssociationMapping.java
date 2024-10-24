@@ -90,6 +90,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				(BasicType<?>) metaType.getBaseType(),
 				metaType.getDiscriminatorValuesToEntityNameMap(),
 				metaType.getValueStrategy(),
+				metaType.isImplicitEntityShortName(),
 				creationProcess.getCreationContext().getSessionFactory().getMappingMetamodel()
 		);
 

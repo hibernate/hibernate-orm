@@ -86,13 +86,13 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 	}
 
 	@Override
-	public EmbeddableDiscriminatorValueDetailsImpl getDetailsForDiscriminatorValue(Object value) {
-		final EmbeddableDiscriminatorValueDetailsImpl valueMatch = discriminatorValueToDetailsMap.get( value );
+	public EmbeddableDiscriminatorValueDetailsImpl getDetailsForDiscriminatorValue(Object relationalValue) {
+		final EmbeddableDiscriminatorValueDetailsImpl valueMatch = discriminatorValueToDetailsMap.get( relationalValue );
 		if ( valueMatch != null ) {
 			return valueMatch;
 		}
 
-		throw new HibernateException( "Unrecognized discriminator value: " + value );
+		throw new HibernateException( "Unrecognized discriminator value: " + relationalValue );
 	}
 
 	@Override

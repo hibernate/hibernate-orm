@@ -85,6 +85,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			BasicType<?> underlyingJdbcMapping,
 			Map<Object,String> valueToEntityNameMap,
 			AnyDiscriminatorValueStrategy valueStrategy,
+			boolean implicitEntityShortName,
 			MappingMetamodelImplementor mappingMetamodel) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
@@ -106,6 +107,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				underlyingJdbcMapping,
 				valueToEntityNameMap,
 				valueStrategy,
+				implicitEntityShortName,
 				mappingMetamodel
 		);
 	}
@@ -115,6 +117,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			BasicType<?> underlyingJdbcMapping,
 			Map<Object, String> valueToEntityNameMap,
 			AnyDiscriminatorValueStrategy valueStrategy,
+			boolean implicitEntityShortName,
 			MappingMetamodelImplementor mappingMetamodel) {
 		if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
 			if ( valueToEntityNameMap == null || valueToEntityNameMap.isEmpty() ) {
@@ -132,6 +135,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 					ClassJavaType.INSTANCE,
 					underlyingJdbcMapping.getJavaTypeDescriptor(),
 					valueToEntityNameMap,
+					implicitEntityShortName,
 					mappingMetamodel
 			);
 			case EXPLICIT -> new ExplicitDiscriminatorConverter<>(
@@ -146,6 +150,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 					ClassJavaType.INSTANCE,
 					underlyingJdbcMapping.getJavaTypeDescriptor(),
 					valueToEntityNameMap,
+					implicitEntityShortName,
 					mappingMetamodel
 			);
 		};

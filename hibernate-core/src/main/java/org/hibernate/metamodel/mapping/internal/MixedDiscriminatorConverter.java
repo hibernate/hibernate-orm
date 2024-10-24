@@ -32,6 +32,7 @@ public class MixedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R
 	private final NavigableRole discriminatorRole;
 	private final Map<Object, DiscriminatorValueDetails> detailsByValue;
 	private final Map<String,DiscriminatorValueDetails> detailsByEntityName;
+	private final boolean implicitEntityShortName;
 	private final MappingMetamodelImplementor mappingMetamodel;
 
 	public MixedDiscriminatorConverter(
@@ -39,15 +40,17 @@ public class MixedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R
 			JavaType<O> domainJavaType,
 			JavaType<R> relationalJavaType,
 			Map<Object,String> explicitValueMappings,
+			boolean implicitEntityShortName,
 			MappingMetamodelImplementor mappingMetamodel) {
 		super( discriminatorRole.getFullPath(), domainJavaType, relationalJavaType );
 		this.discriminatorRole = discriminatorRole;
+		this.implicitEntityShortName = implicitEntityShortName;
 		this.mappingMetamodel = mappingMetamodel;
 
 		this.detailsByValue = CollectionHelper.concurrentMap( explicitValueMappings.size() );
 		this.detailsByEntityName = CollectionHelper.concurrentMap( explicitValueMappings.size() );
 		explicitValueMappings.forEach( (value,entityName) -> {
-			String importedEntityName = mappingMetamodel.getImportedName( entityName );
+			final String importedEntityName = mappingMetamodel.getImportedName( entityName );
 			final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( importedEntityName );
 			register( value, entityDescriptor );
 		} );
@@ -74,32 +77,26 @@ public class MixedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R
 	}
 
 	@Override
-	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm) {
-		if ( relationalForm == null ) {
+	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue) {
+		if ( relationalValue == null ) {
 			return detailsByValue.get( NULL_DISCRIMINATOR );
 		}
 
-		final DiscriminatorValueDetails existing = detailsByValue.get( relationalForm );
+		final DiscriminatorValueDetails existing = detailsByValue.get( relationalValue );
 		if ( existing != null ) {
-			// an explicit or previously-resolved mapping
 			return existing;
 		}
 
-		final DiscriminatorValueDetails notNullMatch = detailsByValue.get( NOT_NULL_DISCRIMINATOR );
-		if ( notNullMatch != null ) {
-			return notNullMatch;
-		}
-
-		if ( relationalForm.getClass().isEnum() ) {
+		if ( relationalValue.getClass().isEnum() ) {
 			final Object enumValue;
 			if ( getRelationalJavaType() instanceof StringJavaType ) {
-				enumValue = ( (Enum<?>) relationalForm ).name();
+				enumValue = ( (Enum<?>) relationalValue ).name();
 			}
 			else if ( getRelationalJavaType() instanceof CharacterJavaType ) {
-				enumValue = ( (Enum<?>) relationalForm ).name().charAt( 0 );
+				enumValue = ( (Enum<?>) relationalValue ).name().charAt( 0 );
 			}
 			else {
-				enumValue = ( (Enum<?>) relationalForm ).ordinal();
+				enumValue = ( (Enum<?>) relationalValue ).ordinal();
 			}
 			final DiscriminatorValueDetails enumMatch = detailsByValue.get( enumValue );
 			if ( enumMatch != null ) {
@@ -107,15 +104,27 @@ public class MixedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R
 			}
 		}
 
-		if ( relationalForm instanceof String assumedEntityName ) {
-			// Assume the relational form is the entity name
-			final EntityPersister persister = mappingMetamodel.findEntityDescriptor( assumedEntityName );
+		if ( relationalValue instanceof String assumedEntityName ) {
+			final EntityPersister persister;
+			if ( implicitEntityShortName ) {
+				final String importedName = mappingMetamodel.getImportedName( assumedEntityName );
+				persister = mappingMetamodel.findEntityDescriptor( importedName );
+			}
+			else {
+				persister = mappingMetamodel.findEntityDescriptor( assumedEntityName );
+			}
+
 			if ( persister != null ) {
 				return register( assumedEntityName, persister );
 			}
 		}
 
-		throw new HibernateException( "Cannot interpret discriminator value (" + discriminatorRole + ") : " + relationalForm );
+		final DiscriminatorValueDetails notNullMatch = detailsByValue.get( NOT_NULL_DISCRIMINATOR );
+		if ( notNullMatch != null ) {
+			return notNullMatch;
+		}
+
+		throw new HibernateException( "Cannot interpret discriminator value (" + discriminatorRole + ") : " + relationalValue );
 	}
 
 	@Override
@@ -126,7 +135,8 @@ public class MixedDiscriminatorConverter<O,R> extends DiscriminatorConverter<O,R
 		}
 
 		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( entityName );
-		return register( entityName, entityDescriptor );
+		final String implicitName = implicitEntityShortName ? entityDescriptor.getImportedName() : entityName;
+		return register( implicitName, entityDescriptor );
 	}
 
 	@Override

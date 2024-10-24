@@ -71,7 +71,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return metaType;
 		}
 
-		return new MetaType( discriminatorType, AnyDiscriminatorValueStrategy.AUTO, null );
+		return new MetaType( discriminatorType, AnyDiscriminatorValueStrategy.AUTO, false, null );
 	}
 
 	public Type getIdentifierType() {

@@ -2,18 +2,20 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.any.mixed;
+package org.hibernate.orm.test.any.discriminator.explicit;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Basic;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Any;
-import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
+import org.hibernate.orm.test.any.discriminator.CardPayment;
+import org.hibernate.orm.test.any.discriminator.CheckPayment;
+import org.hibernate.orm.test.any.discriminator.Payment;
 
 /**
  * @author Steve Ebersole
@@ -26,25 +28,15 @@ public class Order {
 	@Basic
 	public String name;
 
+	//tag::associations-any-explicit-discriminator-example[]
 	@Any
 	@AnyKeyJavaClass( Integer.class )
 	@JoinColumn(name = "explicit_fk")
+	@Column( name="explicit_type" )
 	@AnyDiscriminatorValue( discriminator = "CARD", entity = CardPayment.class )
 	@AnyDiscriminatorValue( discriminator = "CHECK", entity = CheckPayment.class )
-	public Payment explicitPayment;
-
-	@Any
-	@AnyKeyJavaClass( Integer.class )
-	@JoinColumn(name = "implicit_fk")
-	public Payment implicitPayment;
-
-	@Any
-	@AnyKeyJavaClass( Integer.class )
-	@JoinColumn(name = "mixed_fk")
-	@AnyDiscriminator(valueStrategy = AnyDiscriminatorValueStrategy.MIXED)
-	@AnyDiscriminatorValue( discriminator = "CARD", entity = CardPayment.class )
-	@AnyDiscriminatorValue( discriminator = "CHECK", entity = CheckPayment.class )
-	public Payment mixedPayment;
+	public Payment paymentExplicit;
+	//end::associations-any-explicit-discriminator-example[]
 
 	protected Order() {
 		// for Hibernate use

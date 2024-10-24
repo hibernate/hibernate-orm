@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.any.mixed;
+package org.hibernate.orm.test.any.discriminator;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -11,8 +11,11 @@ import jakarta.persistence.Id;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
-@Entity(name = "CashPayment")
+//tag::associations-any-example[]
+@Entity
 public class CashPayment implements Payment {
+	// ...
+//end::associations-any-example[]
 	@Id
 	private Integer id;
 	private Double amount;
@@ -37,4 +40,6 @@ public class CashPayment implements Payment {
 	public void setAmount(Double amount) {
 		this.amount = amount;
 	}
+//tag::associations-any-example[]
 }
+//end::associations-any-example[]

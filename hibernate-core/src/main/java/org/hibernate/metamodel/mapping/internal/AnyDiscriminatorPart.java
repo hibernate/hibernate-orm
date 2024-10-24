@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -20,6 +19,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -35,7 +35,6 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -84,7 +83,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean partitioned,
 			BasicType<?> underlyingJdbcMapping,
 			Map<Object,String> valueToEntityNameMap,
-			AnyDiscriminatorValueStrategy valueStrategy,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
@@ -105,7 +104,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				partRole,
 				underlyingJdbcMapping,
 				valueToEntityNameMap,
-				valueStrategy,
+				implicitValueStrategy,
 				mappingMetamodel
 		);
 	}
@@ -114,41 +113,16 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			NavigableRole partRole,
 			BasicType<?> underlyingJdbcMapping,
 			Map<Object, String> valueToEntityNameMap,
-			AnyDiscriminatorValueStrategy valueStrategy,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
-		if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
-			if ( valueToEntityNameMap == null || valueToEntityNameMap.isEmpty() ) {
-				valueStrategy = AnyDiscriminatorValueStrategy.IMPLICIT;
-			}
-			else {
-				valueStrategy = AnyDiscriminatorValueStrategy.EXPLICIT;
-			}
-		}
-
-		return switch ( valueStrategy ) {
-			case AUTO -> throw new AssertionFailure( "Not expecting AUTO" );
-			case MIXED -> new MixedDiscriminatorConverter<>(
-					partRole,
-					ClassJavaType.INSTANCE,
-					underlyingJdbcMapping.getJavaTypeDescriptor(),
-					valueToEntityNameMap,
-					mappingMetamodel
-			);
-			case EXPLICIT -> new ExplicitDiscriminatorConverter<>(
-					partRole,
-					ClassJavaType.INSTANCE,
-					underlyingJdbcMapping.getJavaTypeDescriptor(),
-					valueToEntityNameMap,
-					mappingMetamodel
-			);
-			case IMPLICIT -> new ImplicitDiscriminatorConverter<>(
-					partRole,
-					ClassJavaType.INSTANCE,
-					underlyingJdbcMapping.getJavaTypeDescriptor(),
-					valueToEntityNameMap,
-					mappingMetamodel
-			);
-		};
+		return new UnifiedAnyDiscriminatorConverter<>(
+				partRole,
+				ClassJavaType.INSTANCE,
+				underlyingJdbcMapping.getJavaTypeDescriptor(),
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
 	}
 
 	public DiscriminatorConverter<?,?> getValueConverter() {

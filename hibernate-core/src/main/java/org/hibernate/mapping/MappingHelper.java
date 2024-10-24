@@ -18,11 +18,11 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
@@ -129,17 +129,24 @@ public final class MappingHelper {
 			Map<Object, String> explicitValeMappings,
 			boolean lazy,
 			MetadataBuildingContext buildingContext) {
-		return anyMapping( discriminatorType, identifierType, AnyDiscriminatorValueStrategy.AUTO, explicitValeMappings, lazy, buildingContext );
+		return anyMapping(
+				discriminatorType,
+				identifierType,
+				explicitValeMappings,
+				null,
+				lazy,
+				buildingContext
+		);
 	}
 
 	public static AnyType anyMapping(
 			Type discriminatorType,
 			Type identifierType,
-			AnyDiscriminatorValueStrategy discriminatorValueStrategy,
 			Map<Object, String> explicitValeMappings,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			boolean lazy,
 			MetadataBuildingContext buildingContext) {
-		final MetaType metaType = new MetaType( discriminatorType, discriminatorValueStrategy, explicitValeMappings );
+		final MetaType metaType = new MetaType( discriminatorType, implicitValueStrategy, explicitValeMappings );
 		return new AnyType( buildingContext.getBootstrapContext().getTypeConfiguration(), metaType, identifierType, lazy );
 	}
 

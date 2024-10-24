@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -25,47 +26,36 @@ public class MetaType extends AbstractType {
 	public static final String[] REGISTRATION_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	private final Type valueType;
-	private final AnyDiscriminatorValueStrategy valueStrategy;
+	private final ImplicitDiscriminatorStrategy implicitValueStrategy;
 	private final Map<Object,String> discriminatorValuesToEntityNameMap;
 	private final Map<String,Object> entityNameToDiscriminatorValueMap;
 
 	public MetaType(
 			Type valueType,
-			AnyDiscriminatorValueStrategy valueStrategy,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			Map<Object,String> explicitValueMappings) {
 		this.valueType = valueType;
+		this.implicitValueStrategy = implicitValueStrategy;
 
 		if ( explicitValueMappings == null || explicitValueMappings.isEmpty() ) {
-			if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
-				valueStrategy = AnyDiscriminatorValueStrategy.IMPLICIT;
-			}
 			this.discriminatorValuesToEntityNameMap = new HashMap<>();
 			this.entityNameToDiscriminatorValueMap = new HashMap<>();
 		}
 		else {
-			if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
-				valueStrategy = AnyDiscriminatorValueStrategy.EXPLICIT;
-			}
 			this.discriminatorValuesToEntityNameMap = explicitValueMappings;
 			this.entityNameToDiscriminatorValueMap = new HashMap<>();
 			for ( Map.Entry<Object,String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
 				entityNameToDiscriminatorValueMap.put( entry.getValue(), entry.getKey() );
 			}
 		}
-
-		this.valueStrategy = valueStrategy;
-	}
-
-	public MetaType(Map<Object,String> discriminatorValuesToEntityNameMap, Type baseType) {
-		this( baseType, AnyDiscriminatorValueStrategy.AUTO, discriminatorValuesToEntityNameMap );
 	}
 
 	public Type getBaseType() {
 		return valueType;
 	}
 
-	public AnyDiscriminatorValueStrategy getValueStrategy() {
-		return valueStrategy;
+	public ImplicitDiscriminatorStrategy getImplicitValueStrategy() {
+		return implicitValueStrategy;
 	}
 
 	public String[] getRegistrationKeys() {

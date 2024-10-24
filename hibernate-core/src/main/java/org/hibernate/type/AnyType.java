@@ -4,14 +4,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
-
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -30,8 +22,17 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
+import static org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -71,7 +72,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return metaType;
 		}
 
-		return new MetaType( discriminatorType, AnyDiscriminatorValueStrategy.AUTO, null );
+		return new MetaType( discriminatorType, FULL_NAME_STRATEGY, null );
 	}
 
 	public Type getIdentifierType() {

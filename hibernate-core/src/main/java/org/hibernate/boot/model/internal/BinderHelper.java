@@ -21,6 +21,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.Cascade;
@@ -68,6 +69,7 @@ import jakarta.persistence.OneToOne;
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+import static org.hibernate.boot.model.internal.AnyBinder.resolveImplicitDiscriminatorStrategy;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
@@ -805,6 +807,12 @@ public class BinderHelper {
 				context.getMetadataCollector().getSourceModelBuildingContext()
 		);
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
+
+
+		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		if ( anyDiscriminatorImplicitValues != null ) {
+			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
+		}
 
 		final BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
 		final List<AnnotatedJoinColumn> columns = keyColumns.getJoinColumns();

@@ -105,10 +105,11 @@ public abstract class AnnotationMeta implements Metamodel {
 											context.getEntityNameMappings(), context.getEnumTypesByValue() )
 							);
 					if ( statement instanceof SqmSelectStatement
-							&& isQueryMethodName( name ) ) {
+							&& isQueryMethodName( name )
+							&& !isJakartaDataStyle() ) {
 						putMember( name,
 								// TODO: respect @NamedQuery(resultClass)
-                                new NamedQueryMethod(
+								new NamedQueryMethod(
 										this,
 										(SqmSelectStatement<?>) statement,
 										name.substring(1),

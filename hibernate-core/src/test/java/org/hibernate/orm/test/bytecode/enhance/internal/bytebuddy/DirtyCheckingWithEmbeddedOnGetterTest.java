@@ -158,7 +158,7 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 
 	@Entity(name = "CardGame")
 	public static class CardGame {
-
+		@Id
 		private String id;
 		private String name;
 
@@ -173,7 +173,7 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 			this.firstPlayerToken = createEmbeddedValue( name );
 		}
 
-		@Id
+
 		public String getId() {
 			return id;
 		}

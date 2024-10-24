@@ -43,6 +43,7 @@ import org.hibernate.internal.CoreMessageLogger;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.Id;
 import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
@@ -168,6 +169,11 @@ public class EnhancerImpl implements Enhancer {
 			verifyVersions( managedCtClass, enhancementContext );
 
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
+			return null;
+		}
+
+		// Check for HHH-16572 (PROPERTY attributes with mismatched field and method names)
+		if ( unsupportedEnhancement( managedCtClass ) ) {
 			return null;
 		}
 
@@ -378,6 +384,61 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 			return null;
 		}
+	}
+
+	// See HHH-16572
+	// return true if enhancement is unsupported
+	private boolean unsupportedEnhancement(TypeDescription managedCtClass) {
+		boolean result = false;
+		// Check for use of ID/AccessType(PROPERTY) on methods
+
+		for (MethodDescription.InDefinedShape shape : managedCtClass.getDeclaredMethods()) {
+			AnnotationDescription.Loadable<Access> access = shape.getDeclaredAnnotations().ofType(Access.class);
+			AnnotationDescription.Loadable<Id> id = shape.getDeclaredAnnotations().ofType(Id.class);
+			if (access != null && access.load().value() == AccessType.PROPERTY) {
+				if (!log.isDebugEnabled()) {
+					// return immediately if debug logging is not enabled.
+					return true;
+				}
+				log.debugf("Skipping enhancement of [%s]: due to use of [%s] annotation used for property access using JavaBeans-style property accessors", managedCtClass.getName(), Access.class.getName());
+				result = true;
+			}
+			if (id != null) {
+				if (!log.isDebugEnabled()) {
+					// return immediately if debug logging is not enabled.
+					return true;
+				}
+				log.debugf("Skipping enhancement of [%s]: due to use of [%s] annotation used for property access using JavaBeans-style property accessors", managedCtClass.getName(), Id.class.getName());
+				result = true;
+			}
+		}
+
+		TypeDescription.Generic superclass = managedCtClass.getSuperClass();
+		while (superclass != null && superclass.getSuperClass() != null) {
+			// Check for use of ID/AccessType(PROPERTY) on methods
+			for (MethodDescription.InGenericShape shape : superclass.getDeclaredMethods()) {
+				AnnotationDescription.Loadable<Access> access = shape.getDeclaredAnnotations().ofType(Access.class);
+				AnnotationDescription.Loadable<Id> id = shape.getDeclaredAnnotations().ofType(Id.class);
+				if (access != null && access.load().value() == AccessType.PROPERTY) {
+					if (!log.isDebugEnabled()) {
+						// return immediately if debug logging is not enabled.
+						return true;
+					}
+					log.debugf("Skipping enhancement of [%s]: due to superclass [%s] use of [%s] annotation used for property access using JavaBeans-style property accessors", managedCtClass.getName(), superclass.getActualName(), Access.class.getName());
+					result = true;
+				}
+				if (id != null) {
+					if (!log.isDebugEnabled()) {
+						// return immediately if debug logging is not enabled.
+						return true;
+					}
+					log.debugf("Skipping enhancement of [%s]: due to superclass [%s] use of [%s] annotation used for property access using JavaBeans-style property accessors", managedCtClass.getName(), superclass.getActualName(), Id.class.getName());
+					result = true;
+				}
+			}
+			superclass = superclass.getSuperClass();
+		}
+		return result;
 	}
 
 	private static void verifyVersions(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext) {

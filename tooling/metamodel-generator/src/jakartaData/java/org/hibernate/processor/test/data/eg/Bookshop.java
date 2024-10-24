@@ -12,6 +12,7 @@ import jakarta.data.repository.Repository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ import java.util.List;
 public interface Bookshop extends CrudRepository<Book,String> {
 	@Find
 	@Transactional
-	List<Book> byPublisher(String publisher_name);
+	List<Book> byPublisher(@Size(min=2,max=100) String publisher_name);
 
 	@Find
 	List<Book> byTitle(@Nonnull String title);

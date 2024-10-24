@@ -398,7 +398,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 		else if ( StringHelper.isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
 			final ModelPart mappedByPart = resolveNamedTargetPart( bootCollectionDescriptor.getMappedByProperty(), getAssociatedEntityMappingType(), collectionDescriptor );
-			if ( mappedByPart instanceof ToOneAttributeMapping ) {
+			if ( mappedByPart instanceof ToOneAttributeMapping || mappedByPart instanceof DiscriminatedAssociationAttributeMapping ) {
 				////////////////////////////////////////////////
 				// E.g.
 				//
@@ -425,7 +425,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				final ManyToOne elementDescriptor = (ManyToOne) bootCollectionDescriptor.getElement();
 				assert elementDescriptor.isReferenceToPrimaryKey();
 
-				final String collectionTableName = ( (BasicCollectionPersister) collectionDescriptor ).getTableName();
+				final String collectionTableName = collectionDescriptor.getTableName();
 
 				// this fk will refer to the associated entity's id.  if that id is not ready yet, delay this creation
 				if ( getAssociatedEntityMappingType().getIdentifierMapping() == null ) {

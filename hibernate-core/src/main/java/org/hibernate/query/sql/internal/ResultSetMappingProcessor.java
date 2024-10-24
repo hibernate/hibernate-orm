@@ -23,6 +23,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
@@ -393,6 +394,17 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			resultBuilderEntity.addFetchBuilder( propertyName, fetchBuilder );
 		}
 		else if ( columnAliases.length != 0 ) {
+			if ( propertyType instanceof EntityType ) {
+				final ToOneAttributeMapping toOne = (ToOneAttributeMapping) loadable.findAttributeMapping( propertyName );
+				if ( !toOne.getIdentifyingColumnsTableExpression().equals( loadable.getTableName() ) ) {
+					// The to-one has a join-table, use the plain join column name instead of the alias
+					assert columnAliases.length == 1;
+					final String[] targetAliases = new String[1];
+					targetAliases[0] = toOne.getTargetKeyPropertyName();
+					resultBuilderEntity.addProperty( propertyName, targetAliases );
+					return;
+				}
+			}
 			resultBuilderEntity.addProperty( propertyName, columnAliases );
 		}
 	}

@@ -424,8 +424,8 @@ What if we would like to inject a `Queries` object instead of calling its constr
 [%unbreakable]
 [TIP]
 ====
-As you <<architecture,recall>>, we don't think these things really need to be container-managed objects.
-But if you _want_ them to be—if you're allergic to calling constructors, for some reason—then:
+As you <<organizing-persistence,recall>>, we don't think these things really need to be container-managed objects.
+But if you _want_ them to be--if you're allergic to calling constructors, for some reason--then:
 
 - placing `jakarta.inject` on the build path will cause an `@Inject` annotation to be added to the constructor of `Queries_`, and
 - placing `jakarta.enterprise.context` on the build path will cause a `@Dependent` annotation to be added to the `Queries_` class.

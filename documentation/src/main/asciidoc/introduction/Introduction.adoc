@@ -447,10 +447,14 @@ We might start with something like this, a mix of UI and persistence logic:
 
 [source,java]
 ----
-@Path("/") @Produces("application/json")
+@Path("/")
+@Produces("application/json")
 public class BookResource {
 
-    @GET @Path("book/{isbn}")
+    private final SessionFactory sessionfactory = .... ;
+
+    @GET
+    @Path("book/{isbn}")
     public Book getBook(String isbn) {
         var book = sessionFactory.fromTransaction(session -> session.find(Book.class, isbn));
         return book == null ? Response.status(404).build() : book;
@@ -473,18 +477,25 @@ Let's now consider a slightly more complicated case.
 
 [source,java]
 ----
-@Path("/") @Produces("application/json")
+@Path("/")
+@Produces("application/json")
 public class BookResource {
     private static final int RESULTS_PER_PAGE = 20;
 
-    @GET @Path("books/{titlePattern}/{page:\\d+}")
-    public List<Book> findBooks(String titlePattern, int page) {
-        var books = sessionFactory.fromTransaction(session -> {
-            return session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
-                    .setParameter(1, titlePattern)
-                    .setPage(Page.page(RESULTS_PER_PAGE, page))
-                    .getResultList();
-        });
+    private final SessionFactory sessionfactory = .... ;
+
+    @GET
+    @Path("books/{titlePattern}/{pageNumber:\\d+}")
+    public List<Book> findBooks(String titlePattern, int pageNumber) {
+        var page = Page.page(RESULTS_PER_PAGE, pageNumber);
+        var books =
+                sessionFactory.fromTransaction(session -> {
+                    var findBooksByTitle = "from Book where title like ?1 order by title";
+                    return session.createSelectionQuery(findBooksByTitle, Book.class)
+                            .setParameter(1, titlePattern)
+                            .setPage(page)
+                            .getResultList();
+                });
         return books.isEmpty() ? Response.status(404).build() : books;
     }
 
@@ -498,9 +509,9 @@ Let's hit the code with our favorite thing, the Extract Method refactoring. We o
 
 [source,java]
 ----
-static List<Book> findBooksTitled(Session session,
-                                  String titlePattern, Page page) {
-    return session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
+static List<Book> findBooksTitled(Session session, String titlePattern, Page page) {
+    var findBooksByTitle = "from Book where title like ?1 order by title";
+    return session.createSelectionQuery(findBooksByTitle, Book.class)
             .setParameter(1, titlePattern)
             .setPage(page)
             .getResultList();
@@ -522,13 +533,13 @@ We need a place to put the annotation, so let's move our query method to a new c
             query = "from Book where title like :title order by title")
 class Queries {
 
-    static List<Book> findBooksTitled(Session session,
-                                      String titlePattern, Page page) {
+    static List<Book> findBooksTitled(Session session, String titlePattern, Page page) {
         return session.createQuery(Queries_._findBooksByTitle_)  //type safe reference to the named query
                 .setParameter("title", titlePattern)
                 .setPage(page)
                 .getResultList();
     }
+
 }
 ----
 
@@ -546,11 +557,13 @@ Whatever the case, the code which orchestrates a unit of work usually just calls
 [source,java]
 ----
 @GET
-@Path("books/{titlePattern}")
-public List<Book> findBooks(String titlePattern) {
-    var books = sessionFactory.fromTransaction(session ->
-            Queries.findBooksTitled(session, titlePattern,
-                    Page.page(RESULTS_PER_PAGE, page)));
+@Path("books/{titlePattern}/{pageNumber:\\d+}")
+public List<Book> findBooks(String titlePattern, int pageNumber) {
+    var page = Page.page(RESULTS_PER_PAGE, pageNumber);
+    var books =
+            sessionFactory.fromTransaction(session ->
+                    // call handwritten query method
+                    Queries.findBooksTitled(session, titlePattern, page));
     return books.isEmpty() ? Response.status(404).build() : books;
 }
 ----
@@ -567,7 +580,9 @@ Suppose we simplify `Queries` to just the following:
 
 [source,java]
 ----
+// a sort of proto-repository, this interface is never implemented
 interface Queries {
+    // a HQL query method with a generated static "implementation"
     @HQL("where title like :title order by title")
     List<Book> findBooksTitled(String title, Page page);
 }
@@ -579,11 +594,13 @@ We can call it just like we were previously calling our handwritten version:
 [source,java]
 ----
 @GET
-@Path("books/{titlePattern}")
-public List<Book> findBooks(String titlePattern) {
-    var books = sessionFactory.fromTransaction(session ->
-            Queries_.findBooksTitled(session, titlePattern,
-                    Page.page(RESULTS_PER_PAGE, page)));
+@Path("books/{titlePattern}/{pageNumber:\\d+}")
+public List<Book> findBooks(String titlePattern, int pageNumber) {
+    var page = Page.page(RESULTS_PER_PAGE, pageNumber);
+    var books =
+            sessionFactory.fromTransaction(session ->
+                    // call the generated query method "implementation"
+                    Queries_.findBooksTitled(session, titlePattern, page));
     return books.isEmpty() ? Response.status(404).build() : books;
 }
 ----
@@ -592,32 +609,37 @@ In this case, the quantity of code eliminated is pretty trivial.
 The real value is in improved type safety.
 We now find out about errors in assignments of arguments to query parameters at compile time.
 
-This is all quite nice so far, but at this point you're probably wondering whether we could use dependency injection to obtain an _instance_ of the `Queries` interface.
+This is all quite nice so far, but at this point you're probably wondering whether we could use dependency injection to obtain an _instance_ of the `Queries` interface, and have this object take care of obtaining its own `Session`.
 Well, indeed we can.
 What we need to do is indicate the kind of session the `Queries` interface depends on, by adding a method to retrieve the session.
+Observe, again, that we're _still_ not attempting to hide the `Session` from the client code.
 
 [source,java]
 ----
+// a true repository interface with generated implementation
 interface Queries {
-    EntityManager entityManager();
+    // declare the kind of session backing this repository
+    Session session();
 
+    // a HQL query method with a generated implementation
     @HQL("where title like :title order by title")
     List<Book> findBooksTitled(String title, Page page);
 }
 ----
 
-The `Queries` interface is now considered a _repository_, and we may use CDI to inject the repository implementation generated by Hibernate Processor:
+The `Queries` interface is now considered a _repository_, and we may use CDI to inject the repository implementation generated by Hibernate Processor.
+Also, since I guess we're now working in some sort of container environment, we'll let the container manage transactions for us.
 
 [source,java]
 ----
-@Inject Queries queries;
+@Inject Queries queries;  // inject the repository
 
 @GET
-@Path("books/{titlePattern}")
+@Path("books/{titlePattern}/{pageNumber:\\d+}")
 @Transactional
-public List<Book> findBooks(String titlePattern) {
-    var books = queries.findBooksTitled(session, titlePattern,
-                    Page.page(RESULTS_PER_PAGE, page));
+public List<Book> findBooks(String titlePattern, int pageNumber) {
+    var page = Page.page(RESULTS_PER_PAGE, pageNumber);
+    var books = queries.findBooksTitled(session, titlePattern, page); // call the repository method
     return books.isEmpty() ? Response.status(404).build() : books;
 }
 ----

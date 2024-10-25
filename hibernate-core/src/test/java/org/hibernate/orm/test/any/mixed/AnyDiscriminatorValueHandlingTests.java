@@ -15,8 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 /**
- * Tests for {@link org.hibernate.type.AnyDiscriminatorValueStrategy}
- *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
@@ -75,7 +73,7 @@ public class AnyDiscriminatorValueHandlingTests {
 				fail( "Expecting an error" );
 			}
 			catch (HibernateException expected) {
-				assertThat( expected ).hasMessageContaining( "Entity not explicitly mapped for ANY discriminator" );
+				assertThat( expected ).hasMessageContaining( "Cannot determine discriminator value from entity-name" );
 			}
 		} );
 	}

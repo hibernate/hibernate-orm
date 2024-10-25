@@ -11,11 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -80,14 +81,15 @@ public class ImplicitStrategyWithShortNameTest {
 		private String name;
 
 		@Any
-		@AnyDiscriminator( valueStrategy = AnyDiscriminatorValueStrategy.IMPLICIT, implicitEntityShortName = true )
+		@AnyDiscriminator(implicitValueStrategy = ShortNameImplicitDiscriminatorStrategy.class)
 		@Column(name = "implicit_kind")
 		@AnyKeyJavaClass( Integer.class )
 		@JoinColumn( name = "implicit_fk" )
 		private Payment implicitPayment;
 
 		@Any
-		@AnyDiscriminator( valueStrategy = AnyDiscriminatorValueStrategy.MIXED, implicitEntityShortName = true )
+		@AnyDiscriminator(implicitValueStrategy = ShortNameImplicitDiscriminatorStrategy.class)
+		@AnyDiscriminatorValue( discriminator = "cash", entity = CashPayment.class )
 		@Column(name = "mixed_kind")
 		@AnyKeyJavaClass( Integer.class )
 		@JoinColumn( name = "mixed_fk" )

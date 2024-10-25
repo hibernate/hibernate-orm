@@ -19,6 +19,9 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
@@ -110,8 +113,7 @@ public class AnyBinder {
 
 		final AnyDiscriminator anyDiscriminator = property.getDirectAnnotationUsage( AnyDiscriminator.class );
 		if ( anyDiscriminator != null ) {
-			value.setDiscriminatorValueStrategy( anyDiscriminator.valueStrategy() );
-			value.setImplicitEntityShortName( anyDiscriminator.implicitEntityShortName() );
+			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminator, context ) );
 		}
 
 		final PropertyBinder binder = new PropertyBinder();
@@ -134,5 +136,24 @@ public class AnyBinder {
 		//composite FK columns are in the same table, so it's OK
 		propertyHolder.addProperty( prop, inferredData.getAttributeMember(), columns, inferredData.getDeclaringClass() );
 		binder.callAttributeBindersInSecondPass( prop );
+	}
+
+	private static ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(
+			AnyDiscriminator anyDiscriminator,
+			MetadataBuildingContext context) {
+		final Class<? extends ImplicitDiscriminatorStrategy> implicitValueStrategy = anyDiscriminator.implicitValueStrategy();
+		if ( ImplicitDiscriminatorStrategy.class.equals( implicitValueStrategy ) ) {
+			return null;
+		}
+
+		if ( FullNameImplicitDiscriminatorStrategy.class.equals( implicitValueStrategy ) ) {
+			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+		}
+
+		if ( ShortNameImplicitDiscriminatorStrategy.class.equals( implicitValueStrategy ) ) {
+			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+		}
+
+		return context.getBootstrapContext().getCustomTypeProducer().produceBeanInstance( implicitValueStrategy );
 	}
 }

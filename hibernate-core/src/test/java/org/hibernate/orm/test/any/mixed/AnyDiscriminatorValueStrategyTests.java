@@ -10,14 +10,11 @@ import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.ExplicitDiscriminatorConverter;
-import org.hibernate.metamodel.mapping.internal.ImplicitDiscriminatorConverter;
-import org.hibernate.metamodel.mapping.internal.MixedDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.UnifiedAnyDiscriminatorConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -26,8 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 /**
- * Tests for {@link org.hibernate.type.AnyDiscriminatorValueStrategy}
- *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
@@ -41,7 +36,6 @@ public class AnyDiscriminatorValueStrategyTests {
 			final DiscriminatedAssociationAttributeMapping implicitMapping = (DiscriminatedAssociationAttributeMapping) entityDescriptor.findAttributeMapping( "implicitPayment" );
 			final DiscriminatorMapping discriminatorMapping = implicitMapping.getDiscriminatorMapping();
 			final DiscriminatorConverter<?, ?> discriminatorConverter = discriminatorMapping.getValueConverter();
-			assertThat( discriminatorConverter.getValueStrategy() ).isEqualTo( AnyDiscriminatorValueStrategy.IMPLICIT );
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// check discriminator -> entity
@@ -70,14 +64,14 @@ public class AnyDiscriminatorValueStrategyTests {
 			final DiscriminatorValueDetails checkDiscriminatorValue = discriminatorConverter.getDetailsForEntityName( CheckPayment.class.getName() );
 			assertThat( checkDiscriminatorValue.getValue() ).isEqualTo( CheckPayment.class.getName() );
 
-			final Map<String,?> detailsByEntityName = ((ImplicitDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByEntityName();
+			final Map<String,?> detailsByEntityName = ((UnifiedAnyDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByEntityName();
 			assertThat( detailsByEntityName.keySet() ).containsOnly(
 					CashPayment.class.getName(),
 					CardPayment.class.getName(),
 					CheckPayment.class.getName()
 			);
 
-			final Map<Object,?> detailsByValue = ((ImplicitDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByValue();
+			final Map<Object,?> detailsByValue = ((UnifiedAnyDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByValue();
 			assertThat( detailsByValue.keySet() ).containsOnly(
 					CashPayment.class.getName(),
 					CardPayment.class.getName(),
@@ -95,7 +89,6 @@ public class AnyDiscriminatorValueStrategyTests {
 			final DiscriminatedAssociationAttributeMapping explicitMapping = (DiscriminatedAssociationAttributeMapping) entityDescriptor.findAttributeMapping( "explicitPayment" );
 			final DiscriminatorMapping discriminatorMapping = explicitMapping.getDiscriminatorMapping();
 			final DiscriminatorConverter<?, ?> discriminatorConverter = discriminatorMapping.getValueConverter();
-			assertThat( discriminatorConverter.getValueStrategy() ).isEqualTo( AnyDiscriminatorValueStrategy.EXPLICIT );
 
 			// NOTE : cash is NOT mapped
 
@@ -144,13 +137,13 @@ public class AnyDiscriminatorValueStrategyTests {
 			assertThat( checkDiscriminatorValue.getValue() ).isEqualTo( "CHECK" );
 
 
-			final Map<String,?> detailsByEntityName = ((ExplicitDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByEntityName();
+			final Map<String,?> detailsByEntityName = ((UnifiedAnyDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByEntityName();
 			assertThat( detailsByEntityName.keySet() ).containsOnly(
 					CardPayment.class.getName(),
 					CheckPayment.class.getName()
 			);
 
-			final Map<Object,?> detailsByValue = ((ExplicitDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByValue();
+			final Map<Object,?> detailsByValue = ((UnifiedAnyDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByValue();
 			assertThat( detailsByValue.keySet() ).containsOnly(
 					"CARD",
 					"CHECK"
@@ -167,8 +160,6 @@ public class AnyDiscriminatorValueStrategyTests {
 			final DiscriminatedAssociationAttributeMapping mixedMapping = (DiscriminatedAssociationAttributeMapping) entityDescriptor.findAttributeMapping( "mixedPayment" );
 			final DiscriminatorMapping discriminatorMapping = mixedMapping.getDiscriminatorMapping();
 			final DiscriminatorConverter<?, ?> discriminatorConverter = discriminatorMapping.getValueConverter();
-			// historically this operated as if EXPLICIT
-			assertThat( discriminatorConverter.getValueStrategy() ).isEqualTo( AnyDiscriminatorValueStrategy.MIXED );
 
 			// NOTE : cash is NOT mapped
 
@@ -199,14 +190,14 @@ public class AnyDiscriminatorValueStrategyTests {
 			final DiscriminatorValueDetails checkDiscriminatorValue = discriminatorConverter.getDetailsForEntityName( CheckPayment.class.getName() );
 			assertThat( checkDiscriminatorValue.getValue() ).isEqualTo( "CHECK" );
 
-			final Map<String,?> detailsByEntityName = ((MixedDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByEntityName();
+			final Map<String,?> detailsByEntityName = ((UnifiedAnyDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByEntityName();
 			assertThat( detailsByEntityName.keySet() ).containsOnly(
 					CashPayment.class.getName(),
 					CardPayment.class.getName(),
 					CheckPayment.class.getName()
 			);
 
-			final Map<Object,?> detailsByValue = ((MixedDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByValue();
+			final Map<Object,?> detailsByValue = ((UnifiedAnyDiscriminatorConverter<?,?>) discriminatorConverter).getDetailsByValue();
 			assertThat( detailsByValue.keySet() ).containsOnly(
 					CashPayment.class.getName(),
 					"CARD",

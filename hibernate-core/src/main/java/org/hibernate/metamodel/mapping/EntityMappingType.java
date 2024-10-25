@@ -462,6 +462,10 @@ public interface EntityMappingType
 
 	void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer);
 
+	default String getImportedName() {
+		return getEntityPersister().getImportedName();
+	}
+
 	interface ConstraintOrderedTableConsumer {
 		void consume(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
 	}

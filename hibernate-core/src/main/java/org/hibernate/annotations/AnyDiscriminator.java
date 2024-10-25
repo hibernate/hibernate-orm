@@ -8,13 +8,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import jakarta.persistence.DiscriminatorType;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.hibernate.type.AnyDiscriminatorValueStrategy.AUTO;
 
 /**
  * A simplified way to specify the type of the discriminator in an {@link Any}
@@ -48,16 +47,8 @@ public @interface AnyDiscriminator {
 	DiscriminatorType value() default DiscriminatorType.STRING;
 
 	/**
-	 * How the discriminator value should be handled in regard to explicit
-	 * {@linkplain AnyDiscriminatorValue} mappings, if any.
-	 *
-	 * @since 7.0
+	 * Determines how to handle mappings which are not explicitly defined by
+	 * any associated {@linkplain AnyDiscriminatorValue} annotations
 	 */
-	AnyDiscriminatorValueStrategy valueStrategy() default AUTO;
-
-	/**
-	 * Whether the entity's short-name should be used as the discriminator value
-	 * (as opposed to its full-name) in the case of implicit value mapping.
-	 */
-	boolean implicitEntityShortName() default false;
+	Class<? extends ImplicitDiscriminatorStrategy> implicitValueStrategy() default ImplicitDiscriminatorStrategy.class;
 }

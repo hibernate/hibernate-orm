@@ -9,7 +9,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorValueDetailsImpl;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -64,12 +63,6 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 			discriminatorValueToDetailsMap.put( valueDetails.getValue(), valueDetails );
 			embeddableClassNameToDetailsMap.put( valueDetails.getIndicatedEntityName(), valueDetails );
 		} );
-	}
-
-	@Override
-	public AnyDiscriminatorValueStrategy getValueStrategy() {
-		// discriminators for embeddables are always explicit
-		return AnyDiscriminatorValueStrategy.EXPLICIT;
 	}
 
 	@Override

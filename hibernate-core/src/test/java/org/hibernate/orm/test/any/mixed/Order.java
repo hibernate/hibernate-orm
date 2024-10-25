@@ -13,7 +13,7 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
+import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 
 /**
  * @author Steve Ebersole
@@ -41,7 +41,7 @@ public class Order {
 	@Any
 	@AnyKeyJavaClass( Integer.class )
 	@JoinColumn(name = "mixed_fk")
-	@AnyDiscriminator(valueStrategy = AnyDiscriminatorValueStrategy.MIXED)
+	@AnyDiscriminator(implicitValueStrategy = FullNameImplicitDiscriminatorStrategy.class)
 	@AnyDiscriminatorValue( discriminator = "CARD", entity = CardPayment.class )
 	@AnyDiscriminatorValue( discriminator = "CHECK", entity = CheckPayment.class )
 	public Payment mixedPayment;

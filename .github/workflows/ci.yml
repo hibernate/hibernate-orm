@@ -60,22 +60,50 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Get year/month for cache key
-        id: get-date
-        run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
-        shell: bash
-      - name: Cache Maven/Gradle local caches
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
+          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
+          CURRENT_DAY=$(/bin/date -u "+%d")
+          ROOT_CACHE_KEY="buildtool-cache"
+          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
+          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
+          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+      - name: Cache Maven/Gradle Local Caches
+        id: cache-maven
         uses: actions/cache@v4
-        id: cache-maven-gradle
+        # if it's not a pull request, we restore and save the cache
+        if: github.event_name != 'pull_request'
         with:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
             ~/.gradle/caches/
             ~/.gradle/wrapper/
-          # refresh cache every month to avoid unlimited growth
-          # use a different key depending on whether we run in trusted or untrusted mode
-          key: ${{ github.event_name == 'push' && 'trusted' || 'untrusted' }}-maven-gradle-caches-${{ steps.get-date.outputs.yearmonth }}
+          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
+          # The whole cache is dropped monthly to prevent unlimited growth.
+          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+      - name: Restore Maven/Gradle Local Caches
+        uses: actions/cache/restore@v4
+        # if it a pull request, we restore the cache but we don't save it
+        if: github.event_name == 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            ~/.gradle/wrapper/
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+
       - name: Run build script
         run: ./ci/build-github.sh
         shell: bash
@@ -141,22 +169,50 @@ jobs:
         with:
           distribution: 'graalvm'
           java-version: '21'
-      - name: Get year/month for cache key
-        id: get-date
-        run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
-        shell: bash
-      - name: Cache Maven/Gradle local caches
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
+          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
+          CURRENT_DAY=$(/bin/date -u "+%d")
+          ROOT_CACHE_KEY="buildtool-cache-atlas"
+          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
+          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
+          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+      - name: Cache Maven/Gradle Local Caches
+        id: cache-maven
         uses: actions/cache@v4
-        id: cache-maven-gradle
+        # if it's not a pull request, we restore and save the cache
+        if: github.event_name != 'pull_request'
         with:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
             ~/.gradle/caches/
             ~/.gradle/wrapper/
-          # refresh cache every month to avoid unlimited growth
-          # use a different key than jobs running in trusted mode
-          key: untrusted-maven-gradle-caches-${{ steps.get-date.outputs.yearmonth }}
+          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
+          # The whole cache is dropped monthly to prevent unlimited growth.
+          # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+      - name: Restore Maven/Gradle Local Caches
+        uses: actions/cache/restore@v4
+        # if it a pull request, we restore the cache but we don't save it
+        if: github.event_name == 'pull_request'
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            ~/.gradle/wrapper/
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}

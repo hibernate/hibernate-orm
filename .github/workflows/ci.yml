@@ -72,7 +72,7 @@ jobs:
           echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
           echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
-      - name: Cache Maven/Gradle Local Caches
+      - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
         uses: actions/cache@v4
         # if it's not a pull request, we restore and save the cache
@@ -81,7 +81,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
+            ~/.gradle/caches/modules-2
             ~/.gradle/wrapper/
           # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
@@ -90,7 +90,7 @@ jobs:
           restore-keys: |
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-      - name: Restore Maven/Gradle Local Caches
+      - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@v4
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
@@ -98,7 +98,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
+            ~/.gradle/caches/modules-2
             ~/.gradle/wrapper/
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
           restore-keys: |
@@ -181,7 +181,7 @@ jobs:
           echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
           echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
-      - name: Cache Maven/Gradle Local Caches
+      - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
         uses: actions/cache@v4
         # if it's not a pull request, we restore and save the cache
@@ -190,7 +190,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
+            ~/.gradle/caches/modules-2
             ~/.gradle/wrapper/
           # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
@@ -199,7 +199,7 @@ jobs:
           restore-keys: |
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
-      - name: Restore Maven/Gradle Local Caches
+      - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@v4
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
@@ -207,7 +207,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
+            ~/.gradle/caches/modules-2
             ~/.gradle/wrapper/
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
           restore-keys: |

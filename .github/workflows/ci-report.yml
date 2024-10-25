@@ -54,12 +54,11 @@ jobs:
         id: downloadBuildScan
         uses: actions/download-artifact@v4
         with:
-          name: build-scan-data-${{ matrix.rdbms }}
+          pattern: build-scan-data-*
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
           path: /tmp/downloaded-build-scan-data/
-          pattern: build-scan-data-*
         # Don't fail the build if there are no matching artifacts
         continue-on-error: true
       - name: Publish Develocity build scans for previous builds

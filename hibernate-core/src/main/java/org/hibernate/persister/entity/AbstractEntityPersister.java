@@ -855,13 +855,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected MultiIdEntityLoader<Object> buildMultiIdLoader() {
-		if ( getIdentifierType() instanceof BasicType
-				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
-			return new MultiIdEntityLoaderArrayParam<>( this, factory );
-		}
-		else {
-			return new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
-		}
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		return getIdentifierType() instanceof BasicType && supportsSqlArrayType( dialect )
+				? new MultiIdEntityLoaderArrayParam<>( this, identifierColumnSpan, factory )
+				: new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {

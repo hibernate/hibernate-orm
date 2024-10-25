@@ -73,116 +73,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 	}
 
 	@Override
-	protected <K> List<E> performOrderedMultiLoad(K[] ids, MultiIdLoadOptions loadOptions, EventSource session) {
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef(
-					"MultiIdEntityLoaderArrayParam#performOrderedMultiLoad - %s",
-					getLoadable().getEntityName()
-			);
-		}
-
-		assert loadOptions.isOrderReturnEnabled();
-
-		final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
-		final JavaType<?> idType = getLoadable().getIdentifierMapping().getJavaType();
-
-		final LockOptions lockOptions = loadOptions.getLockOptions() == null
-				? new LockOptions( LockMode.NONE )
-				: loadOptions.getLockOptions();
-
-		final int maxBatchSize = maxBatchSize( ids, loadOptions );
-
-		final List<Object> result = CollectionHelper.arrayList( ids.length );
-
-		final List<Object> idsInBatch = new ArrayList<>();
-		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
-
-		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = coerce ? idType.coerce( ids[i], session ) : ids[i];
-			final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
-
-			if ( !loadFromCaches( loadOptions, session, id, lockOptions, entityKey, result, i ) ) {
-				// if we did not hit any of the continues above,
-				// then we need to batch load the entity state.
-				idsInBatch.add( id );
-
-				if ( idsInBatch.size() >= maxBatchSize ) {
-					// we've hit the allotted max-batch-size, perform an "intermediate load"
-					loadEntitiesById( loadOptions, session, lockOptions, idsInBatch );
-					idsInBatch.clear();
-				}
-
-				// Save the EntityKey instance for use later
-				result.add( i, entityKey );
-				elementPositionsLoadedByBatch.add( i );
-			}
-		}
-
-		if ( !idsInBatch.isEmpty() ) {
-			// we still have ids to load from the processing above since
-			// the last max-batch-size trigger, perform a load for them
-			loadEntitiesById( loadOptions, session, lockOptions, idsInBatch );
-		}
-
-		// for each result where we set the EntityKey earlier, replace them
-		handleResults( loadOptions, session, elementPositionsLoadedByBatch, result );
-
-		//noinspection unchecked
-		return (List<E>) result;
-	}
-
-	private boolean loadFromCaches(
-			MultiIdLoadOptions loadOptions,
-			EventSource session,
-			Object id,
-			LockOptions lockOptions,
-			EntityKey entityKey,
-			List<Object> result,
-			int i) {
-		if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			final LoadEvent loadEvent = new LoadEvent(
-					id,
-					getLoadable().getJavaType().getJavaTypeClass().getName(),
-					lockOptions,
-					session,
-					LoaderHelper.getReadOnlyFromLoadQueryInfluencers( session )
-			);
-
-			Object managedEntity = null;
-
-			if ( loadOptions.isSessionCheckingEnabled() ) {
-				// look for it in the Session first
-				final PersistenceContextEntry persistenceContextEntry =
-						loadFromSessionCacheStatic( loadEvent, entityKey, LoadEventListener.GET );
-				managedEntity = persistenceContextEntry.getEntity();
-
-				if ( managedEntity != null
-						&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
-						&& !persistenceContextEntry.isManaged() ) {
-					// put a null in the result
-					result.add( i, null );
-					return true;
-				}
-			}
-
-			if ( managedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-				// look for it in the SessionFactory
-				managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-						loadEvent,
-						getLoadable().getEntityPersister(),
-						entityKey
-				);
-			}
-
-			if ( managedEntity != null ) {
-				result.add( i, managedEntity );
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static void handleResults(
+	protected void handleResults(
 			MultiIdLoadOptions loadOptions,
 			EventSource session,
 			List<Integer> elementPositionsLoadedByBatch,
@@ -209,7 +100,8 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		}
 	}
 
-	private <K> int maxBatchSize(K[] ids, MultiIdLoadOptions loadOptions) {
+	@Override
+	protected int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions) {
 		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
 			return loadOptions.getBatchSize();
 		}
@@ -225,8 +117,12 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		}
 	}
 
-	private void loadEntitiesById(
-			MultiIdLoadOptions loadOptions, EventSource session, LockOptions lockOptions, List<Object> idsToLoadFromDatabase) {
+	@Override
+	protected void loadEntitiesById(
+			List<Object> idsToLoadFromDatabase,
+			LockOptions lockOptions,
+			MultiIdLoadOptions loadOptions,
+			EventSource session) {
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				getIdentifierMapping(),
@@ -361,22 +257,16 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			return ids;
 		}
 
-		final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
-
 		boolean foundAnyResolvedEntities = false;
 		List<K> nonResolvedIds = null;
 
-		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id;
-			if ( coerce ) {
-				//noinspection unchecked
-				id = (K) getLoadable().getIdentifierMapping().getJavaType().coerce( ids[i], session );
-			}
-			else {
-				id = ids[i];
-			}
+		final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
+		final JavaType<?> idType = getLoadable().getIdentifierMapping().getJavaType();
 
+		for ( int i = 0; i < ids.length; i++ ) {
+			final Object id = coerce ? idType.coerce( ids[i], session ) : ids[i];
 			final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
+
 			final LoadEvent loadEvent = new LoadEvent(
 					id,
 					getLoadable().getJavaType().getJavaTypeClass().getName(),
@@ -385,18 +275,15 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 					LoaderHelper.getReadOnlyFromLoadQueryInfluencers( session )
 			);
 
-			Object resolvedEntity = null;
+			Object managedEntity = null;
 
 			// look for it in the Session first
-			final PersistenceContextEntry persistenceContextEntry = loadFromSessionCacheStatic(
-					loadEvent,
-					entityKey,
-					LoadEventListener.GET
-			);
+			final PersistenceContextEntry persistenceContextEntry =
+					loadFromSessionCacheStatic( loadEvent, entityKey, LoadEventListener.GET );
 			if ( loadOptions.isSessionCheckingEnabled() ) {
-				resolvedEntity = persistenceContextEntry.getEntity();
+				managedEntity = persistenceContextEntry.getEntity();
 
-				if ( resolvedEntity != null
+				if ( managedEntity != null
 						&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
 						&& !persistenceContextEntry.isManaged() ) {
 					foundAnyResolvedEntities = true;
@@ -405,25 +292,25 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				}
 			}
 
-			if ( resolvedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-				resolvedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+			if ( managedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+				managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
 						loadEvent,
 						getLoadable().getEntityPersister(),
 						entityKey
 				);
 			}
 
-			if ( resolvedEntity != null ) {
+			if ( managedEntity != null ) {
 				foundAnyResolvedEntities = true;
 
 				//noinspection unchecked
-				resolutionConsumer.consume( i, entityKey, (R) resolvedEntity);
+				resolutionConsumer.consume( i, entityKey, (R) managedEntity);
 			}
 			else {
 				if ( nonResolvedIds == null ) {
 					nonResolvedIds = new ArrayList<>();
 				}
-				//noinspection unchecked,CastCanBeRemovedNarrowingVariableType
+				//noinspection unchecked
 				nonResolvedIds.add( (K) id );
 			}
 		}

@@ -561,6 +561,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Every object returned by {@code findMultiple()} is either an unproxied instance of the
 	 * given entity class, or a fully-fetched proxy object.
 	 * <p>
+	 * This method accepts {@link BatchSize} as an option, allowing control over the number of
+	 * records retrieved in a single database request.
+	 * <p>
 	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
 	 * {@link MultiIdentifierLoadAccess}.
 	 *

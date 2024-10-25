@@ -24,6 +24,7 @@ import java.util.TimeZone;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.EntityFilterException;
@@ -950,6 +951,7 @@ public class SessionImpl
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
+		int batchSize = -1;
 		for ( FindOption option : options ) {
 			if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
@@ -982,8 +984,13 @@ public class SessionImpl
 			else if ( option instanceof ReadOnlyMode ) {
 				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
 			}
+			else if ( option instanceof BatchSize batchSizeOption ) {
+				batchSize = batchSizeOption.batchSize();
+			}
 		}
-		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+		loadAccess.with( lockOptions )
+				.with( interpretCacheMode( storeMode, retrieveMode ) )
+				.withBatchSize( batchSize );
 		return loadAccess;
 	}
 

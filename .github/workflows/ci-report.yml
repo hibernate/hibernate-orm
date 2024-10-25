@@ -26,23 +26,30 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Get year/month for cache key
-        id: get-date
-        run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT
-        shell: bash
-      # Note we only restore the caches, we never populate them
-      - name: Restore Maven/Gradle local caches
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
+          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
+          CURRENT_DAY=$(/bin/date -u "+%d")
+          ROOT_CACHE_KEY="buildtool-cache"
+          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
+          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
+          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+      - name: Restore Maven/Gradle Local Caches
         uses: actions/cache/restore@v4
-        id: cache-maven-gradle
         with:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
             ~/.gradle/caches/
             ~/.gradle/wrapper/
-          # refresh cache every month to avoid unlimited growth
-          # use a different key than workflows running untrusted code
-          key: trusted-maven-gradle-caches-${{ steps.get-date.outputs.yearmonth }}
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+
       - name: Download GitHub Actions artifacts for the Develocity build scans
         id: downloadBuildScan
         uses: actions/download-artifact@v4

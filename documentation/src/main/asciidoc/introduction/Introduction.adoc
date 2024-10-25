@@ -533,8 +533,8 @@ Whatever the case, the code which orchestrates a unit of work usually just calls
 [source,java]
 ----
 @GET
-@Path("books/{titlePattern}")
-public List<Book> findBooks(String titlePattern) {
+@Path("books/{titlePattern}/{page:\\d+}")
+public List<Book> findBooks(String titlePattern, int page) {
     var books = sessionFactory.fromTransaction(session ->
             Queries.findBooksByTitleWithPagination(session, titlePattern,
                     Page.page(RESULTS_PER_PAGE, page));
@@ -565,8 +565,8 @@ We can call it just like we called our handwritten version:
 [source,java]
 ----
 @GET
-@Path("books/{titlePattern}")
-public List<Book> findBooks(String titlePattern) {
+@Path("books/{titlePattern}/{page:\\d+}")
+public List<Book> findBooks(String titlePattern, int page) {
     var books = sessionFactory.fromTransaction(session ->
             Queries_.findBooksByTitleWithPagination(session, titlePattern,
                     Page.page(RESULTS_PER_PAGE, page));

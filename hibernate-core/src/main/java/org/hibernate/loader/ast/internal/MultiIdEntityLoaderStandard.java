@@ -12,8 +12,6 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -24,6 +22,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
@@ -36,9 +35,11 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
+import org.hibernate.type.descriptor.java.JavaType;
 import org.jboss.logging.Logger;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSessionCacheStatic;
 
 /**
  * Standard MultiIdEntityLoader
@@ -71,108 +72,110 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 
 		assert loadOptions.isOrderReturnEnabled();
 
-		final JdbcEnvironment jdbcEnvironment = getSessionFactory().getJdbcServices().getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
+		final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
+		final JavaType<?> idType = getLoadable().getIdentifierMapping().getJavaType();
 
-		final List<Object> result = CollectionHelper.arrayList( ids.length );
-
-		final LockOptions lockOptions = (loadOptions.getLockOptions() == null)
+		final LockOptions lockOptions = loadOptions.getLockOptions() == null
 				? new LockOptions( LockMode.NONE )
 				: loadOptions.getLockOptions();
 
-		final int maxBatchSize;
-		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
-			maxBatchSize = loadOptions.getBatchSize();
-		}
-		else {
-			maxBatchSize = dialect.getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
-					idJdbcTypeCount,
-					ids.length,
-					getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled()
-			);
-		}
+		final int maxBatchSize = maxBatchSize( ids, loadOptions );
+
+		final List<Object> result = CollectionHelper.arrayList( ids.length );
 
 		final List<Object> idsInBatch = new ArrayList<>();
 		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
 
-		final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
 		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id;
-			if ( coerce ) {
-				id = getLoadable().getIdentifierMapping().getJavaType().coerce( ids[i], session );
-			}
-			else {
-				id = ids[i];
-			}
+			final Object id = coerce ? idType.coerce( ids[i], session ) : ids[i];
 			final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
 
-			if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-				LoadEvent loadEvent = new LoadEvent(
-						id,
-						getLoadable().getJavaType().getJavaTypeClass().getName(),
-						lockOptions,
-						session,
-						LoaderHelper.getReadOnlyFromLoadQueryInfluencers(session)
-				);
+			if ( !loadFromCaches( loadOptions, session, id, lockOptions, entityKey, result, i ) ) {
+				// if we did not hit any of the continues above,
+				// then we need to batch load the entity state.
+				idsInBatch.add( id );
 
-				Object managedEntity = null;
-
-				if ( loadOptions.isSessionCheckingEnabled() ) {
-					// look for it in the Session first
-					CacheEntityLoaderHelper.PersistenceContextEntry persistenceContextEntry = CacheEntityLoaderHelper.INSTANCE
-							.loadFromSessionCache(
-									loadEvent,
-									entityKey,
-									LoadEventListener.GET
-							);
-					managedEntity = persistenceContextEntry.getEntity();
-
-					if ( managedEntity != null
-							&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
-							&& !persistenceContextEntry.isManaged() ) {
-						// put a null in the result
-						result.add( i, null );
-						continue;
-					}
+				if ( idsInBatch.size() >= maxBatchSize ) {
+					// we've hit the allotted max-batch-size, perform an "intermediate load"
+					loadEntitiesById( idsInBatch, lockOptions, loadOptions, session );
+					idsInBatch.clear();
 				}
 
-				if ( managedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-					// look for it in the SessionFactory
-					managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-							loadEvent,
-							getLoadable().getEntityPersister(),
-							entityKey
-					);
-				}
-
-				if ( managedEntity != null ) {
-					result.add( i, managedEntity );
-					continue;
-				}
+				// Save the EntityKey instance for use later
+				result.add( i, entityKey );
+				elementPositionsLoadedByBatch.add( i );
 			}
-
-			// if we did not hit any of the continues above, then we need to batch
-			// load the entity state.
-			idsInBatch.add( id );
-
-			if ( idsInBatch.size() >= maxBatchSize ) {
-				// we've hit the allotted max-batch-size, perform an "intermediate load"
-				loadEntitiesById( idsInBatch, lockOptions, loadOptions, session );
-				idsInBatch.clear();
-			}
-
-			// Save the EntityKey instance for use later
-			result.add( i, entityKey );
-			elementPositionsLoadedByBatch.add( i );
 		}
 
 		if ( !idsInBatch.isEmpty() ) {
-			// we still have ids to load from the processing above since the last max-batch-size trigger,
-			// perform a load for them
+			// we still have ids to load from the processing above since
+			// the last max-batch-size trigger, perform a load for them
 			loadEntitiesById( idsInBatch, lockOptions, loadOptions, session );
 		}
 
 		// for each result where we set the EntityKey earlier, replace them
+		handleResults( loadOptions, session, elementPositionsLoadedByBatch, result );
+
+		//noinspection unchecked
+		return (List<T>) result;
+	}
+
+	private boolean loadFromCaches(
+			MultiIdLoadOptions loadOptions,
+			EventSource session,
+			Object id,
+			LockOptions lockOptions,
+			EntityKey entityKey,
+			List<Object> result,
+			int i) {
+		if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+			final LoadEvent loadEvent = new LoadEvent(
+					id,
+					getLoadable().getJavaType().getJavaTypeClass().getName(),
+					lockOptions,
+					session,
+					LoaderHelper.getReadOnlyFromLoadQueryInfluencers( session )
+			);
+
+			Object managedEntity = null;
+
+			if ( loadOptions.isSessionCheckingEnabled() ) {
+				// look for it in the Session first
+				final PersistenceContextEntry persistenceContextEntry =
+						loadFromSessionCacheStatic( loadEvent, entityKey, LoadEventListener.GET );
+				managedEntity = persistenceContextEntry.getEntity();
+
+				if ( managedEntity != null
+						&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
+						&& !persistenceContextEntry.isManaged() ) {
+					// put a null in the result
+					result.add( i, null );
+					return true;
+				}
+			}
+
+			if ( managedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+				// look for it in the SessionFactory
+				managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+						loadEvent,
+						getLoadable().getEntityPersister(),
+						entityKey
+				);
+			}
+
+			if ( managedEntity != null ) {
+				result.add( i, managedEntity );
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static void handleResults(
+			MultiIdLoadOptions loadOptions,
+			EventSource session,
+			List<Integer> elementPositionsLoadedByBatch,
+			List<Object> result) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		for ( Integer position : elementPositionsLoadedByBatch ) {
 			// the element value at this position in the result List should be
@@ -192,9 +195,20 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			}
 			result.set( position, entity );
 		}
+	}
 
-		//noinspection unchecked
-		return (List<T>) result;
+	private int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions) {
+		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
+			return loadOptions.getBatchSize();
+		}
+		else {
+			return getSessionFactory().getJdbcServices().getJdbcEnvironment().getDialect()
+					.getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+							idJdbcTypeCount,
+							ids.length,
+							getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled()
+					);
+		}
 	}
 
 	private List<T> loadEntitiesById(
@@ -334,7 +348,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				Object managedEntity = null;
 
 				// look for it in the Session first
-				CacheEntityLoaderHelper.PersistenceContextEntry persistenceContextEntry = CacheEntityLoaderHelper.INSTANCE
+				PersistenceContextEntry persistenceContextEntry = CacheEntityLoaderHelper.INSTANCE
 						.loadFromSessionCache(
 								loadEvent,
 								entityKey,

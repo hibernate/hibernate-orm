@@ -43,7 +43,7 @@ public interface FunctionReturnTypeResolver {
 			ReturnableType<?> impliedType,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
-		throw new UnsupportedOperationException( "Not implemented for " + getClass().getName() );
+		return resolveFunctionReturnType( impliedType, new FakeSqmToSqlAstConverter( null ), arguments, typeConfiguration );
 	}
 
 	/**

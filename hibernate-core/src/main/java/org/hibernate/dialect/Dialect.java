@@ -71,7 +71,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
@@ -208,6 +207,7 @@ import static java.lang.Math.log;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
+import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.*;
@@ -4385,21 +4385,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return getMultiKeyLoadSizingStrategy();
 	}
 
-	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = (numberOfColumns, numberOfKeys, pad) -> {
-		numberOfKeys = pad ? MathHelper.ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
+	private int calculateBatchSize(int numberOfColumns, int numberOfKeys, boolean padToPowerOfTwo) {
+		final int batchSize = padToPowerOfTwo ? ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
+		final int maxBatchSize = getParameterCountLimit() / numberOfColumns;
+		return maxBatchSize > 0 && batchSize > maxBatchSize ? maxBatchSize : batchSize;
+	}
 
-		final long parameterCount = (long) numberOfColumns * numberOfKeys;
-		final int limit = getParameterCountLimit();
-
-		if ( limit > 0 ) {
-			// the Dialect reported a limit -  see if the parameter count exceeds the limit
-			if ( parameterCount >= limit ) {
-				return limit / numberOfColumns;
-			}
-		}
-
-		return numberOfKeys;
-	};
+	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = this::calculateBatchSize;
 
 	/**
 	 * Is JDBC statement warning logging enabled by default?

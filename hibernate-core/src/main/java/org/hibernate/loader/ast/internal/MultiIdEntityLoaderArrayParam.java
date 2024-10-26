@@ -4,29 +4,20 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.LoadEvent;
-import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -35,19 +26,12 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ManagedResultConsumer;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.engine.internal.BatchFetchQueueHelper.removeBatchLoadableEntityKey;
 import static org.hibernate.engine.spi.SubselectFetch.createRegistrationHandler;
-import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
-import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSessionCacheStatic;
-import static org.hibernate.loader.ast.internal.LoaderHelper.getReadOnlyFromLoadQueryInfluencers;
 import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
 import static org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelectBySingleArrayParameter;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.resolveArrayJdbcMapping;
@@ -64,11 +48,11 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
+		final Class<?> idArrayClass = idArray.getClass();
 		arrayJdbcMapping = resolveArrayJdbcMapping(
-				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
+				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( idArrayClass ),
 				getIdentifierMapping().getJdbcMapping(),
-				arrayClass,
+				idArrayClass,
 				getSessionFactory()
 		);
 		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
@@ -133,7 +117,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
 		jdbcParameterBindings.addBinding( jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsInBatch.toArray( createTypedArray(0) ) ) );
+				new JdbcParameterBindingImpl( arrayJdbcMapping, idsInBatch.toArray( idArray ) ) );
 
 		getJdbcSelectExecutor().executeQuery(
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
@@ -156,36 +140,12 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 	}
 
 	@Override
-	protected <K> List<E> performUnorderedMultiLoad(
-			K[] ids,
+	protected void loadEntitiesWithUnresolvedIds(
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef(
-					"MultiIdEntityLoaderArrayParam#performUnorderedMultiLoad - %s",
-					getLoadable().getEntityName()
-			);
-		}
-
-		final List<E> result = CollectionHelper.arrayList( ids.length );
-		final LockOptions lockOptions = loadOptions.getLockOptions() == null
-				? new LockOptions( LockMode.NONE )
-				: loadOptions.getLockOptions();
-
-		//noinspection unchecked
-		final K[] idsToLoadFromDatabase = processResolvableEntities(
-				ids,
-				(index, entityKey, resolvedEntity) -> result.add( (E) resolvedEntity ),
-				loadOptions,
-				lockOptions,
-				session
-		);
-
-		if ( idsToLoadFromDatabase == null ) {
-			// all the given ids were already associated with the Session
-			return result;
-		}
-
+			LockOptions lockOptions,
+			EventSource session,
+			Object[] unresolvableIds,
+			List<E> result) {
 		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
 				getLoadable(),
 				getIdentifierMapping(),
@@ -194,12 +154,13 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				jdbcParameter,
 				getSessionFactory()
 		);
+
 		final JdbcOperationQuerySelect jdbcSelectOperation =
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
 						.translate( NO_BINDINGS, QueryOptions.NONE );
 
 		final List<E> databaseResults = loadByArrayParameter(
-				idsToLoadFromDatabase,
+				unresolvableIds,
 				sqlAst,
 				jdbcSelectOperation,
 				jdbcParameter,
@@ -213,108 +174,14 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		);
 		result.addAll( databaseResults );
 
-		//noinspection ForLoopReplaceableByForEach
-		for ( int i = 0; i < idsToLoadFromDatabase.length; i++ ) {
-			final Object id = idsToLoadFromDatabase[i];
-			if ( id == null ) {
-				// skip any of the null padded ids
-				//		- actually we could probably even break here
-				continue;
-			}
-			// found or not, remove the key from the batch-fetch queue
-			removeBatchLoadableEntityKey( id, getLoadable(), session );
-		}
-
-		return result;
-	}
-	public interface ResolutionConsumer<T> {
-		void consume(int position, EntityKey entityKey, T resolvedRef);
-	}
-
-	protected final <R,K> K[] processResolvableEntities(
-			K[] ids,
-			ResolutionConsumer<R> resolutionConsumer,
-			@NonNull MultiIdLoadOptions loadOptions,
-			@NonNull LockOptions lockOptions,
-			EventSource session) {
-		if ( !loadOptions.isSessionCheckingEnabled()
-				&& !loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			// we'll load all of them from the database
-			return ids;
-		}
-
-		boolean foundAnyResolvedEntities = false;
-		List<K> nonResolvedIds = null;
-
-		final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
-		final JavaType<?> idType = getLoadable().getIdentifierMapping().getJavaType();
-
-		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = coerce ? idType.coerce( ids[i], session ) : ids[i];
-			final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
-
-			final LoadEvent loadEvent = new LoadEvent(
-					id,
-					getLoadable().getJavaType().getJavaTypeClass().getName(),
-					lockOptions,
-					session,
-					getReadOnlyFromLoadQueryInfluencers( session )
-			);
-
-			Object managedEntity = null;
-
-			// look for it in the Session first
-			final PersistenceContextEntry persistenceContextEntry =
-					loadFromSessionCacheStatic( loadEvent, entityKey, LoadEventListener.GET );
-			if ( loadOptions.isSessionCheckingEnabled() ) {
-				managedEntity = persistenceContextEntry.getEntity();
-
-				if ( managedEntity != null
-						&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
-						&& !persistenceContextEntry.isManaged() ) {
-					foundAnyResolvedEntities = true;
-					resolutionConsumer.consume( i, entityKey, null );
-					continue;
-				}
-			}
-
-			if ( managedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-				managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-						loadEvent,
-						getLoadable().getEntityPersister(),
-						entityKey
-				);
-			}
-
-			if ( managedEntity != null ) {
-				foundAnyResolvedEntities = true;
-
-				//noinspection unchecked
-				resolutionConsumer.consume( i, entityKey, (R) managedEntity);
-			}
-			else {
-				if ( nonResolvedIds == null ) {
-					nonResolvedIds = new ArrayList<>();
-				}
-				//noinspection unchecked
-				nonResolvedIds.add( (K) id );
+		for ( Object id : unresolvableIds ) {
+			// skip any of the null padded ids
+			// (actually we could probably even break on the first null)
+			if ( id != null ) {
+				// found or not, remove the key from the batch-fetch queue
+				removeBatchLoadableEntityKey( id, getLoadable(), session );
 			}
 		}
-
-		if ( foundAnyResolvedEntities ) {
-			if ( isEmpty( nonResolvedIds ) ) {
-				// all the given ids were already associated with the Session
-				return null;
-			}
-
-			return nonResolvedIds.toArray( createTypedArray(0) );
-		}
-
-		return ids;
 	}
 
-	private <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
-		//noinspection unchecked
-		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
-	}
 }

@@ -4,11 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
@@ -18,9 +15,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.LoadEvent;
-import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.persister.entity.EntityPersister;
@@ -32,15 +26,11 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
-import org.hibernate.type.descriptor.java.JavaType;
-
 import static java.lang.Boolean.TRUE;
+import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.engine.spi.SubselectFetch.createRegistrationHandler;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSessionCacheStatic;
-import static org.hibernate.loader.ast.internal.LoaderHelper.getReadOnlyFromLoadQueryInfluencers;
 import static org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelect;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -205,123 +195,22 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 	}
 
 	@Override
-	protected List<T> performUnorderedMultiLoad(
-			Object[] ids,
+	protected void loadEntitiesWithUnresolvedIds(
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
-		assert !loadOptions.isOrderReturnEnabled();
-		assert ids != null;
-
-		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "#performUnorderedMultiLoad(`%s`, ..)", getLoadable().getEntityName() );
-		}
-
-		final List<T> result = arrayList( ids.length );
-
-		final LockOptions lockOptions = loadOptions.getLockOptions() == null
-				? new LockOptions( LockMode.NONE )
-				: loadOptions.getLockOptions();
-
-		if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			// the user requested that we exclude ids corresponding to already managed
-			// entities from the generated load SQL.  So here we will iterate all
-			// incoming id values and see whether it corresponds to an existing
-			// entity associated with the PC - if it does we add it to the result
-			// list immediately and remove its id from the group of ids to load.
-			boolean foundAnyManagedEntities = false;
-			final List<Object> nonManagedIds = new ArrayList<>();
-
-			final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
-			final JavaType<?> idType = getLoadable().getIdentifierMapping().getJavaType();
-
-			for ( int i = 0; i < ids.length; i++ ) {
-				final Object id = coerce ? idType.coerce( ids[i], session ) : ids[i];
-				final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
-
-				final LoadEvent loadEvent = new LoadEvent(
-						id,
-						getLoadable().getJavaType().getJavaTypeClass().getName(),
-						lockOptions,
-						session,
-						getReadOnlyFromLoadQueryInfluencers( session )
-				);
-
-				Object managedEntity = null;
-
-				// look for it in the Session first
-				final PersistenceContextEntry persistenceContextEntry =
-						loadFromSessionCacheStatic( loadEvent, entityKey, LoadEventListener.GET );
-				if ( loadOptions.isSessionCheckingEnabled() ) {
-					managedEntity = persistenceContextEntry.getEntity();
-
-					if ( managedEntity != null
-							&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
-							&& !persistenceContextEntry.isManaged() ) {
-						foundAnyManagedEntities = true;
-						result.add( null );
-						continue;
-					}
-				}
-
-				if ( managedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-					managedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-							loadEvent,
-							getLoadable().getEntityPersister(),
-							entityKey
-					);
-				}
-
-				if ( managedEntity != null ) {
-					foundAnyManagedEntities = true;
-					//noinspection unchecked
-					result.add( (T) managedEntity );
-				}
-				else {
-					nonManagedIds.add( id );
-				}
-			}
-
-			if ( foundAnyManagedEntities ) {
-				if ( nonManagedIds.isEmpty() ) {
-					// all the given ids were already associated with the Session
-					return result;
-				}
-				else {
-					// over-write the ids to be loaded with the collection of
-					// just non-managed ones
-					ids = nonManagedIds.toArray(
-							(Object[]) Array.newInstance(
-									ids.getClass().getComponentType(),
-									nonManagedIds.size()
-							)
-					);
-				}
-			}
-		}
-
-		int numberOfIdsLeft = ids.length;
-		final int maxBatchSize;
-		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
-			maxBatchSize = loadOptions.getBatchSize();
-		}
-		else {
-			maxBatchSize = getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
-					getIdentifierMapping().getJdbcTypeCount(),
-					numberOfIdsLeft,
-					isInClauseParameterPaddingEnabled()
-			);
-		}
-
+			LockOptions lockOptions,
+			EventSource session,
+			Object[] unresolvableIds,
+			List<T> result) {
+		final int maxBatchSize = maxBatchSize( unresolvableIds, loadOptions );
+		int numberOfIdsLeft = unresolvableIds.length;
 		int idPosition = 0;
 		while ( numberOfIdsLeft > 0 ) {
 			final int batchSize =  Math.min( numberOfIdsLeft, maxBatchSize );
-			final Object[] idsInBatch = new Object[ batchSize ];
-			System.arraycopy( ids, idPosition, idsInBatch, 0, batchSize );
+			final Object[] idsInBatch = new Object[batchSize];
+			arraycopy( unresolvableIds, idPosition, idsInBatch, 0, batchSize );
 			result.addAll( listEntitiesById( asList( idsInBatch ), lockOptions, loadOptions, session ) );
 			numberOfIdsLeft = numberOfIdsLeft - batchSize;
 			idPosition += batchSize;
 		}
-
-		return result;
 	}
 }

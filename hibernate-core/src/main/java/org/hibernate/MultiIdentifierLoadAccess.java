@@ -133,6 +133,18 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * If an explicit batch size is set manually, care should be taken
 	 * to not exceed the capabilities of the underlying database.
 	 * <p>
+	 * The performance impact of setting a batch size depends on whether
+	 * a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which support standard SQL arrays, a smaller
+	 *     batch size might be extremely inefficient compared to a very
+	 *     large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a
+	 *     large batch size results in long SQL statements with many JDBC
+	 *     parameters.
+	 * </ul>
+	 * <p>
 	 * A batch size is considered a hint.
 	 *
 	 * @param batchSize The batch size

@@ -562,7 +562,16 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * given entity class, or a fully-fetched proxy object.
 	 * <p>
 	 * This method accepts {@link BatchSize} as an option, allowing control over the number of
-	 * records retrieved in a single database request.
+	 * records retrieved in a single database request. The performance impact of setting a batch
+	 * size depends on whether a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which {@linkplain org.hibernate.dialect.Dialect#supportsStandardArrays
+	 *     support standard SQL arrays}, a smaller batch size might be extremely inefficient
+	 *     compared to a very large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
+	 *     in long SQL statements with many JDBC parameters.
+	 * </ul>
 	 * <p>
 	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
 	 * {@link MultiIdentifierLoadAccess}.

@@ -56,9 +56,6 @@ public final class JdbcExceptionHelper {
 	}
 
 	public static String determineSqlStateClassCode(String sqlState) {
-		if ( sqlState == null || sqlState.length() < 2 ) {
-			return sqlState;
-		}
-		return sqlState.substring( 0, 2 );
+		return sqlState == null || sqlState.length() < 2 ? sqlState : sqlState.substring( 0, 2 );
 	}
 }

@@ -857,7 +857,7 @@ public abstract class AbstractEntityPersister
 	protected MultiIdEntityLoader<Object> buildMultiIdLoader() {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		return getIdentifierType() instanceof BasicType && supportsSqlArrayType( dialect )
-				? new MultiIdEntityLoaderArrayParam<>( this, identifierColumnSpan, factory )
+				? new MultiIdEntityLoaderArrayParam<>( this, factory )
 				: new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
 	}
 

@@ -6,11 +6,11 @@ package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -20,26 +20,29 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
+import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import org.hibernate.type.descriptor.java.JavaType;
-import org.jboss.logging.Logger;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.hibernate.engine.spi.SubselectFetch.createRegistrationHandler;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSessionCacheStatic;
+import static org.hibernate.loader.ast.internal.LoaderHelper.getReadOnlyFromLoadQueryInfluencers;
+import static org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelect;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
  * Standard MultiIdEntityLoader
@@ -47,7 +50,6 @@ import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFrom
  * @author Steve Ebersole
  */
 public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<T> {
-	private static final Logger log = Logger.getLogger( MultiIdEntityLoaderStandard.class );
 
 	private final int idJdbcTypeCount;
 
@@ -57,8 +59,15 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
 		this.idJdbcTypeCount = idColumnSpan;
-
 		assert idJdbcTypeCount > 0;
+	}
+
+	private boolean isInClauseParameterPaddingEnabled() {
+		return getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled();
+	}
+
+	private MultiKeyLoadSizingStrategy getBatchLoadSizingStrategy() {
+		return getJdbcServices().getJdbcEnvironment().getDialect().getBatchLoadSizingStrategy();
 	}
 
 	@Override
@@ -90,17 +99,12 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 
 	@Override
 	protected int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions) {
-		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
-			return loadOptions.getBatchSize();
-		}
-		else {
-			return getSessionFactory().getJdbcServices().getJdbcEnvironment().getDialect()
-					.getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
-							idJdbcTypeCount,
-							ids.length,
-							getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled()
-					);
-		}
+		final Integer explicitBatchSize = loadOptions.getBatchSize();
+		return explicitBatchSize != null && explicitBatchSize > 0
+				? explicitBatchSize
+				: getBatchLoadSizingStrategy()
+						.determineOptimalBatchLoadSize( idJdbcTypeCount, ids.length,
+								isInClauseParameterPaddingEnabled() );
 	}
 
 	@Override
@@ -111,7 +115,6 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			EventSource session) {
 		assert idsInBatch != null;
 		assert !idsInBatch.isEmpty();
-
 		listEntitiesById( idsInBatch, lockOptions, loadOptions, session );
 	}
 
@@ -121,85 +124,84 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			MultiIdLoadOptions loadOptions,
 			EventSource session) {
 		final int numberOfIdsInBatch = idsInBatch.size();
-		if ( numberOfIdsInBatch == 1 ) {
-			return performSingleMultiLoad( idsInBatch.get( 0 ), lockOptions, session );
+		return numberOfIdsInBatch == 1
+				? performSingleMultiLoad( idsInBatch.get( 0 ), lockOptions, session )
+				: performRegularMultiLoad( idsInBatch, lockOptions, loadOptions, session, numberOfIdsInBatch );
+	}
+
+	private List<T> performRegularMultiLoad(
+			List<Object> idsInBatch,
+			LockOptions lockOptions,
+			MultiIdLoadOptions loadOptions,
+			EventSource session,
+			int numberOfIdsInBatch) {
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "#loadEntitiesById(`%s`, `%s`, ..)",
+					getLoadable().getEntityName(), numberOfIdsInBatch );
 		}
-		else {
-			if ( log.isTraceEnabled() ) {
-				log.tracef( "#loadEntitiesById(`%s`, `%s`, ..)", getLoadable().getEntityName(), numberOfIdsInBatch );
-			}
 
-			final JdbcParametersList.Builder jdbcParametersBuilder =
-					JdbcParametersList.newBuilder( numberOfIdsInBatch * idJdbcTypeCount );
+		final JdbcParametersList.Builder jdbcParametersBuilder =
+				JdbcParametersList.newBuilder( numberOfIdsInBatch * idJdbcTypeCount );
 
-			final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
-					getLoadable(),
-					// null here means to select everything
-					null,
+		final SelectStatement sqlAst = createSelect(
+				getLoadable(),
+				// null here means to select everything
+				null,
+				getLoadable().getIdentifierMapping(),
+				null,
+				numberOfIdsInBatch,
+				session.getLoadQueryInfluencers(),
+				lockOptions,
+				jdbcParametersBuilder::add,
+				getSessionFactory()
+		);
+
+		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		int offset = 0;
+		for ( int i = 0; i < numberOfIdsInBatch; i++ ) {
+			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
+					idsInBatch.get( i ),
+					offset,
 					getLoadable().getIdentifierMapping(),
-					null,
-					numberOfIdsInBatch,
-					session.getLoadQueryInfluencers(),
-					lockOptions,
-					jdbcParametersBuilder::add,
-					getSessionFactory()
-			);
-			JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
-
-			final SqlAstTranslatorFactory sqlAstTranslatorFactory =
-					getSessionFactory().getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
-
-			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-			int offset = 0;
-
-			for ( int i = 0; i < numberOfIdsInBatch; i++ ) {
-				final Object id = idsInBatch.get( i );
-
-				offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
-						id,
-						offset,
-						getLoadable().getIdentifierMapping(),
-						jdbcParameters,
-						session
-				);
-			}
-
-			// we should have used all the JdbcParameter references (created bindings for all)
-			assert offset == jdbcParameters.size();
-			final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( getSessionFactory(), sqlAst )
-					.translate( jdbcParameterBindings, QueryOptions.NONE );
-
-			final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
-			if ( session.getLoadQueryInfluencers().hasSubselectLoadableCollections( getLoadable().getEntityPersister() ) ) {
-				subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-						session.getPersistenceContext().getBatchFetchQueue(),
-						sqlAst,
-						jdbcParameters,
-						jdbcParameterBindings
-				);
-			}
-			else {
-				subSelectFetchableKeysHandler = null;
-			}
-
-			return session.getJdbcServices().getJdbcSelectExecutor().list(
-					jdbcSelect,
-					jdbcParameterBindings,
-					new ExecutionContextWithSubselectFetchHandler( session,
-							subSelectFetchableKeysHandler,
-							TRUE.equals( loadOptions.getReadOnly( session ) ) ),
-					RowTransformerStandardImpl.instance(),
-					null,
-					ListResultsConsumer.UniqueSemantic.FILTER,
-					idsInBatch.size()
+					jdbcParameters,
+					session
 			);
 		}
+		// we should have used all the JdbcParameter references (created bindings for all)
+		assert offset == jdbcParameters.size();
+
+		return getJdbcSelectExecutor().list(
+				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
+						.translate( jdbcParameterBindings, QueryOptions.NONE ),
+				jdbcParameterBindings,
+				new ExecutionContextWithSubselectFetchHandler(
+						session,
+						fetchableKeysHandler( session, sqlAst, jdbcParameters, jdbcParameterBindings ),
+						TRUE.equals( loadOptions.getReadOnly( session ) )
+				),
+				RowTransformerStandardImpl.instance(),
+				null,
+				ListResultsConsumer.UniqueSemantic.FILTER,
+				idsInBatch.size()
+		);
+	}
+
+	private SubselectFetch.RegistrationHandler fetchableKeysHandler(
+			EventSource session,
+			SelectStatement sqlAst,
+			JdbcParametersList jdbcParameters,
+			JdbcParameterBindings jdbcParameterBindings) {
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
+		return session.getLoadQueryInfluencers().hasSubselectLoadableCollections( getLoadable().getEntityPersister() )
+				? createRegistrationHandler( batchFetchQueue, sqlAst, jdbcParameters, jdbcParameterBindings )
+				: null;
 	}
 
 	private List<T> performSingleMultiLoad(Object id, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		//noinspection unchecked
+		@SuppressWarnings("unchecked")
 		T loaded = (T) getLoadable().getEntityPersister().load( id, null, lockOptions, session );
-		return Collections.singletonList( loaded );
+		return singletonList( loaded );
 	}
 
 	@Override
@@ -210,11 +212,11 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 		assert !loadOptions.isOrderReturnEnabled();
 		assert ids != null;
 
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "#performUnorderedMultiLoad(`%s`, ..)", getLoadable().getEntityName() );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "#performUnorderedMultiLoad(`%s`, ..)", getLoadable().getEntityName() );
 		}
 
-		final List<T> result = CollectionHelper.arrayList( ids.length );
+		final List<T> result = arrayList( ids.length );
 
 		final LockOptions lockOptions = loadOptions.getLockOptions() == null
 				? new LockOptions( LockMode.NONE )
@@ -241,7 +243,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 						getLoadable().getJavaType().getJavaTypeClass().getName(),
 						lockOptions,
 						session,
-						LoaderHelper.getReadOnlyFromLoadQueryInfluencers( session )
+						getReadOnlyFromLoadQueryInfluencers( session )
 				);
 
 				Object managedEntity = null;
@@ -303,27 +305,23 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			maxBatchSize = loadOptions.getBatchSize();
 		}
 		else {
-			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+			maxBatchSize = getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					getIdentifierMapping().getJdbcTypeCount(),
 					numberOfIdsLeft,
-					getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled()
+					isInClauseParameterPaddingEnabled()
 			);
 		}
 
 		int idPosition = 0;
 		while ( numberOfIdsLeft > 0 ) {
 			final int batchSize =  Math.min( numberOfIdsLeft, maxBatchSize );
-
 			final Object[] idsInBatch = new Object[ batchSize ];
 			System.arraycopy( ids, idPosition, idsInBatch, 0, batchSize );
-
 			result.addAll( listEntitiesById( asList( idsInBatch ), lockOptions, loadOptions, session ) );
-
 			numberOfIdsLeft = numberOfIdsLeft - batchSize;
 			idPosition += batchSize;
 		}
 
 		return result;
 	}
-
 }

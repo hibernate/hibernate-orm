@@ -6,22 +6,27 @@ package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.loadFromSessionCacheStatic;
+import static org.hibernate.loader.ast.internal.LoaderHelper.getReadOnlyFromLoadQueryInfluencers;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
  * Base support for {@link MultiIdEntityLoader} implementations.
@@ -51,6 +56,18 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		return identifierMapping;
 	}
 
+	protected JdbcServices getJdbcServices() {
+		return getSessionFactory().getJdbcServices();
+	}
+
+	protected SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
+	}
+
+	protected JdbcSelectExecutor getJdbcSelectExecutor() {
+		return getJdbcServices().getJdbcSelectExecutor();
+	}
+
 	@Override
 	public EntityMappingType getLoadable() {
 		return getEntityDescriptor();
@@ -71,9 +88,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			EventSource session) {
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef( "#performOrderedMultiLoad(`%s`, ..)",
-					getLoadable().getEntityName() );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "#performOrderedMultiLoad(`%s`, ..)", getLoadable().getEntityName() );
 		}
 
 		assert loadOptions.isOrderReturnEnabled();
@@ -87,7 +103,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 		final int maxBatchSize = maxBatchSize( ids, loadOptions );
 
-		final List<Object> result = CollectionHelper.arrayList( ids.length );
+		final List<Object> result = arrayList( ids.length );
 
 		final List<Object> idsInBatch = new ArrayList<>();
 		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
@@ -146,7 +162,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 					getLoadable().getJavaType().getJavaTypeClass().getName(),
 					lockOptions,
 					session,
-					LoaderHelper.getReadOnlyFromLoadQueryInfluencers( session )
+					getReadOnlyFromLoadQueryInfluencers( session )
 			);
 
 			Object managedEntity = null;

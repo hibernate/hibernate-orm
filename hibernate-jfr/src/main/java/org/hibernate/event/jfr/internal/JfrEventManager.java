@@ -479,7 +479,7 @@ public class JfrEventManager implements EventManager {
 	public void completePartialFlushEvent(
 			HibernateMonitoringEvent hibernateMonitoringEvent,
 			AutoFlushEvent event) {
-		if ( event != null ) {
+		if ( event != null && hibernateMonitoringEvent != null) {
 			final PartialFlushEvent flushEvent = (PartialFlushEvent) hibernateMonitoringEvent;
 			flushEvent.end();
 			if ( flushEvent.shouldCommit() ) {

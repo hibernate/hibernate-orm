@@ -114,12 +114,9 @@ jobs:
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
           DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
 
-      # For jobs running on 'pull_request', tar and upload build scan data.
+      # For jobs running on 'pull_request', upload build scan data.
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
-      - name: Tar build scan content pushed to subsequent jobs
-        if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
-        run: tar -czf build-scan-data.tgz -C ~/.gradle/build-scan-data .
       - name: Upload GitHub Actions artifact for the Develocity build scan
         uses: actions/upload-artifact@v4
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
@@ -219,13 +216,10 @@ jobs:
           RUNID: ${{ github.run_number }}
         run: ./ci/build-github.sh
         shell: bash
-      # Tar and upload build scan data.
+      # Upload build scan data.
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
       # That's even on push, because we do not trust Atlas runners to hold secrets: they are shared infrastructure.
-      - name: Tar build scan content pushed to subsequent jobs
-        if: "${{ !cancelled() }}"
-        run: tar -czf build-scan-data.tgz -C ~/.gradle/build-scan-data .
       - name: Upload GitHub Actions artifact for the Develocity build scan
         uses: actions/upload-artifact@v4
         if: "${{ !cancelled() }}"

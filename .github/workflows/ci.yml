@@ -226,7 +226,7 @@ jobs:
         if: "${{ !cancelled() }}"
         with:
           name: build-scan-data-${{ matrix.rdbms }}
-          path: build-scan-data.tgz
+          path: ~/.gradle/build-scan-data
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@v4
         if: failure()

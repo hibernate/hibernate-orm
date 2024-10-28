@@ -28,9 +28,11 @@ public abstract class MavenPluginDescriptorTask extends DefaultTask {
 
 	@TaskAction
 	public void generateDescriptor() {
-		getMavenEmbedderService().get().execute( "plugin:descriptor" );
-		// todo : anything else?  e.g.
-		//getMavenEmbedderService().get().execute( "plugin:addPluginArtifactMetadata" );
-		//getMavenEmbedderService().get().execute( "plugin:helpmojo" );
+		performDescriptorGeneration();
 	}
+
+	private void performDescriptorGeneration() {
+		getMavenEmbedderService().get().execute( "plugin:descriptor" );
+	}
+
 }

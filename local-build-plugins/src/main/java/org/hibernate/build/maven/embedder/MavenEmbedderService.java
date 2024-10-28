@@ -1,6 +1,7 @@
 package org.hibernate.build.maven.embedder;
 
 import org.apache.maven.cli.MavenCli;
+import org.gradle.api.GradleException;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
@@ -37,7 +38,7 @@ public abstract class MavenEmbedderService implements BuildService<MavenEmbedder
 		Collections.addAll( cml, tasksAndArgs );
 
 		final Directory mavenLocalDirectory = getParameters().getMavenLocalDirectory().get();
-		cml.add( "-Dmaven.repo.local=\"" + mavenLocalDirectory.getAsFile().getAbsolutePath() + "\"" );
+		cml.add( "-Dmaven.repo.local=" + mavenLocalDirectory.getAsFile().getAbsolutePath() );
 		cml.add( "-Dorm.project.version=" + getParameters().getProjectVersion().get() );
 
 		final Directory workingDirectory = getParameters().getWorkingDirectory().get();
@@ -46,6 +47,12 @@ public abstract class MavenEmbedderService implements BuildService<MavenEmbedder
 		// todo : consider bridging Maven out/err to Gradle logging
 
 		final int resultCode = embedder.doMain( cml.toArray(new String[0]), workingDirectoryPath, System.out, System.err );
-		// todo : do something with result-code
+		if (resultCode != 0) {
+			StringBuilder sb = new StringBuilder();
+			for (String s : tasksAndArgs) {
+				sb.append( s );
+			}
+			throw new GradleException("Maven execution has failed: " + sb);
+		}
 	}
 }

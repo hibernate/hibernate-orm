@@ -41,8 +41,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Reclaim Disk Space
-        run: .github/ci-prerequisites.sh
+      - name: Reclaim disk space and sanitize user home
+        run: .github/ci-prerequisites-atlas.sh
       - name: Start database
         env:
           RDBMS: ${{ matrix.rdbms }}

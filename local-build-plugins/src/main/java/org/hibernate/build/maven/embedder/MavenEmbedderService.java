@@ -37,7 +37,7 @@ public abstract class MavenEmbedderService implements BuildService<MavenEmbedder
 		Collections.addAll( cml, tasksAndArgs );
 
 		final Directory mavenLocalDirectory = getParameters().getMavenLocalDirectory().get();
-		cml.add( "-Dmaven.repo.local=\"" + mavenLocalDirectory.getAsFile().getAbsolutePath() + "\"" );
+		cml.add( "-Dmaven.repo.local=" + mavenLocalDirectory.getAsFile().getAbsolutePath() );
 		cml.add( "-Dorm.project.version=" + getParameters().getProjectVersion().get() );
 
 		final Directory workingDirectory = getParameters().getWorkingDirectory().get();

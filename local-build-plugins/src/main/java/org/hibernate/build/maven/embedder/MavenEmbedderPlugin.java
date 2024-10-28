@@ -9,6 +9,8 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 
+import java.io.File;
+
 /**
  * Plugin for integrating Maven Embedder into the Gradle build to execute
  * some Maven tasks/goals/mojos.
@@ -39,12 +41,25 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 				}
 		);
 
+		final Project coreProject = project.getRootProject().project( "hibernate-core" );
+		final Provider<Directory> hibernateCoreLibsFolder  = coreProject.getLayout().getBuildDirectory().dir("libs");
+
+		final TaskProvider<MavenInstallArtifactTask> installHibernateCoreTask = project.getTasks().register( "installHibernateCore", MavenInstallArtifactTask.class, (task) -> {
+			task.setGroup( "maven embedder" );
+			task.getMavenEmbedderService().set( embedderServiceProvider );
+			task.usesService( embedderServiceProvider );
+			task.artifactId = "hibernate-core";
+			task.getArtifactFolder().set( hibernateCoreLibsFolder );
+		} );
+
 		// Via the plugin's POM, we tell Maven to generate the descriptors into
 		// `target/generated/sources/plugin-descriptors/META-INF/maven`.
 		// `META-INF/maven` is the relative path we need inside the jar, so we
 		// configure the "resource directory" in Gradle to be just the
 		// `target/generated/sources/plugin-descriptors` part.
 		final Provider<Directory> descriptorsDir = project.getLayout().getBuildDirectory().dir( "generated/sources/plugin-descriptors" );
+
+
 
 		// create the "mirror" task which calls the appropriate Maven tasks/goals/mojos behind the scenes using the embedder service
 		final TaskProvider<MavenPluginDescriptorTask> generatePluginDescriptorTask = project.getTasks().register( "generatePluginDescriptor", MavenPluginDescriptorTask.class, (task) -> {
@@ -61,11 +76,38 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			final SourceSet mainSourceSet = sourceSets.getByName( "main" );
 			mainSourceSet.getResources().srcDir( task.getDescriptorDirectory() );
 
+			// the hibernate-core jar needs to be present in the local repository
 			// we need compilation to happen before we generate the descriptors
-			task.dependsOn( "compileJava" );
+			task.dependsOn("installHibernateCore", "compileJava" );
+
+		} );
+
+		final Provider<Directory> mavenPluginLibsFolder  = project.getLayout().getBuildDirectory().dir("libs");
+
+		final TaskProvider<MavenInstallArtifactTask> installMavenPluginTask = project.getTasks().register("installMavenPlugin", MavenInstallArtifactTask.class, (task) -> {
+			task.setGroup( "maven embedder" );
+
+			task.getMavenEmbedderService().set( embedderServiceProvider );
+			task.usesService( embedderServiceProvider );
+
+			task.artifactId = "hibernate-maven-plugin";
+			task.getArtifactFolder().set( mavenPluginLibsFolder );
+
+			task.dependsOn( "jar" );
+		});
+
+		final TaskProvider<MavenInvokerRunTask> integrationTestTask = project.getTasks().register( "integrationTest", MavenInvokerRunTask.class, (task) -> {
+			task.setGroup( "maven embedder" );
+
+			task.getMavenEmbedderService().set( embedderServiceProvider );
+			task.usesService( embedderServiceProvider );
+
+			task.dependsOn("installMavenPlugin");
+
 		} );
 
 		// we need the descriptor generation to happen before we jar
 		project.getTasks().named( "jar", (jarTask) -> jarTask.dependsOn( generatePluginDescriptorTask ) );
+		project.getTasks().named( "check" , (checkTask) -> checkTask.dependsOn( integrationTestTask ) );
 	}
 }

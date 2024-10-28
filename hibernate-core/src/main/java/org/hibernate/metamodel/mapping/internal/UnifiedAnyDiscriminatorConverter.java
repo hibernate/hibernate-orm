@@ -22,6 +22,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
+
 /**
  * @author Steve Ebersole
  */
@@ -60,6 +63,14 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 				return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
 			}
 		}
+		else {
+			if ( explicitValueMappings.containsKey( NOT_NULL_DISCRIMINATOR ) ) {
+				if ( implicitValueStrategy != null ) {
+					// we will ultimately not know how to handle "implicit" values which are non-null
+					throw new HibernateException( "Illegal use of ImplicitDiscriminatorStrategy with explicit non-null discriminator mapping: " + discriminatorRole.getFullPath() );
+				}
+			}
+		}
 		return implicitValueStrategy;
 	}
 
@@ -80,6 +91,10 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 
 	@Override
 	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue) {
+		if ( relationalValue == null ) {
+			return detailsByValue.get( NULL_DISCRIMINATOR );
+		}
+
 		final DiscriminatorValueDetails existing = detailsByValue.get( relationalValue );
 		if ( existing != null ) {
 			return existing;
@@ -107,6 +122,11 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 			if ( entityMapping != null ) {
 				return register( relationalValue, entityMapping );
 			}
+		}
+
+		final DiscriminatorValueDetails nonNullMatch = detailsByValue.get( NOT_NULL_DISCRIMINATOR );
+		if ( nonNullMatch != null ) {
+			return nonNullMatch;
 		}
 
 		throw new HibernateException( "Unknown discriminator value (" + discriminatorRole.getFullPath() + ") : " + relationalValue );

@@ -66,11 +66,11 @@ jobs:
         run: |
           shopt -s nullglob # Don't run the loop below if there are no artifacts
           status=0
+          mkdir -p ~/.gradle/
           for build_scan_data_directory in /tmp/downloaded-build-scan-data/*
           do
             rm -rf ~/.gradle/build-scan-data
-            mkdir -p ~/.gradle/build-scan-data
-            tar -xzf "$build_scan_data_directory/build-scan-data.tgz" -C ~/.gradle/build-scan-data \
+            mv "$build_scan_data_directory" ~/.gradle/build-scan-data \
             && ./gradlew --no-build-cache buildScanPublishPrevious || status=1
           done
           exit $status

@@ -116,6 +116,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	// Loaded entity instances, by EntityKey
 	private HashMap<EntityKey, EntityHolderImpl> entitiesByKey;
 
+	// New entity holder cached instance
+	private EntityHolderImpl newEntityHolder;
+
 	// Loaded entity instances, by EntityUniqueKey
 	private HashMap<EntityUniqueKey, Object> entitiesByUniqueKey;
 
@@ -180,6 +183,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			entitiesByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
 		return entitiesByKey;
+	}
+
+	private EntityHolderImpl getOrInitializeNewHolder() {
+		if ( newEntityHolder == null ) {
+			return newEntityHolder = new EntityHolderImpl();
+		}
+		return newEntityHolder;
 	}
 
 	@Override
@@ -390,8 +400,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			JdbcValuesSourceProcessingState processingState,
 			EntityInitializer<?> initializer) {
 		final Map<EntityKey, EntityHolderImpl> entityHolderMap = getOrInitializeEntitiesByKey();
-		final EntityHolderImpl oldHolder = entityHolderMap.get( key );
-		final EntityHolderImpl holder;
+		EntityHolderImpl holder = getOrInitializeNewHolder().withEntity( key, key.getPersister(), entity );
+		final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, newEntityHolder );
 		if ( oldHolder != null ) {
 			if ( entity != null ) {
 				assert oldHolder.entity == null || oldHolder.entity == entity;
@@ -411,7 +421,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			holder = oldHolder;
 		}
 		else {
-			entityHolderMap.put( key, holder = EntityHolderImpl.forEntity( key, key.getPersister(), entity ) );
+			newEntityHolder = null;
 		}
 		assert holder.entityInitializer == null || holder.entityInitializer == initializer;
 		holder.entityInitializer = initializer;
@@ -494,16 +504,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public EntityHolder addEntityHolder(EntityKey key, Object entity) {
 		final Map<EntityKey, EntityHolderImpl> entityHolderMap = getOrInitializeEntitiesByKey();
-		final EntityHolderImpl oldHolder = entityHolderMap.get( key );
-		final EntityHolderImpl holder;
+		EntityHolderImpl holder = getOrInitializeNewHolder().withEntity( key, key.getPersister(), entity );
+		final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, holder );
 		if ( oldHolder != null ) {
-//			assert oldHolder.entity == null || oldHolder.entity == entity;
 			oldHolder.entity = entity;
 			holder = oldHolder;
 		}
 		else {
-			holder = EntityHolderImpl.forEntity( key, key.getPersister(), entity );
-			entityHolderMap.put( key, holder );
+			newEntityHolder = null;
 		}
 		holder.state = EntityHolderState.INITIALIZED;
 		final BatchFetchQueue fetchQueue = this.batchFetchQueue;
@@ -783,14 +791,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final EntityKey key = session.generateEntityKey( li.getInternalIdentifier(), persister );
 			// any earlier proxy takes precedence
 			final Map<EntityKey, EntityHolderImpl> entityHolderMap = getOrInitializeEntitiesByKey();
-			final EntityHolderImpl oldHolder = entityHolderMap.get( key );
+			final EntityHolderImpl holder = getOrInitializeNewHolder().withProxy( key, persister, proxy );
+			final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, holder );
 			if ( oldHolder != null ) {
 				if ( oldHolder.proxy == null ) {
 					oldHolder.proxy = proxy;
 				}
 			}
 			else {
-				entityHolderMap.put( key, EntityHolderImpl.forProxy( key, persister, proxy ) );
+				newEntityHolder = null;
 			}
 			proxy.getHibernateLazyInitializer().setSession( session );
 		}
@@ -929,16 +938,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addEnhancedProxy(EntityKey key, PersistentAttributeInterceptable entity) {
 		final Map<EntityKey, EntityHolderImpl> entityHolderMap = getOrInitializeEntitiesByKey();
-		final EntityHolderImpl oldHolder = entityHolderMap.get( key );
-		final EntityHolderImpl holder;
+		final EntityHolderImpl holder = getOrInitializeNewHolder().withEntity( key, key.getPersister(), entity );
+		final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, holder );
 		if ( oldHolder != null ) {
 			oldHolder.entity = entity;
-			holder = oldHolder;
+			oldHolder.state = EntityHolderState.ENHANCED_PROXY;
 		}
 		else {
-			entityHolderMap.put( key, holder = EntityHolderImpl.forEntity( key, key.getPersister(), entity ) );
+			newEntityHolder = null;
+			holder.state = EntityHolderState.ENHANCED_PROXY;
 		}
-		holder.state = EntityHolderState.ENHANCED_PROXY;
 	}
 
 	@Override
@@ -1229,12 +1238,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addProxy(EntityKey key, Object proxy) {
 		final Map<EntityKey, EntityHolderImpl> entityHolderMap = getOrInitializeEntitiesByKey();
-		final EntityHolderImpl holder = entityHolderMap.get( key );
-		if ( holder != null ) {
-			holder.proxy = proxy;
+		final EntityHolderImpl holder = getOrInitializeNewHolder().withProxy( key, key.getPersister(), proxy );
+		final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, holder );
+		if ( oldHolder != null ) {
+			oldHolder.proxy = proxy;
 		}
 		else {
-			entityHolderMap.put( key, EntityHolderImpl.forProxy( key, key.getPersister(), proxy ) );
+			newEntityHolder = null;
 		}
 	}
 
@@ -1960,7 +1970,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				final Object entity = ois.readObject();
 				final Object proxy = ois.readObject();
 				final EntityHolderState state = (EntityHolderState) ois.readObject();
-				final EntityHolderImpl holder = EntityHolderImpl.forEntity( ek, persister, entity );
+				final EntityHolderImpl holder = new EntityHolderImpl().withEntity( ek, persister, entity );
 				holder.state = state;
 				if ( proxy != null ) {
 					final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
@@ -2177,20 +2187,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	private static class EntityHolderImpl implements EntityHolder, Serializable {
-		private final EntityKey entityKey;
-		private final EntityPersister descriptor;
-		Object entity;
-		Object proxy;
-		@Nullable EntityEntry entityEntry;
-		EntityInitializer<?> entityInitializer;
-		EntityHolderState state;
+		private EntityKey entityKey;
+		private EntityPersister descriptor;
+		private Object entity;
+		private Object proxy;
+		private @Nullable EntityEntry entityEntry;
+		private EntityInitializer<?> entityInitializer;
+		private EntityHolderState state;
 
-		private EntityHolderImpl(EntityKey entityKey, EntityPersister descriptor, Object entity, Object proxy) {
-			assert entityKey != null && descriptor != null;
-			this.entityKey = entityKey;
-			this.descriptor = descriptor;
-			this.entity = entity;
-			this.proxy = proxy;
+		private EntityHolderImpl() {
 			this.state = EntityHolderState.UNINITIALIZED;
 		}
 
@@ -2249,12 +2254,21 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return state == EntityHolderState.DETACHED;
 		}
 
-		public static EntityHolderImpl forProxy(EntityKey entityKey, EntityPersister descriptor, Object proxy) {
-			return new EntityHolderImpl( entityKey, descriptor, null, proxy );
+		public EntityHolderImpl withEntity(EntityKey entityKey, EntityPersister descriptor, Object entity) {
+			return withData( entityKey, descriptor, entity, null );
 		}
 
-		public static EntityHolderImpl forEntity(EntityKey entityKey, EntityPersister descriptor, Object entity) {
-			return new EntityHolderImpl( entityKey, descriptor, entity, null );
+		public EntityHolderImpl withProxy(EntityKey entityKey, EntityPersister descriptor, Object proxy) {
+			return withData( entityKey, descriptor, null, proxy );
+		}
+
+		public EntityHolderImpl withData(EntityKey entityKey, EntityPersister descriptor, Object entity, Object proxy) {
+			assert entityKey != null && descriptor != null && entityInitializer == null && state == EntityHolderState.UNINITIALIZED;
+			this.entityKey = entityKey;
+			this.descriptor = descriptor;
+			this.entity = entity;
+			this.proxy = proxy;
+			return this;
 		}
 	}
 

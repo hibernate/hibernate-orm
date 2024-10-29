@@ -42,6 +42,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -1088,6 +1089,10 @@ public class CockroachDialect extends Dialect {
 				return null;
 			}
 			return switch (sqlState) {
+				// Serialization Exception
+				case "40001" -> message.contains("WriteTooOldError")
+						? new TransactionSerializationException( message, sqlException, sql )
+						: null;
 				// DEADLOCK DETECTED
 				case "40P01" -> new LockAcquisitionException( message, sqlException, sql );
 				// LOCK NOT AVAILABLE

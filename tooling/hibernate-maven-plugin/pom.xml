@@ -54,6 +54,9 @@
                     <cloneProjectsTo>${project.build.directory}/maven-embedder/it</cloneProjectsTo>
                     <localRepositoryPath>${project.build.directory}/maven-embedder/maven-local</localRepositoryPath>
                     <postBuildHookScript>verify</postBuildHookScript>
+                    <scriptVariables>
+                        <hibernateCoreJarPath>org/hibernate/orm/hibernate-core/${project.version}/hibernate-core-${project.version}.jar</hibernateCoreJarPath>
+                    </scriptVariables>
                 </configuration>
                 <executions>
                     <execution>

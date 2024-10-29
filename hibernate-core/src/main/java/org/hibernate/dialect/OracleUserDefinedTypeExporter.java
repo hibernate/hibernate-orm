@@ -64,6 +64,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 		);
 		final String valueExpression = determineValueExpression( "t.value", elementSqlTypeCode, elementDdlTypeCode, elementType );
 		final String jsonElementType = determineJsonElementType( elementSqlTypeCode, elementDdlTypeCode, elementType );
+		final boolean isBooleanType = elementType.equalsIgnoreCase( "boolean" );
 		return new String[] {
 				"create or replace type " + arrayTypeName + " as varying array(" + arrayLength + ") of " + elementType,
 				"create or replace function " + arrayTypeName + "_cmp(a in " + arrayTypeName +
@@ -251,7 +252,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"for i in 1 .. arr.count loop " +
 						"if arr(i) is not null then " +
 						"if length(res)<>0 then res:=res||sep; end if; " +
-						"res:=res||arr(i); " +
+						(!isBooleanType ? "res:=res||arr(i); " : "if arr(i) then res:=res||'true'; else res:=res||'false'; end if; ") +
 						"elsif nullVal is not null then " +
 						"if length(res)<>0 then res:=res||sep; end if; " +
 						"res:=res||nullVal; " +

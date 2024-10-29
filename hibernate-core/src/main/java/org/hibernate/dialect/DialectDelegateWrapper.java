@@ -80,7 +80,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.tool.schema.internal.TableMigrator;
+import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;

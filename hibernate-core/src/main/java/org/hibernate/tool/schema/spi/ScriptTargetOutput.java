@@ -5,8 +5,8 @@
 package org.hibernate.tool.schema.spi;
 
 /**
- * Contract for hiding the differences between a passed Writer, File or URL in
- * terms of how we write output scripts.
+ * Contract for hiding the differences between a passed {@code Writer},
+ * {@code File} or {@code URL} in terms of how we write output scripts.
  *
  * @author Steve Ebersole
  */

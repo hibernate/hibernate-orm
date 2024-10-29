@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -67,7 +66,6 @@ public class SQLServerGenerateSeriesFunction extends NumberSeriesGenerateSeriesF
 				arguments,
 				getArgumentsValidator(),
 				getSetReturningTypeResolver(),
-				(AnonymousTupleType<T>) getSetReturningTypeResolver().resolveTupleType( arguments, queryEngine.getTypeConfiguration() ),
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {

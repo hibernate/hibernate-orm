@@ -102,6 +102,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 		if ( getVersion().isSameOrAfter( 10, 6 ) ) {
 			commonFunctionFactory.unnest_emulated();
+			commonFunctionFactory.jsonTable_mysql();
 		}
 
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();

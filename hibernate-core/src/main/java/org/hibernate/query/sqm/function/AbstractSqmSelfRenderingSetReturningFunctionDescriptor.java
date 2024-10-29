@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.function;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
@@ -35,14 +34,12 @@ public abstract class AbstractSqmSelfRenderingSetReturningFunctionDescriptor
 	protected <T> SelfRenderingSqmSetReturningFunction<T> generateSqmSetReturningFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			QueryEngine queryEngine) {
-		//noinspection unchecked
 		return new SelfRenderingSqmSetReturningFunction<>(
 				this,
 				this,
 				arguments,
 				getArgumentsValidator(),
 				getSetReturningTypeResolver(),
-				(AnonymousTupleType<T>) getSetReturningTypeResolver().resolveTupleType( arguments, queryEngine.getTypeConfiguration() ),
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		);

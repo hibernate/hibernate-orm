@@ -25,8 +25,8 @@ public class OracleJsonObjectFunction extends JsonObjectFunction {
 	private final CastTarget stringCastTarget;
 	private CastFunction castFunction;
 
-	public OracleJsonObjectFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, true );
+	public OracleJsonObjectFunction(boolean colonSyntax, TypeConfiguration typeConfiguration) {
+		super( typeConfiguration, colonSyntax );
 		this.stringCastTarget = new CastTarget( typeConfiguration.getBasicTypeForJavaType( String.class ) );
 	}
 

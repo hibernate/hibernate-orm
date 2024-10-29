@@ -28,7 +28,7 @@ public class AggregateSupportImpl implements AggregateSupport {
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
+			int aggregateColumnTypeCode,
 			Column column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentAssignmentExpression: " + getClass().getName() );
 	}

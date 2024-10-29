@@ -10,7 +10,6 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -78,7 +77,6 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 				arguments,
 				getArgumentsValidator(),
 				getSetReturningTypeResolver(),
-				(AnonymousTupleType<T>) getSetReturningTypeResolver().resolveTupleType( arguments, queryEngine.getTypeConfiguration() ),
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {

@@ -401,7 +401,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.jsonValue_oracle();
 		functionFactory.jsonQuery_oracle();
 		functionFactory.jsonExists_oracle();
-		functionFactory.jsonObject_oracle();
+		functionFactory.jsonObject_oracle( getVersion().isSameOrAfter( 19 ) );
 		functionFactory.jsonArray_oracle();
 		functionFactory.jsonArrayAgg_oracle();
 		functionFactory.jsonObjectAgg_oracle();
@@ -424,6 +424,7 @@ public class OracleDialect extends Dialect {
 
 		functionFactory.unnest_oracle();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+		functionFactory.jsonTable_oracle();
 	}
 
 	/**

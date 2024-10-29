@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -144,9 +143,9 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
+			int aggregateColumnTypeCode,
 			Column column) {
-		switch ( aggregateColumn.getTypeCode() ) {
+		switch ( aggregateColumnTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:
 				// For JSON we always have to replace the whole object
@@ -156,7 +155,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			case STRUCT_TABLE:
 				return aggregateParentAssignmentExpression + "." + columnExpression;
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
 	@Override

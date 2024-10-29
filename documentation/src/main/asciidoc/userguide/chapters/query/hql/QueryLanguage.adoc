@@ -1677,18 +1677,19 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` confi
 |===
 | Function | Purpose
 
-| `json_object()` | Constructs a JSON object from pairs of key and value arguments
-| `json_array()` | Constructs a JSON array from arguments
-| `json_value()` | Extracts a value from a JSON document by JSON path
-| `json_exists()` | Checks if a JSON path exists in a JSON document
-| `json_query()` | Queries non-scalar values by JSON path in a JSON document
-| `json_arrayagg()` | Creates a JSON array by aggregating values
-| `json_objectagg()` | Creates a JSON object by aggregating values
-| `json_set()` | Inserts/Replaces a value by JSON path within a JSON document
-| `json_remove()` | Removes a value by JSON path within a JSON document
-| `json_mergepatch()` | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
-| `json_array_append()` | Appends to a JSON array of a JSON document by JSON path
-| `json_array_insert()` | Inserts a value by JSON path to a JSON array within a JSON document
+| <<hql-json-object-function,`json_object()`>> | Constructs a JSON object from pairs of key and value arguments
+| <<hql-json-array-function,`json_array()`>> | Constructs a JSON array from arguments
+| <<hql-json-value-function,`json_value()`>> | Extracts a value from a JSON document by JSON path
+| <<hql-json-exists-function,`json_exists()`>> | Checks if a JSON path exists in a JSON document
+| <<hql-json-query-function,`json_query()`>> | Queries non-scalar values by JSON path in a JSON document
+| <<hql-json-arrayagg-function,`json_arrayagg()`>> | Creates a JSON array by aggregating values
+| <<hql-json-objectagg-function,`json_objectagg()`>> | Creates a JSON object by aggregating values
+| <<hql-json-set-function,`json_set()`>> | Inserts/Replaces a value by JSON path within a JSON document
+| <<hql-json-remove-function,`json_remove()`>> | Removes a value by JSON path within a JSON document
+| <<hql-json-mergepatch-function,`json_mergepatch()`>> | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
+| <<hql-json-array-append-function,`json_array_append()`>> | Appends to a JSON array of a JSON document by JSON path
+| <<hql-json-array-insert-function,`json_array_insert()`>> | Inserts a value by JSON path to a JSON array within a JSON document
+| <<hql-json-table-function,`json_table()`>> | Turns a JSON document into rows
 |===
 
 
@@ -2202,6 +2203,47 @@ include::{json-example-dir-hql}/JsonArrayInsertTest.java[tags=hql-json-array-ins
 ====
 
 WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
+
+[[hql-json-table-function]]
+===== `json_table()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which turns a JSON document argument into rows.
+Returns no rows if the document is `null` or an empty JSON array.
+
+[[hql-json-table-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_table_bnf.txt[]
+----
+
+The first argument is the JSON document. The second optional argument represents the JSON path expression to use
+in order to obtain JSON nodes for further processing. The default for the optional second argument is `$[*]`
+i.e. access of root array elements.
+
+NOTE: If the root of the JSON document is an object, it is recommended to pass `$` as JSON path for portability.
+
+The `passing` clause can be used to pass values for variables in the JSON path.
+
+Attributes/columns that ought to be accessible via the `from` node alias are defined in the `columns` clause,
+which can be of varying forms:
+
+* Value attributes - denoted by a `castTarget` after the name, behaves like <<hql-json-value-function,`json_value()`>>
+* Query attributes - denoted by the `json` type after the name, behaves like <<hql-json-query-function,`json_query()`>>
+* Exists attributes - denoted by the `exists` keyword after the name, behaves like <<hql-json-exists-function,`json_exists()`>>
+* Ordinal attributes - denoted by the `for ordinality` syntax after the name, gives access to the 1-based index of the currently processed array element
+* Nested paths - declare a JSON path for processing of a nested `columns` clause
+
+[[hql-json-table-simple-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonTableTest.java[tags=hql-json-table-example]
+----
+====
+
+The `lateral` keyword is mandatory if one of the arguments refer to a from node item of the same query level.
+
+WARNING: H2 support is limited and HSQLDB as well as Sybase ASE do not support this function.
 
 [[hql-functions-xml]]
 ==== Functions for dealing with XML
@@ -2959,6 +3001,7 @@ The following set-returning functions are available on many platforms:
 
 | <<hql-array-unnest,`unnest()`>> | Turns an array into rows
 | <<hql-from-set-returning-functions-generate-series,`generate_series()`>> | Creates a series of values as rows
+| <<hql-json-table,`json_table()`>> | Turns a JSON document into rows
 |===
 
 To use set returning functions defined in the database, it is required to register them in a `FunctionContributor`:

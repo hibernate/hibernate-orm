@@ -61,13 +61,13 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
+			int aggregateColumnTypeCode,
 			Column column) {
-		switch ( aggregateColumn.getTypeCode() ) {
+		switch ( aggregateColumnTypeCode ) {
 			case STRUCT:
 				return aggregateParentAssignmentExpression + ".." + columnExpression;
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
 	@Override

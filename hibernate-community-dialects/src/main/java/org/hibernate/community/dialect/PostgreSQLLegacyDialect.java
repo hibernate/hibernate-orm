@@ -639,6 +639,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.jsonArray();
 			functionFactory.jsonArrayAgg_postgresql( true );
 			functionFactory.jsonObjectAgg_postgresql( true );
+			functionFactory.jsonTable();
 		}
 		else {
 			functionFactory.jsonValue_postgresql();
@@ -656,6 +657,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				functionFactory.jsonArrayAgg_postgresql( false );
 				functionFactory.jsonObjectAgg_postgresql( false );
 			}
+			functionFactory.jsonTable_postgresql();
 		}
 		functionFactory.jsonSet_postgresql();
 		functionFactory.jsonRemove_postgresql();

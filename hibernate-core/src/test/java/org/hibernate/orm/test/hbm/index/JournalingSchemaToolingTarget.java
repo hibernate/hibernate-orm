@@ -7,7 +7,7 @@ package org.hibernate.orm.test.hbm.index;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 
 /**
  * @author Steve Ebersole

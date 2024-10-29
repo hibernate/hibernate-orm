@@ -6,7 +6,7 @@ package org.hibernate.orm.test.tool.schema;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 
 /**
  * @author Steve Ebersole

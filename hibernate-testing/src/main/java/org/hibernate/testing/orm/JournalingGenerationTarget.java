@@ -6,7 +6,7 @@ package org.hibernate.testing.orm;
 
 import java.util.ArrayList;
 
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 
 /**
  * @author Steve Ebersole

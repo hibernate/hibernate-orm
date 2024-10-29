@@ -56,10 +56,10 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeSessionOpenEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session) {
-		if ( event != null ) {
-			final SessionOpenEvent sessionOpenEvent = (SessionOpenEvent) event;
+		if ( monitoringEvent != null ) {
+			final SessionOpenEvent sessionOpenEvent = (SessionOpenEvent) monitoringEvent;
 			sessionOpenEvent.end();
 			if ( sessionOpenEvent.shouldCommit() ) {
 				sessionOpenEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -82,10 +82,10 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeSessionClosedEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session) {
-		if ( event != null ) {
-			final SessionClosedEvent sessionClosedEvent = (SessionClosedEvent) event;
+		if ( monitoringEvent != null ) {
+			final SessionClosedEvent sessionClosedEvent = (SessionClosedEvent) monitoringEvent;
 			sessionClosedEvent.end();
 			if ( sessionClosedEvent.shouldCommit() ) {
 				sessionClosedEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -108,11 +108,11 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcConnectionAcquisitionEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
-		if ( event != null ) {
-			final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = (JdbcConnectionAcquisitionEvent) event;
+		if ( monitoringEvent != null ) {
+			final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = (JdbcConnectionAcquisitionEvent) monitoringEvent;
 			jdbcConnectionAcquisitionEvent.end();
 			if ( jdbcConnectionAcquisitionEvent.shouldCommit() ) {
 				jdbcConnectionAcquisitionEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -138,11 +138,11 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcConnectionReleaseEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
-		if ( event != null ) {
-			final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = (JdbcConnectionReleaseEvent) event;
+		if ( monitoringEvent != null ) {
+			final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = (JdbcConnectionReleaseEvent) monitoringEvent;
 			jdbcConnectionReleaseEvent.end();
 			if ( jdbcConnectionReleaseEvent.shouldCommit() ) {
 				jdbcConnectionReleaseEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -168,10 +168,10 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcPreparedStatementCreationEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			String preparedStatementSql) {
-		if ( event != null ) {
-			final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = (JdbcPreparedStatementCreationEvent) event;
+		if ( monitoringEvent != null ) {
+			final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = (JdbcPreparedStatementCreationEvent) monitoringEvent;
 			jdbcPreparedStatementCreation.end();
 			if ( jdbcPreparedStatementCreation.shouldCommit() ) {
 				jdbcPreparedStatementCreation.sql = preparedStatementSql;
@@ -194,10 +194,10 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcPreparedStatementExecutionEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			String preparedStatementSql) {
-		if ( event != null ) {
-			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = (JdbcPreparedStatementExecutionEvent) event;
+		if ( monitoringEvent != null ) {
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = (JdbcPreparedStatementExecutionEvent) monitoringEvent;
 			jdbcPreparedStatementExecutionEvent.end();
 			if ( jdbcPreparedStatementExecutionEvent.shouldCommit() ) {
 				jdbcPreparedStatementExecutionEvent.sql = preparedStatementSql;
@@ -220,10 +220,10 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeJdbcBatchExecutionEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			String statementSql) {
-		if ( event != null ) {
-			final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = (JdbcBatchExecutionEvent) event;
+		if ( monitoringEvent != null ) {
+			final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = (JdbcBatchExecutionEvent) monitoringEvent;
 			jdbcBatchExecutionEvent.end();
 			if ( jdbcBatchExecutionEvent.shouldCommit() ) {
 				jdbcBatchExecutionEvent.sql = statementSql;
@@ -246,13 +246,13 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean cacheContentChanged,
 			CacheActionDescription description) {
-		if ( event != null ) {
-			final CachePutEvent cachePutEvent = (CachePutEvent) event;
+		if ( monitoringEvent != null ) {
+			final CachePutEvent cachePutEvent = (CachePutEvent) monitoringEvent;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
 				cachePutEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -266,14 +266,14 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
 			boolean cacheContentChanged,
 			CacheActionDescription description) {
 		completeCachePutEvent(
-				event,
+				monitoringEvent,
 				session,
 				cachedDomainDataAccess,
 				persister,
@@ -285,15 +285,15 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
 			boolean cacheContentChanged,
 			boolean isNatualId,
 			CacheActionDescription description) {
-		if ( event != null ) {
-			final CachePutEvent cachePutEvent = (CachePutEvent) event;
+		if ( monitoringEvent != null ) {
+			final CachePutEvent cachePutEvent = (CachePutEvent) monitoringEvent;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
 				cachePutEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -309,14 +309,14 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCachePutEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			CollectionPersister persister,
 			boolean cacheContentChanged,
 			CacheActionDescription description) {
-		if ( event != null ) {
-			final CachePutEvent cachePutEvent = (CachePutEvent) event;
+		if ( monitoringEvent != null ) {
+			final CachePutEvent cachePutEvent = (CachePutEvent) monitoringEvent;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
 				cachePutEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -343,12 +343,12 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean hit) {
-		if ( event != null ) {
-			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
+		if ( monitoringEvent != null ) {
+			final CacheGetEvent cacheGetEvent = (CacheGetEvent) monitoringEvent;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
 				cacheGetEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -361,14 +361,14 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			EntityPersister persister,
 			boolean isNaturalKey,
 			boolean hit) {
-		if ( event != null ) {
-			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
+		if ( monitoringEvent != null ) {
+			final CacheGetEvent cacheGetEvent = (CacheGetEvent) monitoringEvent;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
 				cacheGetEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -383,13 +383,13 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeCacheGetEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			CollectionPersister persister,
 			boolean hit) {
-		if ( event != null ) {
-			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
+		if ( monitoringEvent != null ) {
+			final CacheGetEvent cacheGetEvent = (CacheGetEvent) monitoringEvent;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
 				cacheGetEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -422,18 +422,18 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeFlushEvent(
-			HibernateMonitoringEvent hibernateMonitoringEvent,
-			org.hibernate.event.spi.FlushEvent event,
+			HibernateMonitoringEvent monitoringEvent,
+			org.hibernate.event.spi.FlushEvent hibernateFlushEvent,
 			boolean autoFlush) {
-		if ( hibernateMonitoringEvent != null ) {
-			final FlushEvent flushEvent = (FlushEvent) hibernateMonitoringEvent;
-			flushEvent.end();
-			if ( flushEvent.shouldCommit() ) {
-				flushEvent.sessionIdentifier = getSessionIdentifier( event.getSession() );
-				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
-				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
-				flushEvent.isAutoFlush = autoFlush;
-				flushEvent.commit();
+		if ( monitoringEvent != null ) {
+			final FlushEvent jfrFlushEvent = (FlushEvent) monitoringEvent;
+			jfrFlushEvent.end();
+			if ( jfrFlushEvent.shouldCommit() ) {
+				jfrFlushEvent.sessionIdentifier = getSessionIdentifier( hibernateFlushEvent.getSession() );
+				jfrFlushEvent.numberOfEntitiesProcessed = hibernateFlushEvent.getNumberOfEntitiesProcessed();
+				jfrFlushEvent.numberOfCollectionsProcessed = hibernateFlushEvent.getNumberOfCollectionsProcessed();
+				jfrFlushEvent.isAutoFlush = autoFlush;
+				jfrFlushEvent.commit();
 			}
 		}
 	}
@@ -452,17 +452,17 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completePartialFlushEvent(
-			HibernateMonitoringEvent hibernateMonitoringEvent,
-			AutoFlushEvent event) {
-		if ( event != null && hibernateMonitoringEvent != null) {
-			final PartialFlushEvent flushEvent = (PartialFlushEvent) hibernateMonitoringEvent;
-			flushEvent.end();
-			if ( flushEvent.shouldCommit() ) {
-				flushEvent.sessionIdentifier = getSessionIdentifier( event.getSession() );
-				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
-				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
-				flushEvent.isAutoFlush = true;
-				flushEvent.commit();
+			HibernateMonitoringEvent monitoringEvent,
+			AutoFlushEvent hibernateAutoFlushEvent) {
+		if ( monitoringEvent != null) {
+			final PartialFlushEvent jfrPartialFlushEvent = (PartialFlushEvent) monitoringEvent;
+			jfrPartialFlushEvent.end();
+			if ( jfrPartialFlushEvent.shouldCommit() ) {
+				jfrPartialFlushEvent.sessionIdentifier = getSessionIdentifier( hibernateAutoFlushEvent.getSession() );
+				jfrPartialFlushEvent.numberOfEntitiesProcessed = hibernateAutoFlushEvent.getNumberOfEntitiesProcessed();
+				jfrPartialFlushEvent.numberOfCollectionsProcessed = hibernateAutoFlushEvent.getNumberOfCollectionsProcessed();
+				jfrPartialFlushEvent.isAutoFlush = true;
+				jfrPartialFlushEvent.commit();
 			}
 		}
 	}
@@ -481,13 +481,13 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completeDirtyCalculationEvent(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session,
 			EntityPersister persister,
 			EntityEntry entry,
 			int[] dirtyProperties) {
-		if ( event != null ) {
-			final DirtyCalculationEvent dirtyCalculationEvent = (DirtyCalculationEvent) event;
+		if ( monitoringEvent != null ) {
+			final DirtyCalculationEvent dirtyCalculationEvent = (DirtyCalculationEvent) monitoringEvent;
 			dirtyCalculationEvent.end();
 			if ( dirtyCalculationEvent.shouldCommit() ) {
 				dirtyCalculationEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -513,10 +513,10 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public void completePrePartialFlush(
-			HibernateMonitoringEvent event,
+			HibernateMonitoringEvent monitoringEvent,
 			SharedSessionContractImplementor session) {
-		if ( event != null ) {
-			final PrePartialFlushEvent prePartialFlushEvent = (PrePartialFlushEvent) event;
+		if ( monitoringEvent != null ) {
+			final PrePartialFlushEvent prePartialFlushEvent = (PrePartialFlushEvent) monitoringEvent;
 			prePartialFlushEvent.end();
 			if ( prePartialFlushEvent.shouldCommit() ) {
 				prePartialFlushEvent.sessionIdentifier = getSessionIdentifier( session );

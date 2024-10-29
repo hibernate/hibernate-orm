@@ -7,6 +7,7 @@ package org.hibernate.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.QueryException;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -14,6 +15,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -89,6 +91,10 @@ public class H2JsonValueFunction extends JsonValueFunction {
 			SqlAstTranslator<?> walker,
 			String jsonPath,
 			@Nullable JsonPathPassingClause passingClause) {
+		if ( "$".equals( jsonPath ) ) {
+			jsonDocument.accept( walker );
+			return;
+		}
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
 		final boolean needsWrapping = jsonPathElements.get( 0 ) instanceof JsonPathHelper.JsonAttribute
 				&& jsonDocument.getColumnReference() != null
@@ -128,5 +134,55 @@ public class H2JsonValueFunction extends JsonValueFunction {
 				sqlAppender.appendSql( ']' );
 			}
 		}
+	}
+
+	static String applyJsonPath(String parentPath, boolean isColumn, boolean isJson, String jsonPath, @Nullable JsonPathPassingClause passingClause) {
+		if ( "$".equals( jsonPath ) ) {
+			return parentPath;
+		}
+		final StringBuilder sb = new StringBuilder( parentPath.length() + jsonPath.length() );
+		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
+		final boolean needsWrapping = jsonPathElements.get( 0 ) instanceof JsonPathHelper.JsonAttribute
+				&& isColumn
+				|| !isJson;
+		if ( needsWrapping ) {
+			sb.append( '(' );
+		}
+		sb.append( parentPath );
+		if ( needsWrapping ) {
+			if ( !isJson ) {
+				sb.append( " format json" );
+			}
+			sb.append( ')' );
+		}
+		for ( int i = 0; i < jsonPathElements.size(); i++ ) {
+			final JsonPathHelper.JsonPathElement jsonPathElement = jsonPathElements.get( i );
+			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
+				final String attributeName = attribute.attribute();
+				sb.append( "." );
+				QuotingHelper.appendDoubleQuoteEscapedString( sb, attributeName );
+			}
+			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+				assert passingClause != null;
+				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) jsonPathElement ).parameterName();
+				final Expression expression = passingClause.getPassingExpressions().get( parameterName );
+				if ( expression == null ) {
+					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				}
+				if ( !( expression instanceof Literal literal) ) {
+					throw new QueryException( "H2 json_table() passing clause only supports literal json path passing values, but got " + expression );
+				}
+
+				sb.append( '[' );
+				sb.append( literal.getLiteralValue() );
+				sb.append( "+1]" );
+			}
+			else {
+				sb.append( '[' );
+				sb.append( ( (JsonPathHelper.JsonIndexAccess) jsonPathElement ).index() + 1 );
+				sb.append( ']' );
+			}
+		}
+		return sb.toString();
 	}
 }

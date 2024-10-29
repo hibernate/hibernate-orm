@@ -100,6 +100,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
 				if ( getVersion().isSameOrAfter( 10, 6 ) ) {
 					commonFunctionFactory.unnest_emulated();
+					commonFunctionFactory.jsonTable_mysql();
 				}
 
 				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();

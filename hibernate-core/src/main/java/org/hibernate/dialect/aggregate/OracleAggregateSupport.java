@@ -49,6 +49,7 @@ import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.SMALLINT;
@@ -118,6 +119,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			SqlTypedMapping column) {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON:
+			case JSON_ARRAY:
 				String jsonTypeName = "json";
 				switch ( jsonSupport ) {
 					case MERGEPATCH:
@@ -241,10 +243,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
+			int aggregateColumnTypeCode,
 			Column column) {
-		switch ( aggregateColumn.getTypeCode() ) {
+		switch ( aggregateColumnTypeCode ) {
 			case JSON:
+			case JSON_ARRAY:
 				// For JSON we always have to replace the whole object
 				return aggregateParentAssignmentExpression;
 			case STRUCT:
@@ -252,7 +255,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			case STRUCT_TABLE:
 				return aggregateParentAssignmentExpression + "." + columnExpression;
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
 	private String jsonCustomWriteExpression(
@@ -264,6 +267,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		switch ( jsonSupport ) {
 			case OSON:
 			case MERGEPATCH:
+			case QUERY_AND_PATH:
+			case QUERY:
 				switch ( sqlTypeCode ) {
 					case CLOB:
 						return "to_clob(" + customWriteExpression + ")";
@@ -411,13 +416,14 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				AggregateColumnWriteExpression expression);
 	}
 	private static class AggregateJsonWriteExpression implements JsonWriteExpression {
+		private final boolean colonSyntax;
 		private final LinkedHashMap<String, JsonWriteExpression> subExpressions = new LinkedHashMap<>();
 		protected final EmbeddableMappingType embeddableMappingType;
 		protected final String ddlTypeName;
 
-		public AggregateJsonWriteExpression(
-				SelectableMapping selectableMapping,
-				OracleAggregateSupport aggregateSupport) {
+		public AggregateJsonWriteExpression(SelectableMapping selectableMapping, OracleAggregateSupport aggregateSupport) {
+			this.colonSyntax = aggregateSupport.jsonSupport == JsonSupport.OSON
+					|| aggregateSupport.jsonSupport == JsonSupport.MERGEPATCH;
 			this.embeddableMappingType = ( (AggregateJdbcType) selectableMapping.getJdbcMapping().getJdbcType() )
 					.getEmbeddableMappingType();
 			this.ddlTypeName = aggregateSupport.determineJsonTypeName( selectableMapping );
@@ -452,7 +458,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										column.getJdbcMapping(),
 										column,
 										typeConfiguration
-								)
+								),
+								colonSyntax
 						)
 				);
 			}
@@ -474,7 +481,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				if ( value instanceof AggregateJsonWriteExpression ) {
 					sb.append( '\'' );
 					sb.append( column );
-					sb.append( "':" );
+					if ( colonSyntax ) {
+						sb.append( "':" );
+					}
+					else {
+						sb.append( "' value " );
+					}
 					value.append( sb, subPath, translator, expression );
 				}
 				else {
@@ -538,12 +550,14 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	private static class BasicJsonWriteExpression implements JsonWriteExpression {
 
+		private final boolean colonSyntax;
 		private final SelectableMapping selectableMapping;
 		private final String customWriteExpressionStart;
 		private final String customWriteExpressionEnd;
 
-		BasicJsonWriteExpression(SelectableMapping selectableMapping, String customWriteExpression) {
+		BasicJsonWriteExpression(SelectableMapping selectableMapping, String customWriteExpression, boolean colonSyntax) {
 			this.selectableMapping = selectableMapping;
+			this.colonSyntax = colonSyntax;
 			if ( customWriteExpression.equals( "?" ) ) {
 				this.customWriteExpressionStart = "";
 				this.customWriteExpressionEnd = "";
@@ -564,7 +578,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				AggregateColumnWriteExpression expression) {
 			sb.append( '\'' );
 			sb.append( selectableMapping.getSelectableName() );
-			sb.append( "':" );
+			if ( colonSyntax ) {
+				sb.append( "':" );
+			}
+			else {
+				sb.append( "' value " );
+			}
 			sb.append( customWriteExpressionStart );
 			// We use NO_UNTYPED here so that expressions which require type inference are casted explicitly,
 			// since we don't know how the custom write expression looks like where this is embedded,

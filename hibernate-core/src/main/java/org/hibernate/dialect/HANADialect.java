@@ -503,7 +503,7 @@ public class HANADialect extends Dialect {
 		functionFactory.jsonExists_hana();
 
 		functionFactory.unnest_hana();
-//		functionFactory.json_table();
+		functionFactory.jsonTable_hana();
 
 		// Introduced in 2.0 SPS 04
 		functionFactory.jsonObject_hana();

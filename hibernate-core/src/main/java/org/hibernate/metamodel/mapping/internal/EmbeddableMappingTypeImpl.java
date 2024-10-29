@@ -237,8 +237,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					null,
 					creationContext
 			);
+			final int defaultSqlTypeCode = aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
-			final int sqlTypeCode = aggregateColumn.getSqlTypeCode();
+			final int sqlTypeCode = defaultSqlTypeCode == ARRAY ? aggregateColumn.getTypeCode() : defaultSqlTypeCode;
 			this.aggregateMappingRequiresColumnWriter = aggregateSupport
 					.requiresAggregateCustomWriteExpressionRenderer( sqlTypeCode );
 			this.preferSelectAggregateMapping = aggregateSupport.preferSelectAggregateMapping( sqlTypeCode );

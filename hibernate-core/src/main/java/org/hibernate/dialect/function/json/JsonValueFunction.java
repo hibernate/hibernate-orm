@@ -131,10 +131,7 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 					walker
 			);
 		}
-		if ( arguments.returningType() != null ) {
-			sqlAppender.appendSql( " returning " );
-			arguments.returningType().accept( walker );
-		}
+		renderReturningClause( sqlAppender, arguments, walker );
 		if ( arguments.errorBehavior() != null ) {
 			if ( arguments.errorBehavior() == JsonValueErrorBehavior.ERROR ) {
 				sqlAppender.appendSql( " error on error" );
@@ -160,6 +157,13 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			}
 		}
 		sqlAppender.appendSql( ')' );
+	}
+
+	protected void renderReturningClause(SqlAppender sqlAppender, JsonValueArguments arguments, SqlAstTranslator<?> walker) {
+		if ( arguments.returningType() != null ) {
+			sqlAppender.appendSql( " returning " );
+			arguments.returningType().accept( walker );
+		}
 	}
 
 	protected record JsonValueArguments(

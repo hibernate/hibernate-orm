@@ -495,7 +495,7 @@ public class HANALegacyDialect extends Dialect {
 			functionFactory.jsonExists_hana();
 
 			functionFactory.unnest_hana();
-//			functionFactory.json_table();
+			functionFactory.jsonTable_hana();
 
 			functionFactory.generateSeries_hana( getMaximumSeriesSize() );
 

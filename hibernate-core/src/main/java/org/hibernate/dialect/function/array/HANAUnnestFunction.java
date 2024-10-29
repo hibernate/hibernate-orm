@@ -25,7 +25,6 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -82,7 +81,6 @@ public class HANAUnnestFunction extends UnnestFunction {
 				arguments,
 				getArgumentsValidator(),
 				getSetReturningTypeResolver(),
-				(AnonymousTupleType<T>) getSetReturningTypeResolver().resolveTupleType( arguments, queryEngine.getTypeConfiguration() ),
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {
@@ -520,7 +518,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				separator = ',';
 			}
 			sqlAppender.appendSql( " from sys.dummy for json('arraywrap'='no')))||" );
-			sqlAppender.appendSql( "'\"v\":'||" );
+			sqlAppender.appendSql( "',\"v\":'||" );
 			argument.accept( walker );
 			sqlAppender.appendSql( "||'}'" );
 		}

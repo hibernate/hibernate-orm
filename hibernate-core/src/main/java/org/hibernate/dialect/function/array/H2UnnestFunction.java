@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -71,7 +70,6 @@ public class H2UnnestFunction extends UnnestFunction {
 				arguments,
 				getArgumentsValidator(),
 				getSetReturningTypeResolver(),
-				(AnonymousTupleType<T>) getSetReturningTypeResolver().resolveTupleType( arguments, queryEngine.getTypeConfiguration() ),
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {

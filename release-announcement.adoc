@@ -82,9 +82,12 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` and `
 A set-returning function is a new type of function that can return rows and is exclusive to the `from` clause.
 The concept is known in many different database SQL dialects and is sometimes referred to as table valued function or table function.
 
-Custom set-returning functions can be registered via a `FunctionContributor` and Hibernate ORM
-also comes with out-of-the-box support for the set-returning functions `unnest()`, which allows to turn an array into rows,
-and `generate_series()`, which can be used to create a series of values as rows.
+Custom set-returning functions can be registered via a `FunctionContributor`.
+Out-of-the-box, some common set-returning functions are already supported or emulated
+
+* `unnest()` - allows to turn an array into rows
+* `generate_series()` - can be used to create a series of values as rows
+* `json_table()` - turns a JSON document into rows
 
 [[cleanup]]
 == Clean-up

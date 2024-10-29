@@ -4,9 +4,9 @@
  */
 package org.hibernate.dialect.function.array;
 
-
 import org.hibernate.dialect.XmlHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -35,23 +35,29 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 			AnonymousTupleTableGroupProducer tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
-		sqlAppender.appendSql( "openjson(" );
+		final ModelPart ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalityPart != null ) {
+			sqlAppender.appendSql( "(select t.*,row_number() over (order by (select null)) " );
+			sqlAppender.appendSql( ordinalityPart.asBasicValuedModelPart().getSelectableName() );
+			sqlAppender.appendSql( " from openjson(" );
+		}
+		else {
+			sqlAppender.appendSql( "openjson(" );
+		}
 		array.accept( walker );
 		sqlAppender.appendSql( ",'$[*]') with (" );
 
+		boolean[] comma = new boolean[1];
 		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
-				if ( selectionIndex == 0 ) {
-					sqlAppender.append( ' ' );
-				}
-				else {
-					sqlAppender.append( ',' );
-				}
-				if ( CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
-					sqlAppender.append( selectableMapping.getSelectionExpression() );
-					sqlAppender.append( " for ordinality" );
-				}
-				else {
+				if ( !CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
+					if ( comma[0] ) {
+						sqlAppender.append( ',' );
+					}
+					else {
+						sqlAppender.append( ' ' );
+						comma[0] = true;
+					}
 					sqlAppender.append( selectableMapping.getSelectionExpression() );
 					sqlAppender.append( ' ' );
 					sqlAppender.append( getDdlType( selectableMapping, walker ) );
@@ -63,17 +69,14 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 		}
 		else {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
-				if ( selectionIndex == 0 ) {
-					sqlAppender.append( ' ' );
-				}
-				else {
-					sqlAppender.append( ',' );
-				}
-				if ( CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
-					sqlAppender.append( selectableMapping.getSelectionExpression() );
-					sqlAppender.append( " for ordinality" );
-				}
-				else {
+				if ( !CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
+					if ( comma[0] ) {
+						sqlAppender.append( ',' );
+					}
+					else {
+						sqlAppender.append( ' ' );
+						comma[0] = true;
+					}
 					sqlAppender.append( selectableMapping.getSelectionExpression() );
 					sqlAppender.append( ' ' );
 					sqlAppender.append( getDdlType( selectableMapping, walker ) );
@@ -82,7 +85,12 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 			} );
 		}
 
-		sqlAppender.appendSql( ')' );
+		if ( ordinalityPart != null ) {
+			sqlAppender.appendSql( ")t)" );
+		}
+		else {
+			sqlAppender.appendSql( ')' );
+		}
 	}
 
 	@Override

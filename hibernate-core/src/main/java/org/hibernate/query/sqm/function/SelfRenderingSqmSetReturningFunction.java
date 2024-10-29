@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
@@ -44,6 +45,7 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 	private final @Nullable ArgumentsValidator argumentsValidator;
 	private final SetReturningFunctionTypeResolver setReturningTypeResolver;
 	private final SetReturningFunctionRenderer renderer;
+	private @Nullable AnonymousTupleType<T> type;
 
 	public SelfRenderingSqmSetReturningFunction(
 			SqmSetReturningFunctionDescriptor descriptor,
@@ -51,10 +53,9 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 			List<? extends SqmTypedNode<?>> arguments,
 			@Nullable ArgumentsValidator argumentsValidator,
 			SetReturningFunctionTypeResolver setReturningTypeResolver,
-			AnonymousTupleType<T> type,
 			NodeBuilder nodeBuilder,
 			String name) {
-		super( name, descriptor, type, arguments, nodeBuilder );
+		super( name, descriptor, arguments, nodeBuilder );
 		this.renderer = renderer;
 		this.argumentsValidator = argumentsValidator;
 		this.setReturningTypeResolver = setReturningTypeResolver;
@@ -78,11 +79,30 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 						arguments,
 						getArgumentsValidator(),
 						getSetReturningTypeResolver(),
-						getType(),
 						nodeBuilder(),
 						getFunctionName()
 				)
 		);
+	}
+
+	@Override
+	public AnonymousTupleType<T> getType() {
+		AnonymousTupleType<T> type = this.type;
+		if ( type == null ) {
+			//noinspection unchecked
+			type = this.type = (AnonymousTupleType<T>) getSetReturningTypeResolver().resolveTupleType(
+					getArguments(),
+					nodeBuilder().getTypeConfiguration()
+			);
+			if ( type == null ) {
+				throw new IllegalStateException( "SetReturningFunctionTypeResolver returned a null tuple type" );
+			}
+		}
+		return type;
+	}
+
+	protected boolean isTypeResolved() {
+		return type != null;
 	}
 
 	public SetReturningFunctionRenderer getFunctionRenderer() {
@@ -164,7 +184,16 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 			boolean canUseInnerJoins,
 			boolean withOrdinality,
 			SqmToSqlAstConverter walker) {
-		final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
+		final List<SqlAstNode> arguments;
+		try {
+			arguments = resolveSqlAstArguments( getArguments(), walker );
+		}
+		catch ( SqlTreeCreationException ex ) {
+			if ( !lateral && ex.getMessage().contains( "Could not locate TableGroup" ) ) {
+				throw new IllegalArgumentException( "Could not construct set-returning function. Maybe you forgot to use 'lateral'?", ex );
+			}
+			throw ex;
+		}
 		final ArgumentsValidator validator = argumentsValidator;
 		if ( validator != null ) {
 			validator.validateSqlTypes( arguments, getFunctionName() );

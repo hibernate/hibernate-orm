@@ -1118,6 +1118,7 @@ function
 
 setReturningFunction
 	: simpleSetReturningFunction
+	| jsonTableFunction
 	;
 
 /**
@@ -1730,6 +1731,30 @@ jsonUniqueKeysClause
 	: (WITH|WITHOUT) UNIQUE KEYS
 	;
 
+jsonTableFunction
+	: JSON_TABLE LEFT_PAREN expression (COMMA expression)? jsonPassingClause? jsonTableColumnsClause jsonTableErrorClause? RIGHT_PAREN
+	;
+
+jsonTableErrorClause
+	: (ERROR|NULL) ON ERROR
+	;
+
+jsonTableColumnsClause
+    : COLUMNS LEFT_PAREN jsonTableColumns RIGHT_PAREN
+    ;
+
+jsonTableColumns
+    : jsonTableColumn (COMMA jsonTableColumn)*
+    ;
+
+jsonTableColumn
+    : NESTED PATH? STRING_LITERAL jsonTableColumnsClause                                                                            # JsonTableNestedColumn
+    | identifier JSON jsonQueryWrapperClause? (PATH STRING_LITERAL)? jsonQueryOnErrorOrEmptyClause? jsonQueryOnErrorOrEmptyClause?  # JsonTableQueryColumn
+    | identifier FOR ORDINALITY                                                                                                     # JsonTableOrdinalityColumn
+    | identifier EXISTS (PATH STRING_LITERAL)? jsonExistsOnErrorClause?                                                             # JsonTableExistsColumn
+    | identifier castTarget (PATH STRING_LITERAL)? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause?                    # JsonTableValueColumn
+    ;
+
 xmlFunction
 	: xmlelementFunction
 	| xmlforestFunction
@@ -1820,6 +1845,7 @@ xmlaggFunction
 	| CAST
 	| COLLATE
 	| COLUMN
+	| COLUMNS
 	| CONDITIONAL
 	| CONFLICT
 	| CONSTRAINT
@@ -1885,12 +1911,14 @@ xmlaggFunction
 	| INTO
 	| IS
 	| JOIN
+	| JSON
 	| JSON_ARRAY
 	| JSON_ARRAYAGG
 	| JSON_EXISTS
 	| JSON_OBJECT
 	| JSON_OBJECTAGG
 	| JSON_QUERY
+	| JSON_TABLE
 	| JSON_VALUE
 	| KEY
 	| KEYS
@@ -1921,6 +1949,7 @@ xmlaggFunction
 	| MONTH
 	| NAME
 	| NANOSECOND
+	| NESTED
 	| NATURALID
 	| NEW
 	| NEXT
@@ -1936,6 +1965,7 @@ xmlaggFunction
 	| ONLY
 	| OR
 	| ORDER
+	| ORDINALITY
 	| OTHERS
 //	| OUTER
 	| OVER
@@ -1944,6 +1974,7 @@ xmlaggFunction
 	| PAD
 	| PARTITION
 	| PASSING
+	| PATH
 	| PERCENT
 	| PLACING
 	| POSITION

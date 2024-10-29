@@ -63,6 +63,10 @@ import org.hibernate.query.SyntaxException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.criteria.JpaJsonExistsNode;
+import org.hibernate.query.criteria.JpaJsonQueryNode;
+import org.hibernate.query.criteria.JpaJsonTableColumnsNode;
+import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.derived.AnonymousTupleType;
@@ -129,48 +133,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
-import org.hibernate.query.sqm.tree.expression.AbstractSqmParameter;
-import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
-import org.hibernate.query.sqm.tree.expression.SqmAny;
-import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmByUnit;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCollation;
-import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
-import org.hibernate.query.sqm.tree.expression.SqmEvery;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.SqmFormat;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonObjectAggUniqueKeysBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
-import org.hibernate.query.sqm.tree.expression.SqmOver;
-import org.hibernate.query.sqm.tree.expression.SqmOverflow;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.SqmSummarization;
-import org.hibernate.query.sqm.tree.expression.SqmToDuration;
-import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.expression.SqmTuple;
-import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
+import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -2771,7 +2734,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				null,
 				creationContext.getQueryEngine()
 		);
-		for ( HqlParser.JsonValueOnErrorOrEmptyClauseContext subCtx : ctx.jsonValueOnErrorOrEmptyClause() ) {
+		visitJsonValueOnErrorOrEmptyClause( jsonValue, ctx.jsonValueOnErrorOrEmptyClause() );
+		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
+		if ( passingClause != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonValue.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		return jsonValue;
+	}
+
+	private void visitJsonValueOnErrorOrEmptyClause(JpaJsonValueNode<?> jsonValue, List<HqlParser.JsonValueOnErrorOrEmptyClauseContext> errorOrEmptyClauseContexts) {
+		for ( HqlParser.JsonValueOnErrorOrEmptyClauseContext subCtx : errorOrEmptyClauseContexts ) {
 			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
 			final TerminalNode lastToken = (TerminalNode) subCtx.getChild( subCtx.getChildCount() - 1 );
 			if ( lastToken.getSymbol().getType() == HqlParser.ERROR ) {
@@ -2791,18 +2770,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 		}
-		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
-		if ( passingClause != null ) {
-			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
-			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
-			for ( int i = 0; i < expressionContexts.size(); i++ ) {
-				jsonValue.passing(
-						visitIdentifier( identifierContexts.get( i ) ),
-						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
-				);
-			}
-		}
-		return jsonValue;
 	}
 
 	@Override
@@ -2815,7 +2782,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				null,
 				creationContext.getQueryEngine()
 		);
-		final HqlParser.JsonQueryWrapperClauseContext wrapperClause = ctx.jsonQueryWrapperClause();
+		visitJsonQueryWrapperClause( jsonQuery, ctx.jsonQueryWrapperClause() );
+		visitJsonQueryOnErrorOrEmptyClause( jsonQuery, ctx.jsonQueryOnErrorOrEmptyClause() );
+		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
+		if ( passingClause != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonQuery.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		return jsonQuery;
+	}
+
+	private static void visitJsonQueryWrapperClause(JpaJsonQueryNode jsonQuery, HqlParser.JsonQueryWrapperClauseContext wrapperClause) {
 		if ( wrapperClause != null ) {
 			final TerminalNode firstToken = (TerminalNode) wrapperClause.getChild( 0 );
 			if ( firstToken.getSymbol().getType() == HqlParser.WITH ) {
@@ -2831,7 +2814,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				jsonQuery.withoutWrapper();
 			}
 		}
-		for ( HqlParser.JsonQueryOnErrorOrEmptyClauseContext subCtx : ctx.jsonQueryOnErrorOrEmptyClause() ) {
+	}
+
+	private static void visitJsonQueryOnErrorOrEmptyClause(JpaJsonQueryNode jsonQuery, List<HqlParser.JsonQueryOnErrorOrEmptyClauseContext> jsonQueryOnErrorOrEmptyClauseContexts) {
+		for ( HqlParser.JsonQueryOnErrorOrEmptyClauseContext subCtx : jsonQueryOnErrorOrEmptyClauseContexts ) {
 			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
 			final TerminalNode lastToken = (TerminalNode) subCtx.getChild( subCtx.getChildCount() - 1 );
 			if ( lastToken.getSymbol().getType() == HqlParser.ERROR ) {
@@ -2865,18 +2851,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 		}
-		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
-		if ( passingClause != null ) {
-			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
-			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
-			for ( int i = 0; i < expressionContexts.size(); i++ ) {
-				jsonQuery.passing(
-						visitIdentifier( identifierContexts.get( i ) ),
-						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
-				);
-			}
-		}
-		return jsonQuery;
 	}
 
 	@Override
@@ -3026,6 +3000,104 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				null,
 				creationContext.getQueryEngine()
 		);
+	}
+
+	@Override
+	public Object visitJsonTableFunction(HqlParser.JsonTableFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
+		final List<HqlParser.ExpressionContext> argumentsContexts = ctx.expression();
+		final SqmExpression<?> jsonDocument = (SqmExpression<?>) argumentsContexts.get( 0 ).accept( this );
+		final SqmJsonTableFunction<?> jsonTable;
+		if ( argumentsContexts.size() == 1 ) {
+			jsonTable = creationContext.getNodeBuilder().jsonTable( jsonDocument );
+		}
+		else {
+			//noinspection unchecked
+			final SqmExpression<String> jsonPath = (SqmExpression<String>) argumentsContexts.get( 1 ).accept( this );
+			jsonTable = creationContext.getNodeBuilder().jsonTable( jsonDocument, jsonPath );
+		}
+		final HqlParser.JsonPassingClauseContext passingClauseContext = ctx.jsonPassingClause();
+		if ( passingClauseContext != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClauseContext.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClauseContext.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonTable.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		visitColumns( jsonTable, ctx.jsonTableColumnsClause().jsonTableColumns().jsonTableColumn() );
+
+		final HqlParser.JsonTableErrorClauseContext errorClauseContext = ctx.jsonTableErrorClause();
+		if ( errorClauseContext != null ) {
+			if ( ( (TerminalNode) errorClauseContext.getChild( 0 ) ).getSymbol().getType() == HqlParser.ERROR ) {
+				jsonTable.errorOnError();
+			}
+			else {
+				jsonTable.nullOnError();
+			}
+		}
+		return jsonTable;
+	}
+
+	private void visitColumns(JpaJsonTableColumnsNode columnsNode, List<HqlParser.JsonTableColumnContext> columnContexts) {
+		for ( HqlParser.JsonTableColumnContext columnContext : columnContexts ) {
+			if ( columnContext instanceof HqlParser.JsonTableQueryColumnContext queryContext ) {
+				final String attributeName = visitIdentifier( queryContext.identifier() );
+				final TerminalNode jsonPath = queryContext.STRING_LITERAL();
+				final JpaJsonQueryNode queryNode;
+				if ( jsonPath == null ) {
+					queryNode = columnsNode.queryColumn( attributeName );
+				}
+				else {
+					queryNode = columnsNode.queryColumn( attributeName, unquoteStringLiteral( jsonPath.getText() ) );
+				}
+				visitJsonQueryOnErrorOrEmptyClause( queryNode, queryContext.jsonQueryOnErrorOrEmptyClause() );
+			}
+			else if ( columnContext instanceof HqlParser.JsonTableValueColumnContext valueContext ) {
+				final String attributeName = visitIdentifier( valueContext.identifier() );
+				final SqmCastTarget<?> sqmCastTarget = visitCastTarget( valueContext.castTarget() );
+				final TerminalNode jsonPath = valueContext.STRING_LITERAL();
+				final JpaJsonValueNode<?> valueNode;
+				if ( jsonPath == null ) {
+					valueNode = columnsNode.valueColumn( attributeName, sqmCastTarget );
+				}
+				else {
+					valueNode = columnsNode.valueColumn( attributeName, sqmCastTarget, unquoteStringLiteral( jsonPath.getText() ) );
+				}
+				visitJsonValueOnErrorOrEmptyClause( valueNode, valueContext.jsonValueOnErrorOrEmptyClause() );
+			}
+			else if ( columnContext instanceof HqlParser.JsonTableOrdinalityColumnContext ordinalityContext ) {
+				columnsNode.ordinalityColumn( visitIdentifier( ordinalityContext.identifier() ) );
+			}
+			else if ( columnContext instanceof HqlParser.JsonTableExistsColumnContext existsContext ) {
+				final String attributeName = visitIdentifier( existsContext.identifier() );
+				final TerminalNode jsonPath = existsContext.STRING_LITERAL();
+				final JpaJsonExistsNode existsNode;
+				if ( jsonPath == null ) {
+					existsNode = columnsNode.existsColumn( attributeName );
+				}
+				else {
+					existsNode = columnsNode.existsColumn( attributeName, unquoteStringLiteral( jsonPath.getText() ) );
+				}
+				final HqlParser.JsonExistsOnErrorClauseContext errorClauseContext = existsContext.jsonExistsOnErrorClause();
+				if ( errorClauseContext != null ) {
+					switch ( ( (TerminalNode) errorClauseContext.getChild( 0 ) ).getSymbol().getType() ) {
+						case HqlParser.ERROR -> existsNode.errorOnError();
+						case HqlParser.TRUE -> existsNode.trueOnError();
+						case HqlParser.FALSE -> existsNode.falseOnError();
+					}
+				}
+			}
+			else {
+				final HqlParser.JsonTableNestedColumnContext nestedColumnContext = (HqlParser.JsonTableNestedColumnContext) columnContext;
+				visitColumns(
+						columnsNode.nested( unquoteStringLiteral( nestedColumnContext.STRING_LITERAL().getText() ) ),
+						nestedColumnContext.jsonTableColumnsClause().jsonTableColumns().jsonTableColumn()
+				);
+			}
+		}
 	}
 
 	private void checkJsonFunctionsEnabled(ParserRuleContext ctx) {

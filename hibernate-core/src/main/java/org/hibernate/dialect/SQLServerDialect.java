@@ -436,6 +436,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
 			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
 			functionFactory.jsonArrayInsert_sqlserver();
+			functionFactory.jsonTable_sqlserver();
 		}
 		functionFactory.xmlelement_sqlserver();
 		functionFactory.xmlcomment_sqlserver();

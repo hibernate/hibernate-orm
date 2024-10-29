@@ -672,6 +672,7 @@ public class MySQLDialect extends Dialect {
 
 		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 			functionFactory.unnest_emulated();
+			functionFactory.jsonTable_mysql();
 		}
 		if ( supportsRecursiveCTE() ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );

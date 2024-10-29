@@ -55,6 +55,7 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -108,41 +109,7 @@ import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmByUnit;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
-import org.hibernate.query.sqm.tree.expression.SqmCollation;
-import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.SqmFormat;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonObjectAggUniqueKeysBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
-import org.hibernate.query.sqm.tree.expression.SqmOver;
-import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.SqmToDuration;
-import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.expression.SqmTuple;
-import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.SqmWindow;
-import org.hibernate.query.sqm.tree.expression.SqmWindowFrame;
-import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -561,12 +528,37 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
-		final BasicType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
+		return cast( expression, castTarget( castTargetJavaType ) );
+	}
+
+	@Override
+	public <X, T> SqmExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget) {
+		final SqmCastTarget<X> sqmCastTarget = (SqmCastTarget<X>) castTarget;
 		return getFunctionDescriptor( "cast" ).generateSqmExpression(
-				asList( (SqmTypedNode<?>) expression, new SqmCastTarget<>( type, this ) ),
-				type,
+				asList( (SqmTypedNode<?>) expression, sqmCastTarget ),
+				sqmCastTarget.getType(),
 				queryEngine
 		);
+	}
+
+	@Override
+	public <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType) {
+		return castTarget( castTargetJavaType, null, null, null );
+	}
+
+	@Override
+	public <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, long length) {
+		return castTarget( castTargetJavaType, length, null, null );
+	}
+
+	@Override
+	public <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale) {
+		return castTarget( castTargetJavaType, null, precision, scale );
+	}
+
+	private <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
+		final BasicType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
+		return new SqmCastTarget<>( type, length, precision, scale, this );
 	}
 
 	@Override
@@ -5951,5 +5943,25 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop) {
 		return generateSeries( value( start ), value( stop ) );
+	}
+
+	@Override
+	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument) {
+		return jsonTable( jsonDocument, (Expression<String>) null );
+	}
+
+	@Override
+	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, String jsonPath) {
+		return jsonTable( jsonDocument, value( jsonPath ) );
+	}
+
+	@Override
+	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath) {
+		return (SqmJsonTableFunction<?>) getSetReturningFunctionDescriptor( "json_table" ).generateSqmExpression(
+				jsonPath == null
+						? asList( (SqmTypedNode<?>) jsonDocument )
+						: asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+				queryEngine
+		);
 	}
 }

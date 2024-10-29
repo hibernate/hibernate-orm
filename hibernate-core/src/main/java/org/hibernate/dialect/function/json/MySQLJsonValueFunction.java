@@ -36,7 +36,12 @@ public class MySQLJsonValueFunction extends JsonValueFunction {
 		}
 		else {
 			if ( arguments.returningType() != null ) {
-				sqlAppender.append( "cast(" );
+				if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
+					sqlAppender.append( "case " );
+				}
+				else {
+					sqlAppender.append( "cast(" );
+				}
 			}
 			sqlAppender.appendSql( "json_unquote(nullif(json_extract(" );
 			arguments.jsonDocument().accept( walker );
@@ -54,9 +59,14 @@ public class MySQLJsonValueFunction extends JsonValueFunction {
 			}
 			sqlAppender.appendSql( "),cast('null' as json)))" );
 			if ( arguments.returningType() != null ) {
-				sqlAppender.appendSql( " as " );
-				arguments.returningType().accept( walker );
-				sqlAppender.appendSql( ')' );
+				if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
+					sqlAppender.append( " when 'true' then true when 'false' then false end " );
+				}
+				else {
+					sqlAppender.appendSql( " as " );
+					arguments.returningType().accept( walker );
+					sqlAppender.appendSql( ')' );
+				}
 			}
 		}
 	}

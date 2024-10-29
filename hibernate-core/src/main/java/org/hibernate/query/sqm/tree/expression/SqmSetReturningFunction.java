@@ -33,19 +33,16 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode impleme
 	private final String functionName;
 	private final SqmSetReturningFunctionDescriptor functionDescriptor;
 
-	private final AnonymousTupleType<T> type;
 	private final List<? extends SqmTypedNode<?>> arguments;
 
 	public SqmSetReturningFunction(
 			String functionName,
 			SqmSetReturningFunctionDescriptor functionDescriptor,
-			AnonymousTupleType<T> type,
 			List<? extends SqmTypedNode<?>> arguments,
 			NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 		this.functionName = functionName;
 		this.functionDescriptor = functionDescriptor;
-		this.type = type;
 		this.arguments = arguments;
 	}
 
@@ -61,9 +58,7 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode impleme
 		return functionName;
 	}
 
-	public AnonymousTupleType<T> getType() {
-		return type;
-	}
+	public abstract AnonymousTupleType<T> getType();
 
 	public List<? extends SqmTypedNode<?>> getArguments() {
 		return arguments;

@@ -95,6 +95,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
 
+	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget);
+
+	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType);
+
+	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, long length);
+
+	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale);
+
 	JpaPredicate wrap(Expression<Boolean> expression);
 
 	@SuppressWarnings("unchecked")
@@ -4424,6 +4432,36 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	/**
+	 * Creates a {@code json_table} function expression to generate rows from JSON array elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument);
+
+	/**
+	 * Creates a {@code json_table} function expression to generate rows from JSON array elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, String jsonPath);
+
+	/**
+	 * Creates a {@code json_table} function expression to generate rows from JSON array elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);

@@ -6,6 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -62,6 +63,27 @@ public class JsonPathHelper {
 			JsonPathPassingClause passingClause,
 			SqlAstTranslator<?> walker) {
 		appendJsonPathConcatenatedPassingClause( sqlAppender, jsonPathExpression, passingClause, walker, "", "||" );
+	}
+
+	public static String inlinedJsonPathIncludingPassingClause(
+			Expression jsonPathExpression,
+			JsonPathPassingClause passingClause,
+			SqlAstTranslator<?> walker) {
+		return inlinedJsonPathIncludingPassingClause(
+				walker.<String>getLiteralValue( jsonPathExpression ),
+				passingClause,
+				walker
+		);
+	}
+
+	public static String inlinedJsonPathIncludingPassingClause(
+			String jsonPath,
+			JsonPathPassingClause passingClause,
+			SqlAstTranslator<?> walker) {
+		for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
+			jsonPath = jsonPath.replace( "$" + entry.getKey(), walker.getLiteralValue( entry.getValue() ).toString() );
+		}
+		return jsonPath;
 	}
 
 	public static void appendInlinedJsonPathIncludingPassingClause(

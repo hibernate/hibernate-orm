@@ -429,6 +429,7 @@ public class H2LegacyDialect extends Dialect {
 
 		functionFactory.unnest_h2( getMaximumArraySize() );
 		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
+		functionFactory.jsonTable_h2( getMaximumArraySize() );
 	}
 
 	/**

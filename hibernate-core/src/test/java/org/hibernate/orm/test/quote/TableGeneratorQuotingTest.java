@@ -22,7 +22,7 @@ import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
 import org.hibernate.testing.orm.junit.JiraKey;

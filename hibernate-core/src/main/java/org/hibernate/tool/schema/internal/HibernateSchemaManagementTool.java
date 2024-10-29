@@ -28,7 +28,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToScript;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;

@@ -34,7 +34,7 @@ import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.AbstractSchemaMigrator;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.junit.Assert;

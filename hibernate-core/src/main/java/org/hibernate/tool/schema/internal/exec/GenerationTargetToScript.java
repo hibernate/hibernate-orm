@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.schema.internal.exec;
 
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 

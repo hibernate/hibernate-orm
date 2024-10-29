@@ -82,27 +82,13 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 
 		} );
 
-		final Provider<Directory> mavenPluginLibsFolder  = project.getLayout().getBuildDirectory().dir("libs");
-
-		final TaskProvider<MavenInstallArtifactTask> installMavenPluginTask = project.getTasks().register("installMavenPlugin", MavenInstallArtifactTask.class, (task) -> {
-			task.setGroup( "maven embedder" );
-
-			task.getMavenEmbedderService().set( embedderServiceProvider );
-			task.usesService( embedderServiceProvider );
-
-			task.artifactId = "hibernate-maven-plugin";
-			task.getArtifactFolder().set( mavenPluginLibsFolder );
-
-			task.dependsOn( "jar" );
-		});
-
 		final TaskProvider<MavenInvokerRunTask> integrationTestTask = project.getTasks().register( "integrationTest", MavenInvokerRunTask.class, (task) -> {
 			task.setGroup( "maven embedder" );
 
 			task.getMavenEmbedderService().set( embedderServiceProvider );
 			task.usesService( embedderServiceProvider );
 
-			task.dependsOn("installMavenPlugin");
+			task.dependsOn("jar");
 
 		} );
 

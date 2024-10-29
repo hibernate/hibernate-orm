@@ -1,0 +1,8 @@
+System.out.println("Executing the verification");
+
+File targetFolder = new File(basedir, "target");
+if (!targetFolder.exists()) {
+    throw new FileNotFoundException("Folder should exist: " + targetFolder);
+}
+
+System.out.println("Target folder exists!");

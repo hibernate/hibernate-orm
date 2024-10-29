@@ -14,11 +14,11 @@
     -->
 
     <properties>
-        <project.group>org.hibernate.orm</project.group>
+<!--        <project.group>org.hibernate.orm</project.group>
         <project.artifact>hibernate-maven-plugin</project.artifact>
-        <project.version>7.0.0-SNAPSHOT</project.version>
+        <project.version>7.0.0.Beta1</project.version>
         <project.name>Hibernate ORM Maven Plugin</project.name>
-        <project.url>http://hibernate.org</project.url>
+        <project.url>http://hibernate.org</project.url> -->
         <descriptors.dir>target/generated/sources/plugin-descriptors/META-INF/maven</descriptors.dir>
     </properties>
 
@@ -53,8 +53,16 @@
                     <debug>true</debug>
                     <cloneProjectsTo>${project.build.directory}/maven-embedder/it</cloneProjectsTo>
                     <localRepositoryPath>${project.build.directory}/maven-embedder/maven-local</localRepositoryPath>
-<!--                    <postBuildHookScript>verify</postBuildHookScript> -->
+                    <postBuildHookScript>verify</postBuildHookScript>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -63,7 +71,8 @@
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${project.version}</version>
+            <version>7.0.0.Beta1</version>
+<!--            <version>${project.version}</version> -->
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>

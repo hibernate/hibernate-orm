@@ -83,9 +83,9 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 		try {
 			if ( CharacterStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
+				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just pass along its CharacterStream
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream();
+					return (X) clobImplementer.getUnderlyingStream();
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
@@ -93,9 +93,9 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 				}
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
+				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+					return (X) clobImplementer.getUnderlyingStream().asString();
 				}
 				else {
 					// otherwise extract the bytes from the stream manually
@@ -106,9 +106,9 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 				return (X) getOrCreateClob( value, options );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
+				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just get the underlying String.
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+					return (X) clobImplementer.getUnderlyingStream().asString();
 				}
 				else {
 					// otherwise we need to extract the String.
@@ -124,8 +124,8 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	}
 
 	private Clob getOrCreateClob(Clob value, WrapperOptions options) throws SQLException {
-		if ( value instanceof WrappedClob ) {
-			value = ( (WrappedClob) value ).getWrappedClob();
+		if ( value instanceof WrappedClob wrappedClob ) {
+			value = wrappedClob.getWrappedClob();
 		}
 		if ( options.getDialect().useConnectionToCreateLob() ) {
 			if ( value.length() == 0 ) {

@@ -80,17 +80,17 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof BigInteger ) {
-			return (BigInteger) value;
+		if ( value instanceof BigInteger bigInteger ) {
+			return bigInteger;
 		}
-		if ( value instanceof BigDecimal ) {
-			return ( (BigDecimal) value ).toBigIntegerExact();
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return bigDecimal.toBigIntegerExact();
 		}
-		if ( value instanceof Number ) {
-			return BigInteger.valueOf( ( (Number) value ).longValue() );
+		if ( value instanceof Number number ) {
+			return BigInteger.valueOf( number.longValue() );
 		}
-		if ( value instanceof String ) {
-			return new BigInteger( (String) value );
+		if ( value instanceof String string ) {
+			return new BigInteger( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -127,41 +127,41 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 			return null;
 		}
 
-		if ( value instanceof BigInteger ) {
-			return (BigInteger) value;
+		if ( value instanceof BigInteger bigInteger ) {
+			return bigInteger;
 		}
 
-		if ( value instanceof Byte ) {
-			return BigInteger.valueOf( ( (Byte) value ) );
+		if ( value instanceof Byte byteValue ) {
+			return BigInteger.valueOf( byteValue );
 		}
 
-		if ( value instanceof Short ) {
-			return BigInteger.valueOf( ( (Short) value ) );
+		if ( value instanceof Short shortValue ) {
+			return BigInteger.valueOf( shortValue );
 		}
 
-		if ( value instanceof Integer ) {
-			return BigInteger.valueOf( ( (Integer) value ) );
+		if ( value instanceof Integer integerValue ) {
+			return BigInteger.valueOf( integerValue );
 		}
 
-		if ( value instanceof Long ) {
-			return BigInteger.valueOf( ( (Long) value ) );
+		if ( value instanceof Long longValue ) {
+			return BigInteger.valueOf( longValue );
 		}
 
-		if ( value instanceof Double ) {
-			return CoercionHelper.toBigInteger( (Double) value );
+		if ( value instanceof Double doubleValue ) {
+			return CoercionHelper.toBigInteger( doubleValue );
 		}
 
-		if ( value instanceof Float ) {
-			return CoercionHelper.toBigInteger( (Float) value );
+		if ( value instanceof Float floatValue ) {
+			return CoercionHelper.toBigInteger( floatValue );
 		}
 
-		if ( value instanceof BigDecimal ) {
-			return CoercionHelper.toBigInteger( (BigDecimal) value );
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return CoercionHelper.toBigInteger( bigDecimal );
 		}
 
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> BigInteger.valueOf( Long.parseLong( (String) value ) )
+					() -> BigInteger.valueOf( Long.parseLong( string ) )
 			);
 		}
 

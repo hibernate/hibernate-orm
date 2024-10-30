@@ -110,9 +110,9 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 
 		try {
 			if ( BinaryStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof BlobImplementer) {
+				if (value instanceof BlobImplementer blobImplementer) {
 					// if the incoming Blob is a wrapper, just pass along its BinaryStream
-					return (X) ( (BlobImplementer) value ).getUnderlyingStream();
+					return (X) blobImplementer.getUnderlyingStream();
 				}
 				else {
 					// otherwise we need to build a BinaryStream...
@@ -120,9 +120,9 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 				}
 			}
 			else if ( byte[].class.isAssignableFrom( type )) {
-				if (value instanceof BlobImplementer) {
+				if (value instanceof BlobImplementer blobImplementer) {
 					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) ( (BlobImplementer) value ).getUnderlyingStream().getBytes();
+					return (X) blobImplementer.getUnderlyingStream().getBytes();
 				}
 				else {
 					// otherwise extract the bytes from the stream manually
@@ -141,8 +141,8 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	}
 
 	private Blob getOrCreateBlob(Blob value, WrapperOptions options) throws SQLException {
-		if ( value instanceof WrappedBlob ) {
-			value = ( (WrappedBlob) value ).getWrappedBlob();
+		if ( value instanceof WrappedBlob wrappedBlob ) {
+			value = wrappedBlob.getWrappedBlob();
 		}
 		if ( options.getDialect().useConnectionToCreateLob() ) {
 			if ( value.length() == 0 ) {

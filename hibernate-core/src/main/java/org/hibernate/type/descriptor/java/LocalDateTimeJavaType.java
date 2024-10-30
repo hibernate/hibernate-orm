@@ -128,12 +128,11 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			return null;
 		}
 
-		if (value instanceof LocalDateTime) {
-			return (LocalDateTime) value;
+		if (value instanceof LocalDateTime localDateTime) {
+			return localDateTime;
 		}
 
-		if (value instanceof Timestamp) {
-			final Timestamp ts = (Timestamp) value;
+		if (value instanceof Timestamp timestamp) {
 			/*
 			 * Workaround for HHH-13266 (JDK-8061577).
 			 * We used to do LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ),
@@ -141,22 +140,20 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			 * ts.toInstant() assumes the number of milliseconds since the epoch
 			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
 			 */
-			return ts.toLocalDateTime();
+			return timestamp.toLocalDateTime();
 		}
 
-		if (value instanceof Long) {
-			final Instant instant = Instant.ofEpochMilli( (Long) value );
+		if (value instanceof Long longValue) {
+			final Instant instant = Instant.ofEpochMilli( longValue );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Calendar) {
-			final Calendar calendar = (Calendar) value;
+		if (value instanceof Calendar calendar) {
 			return LocalDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}
 
-		if (value instanceof Date) {
-			final Date ts = (Date) value;
-			final Instant instant = ts.toInstant();
+		if (value instanceof Date timestamp) {
+			final Instant instant = timestamp.toInstant();
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 

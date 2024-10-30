@@ -64,8 +64,8 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Character) {
-			return (Character) value;
+		if (value instanceof Character character) {
+			return character;
 		}
 		if ( value instanceof String ) {
 			if ( value.equals( "" ) ) {
@@ -74,9 +74,8 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 			final String str = (String) value;
 			return str.charAt( 0 );
 		}
-		if (value instanceof Number) {
-			final Number nbr = (Number) value;
-			return (char) nbr.shortValue();
+		if (value instanceof Number number) {
+			return (char) number.shortValue();
 		}
 		throw unknownWrap( value.getClass() );
 	}

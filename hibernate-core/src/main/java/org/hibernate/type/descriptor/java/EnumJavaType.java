@@ -124,23 +124,23 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof String ) {
-			return fromName( (String) value );
+		else if ( value instanceof String string ) {
+			return fromName( string );
 		}
-		else if ( value instanceof Long ) {
-			return fromLong( (Long) value );
+		else if ( value instanceof Long longValue ) {
+			return fromLong( longValue );
 		}
-		else if ( value instanceof Integer ) {
-			return fromInteger( (Integer) value );
+		else if ( value instanceof Integer integerValue ) {
+			return fromInteger( integerValue );
 		}
-		else if ( value instanceof Short ) {
-			return fromShort( (Short) value );
+		else if ( value instanceof Short shortValue ) {
+			return fromShort( shortValue );
 		}
-		else if ( value instanceof Byte ) {
-			return fromByte( (Byte) value );
+		else if ( value instanceof Byte byteValue ) {
+			return fromByte( byteValue );
 		}
-		else if ( value instanceof Number ) {
-			return fromLong( ((Number) value).longValue() );
+		else if ( value instanceof Number number ) {
+			return fromLong( number.longValue() );
 		}
 
 		return (T) value;

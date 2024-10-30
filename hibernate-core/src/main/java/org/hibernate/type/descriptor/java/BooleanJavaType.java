@@ -108,18 +108,18 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Boolean) {
-			return (Boolean) value;
+		if (value instanceof Boolean booleanValue) {
+			return booleanValue;
 		}
-		if (value instanceof Number) {
-			final int intValue = ( (Number) value ).intValue();
+		if (value instanceof Number number) {
+			final int intValue = number.intValue();
 			return intValue != 0;
 		}
-		if (value instanceof Character) {
-			return isTrue( (Character) value );
+		if (value instanceof Character character) {
+			return isTrue( character );
 		}
-		if (value instanceof String) {
-			return isTrue( (String) value );
+		if (value instanceof String string) {
+			return isTrue( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}

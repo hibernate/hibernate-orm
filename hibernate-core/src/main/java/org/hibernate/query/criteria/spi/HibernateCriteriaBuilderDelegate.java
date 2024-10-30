@@ -3878,4 +3878,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath) {
 		return criteriaBuilder.jsonTable( jsonDocument, jsonPath );
 	}
+
+	@Incubating
+	@Override
+	public JpaXmlTableFunction xmlTable(String xpath, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlTable( xpath, xmlDocument );
+	}
+
+	@Incubating
+	@Override
+	public JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument) {
+		return criteriaBuilder.xmlTable( xpath, xmlDocument );
+	}
 }

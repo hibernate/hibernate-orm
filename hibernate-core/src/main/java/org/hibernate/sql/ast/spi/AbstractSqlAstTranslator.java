@@ -5592,7 +5592,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitOverClause( Collections.emptyList(), getSortSpecificationsRowNumbering( selectClause, queryPart ) );
 	}
 
-	protected final boolean isParameter(Expression expression) {
+	public static final boolean isParameter(Expression expression) {
 		return expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation;
 	}
 

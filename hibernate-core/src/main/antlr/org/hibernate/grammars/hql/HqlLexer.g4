@@ -336,6 +336,7 @@ WITH				: [wW] [iI] [tT] [hH];
 WITHIN				: [wW] [iI] [tT] [hH] [iI] [nN];
 WITHOUT				: [wW] [iI] [tT] [hH] [oO] [uU] [tT];
 WRAPPER				: [wW] [rR] [aA] [pP] [pP] [eE] [rR];
+XML 				: [xX] [mM] [lL];
 XMLAGG				: [xX] [mM] [lL] [aA] [gG] [gG];
 XMLATTRIBUTES		: [xX] [mM] [lL] [aA] [tT] [tT] [rR] [iI] [bB] [uU] [tT] [eE] [sS];
 XMLELEMENT			: [xX] [mM] [lL] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
@@ -343,6 +344,7 @@ XMLEXISTS			: [xX] [mM] [lL] [eE] [xX] [iI] [sS] [tT] [sS];
 XMLFOREST			: [xX] [mM] [lL] [fF] [oO] [rR] [eE] [sS] [tT];
 XMLPI				: [xX] [mM] [lL] [pP] [iI];
 XMLQUERY			: [xX] [mM] [lL] [qQ] [uU] [eE] [rR] [yY];
+XMLTABLE			: [xX] [mM] [lL] [tT] [aA] [bB] [lL] [eE];
 YEAR				: [yY] [eE] [aA] [rR];
 ZONED				: [zZ] [oO] [nN] [eE] [dD];
 

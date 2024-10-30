@@ -13,12 +13,15 @@ import org.hibernate.dialect.Dialect;
 
 import org.hibernate.dialect.function.array.*;
 import org.hibernate.dialect.function.json.*;
+import org.hibernate.dialect.function.xml.DB2XmlTableFunction;
 import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
 import org.hibernate.dialect.function.xml.H2XmlPiFunction;
+import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
 import org.hibernate.dialect.function.xml.LegacyDB2XmlExistsFunction;
 import org.hibernate.dialect.function.xml.LegacyDB2XmlQueryFunction;
+import org.hibernate.dialect.function.xml.OracleXmlTableFunction;
 import org.hibernate.dialect.function.xml.PostgreSQLXmlQueryFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlAggFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
@@ -27,6 +30,8 @@ import org.hibernate.dialect.function.xml.SQLServerXmlExistsFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlPiFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlQueryFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlTableFunction;
+import org.hibernate.dialect.function.xml.SybaseASEXmlTableFunction;
 import org.hibernate.dialect.function.xml.XmlAggFunction;
 import org.hibernate.dialect.function.xml.XmlConcatFunction;
 import org.hibernate.dialect.function.xml.XmlElementFunction;
@@ -34,6 +39,7 @@ import org.hibernate.dialect.function.xml.XmlExistsFunction;
 import org.hibernate.dialect.function.xml.XmlForestFunction;
 import org.hibernate.dialect.function.xml.XmlPiFunction;
 import org.hibernate.dialect.function.xml.XmlQueryFunction;
+import org.hibernate.dialect.function.xml.XmlTableFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -4322,5 +4328,47 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonTable_h2(int maximumArraySize) {
 		functionRegistry.register( "json_table", new H2JsonTableFunction( maximumArraySize, typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmltable() function
+	 */
+	public void xmltable(boolean supportsParametersInDefault) {
+		functionRegistry.register( "xmltable", new XmlTableFunction( supportsParametersInDefault, typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle xmltable() function
+	 */
+	public void xmltable_oracle() {
+		functionRegistry.register( "xmltable", new OracleXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 xmltable() function
+	 */
+	public void xmltable_db2() {
+		functionRegistry.register( "xmltable", new DB2XmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HANA xmltable() function
+	 */
+	public void xmltable_hana() {
+		functionRegistry.register( "xmltable", new HANAXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmltable() function
+	 */
+	public void xmltable_sqlserver() {
+		functionRegistry.register( "xmltable", new SQLServerXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Sybase ASE xmltable() function
+	 */
+	public void xmltable_sybasease() {
+		functionRegistry.register( "xmltable", new SybaseASEXmlTableFunction( typeConfiguration ) );
 	}
 }

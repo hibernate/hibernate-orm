@@ -54,6 +54,7 @@ import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
+import org.hibernate.query.sqm.tree.expression.SqmXmlTableFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -884,6 +885,12 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	@Override
+	SqmXmlTableFunction<?> xmlTable(String xpath, Expression<?> xmlDocument);
+
+	@Override
+	SqmXmlTableFunction<?> xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

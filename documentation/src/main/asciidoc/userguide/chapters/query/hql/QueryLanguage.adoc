@@ -2257,14 +2257,15 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 |===
 | Function | Purpose
 
-| `xmlelement()` | Constructs an XML element from arguments
-| `xmlcomment()` | Constructs an XML comment from the single argument
-| `xmlforest()` | Constructs an XML forest from the arguments
-| `xmlconcat()` | Concatenates multiple XML fragments to each other
-| `xmlpi()` | Constructs an XML processing instruction
-| `xmlquery()` | Extracts content from XML document using XQuery or XPath
-| `xmlexists()` | Checks if an XQuery or XPath expression exists in an XML document
-| `xmlagg()` | Aggregates XML elements by concatenation
+| <<hql-xmlelement-function,`xmlelement()`>> | Constructs an XML element from arguments
+| <<hql-xmlcomment-function,`xmlcomment()`>> | Constructs an XML comment from the single argument
+| <<hql-xmlforest-function,`xmlforest()`>> | Constructs an XML forest from the arguments
+| <<hql-xmlconcat-function,`xmlconcat()`>> | Concatenates multiple XML fragments to each other
+| <<hql-xmlpi-function,`xmlpi()`>> | Constructs an XML processing instruction
+| <<hql-xmlquery-function,`xmlquery()`>> | Extracts content from XML document using XQuery or XPath
+| <<hql-xmlexists-function,`xmlexists()`>> | Checks if an XQuery or XPath expression exists in an XML document
+| <<hql-xmlagg-function,`xmlagg()`>> | Aggregates XML elements by concatenation
+| <<hql-xmltable-function,`xmltable()`>> | Turns an XML document into rows
 |===
 
 
@@ -2460,6 +2461,39 @@ include::{xml-example-dir-hql}/XmlAggTest.java[tags=hql-xmlagg-example]
 ====
 
 WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
+
+[[hql-xmltable-function]]
+===== `xmltable()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which turns an XML document argument into rows.
+Returns no rows if the document is `null` or the XPath expression resolves to no nodes.
+
+[[hql-xmltable-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/xmltable_bnf.txt[]
+----
+
+The first argument is the XPath expression. The second argument represents the XML document expression.
+
+Columns that ought to be accessible via the `from` node alias are defined in the `columns` clause,
+which can be of varying forms:
+
+* Value attributes - denoted by a `castTarget` after the name, will cast the content of the XML node matching the XPath expression of the column
+* Query attributes - denoted by the `xml` type after the name, returns the XML node matching the XPath expression of the column
+* Ordinal attributes - denoted by the `for ordinality` syntax after the name, gives access to the 1-based index of the currently processed XML node
+
+[[hql-xmltable-simple-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlTableTest.java[tags=hql-xml-table-example]
+----
+====
+
+The `lateral` keyword is mandatory if one of the arguments refer to a from node item of the same query level.
+
+WARNING: H2, MySQL, MariaDB and HSQLDB do not support this function.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions
@@ -3001,7 +3035,8 @@ The following set-returning functions are available on many platforms:
 
 | <<hql-array-unnest,`unnest()`>> | Turns an array into rows
 | <<hql-from-set-returning-functions-generate-series,`generate_series()`>> | Creates a series of values as rows
-| <<hql-json-table,`json_table()`>> | Turns a JSON document into rows
+| <<hql-json-table-function,`json_table()`>> | Turns a JSON document into rows
+| <<hql-xmltable-function,`xmltable()`>> | Turns an XML document into rows
 |===
 
 To use set returning functions defined in the database, it is required to register them in a `FunctionContributor`:

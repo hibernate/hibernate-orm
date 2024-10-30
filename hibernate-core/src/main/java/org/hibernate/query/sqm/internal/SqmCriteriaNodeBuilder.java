@@ -5956,11 +5956,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath) {
+	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, @Nullable Expression<String> jsonPath) {
 		return (SqmJsonTableFunction<?>) getSetReturningFunctionDescriptor( "json_table" ).generateSqmExpression(
 				jsonPath == null
 						? asList( (SqmTypedNode<?>) jsonDocument )
 						: asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmXmlTableFunction<?> xmlTable(String xpath, Expression<?> xmlDocument) {
+		return xmlTable( value( xpath ), xmlDocument );
+	}
+
+	@Override
+	public SqmXmlTableFunction<?> xmlTable(Expression<String> xpath, Expression<?> xmlDocument) {
+		return (SqmXmlTableFunction<?>) getSetReturningFunctionDescriptor( "xmltable" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) xpath, (SqmTypedNode<?>) xmlDocument ),
 				queryEngine
 		);
 	}

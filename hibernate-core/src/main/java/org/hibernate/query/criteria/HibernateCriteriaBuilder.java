@@ -4463,6 +4463,26 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath);
 
+	/**
+	 * Creates a {@code xmltable} function expression to generate rows from XML elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaXmlTableFunction xmlTable(String xpath, Expression<?> xmlDocument);
+
+	/**
+	 * Creates a {@code xmltable} function expression to generate rows from XML elements.
+	 *
+	 * @since 7.0
+	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
+	 * @see JpaFrom#join(JpaSetReturningFunction)
+	 */
+	@Incubating
+	JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
+
 	@Override
 	JpaPredicate and(List<Predicate> restrictions);
 

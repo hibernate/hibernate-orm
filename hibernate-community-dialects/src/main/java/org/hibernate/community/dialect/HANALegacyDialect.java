@@ -508,7 +508,7 @@ public class HANALegacyDialect extends Dialect {
 					functionFactory.jsonObjectAgg_hana();
 				}
 
-//				functionFactory.xmltable();
+				functionFactory.xmltable_hana();
 			}
 
 //			functionFactory.xmlextract();

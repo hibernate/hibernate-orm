@@ -167,6 +167,7 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 		functionFactory.unnest_sybasease();
 		functionFactory.generateSeries_sybasease( getMaximumSeriesSize() );
+		functionFactory.xmltable_sybasease();
 	}
 
 	/**

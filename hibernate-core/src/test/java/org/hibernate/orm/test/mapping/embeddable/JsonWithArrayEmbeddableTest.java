@@ -55,7 +55,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
 )
 // Don't reorder columns in the types here to avoid the need to rewrite the test
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy"))
+@ServiceRegistry(settings = {
+		@Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy")
+})
 @DomainModel(annotatedClasses = JsonWithArrayEmbeddableTest.JsonHolder.class)
 @SessionFactory
 public class JsonWithArrayEmbeddableTest {

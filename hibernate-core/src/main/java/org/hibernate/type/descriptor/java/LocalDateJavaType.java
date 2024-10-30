@@ -166,12 +166,10 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Date":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date" -> true;
+			default -> false;
+		};
 	}
 
 }

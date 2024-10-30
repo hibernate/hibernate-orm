@@ -192,15 +192,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-			case "java.util.Date":
-			case "java.util.Calendar":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date", "java.sql.Timestamp", "java.util.Date", "java.util.Calendar" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

@@ -99,17 +99,12 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-			case "int":
-			case "java.lang.Integer":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "byte", "java.lang.Byte",
+				 "short", "java.lang.Short",
+				 "int", "java.lang.Integer" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

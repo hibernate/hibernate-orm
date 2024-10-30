@@ -114,7 +114,7 @@ public class FormulaTests {
 		@DialectOverride.Formula(dialect = DB2Dialect.class,
 				override = @Formula("varchar_format(rate * 100) || '%'"))
 		@DialectOverride.Formula(dialect = OracleDialect.class,
-				override = @Formula("to_char(rate * 100) || '%'"))
+				override = @Formula("to_char(cast(rate * 100 as number(10,2))) || '%'"))
 		@DialectOverride.Formula(dialect = SQLServerDialect.class,
 				override = @Formula("ltrim(str(rate * 100, 10, 2)) + '%'"))
 		@DialectOverride.Formula(dialect = SybaseDialect.class,

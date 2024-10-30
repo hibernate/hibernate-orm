@@ -145,17 +145,13 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		if ( value == null ) {
 			return null;
 		}
-
-		// Support multiple return types from
-		// org.hibernate.type.descriptor.sql.ClobTypeDescriptor
-		if ( Clob.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().wrap( (Clob) value );
+		else if ( value instanceof Clob clob ) {
+			return options.getLobCreator().wrap( clob );
 		}
-		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createClob( ( String ) value);
+		else if ( value instanceof String string ) {
+			return options.getLobCreator().createClob( string );
 		}
-		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
-			Reader reader = (Reader) value;
+		else if ( value instanceof Reader reader ) {
 			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
 		}
 

@@ -88,14 +88,14 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Float) {
-			return (Float) value;
+		if (value instanceof Float floatValue) {
+			return floatValue;
 		}
-		if (value instanceof Number) {
-			return ( (Number) value ).floatValue();
+		if (value instanceof Number number) {
+			return number.floatValue();
 		}
-		else if (value instanceof String) {
-			return Float.valueOf( ( (String) value ) );
+		else if (value instanceof String string) {
+			return Float.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -154,36 +154,12 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 			return null;
 		}
 
-		if ( value instanceof Float ) {
-			return (Float) value;
+		if ( value instanceof Float floatValue ) {
+			return floatValue;
 		}
 
-		if ( value instanceof Double ) {
-			return ( (Double) value ).floatValue();
-		}
-
-		if ( value instanceof Byte ) {
-			return ( (Byte) value ).floatValue();
-		}
-
-		if ( value instanceof Short ) {
-			return ( (Short) value ).floatValue();
-		}
-
-		if ( value instanceof Integer ) {
-			return ( (Integer) value ).floatValue();
-		}
-
-		if ( value instanceof Long ) {
-			return ( (Long) value ).floatValue();
-		}
-
-		if ( value instanceof BigInteger ) {
-			return ( (BigInteger) value ).floatValue();
-		}
-
-		if ( value instanceof BigDecimal ) {
-			return ( (BigDecimal) value ).floatValue();
+		if ( value instanceof Number number ) {
+			return number.floatValue();
 		}
 
 		if ( value instanceof String ) {

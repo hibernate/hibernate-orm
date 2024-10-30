@@ -36,7 +36,7 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 	@Override
 	public boolean areEqual(byte[] one, byte[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals( one, another ) );
+			|| one != null && another != null && Arrays.equals( one, another );
 	}
 
 	@Override
@@ -134,9 +134,9 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 				throw new HibernateException( "Unable to access lob stream", e );
 			}
 		}
-		else if ( value instanceof Byte ) {
+		else if ( value instanceof Byte byteValue ) {
 			// Support binding a single element as parameter value
-			return new byte[]{ (byte) value };
+			return new byte[]{ byteValue };
 		}
 
 		throw unknownWrap( value.getClass() );

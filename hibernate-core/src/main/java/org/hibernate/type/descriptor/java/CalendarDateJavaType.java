@@ -115,17 +115,17 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Calendar) {
-			return (Calendar) value;
+		else if (value instanceof Calendar calendar) {
+			return calendar;
 		}
-
-		if ( !(value instanceof Date)) {
+		else if ( value instanceof Date date ) {
+			final Calendar cal = new GregorianCalendar();
+			cal.setTime( date );
+			return cal;
+		}
+		else {
 			throw unknownWrap( value.getClass() );
 		}
-
-		Calendar cal = new GregorianCalendar();
-		cal.setTime( (Date) value );
-		return cal;
 	}
 
 	@Override

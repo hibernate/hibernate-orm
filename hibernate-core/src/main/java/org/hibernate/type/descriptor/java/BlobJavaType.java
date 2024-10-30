@@ -163,17 +163,13 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		if ( value == null ) {
 			return null;
 		}
-
-		// Support multiple return types from
-		// org.hibernate.type.descriptor.sql.BlobTypeDescriptor
-		if ( Blob.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().wrap( (Blob) value );
+		else if ( value instanceof Blob blob ) {
+			return options.getLobCreator().wrap( blob );
 		}
-		else if ( byte[].class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createBlob( ( byte[] ) value);
+		else if ( value instanceof byte[] bytes ) {
+			return options.getLobCreator().createBlob( bytes );
 		}
-		else if ( InputStream.class.isAssignableFrom( value.getClass() ) ) {
-			InputStream inputStream = ( InputStream ) value;
+		else if ( value instanceof InputStream inputStream ) {
 			try {
 				return options.getLobCreator().createBlob( inputStream, inputStream.available() );
 			}

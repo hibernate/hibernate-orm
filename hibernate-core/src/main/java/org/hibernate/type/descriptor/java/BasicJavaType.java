@@ -27,8 +27,8 @@ public interface BasicJavaType<T> extends JavaType<T> {
 		// match legacy behavior
 		int jdbcTypeCode = JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() );
 		final JdbcType descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
-		return descriptor instanceof AdjustableJdbcType
-				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
+		return descriptor instanceof AdjustableJdbcType adjustableJdbcType
+				? adjustableJdbcType.resolveIndicatedType( indicators, this )
 				: descriptor;
 	}
 

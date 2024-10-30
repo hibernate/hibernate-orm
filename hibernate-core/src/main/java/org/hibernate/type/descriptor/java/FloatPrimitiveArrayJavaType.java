@@ -149,16 +149,16 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 			}
 		}
 
-		if ( value instanceof float[] ) {
-			return (float[]) value;
+		if ( value instanceof float[] floats ) {
+			return floats;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
-			return (float[]) SerializationHelper.deserialize( (byte[]) value );
+			return (float[]) SerializationHelper.deserialize( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return (float[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return (float[]) SerializationHelper.deserialize( binaryStream.getBytes() );
 		}
 		else if ( value.getClass().isArray() ) {
 			final float[] wrapped = new float[Array.getLength( value )];
@@ -167,12 +167,11 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 			}
 			return wrapped;
 		}
-		else if ( value instanceof Float ) {
+		else if ( value instanceof Float floatValue) {
 			// Support binding a single element as parameter value
-			return new float[]{ (float) value };
+			return new float[]{ floatValue };
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			final float[] wrapped = new float[collection.size()];
 			int i = 0;
 			for ( Object e : collection ) {

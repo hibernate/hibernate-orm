@@ -99,7 +99,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 				}
 				else {
 					// otherwise extract the bytes from the stream manually
-					return (X) LobStreamDataHelper.extractString( value.getCharacterStream() );
+					return (X) DataHelper.extractString( value.getCharacterStream() );
 				}
 			}
 			else if ( Clob.class.isAssignableFrom( type ) ) {

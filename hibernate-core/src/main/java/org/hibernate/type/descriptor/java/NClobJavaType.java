@@ -92,9 +92,9 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 
 		try {
 			if ( CharacterStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof NClobImplementer) {
+				if (value instanceof NClobImplementer clobImplementer) {
 					// if the incoming NClob is a wrapper, just pass along its BinaryStream
-					return (X) ( (NClobImplementer) value ).getUnderlyingStream();
+					return (X) clobImplementer.getUnderlyingStream();
 				}
 				else {
 					// otherwise we need to build a BinaryStream...

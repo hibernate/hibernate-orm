@@ -112,18 +112,18 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Byte[]) {
-			return (Byte[]) value;
+		if (value instanceof Byte[] bytes) {
+			return bytes;
 		}
-		if (value instanceof byte[]) {
-			return wrapBytes( (byte[]) value );
+		if (value instanceof byte[] bytes) {
+			return wrapBytes( bytes );
 		}
-		if (value instanceof InputStream) {
-			return wrapBytes( DataHelper.extractBytes( (InputStream) value ) );
+		if (value instanceof InputStream inputStream) {
+			return wrapBytes( DataHelper.extractBytes( inputStream ) );
 		}
-		if ( value instanceof Blob || DataHelper.isNClob( value.getClass() ) ) {
+		if ( value instanceof Blob blob ) {
 			try {
-				return wrapBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
+				return wrapBytes( DataHelper.extractBytes( blob.getBinaryStream() ) );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( "Unable to access lob stream", e );

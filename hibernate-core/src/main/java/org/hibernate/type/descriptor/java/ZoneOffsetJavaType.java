@@ -73,14 +73,14 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof ZoneOffset ) {
-			return (ZoneOffset) value;
+		if ( value instanceof ZoneOffset zoneOffset ) {
+			return zoneOffset;
 		}
-		if ( value instanceof CharSequence ) {
-			return fromString( (CharSequence) value );
+		if ( value instanceof CharSequence charSequence ) {
+			return fromString( charSequence );
 		}
-		if ( value instanceof Integer ) {
-			return ZoneOffset.ofTotalSeconds( (Integer) value );
+		if ( value instanceof Integer integer ) {
+			return ZoneOffset.ofTotalSeconds( integer );
 		}
 		throw unknownWrap( value.getClass() );
 	}

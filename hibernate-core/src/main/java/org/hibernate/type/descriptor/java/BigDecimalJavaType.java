@@ -82,17 +82,17 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof BigDecimal ) {
-			return (BigDecimal) value;
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return bigDecimal;
 		}
-		if ( value instanceof BigInteger ) {
-			return new BigDecimal( (BigInteger) value );
+		if ( value instanceof BigInteger bigInteger ) {
+			return new BigDecimal( bigInteger );
 		}
-		if ( value instanceof Number ) {
-			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
+		if ( value instanceof Number number ) {
+			return BigDecimal.valueOf( number.doubleValue() );
 		}
-		if ( value instanceof String ) {
-			return new BigDecimal( (String) value );
+		if ( value instanceof String string ) {
+			return new BigDecimal( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -125,17 +125,17 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 			return null;
 		}
 
-		if ( value instanceof BigDecimal ) {
-			return (BigDecimal) value;
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return bigDecimal;
 		}
 
-		if ( value instanceof Number ) {
-			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
+		if ( value instanceof Number number ) {
+			return BigDecimal.valueOf( number.doubleValue() );
 		}
 
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> BigDecimal.valueOf( Double.parseDouble( (String) value ) )
+					() -> BigDecimal.valueOf( Double.parseDouble( string ) )
 			);
 		}
 

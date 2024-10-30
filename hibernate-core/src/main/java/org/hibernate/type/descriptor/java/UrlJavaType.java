@@ -66,11 +66,11 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof URL) {
-			return (URL) value;
+		if (value instanceof URL url) {
+			return url;
 		}
-		if (value instanceof CharSequence) {
-			return fromString( (CharSequence) value );
+		if (value instanceof CharSequence charSequence) {
+			return fromString( charSequence );
 		}
 		throw unknownWrap( value.getClass() );
 	}

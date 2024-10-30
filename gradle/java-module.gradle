@@ -447,7 +447,7 @@ tasks.copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Report configs
 
-task enforceRules {
+tasks.register('enforceRules') {
 	doLast {
 		def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
 		def missingNewline = ~/^\s*}\s*(else|catch|finally)/
@@ -512,8 +512,34 @@ spotless {
 	}
 }
 
-tasks.spotlessApply.dependsOn enforceRules
+tasks.check.dependsOn enforceRules
 
+tasks.register( "ciCheck" ) {
+	// Task used by CI builds
+	group "verification"
+	description "Checks for CI environments"
+	dependsOn tasks.check
+
+	// These are already enforced by the formatChecks task
+	spotlessApply {
+		enabled = false
+	}
+	spotlessJavaApply {
+		enabled = false
+	}
+	enforceRules {
+		enabled = false
+	}
+}
+
+tasks.register( "formatChecks" ) {
+	// Only runs static code analysis, doesn't require compilation
+	group "verification"
+	description "Code style and formatting checks"
+
+	dependsOn tasks.spotlessCheck
+	dependsOn tasks.enforceRules
+}
 
 class CompilerStubsArgumentProvider implements CommandLineArgumentProvider {
 

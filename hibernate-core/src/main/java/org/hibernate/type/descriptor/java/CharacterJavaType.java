@@ -36,7 +36,7 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 	@Override
 	public Character fromString(CharSequence string) {
 		if ( string.length() != 1 ) {
-			throw new HibernateException( "multiple or zero characters found parsing string" );
+			throw new CoercionException( "value must contain exactly one character: '" + string + "'" );
 		}
 		return string.charAt( 0 );
 	}
@@ -68,12 +68,10 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 			return character;
 		}
 		if (value instanceof String string) {
-			// Note that this conversion is "dangerous",
-			// since it is not invertible, and can in
-			// principle result in accidental loss of data.
-			// It might be better to throw if the incoming
-			// string does not have length one.
-			return string.isEmpty() ? null : string.charAt( 0 );
+			if ( string.length() != 1 ) {
+				throw new CoercionException( "value must contain exactly one character: '" + string + "'" );
+			}
+			return string.charAt( 0 );
 		}
 		if (value instanceof Number number) {
 			return (char) number.shortValue();

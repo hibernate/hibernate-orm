@@ -7,7 +7,6 @@ package org.hibernate.query.results.internal.implicit;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderBasicValued;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;

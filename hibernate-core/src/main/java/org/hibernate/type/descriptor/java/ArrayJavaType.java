@@ -296,8 +296,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 		}
 
-		if ( value instanceof Object[] ) {
-			final Object[] raw = (Object[]) value;
+		if ( value instanceof Object[] raw ) {
 			final Class<T> componentClass = getElementJavaType().getJavaTypeClass();
 			//noinspection unchecked
 			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( componentClass, raw.length );
@@ -314,12 +313,12 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 			return wrapped;
 		}
-		else if ( value instanceof byte[] ) {
-			return fromBytes( (byte[]) value );
+		else if ( value instanceof byte[] bytes ) {
+			return fromBytes( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return fromBytes( ( (BinaryStream) value ).getBytes() );
+			return fromBytes( binaryStream.getBytes() );
 		}
 		else if ( getElementJavaType().isInstance( value ) ) {
 			// Support binding a single element as parameter value
@@ -329,8 +328,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			wrapped[0] = (T) value;
 			return wrapped;
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			//noinspection unchecked
 			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( getElementJavaType().getJavaTypeClass(), collection.size() );
 			int i = 0;
@@ -359,9 +357,8 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 	}
 
-	private T[] fromBytes(byte[] value) {
-		Class<T> elementClass = getElementJavaType().getJavaTypeClass();
-		byte[] bytes = value;
+	private T[] fromBytes(byte[] bytes) {
+		final Class<T> elementClass = getElementJavaType().getJavaTypeClass();
 		if ( elementClass.isEnum() ) {
 			final Object[] array = (Object[]) Array.newInstance( elementClass, bytes.length );
 			for (int i = 0; i < bytes.length; i++ ) {
@@ -375,7 +372,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		else {
 			// When the value is a byte[], this is a deserialization request
 			//noinspection unchecked
-			return (T[]) SerializationHelper.deserialize(value);
+			return (T[]) SerializationHelper.deserialize(bytes);
 		}
 	}
 
@@ -400,7 +397,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 				return null;
 			}
 			//noinspection unchecked
-			T[] copy = (T[]) Array.newInstance( componentClass, value.length );
+			final T[] copy = (T[]) Array.newInstance( componentClass, value.length );
 			for ( int i = 0; i < value.length; i ++ ) {
 				copy[ i ] = componentPlan.deepCopy( value[ i ] );
 			}

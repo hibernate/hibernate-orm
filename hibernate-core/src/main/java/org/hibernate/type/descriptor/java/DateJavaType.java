@@ -151,16 +151,16 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Date) {
-			return (Date) value;
+		if (value instanceof Date date) {
+			return date;
 		}
 
-		if (value instanceof Long) {
-			return new Date( (Long) value );
+		if (value instanceof Long longValue) {
+			return new Date( longValue );
 		}
 
-		if (value instanceof Calendar) {
-			return new Date( ( (Calendar) value ).getTimeInMillis() );
+		if (value instanceof Calendar calendar) {
+			return new Date( calendar.getTimeInMillis() );
 		}
 
 		throw unknownWrap( value.getClass() );

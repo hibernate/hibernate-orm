@@ -149,16 +149,16 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 			}
 		}
 
-		if ( value instanceof int[] ) {
-			return (int[]) value;
+		if ( value instanceof int[] ints ) {
+			return ints;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
-			return (int[]) SerializationHelper.deserialize( (byte[]) value );
+			return (int[]) SerializationHelper.deserialize( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return (int[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return (int[]) SerializationHelper.deserialize( binaryStream.getBytes() );
 		}
 		else if ( value.getClass().isArray() ) {
 			final int[] wrapped = new int[Array.getLength( value )];
@@ -167,12 +167,11 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 			}
 			return wrapped;
 		}
-		else if ( value instanceof Integer ) {
+		else if ( value instanceof Integer integer ) {
 			// Support binding a single element as parameter value
-			return new int[]{ (int) value };
+			return new int[]{ integer };
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			final int[] wrapped = new int[collection.size()];
 			int i = 0;
 			for ( Object e : collection ) {

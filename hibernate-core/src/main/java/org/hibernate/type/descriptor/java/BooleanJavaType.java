@@ -112,8 +112,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 			return booleanValue;
 		}
 		if (value instanceof Number number) {
-			final int intValue = number.intValue();
-			return intValue != 0;
+			return number.intValue() != 0;
 		}
 		if (value instanceof Character character) {
 			return isTrue( character );
@@ -192,7 +191,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		if ( converter != null ) {
 			if ( jdbcType.isString() ) {
 				@SuppressWarnings("unchecked")
-				BasicValueConverter<Boolean, ?> stringConverter =
+				final BasicValueConverter<Boolean, ?> stringConverter =
 						(BasicValueConverter<Boolean, ?>) converter;
 				final Object falseValue = stringConverter.toRelationalValue( false );
 				final Object trueValue = stringConverter.toRelationalValue( true );
@@ -201,11 +200,11 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 			}
 			else if ( jdbcType.isInteger() ) {
 				@SuppressWarnings("unchecked")
-				BasicValueConverter<Boolean, ? extends Number> numericConverter =
+				final BasicValueConverter<Boolean, ? extends Number> numericConverter =
 						(BasicValueConverter<Boolean, ? extends Number>) converter;
 				final Number falseValue = numericConverter.toRelationalValue( false );
 				final Number trueValue = numericConverter.toRelationalValue( true );
-				Long[] values = getPossibleNumericValues( numericConverter, falseValue, trueValue );
+				final Long[] values = getPossibleNumericValues( numericConverter, falseValue, trueValue );
 				return dialect.getCheckCondition( columnName, values );
 			}
 		}
@@ -222,7 +221,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		}
 		catch ( NullPointerException ignored ) {
 		}
-		Long[] values = new Long[nullValue != null ? 3 : 2];
+		final Long[] values = new Long[nullValue != null ? 3 : 2];
 		values[0] = falseValue != null ? falseValue.longValue() : null;
 		values[1] = trueValue != null ? trueValue.longValue() : null;
 		if ( nullValue != null ) {

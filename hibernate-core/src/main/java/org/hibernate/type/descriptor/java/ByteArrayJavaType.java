@@ -35,7 +35,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	@Override
 	public boolean areEqual(Byte[] one, Byte[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals(one, another) );
+			|| one != null && another != null && Arrays.equals(one, another);
 	}
 	@Override
 	public int extractHashCode(Byte[] bytes) {

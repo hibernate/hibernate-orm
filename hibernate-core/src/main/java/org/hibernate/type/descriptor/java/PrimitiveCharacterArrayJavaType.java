@@ -38,7 +38,7 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 	@Override
 	public boolean areEqual(char[] one, char[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals( one, another ) );
+			|| one != null && another != null && Arrays.equals( one, another );
 	}
 
 	@Override
@@ -80,21 +80,21 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof char[]) {
-			return (char[]) value;
+		if (value instanceof char[] chars) {
+			return chars;
 		}
-		if (value instanceof String) {
-			return ( (String) value ).toCharArray();
+		if (value instanceof String string) {
+			return string.toCharArray();
 		}
-		if (value instanceof Clob) {
-			return DataHelper.extractString( ( (Clob) value ) ).toCharArray();
+		if (value instanceof Clob clob) {
+			return DataHelper.extractString( clob ).toCharArray();
 		}
-		if (value instanceof Reader) {
-			return DataHelper.extractString( ( (Reader) value ) ).toCharArray();
+		if (value instanceof Reader reader) {
+			return DataHelper.extractString( reader ).toCharArray();
 		}
-		else if ( value instanceof Character ) {
+		else if ( value instanceof Character character ) {
 			// Support binding a single element as parameter value
-			return new char[]{ (char) value };
+			return new char[]{ character };
 		}
 		throw unknownWrap( value.getClass() );
 	}

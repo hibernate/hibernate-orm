@@ -149,16 +149,16 @@ public class DoublePrimitiveArrayJavaType extends AbstractArrayJavaType<double[]
 			}
 		}
 
-		if ( value instanceof double[] ) {
-			return (double[]) value;
+		if ( value instanceof double[] doubles ) {
+			return doubles;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
-			return (double[]) SerializationHelper.deserialize( (byte[]) value );
+			return (double[]) SerializationHelper.deserialize( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return (double[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return (double[]) SerializationHelper.deserialize( binaryStream.getBytes() );
 		}
 		else if ( value.getClass().isArray() ) {
 			final double[] wrapped = new double[Array.getLength( value )];
@@ -167,12 +167,11 @@ public class DoublePrimitiveArrayJavaType extends AbstractArrayJavaType<double[]
 			}
 			return wrapped;
 		}
-		else if ( value instanceof Double ) {
+		else if ( value instanceof Double doubleValue ) {
 			// Support binding a single element as parameter value
-			return new double[]{ (double) value };
+			return new double[]{ doubleValue };
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			final double[] wrapped = new double[collection.size()];
 			int i = 0;
 			for ( Object e : collection ) {

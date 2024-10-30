@@ -67,12 +67,13 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		if (value instanceof Character character) {
 			return character;
 		}
-		if ( value instanceof String ) {
-			if ( value.equals( "" ) ) {
-				return ' ';
-			}
-			final String str = (String) value;
-			return str.charAt( 0 );
+		if (value instanceof String string) {
+			// Note that this conversion is "dangerous",
+			// since it is not invertible, and can in
+			// principle result in accidental loss of data.
+			// It might be better to throw if the incoming
+			// string does not have length one.
+			return string.isEmpty() ? null : string.charAt( 0 );
 		}
 		if (value instanceof Number number) {
 			return (char) number.shortValue();

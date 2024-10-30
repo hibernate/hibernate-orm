@@ -63,7 +63,7 @@ public class OracleJsonValueFunction extends JsonValueFunction {
 		}
 	}
 
-	static boolean isEncodedBoolean(JdbcMapping type) {
+	public static boolean isEncodedBoolean(JdbcMapping type) {
 		return type.getJdbcType().isBoolean() && type.getJdbcType().getDdlTypeCode() != SqlTypes.BOOLEAN;
 	}
 }

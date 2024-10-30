@@ -94,7 +94,7 @@ public final class StandardFunctionArgumentTypeResolvers {
 		return new AbstractFunctionArgumentTypeResolver() {
 			@Override
 			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
-				return expressibles[argumentIndex];
+				return argumentIndex < expressibles.length ? expressibles[argumentIndex] : null;
 			}
 		};
 	}
@@ -103,6 +103,9 @@ public final class StandardFunctionArgumentTypeResolvers {
 		return new AbstractFunctionArgumentTypeResolver() {
 			@Override
 			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				if ( argumentIndex >= types.length ) {
+					return null;
+				}
 				return getMappingModelExpressible(
 						converter.getCreationContext().getTypeConfiguration(),
 						types[argumentIndex]
@@ -188,7 +191,9 @@ public final class StandardFunctionArgumentTypeResolvers {
 		return new AbstractFunctionArgumentTypeResolver() {
 			@Override
 			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
-				return resolvers[argumentIndex].resolveFunctionArgumentType( arguments, argumentIndex, converter );
+				return argumentIndex < resolvers.length
+						? resolvers[argumentIndex].resolveFunctionArgumentType( arguments, argumentIndex, converter )
+						: null;
 			}
 		};
 	}

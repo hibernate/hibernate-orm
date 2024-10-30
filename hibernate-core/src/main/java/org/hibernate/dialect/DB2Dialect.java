@@ -442,6 +442,7 @@ public class DB2Dialect extends Dialect {
 			functionFactory.xmlexists_db2_legacy();
 		}
 		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
 
 		functionFactory.unnest_emulated();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );

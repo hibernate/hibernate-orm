@@ -511,7 +511,7 @@ public class HANADialect extends Dialect {
 		functionFactory.jsonArrayAgg_hana();
 		functionFactory.jsonObjectAgg_hana();
 
-//		functionFactory.xmltable();
+		functionFactory.xmltable_hana();
 
 //		functionFactory.xmlextract();
 		functionFactory.generateSeries_hana( getMaximumSeriesSize() );

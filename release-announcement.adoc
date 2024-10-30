@@ -88,6 +88,7 @@ Out-of-the-box, some common set-returning functions are already supported or emu
 * `unnest()` - allows to turn an array into rows
 * `generate_series()` - can be used to create a series of values as rows
 * `json_table()` - turns a JSON document into rows
+* `xmltable()` - turns an XML document into rows
 
 [[cleanup]]
 == Clean-up

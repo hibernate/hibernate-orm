@@ -69,6 +69,7 @@ import org.hibernate.query.criteria.JpaJsonTableColumnsNode;
 import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.criteria.JpaXmlTableColumnNode;
 import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -3202,6 +3203,64 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						creationContext.getQueryEngine()
 				)
 		);
+	}
+
+	@Override
+	public Object visitXmltableFunction(HqlParser.XmltableFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final List<HqlParser.ExpressionContext> argumentsContexts = ctx.expression();
+		//noinspection unchecked
+		final SqmExpression<String> xpath = (SqmExpression<String>) argumentsContexts.get( 0 ).accept( this );
+		final SqmExpression<?> document = (SqmExpression<?>) argumentsContexts.get( 1 ).accept( this );
+		final SqmXmlTableFunction<?> xmlTable = creationContext.getNodeBuilder().xmlTable( xpath, document);
+		visitColumns( xmlTable, ctx.xmltableColumnsClause().xmltableColumn() );
+		return xmlTable;
+	}
+
+	private void visitColumns(SqmXmlTableFunction<?> xmlTable, List<HqlParser.XmltableColumnContext> columnContexts) {
+		for ( HqlParser.XmltableColumnContext columnContext : columnContexts ) {
+			if ( columnContext instanceof HqlParser.XmlTableQueryColumnContext queryColumnContext ) {
+				final String columnName = visitIdentifier( queryColumnContext.identifier() );
+				final TerminalNode pathNode = queryColumnContext.STRING_LITERAL();
+				final String xpath;
+				if ( pathNode == null ) {
+					xpath = null;
+				}
+				else {
+					xpath = unquoteStringLiteral( pathNode.getText() );
+				}
+				final JpaXmlTableColumnNode<String> node = xmlTable.queryColumn( columnName, xpath );
+				final HqlParser.XmltableDefaultClauseContext defaultClause = queryColumnContext.xmltableDefaultClause();
+				if ( defaultClause != null ) {
+					//noinspection unchecked
+					node.defaultExpression( (Expression<String>) defaultClause.expression().accept( this ) );
+				}
+			}
+			else if ( columnContext instanceof HqlParser.XmlTableValueColumnContext valueColumnContext ) {
+				final String columnName = visitIdentifier( valueColumnContext.identifier() );
+				//noinspection unchecked
+				final SqmCastTarget<Object> castTarget = (SqmCastTarget<Object>) visitCastTarget( valueColumnContext.castTarget() );
+				final TerminalNode pathNode = valueColumnContext.STRING_LITERAL();
+				final String xpath;
+				if ( pathNode == null ) {
+					xpath = null;
+				}
+				else {
+					xpath = unquoteStringLiteral( pathNode.getText() );
+				}
+				final JpaXmlTableColumnNode<Object> node = xmlTable.valueColumn( columnName, castTarget, xpath );
+				final HqlParser.XmltableDefaultClauseContext defaultClause = valueColumnContext.xmltableDefaultClause();
+				if ( defaultClause != null ) {
+					//noinspection unchecked
+					node.defaultExpression( (Expression<Object>) defaultClause.expression().accept( this ) );
+				}
+			}
+			else {
+				final HqlParser.XmlTableOrdinalityColumnContext ordinalityColumnContext
+						= (HqlParser.XmlTableOrdinalityColumnContext) columnContext;
+				xmlTable.ordinalityColumn( visitIdentifier( ordinalityColumnContext.identifier() ) );
+			}
+		}
 	}
 
 	private void checkXmlFunctionsEnabled(ParserRuleContext ctx) {

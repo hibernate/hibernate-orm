@@ -1119,6 +1119,7 @@ function
 setReturningFunction
 	: simpleSetReturningFunction
 	| jsonTableFunction
+	| xmltableFunction
 	;
 
 /**
@@ -1813,6 +1814,24 @@ xmlaggFunction
 	: XMLAGG LEFT_PAREN expression orderByClause? RIGHT_PAREN filterClause? overClause?
 	;
 
+xmltableFunction
+	: XMLTABLE LEFT_PAREN expression PASSING expression xmltableColumnsClause RIGHT_PAREN
+	;
+
+xmltableColumnsClause
+    : COLUMNS xmltableColumn (COMMA xmltableColumn)*
+    ;
+
+xmltableColumn
+    : identifier XML (PATH STRING_LITERAL)? xmltableDefaultClause?          # XmlTableQueryColumn
+    | identifier FOR ORDINALITY                                             # XmlTableOrdinalityColumn
+    | identifier castTarget (PATH STRING_LITERAL)? xmltableDefaultClause?   # XmlTableValueColumn
+    ;
+
+xmltableDefaultClause
+    : DEFAULT expression
+    ;
+
 /**
  * Support for "soft" keywords which may be used as identifiers
  *
@@ -2025,6 +2044,7 @@ xmlaggFunction
 	| WITHIN
 	| WITHOUT
 	| WRAPPER
+	| XML
 	| XMLAGG
 	| XMLATTRIBUTES
 	| XMLELEMENT
@@ -2032,6 +2052,7 @@ xmlaggFunction
 	| XMLFOREST
 	| XMLPI
 	| XMLQUERY
+	| XMLTABLE
 	| YEAR
 	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );

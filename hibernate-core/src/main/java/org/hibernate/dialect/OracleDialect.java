@@ -421,6 +421,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.xmlquery_oracle();
 		functionFactory.xmlexists();
 		functionFactory.xmlagg();
+		functionFactory.xmltable_oracle();
 
 		functionFactory.unnest_oracle();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );

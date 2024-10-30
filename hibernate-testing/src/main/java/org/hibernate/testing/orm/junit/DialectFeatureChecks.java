@@ -847,6 +847,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsXmlTable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesSetReturningFunction( dialect, "xmltable" );
+		}
+	}
+
 	public static class SupportsArrayAgg implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "array_agg" );

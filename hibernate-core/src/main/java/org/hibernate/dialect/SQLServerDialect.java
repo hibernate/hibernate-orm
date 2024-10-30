@@ -446,6 +446,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.xmlquery_sqlserver();
 		functionFactory.xmlexists_sqlserver();
 		functionFactory.xmlagg_sqlserver();
+		functionFactory.xmltable_sqlserver();
 
 		functionFactory.unnest_sqlserver();
 

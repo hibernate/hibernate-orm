@@ -457,6 +457,7 @@ public class DB2LegacyDialect extends Dialect {
 			functionFactory.xmlexists_db2_legacy();
 		}
 		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
 
 		functionFactory.unnest_emulated();
 		if ( supportsRecursiveCTE() ) {

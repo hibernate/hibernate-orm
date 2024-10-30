@@ -184,6 +184,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 		functionFactory.unnest_sybasease();
 		functionFactory.generateSeries_sybasease( getMaximumSeriesSize() );
+		functionFactory.xmltable_sybasease();
 	}
 
 	/**

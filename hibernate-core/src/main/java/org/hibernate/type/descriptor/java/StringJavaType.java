@@ -77,9 +77,6 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		// Since NClob extends Clob, we need to check if type is an NClob
 		// before checking if type is a Clob. That will ensure that
 		// the correct type is returned.
-		if ( DataHelper.isNClob( type ) ) {
-			return (X) options.getLobCreator().createNClob( value );
-		}
 		if ( NClob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createNClob( value );
 		}
@@ -87,12 +84,10 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 			return (X) options.getLobCreator().createClob( value );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			Integer parsed = Integer.parseInt( value );
-			return (X) parsed;
+			return (X) (Integer) Integer.parseInt( value );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			Long parsed = Long.parseLong( value );
-			return (X) parsed;
+			return (X) (Long) Long.parseLong( value );
 		}
 
 		throw unknownUnwrap( type );

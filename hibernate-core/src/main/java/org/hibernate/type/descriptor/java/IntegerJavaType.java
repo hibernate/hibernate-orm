@@ -99,15 +99,11 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "byte", "java.lang.Byte",
+				 "short", "java.lang.Short" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

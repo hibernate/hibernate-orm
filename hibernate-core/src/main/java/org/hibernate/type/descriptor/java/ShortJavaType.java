@@ -45,13 +45,10 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "byte", "java.lang.Byte" -> true;
+			default -> false;
+		};
 	}
 
 	@SuppressWarnings("unchecked")

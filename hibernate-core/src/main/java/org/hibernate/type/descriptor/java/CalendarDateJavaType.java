@@ -130,12 +130,10 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Date":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

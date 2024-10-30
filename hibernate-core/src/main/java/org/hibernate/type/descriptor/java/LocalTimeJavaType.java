@@ -177,12 +177,10 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Time":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Time" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

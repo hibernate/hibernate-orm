@@ -14,8 +14,11 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Jan Schatteman
@@ -24,26 +27,52 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {BooleanArrayToStringTest.TestEntity.class}
 )
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayToString.class)
+@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
+@Jira( value = "https://hibernate.atlassian.net/browse/HHH-18765" )
 public class BooleanArrayToStringTest {
 
-	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayToString.class)
-	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
-	@Jira( value = "https://hibernate.atlassian.net/browse/HHH-18765" )
-	public void testBooleanArrayToStringFunction(SessionFactoryScope scope) {
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
 		scope.inTransaction(
-			session -> session.persist( new TestEntity(1L, new Boolean[]{Boolean.FALSE, Boolean.FALSE, null, Boolean.TRUE}) )
+				session -> session.persist(
+						new TestEntity( 1L, new Boolean[] {Boolean.FALSE, Boolean.FALSE, null, Boolean.TRUE} ) )
 		);
-		scope.inTransaction(
-				session -> {
-					String s = session.createQuery( "select array_to_string(t.theBoolean, ';', 'null') "
-							+ "from TestEntity t", String.class ).getSingleResult();
-					Assertions.assertEquals("false;false;null;true", s);
-				}
-		);
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createMutationQuery( "delete from TestEntity" ).executeUpdate()
+		);
+	}
+
+	@Test
+	public void testBooleanArrayToStringWithDefault(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final String actual = session.createQuery(
+									"select array_to_string(t.theBoolean, ';', 'null') from TestEntity t",
+									String.class
+							)
+							.getSingleResult();
+					assertEquals("false;false;null;true", actual);
+				}
+		);
+	}
+
+	@Test
+	public void testBooleanArrayToStringWithoutDefault(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final String actual = session.createQuery(
+									"select array_to_string(t.theBoolean, ';') from TestEntity t",
+									String.class
+							)
+							.getSingleResult();
+					assertEquals("false;false;true", actual);
+				}
 		);
 	}
 

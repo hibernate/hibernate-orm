@@ -9,7 +9,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -21,9 +20,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 

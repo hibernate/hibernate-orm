@@ -63,6 +63,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+
 /**
  * H2 json_table function.
  * <p>
@@ -662,15 +663,26 @@ public class H2JsonTableFunction extends JsonTableFunction {
 
 		private String castValueExpression(String baseReadExpression, CastTarget castTarget, @Nullable Literal defaultExpression, SqmToSqlAstConverter converter) {
 			final StringBuilder sb = new StringBuilder( baseReadExpression.length() + 200 );
-			sb.append( "cast(stringdecode(btrim(nullif(" );
 			if ( defaultExpression != null ) {
 				sb.append( "coalesce(" );
 			}
+			final boolean hexDecoding = H2JsonValueFunction.needsHexDecoding( castTarget.getJdbcMapping() );
 			sb.append( "cast(" );
+			if ( hexDecoding ) {
+				// We encode binary data as hex, so we have to decode here
+				sb.append( "hextoraw(regexp_replace(" );
+			}
+			sb.append( "stringdecode(regexp_replace(nullif(" );
 			sb.append( baseReadExpression );
-			sb.append( " as varchar)" );
+			sb.append( ",JSON'null'),'^\"(.*)\"$','$1'))" );
+			if ( hexDecoding ) {
+				sb.append( ",'([0-9a-f][0-9a-f])','00$1'))" );
+			}
+			sb.append( " as " );
+			sb.append( determineColumnType( castTarget, converter.getCreationContext().getTypeConfiguration() ) );
+			sb.append( ')' );
 			if ( defaultExpression != null ) {
-				sb.append( ",cast(" );
+				sb.append( ',' );
 				//noinspection unchecked
 				final String sqlLiteral = defaultExpression.getJdbcMapping().getJdbcLiteralFormatter().toJdbcLiteral(
 						defaultExpression.getLiteralValue(),
@@ -678,13 +690,8 @@ public class H2JsonTableFunction extends JsonTableFunction {
 						converter.getCreationContext().getSessionFactory().getWrapperOptions()
 				);
 				sb.append( sqlLiteral );
-				sb.append( " as varchar))" );
+				sb.append( ')' );
 			}
-			sb.append( ",'null'),'\"'))");
-
-			sb.append( " as " );
-			sb.append( determineColumnType( castTarget, converter.getCreationContext().getTypeConfiguration() ) );
-			sb.append( ')' );
 			return sb.toString();
 		}
 
@@ -703,17 +710,24 @@ public class H2JsonTableFunction extends JsonTableFunction {
 
 		private String castQueryExpression(String baseReadExpression, JsonQueryEmptyBehavior emptyBehavior, JsonQueryWrapMode wrapMode, SqmToSqlAstConverter converter) {
 			final StringBuilder sb = new StringBuilder( baseReadExpression.length() + 200 );
+			if ( emptyBehavior == JsonQueryEmptyBehavior.EMPTY_ARRAY || emptyBehavior == JsonQueryEmptyBehavior.EMPTY_OBJECT ) {
+				sb.append( "coalesce(" );
+			}
 			if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
 				sb.append( "'['||" );
 			}
 
-			sb.append( "stringdecode(btrim(nullif(" );
-			sb.append( "cast(" );
+			sb.append( "stringdecode(regexp_replace(nullif(" );
 			sb.append( baseReadExpression );
-			sb.append( " as varchar)" );
-			sb.append( ",'null'),'\"'))");
+			sb.append( ",JSON'null'),'^\"(.*)\"$','$1'))");
 			if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
 				sb.append( "||']'" );
+			}
+			if ( emptyBehavior == JsonQueryEmptyBehavior.EMPTY_ARRAY ) {
+				sb.append( ",'[]')" );
+			}
+			else if ( emptyBehavior == JsonQueryEmptyBehavior.EMPTY_OBJECT ) {
+				sb.append( ",'{}')" );
 			}
 			return sb.toString();
 		}

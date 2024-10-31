@@ -100,11 +100,12 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
 		return switch ( javaType.getTypeName() ) {
-			case "byte", "java.lang.Byte",
-				 "short", "java.lang.Short",
-				 "int", "java.lang.Integer",
-				 "long", "java.lang.Long",
-				 "java.math.BigInteger" -> true;
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer",
+				"long", "java.lang.Long",
+				"java.math.BigInteger" -> true;
 			default -> false;
 		};
 	}

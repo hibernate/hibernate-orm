@@ -103,12 +103,13 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
 		return switch ( javaType.getTypeName() ) {
-			case "byte", "java.lang.Byte",
-				 "short", "java.lang.Short",
-				 "int", "java.lang.Integer",
-				 "long", "java.lang.Long",
-				 "java.math.BigInteger",
-				 "java.math.BigDecimal" -> true;
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer",
+				"long", "java.lang.Long",
+				"java.math.BigInteger",
+				"java.math.BigDecimal" -> true;
 			default -> false;
 		};
 	}

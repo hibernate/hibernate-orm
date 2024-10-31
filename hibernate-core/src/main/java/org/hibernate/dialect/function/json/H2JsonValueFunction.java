@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.QuotingHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -19,6 +20,10 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * H2 json_value function.
@@ -45,8 +50,20 @@ public class H2JsonValueFunction extends JsonValueFunction {
 		final Expression defaultExpression = arguments.emptyBehavior() == null
 				? null
 				: arguments.emptyBehavior().getDefaultExpression();
+		if ( defaultExpression != null ) {
+			sqlAppender.appendSql( "coalesce(" );
+		}
+		final boolean hexDecoding;
 		if ( arguments.returningType() != null ) {
+			hexDecoding = H2JsonValueFunction.needsHexDecoding( arguments.returningType().getJdbcMapping() );
 			sqlAppender.appendSql( "cast(" );
+			if ( hexDecoding ) {
+				// We encode binary data as hex, so we have to decode here
+				sqlAppender.appendSql( "hextoraw(regexp_replace(" );
+			}
+		}
+		else {
+			hexDecoding = false;
 		}
 		final String jsonPath;
 		try {
@@ -56,11 +73,7 @@ public class H2JsonValueFunction extends JsonValueFunction {
 			throw new QueryException( "H2 json_value only support literal json paths, but got " + arguments.jsonPath() );
 		}
 
-		sqlAppender.appendSql( "stringdecode(btrim(nullif(" );
-		if ( defaultExpression != null ) {
-			sqlAppender.appendSql( "coalesce(" );
-		}
-		sqlAppender.appendSql( "cast(" );
+		sqlAppender.appendSql( "stringdecode(regexp_replace(nullif(" );
 		renderJsonPath(
 				sqlAppender,
 				arguments.jsonDocument(),
@@ -69,19 +82,28 @@ public class H2JsonValueFunction extends JsonValueFunction {
 				jsonPath,
 				arguments.passingClause()
 		);
-		sqlAppender.appendSql( " as varchar)" );
-		if ( defaultExpression != null ) {
-			sqlAppender.appendSql( ",cast(" );
-			defaultExpression.accept( walker );
-			sqlAppender.appendSql( " as varchar))" );
-		}
-		sqlAppender.appendSql( ",'null'),'\"'))");
+		sqlAppender.appendSql( ",JSON'null'),'^\"(.*)\"$','$1'))");
 
 		if ( arguments.returningType() != null ) {
+			if ( hexDecoding ) {
+				sqlAppender.appendSql( ",'([0-9a-f][0-9a-f])','00$1'))" );
+			}
 			sqlAppender.appendSql( " as " );
 			arguments.returningType().accept( walker );
 			sqlAppender.appendSql( ')' );
 		}
+		if ( defaultExpression != null ) {
+			sqlAppender.appendSql( ',' );
+			defaultExpression.accept( walker );
+			sqlAppender.appendSql( ')' );
+		}
+	}
+
+	public static boolean needsHexDecoding(JdbcMapping jdbcMapping) {
+		return switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+			case BINARY, VARBINARY, LONG32VARBINARY -> true;
+			default -> false;
+		};
 	}
 
 	public static void renderJsonPath(

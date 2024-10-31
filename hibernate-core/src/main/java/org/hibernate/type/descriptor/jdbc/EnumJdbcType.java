@@ -55,6 +55,11 @@ public class EnumJdbcType implements JdbcType {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return String.class;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
@@ -67,6 +72,11 @@ public class EnumJdbcType implements JdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				st.setString( name, getJavaType().unwrap( value, String.class, options ) );
+			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return getJavaType().unwrap( value, String.class, options );
 			}
 		};
 	}

@@ -268,9 +268,12 @@ public class MySQLDialect extends Dialect {
 
 			case NUMERIC -> columnType( DECIMAL ); // it's just a synonym
 
+			// MySQL strips space characters from any value stored in a char column, which
+			// is especially pathological in the case of storing characters in char(1)
+			case CHAR -> "varchar($l)";
+
 			// on MySQL 8, the nchar/nvarchar types use a deprecated character set
-			case NCHAR -> "char($l) character set utf8mb4";
-			case NVARCHAR -> "varchar($l) character set utf8mb4";
+			case NCHAR, NVARCHAR -> "varchar($l) character set utf8mb4";
 
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB -> "longblob";

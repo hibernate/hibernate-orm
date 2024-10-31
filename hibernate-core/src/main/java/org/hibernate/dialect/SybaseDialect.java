@@ -258,6 +258,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 

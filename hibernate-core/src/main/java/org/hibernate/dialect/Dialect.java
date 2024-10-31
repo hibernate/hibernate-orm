@@ -582,7 +582,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Does this dialect strip trailing spaces from values stored
 	 * in columns of type {@code char(n)}?
-	 * MySQL is the main offender here.
+	 * MySQL and Sybase are the main offenders here.
 	 */
 	public boolean stripsTrailingSpacesFromChar() {
 		return false;

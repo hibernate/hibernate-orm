@@ -98,10 +98,11 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
 		return switch ( javaType.getTypeName() ) {
-			case "byte", "java.lang.Byte",
-				 "short", "java.lang.Short",
-				 "int", "java.lang.Integer",
-				 "long", "java.lang.Long" -> true;
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer",
+				"long", "java.lang.Long" -> true;
 			default -> false;
 		};
 	}

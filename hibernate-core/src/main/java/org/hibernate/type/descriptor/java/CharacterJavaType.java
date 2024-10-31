@@ -4,7 +4,6 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;

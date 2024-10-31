@@ -63,19 +63,32 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Character character) {
+		else if (value instanceof Character character) {
 			return character;
 		}
-		if (value instanceof String string) {
-			if ( string.length() != 1 ) {
-				throw new CoercionException( "value must contain exactly one character: '" + string + "'" );
+		else if (value instanceof String string) {
+			switch ( string.length() ) {
+				case 1:
+					return string.charAt( 0 );
+				case 0:
+					if ( options.getDialect().stripsTrailingSpacesFromChar() ) {
+						// we previously stored char values in char(1) columns on MySQL
+						// but MySQL strips trailing spaces from the value when read
+						return ' ';
+					}
+					else {
+						throw new CoercionException( "value does not contain a character: '" + string + "'" );
+					}
+				default:
+					throw new CoercionException( "value contains more than one character: '" + string + "'" );
 			}
-			return string.charAt( 0 );
 		}
-		if (value instanceof Number number) {
+		else if (value instanceof Number number) {
 			return (char) number.shortValue();
 		}
-		throw unknownWrap( value.getClass() );
+		else {
+			throw unknownWrap( value.getClass() );
+		}
 	}
 
 	@Override

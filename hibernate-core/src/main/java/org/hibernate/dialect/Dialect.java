@@ -580,6 +580,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect strip trailing spaces from values stored
+	 * in columns of type {@code char(n)}?
+	 * MySQL is the main offender here.
+	 */
+	public boolean stripsTrailingSpacesFromChar() {
+		return false;
+	}
+
+	/**
 	 * The SQL type to use in {@code cast( ... as ... )} expressions when
 	 * casting to the target type represented by the given JDBC type code.
 	 *

@@ -284,6 +284,16 @@ public class MySQLDialect extends Dialect {
 		};
 	}
 
+	/**
+	 * MySQL strips any trailing space character from a
+	 * value stored in a column of type {@code char(n)}.
+	 * @return {@code true}
+	 */
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
+	}
+
 	@Override
 	public boolean useMaterializedLobWhenCapacityExceeded() {
 		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs

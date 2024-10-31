@@ -51,7 +51,7 @@ class ColumnDefinitions {
 	}
 
 	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		if ( !column.getSqlType( metadata ).contains("(") ) {
+		if ( !column.isExplicit() || !column.getSqlType( metadata ).contains("(") ) {
 			// the DDL type does not explicitly specify a length,
 			// and so we do not require an exact match
 			return true;

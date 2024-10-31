@@ -26,10 +26,12 @@ public class ClassJavaType extends AbstractClassJavaType<Class<?>> {
 		return true;
 	}
 
+	@Override
 	public String toString(Class<?> value) {
 		return value.getName();
 	}
 
+	@Override
 	public Class<?> fromString(CharSequence string) {
 		if ( string == null ) {
 			return null;
@@ -43,6 +45,7 @@ public class ClassJavaType extends AbstractClassJavaType<Class<?>> {
 		}
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <X> X unwrap(Class<?> value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
@@ -57,6 +60,7 @@ public class ClassJavaType extends AbstractClassJavaType<Class<?>> {
 		throw unknownUnwrap( type );
 	}
 
+	@Override
 	public <X> Class<?> wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

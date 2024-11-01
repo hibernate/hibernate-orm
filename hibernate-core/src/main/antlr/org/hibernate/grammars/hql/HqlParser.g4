@@ -1663,7 +1663,7 @@ jsonValueReturningClause
 	;
 
 jsonValueOnErrorOrEmptyClause
-	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY)
+	: (ERROR | NULL | DEFAULT expression) ON (ERROR | EMPTY)
 	;
 
 /**
@@ -1674,12 +1674,13 @@ jsonQueryFunction
 	;
 
 jsonQueryWrapperClause
-	: WITH (CONDITIONAL|UNCONDITIONAL)? ARRAY? WRAPPER
+	: WITH (CONDITIONAL | UNCONDITIONAL)? ARRAY? WRAPPER
 	| WITHOUT ARRAY? WRAPPER
 	;
 
 jsonQueryOnErrorOrEmptyClause
-	: ( ERROR | NULL | ( EMPTY ( ARRAY | OBJECT )? ) ) ON (ERROR|EMPTY);
+	: (ERROR | NULL | EMPTY (ARRAY | OBJECT)?) ON (ERROR | EMPTY)
+	;
 
 /**
  * The 'json_exists()' function
@@ -1689,7 +1690,8 @@ jsonExistsFunction
 	;
 
 jsonExistsOnErrorClause
-	: ( ERROR | TRUE | FALSE ) ON ERROR;
+	: (ERROR | TRUE | FALSE) ON ERROR
+	;
 
 /**
  * The 'json_array()' function
@@ -1707,11 +1709,12 @@ jsonObjectFunction
 
 jsonObjectFunctionEntries
 	: expressionOrPredicate COMMA expressionOrPredicate (COMMA expressionOrPredicate COMMA expressionOrPredicate)*
-	| (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate) (COMMA (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate))*
+	| (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate)
+	  (COMMA (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate))*
 	;
 
 jsonNullClause
-	: (ABSENT|NULL) ON NULL
+	: (ABSENT | NULL) ON NULL
 	;
 
 /**
@@ -1725,11 +1728,11 @@ jsonArrayAggFunction
  * The 'json_objectagg()' function
  */
 jsonObjectAggFunction
-	: JSON_OBJECTAGG LEFT_PAREN KEY? expressionOrPredicate (VALUE|COLON) expressionOrPredicate jsonNullClause? jsonUniqueKeysClause? RIGHT_PAREN filterClause?
+	: JSON_OBJECTAGG LEFT_PAREN KEY? expressionOrPredicate (VALUE | COLON) expressionOrPredicate jsonNullClause? jsonUniqueKeysClause? RIGHT_PAREN filterClause?
 	;
 
 jsonUniqueKeysClause
-	: (WITH|WITHOUT) UNIQUE KEYS
+	: (WITH | WITHOUT) UNIQUE KEYS
 	;
 
 jsonTableFunction
@@ -1737,7 +1740,7 @@ jsonTableFunction
 	;
 
 jsonTableErrorClause
-	: (ERROR|NULL) ON ERROR
+	: (ERROR | NULL) ON ERROR
 	;
 
 jsonTableColumnsClause

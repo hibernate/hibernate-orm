@@ -368,6 +368,13 @@ This is now done across the entire set of `hbm.xml` files at once.
 While most users will never see this change, it might impact integrations which tie-in to XML processing.
 ====
 
+[[mysql-varchar]]
+== Default DDL type for `char` and `Character` on MySQL
+
+Previously, `char` and `Character` fields were, by default, mapped to `char(1)` columns by the schema export tool.
+However, MySQL treats a `char(1)` containing a single space as an empty string, resulting in broken behavior for some HQL and SQL functions.
+Now, `varchar(1)` is used by default.
+
 [[cleanup]]
 == Cleanup
 

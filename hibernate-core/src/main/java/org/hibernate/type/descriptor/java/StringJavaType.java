@@ -18,6 +18,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Descriptor for {@link String} handling.
  *
@@ -68,6 +70,9 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
+		if ( byte[].class.isAssignableFrom( type ) ) {
+			return (X) value.getBytes( UTF_8 );
+		}
 		if ( Reader.class.isAssignableFrom( type ) ) {
 			return (X) new StringReader( value );
 		}
@@ -102,6 +107,9 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		}
 		if (value instanceof char[] chars) {
 			return new String( chars );
+		}
+		if (value instanceof byte[] bytes) {
+			return new String( bytes, UTF_8 );
 		}
 		if (value instanceof Reader reader) {
 			return DataHelper.extractString( reader );

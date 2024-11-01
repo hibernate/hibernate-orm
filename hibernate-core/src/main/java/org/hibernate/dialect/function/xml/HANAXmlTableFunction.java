@@ -29,7 +29,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmXmlTableFunction;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.internal.ColumnQualifierCollectorSqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;

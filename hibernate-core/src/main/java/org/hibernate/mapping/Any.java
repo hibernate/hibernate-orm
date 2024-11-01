@@ -131,19 +131,6 @@ public class Any extends SimpleValue {
 		this.keyMapping.setTypeName( identifierType );
 	}
 
-	/**
-	 * Set the strategy for dealing with discriminator mappings which are not explicitly defined by
-	 * {@linkplain org.hibernate.annotations.AnyDiscriminatorValue}.
-	 *
-	 * @apiNote {@code null} indicates to not allow implicit mappings.
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
-		this.implicitValueStrategy = implicitValueStrategy;
-	}
-
 	@Override
 	public AnyType getType() throws MappingException {
 		if ( resolvedType == null ) {
@@ -231,6 +218,19 @@ public class Any extends SimpleValue {
 	public void setMetaValues(Map metaValueToEntityNameMap) {
 		//noinspection unchecked
 		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
+	}
+
+	/**
+	 * Set the strategy for dealing with discriminator mappings which are not explicitly defined by
+	 * {@linkplain org.hibernate.annotations.AnyDiscriminatorValue}.
+	 *
+	 * @apiNote {@code null} indicates to not allow implicit mappings.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
+		this.implicitValueStrategy = implicitValueStrategy;
 	}
 
 	public boolean isLazy() {

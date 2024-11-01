@@ -27,6 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see Any
  * @see AnyDiscriminator
+ * @see AnyDiscriminatorImplicitValues
  *
  * @since 6.0
  */

@@ -36,6 +36,10 @@ public interface HibernateAnnotations {
 			AnyDiscriminator.class,
 			AnyDiscriminatorAnnotation.class
 	);
+	OrmAnnotationDescriptor<AnyDiscriminatorImplicitValues,AnyDiscriminatorImplicitValuesAnnotation> ANY_DISCRIMINATOR_IMPLICIT_VALUES = new OrmAnnotationDescriptor<>(
+			AnyDiscriminatorImplicitValues.class,
+			AnyDiscriminatorImplicitValuesAnnotation.class
+	);
 	OrmAnnotationDescriptor<AnyDiscriminatorValues,AnyDiscriminatorValuesAnnotation> ANY_DISCRIMINATOR_VALUES = new OrmAnnotationDescriptor<>(
 			AnyDiscriminatorValues.class,
 			AnyDiscriminatorValuesAnnotation.class

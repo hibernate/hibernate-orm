@@ -11,6 +11,8 @@ import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 
 /**
+ * ImplicitDiscriminatorStrategy implementation using entity {@linkplain EntityMappingType#getEntityName() full-names}.
+ *
  * @author Steve Ebersole
  */
 public class ShortNameImplicitDiscriminatorStrategy implements ImplicitDiscriminatorStrategy {

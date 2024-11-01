@@ -12,6 +12,8 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * ImplicitDiscriminatorStrategy implementation using entity {@linkplain EntityMappingType#getEntityName() full-names}.
+ *
  * @author Steve Ebersole
  */
 public class FullNameImplicitDiscriminatorStrategy implements ImplicitDiscriminatorStrategy {

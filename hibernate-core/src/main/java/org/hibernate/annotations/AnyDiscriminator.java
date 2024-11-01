@@ -4,11 +4,10 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.DiscriminatorType;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import jakarta.persistence.DiscriminatorType;
-import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -33,6 +32,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@code @AnyDiscriminator}.
  *
  * @see Any
+ * @see AnyDiscriminatorValue
+ * @see AnyDiscriminatorImplicitValues
  *
  * @since 6.0
  */
@@ -45,10 +46,4 @@ public @interface AnyDiscriminator {
 	 * or {@link JdbcTypeCode}.
 	 */
 	DiscriminatorType value() default DiscriminatorType.STRING;
-
-	/**
-	 * Determines how to handle mappings which are not explicitly defined by
-	 * any associated {@linkplain AnyDiscriminatorValue} annotations
-	 */
-	Class<? extends ImplicitDiscriminatorStrategy> implicitValueStrategy() default ImplicitDiscriminatorStrategy.class;
 }

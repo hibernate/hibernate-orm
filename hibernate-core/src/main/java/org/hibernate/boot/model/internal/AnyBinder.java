@@ -9,6 +9,7 @@ import java.util.Locale;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
@@ -112,8 +113,9 @@ public class AnyBinder {
 		);
 
 		final AnyDiscriminator anyDiscriminator = property.getDirectAnnotationUsage( AnyDiscriminator.class );
-		if ( anyDiscriminator != null ) {
-			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminator, context ) );
+		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		if ( anyDiscriminatorImplicitValues != null ) {
+			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
 
 		final PropertyBinder binder = new PropertyBinder();
@@ -138,22 +140,35 @@ public class AnyBinder {
 		binder.callAttributeBindersInSecondPass( prop );
 	}
 
-	private static ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(
-			AnyDiscriminator anyDiscriminator,
+	public static ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(
+			AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues,
 			MetadataBuildingContext context) {
-		final Class<? extends ImplicitDiscriminatorStrategy> implicitValueStrategy = anyDiscriminator.implicitValueStrategy();
-		if ( ImplicitDiscriminatorStrategy.class.equals( implicitValueStrategy ) ) {
-			return null;
-		}
+		final AnyDiscriminatorImplicitValues.Strategy strategy = anyDiscriminatorImplicitValues.value();
 
-		if ( FullNameImplicitDiscriminatorStrategy.class.equals( implicitValueStrategy ) ) {
+		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.FULL_NAME ) {
 			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
 		}
 
-		if ( ShortNameImplicitDiscriminatorStrategy.class.equals( implicitValueStrategy ) ) {
+		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.SHORT_NAME ) {
 			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
 		}
 
-		return context.getBootstrapContext().getCustomTypeProducer().produceBeanInstance( implicitValueStrategy );
+		assert strategy == AnyDiscriminatorImplicitValues.Strategy.CUSTOM;
+
+		final Class<? extends ImplicitDiscriminatorStrategy> customStrategy = anyDiscriminatorImplicitValues.implementation();
+
+		if ( ImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return null;
+		}
+
+		if ( FullNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+		}
+
+		if ( ShortNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+		}
+
+		return context.getBootstrapContext().getCustomTypeProducer().produceBeanInstance( customStrategy );
 	}
 }

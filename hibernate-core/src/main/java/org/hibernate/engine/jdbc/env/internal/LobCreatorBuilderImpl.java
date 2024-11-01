@@ -25,9 +25,11 @@ import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_MESS
  * @author Steve Ebersole
  */
 public class LobCreatorBuilderImpl implements LobCreatorBuilder {
+	private final boolean useConnectionToCreateLob;
 	private final EnumSet<LobTypes> supportedContextualLobTypes;
 
-	public LobCreatorBuilderImpl(EnumSet<LobTypes> supportedContextualLobTypes) {
+	public LobCreatorBuilderImpl(boolean useConnectionToCreateLob, EnumSet<LobTypes> supportedContextualLobTypes) {
+		this.useConnectionToCreateLob = useConnectionToCreateLob;
 		this.supportedContextualLobTypes = supportedContextualLobTypes;
 	}
 
@@ -46,13 +48,8 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 			Dialect dialect,
 			Map<String,Object> configValues,
 			Connection jdbcConnection) {
-		final EnumSet<LobTypes> supportedContextualLobTypes = getSupportedContextualLobTypes(
-				dialect,
-				configValues,
-				jdbcConnection
-		);
-
-		return new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		return new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(),
+				getSupportedContextualLobTypes( dialect, configValues, jdbcConnection ) );
 	}
 
 	/**
@@ -60,9 +57,9 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 *
 	 * @return Appropriate LobCreatorBuilder
 	 */
-	public static LobCreatorBuilderImpl makeLobCreatorBuilder() {
+	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect) {
 		LOB_MESSAGE_LOGGER.disablingContextualLOBCreationSinceConnectionNull();
-		return new LobCreatorBuilderImpl( NONE );
+		return new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), NONE );
 	}
 
 	/**
@@ -76,17 +73,18 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 		if ( supportedContextualLobTypes.isEmpty() ) {
 			return NonContextualLobCreator.INSTANCE;
 		}
-
-		if ( supportedContextualLobTypes.contains( LobTypes.BLOB )
+		else if ( supportedContextualLobTypes.contains( LobTypes.BLOB )
 				&& supportedContextualLobTypes.contains( LobTypes.CLOB ) ){
 			if ( !supportedContextualLobTypes.contains( LobTypes.NCLOB ) ) {
-				return new BlobAndClobCreator( lobCreationContext );
+				return new BlobAndClobCreator( lobCreationContext, useConnectionToCreateLob );
 			}
-
-			return new StandardLobCreator( lobCreationContext );
+			else {
+				return new StandardLobCreator( lobCreationContext, useConnectionToCreateLob );
+			}
 		}
-
-		LOB_LOGGER.debug( "Unexpected condition resolving type of LobCreator to use. Falling back to NonContextualLobCreator" );
-		return NonContextualLobCreator.INSTANCE;
+		else {
+			LOB_LOGGER.debug( "Unexpected condition resolving type of LobCreator to use. Falling back to NonContextualLobCreator" );
+			return NonContextualLobCreator.INSTANCE;
+		}
 	}
 }

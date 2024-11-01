@@ -100,4 +100,8 @@ public interface LobCreator {
 	 * environments, also castable to java.sql.NClob
 	 */
 	NClob createNClob(Reader reader, long length);
+
+	Blob createBlob(Blob clob);
+	Clob createClob(Clob clob);
+	NClob createNClob(NClob clob);
 }

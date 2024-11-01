@@ -58,6 +58,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -213,7 +214,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
 			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.NCLOB, NClobJdbcType.NCLOB_BINDING );
 		}
 		else {
 			// jConnect driver only conditionally supports getClob/getNClob depending on a server setting. See

@@ -20,7 +20,7 @@ import org.hibernate.engine.jdbc.NClobProxy;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 
 /**
- * LobCreator which can use {@link Connection#createBlob} and {@link Connection#createClob},
+ * {@link LobCreator} which can use {@link Connection#createBlob} and {@link Connection#createClob},
  * but {@link java.sql.NClob} references are created locally.
  *
  * @see NClobProxy
@@ -40,9 +40,11 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 	public static final LobCreationContext.Callback<Clob> CREATE_CLOB_CALLBACK = Connection::createClob;
 
 	protected final LobCreationContext lobCreationContext;
+	protected final boolean useConnectionToCreateLob;
 
-	public BlobAndClobCreator(LobCreationContext lobCreationContext) {
+	public BlobAndClobCreator(LobCreationContext lobCreationContext, boolean useConnectionToCreateLob) {
 		this.lobCreationContext = lobCreationContext;
+		this.useConnectionToCreateLob = useConnectionToCreateLob;
 	}
 
 	/**
@@ -68,8 +70,9 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 
 	@Override
 	public Blob createBlob(InputStream stream, long length) {
-		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
-		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
+		// IMPL NOTE: it's inefficient to use JDBC LOB locator creation to
+		// create a LOB backed by a given stream. So just wrap the stream
+		// (which is what the NonContextualLobCreator does).
 		return NonContextualLobCreator.INSTANCE.createBlob( stream, length );
 	}
 
@@ -96,8 +99,9 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 
 	@Override
 	public Clob createClob(Reader reader, long length) {
-		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
-		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
+		// IMPL NOTE: it's inefficient to use JDBC LOB locator creation to
+		// create a LOB backed by a given stream. So just wrap the stream
+		// (which is what the NonContextualLobCreator does).
 		return NonContextualLobCreator.INSTANCE.createClob( reader, length );
 	}
 
@@ -109,5 +113,41 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 	@Override
 	public NClob createNClob(Reader reader, long length) {
 		return NonContextualLobCreator.INSTANCE.createNClob( reader, length );
+	}
+
+	@Override
+	public Blob createBlob(Blob blob) {
+		try {
+			return useConnectionToCreateLob
+					? createBlob( blob.getBytes( 1, (int) blob.length() ) )
+					: blob;
+		}
+		catch (SQLException e) {
+			throw new JDBCException( "Could not create JDBC Clob", e );
+		}
+	}
+
+	@Override
+	public Clob createClob(Clob clob) {
+		try {
+			return useConnectionToCreateLob
+					? createClob( clob.getSubString( 1, (int) clob.length() ) )
+					: clob;
+		}
+		catch (SQLException e) {
+			throw new JDBCException( "Could not create JDBC Clob", e );
+		}
+	}
+
+	@Override
+	public NClob createNClob(NClob clob) {
+		try {
+			return useConnectionToCreateLob
+					? createNClob( clob.getSubString( 1, (int) clob.length() ) )
+					: clob;
+		}
+		catch (SQLException e) {
+			throw new JDBCException( "Could not create JDBC Clob", e );
+		}
 	}
 }

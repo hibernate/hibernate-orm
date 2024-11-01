@@ -197,6 +197,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
+					// the use of BinaryStream here instead of InputStream seems to be only necessary on Oracle
 					final BinaryStream binaryStream = javaType.unwrap( value, BinaryStream.class, options );
 					st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
 				}
@@ -204,6 +205,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
+					// the use of BinaryStream here instead of InputStream seems to be only necessary on Oracle
 					final BinaryStream binaryStream = javaType.unwrap( value, BinaryStream.class, options );
 					st.setBinaryStream( name, binaryStream.getInputStream(), binaryStream.getLength() );
 				}

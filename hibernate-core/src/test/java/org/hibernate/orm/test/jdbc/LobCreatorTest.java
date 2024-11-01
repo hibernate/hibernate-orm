@@ -63,7 +63,7 @@ public class LobCreatorTest {
 				connection
 		);
 
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -85,7 +85,7 @@ public class LobCreatorTest {
 				connection
 		);
 
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -106,7 +106,7 @@ public class LobCreatorTest {
 				connection
 		);
 
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -128,7 +128,7 @@ public class LobCreatorTest {
 				props,
 				connection
 		);
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );
@@ -148,7 +148,7 @@ public class LobCreatorTest {
 				Collections.emptyMap(),
 				connection
 		);
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), supportedContextualLobTypes );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );

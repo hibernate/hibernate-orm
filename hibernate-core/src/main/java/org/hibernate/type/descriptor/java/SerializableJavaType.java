@@ -15,7 +15,7 @@ import java.util.Arrays;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -107,7 +107,7 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 			return (X) new ByteArrayInputStream( toBytes( value ) );
 		}
 		else if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( toBytes( value ) );
+			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
 		}
 		else if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( toBytes( value ) );

@@ -35,6 +35,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl.makeLobCreatorBuilder;
+
 /**
  * @author Steve Ebersole
  */
@@ -100,7 +102,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
 
-		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
+		this.lobCreatorBuilder = makeLobCreatorBuilder( dialect );
 	}
 
 	private IdentifierHelperBuilder identifierHelperBuilder(
@@ -201,7 +203,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				databaseMetaData
 		);
 
-		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
+		this.lobCreatorBuilder = makeLobCreatorBuilder( dialect );
 	}
 
 	private IdentifierHelper identifierHelper(DatabaseMetaData databaseMetaData, Dialect dialect) {

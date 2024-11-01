@@ -16,11 +16,14 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.internal.StreamBackedBinaryStream;
 import org.hibernate.engine.jdbc.WrappedBlob;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import static org.hibernate.type.descriptor.java.DataHelper.extractBytes;
 
 /**
  * Descriptor for {@link Blob} handling.
@@ -72,7 +75,7 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	public String toString(Blob value) {
 		final byte[] bytes;
 		try {
-			bytes = DataHelper.extractBytes( value.getBinaryStream() );
+			bytes = extractBytes( value.getBinaryStream() );
 		}
 		catch ( SQLException e ) {
 			throw new HibernateException( "Unable to access blob stream", e );
@@ -109,15 +112,12 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		}
 
 		try {
-			if ( BinaryStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof BlobImplementer blobImplementer) {
-					// if the incoming Blob is a wrapper, just pass along its BinaryStream
-					return (X) blobImplementer.getUnderlyingStream();
+			if ( Blob.class.isAssignableFrom( type ) ) {
+				Blob blob = value;
+				if ( blob instanceof WrappedBlob wrappedBlob ) {
+					blob = wrappedBlob.getWrappedBlob();
 				}
-				else {
-					// otherwise we need to build a BinaryStream...
-					return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
-				}
+				return (X) options.getLobCreator().createBlob( blob );
 			}
 			else if ( byte[].class.isAssignableFrom( type )) {
 				if (value instanceof BlobImplementer blobImplementer) {
@@ -125,12 +125,32 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 					return (X) blobImplementer.getUnderlyingStream().getBytes();
 				}
 				else {
-					// otherwise extract the bytes from the stream manually
-					return (X) DataHelper.extractBytes( value.getBinaryStream() );
+					try {
+						// otherwise extract the bytes from the stream manually
+						return (X) value.getBinaryStream().readAllBytes();
+					}
+					catch ( IOException e ) {
+						throw new HibernateException( "IOException occurred reading a binary value", e );
+					}
 				}
 			}
-			else if ( Blob.class.isAssignableFrom( type ) ) {
-				return (X) getOrCreateBlob( value, options );
+			else if ( BinaryStream.class.isAssignableFrom( type ) ) {
+				if (value instanceof BlobImplementer blobImplementer) {
+					return (X) blobImplementer.getUnderlyingStream();
+				}
+				else {
+					return (X) new StreamBackedBinaryStream( value.getBinaryStream(), value.length() );
+				}
+			}
+			else if ( InputStream.class.isAssignableFrom( type ) ) {
+				if (value instanceof BlobImplementer blobImplementer) {
+					// if the incoming Blob is a wrapper, just pass along its BinaryStream
+					return (X) blobImplementer.getUnderlyingStream().getInputStream();
+				}
+				else {
+					// otherwise we need to build a BinaryStream...
+					return (X) value.getBinaryStream();
+				}
 			}
 		}
 		catch ( SQLException e ) {
@@ -140,45 +160,32 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		throw unknownUnwrap( type );
 	}
 
-	private Blob getOrCreateBlob(Blob value, WrapperOptions options) throws SQLException {
-		if ( value instanceof WrappedBlob wrappedBlob ) {
-			value = wrappedBlob.getWrappedBlob();
-		}
-		if ( options.getDialect().useConnectionToCreateLob() ) {
-			if ( value.length() == 0 ) {
-				// empty Blob
-				return options.getLobCreator().createBlob( new byte[0] );
-			}
-			else {
-				return options.getLobCreator().createBlob( value.getBytes( 1, (int) value.length() ) );
-			}
-		}
-		else {
-			return value;
-		}
-	}
-
 	@Override
 	public <X> Blob wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof Blob blob ) {
-			return options.getLobCreator().wrap( blob );
-		}
-		else if ( value instanceof byte[] bytes ) {
-			return options.getLobCreator().createBlob( bytes );
-		}
-		else if ( value instanceof InputStream inputStream ) {
-			try {
-				return options.getLobCreator().createBlob( inputStream, inputStream.available() );
+		else {
+			final LobCreator lobCreator = options.getLobCreator();
+			if ( value instanceof Blob blob ) {
+				return lobCreator.wrap( blob );
 			}
-			catch ( IOException e ) {
+			else if ( value instanceof byte[] bytes ) {
+				return lobCreator.createBlob( bytes );
+			}
+			else if ( value instanceof BinaryStream binaryStream) {
+				return binaryStream.asBlob( lobCreator );
+			}
+			else if ( value instanceof InputStream inputStream ) {
+				// A JDBC Blob object needs to know its length, but
+				// there's no way to get an accurate length from an
+				// InputStream without reading the whole stream
+				return lobCreator.createBlob( extractBytes( inputStream ) );
+			}
+			else {
 				throw unknownWrap( value.getClass() );
 			}
 		}
-
-		throw unknownWrap( value.getClass() );
 	}
 
 	@Override

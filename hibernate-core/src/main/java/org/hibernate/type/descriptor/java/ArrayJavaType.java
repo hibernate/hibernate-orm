@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicPluralType;
@@ -264,7 +264,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 		else if ( type == BinaryStream.class ) {
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( toBytes( value ) );
+			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();

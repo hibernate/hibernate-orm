@@ -17,7 +17,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -246,7 +246,7 @@ public final class DataHelper {
 	 * @return The extracted bytes as a stream
 	 */
 	public static InputStream subStream(InputStream inputStream, long start, int length) {
-		return new BinaryStreamImpl( extractBytes( inputStream, start, length ) );
+		return new ArrayBackedBinaryStream( extractBytes( inputStream, start, length ) );
 	}
 
 	/**

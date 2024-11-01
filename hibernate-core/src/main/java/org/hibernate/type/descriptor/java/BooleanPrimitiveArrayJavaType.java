@@ -15,7 +15,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -118,7 +118,7 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( SerializationHelper.serialize( value ) );
+			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( value ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();

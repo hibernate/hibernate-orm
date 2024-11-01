@@ -4,41 +4,51 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
+import org.hibernate.engine.jdbc.BinaryStream;
+import org.hibernate.engine.jdbc.LobCreator;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.hibernate.engine.jdbc.BinaryStream;
+import java.sql.Blob;
 
 /**
- * Implementation of {@link BinaryStream}
+ * Implementation of {@link BinaryStream} backed by a {@code byte[]} array.
  *
  * @author Steve Ebersole
  */
-public final class BinaryStreamImpl extends ByteArrayInputStream implements BinaryStream {
+public class ArrayBackedBinaryStream extends ByteArrayInputStream implements BinaryStream {
 	private final int length;
 
 	/**
-	 * Constructs a BinaryStreamImpl
+	 * Constructs a ArrayBackedBinaryStream
 	 *
 	 * @param bytes The bytes to use backing the stream
 	 */
-	public BinaryStreamImpl(byte[] bytes) {
+	public ArrayBackedBinaryStream(byte[] bytes) {
 		super( bytes );
 		this.length = bytes.length;
 	}
 
+	@Override
 	public InputStream getInputStream() {
 		return this;
 	}
 
+	@Override
 	public byte[] getBytes() {
 		// from ByteArrayInputStream
 		return buf;
 	}
 
+	@Override
 	public long getLength() {
 		return length;
+	}
+
+	@Override
+	public Blob asBlob(LobCreator lobCreator) {
+		return lobCreator.createBlob( buf );
 	}
 
 	@Override

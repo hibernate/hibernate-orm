@@ -28,8 +28,8 @@ public class StandardLobCreator extends BlobAndClobCreator {
 	 */
 	public static final LobCreationContext.Callback<NClob> CREATE_NCLOB_CALLBACK = Connection::createNClob;
 
-	public StandardLobCreator(LobCreationContext lobCreationContext) {
-		super( lobCreationContext );
+	public StandardLobCreator(LobCreationContext lobCreationContext, boolean useConnectionToCreateLob) {
+		super( lobCreationContext, useConnectionToCreateLob );
 	}
 
 	/**

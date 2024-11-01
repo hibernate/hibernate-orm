@@ -11,7 +11,8 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.engine.jdbc.internal.StreamBackedBinaryStream;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
@@ -45,7 +46,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	 * @see #generateProxy(byte[])
 	 */
 	private BlobProxy(byte[] bytes) {
-		binaryStream = new BinaryStreamImpl( bytes );
+		binaryStream = new ArrayBackedBinaryStream( bytes );
 	}
 
 	/**
@@ -177,45 +178,6 @@ public final class BlobProxy implements Blob, BlobImplementer {
 			throw new SQLException( "Length must be great-than-or-equal to zero." );
 		}
 		return DataHelper.subStream( getStream(), start-1, intLength );
-	}
-
-	private static class StreamBackedBinaryStream implements BinaryStream {
-
-		private final InputStream stream;
-		private final long length;
-		private byte[] bytes;
-
-		private StreamBackedBinaryStream(InputStream stream, long length) {
-			this.stream = stream;
-			this.length = length;
-		}
-
-		@Override
-		public InputStream getInputStream() {
-			return stream;
-		}
-
-		@Override
-		public byte[] getBytes() {
-			if ( bytes == null ) {
-				bytes = DataHelper.extractBytes( stream );
-			}
-			return bytes;
-		}
-
-		@Override
-		public long getLength() {
-			return length;
-		}
-
-		@Override
-		public void release() {
-			try {
-				stream.close();
-			}
-			catch (IOException ignore) {
-			}
-		}
 	}
 
 	private static UnsupportedOperationException notSupported() {

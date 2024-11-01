@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
@@ -99,7 +99,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 			return (X) new ByteArrayInputStream( unwrapBytes( value ) );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( unwrapBytes( value ) );
+			return (X) new ArrayBackedBinaryStream( unwrapBytes( value ) );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( unwrapBytes( value ) );

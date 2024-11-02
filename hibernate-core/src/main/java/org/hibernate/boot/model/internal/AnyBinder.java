@@ -8,6 +8,7 @@ import java.util.Locale;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
@@ -106,6 +107,11 @@ public class AnyBinder {
 				optional,
 				context
 		);
+
+		final AnyDiscriminator anyDiscriminator = property.getDirectAnnotationUsage( AnyDiscriminator.class );
+		if ( anyDiscriminator != null ) {
+			value.setDiscriminatorValueStrategy( anyDiscriminator.valueStrategy() );
+		}
 
 		final PropertyBinder binder = new PropertyBinder();
 		binder.setName( inferredData.getPropertyName() );

@@ -434,6 +434,8 @@ use master
 go
 create login $SYBASE_USER with password $SYBASE_PASSWORD
 go
+exec sp_configure 'enable xml', 1
+go
 exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
 go
 exec sp_dboption $SYBASE_DB, 'allow nulls by default', true
@@ -787,8 +789,47 @@ hana() {
 }
 
 cockroachdb() {
-  cockroachdb_23_1
+  cockroachdb_24_1
 }
+
+cockroachdb_24_1() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_1:-cockroachdb/cockroach:v24.1.5} start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '15s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+
+quit
+EOF
+"
+  echo "Cockroachdb successfully started"
+}
+
 
 cockroachdb_23_1() {
   $CONTAINER_CLI rm -f cockroach || true
@@ -800,7 +841,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_1:-docker.io/cockroachdb/cockroach:v23.1.12} start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_1:-docker.io/cockroachdb/cockroach:v23.1.28} start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -823,48 +864,6 @@ SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
 SET CLUSTER SETTING sql.defaults.serial_normalization = 'sql_sequence_cached';
 ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-
-quit
-EOF
-"
-  echo "Cockroachdb successfully started"
-
-}
-
-cockroachdb_22_2() {
-  $CONTAINER_CLI rm -f cockroach || true
-  LOG_CONFIG="
-sinks:
-  stderr:
-    channels: all
-    filter: ERROR
-    redact: false
-    exit-on-error: true
-"
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_22_2:-docker.io/cockroachdb/cockroach:v22.2.2} start-single-node \
-    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
-  OUTPUT=
-  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
-        echo "Waiting for CockroachDB to start..."
-        sleep 10
-        # Note we need to redirect stderr to stdout to capture the logs
-        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
-  done
-  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
-  #settings documented in https://www.cockroachlabs.com/docs/v22.1/local-testing.html#use-a-local-single-node-cluster-with-in-memory-storage
-  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
-SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
-SET CLUSTER SETTING kv.raft_log.disable_synchronization_unsafe = true;
-SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
-SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
-SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
-SET CLUSTER SETTING jobs.retention_time = '15s';
-SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
-SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
-SET CLUSTER SETTING sql.defaults.serial_normalization = 'sql_sequence_cached';
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-SET CLUSTER SETTING sql.defaults.serial_normalization=sql_sequence;
 
 quit
 EOF
@@ -966,8 +965,8 @@ if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
     echo -e "\tcockroachdb"
+    echo -e "\tcockroachdb_24_1"
     echo -e "\tcockroachdb_23_1"
-    echo -e "\tcockroachdb_22_2"
     echo -e "\tdb2"
     echo -e "\tdb2_11_5"
     echo -e "\tdb2_10_5"

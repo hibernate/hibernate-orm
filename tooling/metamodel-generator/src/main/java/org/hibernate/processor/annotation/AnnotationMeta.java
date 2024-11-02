@@ -26,8 +26,10 @@ import javax.lang.model.element.Element;
 import java.util.List;
 
 import static java.lang.Character.isJavaIdentifierStart;
+import static org.hibernate.processor.util.Constants.ENTITY_GRAPH;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 import static org.hibernate.processor.util.Constants.NAMED_QUERY;
+import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
@@ -107,9 +109,11 @@ public abstract class AnnotationMeta implements Metamodel {
 									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
 											context.getEntityNameMappings(), context.getEnumTypesByValue() )
 							);
-					if ( statement instanceof SqmSelectStatement<?> selectStatement ) {
+					if ( !isJakartaDataStyle()
+							&& statement instanceof SqmSelectStatement<?> selectStatement ) {
 						if ( isQueryMethodName( name ) ) {
 							putMember( name,
+									// TODO: respect @NamedQuery(resultClass)
 									new NamedQueryMethod(
 											this,
 											selectStatement,
@@ -121,13 +125,12 @@ public abstract class AnnotationMeta implements Metamodel {
 									)
 							);
 						}
-						if ( !isJakartaDataStyle()
-								&& getAnnotationValue( mirror, "resultClass" ) == null ) {
+						if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
 							final String resultType = resultType( selectStatement );
 							if ( resultType != null ) {
 								putMember( "QUERY_" + name,
 										new TypedMetaAttribute( this, name, "QUERY_", resultType,
-												"jakarta.persistence.TypedQueryReference", hql ) );
+												TYPED_QUERY_REFERENCE, hql ) );
 							}
 						}
 					}
@@ -207,11 +210,11 @@ public abstract class AnnotationMeta implements Metamodel {
 			// and then we will replace this TypedMetaAttribute
 			return new TypedMetaAttribute( this, name, prefix,
 					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
-					"jakarta.persistence.TypedQueryReference", null );
+					TYPED_QUERY_REFERENCE, null );
 		}
 		else if ( "GRAPH_".equals(prefix) ) {
 			return new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
-					"jakarta.persistence.EntityGraph", null );
+					ENTITY_GRAPH, null );
 		}
 		else {
 			return new NameMetaAttribute( this, name, prefix);

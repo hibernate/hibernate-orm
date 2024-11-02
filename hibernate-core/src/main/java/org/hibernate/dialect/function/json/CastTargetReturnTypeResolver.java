@@ -40,14 +40,14 @@ public class CastTargetReturnTypeResolver implements FunctionReturnTypeResolver 
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
 		if ( arguments.size() > 2 ) {
-			int castTargetIndex = -1;
+			int castTargetIndex = 0;
 			for ( int i = 2; i < arguments.size(); i++ ) {
 				if (arguments.get( i ) instanceof SqmCastTarget<?> ) {
-					castTargetIndex = i;
+					castTargetIndex = i + 1;
 					break;
 				}
 			}
-			if ( castTargetIndex != -1 ) {
+			if ( castTargetIndex != 0 ) {
 				ReturnableType<?> argType = extractArgumentType( arguments, castTargetIndex );
 				return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 			}
@@ -60,14 +60,14 @@ public class CastTargetReturnTypeResolver implements FunctionReturnTypeResolver 
 			Supplier<BasicValuedMapping> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments) {
 		if ( arguments.size() > 2 ) {
-			int castTargetIndex = -1;
+			int castTargetIndex = 0;
 			for ( int i = 2; i < arguments.size(); i++ ) {
 				if (arguments.get( i ) instanceof CastTarget ) {
-					castTargetIndex = i;
+					castTargetIndex = i + 1;
 					break;
 				}
 			}
-			if ( castTargetIndex != -1 ) {
+			if ( castTargetIndex != 0 ) {
 				final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, castTargetIndex );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedTypeAccess.get() );
 			}

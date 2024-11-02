@@ -55,9 +55,9 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 	protected static final String FRONT_END_TENANT = "front_end";
 	protected static final String BACK_END_TENANT = "back_end";
 
-	private Map<String, ConnectionProvider> connectionProviderMap = new HashMap<>();
+	protected Map<String, ConnectionProvider> connectionProviderMap = new HashMap<>();
 
-	private SessionFactory sessionFactory;
+	protected SessionFactory sessionFactory;
 
 	public AbstractMultiTenancyTest() {
 		init();
@@ -67,13 +67,15 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 	private void init() {
 		registerConnectionProvider(FRONT_END_TENANT);
 		registerConnectionProvider(BACK_END_TENANT);
+		sessionFactory = sessionFactory(createSettings());
+	}
 
+	protected Map<String, Object> createSettings() {
 		Map<String, Object> settings = new HashMap<>();
 
 		settings.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
-			new ConfigurableMultiTenantConnectionProvider(connectionProviderMap));
-
-		sessionFactory = sessionFactory(settings);
+				new ConfigurableMultiTenantConnectionProvider(connectionProviderMap));
+		return settings;
 	}
 	//end::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 

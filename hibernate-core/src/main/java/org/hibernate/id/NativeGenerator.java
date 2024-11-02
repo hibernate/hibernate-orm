@@ -4,16 +4,12 @@
  */
 package org.hibernate.id;
 
-import java.lang.reflect.Member;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Properties;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
 import org.hibernate.boot.model.internal.GeneratorParameters;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.AnnotationBasedGenerator;
@@ -29,8 +25,10 @@ import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.persister.entity.EntityPersister;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.SequenceGenerator;
+import java.lang.reflect.Member;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
@@ -84,7 +82,7 @@ public class NativeGenerator
 				break;
 			}
 			case UUID: {
-				dialectNativeGenerator = new UuidGenerator( new UuidGeneratorAnnotation( null ), member );
+				dialectNativeGenerator = new UuidGenerator( context.getType().getReturnedClass() );
 				break;
 			}
 			default: {

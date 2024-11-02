@@ -364,6 +364,10 @@ public class ModelBinder {
 		entityDescriptor.setEntityName( entitySource.getEntityNamingSource().getEntityName() );
 		entityDescriptor.setJpaEntityName( entitySource.getEntityNamingSource().getJpaEntityName() );
 		entityDescriptor.setClassName( entitySource.getEntityNamingSource().getClassName() );
+		if ( entityDescriptor.getJpaEntityName() != null && entityDescriptor.getClassName() != null ) {
+			metadataBuildingContext.getMetadataCollector()
+					.addImport( entityDescriptor.getJpaEntityName(), entityDescriptor.getClassName() );
+		}
 
 		entityDescriptor.setDiscriminatorValue(
 				entitySource.getDiscriminatorMatchValue() != null

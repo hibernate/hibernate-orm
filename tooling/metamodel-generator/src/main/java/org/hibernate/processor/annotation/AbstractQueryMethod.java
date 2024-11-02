@@ -109,7 +109,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		String type = fullType;
 		// strip off type annotations
 		while ( type.charAt(0) == '@' ) {
-			int startIndex = type.indexOf( ' ' );
+			int startIndex = type.lastIndexOf( ' ' );
 			if ( startIndex > 0 ) {
 				type = type.substring(startIndex+1);
 			}

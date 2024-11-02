@@ -270,15 +270,16 @@ Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audi
 When set to `true`, the legacy mapping behavior is used such that the revision end timestamp is only maintained in the root entity audit table.
 When set to `false`, the revision end timestamp is maintained in both the root entity and joined subclass audit tables; allowing the potential to apply database partitioning to the joined subclass tables just like the root entity audit tables.
 
+[[envers-config-native-id]]
 `*org.hibernate.envers.use_revision_entity_with_native_id*` (default: `true` )::
 Boolean flag that determines the strategy of revision number generation.
 Default implementation of revision entity uses native identifier generator.
 +
 If the current database engine does not support identity columns, users are advised to set this property to false.
 +
-In this case revision numbers are created by preconfigured `org.hibernate.id.enhanced.SequenceStyleGenerator`.
-See: `org.hibernate.envers.DefaultRevisionEntity` and `org.hibernate.envers.enhanced.SequenceIdRevisionEntity`.
+In this case revision numbers are created by a preconfigured `org.hibernate.id.enhanced.SequenceStyleGenerator`.
 
+[[envers-config-track-entities]]
 `*org.hibernate.envers.track_entities_changed_in_revision*` (default: `false` )::
 Should entity types, that have been modified during each revision, be tracked.
 The default implementation creates `REVCHANGES` table that stores entity names of modified persistent objects.
@@ -484,17 +485,48 @@ Either a `long/Long` or `java.util.Date` value representing the instant at which
 When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will lose precision.
 
 Envers handles this information as an entity.
-By default it uses its own internal class to act as the entity, mapped to the `REVINFO` table.
-You can, however, supply your own approach to collecting this information which might be useful to capture additional details such as who made a change
+
+[[envers-default-revision-entity]]
+==== Default Revision Entity
+
+By default, Envers uses its own internal class to act as the entity, mapped to the `REVINFO` table.
+The entity type that's used depends on a couple configuration properties: <<envers-config-native-id,native identifiers>> and <<envers-config-track-entities, entity tracking>>. Here is a table showing the entity type used based on the configuration values:
+[cols="1,1,1"]
+|===
+|
+| native-id `false`
+| native-id `true`
+
+| track-entities `false`
+| `org.hibernate.envers.DefaultRevisionEntity`
+| `org.hibernate.envers.enhanced.SequenceIdRevisionEntity`
+
+| track-entities `true`
+| `org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity`
+| `org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity`
+|===
+
+[[envers-custom-revision-entity]]
+==== Custom Revision Entity
+
+You can also supply your own approach to collecting this information which might be useful to capture additional details such as who made a change
 or the IP address from which the request came.
 There are two things you need to make this work:
 
 . First, you will need to tell Envers about the entity you wish to use.
 Your entity must use the `@org.hibernate.envers.RevisionEntity` annotation.
 It must define the two attributes described above annotated with `@org.hibernate.envers.RevisionNumber` and `@org.hibernate.envers.RevisionTimestamp`, respectively.
-You can extend from `org.hibernate.envers.DefaultRevisionEntity`, if you wish, to inherit all these required behaviors.
+You can extend from any of the revision mapped superclass types, if you wish, to inherit all these required behaviors:
+
+    org.hibernate.envers.RevisionMapping
+    org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping
+    org.hibernate.envers.enhanced.SequenceIdRevisionMapping
+    org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionMapping
+
 +
 Simply add the custom revision entity as you do your normal entities and Envers will *find it*.
++
+To understand which mapping you should extend based on configuration see the <<envers-default-revision-entity,default revision entity>> paragraph.
 +
 NOTE: It is an error for there to be multiple entities marked as `@org.hibernate.envers.RevisionEntity`.
 
@@ -982,7 +1014,7 @@ include::{example-dir-envers}/QueryAuditTest.java[tags=revisions-of-entity-query
 The second additional feature you can use in queries for revisions is the ability to _maximize_/_minimize_ a property.
 
 For example, if you want to select the smallest possible revision at which the value of the `createdOn`
-attribute was larger then a given value,
+attribute was larger than a given value,
 you can run the following query:
 
 [[revisions-of-entity-query-minimize-example]]
@@ -1003,7 +1035,7 @@ If true, the result of the query will be a list of entities (which changed at re
 If false, the result will be a list of three element arrays:
 
 * the first element will be the changed entity instance.
-* the second will be an entity containing revision data (if no custom entity is used, this will be an instance of `DefaultRevisionEntity`).
+* the second will be an entity containing revision data (if no custom entity is used, this will be an instance of the <<envers-default-revision-entity,default revision entity type>>).
 * the third will be the type of the revision (one of the values of the `RevisionType` enumeration: `ADD`, `MOD`, `DEL`).
 
 `selectDeletedEntities`:: The second parameter specifies if revisions,
@@ -1330,17 +1362,31 @@ Here is a simple example:
 [source,java]
 ----
 AuditQuery query = getAuditReader().createQuery()
-    .forRevisionsOfEntity( DefaultRevisionEntity.class, true )
+    .forRevisionsOfEntity( Customer.class, true )
     .add( AuditEntity.revisionNumber().between( 1, 25 ) );
 ----
 
-This query will return all revision information entities for revisions between 1 and 25 including those which are
+This query will return all information for revisions between 1 and 25 including those which are
 related to deletions.  If deletions are not of interest, you would pass `false` as the second argument.
 
-Note that this query uses the `DefaultRevisionEntity` class type.  The class provided will vary depending on the
-configuration properties used to configure Envers or if you supply your own revision entity.  Typically users who
-will use this API will likely be providing a custom revision entity implementation to obtain custom information
-being maintained per revision.
+Note that this query produces `@RevisionEntity` instances. The obtained instance type will vary depending on the
+configuration properties used to configure Envers, like showed in <<envers-default-revision-entity,this paragraph>>,
+or if you supply your own revision entity.
+
+[[envers-querying-revision-info]]
+=== Directly querying revision information
+
+You can also directly query all revision information available on the database by writing HQL or Criteria queries
+which select from the revision entity used by your application. For example:
+
+[source,java]
+----
+List<DefaultRevisionEntity> resultList = session.createQuery( "from DefaultRevisionEntity where id = 1", DefaultRevisionEntity.class ).getResultList();
+----
+
+This query will return all revision entity information for revision numbers equal to 1 (the first revision of each entity).
+Often, users who will take advantage of this functionality will be providing a custom revision entity implementation to
+obtain additional information being maintained per revision.
 
 [[envers-conditional-auditing]]
 === Conditional auditing

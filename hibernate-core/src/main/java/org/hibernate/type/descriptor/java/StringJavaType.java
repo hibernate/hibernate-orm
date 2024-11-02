@@ -77,9 +77,6 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		// Since NClob extends Clob, we need to check if type is an NClob
 		// before checking if type is a Clob. That will ensure that
 		// the correct type is returned.
-		if ( DataHelper.isNClob( type ) ) {
-			return (X) options.getLobCreator().createNClob( value );
-		}
 		if ( NClob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createNClob( value );
 		}
@@ -87,12 +84,10 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 			return (X) options.getLobCreator().createClob( value );
 		}
 		if ( Integer.class.isAssignableFrom( type ) ) {
-			Integer parsed = Integer.parseInt( value );
-			return (X) parsed;
+			return (X) (Integer) Integer.parseInt( value );
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
-			Long parsed = Long.parseLong( value );
-			return (X) parsed;
+			return (X) (Long) Long.parseLong( value );
 		}
 
 		throw unknownUnwrap( type );
@@ -102,17 +97,17 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof String) {
-			return (String) value;
+		if (value instanceof String string) {
+			return string;
 		}
-		if (value instanceof char[]) {
-			return new String( (char[]) value );
+		if (value instanceof char[] chars) {
+			return new String( chars );
 		}
-		if (value instanceof Reader) {
-			return DataHelper.extractString( (Reader) value );
+		if (value instanceof Reader reader) {
+			return DataHelper.extractString( reader );
 		}
-		if (value instanceof Clob) {
-			return DataHelper.extractString( (Clob) value );
+		if (value instanceof Clob clob) {
+			return DataHelper.extractString( clob );
 		}
 		if (value instanceof Integer) {
 			return value.toString();
@@ -126,15 +121,14 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "char":
-			case "char[]":
-			case "java.lang.Character":
-			case "java.lang.Character[]":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case
+				"char",
+				"char[]",
+				"java.lang.Character",
+				"java.lang.Character[]" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

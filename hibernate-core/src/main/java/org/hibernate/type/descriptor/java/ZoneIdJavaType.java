@@ -64,11 +64,11 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof ZoneId ) {
-			return (ZoneId) value;
+		if ( value instanceof ZoneId zoneId ) {
+			return zoneId;
 		}
-		if ( value instanceof String ) {
-			return fromString( (String) value );
+		if ( value instanceof String string ) {
+			return fromString( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}

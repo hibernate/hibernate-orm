@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,6 +55,7 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -74,17 +76,18 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -106,40 +109,7 @@ import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmByUnit;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
-import org.hibernate.query.sqm.tree.expression.SqmCollation;
-import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.SqmFormat;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonObjectAggUniqueKeysBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
-import org.hibernate.query.sqm.tree.expression.SqmOver;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.SqmToDuration;
-import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.expression.SqmTuple;
-import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.SqmWindow;
-import org.hibernate.query.sqm.tree.expression.SqmWindowFrame;
-import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -558,12 +528,37 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
-		final BasicType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
+		return cast( expression, castTarget( castTargetJavaType ) );
+	}
+
+	@Override
+	public <X, T> SqmExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget) {
+		final SqmCastTarget<X> sqmCastTarget = (SqmCastTarget<X>) castTarget;
 		return getFunctionDescriptor( "cast" ).generateSqmExpression(
-				asList( (SqmTypedNode<?>) expression, new SqmCastTarget<>( type, this ) ),
-				type,
+				asList( (SqmTypedNode<?>) expression, sqmCastTarget ),
+				sqmCastTarget.getType(),
 				queryEngine
 		);
+	}
+
+	@Override
+	public <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType) {
+		return castTarget( castTargetJavaType, null, null, null );
+	}
+
+	@Override
+	public <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, long length) {
+		return castTarget( castTargetJavaType, length, null, null );
+	}
+
+	@Override
+	public <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale) {
+		return castTarget( castTargetJavaType, null, precision, scale );
+	}
+
+	private <X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
+		final BasicType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
+		return new SqmCastTarget<>( type, length, precision, scale, this );
 	}
 
 	@Override
@@ -2254,6 +2249,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private SqmFunctionDescriptor getFunctionDescriptor(String name) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( name );
+	}
+
+	private SqmSetReturningFunctionDescriptor getSetReturningFunctionDescriptor(String name) {
+		return queryEngine.getSqmFunctionRegistry().findSetReturningFunctionDescriptor( name );
 	}
 
 	@Override
@@ -5811,5 +5810,171 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
 		return functionWithinGroup( "xmlagg", String.class, order, filter, window, argument );
+	}
+
+	@Override
+	public <E> SqmSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args) {
+		return getSetReturningFunctionDescriptor( name ).generateSqmExpression(
+				expressionList( args ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E> SqmSetReturningFunction<E> unnestArray(Expression<E[]> array) {
+		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) array ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
+		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) collection ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return getSetReturningFunctionDescriptor( "generate_series" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) start, (SqmTypedNode<?>) stop, (SqmTypedNode<?>) step ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step) {
+		return generateTimeSeries( value( start ), value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step) {
+		return generateTimeSeries( value( start ), stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step) {
+		return generateTimeSeries( start, value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step) {
+		return generateTimeSeries( start, stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step) {
+		return generateTimeSeries( value( start ), value( stop ), step );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step) {
+		return generateTimeSeries( start, value( stop ), step );
+	}
+
+	@Override
+	public <E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
+		return generateTimeSeries( value( start ), stop, step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step) {
+		return getSetReturningFunctionDescriptor( "generate_series" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) start, (SqmTypedNode<?>) stop, (SqmTypedNode<?>) step ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, E step) {
+		return generateSeries( value( start ), value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step) {
+		return generateSeries( value( start ), value( stop ), step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step) {
+		return generateSeries( start, value( stop ), value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step) {
+		return generateSeries( value( start ), stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step) {
+		return generateSeries( start, stop, value( step ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step) {
+		return generateSeries( start, value( stop ), step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step) {
+		return generateSeries( value( start ), stop, step );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop) {
+		return getSetReturningFunctionDescriptor( "generate_series" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) start, (SqmTypedNode<?>) stop ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop) {
+		return generateSeries( start, value( stop ) );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop) {
+		return generateSeries( value( start ), stop );
+	}
+
+	@Override
+	public <E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop) {
+		return generateSeries( value( start ), value( stop ) );
+	}
+
+	@Override
+	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument) {
+		return jsonTable( jsonDocument, (Expression<String>) null );
+	}
+
+	@Override
+	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, String jsonPath) {
+		return jsonTable( jsonDocument, value( jsonPath ) );
+	}
+
+	@Override
+	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, @Nullable Expression<String> jsonPath) {
+		return (SqmJsonTableFunction<?>) getSetReturningFunctionDescriptor( "json_table" ).generateSqmExpression(
+				jsonPath == null
+						? asList( (SqmTypedNode<?>) jsonDocument )
+						: asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmXmlTableFunction<?> xmlTable(String xpath, Expression<?> xmlDocument) {
+		return xmlTable( value( xpath ), xmlDocument );
+	}
+
+	@Override
+	public SqmXmlTableFunction<?> xmlTable(Expression<String> xpath, Expression<?> xmlDocument) {
+		return (SqmXmlTableFunction<?>) getSetReturningFunctionDescriptor( "xmltable" ).generateSqmExpression(
+				asList( (SqmTypedNode<?>) xpath, (SqmTypedNode<?>) xmlDocument ),
+				queryEngine
+		);
 	}
 }

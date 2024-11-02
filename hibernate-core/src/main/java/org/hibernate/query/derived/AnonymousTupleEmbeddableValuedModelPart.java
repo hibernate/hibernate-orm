@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -82,7 +83,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	public AnonymousTupleEmbeddableValuedModelPart(
 			SqmExpressible<?> sqmExpressible,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
@@ -93,7 +94,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			int fetchableIndex) {
 		this.modelPartMap = createModelParts(
 				sqmExpressible,
-				sqlSelections,
+				sqlTypedMappings,
 				selectionIndex,
 				selectionExpression,
 				compatibleTableExpressions,
@@ -109,7 +110,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	private Map<String, ModelPart> createModelParts(
 			SqmExpressible<?> sqmExpressible,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
@@ -126,7 +127,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 					this,
 					sqmExpressible,
 					attributeType,
-					sqlSelections,
+					sqlTypedMappings,
 					selectionIndex,
 					selectionExpression + "_" + attribute.getName(),
 					attribute.getName(),

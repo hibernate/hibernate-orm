@@ -92,9 +92,9 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 
 		try {
 			if ( CharacterStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof NClobImplementer) {
+				if (value instanceof NClobImplementer clobImplementer) {
 					// if the incoming NClob is a wrapper, just pass along its BinaryStream
-					return (X) ( (NClobImplementer) value ).getUnderlyingStream();
+					return (X) clobImplementer.getUnderlyingStream();
 				}
 				else {
 					// otherwise we need to build a BinaryStream...
@@ -113,8 +113,8 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 	}
 
 	private NClob getOrCreateNClob(NClob value, WrapperOptions options) throws SQLException {
-		if ( value instanceof WrappedNClob ) {
-			value = ( (WrappedNClob) value ).getWrappedNClob();
+		if ( value instanceof WrappedNClob wrappedNClob ) {
+			value = wrappedNClob.getWrappedNClob();
 		}
 		if ( options.getDialect().useConnectionToCreateLob() ) {
 			if ( value.length() == 0 ) {
@@ -137,11 +137,10 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 
 		// Support multiple return types from
 		// org.hibernate.type.descriptor.sql.ClobTypeDescriptor
-		if ( NClob.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().wrap( (NClob) value );
+		if ( value instanceof NClob clob ) {
+			return options.getLobCreator().wrap( clob );
 		}
-		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
-			Reader reader = (Reader) value;
+		else if ( value instanceof Reader reader ) {
 			return options.getLobCreator().createNClob( DataHelper.extractString( reader ) );
 		}
 

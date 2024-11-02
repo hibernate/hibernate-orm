@@ -138,10 +138,10 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 			return null;
 		}
 
-		if ( value instanceof java.sql.Array ) {
+		if ( value instanceof java.sql.Array array ) {
 			try {
 				//noinspection unchecked
-				value = (X) ( (java.sql.Array) value ).getArray();
+				value = (X) array.getArray();
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -149,16 +149,16 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 			}
 		}
 
-		if ( value instanceof long[] ) {
-			return (long[]) value;
+		if ( value instanceof long[] longs ) {
+			return longs;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
-			return (long[]) SerializationHelper.deserialize( (byte[]) value );
+			return (long[]) SerializationHelper.deserialize( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return (long[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return (long[]) SerializationHelper.deserialize( binaryStream.getBytes() );
 		}
 		else if ( value.getClass().isArray() ) {
 			final long[] wrapped = new long[Array.getLength( value )];
@@ -167,12 +167,11 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 			}
 			return wrapped;
 		}
-		else if ( value instanceof Long ) {
+		else if ( value instanceof Long longValue ) {
 			// Support binding a single element as parameter value
-			return new long[]{ (long) value };
+			return new long[]{ longValue };
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			final long[] wrapped = new long[collection.size()];
 			int i = 0;
 			for ( Object e : collection ) {

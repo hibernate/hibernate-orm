@@ -24,6 +24,7 @@ import java.util.TimeZone;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.EntityFilterException;
@@ -950,6 +951,7 @@ public class SessionImpl
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
+		int batchSize = -1;
 		for ( FindOption option : options ) {
 			if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				storeMode = cacheStoreMode;
@@ -982,13 +984,18 @@ public class SessionImpl
 			else if ( option instanceof ReadOnlyMode ) {
 				loadAccess.withReadOnly( option == ReadOnlyMode.READ_ONLY );
 			}
+			else if ( option instanceof BatchSize batchSizeOption ) {
+				batchSize = batchSizeOption.batchSize();
+			}
 		}
-		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
+		loadAccess.with( lockOptions )
+				.with( interpretCacheMode( storeMode, retrieveMode ) )
+				.withBatchSize( batchSize );
 		return loadAccess;
 	}
 
 	@Override
-	public <E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options) {
+	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
 		return multiloadAccessWithOptions( entityType, options ).multiLoad( ids );
 	}
 
@@ -2292,12 +2299,12 @@ public class SessionImpl
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
-		return find( entityClass, primaryKey, null, null );
+		return find( entityClass, primaryKey, (LockOptions) null, null );
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		return find( entityClass, primaryKey, null, properties );
+		return find( entityClass, primaryKey, (LockOptions) null, properties );
 	}
 
 	@Override
@@ -2306,19 +2313,34 @@ public class SessionImpl
 	}
 
 	@Override
+	public <T> T find(Class<T> entityType, Object id, LockMode lockMode) {
+		checkTransactionNeededForLock( lockMode );
+		final LockOptions lockOptions = copySessionLockOptions();
+		lockOptions.setLockMode( lockMode );
+		return find( entityType, id, lockOptions, null );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityType, Object id, LockOptions lockOptions) {
+		checkTransactionNeededForLock( lockOptions.getLockMode() );
+		return find( entityType, id, lockOptions, null );
+	}
+
+	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
 		checkOpen();
+		if ( lockModeType == null ) {
+			throw new IllegalArgumentException("Given LockModeType was null");
+		}
+		final LockMode lockMode = LockModeTypeHelper.getLockMode( lockModeType );
+		checkTransactionNeededForLock( lockMode );
+		return find( entityClass, primaryKey, buildLockOptions( lockMode, properties ), properties );
+	}
 
-		final LockOptions lockOptions = lockModeType == null ? null : buildLockOptions( lockModeType, properties );
+	private <T> T find(Class<T> entityClass, Object primaryKey, LockOptions lockOptions, Map<String, Object> properties) {
 		try {
-			if ( lockModeType != null ) {
-				checkTransactionNeededForLock( LockModeTypeHelper.getLockMode( lockModeType ) );
-			}
-
-			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
-			effectiveEntityGraph.applyConfiguredGraph( properties );
+			loadQueryInfluencers.getEffectiveEntityGraph().applyConfiguredGraph( properties );
 			loadQueryInfluencers.setReadOnly( readOnlyHint( properties ) );
-
 			return byId( entityClass )
 					.with( determineAppropriateLocalCacheMode( properties ) )
 					.with( lockOptions )
@@ -2531,17 +2553,17 @@ public class SessionImpl
 
 	@Override
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
-		lock( entity, buildLockOptions( lockModeType, properties ) );
+		lock( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), properties ) );
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
-		lock( entity, buildLockOptions( lockMode, options ) );
+	public void lock(Object entity, LockModeType lockModeType, LockOption... options) {
+		lock( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), options ) );
 	}
 
-	private LockOptions buildLockOptions(LockModeType lockModeType, LockOption[] options) {
+	private LockOptions buildLockOptions(LockMode lockMode, LockOption[] options) {
 		final LockOptions lockOptions = copySessionLockOptions();
-		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		lockOptions.setLockMode( lockMode );
 		for ( LockOption option : options ) {
 			if ( option instanceof PessimisticLockScope lockScope ) {
 				lockOptions.setLockScope( lockScope );
@@ -2553,9 +2575,9 @@ public class SessionImpl
 		return lockOptions;
 	}
 
-	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
+	private LockOptions buildLockOptions(LockMode lockMode, Map<String, Object> properties) {
 		final LockOptions lockOptions = copySessionLockOptions();
-		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		lockOptions.setLockMode( lockMode );
 		if ( properties != null ) {
 			applyPropertiesToLockOptions( properties, () -> lockOptions );
 		}
@@ -2591,7 +2613,7 @@ public class SessionImpl
 				refresh( entity );
 			}
 			else {
-				refresh( entity, buildLockOptions( lockModeType, properties ) );
+				refresh( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), properties ) );
 			}
 		}
 		finally {

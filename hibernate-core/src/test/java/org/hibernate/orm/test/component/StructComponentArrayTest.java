@@ -31,7 +31,7 @@ import jakarta.persistence.Id;
 )
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructAggregate.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
 public class StructComponentArrayTest {
 
 	@BeforeEach

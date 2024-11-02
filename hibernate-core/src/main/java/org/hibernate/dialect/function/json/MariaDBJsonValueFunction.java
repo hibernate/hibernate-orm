@@ -36,7 +36,12 @@ public class MariaDBJsonValueFunction extends JsonValueFunction {
 			throw new QueryException( "Can't emulate on empty clause on MariaDB" );
 		}
 		if ( arguments.returningType() != null ) {
-			sqlAppender.append( "cast(" );
+			if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
+				sqlAppender.append( "case " );
+			}
+			else {
+				sqlAppender.append( "cast(" );
+			}
 		}
 		sqlAppender.appendSql( "json_unquote(nullif(json_extract(" );
 		arguments.jsonDocument().accept( walker );
@@ -54,9 +59,14 @@ public class MariaDBJsonValueFunction extends JsonValueFunction {
 		}
 		sqlAppender.appendSql( "),'null'))" );
 		if ( arguments.returningType() != null ) {
-			sqlAppender.appendSql( " as " );
-			arguments.returningType().accept( walker );
-			sqlAppender.appendSql( ')' );
+			if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
+				sqlAppender.append( " when 'true' then true when 'false' then false end " );
+			}
+			else {
+				sqlAppender.appendSql( " as " );
+				arguments.returningType().accept( walker );
+				sqlAppender.appendSql( ')' );
+			}
 		}
 	}
 }

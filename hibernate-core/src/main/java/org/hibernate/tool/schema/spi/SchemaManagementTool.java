@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.hibernate.Incubating;
 import org.hibernate.service.Service;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**

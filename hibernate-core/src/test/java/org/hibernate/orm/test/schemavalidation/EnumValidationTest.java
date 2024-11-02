@@ -25,7 +25,6 @@ import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -177,8 +176,8 @@ public class EnumValidationTest implements ExecutionOptions {
 	}
 
 	@Override
-	public Map getConfigurationValues() {
-		return ssr.getService( ConfigurationService.class ).getSettings();
+	public Map<String,Object> getConfigurationValues() {
+		return ssr.requireService( ConfigurationService.class ).getSettings();
 	}
 
 	@Override
@@ -189,10 +188,5 @@ public class EnumValidationTest implements ExecutionOptions {
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return ExceptionHandlerLoggedImpl.INSTANCE;
-	}
-
-	@Override
-	public SchemaFilter getSchemaFilter() {
-		return SchemaFilter.ALL;
 	}
 }

@@ -115,7 +115,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		return mutatingTableGroup;
 	}
 
-	@Override
+	@Override // promote protected to public
 	public Stack<SqlAstProcessingState> getProcessingStateStack() {
 		return super.getProcessingStateStack();
 	}

@@ -7,13 +7,13 @@ package org.hibernate.orm.test.query;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -62,7 +62,7 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 					subquery.orderBy( cb.asc( alternativeContacts.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );
@@ -112,7 +112,7 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 					subquery.orderBy( cb.desc( alternativeContacts.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 					final Join<Object, Object> alt = a.join( "contact" );
 
 					cq.multiselect( root.get( "name" ), alt.get( "name" ) );
@@ -160,7 +160,7 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 					subquery.orderBy( cb.desc( alternativeContacts.get( "name" ).get( "first" ) ) );
 					subquery.fetch( 1 );
 
-					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, SqmJoinType.LEFT );
+					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 
 					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "name" ) );
 					cq.orderBy( cb.asc( root.get( "id" ) ) );

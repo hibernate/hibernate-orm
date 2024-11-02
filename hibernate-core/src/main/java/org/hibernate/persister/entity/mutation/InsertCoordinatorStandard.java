@@ -433,11 +433,13 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
-							column.getColumnName(),
-							columnValues[i],
-							identifierMapping.getJdbcMapping()
-					) );
+					if ( columnValues != null ) {
+						tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
+								column.getColumnName(),
+								columnValues[i],
+								identifierMapping.getJdbcMapping()
+						) );
+					}
 				}
 			}
 			else {

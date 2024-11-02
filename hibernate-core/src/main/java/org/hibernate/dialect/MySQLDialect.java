@@ -22,7 +22,6 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -50,10 +49,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -269,9 +268,12 @@ public class MySQLDialect extends Dialect {
 
 			case NUMERIC -> columnType( DECIMAL ); // it's just a synonym
 
+			// MySQL strips space characters from any value stored in a char column, which
+			// is especially pathological in the case of storing characters in char(1)
+			case CHAR -> "varchar($l)";
+
 			// on MySQL 8, the nchar/nvarchar types use a deprecated character set
-			case NCHAR -> "char($l) character set utf8mb4";
-			case NVARCHAR -> "varchar($l) character set utf8mb4";
+			case NCHAR, NVARCHAR -> "varchar($l) character set utf8mb4";
 
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB -> "longblob";
@@ -280,6 +282,16 @@ public class MySQLDialect extends Dialect {
 
 			default -> super.columnType( sqlTypeCode );
 		};
+	}
+
+	/**
+	 * MySQL strips any trailing space character from a
+	 * value stored in a column of type {@code char(n)}.
+	 * @return {@code true}
+	 */
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
 	}
 
 	@Override
@@ -537,6 +549,11 @@ public class MySQLDialect extends Dialect {
 		return Types.BIT;
 	}
 
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return SqlTypes.JSON_ARRAY;
+	}
+
 //	@Override
 //	public int getDefaultDecimalPrecision() {
 //		//this is the maximum, but I guess it's too high
@@ -652,6 +669,24 @@ public class MySQLDialect extends Dialect {
 		functionFactory.jsonMergepatch_mysql();
 		functionFactory.jsonArrayAppend_mysql();
 		functionFactory.jsonArrayInsert_mysql();
+
+		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
+			functionFactory.unnest_emulated();
+			functionFactory.jsonTable_mysql();
+		}
+		if ( supportsRecursiveCTE() ) {
+			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+		}
+	}
+
+	/**
+	 * MySQL doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum recursion depth of MySQL
+		return 1000;
 	}
 
 	@Override
@@ -661,7 +696,7 @@ public class MySQLDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, MySQLCastingJsonArrayJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
@@ -913,7 +948,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return addQueryHints( query, hints );
 	}
 
 	/**

@@ -645,8 +645,8 @@ List<Object[]> results =
                                   Object[].class)
             .getResultList();
 for (var result : results) {
-	String title = (String) result[0];
-	String preamble = (String) result[1];
+    String title = (String) result[0];
+    String preamble = (String) result[1];
 }
 ----
 

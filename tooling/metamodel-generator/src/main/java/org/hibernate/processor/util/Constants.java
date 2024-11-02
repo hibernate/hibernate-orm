@@ -47,6 +47,9 @@ public final class Constants {
 	public static final String NAMED_ENTITY_GRAPH = "jakarta.persistence.NamedEntityGraph";
 	public static final String NAMED_ENTITY_GRAPHS = "jakarta.persistence.NamedEntityGraphs";
 
+	public static final String TYPED_QUERY_REFERENCE = "jakarta.persistence.TypedQueryReference";
+	public static final String ENTITY_GRAPH = "jakarta.persistence.EntityGraph";
+
 	public static final String HIB_NAMED_QUERY = "org.hibernate.annotations.NamedQuery";
 	public static final String HIB_NAMED_QUERIES = "org.hibernate.annotations.NamedQueries";
 	public static final String HIB_NAMED_NATIVE_QUERY = "org.hibernate.annotations.NamedNativeQuery";

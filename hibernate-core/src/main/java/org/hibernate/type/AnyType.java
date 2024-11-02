@@ -43,14 +43,35 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
 	private final TypeConfiguration typeConfiguration;
 	private final Type identifierType;
-	private final Type discriminatorType;
+	private final MetaType discriminatorType;
 	private final boolean eager;
 
-	public AnyType(TypeConfiguration typeConfiguration, Type discriminatorType, Type identifierType, boolean lazy) {
+	public AnyType(TypeConfiguration typeConfiguration, MetaType discriminatorType, Type identifierType, boolean lazy) {
 		this.typeConfiguration = typeConfiguration;
 		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
 		this.eager = !lazy;
+	}
+
+	/**
+	 * @deprecated Use {@linkplain AnyType#AnyType(TypeConfiguration, MetaType, Type, boolean)} instead
+	 */
+	@Deprecated
+	public AnyType(TypeConfiguration typeConfiguration, Type discriminatorType, Type identifierType, boolean lazy) {
+		this(
+				typeConfiguration,
+				wrapDiscriminatorType( discriminatorType ),
+				identifierType,
+				lazy
+		);
+	}
+
+	private static MetaType wrapDiscriminatorType(Type discriminatorType) {
+		if ( discriminatorType instanceof MetaType metaType ) {
+			return metaType;
+		}
+
+		return new MetaType( discriminatorType, AnyDiscriminatorValueStrategy.AUTO, null );
 	}
 
 	public Type getIdentifierType() {

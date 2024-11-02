@@ -60,10 +60,11 @@ elif [ "$RDBMS" == "db2_10_5" ]; then
   goal="-Pdb=db2"
 elif [ "$RDBMS" == "mssql" ] || [ "$RDBMS" == "mssql_2017" ]; then
   goal="-Pdb=mssql_ci"
+# Exclude some Sybase tests on CI because they use `xmltable` function which has a memory leak on the DB version in CI
 elif [ "$RDBMS" == "sybase" ]; then
-  goal="-Pdb=sybase_ci"
+  goal="-Pdb=sybase_ci -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "sybase_jconn" ]; then
-  goal="-Pdb=sybase_jconn_ci"
+  goal="-Pdb=sybase_jconn_ci -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"
 elif [ "$RDBMS" == "hana_cloud" ]; then

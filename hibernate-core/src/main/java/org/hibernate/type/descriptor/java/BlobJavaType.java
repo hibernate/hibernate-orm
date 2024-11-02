@@ -110,9 +110,9 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 
 		try {
 			if ( BinaryStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof BlobImplementer) {
+				if (value instanceof BlobImplementer blobImplementer) {
 					// if the incoming Blob is a wrapper, just pass along its BinaryStream
-					return (X) ( (BlobImplementer) value ).getUnderlyingStream();
+					return (X) blobImplementer.getUnderlyingStream();
 				}
 				else {
 					// otherwise we need to build a BinaryStream...
@@ -120,9 +120,9 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 				}
 			}
 			else if ( byte[].class.isAssignableFrom( type )) {
-				if (value instanceof BlobImplementer) {
+				if (value instanceof BlobImplementer blobImplementer) {
 					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) ( (BlobImplementer) value ).getUnderlyingStream().getBytes();
+					return (X) blobImplementer.getUnderlyingStream().getBytes();
 				}
 				else {
 					// otherwise extract the bytes from the stream manually
@@ -141,8 +141,8 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	}
 
 	private Blob getOrCreateBlob(Blob value, WrapperOptions options) throws SQLException {
-		if ( value instanceof WrappedBlob ) {
-			value = ( (WrappedBlob) value ).getWrappedBlob();
+		if ( value instanceof WrappedBlob wrappedBlob ) {
+			value = wrappedBlob.getWrappedBlob();
 		}
 		if ( options.getDialect().useConnectionToCreateLob() ) {
 			if ( value.length() == 0 ) {
@@ -163,17 +163,13 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 		if ( value == null ) {
 			return null;
 		}
-
-		// Support multiple return types from
-		// org.hibernate.type.descriptor.sql.BlobTypeDescriptor
-		if ( Blob.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().wrap( (Blob) value );
+		else if ( value instanceof Blob blob ) {
+			return options.getLobCreator().wrap( blob );
 		}
-		else if ( byte[].class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createBlob( ( byte[] ) value);
+		else if ( value instanceof byte[] bytes ) {
+			return options.getLobCreator().createBlob( bytes );
 		}
-		else if ( InputStream.class.isAssignableFrom( value.getClass() ) ) {
-			InputStream inputStream = ( InputStream ) value;
+		else if ( value instanceof InputStream inputStream ) {
 			try {
 				return options.getLobCreator().createBlob( inputStream, inputStream.available() );
 			}

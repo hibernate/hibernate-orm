@@ -4,18 +4,8 @@
  */
 package org.hibernate.persister.collection;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-
+import jakarta.persistence.metamodel.PluralAttribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
@@ -60,7 +50,6 @@ import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.mapping.Any;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -72,15 +61,21 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.InFlightCollectionMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -129,15 +124,25 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
@@ -154,7 +159,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
+		implements CollectionPersister, InFlightCollectionMapping, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
@@ -164,13 +169,13 @@ public abstract class AbstractCollectionPersister
 	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
 
-	private final String sqlSelectSizeString;
-	private final String sqlDetectRowByIndexString;
-	private final String sqlDetectRowByElementString;
+	private String sqlSelectSizeString;
+	private String sqlDetectRowByIndexString;
+	private String sqlDetectRowByElementString;
 
-	protected final boolean hasWhere;
-	protected final String sqlWhereString;
-	private final String sqlWhereStringTemplate;
+	protected boolean hasWhere;
+	protected String sqlWhereString;
+	private String sqlWhereStringTemplate;
 
 	private final boolean hasOrder;
 	private final boolean hasManyToManyOrder;
@@ -244,10 +249,14 @@ public abstract class AbstractCollectionPersister
 	private PluralAttributeMapping attributeMapping;
 	private volatile Set<String> affectingFetchProfiles;
 
+	private Collection collectionBootDescriptor;
+
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
+		this.collectionBootDescriptor = collectionBootDescriptor;
+
 		this.factory = creationContext.getSessionFactory();
 		this.collectionSemantics = creationContext.getBootstrapContext()
 				.getMetadataBuildingOptions()
@@ -293,49 +302,6 @@ public abstract class AbstractCollectionPersister
 		Iterator<String> tables = collectionBootDescriptor.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = tables.next();
-		}
-
-		String where = collectionBootDescriptor.getWhere();
-		/*
-		 * Add the predicate on the role in the WHERE clause before creating the SQL queries.
-		 */
-		if ( mappedByProperty != null && elementType instanceof EntityType ) {
-			final String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
-			final PersistentClass persistentClass = creationContext.getBootModel().getEntityBinding( entityName );
-			final Property property = persistentClass.getRecursiveProperty( mappedByProperty );
-			final Value propertyValue = property.getValue();
-			if ( propertyValue instanceof Any ) {
-				final Any any = (Any) propertyValue;
-				final BasicValue discriminatorDescriptor = any.getDiscriminatorDescriptor();
-				final AnyType anyType = any.getType();
-				final MetaType metaType = (MetaType) anyType.getDiscriminatorType();
-				final Object discriminatorValue = metaType.getEntityNameToDiscriminatorValueMap().get( ownerPersister.getEntityName() );
-				final BasicType<Object> discriminatorBaseType = (BasicType<Object>) metaType.getBaseType();
-				final String discriminatorLiteral = discriminatorBaseType.getJdbcLiteralFormatter().toJdbcLiteral(
-						discriminatorValue,
-						creationContext.getDialect(),
-						creationContext.getSessionFactory().getWrapperOptions()
-				);
-				where = getNonEmptyOrConjunctionIfBothNonEmpty(
-						where,
-						discriminatorDescriptor.getColumn().getText() + "=" + discriminatorLiteral
-				);
-			}
-		}
-
-		if ( StringHelper.isNotEmpty( where ) ) {
-			hasWhere = true;
-			sqlWhereString = "(" + where + ")";
-			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
-					sqlWhereString,
-					dialect,
-					creationContext.getTypeConfiguration()
-			);
-		}
-		else {
-			hasWhere = false;
-			sqlWhereString = null;
-			sqlWhereStringTemplate = null;
 		}
 
 		hasOrphanDelete = collectionBootDescriptor.hasOrphanDelete();
@@ -512,12 +478,6 @@ public abstract class AbstractCollectionPersister
 			identifierGenerator = null;
 		}
 
-		// GENERATE THE SQL:
-
-		sqlSelectSizeString = generateSelectSizeString( collectionBootDescriptor.isIndexed() && !collectionBootDescriptor.isMap() );
-		sqlDetectRowByIndexString = generateDetectRowByIndexString();
-		sqlDetectRowByElementString = generateDetectRowByElementString();
-
 		isLazy = collectionBootDescriptor.isLazy();
 		isExtraLazy = collectionBootDescriptor.isExtraLazy();
 
@@ -590,6 +550,119 @@ public abstract class AbstractCollectionPersister
 
 		cascadeDeleteEnabled = collectionBootDescriptor.getKey().isCascadeDeleteEnabled()
 				&& creationContext.getDialect().supportsCascadeDelete();
+	}
+
+	@Override
+	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
+		if ( mappedByProperty != null && elementType instanceof EntityType ) {
+			final String entityName = ((EntityType) elementType).getAssociatedEntityName();
+
+			final PersistentClass persistentClass = creationProcess.getCreationContext().getBootModel().getEntityBinding( entityName );
+			final Property property = persistentClass.getRecursiveProperty( mappedByProperty );
+			final Value propertyValue = property.getValue();
+
+			if ( propertyValue instanceof Any ) {
+				// we want to delay processing of where-fragment, and therefore affected SQL, until
+				// all model parts are ready so that we can access details about the ANY discriminator
+				creationProcess.registerInitializationCallback(
+						"Where-fragment handling for ANY inverse mapping : " + navigableRole,
+						() -> {
+							final EntityPersister entityPersister = creationProcess.getEntityPersister( entityName );
+							delayedWhereFragmentProcessing( entityPersister, mappedByProperty, collectionBootDescriptor, creationProcess );
+							buildStaticWhereFragmentSensitiveSql();
+							collectionBootDescriptor = null;
+							return true;
+						}
+				);
+				return;
+			}
+		}
+
+		if ( StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
+			hasWhere = true;
+			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ")";
+			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
+					sqlWhereString,
+					dialect,
+					creationProcess.getCreationContext().getTypeConfiguration()
+			);
+		}
+		buildStaticWhereFragmentSensitiveSql();
+		collectionBootDescriptor = null;
+	}
+
+	private void delayedWhereFragmentProcessing(
+			EntityPersister entityPersister,
+			String mappedByProperty,
+			Collection collectionBootDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		String where = collectionBootDescriptor.getWhere();
+
+		final AttributeMapping mappedByAttribute = resolveMappedBy( entityPersister, mappedByProperty, creationProcess );
+		if ( mappedByAttribute instanceof DiscriminatedAssociationAttributeMapping ) {
+			final DiscriminatedAssociationAttributeMapping anyMapping = (DiscriminatedAssociationAttributeMapping) mappedByAttribute;
+			final DiscriminatorConverter<?, ?> valueConverter = anyMapping.getDiscriminatorMapping().getValueConverter();
+			final DiscriminatorValueDetails discriminatorValueDetails = valueConverter.getDetailsForEntityName( ownerPersister.getEntityName() );
+			//noinspection unchecked
+			final String discriminatorLiteral = anyMapping.getDiscriminatorMapping().getUnderlyingJdbcMapping().getJdbcLiteralFormatter().toJdbcLiteral(
+					discriminatorValueDetails.getValue(),
+					creationProcess.getCreationContext().getDialect(),
+					creationProcess.getCreationContext().getSessionFactory().getWrapperOptions()
+			);
+			where = getNonEmptyOrConjunctionIfBothNonEmpty(
+					where,
+					anyMapping.getDiscriminatorMapping().getSelectableName() + "=" + discriminatorLiteral
+			);
+		}
+
+		if ( StringHelper.isNotEmpty( where ) ) {
+			hasWhere = true;
+			sqlWhereString = "(" + where + ")";
+			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
+					sqlWhereString,
+					dialect,
+					creationProcess.getCreationContext().getTypeConfiguration()
+			);
+		}
+	}
+
+	private void buildStaticWhereFragmentSensitiveSql() {
+		sqlSelectSizeString = generateSelectSizeString( hasIndex() && !isMap() );
+		sqlDetectRowByIndexString = generateDetectRowByIndexString();
+		sqlDetectRowByElementString = generateDetectRowByElementString();
+	}
+
+	private boolean isMap() {
+		return collectionSemantics.getCollectionClassification().toJpaClassification() == PluralAttribute.CollectionType.MAP;
+	}
+
+	private static AttributeMapping resolveMappedBy(EntityPersister entityPersister, String mappedByProperty, MappingModelCreationProcess creationProcess) {
+		final StringTokenizer propertyPathParts = new StringTokenizer( mappedByProperty, ".", false );
+		assert propertyPathParts.countTokens() > 0;
+
+		if ( propertyPathParts.countTokens() == 1 ) {
+			return entityPersister.findAttributeMapping( propertyPathParts.nextToken() );
+		}
+
+		ManagedMappingType source = entityPersister;
+		while ( propertyPathParts.hasMoreTokens() ) {
+			final String partName = propertyPathParts.nextToken();
+			final AttributeMapping namedPart = source.findAttributeMapping( partName );
+			if ( !propertyPathParts.hasMoreTokens() ) {
+				return namedPart;
+			}
+
+			source = (ManagedMappingType) namedPart.getPartMappingType();
+		}
+
+		throw new MappingException(
+				String.format(
+						Locale.ROOT,
+						"Unable to resolve mapped-by path : (%s) %s",
+						entityPersister.getEntityName(),
+						mappedByProperty
+				)
+		);
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {

@@ -64,6 +64,11 @@ public class DB2StructJdbcType implements StructJdbcType {
 	}
 
 	@Override
+	public int getDdlTypeCode() {
+		return SqlTypes.SQLXML;
+	}
+
+	@Override
 	public int getDefaultSqlTypeCode() {
 		return SqlTypes.STRUCT;
 	}

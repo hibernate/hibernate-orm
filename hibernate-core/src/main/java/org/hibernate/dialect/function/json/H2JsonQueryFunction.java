@@ -4,10 +4,13 @@
  */
 package org.hibernate.dialect.function.json;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
@@ -35,14 +38,30 @@ public class H2JsonQueryFunction extends JsonQueryFunction {
 		if ( arguments.emptyBehavior() == JsonQueryEmptyBehavior.ERROR ) {
 			throw new QueryException( "Can't emulate error on empty clause on H2" );
 		}
+		appendJsonQuery(
+				sqlAppender,
+				arguments.jsonDocument(),
+				arguments.isJsonType(),
+				arguments.jsonPath(),
+				arguments.passingClause(),
+				arguments.wrapMode(),
+				walker
+		);
+	}
+
+	static void appendJsonQuery(SqlAppender sqlAppender, Expression jsonDocument, boolean isJsonType, Expression jsonPathExpression, @Nullable JsonPathPassingClause passingClause, @Nullable JsonQueryWrapMode wrapMode, SqlAstTranslator<?> walker) {
 		final String jsonPath;
 		try {
-			jsonPath = walker.getLiteralValue( arguments.jsonPath() );
+			jsonPath = walker.getLiteralValue( jsonPathExpression );
 		}
 		catch (Exception ex) {
-			throw new QueryException( "H2 json_query only support literal json paths, but got " + arguments.jsonPath() );
+			throw new QueryException( "H2 json_query only support literal json paths, but got " + jsonPathExpression );
 		}
-		if ( arguments.wrapMode() == JsonQueryWrapMode.WITH_WRAPPER ) {
+		appendJsonQuery( sqlAppender, jsonDocument, isJsonType, jsonPath, passingClause, wrapMode, walker );
+	}
+
+	static void appendJsonQuery(SqlAppender sqlAppender, Expression jsonDocument, boolean isJsonType, String jsonPath, @Nullable JsonPathPassingClause passingClause, @Nullable JsonQueryWrapMode wrapMode, SqlAstTranslator<?> walker) {
+		if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
 			sqlAppender.appendSql( "'['||" );
 		}
 
@@ -50,15 +69,15 @@ public class H2JsonQueryFunction extends JsonQueryFunction {
 		sqlAppender.appendSql( "cast(" );
 		H2JsonValueFunction.renderJsonPath(
 				sqlAppender,
-				arguments.jsonDocument(),
-				arguments.isJsonType(),
+				jsonDocument,
+				isJsonType,
 				walker,
 				jsonPath,
-				arguments.passingClause()
+				passingClause
 		);
 		sqlAppender.appendSql( " as varchar)" );
 		sqlAppender.appendSql( ",'null'),'\"'))");
-		if ( arguments.wrapMode() == JsonQueryWrapMode.WITH_WRAPPER ) {
+		if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
 			sqlAppender.appendSql( "||']'" );
 		}
 	}

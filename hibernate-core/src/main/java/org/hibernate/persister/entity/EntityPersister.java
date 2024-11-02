@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.persistence.Entity;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -37,6 +39,7 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -177,6 +180,16 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return The name of the entity which this persister maps.
 	 */
 	String getEntityName();
+
+	/**
+	 * The {@linkplain Entity#name() JPA entity name}, if one, associated with the entity.
+	 */
+	@Nullable
+	String getJpaEntityName();
+
+	default String getImportedName() {
+		return getJpaEntityName() != null ? getJpaEntityName() : StringHelper.unqualifyEntityName( getEntityName() );
+	}
 
 	/**
 	 * The strategy to use for SQM mutation statements where the target entity

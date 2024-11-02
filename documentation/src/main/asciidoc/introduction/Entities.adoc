@@ -250,7 +250,7 @@ This id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=IDENTITY) Long id;
+@Id @GeneratedValue(strategy = IDENTITY) Long id;
 ----
 
 The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over `SEQUENCE` and `TABLE` generation respectively.
@@ -259,7 +259,7 @@ Consider this sequence generator:
 
 [source,java]
 ----
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+@SequenceGenerator(name = "bookSeq", sequenceName = "seq_book", initialValue = 5, allocationSize=10)
 ----
 
 Values are generated using a database sequence defined as follows:
@@ -285,7 +285,7 @@ Any identifier attribute may now make use of the generator named `bookSeq`:
 [source,java]
 ----
 @Id
-@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined elsewhere
+@GeneratedValue(generator = "bookSeq")  // reference to generator defined elsewhere
 Long id;
 ----
 
@@ -294,18 +294,38 @@ Actually, it's extremely common to place the `@SequenceGenerator` annotation on 
 [source,java]
 ----
 @Id
-@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined below
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+@GeneratedValue  // uses the generator defined below
+@SequenceGenerator(sequenceName = "seq_book", initialValue = 5, allocationSize=10)
 Long id;
 ----
 
-[NOTE]
-// .JPA id generators may be shared between entities
-====
-JPA id generators may be shared between entities.
-A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
-This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
-====
+In this case, the `name` of the `@SequenceGenerator` should not be specified.
+
+We may even place a `@SequenceGenerator` or `@TableGenerator` annotation at the package level:
+
+[source,java]
+----
+@SequenceGenerator(sequenceName = "id_sequence", initialValue = 5, allocationSize=10)
+@TableGenerator(table = "id_table", initialValue = 5, allocationSize=10)
+package org.example.entities;
+----
+
+Then any entity in this package which specifies `strategy=SEQUENCE` or `strategy=TABLE` without also explicitly specifying a generator `name` will be assigned a generator based on the package-level annotation.
+
+[source,java]
+----
+@Id
+@GeneratedValue(strategy=SEQUENCE)  // uses the sequence generator defined at the package level
+Long id;
+----
+
+// [NOTE]
+// // .JPA id generators may be shared between entities
+// ====
+// JPA id generators may be shared between entities.
+// A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
+// This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
+// ====
 
 As you can see, JPA provides quite adequate support for the most common strategies for system-generated ids.
 However, the annotations themselves are a bit more intrusive than they should be, and there's no well-defined way to extend this framework to support custom strategies for id generation.
@@ -497,7 +517,7 @@ The JPA specification defines a quite limited set of basic types:
 | Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc
 | Strings | `java.lang` | `String`
 | Arbitrary-precision numeric types | `java.math` | `BigInteger`, `BigDecimal`
-| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`
+| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`, `Year`
 | Deprecated date/time types 💀 | `java.util` | `Date`, `Calendar`
 | Deprecated JDBC date/time types 💀 | `java.sql` | `Date`, `Time`, `Timestamp`
 | Binary and character arrays | | `byte[]`, `char[]`
@@ -526,7 +546,7 @@ Hibernate slightly extends this list with the following types:
 |====
 | Classification | Package | Types
 
-| Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, `Year`, and even `ZonedDateTime`
+| Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, and even `ZonedDateTime`
 | JDBC LOB types | `java.sql` | `Blob`, `Clob`, `NClob`
 | Java class object | `java.lang` | `Class`
 | Miscellaneous types | `java.util` | `Currency`, `URL`, `TimeZone`
@@ -600,7 +620,23 @@ Status status;
 
 ----
 
-In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
+The `@EnumeratedValue` annotation allows the column value to be customized:
+
+[source,java]
+----
+enum Resolution {
+    UNRESOLVED(0), FIXED(1), REJECTED(-1);
+
+    @EnumeratedValue // store the code, not the enum ordinal() value
+    final int code;
+
+    Resolution(int code) {
+         this.code = code;
+    }
+}
+----
+
+Since Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
 
 - a `VARCHAR` column type with a `CHECK` constraint on most databases, or
 - an `ENUM` column type on MySQL.
@@ -929,7 +965,40 @@ a|
 
 We'll explain the effect of these members as we consider the various types of association mapping.
 
-Let's begin with the most common association multiplicity.
+It's not a requirement to represent _every_ foreign key relationship as an association at the Java level.
+It's perfectly acceptable to replace a `@ManyToOne` mapping with a basic-typed attribute holding an identifier, if it's inconvenient to think of this relationship as an association at the Java level.
+That said, it's possible to take this idea way to far.
+
+
+.💀 Aggregates 💀
+****
+It's come to our attention that a vocal group of people advocate that Java entity classes should be broken up into tiny disconnected islands they call "aggregates". An aggregate--at least as a first approximation--corresponds roughly to what we would usually call a parent/child relationship.
+Simple examples of aggregates might be `Order`/`Item`, or `Product`/`Part`.
+According to this way of thinking, there should be no associations _between_ aggregates, that is, that the `Item.product` association should be replaced with `productId`, that `Part.manufacturer` should be replaced with `manufacturerId`, and so on.
+(Of course, the word "aggregate" may also be employed in other senses, but this is the sense we're discussing right now.)
+
+In the example we've been using, `Book` would not be permitted to have a collection of entity type `Author`, and should instead hold only the ids of the authors, or perhaps instances of some `BookAuthor` type which duplicates some state of `Author` and is disconnected from the rest of the model.
+
+Let's stipulate that this might be a perfectly natural thing to do in certain contexts, for example, when accessing a document database.
+But one context where it doesn't usually make sense is when accessing a relational database via Hibernate.
+The reason is that Hibernate offers <<association-fetching,rich functionality>> for optimizing access to associated data, including:
+
+- the <<second-level-cache,second level cache>>, and
+- join, batch, and subselect fetching, whether via HQL, <<entity-graph,entity graphs>>, or <<fetch-profiles,fetch profiles>>.
+
+But all this functionality is lost if Hibernate doesn't know it's dealing with an association, inevitably making the application program much more vulnerable to problems with <<association-fetching,N+1 selects>>, just as soon as we encounter a business requirement which involves data from more than one aggregate.
+(Always keep in mind that business requirements change much faster than relational data models!)
+
+To put it mildly: this is not how JPA was ever intended to be used.
+
+It's difficult to respond charitably to most of the arguments in favor of this approach, since most of them don't rise above the level of hand-waving at boxes on drawn on whiteboards.
+An argument we _can_ respond to is the concern that transparent lazy fetching can lead to "accidental" fetching of an association and the potential for N+1 selects.
+This is a legit concern, and one we worry about too, but where it's really a problem we have a much better solution: just use a `StatelessSession`, or a Jakarta Data repository, where <<stateless-sessions,association fetching is always an explicit operation>>.
+Indeed, `StatelessSession` even guards against accidental _updates_, since `update()` is always an explicit operation.
+****
+
+Now that we know that associations are actually good and useful, let's see how to model the various kinds of association we might find need to map to a relational data model.
+We begin with the most common association multiplicity.
 
 [[many-to-one]]
 === Many-to-one
@@ -1002,8 +1071,8 @@ class Publisher {
 The `Publisher.books` field is called the _unowned_ side of the association.
 
 Now, we passionately _hate_ the stringly-typed `mappedBy` reference to the owning side of the association.
-Thankfully, the <<metamodel-generator, Metamodel Generator>> gives us a way to make it a
-bit more typesafe:
+Thankfully, the <<metamodel-generator, Hibernate Processor>> gives us a way to make it a
+bit more type safe:
 
 [[mapped-by-metamodel]]
 [source,java]

@@ -1402,18 +1402,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return exceptionConverter;
 	}
 
+	@Override
 	public Integer getJdbcBatchSize() {
 		return jdbcBatchSize;
 	}
 
 	@Override
-	public EventManager getEventManager() {
-		return fastSessionServices.getEventManager();
+	public void setJdbcBatchSize(Integer jdbcBatchSize) {
+		this.jdbcBatchSize = jdbcBatchSize;
 	}
 
 	@Override
-	public void setJdbcBatchSize(Integer jdbcBatchSize) {
-		this.jdbcBatchSize = jdbcBatchSize;
+	public EventManager getEventManager() {
+		return fastSessionServices.getEventManager();
 	}
 
 	@Override

@@ -59,6 +59,36 @@ See the link:{migration-guide-url}#hbm-transform[Migration Guide] for details.
 
 See the link:{migration-guide-url}#hibernate-models[Migration Guide] for details.
 
+[[json-and-xml-functions]]
+== JSON and XML functions
+
+Support for most of the JSON and XML functions that the SQL standard specifies was added to HQL/Criteria.
+The implementations retain the SQL standard semantics and will throw an error if emulation on a database is impossible.
+
+New functions include:
+
+* construction functions like `json_array()`, `json_object()`, `xmlelement()` and `xmlforest()`
+* query functions like `json_value()`, `json_query()` and `xmlquery()`
+* aggregation functions like `json_agg()`, `json_object_agg()` and `xmlagg()`
+* manipulation functions like `json_set()`, `json_mergepatch()`
+* any many more
+
+NOTE: The functions are incubating/tech-preview and to use them in HQL,
+it is necessary to enable the `hibernate.query.hql.json_functions_enabled` and `hibernate.query.hql.xml_functions_enabled` configuration settings.
+
+[[set-returning-functions]]
+== Set-returning functions
+
+A set-returning function is a new type of function that can return rows and is exclusive to the `from` clause.
+The concept is known in many different database SQL dialects and is sometimes referred to as table valued function or table function.
+
+Custom set-returning functions can be registered via a `FunctionContributor`.
+Out-of-the-box, some common set-returning functions are already supported or emulated
+
+* `unnest()` - allows to turn an array into rows
+* `generate_series()` - can be used to create a series of values as rows
+* `json_table()` - turns a JSON document into rows
+* `xmltable()` - turns an XML document into rows
 
 [[cleanup]]
 == Clean-up

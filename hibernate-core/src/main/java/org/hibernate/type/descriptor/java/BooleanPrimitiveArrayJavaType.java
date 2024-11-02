@@ -138,10 +138,10 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			return null;
 		}
 
-		if ( value instanceof java.sql.Array ) {
+		if ( value instanceof java.sql.Array array ) {
 			try {
 				//noinspection unchecked
-				value = (X) ( (java.sql.Array) value ).getArray();
+				value = (X) array.getArray();
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -149,16 +149,16 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			}
 		}
 
-		if ( value instanceof boolean[] ) {
-			return (boolean[]) value;
+		if ( value instanceof boolean[] booleans ) {
+			return booleans;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
-			return (boolean[]) SerializationHelper.deserialize( (byte[]) value );
+			return (boolean[]) SerializationHelper.deserialize( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return (boolean[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return (boolean[]) SerializationHelper.deserialize( binaryStream.getBytes() );
 		}
 		else if ( value.getClass().isArray() ) {
 			final boolean[] wrapped = new boolean[Array.getLength( value )];
@@ -167,12 +167,11 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 			}
 			return wrapped;
 		}
-		else if ( value instanceof Boolean ) {
+		else if ( value instanceof Boolean booleanValue ) {
 			// Support binding a single element as parameter value
-			return new boolean[]{ (boolean) value };
+			return new boolean[]{ booleanValue };
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			final boolean[] wrapped = new boolean[collection.size()];
 			int i = 0;
 			for ( Object e : collection ) {

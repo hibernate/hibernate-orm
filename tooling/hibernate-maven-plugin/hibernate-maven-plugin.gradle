@@ -1,0 +1,19 @@
+description = 'Maven plugin to integrate aspects of Hibernate into your build.'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply plugin: 'org.hibernate.build.maven-embedder'
+
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ */
+
+dependencies {
+    implementation project( ":hibernate-core" )
+
+    implementation "org.apache.maven:maven-plugin-api:3.6.3"
+    implementation "org.apache.maven.plugin-tools:maven-plugin-annotations:3.6.0"
+    implementation "org.apache.maven:maven-project:2.2.1"
+}

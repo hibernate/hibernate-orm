@@ -89,8 +89,8 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Object[]) {
-			return (Object[]) value;
+		if (value instanceof Object[] objects) {
+			return objects;
 		}
 		throw unknownWrap( value.getClass() );
 	}

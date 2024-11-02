@@ -10,6 +10,8 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,7 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
@@ -40,14 +43,18 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmJsonTableFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
+import org.hibernate.query.sqm.tree.expression.SqmXmlTableFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -801,6 +808,90 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	@Override
 	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument);
 
+	@Override
+	<E> SqmSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args);
+
+	@Override
+	<E> SqmSetReturningFunction<E> unnestArray(Expression<E[]> array);
+
+	@Override
+	<E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop);
+
+	@Override
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop);
+
+	@Override
+	SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument);
+
+	@Override
+	SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, String jsonPath);
+
+	@Override
+	SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath);
+
+	@Override
+	SqmXmlTableFunction<?> xmlTable(String xpath, Expression<?> xmlDocument);
+
+	@Override
+	SqmXmlTableFunction<?> xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
@@ -857,6 +948,18 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 
 	@Override
 	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
+
+	@Override
+	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget);
+
+	@Override
+	<X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType);
+
+	@Override
+	<X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, long length);
+
+	@Override
+	<X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale);
 
 	@Override
 	SqmPredicate wrap(Expression<Boolean> expression);

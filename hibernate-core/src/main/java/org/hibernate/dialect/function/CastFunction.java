@@ -77,9 +77,8 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			renderCastArrayToString( sqlAppender, arguments.get( 0 ), dialect, walker );
 		}
 		else {
-			String cast = dialect.castPattern( sourceType, targetType );
-
-			new PatternRenderer( cast ).render( sqlAppender, arguments, walker );
+			new PatternRenderer( dialect.castPattern( sourceType, targetType ) )
+					.render( sqlAppender, arguments, walker );
 		}
 	}
 

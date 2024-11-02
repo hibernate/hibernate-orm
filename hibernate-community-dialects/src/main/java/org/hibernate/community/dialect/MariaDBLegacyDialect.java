@@ -29,7 +29,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -96,7 +96,13 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 			commonFunctionFactory.jsonArrayAgg_mariadb();
 			commonFunctionFactory.jsonObjectAgg_mariadb();
 			commonFunctionFactory.jsonArrayAppend_mariadb();
+
 			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
+				if ( getVersion().isSameOrAfter( 10, 6 ) ) {
+					commonFunctionFactory.unnest_emulated();
+					commonFunctionFactory.jsonTable_mysql();
+				}
+
 				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 				functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
 						.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
@@ -145,7 +151,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		// Make sure we register the JSON type descriptor before calling super, because MariaDB does not need casting
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, JsonArrayJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( JsonArrayJdbcTypeConstructor.INSTANCE );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {

@@ -177,22 +177,19 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			return null;
 		}
 
-		if (value instanceof OffsetDateTime) {
-			return (OffsetDateTime) value;
+		if (value instanceof OffsetDateTime offsetDateTime) {
+			return offsetDateTime;
 		}
 
-		if (value instanceof ZonedDateTime) {
-			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
+		if (value instanceof ZonedDateTime zonedDateTime) {
 			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
 		}
 
-		if (value instanceof Instant) {
-			Instant instant = (Instant) value;
+		if (value instanceof Instant instant) {
 			return instant.atOffset( ZoneOffset.UTC );
 		}
 
-		if (value instanceof Timestamp) {
-			final Timestamp ts = (Timestamp) value;
+		if (value instanceof Timestamp timestamp) {
 			/*
 			 * This works around two bugs:
 			 * - HHH-13266 (JDK-8061577): around and before 1900,
@@ -203,25 +200,23 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
-			if ( ts.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
+			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
+				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
 			}
 			else {
-				return OffsetDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() );
+				return OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
 			}
 		}
 
-		if (value instanceof Date) {
-			final Date date = (Date) value;
+		if (value instanceof Date date) {
 			return OffsetDateTime.ofInstant( date.toInstant(), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Long) {
-			return OffsetDateTime.ofInstant( Instant.ofEpochMilli( (Long) value ), ZoneId.systemDefault() );
+		if (value instanceof Long longValue) {
+			return OffsetDateTime.ofInstant( Instant.ofEpochMilli( longValue ), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Calendar) {
-			final Calendar calendar = (Calendar) value;
+		if (value instanceof Calendar calendar) {
 			return OffsetDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}
 

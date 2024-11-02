@@ -83,9 +83,9 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 		try {
 			if ( CharacterStream.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
+				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just pass along its CharacterStream
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream();
+					return (X) clobImplementer.getUnderlyingStream();
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
@@ -93,22 +93,22 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 				}
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
+				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+					return (X) clobImplementer.getUnderlyingStream().asString();
 				}
 				else {
 					// otherwise extract the bytes from the stream manually
-					return (X) LobStreamDataHelper.extractString( value.getCharacterStream() );
+					return (X) DataHelper.extractString( value.getCharacterStream() );
 				}
 			}
 			else if ( Clob.class.isAssignableFrom( type ) ) {
 				return (X) getOrCreateClob( value, options );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer) {
+				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just get the underlying String.
-					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+					return (X) clobImplementer.getUnderlyingStream().asString();
 				}
 				else {
 					// otherwise we need to extract the String.
@@ -124,8 +124,8 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	}
 
 	private Clob getOrCreateClob(Clob value, WrapperOptions options) throws SQLException {
-		if ( value instanceof WrappedClob ) {
-			value = ( (WrappedClob) value ).getWrappedClob();
+		if ( value instanceof WrappedClob wrappedClob ) {
+			value = wrappedClob.getWrappedClob();
 		}
 		if ( options.getDialect().useConnectionToCreateLob() ) {
 			if ( value.length() == 0 ) {
@@ -145,17 +145,13 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		if ( value == null ) {
 			return null;
 		}
-
-		// Support multiple return types from
-		// org.hibernate.type.descriptor.sql.ClobTypeDescriptor
-		if ( Clob.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().wrap( (Clob) value );
+		else if ( value instanceof Clob clob ) {
+			return options.getLobCreator().wrap( clob );
 		}
-		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
-			return options.getLobCreator().createClob( ( String ) value);
+		else if ( value instanceof String string ) {
+			return options.getLobCreator().createClob( string );
 		}
-		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
-			Reader reader = (Reader) value;
+		else if ( value instanceof Reader reader ) {
 			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
 		}
 

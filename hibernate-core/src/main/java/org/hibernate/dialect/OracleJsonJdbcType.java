@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -24,6 +25,11 @@ public class OracleJsonJdbcType extends OracleJsonBlobJdbcType {
 
 	private OracleJsonJdbcType(EmbeddableMappingType embeddableMappingType) {
 		super( embeddableMappingType );
+	}
+
+	@Override
+	public int getDdlTypeCode() {
+		return SqlTypes.JSON;
 	}
 
 	@Override

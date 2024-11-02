@@ -86,9 +86,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -488,19 +488,39 @@ public class HANALegacyDialect extends Dialect {
 				typeConfiguration
 		);
 
-		if ( getVersion().isSameOrAfter(2, 0, 20) ) {
-			// Introduced in 2.0 SPS 02
+		if ( getVersion().isSameOrAfter( 2, 0 ) ) {
+			// Introduced in 2.0 SPS 00
 			functionFactory.jsonValue_no_passing();
 			functionFactory.jsonQuery_no_passing();
 			functionFactory.jsonExists_hana();
-			if ( getVersion().isSameOrAfter(2, 0, 40) ) {
-				// Introduced in 2.0 SPS 04
-				functionFactory.jsonObject_hana();
-				functionFactory.jsonArray_hana();
-				functionFactory.jsonArrayAgg_hana();
-				functionFactory.jsonObjectAgg_hana();
+
+			functionFactory.unnest_hana();
+			functionFactory.jsonTable_hana();
+
+			functionFactory.generateSeries_hana( getMaximumSeriesSize() );
+
+			if ( getVersion().isSameOrAfter(2, 0, 20 ) ) {
+				if ( getVersion().isSameOrAfter( 2, 0, 40 ) ) {
+					// Introduced in 2.0 SPS 04
+					functionFactory.jsonObject_hana();
+					functionFactory.jsonArray_hana();
+					functionFactory.jsonArrayAgg_hana();
+					functionFactory.jsonObjectAgg_hana();
+				}
+
+				functionFactory.xmltable_hana();
 			}
+
+//			functionFactory.xmlextract();
 		}
+	}
+
+	/**
+	 * HANA doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with the {@code xmltable} and {@code lpad} functions.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override

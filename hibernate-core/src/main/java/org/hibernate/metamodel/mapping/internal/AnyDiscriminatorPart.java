@@ -4,23 +4,19 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Map;
-import java.util.function.BiConsumer;
-
+import org.hibernate.AssertionFailure;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.metamodel.mapping.DefaultDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -39,9 +35,13 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.AnyDiscriminatorValueStrategy;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Acts as a ModelPart for the discriminator portion of an any-valued mapping
@@ -84,6 +84,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean partitioned,
 			BasicType<?> underlyingJdbcMapping,
 			Map<Object,String> valueToEntityNameMap,
+			AnyDiscriminatorValueStrategy valueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
@@ -100,20 +101,54 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.partitioned = partitioned;
 
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
-		this.valueConverter = valueToEntityNameMap.isEmpty()
-				? DefaultDiscriminatorConverter.fromMappingMetamodel(
-						partRole,
-						ClassJavaType.INSTANCE,
-						underlyingJdbcMapping,
-						mappingMetamodel
-				)
-				: MappedDiscriminatorConverter.fromValueMappings(
-						partRole,
-						ClassJavaType.INSTANCE,
-						underlyingJdbcMapping,
-						valueToEntityNameMap,
-						mappingMetamodel
-				);
+		this.valueConverter = determineDiscriminatorConverter(
+				partRole,
+				underlyingJdbcMapping,
+				valueToEntityNameMap,
+				valueStrategy,
+				mappingMetamodel
+		);
+	}
+
+	public static DiscriminatorConverter<?, ?> determineDiscriminatorConverter(
+			NavigableRole partRole,
+			BasicType<?> underlyingJdbcMapping,
+			Map<Object, String> valueToEntityNameMap,
+			AnyDiscriminatorValueStrategy valueStrategy,
+			MappingMetamodelImplementor mappingMetamodel) {
+		if ( valueStrategy == AnyDiscriminatorValueStrategy.AUTO ) {
+			if ( valueToEntityNameMap == null || valueToEntityNameMap.isEmpty() ) {
+				valueStrategy = AnyDiscriminatorValueStrategy.IMPLICIT;
+			}
+			else {
+				valueStrategy = AnyDiscriminatorValueStrategy.EXPLICIT;
+			}
+		}
+
+		return switch ( valueStrategy ) {
+			case AUTO -> throw new AssertionFailure( "Not expecting AUTO" );
+			case MIXED -> new MixedDiscriminatorConverter<>(
+					partRole,
+					ClassJavaType.INSTANCE,
+					underlyingJdbcMapping.getJavaTypeDescriptor(),
+					valueToEntityNameMap,
+					mappingMetamodel
+			);
+			case EXPLICIT -> new ExplicitDiscriminatorConverter<>(
+					partRole,
+					ClassJavaType.INSTANCE,
+					underlyingJdbcMapping.getJavaTypeDescriptor(),
+					valueToEntityNameMap,
+					mappingMetamodel
+			);
+			case IMPLICIT -> new ImplicitDiscriminatorConverter<>(
+					partRole,
+					ClassJavaType.INSTANCE,
+					underlyingJdbcMapping.getJavaTypeDescriptor(),
+					valueToEntityNameMap,
+					mappingMetamodel
+			);
+		};
 	}
 
 	public DiscriminatorConverter<?,?> getValueConverter() {

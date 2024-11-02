@@ -121,15 +121,15 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 		if ( value == null ) {
 			return null;
 		}
-		else if (value instanceof byte[]) {
-			return fromBytes( (byte[]) value );
+		else if (value instanceof byte[] bytes) {
+			return fromBytes( bytes );
 		}
-		else if (value instanceof InputStream) {
-			return fromBytes( DataHelper.extractBytes( (InputStream) value ) );
+		else if (value instanceof InputStream inputStream) {
+			return fromBytes( DataHelper.extractBytes( inputStream ) );
 		}
-		else if (value instanceof Blob) {
+		else if (value instanceof Blob blob) {
 			try {
-				return fromBytes( DataHelper.extractBytes( ((Blob) value).getBinaryStream() ) );
+				return fromBytes( DataHelper.extractBytes( blob.getBinaryStream() ) );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( e );

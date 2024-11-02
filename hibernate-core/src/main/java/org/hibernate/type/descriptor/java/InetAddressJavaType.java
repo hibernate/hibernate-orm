@@ -74,20 +74,20 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof InetAddress) {
-			return (InetAddress) value;
+		if (value instanceof InetAddress inetAddress) {
+			return inetAddress;
 		}
-		if (value instanceof byte[]) {
+		if (value instanceof byte[] bytes) {
 			try {
-				return InetAddress.getByAddress( (byte[]) value );
+				return InetAddress.getByAddress( bytes );
 			}
 			catch (UnknownHostException e) {
 				throw new IllegalArgumentException( e );
 			}
 		}
-		if (value instanceof String) {
+		if (value instanceof String string) {
 			try {
-				return InetAddress.getByName( (String) value );
+				return InetAddress.getByName( string );
 			}
 			catch (UnknownHostException e) {
 				throw new IllegalArgumentException( e );

@@ -77,6 +77,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.SQLXML;
@@ -236,8 +237,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					null,
 					creationContext
 			);
+			final int defaultSqlTypeCode = aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
-			final int sqlTypeCode = aggregateColumn.getSqlTypeCode();
+			final int sqlTypeCode = defaultSqlTypeCode == ARRAY ? aggregateColumn.getTypeCode() : defaultSqlTypeCode;
 			this.aggregateMappingRequiresColumnWriter = aggregateSupport
 					.requiresAggregateCustomWriteExpressionRenderer( sqlTypeCode );
 			this.preferSelectAggregateMapping = aggregateSupport.preferSelectAggregateMapping( sqlTypeCode );
@@ -263,13 +265,18 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final Column aggregateColumn = bootDescriptor.getAggregateColumn();
-		Integer aggregateSqlTypeCode = aggregateColumn.getSqlTypeCode();
+		final BasicValue basicValue = (BasicValue) aggregateColumn.getValue();
+		final BasicValue.Resolution<?> resolution = basicValue.getResolution();
+		final int aggregateColumnSqlTypeCode = resolution.getJdbcType().getDefaultSqlTypeCode();
+		final int aggregateSqlTypeCode;
 		boolean isArray = false;
 		String structTypeName = null;
-		switch ( aggregateSqlTypeCode ) {
+		switch ( aggregateColumnSqlTypeCode ) {
 			case STRUCT:
+				aggregateSqlTypeCode = STRUCT;
 				structTypeName = aggregateColumn.getSqlType( creationContext.getMetadata() );
 				break;
+			case ARRAY:
 			case STRUCT_ARRAY:
 			case STRUCT_TABLE:
 				isArray = true;
@@ -290,6 +297,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				isArray = true;
 				aggregateSqlTypeCode = SQLXML;
 				break;
+			default:
+				aggregateSqlTypeCode = aggregateColumnSqlTypeCode;
+				break;
 		}
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		final AggregateJdbcType aggregateJdbcType = jdbcTypeRegistry.resolveAggregateDescriptor(
@@ -307,7 +317,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			basicTypeRegistry.register( basicType, bootDescriptor.getStructName().render() );
 			basicTypeRegistry.register( basicType, getMappedJavaType().getJavaTypeClass().getName() );
 		}
-		final BasicValue basicValue = (BasicValue) aggregateColumn.getValue();
 		final BasicType<?> resolvedJdbcMapping;
 		if ( isArray ) {
 			final JdbcTypeConstructor arrayConstructor = jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY );
@@ -315,7 +324,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes.ARRAY" );
 			}
 			//noinspection rawtypes,unchecked
-			final BasicType<?> arrayType = ( (BasicPluralJavaType) basicValue.getResolution().getDomainJavaType() ).resolveType(
+			final BasicType<?> arrayType = ( (BasicPluralJavaType) resolution.getDomainJavaType() ).resolveType(
 					typeConfiguration,
 					creationContext.getDialect(),
 					basicType,
@@ -328,7 +337,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		else {
 			resolvedJdbcMapping = basicType;
 		}
-		basicValue.getResolution().updateResolution( resolvedJdbcMapping );
+		resolution.updateResolution( resolvedJdbcMapping );
 		return resolvedJdbcMapping;
 	}
 

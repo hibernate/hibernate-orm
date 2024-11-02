@@ -262,7 +262,7 @@ public final class CollectionHelper {
 		return copy;
 	}
 
-	public static boolean isEmpty(Collection collection) {
+	public static boolean isEmpty(Collection<?> collection) {
 		return collection == null || collection.isEmpty();
 	}
 

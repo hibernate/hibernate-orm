@@ -47,6 +47,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -624,13 +625,20 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		final EventManager eventManager = session.getEventManager();
 		final HibernateMonitoringEvent creationEvent = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final StatisticsImplementor stats = session.getFactory().getStatistics();
 		try {
 			listener.jdbcPrepareStatementStart();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.prepareStatement();
+			}
 			return connection.prepareStatement( sql );
 		}
 		finally {
 			eventManager.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			listener.jdbcPrepareStatementEnd();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.closeStatement();
+			}
 		}
 	}
 

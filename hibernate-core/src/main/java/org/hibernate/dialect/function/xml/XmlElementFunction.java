@@ -7,6 +7,7 @@ package org.hibernate.dialect.function.xml;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.XmlHelper;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -33,8 +34,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static java.lang.Character.isLetter;
-import static java.lang.Character.isLetterOrDigit;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
@@ -56,7 +55,7 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 									TypeConfiguration typeConfiguration) {
 								//noinspection unchecked
 								final String elementName = ( (SqmLiteral<String>) arguments.get( 0 ) ).getLiteralValue();
-								if ( !isValidXmlName( elementName ) ) {
+								if ( !XmlHelper.isValidXmlName( elementName ) ) {
 									throw new FunctionArgumentException(
 											String.format(
 													"Invalid XML element name passed to 'xmlelement()': %s",
@@ -68,7 +67,7 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 										&& arguments.get( 1 ) instanceof SqmXmlAttributesExpression attributesExpression ) {
 									final Map<String, SqmExpression<?>> attributes = attributesExpression.getAttributes();
 									for ( Map.Entry<String, SqmExpression<?>> entry : attributes.entrySet() ) {
-										if ( !isValidXmlName( entry.getKey() ) ) {
+										if ( !XmlHelper.isValidXmlName( entry.getKey() ) ) {
 											throw new FunctionArgumentException(
 													String.format(
 															"Invalid XML attribute name passed to 'xmlattributes()': %s",
@@ -79,29 +78,6 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 									}
 								}
 							}
-
-							private static boolean isValidXmlName(String name) {
-								if ( name.isEmpty()
-										|| !isValidXmlNameStart( name.charAt( 0 ) )
-										|| name.regionMatches( true, 0, "xml", 0, 3 ) ) {
-									return false;
-								}
-								for ( int i = 1; i < name.length(); i++ ) {
-									if ( !isValidXmlNameChar( name.charAt( i ) ) ) {
-										return false;
-									}
-								}
-								return true;
-							}
-
-							private static boolean isValidXmlNameStart(char c) {
-								return isLetter( c ) || c == '_' || c == ':';
-							}
-
-							private static boolean isValidXmlNameChar(char c) {
-								return isLetterOrDigit( c ) || c == '_' || c == ':' || c == '-' || c == '.';
-							}
-
 						}
 				),
 				StandardFunctionReturnTypeResolvers.invariant(

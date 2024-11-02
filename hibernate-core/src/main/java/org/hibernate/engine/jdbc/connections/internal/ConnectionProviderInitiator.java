@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,6 +20,11 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.internal.Helper;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static java.sql.Connection.TRANSACTION_NONE;
@@ -102,6 +108,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
+		final BeanContainer beanContainer = Helper.allowExtensionsInCdi( registry ) ? registry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
 		final StrategySelector strategySelector = registry.requireService( StrategySelector.class );
 		final Object explicitSetting = configurationValues.get( CONNECTION_PROVIDER );
 		if ( explicitSetting != null ) {
@@ -111,25 +118,25 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			}
 			else if ( explicitSetting instanceof Class<?> providerClass ) {
 				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
-				return instantiateExplicitConnectionProvider( providerClass );
+				return instantiateExplicitConnectionProvider( providerClass, beanContainer );
 			}
 			else {
 				final String providerName = nullIfEmpty( explicitSetting.toString() );
 				if ( providerName != null ) {
-					return instantiateNamedConnectionProvider(providerName, strategySelector);
+					return instantiateNamedConnectionProvider(providerName, strategySelector, beanContainer);
 				}
 			}
 		}
 
-		return instantiateConnectionProvider( configurationValues, strategySelector );
+		return instantiateConnectionProvider( configurationValues, strategySelector, beanContainer );
 	}
 
-	private ConnectionProvider instantiateNamedConnectionProvider(String providerName, StrategySelector strategySelector) {
+	private ConnectionProvider instantiateNamedConnectionProvider(String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
 		LOG.instantiatingExplicitConnectionProvider( providerName );
 		final Class<?> providerClass =
 				strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
 		try {
-			return instantiateExplicitConnectionProvider( providerClass );
+			return instantiateExplicitConnectionProvider( providerClass, beanContainer );
 		}
 		catch (Exception e) {
 			throw new HibernateException(
@@ -140,7 +147,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	private ConnectionProvider instantiateConnectionProvider(
-			Map<String, Object> configurationValues, StrategySelector strategySelector) {
+			Map<String, Object> configurationValues, StrategySelector strategySelector, BeanContainer beanContainer) {
 		if ( configurationValues.containsKey( DATASOURCE ) ) {
 			return new DatasourceConnectionProviderImpl();
 		}
@@ -149,9 +156,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				getSingleRegisteredProvider( strategySelector );
 		if ( singleRegisteredProvider != null ) {
 			try {
-				return singleRegisteredProvider.newInstance();
+				return singleRegisteredProvider.getConstructor().newInstance();
 			}
-			catch (IllegalAccessException | InstantiationException e) {
+			catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
 				throw new HibernateException( "Could not instantiate singular-registered ConnectionProvider", e );
 			}
 		}
@@ -177,9 +184,45 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return new DriverManagerConnectionProviderImpl();
 		}
 		else {
-			LOG.noAppropriateConnectionProvider();
-			return new UserSuppliedConnectionProviderImpl();
+			if (beanContainer != null) {
+				return beanContainer.getBean(
+						ConnectionProvider.class,
+						new BeanContainer.LifecycleOptions() {
+							@Override
+							public boolean canUseCachedReferences() {
+								return true;
+							}
+
+							@Override
+							public boolean useJpaCompliantCreation() {
+								return true;
+							}
+						},
+						new BeanInstanceProducer() {
+
+							@Override
+							public <B> B produceBeanInstance(Class<B> beanType) {
+								return (B) noAppropriateConnectionProvider();
+							}
+
+							@Override
+							public <B> B produceBeanInstance(String name, Class<B> beanType) {
+								return (B) noAppropriateConnectionProvider();
+							}
+
+						}
+				).getBeanInstance();
+			}
+			else {
+				return noAppropriateConnectionProvider();
+			}
+
 		}
+	}
+
+	private ConnectionProvider noAppropriateConnectionProvider() {
+		LOG.noAppropriateConnectionProvider();
+		return new UserSuppliedConnectionProviderImpl();
 	}
 
 	private Class<? extends ConnectionProvider> getSingleRegisteredProvider(StrategySelector strategySelector) {
@@ -190,9 +233,28 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				: null;
 	}
 
-	private ConnectionProvider instantiateExplicitConnectionProvider(Class<?> providerClass) {
+	private ConnectionProvider instantiateExplicitConnectionProvider(Class<?> providerClass, BeanContainer beanContainer) {
 		try {
-			return (ConnectionProvider) providerClass.newInstance();
+			if ( beanContainer != null ) {
+				return (ConnectionProvider) beanContainer.getBean(
+						providerClass,
+						new BeanContainer.LifecycleOptions() {
+							@Override
+							public boolean canUseCachedReferences() {
+								return true;
+							}
+
+							@Override
+							public boolean useJpaCompliantCreation() {
+								return true;
+							}
+						},
+						FallbackBeanInstanceProducer.INSTANCE
+				).getBeanInstance();
+			}
+			else {
+				return (ConnectionProvider) providerClass.getConstructor().newInstance();
+			}
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate connection provider [" + providerClass.getName() + "]", e );
@@ -201,7 +263,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private static ConnectionProvider instantiateProvider(StrategySelector selector, String strategy) {
 		try {
-			return selector.selectStrategyImplementor( ConnectionProvider.class, strategy ).newInstance();
+			return selector.selectStrategyImplementor( ConnectionProvider.class, strategy ).getConstructor().newInstance();
 		}
 		catch ( Exception e ) {
 			LOG.providerClassNotFound(strategy);

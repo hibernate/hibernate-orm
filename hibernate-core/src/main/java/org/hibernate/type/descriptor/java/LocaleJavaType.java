@@ -107,11 +107,11 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Locale ) {
-			return (Locale) value;
+		if ( value instanceof Locale locale ) {
+			return locale;
 		}
-		if (value instanceof CharSequence) {
-			return fromString( (CharSequence) value );
+		if (value instanceof CharSequence charSequence) {
+			return fromString( charSequence );
 		}
 		throw unknownWrap( value.getClass() );
 	}

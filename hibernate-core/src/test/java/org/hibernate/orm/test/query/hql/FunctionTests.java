@@ -1131,7 +1131,6 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase cast to char does not do truncatation")
-	@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL cast does not do truncatation")
 	public void testCastFunctionWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

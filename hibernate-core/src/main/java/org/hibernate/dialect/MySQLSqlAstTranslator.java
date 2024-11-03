@@ -4,10 +4,6 @@
  */
 package org.hibernate.dialect;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -40,6 +36,10 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * A SQL AST translator for MySQL.
@@ -81,9 +81,15 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "varchar":
 				case "nchar":
 				case "nvarchar":
-					return castTarget.getLength() == null
-							? "char"
-							: ( "char(" + castTarget.getLength() + ")" );
+					if ( castTarget.getLength() == null ) {
+						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
+							return "char(1)";
+						}
+						else {
+							return "char";
+						}
+					}
+					return "char(" + castTarget.getLength() + ")";
 				case "binary":
 				case "varbinary":
 					return castTarget.getLength() == null

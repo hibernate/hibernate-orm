@@ -17,7 +17,7 @@ import java.sql.NClob;
 
 /**
  * {@link LobCreator} implementation using non-contextual or local creation, meaning that we generate the LOB
- * references ourselves as opposed to delegating to the JDBC {@link java.sql.Connection}.
+ * references ourselves as opposed to delegating to the {@linkplain java.sql.Connection JDBC connection}.
  *
  * @author Steve Ebersole
  * @author Gail Badner

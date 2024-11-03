@@ -20,7 +20,7 @@ import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 
 /**
- * Standard implementation of the ResultSetReturn contract
+ * Standard implementation of the {@link ResultSetReturn} contract
  *
  * @author Brett Meyer
  */

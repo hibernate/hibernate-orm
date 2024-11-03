@@ -12,7 +12,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Service initiator for RefCursorSupport service
+ * Service initiator for the {@link RefCursorSupport} service
  *
  * @author Steve Ebersole
  */

@@ -24,7 +24,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import static java.util.stream.StreamSupport.stream;
 
 /**
- * Standard implementation of ExtractedDatabaseMetaData
+ * Standard implementation of {@link ExtractedDatabaseMetaData}
  *
  * @author Steve Ebersole
  */

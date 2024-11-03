@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
@@ -36,7 +37,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
- * Standard MutationExecutor implementation
+ * Standard {@link MutationExecutor} implementation
  *
  * @author Steve Ebersole
  */

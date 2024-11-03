@@ -21,16 +21,16 @@ import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 
 /**
- * Helps to track statements and resultsets which need being closed.
+ * Helps to track {@link Statement}s and {@link ResultSet}s which need to be closed.
  * This class is not threadsafe.
  * <p>
- * Note regarding performance: we had evidence that allocating Iterators
+ * Note regarding performance: we had evidence that allocating {@code Iterator}s
  * to implement the cleanup on each element recursively was the dominant
- * resource cost, so we decided using "forEach" and lambdas in this case.
- * However the forEach/lambda combination is able to dodge allocating
- * Iterators on HashMap and ArrayList, but not on HashSet (at least on JDK8 and 11).
- * Therefore some types which should ideally be modelled as a Set have
- * been implemented using HashMap.
+ * resource cost, so we decided to use "for each" and lambdas in this case.
+ * However, the "for each"/lambda combination is able to dodge allocating
+ * {@code Iterator}s on {@code HashMap} and {@code ArrayList}, but not on {@code HashSet} (at least on JDK8 and 11).
+ * Therefore some types which should ideally be modelled as a {@code Set} have
+ * been implemented using {@code HashMap}.
  *
  * @author Steve Ebersole
  * @author Sanne Grinovero

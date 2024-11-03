@@ -8,7 +8,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
 /**
- * JdbcOperation extension for model mutations stemming from
+ * {@link JdbcOperation} extension for model mutations stemming from
  * persistence context flushes
  *
  * @author Steve Ebersole

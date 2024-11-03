@@ -11,7 +11,7 @@ import java.sql.Clob;
 import java.sql.NClob;
 
 /**
- * Manages aspects of proxying java.sql.NClobs to add serializability.
+ * Manages aspects of proxying {@link NClob}s to add serializability.
  *
  * @author Steve Ebersole
  */

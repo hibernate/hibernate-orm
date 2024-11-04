@@ -52,7 +52,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	}
 
 	/**
-	 * For used when JDBC Connection is not available.
+	 * For use when JDBC {@link Connection} is not available.
 	 *
 	 * @return Appropriate LobCreatorBuilder
 	 */
@@ -62,7 +62,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	}
 
 	/**
-	 * Build a LobCreator using the given context
+	 * Build a {@link LobCreator} using the given context
 	 *
 	 * @param lobCreationContext The LOB creation context
 	 *

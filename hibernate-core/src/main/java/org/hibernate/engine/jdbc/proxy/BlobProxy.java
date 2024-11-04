@@ -67,6 +67,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		return getUnderlyingStream().getInputStream();
 	}
 
+	@Override
 	public BinaryStream getUnderlyingStream() throws SQLException {
 		resetIfNeeded();
 		return binaryStream;
@@ -172,15 +173,14 @@ public final class BlobProxy implements Blob, BlobImplementer {
 			throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + length() + "]" );
 		}
 		if ( length > Integer.MAX_VALUE ) {
-			throw new SQLException( "Can't deal with Blobs larger than Integer.MAX_VALUE" );
+			throw new SQLException( "Can't deal with Blobs larger than 'Integer.MAX_VALUE'" );
 		}
-		final int intLength = (int)length;
-		if ( intLength < 0 ) {
-			// java docs specifically say for getBinaryStream(long,int) that the start+length must not exceed the
-			// total length, however that is at odds with the getBytes(long,int) behavior.
+		if ( length < 0 ) {
+			// javadoc for getBinaryStream(long,int) specifies that the start+length must not exceed the
+			// total length (this is at odds with the behavior of getBytes(long,int))
 			throw new SQLException( "Length must be great-than-or-equal to zero." );
 		}
-		return DataHelper.subStream( getStream(), start-1, intLength );
+		return DataHelper.subStream( getStream(), start-1, (int)length );
 	}
 
 	private static UnsupportedOperationException notSupported() {

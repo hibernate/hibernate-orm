@@ -9,7 +9,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.LobHelper;
-import org.hibernate.engine.jdbc.BlobProxy;
+import org.hibernate.engine.jdbc.proxy.BlobProxy;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;

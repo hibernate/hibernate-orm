@@ -139,7 +139,7 @@ public final class DataHelper {
 	 *
 	 * @return The content portion as a reader
 	 */
-	public static Object subStream(Reader characterStream, long start, int length) {
+	public static Reader subStream(Reader characterStream, long start, int length) {
 		return new StringReader( extractString( characterStream, start, length ) );
 	}
 

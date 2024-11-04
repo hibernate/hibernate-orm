@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.jdbc;
+package org.hibernate.engine.jdbc.proxy;
+
+import org.hibernate.Internal;
 
 import java.lang.reflect.Proxy;
 import java.sql.Clob;
@@ -13,6 +15,7 @@ import java.sql.NClob;
  *
  * @author Steve Ebersole
  */
+@Internal
 public class SerializableNClobProxy extends SerializableClobProxy {
 	private static final Class<?>[] PROXY_INTERFACES = new Class[] { NClob.class, WrappedNClob.class };
 

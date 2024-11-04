@@ -15,9 +15,8 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
-import org.hibernate.engine.jdbc.ClobProxy;
+import org.hibernate.engine.jdbc.proxy.ClobProxy;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -85,11 +84,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 		try {
 			if ( Clob.class.isAssignableFrom( type ) ) {
-				Clob clob = value;
-				if ( clob instanceof WrappedClob wrappedClob ) {
-					clob = wrappedClob.getWrappedClob();
-				}
-				return (X) options.getLobCreator().createClob( clob );
+				return (X) options.getLobCreator().toJdbcClob( value );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
 				if (value instanceof ClobImplementer clobImplementer) {

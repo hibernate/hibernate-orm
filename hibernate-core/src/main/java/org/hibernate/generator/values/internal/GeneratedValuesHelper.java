@@ -27,6 +27,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.pretty.MessageHelper;
@@ -326,7 +327,11 @@ public class GeneratedValuesHelper {
 	public static GeneratedValuesMutationDelegate getGeneratedValuesDelegate(
 			EntityPersister persister,
 			EventType timing) {
-		final boolean hasGeneratedProperties = !persister.getGeneratedProperties( timing ).isEmpty();
+		final List<? extends ModelPart> generatedProperties = persister.getGeneratedProperties( timing );
+		final boolean hasGeneratedProperties = !generatedProperties.isEmpty();
+		final boolean hasFormula =
+				generatedProperties.stream()
+					.anyMatch( part -> part instanceof SelectableMapping selectable && selectable.isFormula() );
 		final boolean hasRowId = timing == EventType.INSERT && persister.getRowIdMapping() != null;
 		final Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
 
@@ -341,7 +346,8 @@ public class GeneratedValuesHelper {
 			return null;
 		}
 
-		if ( dialect.supportsInsertReturningGeneratedKeys()
+		if ( !hasFormula
+				&& dialect.supportsInsertReturningGeneratedKeys()
 				&& persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return new GetGeneratedKeysDelegate( persister, false, timing );
 		}

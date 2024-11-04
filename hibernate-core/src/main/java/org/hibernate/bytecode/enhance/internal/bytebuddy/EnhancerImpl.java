@@ -17,6 +17,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import net.bytebuddy.description.type.TypeList;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
@@ -172,6 +174,12 @@ public class EnhancerImpl implements Enhancer {
 		}
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
+
+			// Check for HHH-16572 (PROPERTY attributes with mismatched field and method names)
+			if ( !allowedEnhancementCheck( managedCtClass ) ) {
+				return null;
+			}
+
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
 			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( ManagedEntity.class )
@@ -331,6 +339,12 @@ public class EnhancerImpl implements Enhancer {
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
+
+			// Check for HHH-16572 (PROPERTY attributes with mismatched field and method names)
+			if ( !allowedEnhancementCheck( managedCtClass ) ) {
+				return null;
+			}
+
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
@@ -364,6 +378,12 @@ public class EnhancerImpl implements Enhancer {
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+
+			// Check for HHH-16572 (PROPERTY attributes with mismatched field and method names)
+			if ( !allowedEnhancementCheck( managedCtClass ) ) {
+				return null;
+			}
+
 			log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
@@ -378,6 +398,79 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 			return null;
 		}
+	}
+
+	// See HHH-16572
+	// return true if enhancement is supported
+	private boolean allowedEnhancementCheck(TypeDescription managedCtClass) {
+		// For process access rules, See https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#default-access-type
+		// and https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#a122
+		//
+		// This check will determine if entity field names do not match Property accessor method name
+		// For example:
+		// @Entity
+		// class Book {
+		//   Integer id;
+		//   String smtg;
+		//
+		//   @Id Integer getId() { return id; }
+		//   String getSomething() { return smtg; }
+		// }
+		//
+		// Check name of the getter/setter method with Peristence annotation and getter/setter method name that doesn't refer to an entity field
+		// and will return false.  If the property accessor method(s) are named to match the field name(s), return true.
+		boolean propertyHasAnnotation = false;
+		MethodGraph.Linked methodGraph = MethodGraph.Compiler.Default.forJavaHierarchy().compile((TypeDefinition) managedCtClass);
+		for (MethodGraph.Node node : methodGraph.listNodes()) {
+			MethodDescription methodDescription = node.getRepresentative();
+			if (methodDescription.getDeclaringType().represents(Object.class)) { // skip class java.lang.Object methods
+				continue;
+			}
+
+			String methodName = methodDescription.getActualName();
+			if (methodName.equals("") ||
+					(!methodName.startsWith("get") && !methodName.startsWith("set") && !methodName.startsWith("is"))) {
+				continue;
+			}
+			String methodFieldName;
+			if (methodName.startsWith("is")) { // skip past "is"
+				methodFieldName = methodName.substring(2);
+			}
+			else if (methodName.startsWith("get") ||
+					methodName.startsWith("set")) { // skip past "get" or "set"
+				methodFieldName = methodName.substring(3);
+			}
+			else {
+				// not a property accessor method so ignore it
+				continue;
+			}
+			boolean propertyNameMatchesFieldName = false;
+			// convert field letter to lower case
+			methodFieldName = methodFieldName.substring(0, 1).toLowerCase() + methodFieldName.substring(1);
+			TypeList typeList = methodDescription.getDeclaredAnnotations().asTypeList();
+			if (typeList.stream().anyMatch(typeDefinitions ->
+					(typeDefinitions.getName().contains("jakarta.persistence")))) {
+				propertyHasAnnotation = true;
+			}
+			for (FieldDescription ctField : methodDescription.getDeclaringType().getDeclaredFields()) {
+				if (!Modifier.isStatic(ctField.getModifiers())) {
+					AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription(enhancementContext, ctField);
+					boolean containsPropertyAccessorMethods = false;
+					if (enhancementContext.isPersistentField(annotatedField)) {
+						if (methodFieldName.equals(ctField.getActualName())) {
+							propertyNameMatchesFieldName = true;
+							break;
+						}
+					}
+				}
+			}
+			if (propertyHasAnnotation && !propertyNameMatchesFieldName) {
+				log.debugf("Skipping enhancement of [%s]: due to class [%s] not having a property accessor method name matching field name [%s]",
+						managedCtClass, methodDescription.getDeclaringType().getActualName(), methodFieldName);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static void verifyVersions(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext) {

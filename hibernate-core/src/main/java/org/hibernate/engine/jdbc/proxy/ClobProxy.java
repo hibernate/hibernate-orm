@@ -92,34 +92,35 @@ public class ClobProxy implements Clob, ClobImplementer {
 
 	@Override
 	public long position(Clob searchstr, long start) throws SQLException {
-		throw new UnsupportedOperationException("Clob may not be manipulated from creating session");
+		throw notSupported();
 	}
 
 	@Override
 	public int setString(long pos, String str) throws SQLException {
-		throw new UnsupportedOperationException("Clob may not be manipulated from creating session");
+		throw notSupported();
 	}
 
 	@Override
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
-		throw new UnsupportedOperationException("Clob may not be manipulated from creating session");
+		throw notSupported();
 	}
 
 	@Override
 	public OutputStream setAsciiStream(long pos) {
-		throw new UnsupportedOperationException("Clob may not be manipulated from creating session");
+		throw notSupported();
 	}
 
 	@Override
 	public Writer setCharacterStream(long pos) {
-		throw new UnsupportedOperationException("Clob may not be manipulated from creating session");
+		throw notSupported();
 	}
 
 	@Override
 	public void truncate(long len) throws SQLException {
-		throw new UnsupportedOperationException("Clob may not be manipulated from creating session");
+		throw notSupported();
 	}
 
+	@Override
 	public String getSubString(long start, int length) throws SQLException {
 		if ( start < 1 ) {
 			throw new SQLException( "Start position 1-based; must be 1 or more." );
@@ -143,8 +144,11 @@ public class ClobProxy implements Clob, ClobImplementer {
 		if ( start > length() + 1 ) {
 			throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + length() + "]" );
 		}
+		if ( length > Integer.MAX_VALUE ) {
+			throw new SQLException( "Can't deal with Clobs larger than 'Integer.MAX_VALUE'" );
+		}
 		if ( length < 0 ) {
-			// javadoc for getCharacterStream(long,int) specify that the start+length must not exceed the
+			// javadoc for getCharacterStream(long,int) specifies that the start+length must not exceed the
 			// total length (this is at odds with the behavior of getSubString(long,int))
 			throw new SQLException( "Length must be greater than or equal to zero" );
 		}
@@ -189,5 +193,9 @@ public class ClobProxy implements Clob, ClobImplementer {
 	 */
 	public static Clob generateProxy(Reader reader, long length) {
 		return new ClobProxy( reader, length );
+	}
+
+	private static UnsupportedOperationException notSupported() {
+		return new UnsupportedOperationException("Clob may not be manipulated from creating session");
 	}
 }

@@ -31,11 +31,13 @@ import static org.hibernate.generator.EventType.INSERT;
  * <li>a mapped column has a default value defined in DDL, in which case
  *     {@code @Generated} is used in conjunction with {@link ColumnDefault},
  * <li>a {@linkplain #sql() SQL expression} is used to compute the value of
- *     a mapped column, or
- * <li>when a custom SQL {@link SQLInsert insert} or {@link SQLUpdate update}
+ *     a mapped column,
+ * <li>a custom SQL {@link SQLInsert insert} or {@link SQLUpdate update}
  *     statement specified by an entity assigns a value to the annotated
- *     property of the entity, or {@linkplain #writable() transforms} the
- *     value currently assigned to the annotated property.
+ *     property of the entity, or {@linkplain #writable transforms} the
+ *     value currently assigned to the annotated property, or
+ * <li>there is no mapped column, and the value of the field is determined
+ *     by evaluating a SQL {@link Formula}.
  * </ul>
  * <p>
  * On the other hand:

@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
@@ -22,6 +21,7 @@ import org.hibernate.sql.ast.tree.update.Assignable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.sql.Template.TEMPLATE;
 
@@ -116,21 +116,20 @@ public class ColumnReference implements Expression, Assignable {
 			boolean isFormula,
 			String customReadExpression,
 			JdbcMapping jdbcMapping) {
-		this.qualifier = StringHelper.nullIfEmpty( qualifier );
+		this.qualifier = nullIfEmpty( qualifier );
 
 		if ( isFormula ) {
-			assert qualifier != null;
-			this.columnExpression = replace( columnExpression, TEMPLATE, qualifier );
+			this.columnExpression = qualifier == null
+					? replace( columnExpression, TEMPLATE + '.', "" )
+					: replace( columnExpression, TEMPLATE, qualifier );
 		}
 		else {
 			this.columnExpression = columnExpression;
 		}
-		if ( selectablePath == null ) {
-			this.selectablePath = new SelectablePath( this.columnExpression );
-		}
-		else {
-			this.selectablePath = selectablePath;
-		}
+
+		this.selectablePath = selectablePath == null
+				? new SelectablePath( this.columnExpression )
+				: selectablePath;
 
 		this.isFormula = isFormula;
 		this.readExpression = customReadExpression;
@@ -181,12 +180,9 @@ public class ColumnReference implements Expression, Assignable {
 			appender.accept( columnExpression );
 		}
 		else if ( readExpression != null ) {
-			if ( qualifier == null ) {
-				appender.accept( replace( readExpression, TEMPLATE + ".", "" ) );
-			}
-			else {
-				appender.accept( replace( readExpression, TEMPLATE, qualifier ) );
-			}
+			appender.accept( qualifier == null
+					? replace( readExpression, TEMPLATE + '.', "" )
+					: replace( readExpression, TEMPLATE, qualifier ) );
 		}
 		else {
 			if ( qualifier != null ) {

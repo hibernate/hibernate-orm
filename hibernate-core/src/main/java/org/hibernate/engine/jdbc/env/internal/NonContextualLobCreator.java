@@ -2,7 +2,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.jdbc;
+package org.hibernate.engine.jdbc.env.internal;
+
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.proxy.BlobProxy;
+import org.hibernate.engine.jdbc.proxy.ClobProxy;
+import org.hibernate.engine.jdbc.proxy.NClobProxy;
 
 import java.io.InputStream;
 import java.io.Reader;

@@ -11,7 +11,6 @@ import java.util.Map;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.NONE;

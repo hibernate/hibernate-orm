@@ -13,11 +13,9 @@ import java.sql.NClob;
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
-import org.hibernate.engine.jdbc.AbstractLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NClobProxy;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.proxy.NClobProxy;
 
 /**
  * {@link LobCreator} which can use {@link Connection#createBlob} and {@link Connection#createClob},
@@ -42,7 +40,7 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 	protected final LobCreationContext lobCreationContext;
 	protected final boolean useConnectionToCreateLob;
 
-	public BlobAndClobCreator(LobCreationContext lobCreationContext, boolean useConnectionToCreateLob) {
+	BlobAndClobCreator(LobCreationContext lobCreationContext, boolean useConnectionToCreateLob) {
 		this.lobCreationContext = lobCreationContext;
 		this.useConnectionToCreateLob = useConnectionToCreateLob;
 	}
@@ -52,7 +50,7 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 	 *
 	 * @return The created BLOB reference.
 	 */
-	public Blob createBlob() {
+	Blob createBlob() {
 		return lobCreationContext.fromContext( CREATE_BLOB_CALLBACK );
 	}
 
@@ -116,11 +114,11 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 	}
 
 	@Override
-	public Blob createBlob(Blob blob) {
+	public Blob toJdbcBlob(Blob blob) {
 		try {
 			return useConnectionToCreateLob
 					? createBlob( blob.getBytes( 1, (int) blob.length() ) )
-					: blob;
+					: super.toJdbcBlob( blob );
 		}
 		catch (SQLException e) {
 			throw new JDBCException( "Could not create JDBC Clob", e );
@@ -128,11 +126,11 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 	}
 
 	@Override
-	public Clob createClob(Clob clob) {
+	public Clob toJdbcClob(Clob clob) {
 		try {
 			return useConnectionToCreateLob
 					? createClob( clob.getSubString( 1, (int) clob.length() ) )
-					: clob;
+					: super.toJdbcClob( clob );
 		}
 		catch (SQLException e) {
 			throw new JDBCException( "Could not create JDBC Clob", e );
@@ -140,11 +138,11 @@ public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator
 	}
 
 	@Override
-	public NClob createNClob(NClob clob) {
+	public NClob toJdbcNClob(NClob clob) {
 		try {
 			return useConnectionToCreateLob
 					? createNClob( clob.getSubString( 1, (int) clob.length() ) )
-					: clob;
+					: super.toJdbcNClob( clob );
 		}
 		catch (SQLException e) {
 			throw new JDBCException( "Could not create JDBC Clob", e );

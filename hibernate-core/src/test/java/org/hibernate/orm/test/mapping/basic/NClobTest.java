@@ -11,7 +11,7 @@ import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.engine.jdbc.NClobProxy;
+import org.hibernate.engine.jdbc.proxy.NClobProxy;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

@@ -15,10 +15,9 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
-import org.hibernate.engine.jdbc.BlobProxy;
+import org.hibernate.engine.jdbc.proxy.BlobProxy;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.internal.StreamBackedBinaryStream;
-import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -113,11 +112,7 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 
 		try {
 			if ( Blob.class.isAssignableFrom( type ) ) {
-				Blob blob = value;
-				if ( blob instanceof WrappedBlob wrappedBlob ) {
-					blob = wrappedBlob.getWrappedBlob();
-				}
-				return (X) options.getLobCreator().createBlob( blob );
+				return (X) options.getLobCreator().toJdbcBlob( value );
 			}
 			else if ( byte[].class.isAssignableFrom( type )) {
 				if (value instanceof BlobImplementer blobImplementer) {

@@ -28,7 +28,8 @@ public interface LobCreator {
 	 * Wrap the given blob in a serializable wrapper.
 	 *
 	 * @param blob The blob to be wrapped.
-	 * @return The wrapped blob which will be castable to {@link Blob} as well as {@link WrappedBlob}.
+	 * @return The wrapped blob which will be castable to {@link Blob}
+	 * as well as {@link org.hibernate.engine.jdbc.proxy.WrappedBlob}.
 	 */
 	Blob wrap(Blob blob);
 
@@ -36,7 +37,8 @@ public interface LobCreator {
 	 * Wrap the given clob in a serializable wrapper.
 	 *
 	 * @param clob The clob to be wrapped.
-	 * @return The wrapped clob which will be castable to {@link Clob} as well as {@link WrappedClob}.
+	 * @return The wrapped clob which will be castable to {@link Clob}
+	 * as well as {@link org.hibernate.engine.jdbc.proxy.WrappedClob}.
 	 */
 	Clob wrap(Clob clob);
 
@@ -44,7 +46,8 @@ public interface LobCreator {
 	 * Wrap the given nclob in a serializable wrapper.
 	 *
 	 * @param nclob The nclob to be wrapped.
-	 * @return The wrapped nclob which will be castable to {@link NClob} as well as {@link WrappedNClob}.
+	 * @return The wrapped nclob which will be castable to {@link NClob}
+	 * as well as {@link org.hibernate.engine.jdbc.proxy.WrappedNClob}.
 	 */
 	NClob wrap(NClob nclob);
 
@@ -101,7 +104,39 @@ public interface LobCreator {
 	 */
 	NClob createNClob(Reader reader, long length);
 
-	Blob createBlob(Blob clob);
-	Clob createClob(Clob clob);
-	NClob createNClob(NClob clob);
+	/**
+	 * Return an instance which can actually be written to a JDBC
+	 * {@code PreparedStatement}.
+	 *
+	 * @apiNote This is needed for Oracle
+	 *
+	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
+	 *
+	 * @since 7.0
+	 */
+	Blob toJdbcBlob(Blob clob);
+
+	/**
+	 * Return an instance which can actually be written to a JDBC
+	 * {@code PreparedStatement}.
+	 *
+	 * @apiNote This is needed for Oracle
+	 *
+	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
+	 *
+	 * @since 7.0
+	 */
+	Clob toJdbcClob(Clob clob);
+
+	/**
+	 * Return an instance which can actually be written to a JDBC
+	 * {@code PreparedStatement}.
+	 *
+	 * @apiNote This is needed for Oracle
+	 *
+	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
+	 *
+	 * @since 7.0
+	 */
+	NClob toJdbcNClob(NClob clob);
 }

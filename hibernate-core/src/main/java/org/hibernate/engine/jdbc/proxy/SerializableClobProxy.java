@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.jdbc;
+package org.hibernate.engine.jdbc.proxy;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
@@ -12,6 +12,7 @@ import java.lang.reflect.Proxy;
 import java.sql.Clob;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 
 /**
  * Manages aspects of proxying {@link Clob}s to add serializability.
@@ -20,6 +21,7 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  * @author Gail Badner
  */
+@Internal
 public class SerializableClobProxy implements InvocationHandler, Serializable {
 	private static final Class<?>[] PROXY_INTERFACES = new Class[] { Clob.class, WrappedClob.class, Serializable.class };
 

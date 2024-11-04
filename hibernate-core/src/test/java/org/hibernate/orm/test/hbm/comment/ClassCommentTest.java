@@ -10,7 +10,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.ReaderInputStream;
+import org.hibernate.internal.util.ReaderInputStream;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 

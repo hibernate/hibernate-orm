@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.jdbc;
+package org.hibernate.engine.jdbc.proxy;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +11,9 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
+import org.hibernate.engine.jdbc.BinaryStream;
+import org.hibernate.engine.jdbc.BlobImplementer;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.engine.jdbc.internal.StreamBackedBinaryStream;
 import org.hibernate.type.descriptor.java.DataHelper;

@@ -14,8 +14,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NClobImplementer;
-import org.hibernate.engine.jdbc.NClobProxy;
-import org.hibernate.engine.jdbc.WrappedNClob;
+import org.hibernate.engine.jdbc.proxy.NClobProxy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -94,11 +93,7 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 
 		try {
 			if ( NClob.class.isAssignableFrom( type ) ) {
-				NClob clob = value;
-				if ( clob instanceof WrappedNClob wrappedNClob ) {
-					clob = wrappedNClob.getWrappedNClob();
-				}
-				return (X) options.getLobCreator().createNClob( clob );
+				return (X) options.getLobCreator().toJdbcNClob( value );
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
 				if (value instanceof NClobImplementer clobImplementer) {

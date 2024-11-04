@@ -33,10 +33,10 @@ public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegat
 
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
-		return dialect().getIdentityColumnSupport().appendIdentitySelectToInsert(
-				( (BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping() ).getSelectionExpression(),
-				insertSQL
-		);
+		final BasicEntityIdentifierMapping identifierMapping =
+				(BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping();
+		return dialect().getIdentityColumnSupport()
+				.appendIdentitySelectToInsert( identifierMapping.getSelectionExpression(), insertSQL );
 	}
 
 	@Override

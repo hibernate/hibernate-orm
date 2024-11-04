@@ -9,16 +9,13 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Generated;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.hibernate.cfg.JdbcSettings.USE_GET_GENERATED_KEYS;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -27,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = FormulaGeneratedTest.OrderLine.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = USE_GET_GENERATED_KEYS, value = "false"))
+//@ServiceRegistry(settings = @Setting(name = USE_GET_GENERATED_KEYS, value = "false"))
 public class FormulaGeneratedTest {
 
 	@Test

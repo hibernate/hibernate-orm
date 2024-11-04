@@ -416,7 +416,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof Table && equals((Table) object);
+		return object instanceof Table table
+			&& equals( table );
 	}
 
 	public boolean equals(Table table) {

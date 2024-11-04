@@ -149,11 +149,14 @@ public abstract class SimpleValue implements KeyValue {
 		return metadata;
 	}
 
+	InFlightMetadataCollector getMetadataCollector() {
+		return getBuildingContext().getMetadataCollector();
+	}
+
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
-
 
 	public TypeConfiguration getTypeConfiguration() {
 		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
@@ -234,8 +237,8 @@ public abstract class SimpleValue implements KeyValue {
 			for ( int i = 0; i < originalOrder.length; i++ ) {
 				final int originalIndex = originalOrder[i];
 				final Selectable selectable = originalColumns[i];
-				if ( selectable instanceof Column ) {
-					( (Column) selectable ).setTypeIndex( originalIndex );
+				if ( selectable instanceof Column column ) {
+					column.setTypeIndex( originalIndex );
 				}
 				columns.set( originalIndex, selectable );
 				insertability.set( originalIndex, originalInsertability[i] );
@@ -422,9 +425,8 @@ public abstract class SimpleValue implements KeyValue {
 		if ( getColumnSpan() != 1 ) {
 			throw new MappingException( "Identity generation requires exactly one column" );
 		}
-		final Selectable column = getColumn(0);
-		if ( column instanceof Column ) {
-			( (Column) column).setIdentity( true );
+		else if ( getColumn(0) instanceof Column column ) {
+			column.setIdentity( true );
 		}
 		else {
 			throw new MappingException( "Identity generation requires a column" );
@@ -513,10 +515,12 @@ public abstract class SimpleValue implements KeyValue {
 				// considered nullable
 				return true;
 			}
-			else if ( !( (Column) selectable ).isNullable() ) {
-				// if there is a single non-nullable column, the Value
-				// overall is considered non-nullable.
-				return false;
+			else if ( selectable instanceof Column column ) {
+				if ( !column.isNullable() ) {
+					// if there is a single non-nullable column, the Value
+					// overall is considered non-nullable.
+					return false;
+				}
 			}
 		}
 		// nullable by default
@@ -755,7 +759,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void setTypeParameters(Map<String, ?> parameters) {
 		if ( parameters != null ) {
-			Properties properties = new Properties();
+			final Properties properties = new Properties();
 			properties.putAll( parameters );
 			setTypeParameters( properties );
 		}
@@ -891,10 +895,9 @@ public abstract class SimpleValue implements KeyValue {
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = getAnnotations( attributeMember );
 
-			final ClassLoaderService classLoaderService = getMetadata()
-					.getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.requireService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService =
+					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+							.requireService( ClassLoaderService.class );
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
@@ -906,7 +909,7 @@ public abstract class SimpleValue implements KeyValue {
 							table.getCatalog(),
 							table.getSchema(),
 							table.getName(),
-							parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY)),
+							parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY) ),
 							columnNames,
 							columnLengths
 					)
@@ -944,19 +947,18 @@ public abstract class SimpleValue implements KeyValue {
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = getAnnotations( attributeMember );
 
-			final ClassLoaderService classLoaderService = getMetadata()
-					.getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.requireService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService =
+					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+							.requireService( ClassLoaderService.class );
 
 			return new ParameterTypeImpl(
-					classLoaderService.classForTypeName(typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)),
+					classLoaderService.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
 					attributeMember != null ? attributeMember.getType() : null,
 					annotations,
 					table.getCatalog(),
 					table.getSchema(),
 					table.getName(),
-					parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY)),
+					parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY) ),
 					columnNames,
 					columnLengths
 			);

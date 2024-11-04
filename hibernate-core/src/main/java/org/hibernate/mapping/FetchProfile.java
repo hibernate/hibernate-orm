@@ -68,17 +68,10 @@ public class FetchProfile {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-
-		FetchProfile that = ( FetchProfile ) o;
-
-		return name.equals( that.name );
+	public boolean equals(Object that) {
+		return this == that
+			|| that instanceof FetchProfile profile
+				&& name.equals( profile.name );
 	}
 
 	@Override

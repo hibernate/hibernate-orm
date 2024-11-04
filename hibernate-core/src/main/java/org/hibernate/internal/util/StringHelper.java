@@ -819,7 +819,7 @@ public final class StringHelper {
 			return names;
 		}
 		else {
-			String[] unquoted = new String[length];
+			final String[] unquoted = new String[length];
 			System.arraycopy( names, 0, unquoted, 0, failedIndex );
 			for ( int i = failedIndex; i < length; i++ ) {
 				unquoted[i] = unquote( names[i], dialect );
@@ -889,8 +889,8 @@ public final class StringHelper {
 	 * if both {@code firstExpression} and {@code secondExpression} are empty, then null is returned.
 	 */
 	public static String getNonEmptyOrConjunctionIfBothNonEmpty( String firstExpression, String secondExpression ) {
-		final boolean isFirstExpressionNonEmpty = StringHelper.isNotEmpty( firstExpression );
-		final boolean isSecondExpressionNonEmpty = StringHelper.isNotEmpty( secondExpression );
+		final boolean isFirstExpressionNonEmpty = isNotEmpty( firstExpression );
+		final boolean isSecondExpressionNonEmpty = isNotEmpty( secondExpression );
 		if ( isFirstExpressionNonEmpty && isSecondExpressionNonEmpty ) {
 			return "( " + firstExpression + " ) and ( " + secondExpression + " )";
 		}
@@ -918,12 +918,7 @@ public final class StringHelper {
 	 * @return The interned string.
 	 */
 	public static String safeInterning(final String string) {
-		if ( string == null ) {
-			return null;
-		}
-		else {
-			return string.intern();
-		}
+		return string == null ? null : string.intern();
 	}
 
 }

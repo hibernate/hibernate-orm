@@ -94,9 +94,9 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof Formula
-			&& ( (Formula) obj ).formula.equals( formula );
+	public boolean equals(Object that) {
+		return that instanceof Formula other
+			&& formula.equals( other.formula );
 	}
 
 	@Override

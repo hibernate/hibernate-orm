@@ -90,9 +90,9 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final ClassLoaderService cls = getMetadata().getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.requireService( ClassLoaderService.class );
+			final ClassLoaderService cls =
+					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+							.requireService( ClassLoaderService.class );
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();
 		}
 	}

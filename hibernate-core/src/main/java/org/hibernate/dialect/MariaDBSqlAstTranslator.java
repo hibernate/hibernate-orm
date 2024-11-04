@@ -401,5 +401,4 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
 	}
-
 }

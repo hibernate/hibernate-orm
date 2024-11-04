@@ -57,6 +57,10 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
 	}
 
+	//TODO: this is really, really bad since it circumvents the whole machinery we have in DdlType
+	//      and in the Dialect for doing this in a unified way! These mappings should be held in
+	//      the DdlTypes themselves and should be set up in registerColumnTypes(). Doing it here
+	//      means we have problems distinguishing, say, the 'as Character' special case
 	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
 		if ( sqlType != null ) {
 			int parenthesesIndex = sqlType.indexOf( '(' );
@@ -72,9 +76,9 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "float":
 				case "real":
 				case "double precision":
-					final int precision = castTarget.getPrecision() == null ?
-							dialect.getDefaultDecimalPrecision() :
-							castTarget.getPrecision();
+					final int precision = castTarget.getPrecision() == null
+							? dialect.getDefaultDecimalPrecision()
+							: castTarget.getPrecision();
 					final int scale = castTarget.getScale() == null ? Size.DEFAULT_SCALE : castTarget.getScale();
 					return "decimal(" + precision + "," + scale + ")";
 				case "char":
@@ -82,6 +86,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "nchar":
 				case "nvarchar":
 					if ( castTarget.getLength() == null ) {
+						// TODO: this is ugly and fragile, but could easily be handled in a DdlType
 						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
 							return "char(1)";
 						}
@@ -94,7 +99,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "varbinary":
 					return castTarget.getLength() == null
 						? "binary"
-						: ( "binary(" + castTarget.getLength() + ")" );
+						: "binary(" + castTarget.getLength() + ")";
 			}
 		}
 		return sqlType;

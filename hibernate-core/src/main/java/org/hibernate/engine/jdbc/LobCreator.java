@@ -108,6 +108,8 @@ public interface LobCreator {
 	 * Return an instance which can actually be written to a JDBC
 	 * {@code PreparedStatement}.
 	 *
+	 * @see java.sql.PreparedStatement#setBlob(int, Blob)
+	 *
 	 * @apiNote This is needed for Oracle
 	 *
 	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
@@ -120,6 +122,8 @@ public interface LobCreator {
 	 * Return an instance which can actually be written to a JDBC
 	 * {@code PreparedStatement}.
 	 *
+	 * @see java.sql.PreparedStatement#setClob(int, Clob)
+	 *
 	 * @apiNote This is needed for Oracle
 	 *
 	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
@@ -131,6 +135,8 @@ public interface LobCreator {
 	/**
 	 * Return an instance which can actually be written to a JDBC
 	 * {@code PreparedStatement}.
+	 *
+	 * @see java.sql.PreparedStatement#setNClob(int, NClob)
 	 *
 	 * @apiNote This is needed for Oracle
 	 *

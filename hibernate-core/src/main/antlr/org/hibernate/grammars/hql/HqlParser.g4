@@ -14,12 +14,6 @@ options {
 package org.hibernate.grammars.hql;
 }
 
-@members {
-	protected void logUseOfReservedWordAsIdentifier(Token token) {
-	}
-}
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Statements
 
@@ -1851,7 +1845,7 @@ xmltableDefaultClause
  nakedIdentifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
-	| (ABSENT
+	| ABSENT
 	| ALL
 	| AND
 	| ANY
@@ -2057,17 +2051,14 @@ xmltableDefaultClause
 	| XMLQUERY
 	| XMLTABLE
 	| YEAR
-	| ZONED) {
-		logUseOfReservedWordAsIdentifier( getCurrentToken() );
-	}
+	| ZONED
 	;
+
 identifier
 	: nakedIdentifier
-	| (FULL
+	| FULL
 	| INNER
 	| LEFT
 	| OUTER
-	| RIGHT) {
-		logUseOfReservedWordAsIdentifier( getCurrentToken() );
-	}
+	| RIGHT
 	;

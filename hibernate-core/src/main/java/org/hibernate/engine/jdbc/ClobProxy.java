@@ -97,65 +97,78 @@ public class ClobProxy implements InvocationHandler {
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		final String methodName = method.getName();
 		final int argCount = method.getParameterCount();
-
-		if ( "length".equals( methodName ) && argCount == 0 ) {
-			return getLength();
-		}
-		if ( "getUnderlyingStream".equals( methodName ) ) {
-			return getUnderlyingStream(); // Reset stream if needed.
-		}
-		if ( "getAsciiStream".equals( methodName ) && argCount == 0 ) {
-			return getAsciiStream();
-		}
-		if ( "getCharacterStream".equals( methodName ) ) {
-			if ( argCount == 0 ) {
-				return getCharacterStream();
-			}
-			else if ( argCount == 2 ) {
-				final long start = (Long) args[0];
-				if ( start < 1 ) {
-					throw new SQLException( "Start position 1-based; must be 1 or more." );
+		switch ( methodName ) {
+			case "length":
+				if ( argCount == 0 ) {
+					return getLength();
 				}
-				if ( start > getLength() ) {
-					throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
+				break;
+			case "getUnderlyingStream":
+				return getUnderlyingStream(); // Reset stream if needed
+			case "getCharacterStream":
+				if ( argCount == 0 ) {
+					return getCharacterStream();
 				}
-				final int length = (Integer) args[1];
-				if ( length < 0 ) {
-					// java docs specifically say for getCharacterStream(long,int) that the start+length must not exceed the
-					// total length, however that is at odds with the getSubString(long,int) behavior.
-					throw new SQLException( "Length must be great-than-or-equal to zero." );
+				else if ( argCount == 2 ) {
+					final long start = (Long) args[0];
+					if ( start < 1 ) {
+						throw new SQLException( "Start position 1-based; must be 1 or more." );
+					}
+					if ( start > getLength() + 1 ) {
+						throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
+					}
+					final int length = (Integer) args[1];
+					if ( length < 0 ) {
+						// javadoc for getCharacterStream(long,int) specify that the start+length must not exceed the
+						// total length (this is at odds with the behavior of getSubString(long,int))
+						throw new SQLException( "Length must be greater than or equal to zero" );
+					}
+					return DataHelper.subStream( getCharacterStream(), start-1, length );
 				}
-				return DataHelper.subStream( getCharacterStream(), start-1, length );
-			}
+				break;
+			case "getAsciiStream":
+				if ( argCount == 0 ) {
+					return getAsciiStream();
+				}
+				break;
+			case "getSubString":
+				if ( argCount == 2 ) {
+					final long start = (Long) args[0];
+					if ( start < 1 ) {
+						throw new SQLException( "Start position 1-based; must be 1 or more." );
+					}
+					if ( start > getLength() + 1 ) {
+						throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
+					}
+					final int length = (Integer) args[1];
+					if ( length < 0 ) {
+						throw new SQLException( "Length must be great-than-or-equal to zero." );
+					}
+					return getSubString( start-1, length );
+				}
+				break;
+			case "free":
+				if ( argCount == 0 ) {
+					characterStream.release();
+					return null;
+				}
+				break;
+			case "toString":
+				if ( argCount == 0 ) {
+					return this.toString();
+				}
+				break;
+			case "equals":
+				if ( argCount == 1 ) {
+					return proxy == args[0];
+				}
+				break;
+			case "hashCode":
+				if ( argCount == 0 ) {
+					return this.hashCode();
+				}
+				break;
 		}
-		if ( "getSubString".equals( methodName ) && argCount == 2 ) {
-			final long start = (Long) args[0];
-			if ( start < 1 ) {
-				throw new SQLException( "Start position 1-based; must be 1 or more." );
-			}
-			if ( start > getLength() ) {
-				throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
-			}
-			final int length = (Integer) args[1];
-			if ( length < 0 ) {
-				throw new SQLException( "Length must be great-than-or-equal to zero." );
-			}
-			return getSubString( start-1, length );
-		}
-		if ( "free".equals( methodName ) && argCount == 0 ) {
-			characterStream.release();
-			return null;
-		}
-		if ( "toString".equals( methodName ) && argCount == 0 ) {
-			return this.toString();
-		}
-		if ( "equals".equals( methodName ) && argCount == 1 ) {
-			return proxy == args[0];
-		}
-		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
-			return this.hashCode();
-		}
-
 		throw new UnsupportedOperationException( "Clob may not be manipulated from creating session" );
 	}
 

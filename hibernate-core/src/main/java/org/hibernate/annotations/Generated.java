@@ -48,12 +48,25 @@ import static org.hibernate.generator.EventType.INSERT;
  *     {@link GeneratedColumn} annotation, so that Hibernate automatically
  *     generates the correct DDL.
  * </ul>
+ * <p>
+ * A {@code @Generated} field may be generated on
+ * {@linkplain EventType#INSERT inserts}, on
+ * {@linkplain EventType#UPDATE updates}, or on both inserts and updates,
+ * as specified by the {@link #event} member.
+ * By default, {@code @Generated} fields are not immutable, and so a field
+ * which is generated on insert may later be explicitly assigned a new value
+ * by the application program, resulting in its value being updated in the
+ * database. If this is not desired, the {@link Immutable @Immutable}
+ * annotation may be used in conjunction with {@code @Generated} to specify
+ * that the field may never be updated after initial generation of its value.
  *
  * @author Emmanuel Bernard
  *
  * @see jakarta.persistence.GeneratedValue
  * @see ColumnDefault
  * @see GeneratedColumn
+ * @see Formula
+ * @see Immutable
  */
 @ValueGenerationType( generatedBy = GeneratedGeneration.class )
 @IdGeneratorType( GeneratedGeneration.class )

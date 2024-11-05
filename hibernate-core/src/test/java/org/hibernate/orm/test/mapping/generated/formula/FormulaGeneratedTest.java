@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,12 +38,14 @@ public class FormulaGeneratedTest {
 			assertEquals( "new", entity.status );
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
+			assertEquals( 64.95f, entity.total.floatValue(), 0.01f );
 		} );
 		scope.inTransaction( session -> {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
 			assertEquals( "new", entity.status );
+			assertEquals( 64.95f, entity.total.floatValue(), 0.01f );
 			entity.status = "old"; //should be ignored when fetch=true
 		} );
 		scope.inTransaction( session -> {
@@ -50,6 +53,17 @@ public class FormulaGeneratedTest {
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
 			assertEquals( "new", entity.status );
+			assertEquals( 64.95f, entity.total.floatValue(), 0.01f );
+			entity.quantity = 10;
+			session.flush();
+			assertEquals( 129.90f, entity.total.floatValue(), 0.01f );
+		} );
+		scope.inTransaction( session -> {
+			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
+			assertEquals( unitPrice, entity.unitPrice );
+			assertEquals( 10, entity.quantity );
+			assertEquals( "new", entity.status );
+			assertEquals( 129.90f, entity.total.floatValue(), 0.01f );
 		} );
 	}
 
@@ -61,12 +75,16 @@ public class FormulaGeneratedTest {
 	@Entity(name="WithDefault")
 	public static class OrderLine {
 		@Id
+		private long id;
 		private BigDecimal unitPrice;
-		@Id
 		private int quantity = 1;
 		@Generated
 		@Formula(value = "'new'")
 		private String status;
+		@Generated(event = {EventType.INSERT, EventType.UPDATE})
+		@Formula(value = "quantity*unitPrice")
+		private BigDecimal total;
+
 
 		public OrderLine() {}
 		public OrderLine(BigDecimal unitPrice, int quantity) {

@@ -33,9 +33,9 @@ import static org.hibernate.sql.Template.TEMPLATE;
  * @author Yanming Zhou
  */
 public class ColumnReference implements Expression, Assignable {
-	private final String qualifier;
+	private final @Nullable String qualifier;
 	private final String columnExpression;
-	private final SelectablePath selectablePath;
+	private final @Nullable SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final @Nullable String readExpression;
 	private final JdbcMapping jdbcMapping;
@@ -62,7 +62,7 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
-	public ColumnReference(String qualifier, SelectableMapping selectableMapping) {
+	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
@@ -73,7 +73,7 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
-	public ColumnReference(String qualifier, SelectableMapping selectableMapping, JdbcMapping jdbcMapping) {
+	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping, JdbcMapping jdbcMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
@@ -88,7 +88,7 @@ public class ColumnReference implements Expression, Assignable {
 			TableReference tableReference,
 			String columnExpression,
 			boolean isFormula,
-			String customReadExpression,
+			@Nullable String customReadExpression,
 			JdbcMapping jdbcMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
@@ -101,20 +101,20 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	public ColumnReference(
-			String qualifier,
+			@Nullable String qualifier,
 			String columnExpression,
 			boolean isFormula,
-			String customReadExpression,
+			@Nullable String customReadExpression,
 			JdbcMapping jdbcMapping) {
 		this( qualifier, columnExpression, null, isFormula, customReadExpression, jdbcMapping );
 	}
 
 	public ColumnReference(
-			String qualifier,
+			@Nullable String qualifier,
 			String columnExpression,
-			SelectablePath selectablePath,
+			@Nullable SelectablePath selectablePath,
 			boolean isFormula,
-			String customReadExpression,
+			@Nullable String customReadExpression,
 			JdbcMapping jdbcMapping) {
 		this.qualifier = nullIfEmpty( qualifier );
 
@@ -141,7 +141,7 @@ public class ColumnReference implements Expression, Assignable {
 		return this;
 	}
 
-	public String getQualifier() {
+	public @Nullable String getQualifier() {
 		return qualifier;
 	}
 
@@ -153,11 +153,11 @@ public class ColumnReference implements Expression, Assignable {
 		return readExpression;
 	}
 
-	public String getSelectableName() {
-		return selectablePath.getSelectableName();
+	public @Nullable String getSelectableName() {
+		return selectablePath == null ? null : selectablePath.getSelectableName();
 	}
 
-	public SelectablePath getSelectablePath() {
+	public @Nullable SelectablePath getSelectablePath() {
 		return selectablePath;
 	}
 
@@ -175,7 +175,7 @@ public class ColumnReference implements Expression, Assignable {
 		appendReadExpression( appender, qualifier );
 	}
 
-	public void appendReadExpression(String qualifier, Consumer<String> appender) {
+	public void appendReadExpression(@Nullable String qualifier, Consumer<String> appender) {
 		if ( isFormula ) {
 			appender.accept( columnExpression );
 		}
@@ -193,7 +193,7 @@ public class ColumnReference implements Expression, Assignable {
 		}
 	}
 
-	public void appendReadExpression(SqlAppender appender, String qualifier) {
+	public void appendReadExpression(SqlAppender appender, @Nullable String qualifier) {
 		appendReadExpression( qualifier, appender::appendSql );
 	}
 
@@ -201,7 +201,7 @@ public class ColumnReference implements Expression, Assignable {
 		appendColumnForWrite( appender, qualifier );
 	}
 
-	public void appendColumnForWrite(SqlAppender appender, String qualifier) {
+	public void appendColumnForWrite(SqlAppender appender, @Nullable String qualifier) {
 		if ( qualifier != null ) {
 			appender.append( qualifier );
 			appender.append( '.' );

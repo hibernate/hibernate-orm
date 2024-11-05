@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -295,7 +296,54 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonDistinctOperator( lhs, operator, rhs );
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().isJson() ) {
+			switch ( operator ) {
+				case DISTINCT_FROM:
+					appendSql( "case when json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1 or " );
+					lhs.accept( this );
+					appendSql( " is null and " );
+					rhs.accept( this );
+					appendSql( " is null then 0 else 1 end=1" );
+					break;
+				case NOT_DISTINCT_FROM:
+					appendSql( "case when json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1 or " );
+					lhs.accept( this );
+					appendSql( " is null and " );
+					rhs.accept( this );
+					appendSql( " is null then 0 else 1 end=0" );
+					break;
+				case NOT_EQUAL:
+					appendSql( "json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=0" );
+					break;
+				case EQUAL:
+					appendSql( "json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1" );
+					break;
+				default:
+					renderComparisonDistinctOperator( lhs, operator, rhs );
+					break;
+			}
+		}
+		else {
+			renderComparisonDistinctOperator( lhs, operator, rhs );
+		}
 	}
 
 	@Override

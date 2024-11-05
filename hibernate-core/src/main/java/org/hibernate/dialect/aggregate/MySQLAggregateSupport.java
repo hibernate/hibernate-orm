@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.aggregate;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -26,7 +25,9 @@ import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.ENUM;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
@@ -36,6 +37,7 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
@@ -45,10 +47,13 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 
 public class MySQLAggregateSupport extends AggregateSupportImpl {
 
-	private static final AggregateSupport INSTANCE = new MySQLAggregateSupport();
+	public static final AggregateSupport JSON_INSTANCE = new MySQLAggregateSupport( true );
+	public static final AggregateSupport LONGTEXT_INSTANCE = new MySQLAggregateSupport( false );
 
-	public static AggregateSupport valueOf(Dialect dialect) {
-		return MySQLAggregateSupport.INSTANCE;
+	private final boolean jsonType;
+
+	public MySQLAggregateSupport(boolean jsonType) {
+		this.jsonType = jsonType;
 	}
 
 	@Override
@@ -72,7 +77,9 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 					case BOOLEAN:
 						return template.replace(
 								placeholder,
-								"case " + queryExpression( aggregateParentReadExpression, columnExpression ) + " when 'true' then true when 'false' then false end"
+								jsonType
+										? "case " + queryExpression( aggregateParentReadExpression, columnExpression ) + " when cast('true' as json) then true when cast('false' as json) then false end"
+										: "case " + queryExpression( aggregateParentReadExpression, columnExpression ) + " when 'true' then true when 'false' then false end"
 						);
 					case BINARY:
 					case VARBINARY:
@@ -92,12 +99,18 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
-	private static String columnCastType(SqlTypedMapping column) {
+	private String columnCastType(SqlTypedMapping column) {
 		return switch (column.getJdbcMapping().getJdbcType().getDdlTypeCode()) {
 			// special case for casting to Boolean
 			case BOOLEAN, BIT -> "unsigned";
 			// MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
 			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
+			case REAL -> "float";
+			case DOUBLE -> "double";
+			case FLOAT -> jsonType
+					// In newer versions of MySQL, casting to float/double is supported
+					? column.getColumnDefinition()
+					: column.getPrecision() == null || column.getPrecision() == 53 ? "double" : "float";
 			// MySQL doesn't let you cast to TEXT/LONGTEXT
 			case CHAR, VARCHAR, LONG32VARCHAR, CLOB, ENUM -> "char";
 			case NCHAR, NVARCHAR, LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
@@ -107,12 +120,17 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 		};
 	}
 
-	private static String valueExpression(String aggregateParentReadExpression, String columnExpression, String columnType) {
+	private String valueExpression(String aggregateParentReadExpression, String columnExpression, String columnType) {
 		return "cast(json_unquote(" + queryExpression( aggregateParentReadExpression, columnExpression ) + ") as " + columnType + ')';
 	}
 
-	private static String queryExpression(String aggregateParentReadExpression, String columnExpression) {
-		return "nullif(json_extract(" + aggregateParentReadExpression + ",'$." + columnExpression + "'),cast('null' as json))";
+	private String queryExpression(String aggregateParentReadExpression, String columnExpression) {
+		if ( jsonType ) {
+			return "nullif(json_extract(" + aggregateParentReadExpression + ",'$." + columnExpression + "'),cast('null' as json))";
+		}
+		else {
+			return "nullif(json_extract(" + aggregateParentReadExpression + ",'$." + columnExpression + "'),'null')";
+		}
 	}
 
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
@@ -190,7 +208,7 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 				SqlAstTranslator<?> translator,
 				AggregateColumnWriteExpression expression);
 	}
-	private static class AggregateJsonWriteExpression implements JsonWriteExpression {
+	private class AggregateJsonWriteExpression implements JsonWriteExpression {
 		private final LinkedHashMap<String, JsonWriteExpression> subExpressions = new LinkedHashMap<>();
 
 		protected void initializeSubExpressions(SelectableMapping[] columns) {
@@ -242,7 +260,7 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 		}
 	}
 
-	private static class RootJsonWriteExpression extends AggregateJsonWriteExpression
+	private class RootJsonWriteExpression extends AggregateJsonWriteExpression
 			implements WriteExpressionRenderer {
 		private final boolean nullable;
 		private final String path;

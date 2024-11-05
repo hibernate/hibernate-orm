@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.generated.sql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -27,11 +28,11 @@ import static org.junit.Assert.assertNotNull;
  * @author Gavin King
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(annotatedClasses = SqlGeneratedTest.OrderLine.class)
+@DomainModel(annotatedClasses = ImmutableSqlGeneratedTest.OrderLine.class)
 @SessionFactory
 @SkipForDialect(dialectClass = SybaseASEDialect.class,
 		reason = "The name 'current_timestamp' is illegal in this context. Only constants, constant expressions, or variables allowed here.")
-public class SqlGeneratedTest {
+public class ImmutableSqlGeneratedTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -57,10 +58,11 @@ public class SqlGeneratedTest {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
-			assertEquals( "old", entity.status );
+			assertEquals( "new", entity.status );
 			assertNotNull( entity.updated );
 			LocalDateTime previous = entity.updated;
 			entity.quantity = 10;
+			entity.status = "old";
 			session.flush();
 			assertNotNull( entity.updated );
 			assertFalse( previous == entity.updated );
@@ -69,7 +71,7 @@ public class SqlGeneratedTest {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 10, entity.quantity );
-			assertEquals( "old", entity.status );
+			assertEquals( "new", entity.status );
 			assertNotNull( entity.updated );
 		} );
 	}
@@ -85,6 +87,7 @@ public class SqlGeneratedTest {
 		private long id;
 		private BigDecimal unitPrice;
 		private int quantity = 1;
+		@Immutable
 		@Generated(sql = "'new'")
 		private String status;
 		@Generated(event = {EventType.INSERT, EventType.UPDATE},

@@ -51,6 +51,7 @@
                 <version>3.8.0</version>
                 <configuration>
                     <debug>true</debug>
+                    <mavenExecutable>mvnw</mavenExecutable>
                     <cloneProjectsTo>${project.build.directory}/maven-embedder/it</cloneProjectsTo>
                     <localRepositoryPath>${project.build.directory}/maven-embedder/maven-local</localRepositoryPath>
                     <postBuildHookScript>verify</postBuildHookScript>

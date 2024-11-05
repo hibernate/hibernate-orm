@@ -33,7 +33,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAstCreationState {
 	Stack<Clause> getCurrentClauseStack();
 
-	SqmQueryPart<?> getCurrentSqmQueryPart();
+	Stack<SqmQueryPart> getSqmQueryPartStack();
+
+	default SqmQueryPart<?> getCurrentSqmQueryPart() {
+		return getSqmQueryPartStack().getCurrent();
+	}
 
 	void registerQueryTransformer(QueryTransformer transformer);
 

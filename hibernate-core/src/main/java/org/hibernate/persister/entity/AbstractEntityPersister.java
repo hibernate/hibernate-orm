@@ -4359,14 +4359,11 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().getGenerator().allowAssignedIdentifiers() ) {
-			return;
+		if ( !getGenerator().allowAssignedIdentifiers() ) {
+			// reset the identifier
+			final Object defaultIdentifier = identifierMapping.getUnsavedStrategy().getDefaultValue( currentId );
+			setIdentifier( entity, defaultIdentifier, session );
 		}
-
-		// reset the identifier
-		final Object defaultIdentifier = identifierMapping.getUnsavedStrategy().getDefaultValue( currentId );
-		setIdentifier( entity, defaultIdentifier, session );
-
 		// reset the version
 		if ( versionMapping != null ) {
 			final Object defaultVersion = versionMapping.getUnsavedStrategy().getDefaultValue( currentVersion );

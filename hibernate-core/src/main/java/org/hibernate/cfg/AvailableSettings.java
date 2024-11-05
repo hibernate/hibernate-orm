@@ -170,6 +170,7 @@ public interface AvailableSettings
 	/**
 	 * When enabled, specifies that the generated identifier of an entity is unset
 	 * when the entity is {@linkplain org.hibernate.Session#remove(Object) deleted}.
+	 * If the entity is versioned, the version is also reset to its default value.
 	 *
 	 * @settingDefault {@code false} - generated identifiers are not unset
 	 *

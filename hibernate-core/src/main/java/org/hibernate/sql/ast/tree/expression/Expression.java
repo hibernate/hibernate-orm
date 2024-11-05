@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.SqlSelectionProducer;
@@ -21,9 +22,9 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 	/**
 	 * The type for this expression
 	 */
-	JdbcMappingContainer getExpressionType();
+	@Nullable JdbcMappingContainer getExpressionType();
 
-	default ColumnReference getColumnReference() {
+	default @Nullable ColumnReference getColumnReference() {
 		return null;
 	}
 

@@ -347,6 +347,9 @@ public interface JdbcType extends Serializable {
 				return CastType.TIMESTAMP;
 			case TIMESTAMP_WITH_TIMEZONE:
 				return CastType.OFFSET_TIMESTAMP;
+			case JSON:
+			case JSON_ARRAY:
+				return CastType.JSON;
 			case NULL:
 				return CastType.NULL;
 			default:

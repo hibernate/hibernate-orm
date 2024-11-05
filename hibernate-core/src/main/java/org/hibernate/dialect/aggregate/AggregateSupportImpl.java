@@ -13,6 +13,7 @@ import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class AggregateSupportImpl implements AggregateSupport {
@@ -76,7 +77,10 @@ public class AggregateSupportImpl implements AggregateSupport {
 
 	@Override
 	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		return columnSqlTypeCode;
+		return switch (aggregateColumnSqlTypeCode) {
+			case SqlTypes.JSON -> columnSqlTypeCode == SqlTypes.ARRAY ? SqlTypes.JSON_ARRAY : columnSqlTypeCode;
+			default -> columnSqlTypeCode;
+		};
 	}
 
 	@Override

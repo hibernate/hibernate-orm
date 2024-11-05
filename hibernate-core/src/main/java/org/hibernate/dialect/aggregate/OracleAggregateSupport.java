@@ -218,6 +218,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										);
 								}
 							case JSON:
+							case JSON_ARRAY:
 								return template.replace(
 										placeholder,
 										"json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + ")"

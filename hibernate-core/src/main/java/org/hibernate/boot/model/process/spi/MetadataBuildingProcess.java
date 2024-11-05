@@ -83,6 +83,7 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
@@ -101,6 +102,7 @@ import org.hibernate.usertype.CompositeUserType;
 import jakarta.persistence.AttributeConverter;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForInstant;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForUuid;
@@ -769,6 +771,14 @@ public class MetadataBuildingProcess {
 			}
 			else {
 				jdbcTypeRegistry.addTypeConstructor( XmlAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
+		}
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY ) == null ) {
+			// Default the array constructor to e.g. JSON_ARRAY/XML_ARRAY if needed
+			final JdbcTypeConstructor constructor =
+					jdbcTypeRegistry.getConstructor( getPreferredSqlTypeCodeForArray( serviceRegistry ) );
+			if ( constructor != null ) {
+				jdbcTypeRegistry.addTypeConstructor( SqlTypes.ARRAY, constructor );
 			}
 		}
 

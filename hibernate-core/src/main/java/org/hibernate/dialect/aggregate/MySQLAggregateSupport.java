@@ -4,9 +4,6 @@
  */
 package org.hibernate.dialect.aggregate;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -17,32 +14,41 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.SqlTypes.ARRAY;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
+import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.ENUM;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.STRUCT;
-import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
-import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
-public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
+public class MySQLAggregateSupport extends AggregateSupportImpl {
 
-	private static final AggregateSupport INSTANCE = new PostgreSQLAggregateSupport();
+	private static final AggregateSupport INSTANCE = new MySQLAggregateSupport();
 
 	public static AggregateSupport valueOf(Dialect dialect) {
-		return PostgreSQLAggregateSupport.INSTANCE;
+		return MySQLAggregateSupport.INSTANCE;
 	}
 
 	@Override
@@ -61,7 +67,12 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 					case JSON_ARRAY:
 						return template.replace(
 								placeholder,
-								aggregateParentReadExpression + "->'" + columnExpression + "'"
+								queryExpression( aggregateParentReadExpression, columnExpression )
+						);
+					case BOOLEAN:
+						return template.replace(
+								placeholder,
+								"case " + queryExpression( aggregateParentReadExpression, columnExpression ) + " when 'true' then true when 'false' then false end"
 						);
 					case BINARY:
 					case VARBINARY:
@@ -69,51 +80,39 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								"decode(" + aggregateParentReadExpression + "->>'" + columnExpression + "','hex')"
+								"unhex(json_unquote(" + queryExpression( aggregateParentReadExpression, columnExpression ) + "))"
 						);
-					case ARRAY:
-						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
-						switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
-							case BOOLEAN:
-							case TINYINT:
-							case SMALLINT:
-							case INTEGER:
-							case BIGINT:
-							case FLOAT:
-							case DOUBLE:
-								// For types that are natively supported in jsonb we can use jsonb_array_elements,
-								// but note that we can't use that for string types,
-								// because casting a jsonb[] to text[] will not omit the quotes of the jsonb text values
-								return template.replace(
-										placeholder,
-										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
-								);
-							case BINARY:
-							case VARBINARY:
-							case LONG32VARBINARY:
-								// We encode binary data as hex, so we have to decode here
-								return template.replace(
-										placeholder,
-										"array(select decode(jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "'),'hex'))"
-								);
-							default:
-								return template.replace(
-										placeholder,
-										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
-								);
-						}
 					default:
 						return template.replace(
 								placeholder,
-								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + column.getColumnDefinition() + ')'
+								valueExpression( aggregateParentReadExpression, columnExpression, columnCastType( column ) )
 						);
 				}
-			case STRUCT:
-			case STRUCT_ARRAY:
-			case STRUCT_TABLE:
-				return template.replace( placeholder, '(' + aggregateParentReadExpression + ")." + columnExpression );
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
+	}
+
+	private static String columnCastType(SqlTypedMapping column) {
+		return switch (column.getJdbcMapping().getJdbcType().getDdlTypeCode()) {
+			// special case for casting to Boolean
+			case BOOLEAN, BIT -> "unsigned";
+			// MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
+			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
+			// MySQL doesn't let you cast to TEXT/LONGTEXT
+			case CHAR, VARCHAR, LONG32VARCHAR, CLOB, ENUM -> "char";
+			case NCHAR, NVARCHAR, LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
+			// MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
+			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "binary";
+			default -> column.getColumnDefinition();
+		};
+	}
+
+	private static String valueExpression(String aggregateParentReadExpression, String columnExpression, String columnType) {
+		return "cast(json_unquote(" + queryExpression( aggregateParentReadExpression, columnExpression ) + ") as " + columnType + ')';
+	}
+
+	private static String queryExpression(String aggregateParentReadExpression, String columnExpression) {
+		return "nullif(json_extract(" + aggregateParentReadExpression + ",'$." + columnExpression + "'),cast('null' as json))";
 	}
 
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
@@ -122,22 +121,23 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
+			case BLOB:
 				// We encode binary data as hex
-				return "to_jsonb(encode(" + customWriteExpression + ",'hex'))";
-			case ARRAY:
-				final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
-				switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
-					case BINARY:
-					case VARBINARY:
-					case LONG32VARBINARY:
-						// We encode binary data as hex
-						return "to_jsonb(array(select encode(unnest(" + customWriteExpression + "),'hex')))";
-					default:
-						return "to_jsonb(" + customWriteExpression + ")";
-				}
+				return "hex(" + customWriteExpression + ")";
+			case BOOLEAN:
+				return "(" + customWriteExpression + ")=true";
+			case TIMESTAMP:
+				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%f')";
+			case TIMESTAMP_UTC:
+				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%fZ')";
 			default:
-				return "to_jsonb(" + customWriteExpression + ")";
+				return customWriteExpression;
 		}
+	}
+
+	@Override
+	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
+		return super.aggregateComponentSqlTypeCode( aggregateColumnSqlTypeCode, columnSqlTypeCode );
 	}
 
 	@Override
@@ -151,10 +151,6 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			case JSON_ARRAY:
 				// For JSON we always have to replace the whole object
 				return aggregateParentAssignmentExpression;
-			case STRUCT:
-			case STRUCT_ARRAY:
-			case STRUCT_TABLE:
-				return aggregateParentAssignmentExpression + "." + columnExpression;
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
@@ -166,12 +162,6 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 				return true;
 		}
 		return false;
-	}
-
-	@Override
-	public boolean preferSelectAggregateMapping(int aggregateSqlTypeCode) {
-		// The JDBC driver does not support selecting java.sql.Struct, so return false to select individual parts
-		return aggregateSqlTypeCode != STRUCT;
 	}
 
 	@Override
@@ -231,27 +221,24 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 				String path,
 				SqlAstTranslator<?> translator,
 				AggregateColumnWriteExpression expression) {
-			sb.append( "||jsonb_build_object" );
-			char separator = '(';
 			for ( Map.Entry<String, JsonWriteExpression> entry : subExpressions.entrySet() ) {
 				final String column = entry.getKey();
 				final JsonWriteExpression value = entry.getValue();
-				final String subPath = path + "->'" + column + "'";
-				sb.append( separator );
+				final String subPath = queryExpression( path, column );
+				sb.append( ',' );
 				if ( value instanceof AggregateJsonWriteExpression ) {
-					sb.append( '\'' );
+					sb.append( "'$." );
 					sb.append( column );
-					sb.append( "',coalesce(" );
+					sb.append( "',json_set(coalesce(" );
 					sb.append( subPath );
-					sb.append( ",'{}')" );
+					sb.append( ",json_object())" );
 					value.append( sb, subPath, translator, expression );
+					sb.append( ')' );
 				}
 				else {
 					value.append( sb, subPath, translator, expression );
 				}
-				separator = ',';
 			}
-			sb.append( ')' );
 		}
 	}
 
@@ -279,15 +266,17 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			else {
 				basePath = qualifier + "." + path;
 			}
+			sqlAppender.appendSql( "json_set(" );
 			if ( nullable ) {
 				sqlAppender.append( "coalesce(" );
 				sqlAppender.append( basePath );
-				sqlAppender.append( ",'{}')" );
+				sqlAppender.append( ",json_object())" );
 			}
 			else {
 				sqlAppender.append( basePath );
 			}
 			append( sqlAppender, basePath, translator, aggregateColumnWriteExpression );
+			sqlAppender.append( ')' );
 		}
 	}
 	private static class BasicJsonWriteExpression implements JsonWriteExpression {
@@ -316,7 +305,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 				String path,
 				SqlAstTranslator<?> translator,
 				AggregateColumnWriteExpression expression) {
-			sb.append( '\'' );
+			sb.append( "'$." );
 			sb.append( selectableMapping.getSelectableName() );
 			sb.append( "'," );
 			sb.append( customWriteExpressionStart );

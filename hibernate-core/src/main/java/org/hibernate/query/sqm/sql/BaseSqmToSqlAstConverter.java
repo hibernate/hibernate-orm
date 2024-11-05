@@ -478,7 +478,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmStatement<?> currentSqmStatement;
-	private SqmQueryPart<?> currentSqmQueryPart;
+	private Stack<SqmQueryPart> sqmQueryPartStack = new StandardStack<>( SqmQueryPart.class );
 	private CteContainer cteContainer;
 	/**
 	 * A map from {@link SqmCteTable#getCteName()} to the final SQL name.
@@ -784,9 +784,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return currentClauseStack;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	public SqmQueryPart<?> getCurrentSqmQueryPart() {
-		return currentSqmQueryPart;
+	public Stack<SqmQueryPart> getSqmQueryPartStack() {
+		return sqmQueryPartStack;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1735,8 +1736,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							);
 							final DelegatingSqmAliasedNodeCollector collector = (DelegatingSqmAliasedNodeCollector) processingState
 									.getSqlExpressionResolver();
-							final SqmQueryPart<?> oldSqmQueryPart = currentSqmQueryPart;
-							currentSqmQueryPart = queryGroup;
+							sqmQueryPartStack.push( queryGroup );
 							pushProcessingState( processingState );
 
 							try {
@@ -1780,7 +1780,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							}
 							finally {
 								popProcessingStateStack();
-								currentSqmQueryPart = oldSqmQueryPart;
+								sqmQueryPartStack.pop();
 							}
 						}
 						finally {
@@ -1993,8 +1993,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		final DelegatingSqmAliasedNodeCollector collector = (DelegatingSqmAliasedNodeCollector) processingState
 				.getSqlExpressionResolver();
-		final SqmQueryPart<?> sqmQueryPart = currentSqmQueryPart;
-		currentSqmQueryPart = queryGroup;
+		sqmQueryPartStack.push( queryGroup );
 		pushProcessingState( processingState );
 
 		try {
@@ -2016,7 +2015,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
-			currentSqmQueryPart = sqmQueryPart;
+			sqmQueryPartStack.pop();
 		}
 	}
 
@@ -2076,9 +2075,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
-		final SqmQueryPart<?> sqmQueryPart = currentSqmQueryPart;
 		final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
-		currentSqmQueryPart = sqmQuerySpec;
+		sqmQueryPartStack.push( sqmQuerySpec );
 		// In sub-queries, we can never deduplicate the selection items as that might change semantics
 		deduplicateSelectionItems = false;
 		pushProcessingState( processingState );
@@ -2145,7 +2143,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inNestedContext = oldInNestedContext;
 			popProcessingStateStack();
 			queryTransformers.pop();
-			currentSqmQueryPart = sqmQueryPart;
+			sqmQueryPartStack.pop();
 			deduplicateSelectionItems = originalDeduplicateSelectionItems;
 		}
 	}
@@ -2211,7 +2209,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		try {
 			final SelectClause sqlSelectClause = currentQuerySpec().getSelectClause();
 			if ( selectClause == null ) {
-				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) currentSqmQueryPart );
+				final SqmFrom<?, ?> implicitSelection = determineImplicitSelection( (SqmQuerySpec<?>) getCurrentSqmQueryPart() );
 				visitSelection( 0, new SqmSelection<>( implicitSelection, implicitSelection.nodeBuilder() ) );
 			}
 			else {
@@ -2236,7 +2234,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Void visitSelection(SqmSelection<?> sqmSelection) {
 		return visitSelection(
-				currentSqmQueryPart.getFirstQuerySpec().getSelectClause().getSelections().indexOf( sqmSelection ),
+				getCurrentSqmQueryPart().getFirstQuerySpec().getSelectClause().getSelections().indexOf( sqmSelection ),
 				sqmSelection
 		);
 	}
@@ -2355,7 +2353,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// To avoid this issue, we determine the position and let the SqlAstTranslator handle the rest.
 			// Usually it will render `select ?, count(*) from dual group by 1` if supported
 			// or force rendering the parameter as literal instead so that the database can see the grouping is fine
-			final SqmQuerySpec<?> querySpec = currentSqmQueryPart.getFirstQuerySpec();
+			final SqmQuerySpec<?> querySpec = getCurrentSqmQueryPart().getFirstQuerySpec();
 			sqmPosition = indexOfExpression( querySpec.getSelectClause().getSelections(), groupByClauseExpression );
 			path = null;
 		}
@@ -2383,7 +2381,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						continue OUTER;
 					}
 				}
-				if ( currentSqmQueryPart instanceof SqmQueryGroup<?> ) {
+				if ( getCurrentSqmQueryPart() instanceof SqmQueryGroup<?> ) {
 					// Reusing the SqlSelection for query groups would be wrong because the aliases do no exist
 					// So we have to use a literal expression in a new SqlSelection instance to refer to the position
 					expressions.add(

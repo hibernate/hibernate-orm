@@ -65,8 +65,8 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -319,9 +319,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 		final BasicType<?> resolvedJdbcMapping;
 		if ( isArray ) {
-			final JdbcTypeConstructor arrayConstructor = jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY );
+			final JdbcTypeConstructor arrayConstructor = jdbcTypeRegistry.getConstructor( aggregateColumnSqlTypeCode );
 			if ( arrayConstructor == null ) {
-				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes.ARRAY" );
+				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes." + JdbcTypeNameMapper.getTypeName( aggregateColumnSqlTypeCode ) );
 			}
 			//noinspection rawtypes,unchecked
 			final BasicType<?> arrayType = ( (BasicPluralJavaType) resolution.getDomainJavaType() ).resolveType(

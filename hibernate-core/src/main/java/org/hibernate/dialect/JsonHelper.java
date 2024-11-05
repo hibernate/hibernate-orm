@@ -322,6 +322,7 @@ public class JsonHelper {
 				appender.append( '"' );
 				break;
 			case SqlTypes.ARRAY:
+			case SqlTypes.JSON_ARRAY:
 				final int length = Array.getLength( value );
 				appender.append( '[' );
 				if ( length != 0 ) {

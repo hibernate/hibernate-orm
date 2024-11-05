@@ -4,6 +4,7 @@
  */
 package org.hibernate.generator.internal;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Generated;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -41,7 +42,10 @@ public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutio
 	public GeneratedGeneration(Generated annotation) {
 		eventTypes = fromArray( annotation.event() );
 		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };
-		writable = annotation.writable() || sql != null;
+		writable = annotation.writable();
+		if ( sql != null && writable ) {
+			throw new AnnotationException( "A field marked '@Generated(writable=true)' may not specify explicit 'sql'" );
+		}
 	}
 
 	@Override
@@ -51,7 +55,9 @@ public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutio
 
 	@Override
 	public boolean referenceColumnsInSql(Dialect dialect) {
-		return writable;
+		// include the column in when the field is writable,
+		// or when there is an explicit SQL expression
+		return writable || sql != null;
 	}
 
 	@Override
@@ -61,7 +67,9 @@ public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutio
 
 	@Override
 	public boolean writePropertyValue() {
-		return writable && sql==null;
+		// include a ? parameter when the field is writable,
+		// but there is no explicit SQL expression
+		return writable;
 	}
 
 	@Override
@@ -71,13 +79,15 @@ public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutio
 
 	@Override
 	public boolean generatedOnExecution(Object entity, SharedSessionContractImplementor session) {
-		if ( !writable ) {
+		if ( writable ) {
+			// When this is the identifier generator and writable is true, allow pre-assigned identifiers
+			final EntityPersister entityPersister = session.getEntityPersister( null, entity );
+			return entityPersister.getGenerator() != this
+				|| entityPersister.getIdentifier( entity, session ) == null;
+		}
+		else {
 			return true;
 		}
-
-		// When this is the identifier generator and writable is true, allow pre-assigned identifiers
-		final EntityPersister entityPersister = session.getEntityPersister( null, entity );
-		return entityPersister.getGenerator() != this || entityPersister.getIdentifier( entity, session ) == null;
 	}
 
 	@Override
@@ -90,5 +100,11 @@ public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutio
 	@Override
 	public boolean allowAssignedIdentifiers() {
 		return writable;
+	}
+
+	@Override
+	public boolean allowMutation() {
+		// the user may specify @Immutable if mutation should be disallowed
+		return true;
 	}
 }

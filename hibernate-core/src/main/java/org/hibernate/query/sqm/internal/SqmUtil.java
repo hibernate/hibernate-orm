@@ -24,6 +24,7 @@ import java.util.function.Function;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
@@ -174,36 +175,64 @@ public class SqmUtil {
 			SqmPath<?> sqmPath,
 			ModelPartContainer modelPartContainer,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final SqmQueryPart<?> queryPart = sqlAstCreationState.getCurrentSqmQueryPart();
-		if ( queryPart != null ) {
-			// We only need to do this for queries
-			final Clause clause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
-			if ( clause != Clause.FROM && modelPartContainer.getPartMappingType() != modelPartContainer && sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
-				final ModelPart modelPart;
-				if ( modelPartContainer instanceof PluralAttributeMapping ) {
-					modelPart = getCollectionPart(
-							(PluralAttributeMapping) modelPartContainer,
-							castNonNull( sqmPath.getNavigablePath().getParent() )
-					);
-				}
-				else {
-					modelPart = modelPartContainer;
-				}
-				if ( modelPart instanceof EntityAssociationMapping ) {
-					final EntityAssociationMapping association = (EntityAssociationMapping) modelPart;
-					// If the path is one of the association's target key properties,
-					// we need to render the target side if in group/order by
-					if ( association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() )
-							&& ( clause == Clause.GROUP || clause == Clause.ORDER
-							|| !isFkOptimizationAllowed( sqmPath.getLhs(), association )
-							|| queryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState )
-							|| queryPart.getFirstQuerySpec().orderByClauseContains( sqmPath.getNavigablePath(), sqlAstCreationState ) ) ) {
-						return association.getAssociatedEntityMappingType();
-					}
+		// We only need to do this for queries
+		if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
+				&& modelPartContainer.getPartMappingType() != modelPartContainer && sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
+			final ModelPart modelPart;
+			if ( modelPartContainer instanceof PluralAttributeMapping ) {
+				modelPart = getCollectionPart(
+						(PluralAttributeMapping) modelPartContainer,
+						castNonNull( sqmPath.getNavigablePath().getParent() )
+				);
+			}
+			else {
+				modelPart = modelPartContainer;
+			}
+			if ( modelPart instanceof EntityAssociationMapping ) {
+				final EntityAssociationMapping association = (EntityAssociationMapping) modelPart;
+				if ( shouldRenderTargetSide( sqmPath, association, sqlAstCreationState ) ) {
+					return association.getAssociatedEntityMappingType();
 				}
 			}
 		}
 		return modelPartContainer;
+	}
+
+	private static boolean shouldRenderTargetSide(
+			SqmPath<?> sqmPath,
+			EntityAssociationMapping association,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		if ( !association.getTargetKeyPropertyNames().contains( sqmPath.getReferencedPathSource().getPathName() ) ) {
+			return false;
+		}
+		// If the path is one of the association's target key properties,
+		// we need to render the target side if in group/order by
+		final Clause clause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+		return clause == Clause.GROUP || clause == Clause.ORDER
+				|| !isFkOptimizationAllowed( sqmPath.getLhs(), association )
+				|| clauseContainsPath( Clause.GROUP, sqmPath, sqlAstCreationState )
+				|| clauseContainsPath( Clause.ORDER, sqmPath, sqlAstCreationState );
+	}
+
+	private static boolean clauseContainsPath(
+			Clause clauseToCheck,
+			SqmPath<?> sqmPath,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		final Stack<SqmQueryPart> queryPartStack = sqlAstCreationState.getSqmQueryPartStack();
+		final NavigablePath navigablePath = sqmPath.getNavigablePath();
+		final Boolean found = queryPartStack.findCurrentFirst( queryPart -> {
+			final SqmQuerySpec<?> spec = queryPart.getFirstQuerySpec();
+			if ( clauseToCheck == Clause.GROUP && spec.groupByClauseContains( navigablePath, sqlAstCreationState ) ) {
+				return true;
+			}
+			else if ( clauseToCheck == Clause.ORDER && spec.orderByClauseContains( navigablePath, sqlAstCreationState ) ) {
+				return true;
+			}
+			else {
+				return null;
+			}
+		} );
+		return Boolean.TRUE.equals( found );
 	}
 
 	private static CollectionPart getCollectionPart(PluralAttributeMapping attribute, NavigablePath path) {
@@ -214,6 +243,8 @@ public class SqmUtil {
 					return attribute.getElementDescriptor();
 				case INDEX:
 					return attribute.getIndexDescriptor();
+				case ID:
+					return attribute.getIdentifierDescriptor();
 			}
 		}
 		return null;

@@ -52,7 +52,7 @@ public class OverriddenDefaultTest {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
-			assertEquals( getDefault(scope), entity.status );
+			assertEquals( "old", entity.status );
 		} );
 	}
 

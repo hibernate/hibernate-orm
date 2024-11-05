@@ -4,19 +4,18 @@
  */
 package org.hibernate.orm.test.mapping.generated.sqldefault;
 
-import java.math.BigDecimal;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-
+import org.hibernate.annotations.Immutable;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import java.math.BigDecimal;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,9 +23,9 @@ import static org.junit.Assert.assertEquals;
  * @author Gavin King
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(annotatedClasses = DefaultTest.OrderLine.class)
+@DomainModel(annotatedClasses = ImmutableDefaultTest.OrderLine.class)
 @SessionFactory
-public class DefaultTest {
+public class ImmutableDefaultTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -44,13 +43,13 @@ public class DefaultTest {
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
 			assertEquals( "new", entity.status );
-			entity.status = "old";
+			entity.status = "old"; //should be ignored due to @Immutable
 		} );
 		scope.inTransaction( session -> {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
-			assertEquals( "old", entity.status );
+			assertEquals( "new", entity.status );
 		} );
 	}
 
@@ -65,7 +64,7 @@ public class DefaultTest {
 		private BigDecimal unitPrice;
 		@Id @ColumnDefault(value = "1")
 		private int quantity;
-		@Generated
+		@Generated @Immutable
 		@ColumnDefault(value = "'new'")
 		private String status;
 

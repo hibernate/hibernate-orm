@@ -35,6 +35,11 @@ public class Assigned implements Generator {
 	}
 
 	@Override
+	public boolean allowMutation() {
+		return true;
+	}
+
+	@Override
 	public EnumSet<EventType> getEventTypes() {
 		return EventTypeSets.NONE;
 	}

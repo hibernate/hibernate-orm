@@ -321,15 +321,12 @@ public class EntityMetamodel implements Serializable {
 				}
 				else {
 					generators[i] = generator;
-					final boolean noParameter = generatedWithNoParameter( generator );
-					if ( noParameter && !generator.allowAssignedIdentifiers() ) {
+					if ( !generator.allowMutation() ) {
 						propertyInsertability[i] = false;
 						propertyUpdateability[i] = false;
 					}
 					if ( generator.generatesOnInsert() ) {
-						if ( noParameter ) {
-							propertyInsertability[i] = false;
-						}
+						propertyInsertability[i] = !generatedWithNoParameter( generator );
 						if ( generator.generatedOnExecution() ) {
 							foundPostInsertGeneratedValues = true;
 							if ( generator instanceof BeforeExecutionGenerator ) {
@@ -341,9 +338,7 @@ public class EntityMetamodel implements Serializable {
 						}
 					}
 					if ( generator.generatesOnUpdate() ) {
-						if ( noParameter ) {
-							propertyInsertability[i] = false;
-						}
+						propertyUpdateability[i] = !generatedWithNoParameter( generator );
 						if ( generator.generatedOnExecution() ) {
 							foundPostUpdateGeneratedValues = true;
 							if ( generator instanceof BeforeExecutionGenerator ) {

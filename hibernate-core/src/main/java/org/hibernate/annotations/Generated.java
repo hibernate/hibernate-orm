@@ -97,8 +97,12 @@ public @interface Generated {
 	/**
 	 * Determines if the value currently assigned to the annotated property
 	 * is included in SQL {@code insert} and {@code update} statements. This
-	 * is useful if the generated value is obtained by transforming the
-	 * assigned property value as it is being written.
+	 * is useful if:
+	 * <ul>
+	 * <li>the generated value is obtained by transforming the assigned
+	 *     property value as it is being written, or
+	 * <li>assigning a value disables generation of a value.
+	 * </ul>
 	 * <p>
 	 * Often used in combination with {@link SQLInsert}, {@link SQLUpdate},
 	 * or {@link ColumnTransformer#write()}.

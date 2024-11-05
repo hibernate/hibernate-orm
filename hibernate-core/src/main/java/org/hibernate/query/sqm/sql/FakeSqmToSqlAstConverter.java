@@ -93,6 +93,11 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	}
 
 	@Override
+	public Stack<SqmQueryPart> getSqmQueryPartStack() {
+		return null;
+	}
+
+	@Override
 	public SqmQueryPart<?> getCurrentSqmQueryPart() {
 		return null;
 	}

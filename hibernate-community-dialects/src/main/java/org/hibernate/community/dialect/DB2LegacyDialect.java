@@ -439,7 +439,7 @@ public class DB2LegacyDialect extends Dialect {
 				functionFactory.jsonArray_db2();
 				functionFactory.jsonArrayAgg_db2();
 				functionFactory.jsonObjectAgg_db2();
-				functionFactory.jsonTable_db2();
+				functionFactory.jsonTable_db2( getMaximumSeriesSize() );
 			}
 		}
 
@@ -459,7 +459,7 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.xmlagg();
 		functionFactory.xmltable_db2();
 
-		functionFactory.unnest_emulated();
+		functionFactory.unnest_db2( getMaximumSeriesSize() );
 		if ( supportsRecursiveCTE() ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
 		}
@@ -1007,7 +1007,9 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return DB2AggregateSupport.INSTANCE;
+		return getDB2Version().isSameOrAfter( 11 )
+				? DB2AggregateSupport.JSON_INSTANCE
+				: DB2AggregateSupport.INSTANCE;
 	}
 
 	@Override

@@ -1655,8 +1655,8 @@ public class SessionImpl
 	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
 		checkOpen();
-		if ( selectQuery instanceof CriteriaDefinition ) {
-			return (QueryImplementor<T>) ((CriteriaDefinition<T>) selectQuery).createSelectionQuery(this);
+		if ( selectQuery instanceof CriteriaDefinition<T> criteriaDefinition ) {
+			return (QueryImplementor<T>) criteriaDefinition.createSelectionQuery(this);
 		}
 		else {
 			try {

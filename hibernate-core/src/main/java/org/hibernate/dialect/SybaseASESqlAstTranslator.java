@@ -359,28 +359,11 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// In Sybase ASE, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 		final boolean isLob = isLob( lhs.getExpressionType() );
+		final boolean ansiNullOn = ((SybaseASEDialect) getDialect()).isAnsiNullOn();
 		if ( isLob ) {
 			switch ( operator ) {
-				case EQUAL:
-					lhs.accept( this );
-					appendSql( " like " );
-					rhs.accept( this );
-					return;
-				case NOT_EQUAL:
-					lhs.accept( this );
-					appendSql( " not like " );
-					rhs.accept( this );
-					return;
-				default:
-					// Fall through
-					break;
-			}
-		}
-		// I think intersect is only supported in 16.0 SP3
-		if ( ( (SybaseASEDialect) getDialect() ).isAnsiNullOn() ) {
-			if ( isLob ) {
-				switch ( operator ) {
-					case DISTINCT_FROM:
+				case DISTINCT_FROM:
+					if ( ansiNullOn ) {
 						appendSql( "case when " );
 						lhs.accept( this );
 						appendSql( " like " );
@@ -390,8 +373,20 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 						appendSql( " is null and " );
 						rhs.accept( this );
 						appendSql( " is null then 0 else 1 end=1" );
-						return;
-					case NOT_DISTINCT_FROM:
+					}
+					else {
+						lhs.accept( this );
+						appendSql( " not like " );
+						rhs.accept( this );
+						appendSql( " and (" );
+						lhs.accept( this );
+						appendSql( " is not null or " );
+						rhs.accept( this );
+						appendSql( " is not null)" );
+					}
+					return;
+				case NOT_DISTINCT_FROM:
+					if ( ansiNullOn ) {
 						appendSql( "case when " );
 						lhs.accept( this );
 						appendSql( " like " );
@@ -401,12 +396,42 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 						appendSql( " is null and " );
 						rhs.accept( this );
 						appendSql( " is null then 0 else 1 end=0" );
-						return;
-					default:
-						// Fall through
-						break;
-				}
+					}
+					else {
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null" );
+					}
+					return;
+				case EQUAL:
+					lhs.accept( this );
+					appendSql( " like " );
+					rhs.accept( this );
+					return;
+				case NOT_EQUAL:
+					lhs.accept( this );
+					appendSql( " not like " );
+					rhs.accept( this );
+					if ( !ansiNullOn ) {
+						appendSql( " and " );
+						lhs.accept( this );
+						appendSql( " is not null and " );
+						rhs.accept( this );
+						appendSql( " is not null" );
+					}
+					return;
+				default:
+					// Fall through
+					break;
 			}
+		}
+		// I think intersect is only supported in 16.0 SP3
+		if ( ansiNullOn ) {
 			if ( supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
@@ -417,50 +442,28 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			// The ansinull setting only matters if using a parameter or literal and the eq operator according to the docs
 			// http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug89.htm
-			boolean rhsNotNullPredicate =
-					lhs instanceof Literal
-					|| isParameter( lhs );
-			boolean lhsNotNullPredicate =
-					rhs instanceof Literal
-					|| isParameter( rhs );
-			if ( rhsNotNullPredicate || lhsNotNullPredicate ) {
+			boolean lhsAffectedByAnsiNullOff = lhs instanceof Literal || isParameter( lhs );
+			boolean rhsAffectedByAnsiNullOff = rhs instanceof Literal || isParameter( rhs );
+			if ( lhsAffectedByAnsiNullOff || rhsAffectedByAnsiNullOff ) {
 				lhs.accept( this );
 				switch ( operator ) {
 					case DISTINCT_FROM:
-						if ( isLob ) {
-							appendSql( " not like " );
-						}
-						else {
-							appendSql( "<>" );
-						}
+						// Since this is the ansinull=off case, this comparison is enough
+						appendSql( "<>" );
 						break;
 					case NOT_DISTINCT_FROM:
-						if ( isLob ) {
-							appendSql( " like " );
-						}
-						else {
-							appendSql( '=' );
-						}
+						// Since this is the ansinull=off case, this comparison is enough
+						appendSql( '=' );
 						break;
-					case LESS_THAN:
-					case GREATER_THAN:
-					case LESS_THAN_OR_EQUAL:
-					case GREATER_THAN_OR_EQUAL:
-						// These operators are not affected by ansinull=off
-						lhsNotNullPredicate = false;
-						rhsNotNullPredicate = false;
 					default:
 						appendSql( operator.sqlText() );
 						break;
 				}
 				rhs.accept( this );
-				if ( lhsNotNullPredicate ) {
+				if ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) {
 					appendSql( " and " );
 					lhs.accept( this );
-					appendSql( " is not null" );
-				}
-				if ( rhsNotNullPredicate ) {
-					appendSql( " and " );
+					appendSql( " is not null and " );
 					rhs.accept( this );
 					appendSql( " is not null" );
 				}

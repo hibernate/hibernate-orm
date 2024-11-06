@@ -13,15 +13,16 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -32,6 +33,7 @@ import jakarta.persistence.TemporalType;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Java type descriptor for the {@link OffsetDateTime} type.
@@ -95,16 +97,19 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	}
 
 	@Override
-	public OffsetDateTime fromEncodedString(CharSequence string, int start, int end) {
-		final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse(
-				CharSequenceHelper.subSequence( string, start, end )
-		);
-		if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-			return OffsetDateTime.from( temporalAccessor );
+	public OffsetDateTime fromEncodedString(CharSequence charSequence, int start, int end) {
+		try {
+			final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				return OffsetDateTime.from( temporalAccessor );
+			}
+			else {
+				// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
+				return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
+			}
 		}
-		else {
-			// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
-			return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

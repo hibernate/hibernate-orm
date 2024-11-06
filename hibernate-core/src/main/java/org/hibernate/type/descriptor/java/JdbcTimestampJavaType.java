@@ -236,7 +236,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			return timestamp;
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse timestamp string " + charSequence, pe );
+			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

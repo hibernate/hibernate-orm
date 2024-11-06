@@ -6,9 +6,18 @@ package org.hibernate.dialect.function.json;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
+import org.hibernate.dialect.function.CteGenerateSeriesFunction;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmJsonTableFunction;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
@@ -23,23 +32,60 @@ import org.hibernate.sql.ast.tree.expression.JsonTableQueryColumnDefinition;
 import org.hibernate.sql.ast.tree.expression.JsonTableValueColumnDefinition;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.QueryTransformer;
+import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.List;
 
 /**
  * DB2 json_table function.
  * This implementation/emulation goes to great lengths to ensure Hibernate ORM can provide the same {@code json_table()}
  * experience that other dialects provide also on DB2.
  * The most notable limitation of the DB2 function is that it doesn't support JSON arrays,
- * so this emulation uses a series CTE called {@code gen_} with 10_000 rows to join
+ * so this emulation uses a series CTE called {@code max_series} with 10_000 rows to join
  * each array element queried with {@code json_query()} at the respective index via {@code json_table()} separately.
  * Another notable limitation of the DB2 function is that it doesn't support nested column paths,
  * which requires emulation by joining each nesting with a separate {@code json_table()}.
  */
 public class DB2JsonTableFunction extends JsonTableFunction {
 
-	public DB2JsonTableFunction(TypeConfiguration typeConfiguration) {
+	private final int maximumSeriesSize;
+
+	public DB2JsonTableFunction(int maximumSeriesSize, TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
+		this.maximumSeriesSize = maximumSeriesSize;
+	}
+
+	@Override
+	protected <T> SelfRenderingSqmSetReturningFunction<T> generateSqmSetReturningFunctionExpression(List<? extends SqmTypedNode<?>> sqmArguments, QueryEngine queryEngine) {
+		//noinspection unchecked
+		return new SqmJsonTableFunction<>(
+				this,
+				this,
+				getArgumentsValidator(),
+				getSetReturningTypeResolver(),
+				queryEngine.getCriteriaBuilder(),
+				(SqmExpression<?>) sqmArguments.get( 0 ),
+				sqmArguments.size() > 1 ? (SqmExpression<String>) sqmArguments.get( 1 ) : null
+		) {
+			@Override
+			public TableGroup convertToSqlAst(NavigablePath navigablePath, String identifierVariable, boolean lateral, boolean canUseInnerJoins, boolean withOrdinality, SqmToSqlAstConverter walker) {
+				final FunctionTableGroup tableGroup = (FunctionTableGroup) super.convertToSqlAst( navigablePath, identifierVariable, lateral, canUseInnerJoins, withOrdinality, walker );
+				final JsonTableArguments arguments = JsonTableArguments.extract( tableGroup.getPrimaryTableReference().getFunctionExpression().getArguments() );
+				final Expression jsonPath = arguments.jsonPath();
+				final boolean isArray = !(jsonPath instanceof Literal literal)
+						|| isArrayAccess( (String) literal.getLiteralValue() );
+				if ( isArray || hasNestedArray( arguments.columnsClause() ) ) {
+					walker.registerQueryTransformer( new SeriesQueryTransformer( maximumSeriesSize ) );
+				}
+				return tableGroup;
+			}
+		};
 	}
 
 	@Override
@@ -55,22 +101,13 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 		final Expression jsonDocument = arguments.jsonDocument();
 		final Expression jsonPath = arguments.jsonPath();
 		final boolean isArray = isArrayAccess( jsonPath, walker );
-		sqlAppender.appendSql( "lateral(" );
-
-		if ( isArray || hasNestedArray( arguments.columnsClause() ) ) {
-			// DB2 doesn't support arrays in json_table(), so a series table to join individual elements is needed
-			sqlAppender.appendSql( "with gen_(v) as(select 0 from (values (0)) union all " );
-			sqlAppender.appendSql( "select i.v+1 from gen_ i where i.v<10000)" );
-		}
-
-		sqlAppender.appendSql( "select" );
+		sqlAppender.appendSql( "lateral(select" );
 		renderColumnSelects( sqlAppender, arguments.columnsClause(), 0, isArray );
+		sqlAppender.appendSql( " from " );
 
 		if ( isArray ) {
-			sqlAppender.appendSql( " from gen_ i join " );
-		}
-		else {
-			sqlAppender.appendSql( " from " );
+			sqlAppender.appendSql( CteGenerateSeriesFunction.CteGenerateSeriesQueryTransformer.NAME );
+			sqlAppender.appendSql( " i join " );
 		}
 		sqlAppender.appendSql( "json_table(" );
 		// DB2 json functions only work when passing object documents,
@@ -87,8 +124,33 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 		sqlAppender.appendSql( " error on error) t0" );
 		if ( isArray ) {
 			sqlAppender.appendSql( " on json_exists('{\"a\":'||" );
-			appendJsonDocument( sqlAppender, jsonPath, jsonDocument, arguments.passingClause(), isArray, walker );
-			sqlAppender.appendSql( "||'}','$.a['||i.v||']')" );
+			if ( jsonPath != null ) {
+				final String jsonPathString;
+				if ( arguments.passingClause() != null ) {
+					jsonPathString = JsonPathHelper.inlinedJsonPathIncludingPassingClause( jsonPath, arguments.passingClause(), walker );
+				}
+				else {
+					jsonPathString = walker.getLiteralValue( jsonPath );
+				}
+				if ( jsonPathString.endsWith( "[*]" ) ) {
+					jsonDocument.accept( walker );
+					sqlAppender.appendSql( "||'}'," );
+					final String adaptedJsonPath = jsonPathString.substring( 0, jsonPathString.length() - 3 );
+					sqlAppender.appendSingleQuoteEscapedString( adaptedJsonPath.replace( "$", "$.a" ) );
+					sqlAppender.appendSql( "||'['||(i.i-1)||']')" );
+				}
+				else {
+					sqlAppender.appendSql( "json_query('{\"a\":'||" );
+					jsonDocument.accept( walker );
+					sqlAppender.appendSql( "||'}'," );
+					sqlAppender.appendSingleQuoteEscapedString( jsonPathString.replace( "$", "$.a" ) );
+					sqlAppender.appendSql( " with wrapper)||'}','$.a['||(i.i-1)||']')" );
+				}
+			}
+			else {
+				jsonDocument.accept( walker );
+				sqlAppender.appendSql( "||'}','$.a['||(i.i-1)||']')" );
+			}
 		}
 		renderNestedColumnJoins( sqlAppender, arguments.columnsClause(), 0, walker );
 		sqlAppender.appendSql( ')' );
@@ -97,27 +159,57 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 	private static void appendJsonDocument(SqlAppender sqlAppender, Expression jsonPath, Expression jsonDocument, JsonPathPassingClause passingClause, boolean isArray, SqlAstTranslator<?> walker) {
 		if ( jsonPath != null ) {
 			sqlAppender.appendSql( "json_query(" );
-			jsonDocument.accept( walker );
-			sqlAppender.appendSql( ',' );
-			if ( passingClause != null ) {
-				JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
-						sqlAppender,
-						"",
-						jsonPath,
-						passingClause,
-						walker
-				);
+			if ( isArray ) {
+				final String jsonPathString;
+				if ( passingClause != null ) {
+					jsonPathString = JsonPathHelper.inlinedJsonPathIncludingPassingClause( jsonPath, passingClause, walker );
+				}
+				else {
+					jsonPathString = walker.getLiteralValue( jsonPath );
+				}
+				if ( jsonPathString.endsWith( "[*]" ) ) {
+					sqlAppender.appendSql( "'{\"a\":'||" );
+					jsonDocument.accept( walker );
+					sqlAppender.appendSql( "||'}'," );
+					final String adaptedJsonPath = jsonPathString.substring( 0, jsonPathString.length() - 3 );
+					sqlAppender.appendSingleQuoteEscapedString( adaptedJsonPath.replace( "$", "$.a" ) );
+					sqlAppender.appendSql( "||'['||(i.i-1)||']'" );
+				}
+				else {
+					sqlAppender.appendSql( "'{\"a\":'||" );
+					sqlAppender.appendSql( "json_query('{\"a\":'||" );
+					jsonDocument.accept( walker );
+					sqlAppender.appendSql( "||'}'," );
+					sqlAppender.appendSingleQuoteEscapedString( jsonPathString.replace( "$", "$.a" ) );
+					sqlAppender.appendSql( " with wrapper)||'}','$.a['||(i.i-1)||']'" );
+				}
 			}
 			else {
-				jsonPath.accept( walker );
-			}
-			if ( isArray ) {
-				sqlAppender.appendSql( " with wrapper" );
+				jsonDocument.accept( walker );
+				sqlAppender.appendSql( ',' );
+				if ( passingClause != null ) {
+					JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
+							sqlAppender,
+							"",
+							jsonPath,
+							passingClause,
+							walker
+					);
+				}
+				else {
+					jsonPath.accept( walker );
+				}
 			}
 			sqlAppender.appendSql( ')' );
 		}
 		else {
+			if ( isArray ) {
+				sqlAppender.appendSql( "json_query('{\"a\":'||" );
+			}
 			jsonDocument.accept( walker );
+			if ( isArray ) {
+				sqlAppender.appendSql( "||'}','$.a['||(i.i-1)||']')" );
+			}
 		}
 	}
 
@@ -161,32 +253,33 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 
 				sqlAppender.appendSql( " left join lateral (select" );
 				renderColumnSelects( sqlAppender, nestedColumnDefinition.columns(), nextClauseLevel, isArray );
-				sqlAppender.appendSql( " from" );
+				sqlAppender.appendSql( " from " );
 
 				if ( isArray ) {
 					// When the JSON path indicates that the document is an array,
-					// join the `gen_` CTE to be able to use the respective array element in json_table().
+					// join the `max_series` CTE to be able to use the respective array element in json_table().
 					// DB2 json functions only work when passing object documents,
 					// which is why results are packed in shell object `{"a":...}`
-					sqlAppender.appendSql( " gen_ i join json_table('{\"a\":'||json_query('{\"a\":'||t" );
+					sqlAppender.appendSql( CteGenerateSeriesFunction.CteGenerateSeriesQueryTransformer.NAME );
+					sqlAppender.appendSql( " i join json_table('{\"a\":'||json_query('{\"a\":'||t" );
 					sqlAppender.appendSql( clauseLevel );
 					sqlAppender.appendSql( ".nested_" );
 					sqlAppender.appendSql( nextClauseLevel );
-					sqlAppender.appendSql( "_||'}','$.a['||i.v||']')||'}','strict $'" );
+					sqlAppender.appendSql( "_||'}','$.a['||(i.i-1)||']')||'}','strict $'" );
 					// Since the query results are packed in a shell object `{"a":...}`,
 					// the JSON path for columns need to be prefixed with `$.a`
 					renderColumns( sqlAppender, nestedColumnDefinition.columns(), nextClauseLevel, "$.a", walker );
 					sqlAppender.appendSql( " error on error) t" );
 					sqlAppender.appendSql( nextClauseLevel );
-					// Emulation of arrays via `gen_` sequence requires a join condition to check if an array element exists
+					// Emulation of arrays via `max_series` sequence requires a join condition to check if an array element exists
 					sqlAppender.appendSql( " on json_exists('{\"a\":'||t" );
 					sqlAppender.appendSql( clauseLevel );
 					sqlAppender.appendSql( ".nested_" );
 					sqlAppender.appendSql( nextClauseLevel );
-					sqlAppender.appendSql( "_||'}','$.a['||i.v||']')" );
+					sqlAppender.appendSql( "_||'}','$.a['||(i.i-1)||']')" );
 				}
 				else {
-					sqlAppender.appendSql( " json_table(t" );
+					sqlAppender.appendSql( "json_table(t" );
 					sqlAppender.appendSql( clauseLevel );
 					sqlAppender.appendSql( ".nested_" );
 					sqlAppender.appendSql( nextClauseLevel );
@@ -237,8 +330,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 				// DB2 doesn't support the for ordinality syntax in json_table() since it has no support for array either
 				if ( isArray ) {
 					// If the document is an array, a series table with alias `i` is joined to emulate array support.
-					// Since the value of the series is 0 based, we add 1 to obtain the ordinality value
-					sqlAppender.appendSql( "i.v+1 " );
+					sqlAppender.appendSql( "i.i " );
 				}
 				else {
 					// The ordinality for non-array documents always is trivially 1
@@ -434,5 +526,22 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 		// is made through the json_exists() function in the select clause
 		sqlAppender.appendSql( definition.name() );
 		sqlAppender.appendSql( " clob format json path '$'" );
+	}
+
+	public static class SeriesQueryTransformer implements QueryTransformer {
+
+		private final int maxSeriesSize;
+
+		public SeriesQueryTransformer(int maxSeriesSize) {
+			this.maxSeriesSize = maxSeriesSize;
+		}
+
+		@Override
+		public QuerySpec transform(CteContainer cteContainer, QuerySpec querySpec, SqmToSqlAstConverter converter) {
+			if ( cteContainer.getCteStatement( CteGenerateSeriesFunction.CteGenerateSeriesQueryTransformer.NAME ) == null ) {
+				cteContainer.addCteStatement( CteGenerateSeriesFunction.CteGenerateSeriesQueryTransformer.createSeriesCte( maxSeriesSize, converter ) );
+			}
+			return querySpec;
+		}
 	}
 }

@@ -56,7 +56,7 @@ public interface TypeContributions {
 	 * type for values of type {@link UserType#returnedClass()}.
 	 */
 	default void contributeType(UserType<?> type) {
-		contributeType( type, type.returnedClass().getName() );
+		contributeType( type, type.returnedClass().getTypeName() );
 	}
 
 	/**

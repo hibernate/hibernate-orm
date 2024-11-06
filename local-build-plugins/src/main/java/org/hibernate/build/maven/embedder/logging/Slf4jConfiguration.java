@@ -10,25 +10,21 @@ import java.lang.reflect.Method;
 public class Slf4jConfiguration extends Slf4jSimpleConfiguration {
 	@Override
 	public void activate() {
-		System.out.println("activating Slf4jConfiguration");
 		resetLoggerFactory();
 		initMavenSlf4jSimpleFriend();
 	}
 
 	private void resetLoggerFactory() {
-		System.out.println("Resetting Logger factory");
 		try {
 			Method m = LoggerFactory.class.getDeclaredMethod("reset", new Class[]{});
 			m.setAccessible(true);
 			m.invoke(null);
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
 
 	private void initMavenSlf4jSimpleFriend() {
-		System.out.println("Initializing Maven Slf4j Simple Friend");
 		MavenSlf4jSimpleFriend.init();
 	}
 }

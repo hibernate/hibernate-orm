@@ -33,10 +33,6 @@ public abstract class MavenInvokerRunTask extends DefaultTask {
 		taskAndArgs.add("-DlocalRepositoryPath=" + getPathToLocalRepository());
 		taskAndArgs.add("-Dfile=" + getPathToArtifact());
 		taskAndArgs.add("-DpomFile=" + getPathToPomFile());
-		System.out.println("Task and args:");
-		for (String s : taskAndArgs) {
-			System.out.println(s);
-		}
 		return taskAndArgs.toArray(new String[0]);
 	}
 

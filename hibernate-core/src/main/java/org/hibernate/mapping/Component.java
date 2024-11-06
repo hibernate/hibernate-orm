@@ -776,7 +776,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
-			if ( !generator.generatedOnExecution( incomingObject, session ) ) {
+			if ( generator.generatedBeforeExecution( incomingObject, session ) ) {
 				return generator.generate( session, incomingObject, null, INSERT );
 			}
 			else {

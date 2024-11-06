@@ -8,7 +8,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Generated;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -27,7 +26,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutionGenerator {
+public class GeneratedGeneration implements OnExecutionGenerator {
 
 	private final EnumSet<EventType> eventTypes;
 	private final boolean writable;
@@ -73,11 +72,6 @@ public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutio
 	}
 
 	@Override
-	public boolean generatedOnExecution() {
-		return true;
-	}
-
-	@Override
 	public boolean generatedOnExecution(Object entity, SharedSessionContractImplementor session) {
 		if ( writable ) {
 			// When this is the identifier generator and writable is true, allow pre-assigned identifiers
@@ -88,13 +82,6 @@ public class GeneratedGeneration implements OnExecutionGenerator, BeforeExecutio
 		else {
 			return true;
 		}
-	}
-
-	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-		final EntityPersister entityPersister = session.getEntityPersister( null, owner );
-		assert entityPersister.getGenerator() == this;
-		return entityPersister.getIdentifier( owner, session );
 	}
 
 	@Override

@@ -146,32 +146,47 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		final Generator generator = persister.getGenerator();
-		if ( !generator.generatedOnExecution( entity, this ) ) {
-			if ( generator.generatesOnInsert() ) {
-				id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+		if ( generator.generatedBeforeExecution( entity, this ) ) {
+			if ( !generator.generatesOnInsert() ) {
+				throw new IdentifierGenerationException( "Identifier generator must generate on insert" );
+			}
+			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+			if ( firePreInsert(entity, id, state, persister) ) {
+				return id;
 			}
 			else {
-				id = persister.getIdentifier( entity, this );
-				if ( id == null ) {
-					throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName() + "' must be manually assigned before calling 'insert()'" );
-				}
+				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				persister.getInsertCoordinator().insert( entity, id, state, this );
+				persister.setIdentifier( entity, id, this );
+			}
+		}
+		else if ( generator.generatedOnExecution( entity, this ) ) {
+			if ( !generator.generatesOnInsert() ) {
+				throw new IdentifierGenerationException( "Identifier generator must generate on insert" );
+			}
+			if ( firePreInsert(entity, null, state, persister) ) {
+				return null;
+			}
+			else {
+				getInterceptor().onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+				id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+				persister.setIdentifier( entity, id, this );
+			}
+		}
+		else { // assigned identifier
+			id = persister.getIdentifier( entity, this );
+			if ( id == null ) {
+				throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName() + "' must be manually assigned before calling 'insert()'" );
 			}
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;
 			}
-			getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			persister.getInsertCoordinator().insert( entity, id, state, this );
-		}
-		else {
-			if ( firePreInsert(entity, null, state, persister) ) {
-				return null;
+			else {
+				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				persister.getInsertCoordinator().insert( entity, id, state, this );
 			}
-			getInterceptor()
-					.onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
-			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
-		persister.setIdentifier( entity, id, this );
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
 					descriptor.recreate( collection, id, this);

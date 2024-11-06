@@ -140,7 +140,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				final Generator generator = generators[i];
 				if ( generator != null
 						&& generator.generatesOnInsert()
-						&& !generator.generatedOnExecution( entity, session ) ) {
+						&& generator.generatedBeforeExecution( entity, session ) ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
 					persister.setPropertyValue( entity, i, values[i] );
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
@@ -407,7 +407,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				else {
 					final Generator generator = attributeMapping.getGenerator();
 					if ( isValueGenerated( generator ) ) {
-						if ( session != null && !generator.generatedOnExecution( object, session ) ) {
+						if ( session != null && generator.generatedBeforeExecution( object, session ) ) {
 							attributeInclusions[attributeIndex] = true;
 							attributeMapping.forEachInsertable( insertGroupBuilder );
 						}

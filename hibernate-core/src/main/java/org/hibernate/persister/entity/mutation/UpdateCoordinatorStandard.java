@@ -540,7 +540,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				final Generator generator = generators[i];
 				if ( generator != null
 						&& generator.generatesOnUpdate()
-						&& !generator.generatedOnExecution( object, session ) ) {
+						&& generator.generatedBeforeExecution( object, session ) ) {
 					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
@@ -667,7 +667,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final Generator generator = attributeMapping.getGenerator();
 		final boolean generated = isValueGenerated( generator );
-		final boolean needsDynamicUpdate = generated && session != null && !generator.generatedOnExecution( entity, session );
+		final boolean needsDynamicUpdate =
+				generated && session != null && generator.generatedBeforeExecution( entity, session );
 		final boolean generatedInSql = generated && isValueGenerationInSql( generator, dialect );
 		if ( generatedInSql && !needsDynamicUpdate && !( (OnExecutionGenerator) generator ).writePropertyValue() ) {
 			analysis.registerValueGeneratedInSqlNoWrite();

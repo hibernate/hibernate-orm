@@ -77,7 +77,7 @@ NOTE: The functions are incubating/tech-preview and to use them in HQL,
 it is necessary to enable the `hibernate.query.hql.json_functions_enabled` and `hibernate.query.hql.xml_functions_enabled` configuration settings.
 
 [[set-returning-functions]]
-== Set-returning functions
+== Set-returning Functions
 
 A set-returning function is a new type of function that can return rows and is exclusive to the `from` clause.
 The concept is known in many different database SQL dialects and is sometimes referred to as table valued function or table function.
@@ -89,6 +89,22 @@ Out-of-the-box, some common set-returning functions are already supported or emu
 * `generate_series()` - can be used to create a series of values as rows
 * `json_table()` - turns a JSON document into rows
 * `xmltable()` - turns an XML document into rows
+
+
+[[any-discriminator]]
+== @AnyDiscriminatorImplicitValues
+
+The new  `@AnyDiscriminatorImplicitValues` offers 2 related improvements for the mapping of discriminator values
+for `@Any` and `ManyToAny` associations.
+
+First, it allows control over how Hibernate determines the discriminator value to store in the database for
+implicit discriminator mappings.  Historically, Hibernate would always use the full name of the associated
+entity.
+
+Second, it allows mixing of explicit and implicit value strategies.
+
+See the link:{user-guide-url}#associations-any[User Guide] for details.
+
 
 [[cleanup]]
 == Clean-up

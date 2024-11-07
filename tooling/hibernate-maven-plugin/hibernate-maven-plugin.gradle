@@ -21,3 +21,42 @@ dependencies {
     implementation "org.apache.maven.shared:file-management:3.1.0"
 }
 
+publishing {
+    publications {
+        hibernateMavenPlugin(MavenPublication) {
+            from components.java
+            pom.withXml {
+                asNode()
+                        .version
+                        .plus {
+                            packaging('maven-plugin')
+                        }
+                asNode()
+                        .dependencies
+                        .plus {
+                            def plugins = build().appendNode('plugins')
+                            def pluginPlugin = plugins.appendNode('plugin')
+                            pluginPlugin.appendNode('groupId', 'org.apache.maven.plugins')
+                            pluginPlugin.appendNode('artifactId', 'maven-plugin-plugin')
+                            pluginPlugin.appendNode('version', '3.15.0')
+                            def configuration = pluginPlugin.appendNode('configuration')
+                            configuration.appendNode('goalPrefix', 'plugin')
+                            configuration.appendNode('outputDirectory', 'target/generated/sources/plugin-descriptors/META-INF/maven' )
+                        }
+            }
+        }
+        hibernateCore(MavenPublication) {
+            artifactId 'org.hibernate.orm'
+            from project(":hibernate-core").components.java
+        }
+    }
+    repositories {
+        mavenLocal {
+            url = layout.buildDirectory.dir('maven-embedder/maven-local')
+        }
+    }
+}
+
+tasks.generatePluginDescriptor.dependsOn generatePomFileForHibernateMavenPluginPublication
+tasks.integrationTest.dependsOn publishHibernateCorePublicationToMavenLocalRepository
+

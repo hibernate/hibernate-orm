@@ -4,9 +4,12 @@
  */
 package org.hibernate.query.hql.internal;
 
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.NoViableAltException;
+import org.antlr.v4.runtime.misc.Interval;
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
@@ -42,6 +45,16 @@ import static java.util.stream.Collectors.toList;
  * @author Steve Ebersole
  */
 public class StandardHqlTranslator implements HqlTranslator {
+
+	private static final ANTLRErrorListener PRETTIFY_ERROR_LISTENER = new BaseErrorListener() {
+		@Override
+		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+			CommonTokenStream commonTokenStream = (CommonTokenStream) recognizer.getInputStream();
+			CharStream charStream = commonTokenStream.getTokenSource().getInputStream();
+			String hql = charStream.getText( Interval.of( 0, charStream.size() - 1 ) );
+			throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ), hql );
+		}
+	};
 
 	private final SqmCreationContext sqmCreationContext;
 	private final SqmCreationOptions sqmCreationOptions;
@@ -112,14 +125,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 			// fall back to LL(k)-based parsing
 			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
 			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
-
-			final ANTLRErrorListener errorListener = new BaseErrorListener() {
-				@Override
-				public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-					throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ), hql );
-				}
-			};
-			hqlParser.addErrorListener( errorListener );
+			hqlParser.addErrorListener( PRETTIFY_ERROR_LISTENER );
 
 			return hqlParser.statement();
 		}

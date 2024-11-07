@@ -659,8 +659,6 @@ disable_userland_proxy() {
       sudo service docker stop
       echo "Updating /etc/docker/daemon.json..."
       sudo bash -c "export docker_daemon_json='$docker_daemon_json'; echo \"\${docker_daemon_json/\}/,}\\\"userland-proxy\\\": false}\" > /etc/docker/daemon.json"
-      echo "New docker daemon config:"
-      cat /etc/docker/daemon.json
       echo "Starting docker..."
       sudo service docker start
       echo "Service status:"

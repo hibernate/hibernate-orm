@@ -240,6 +240,17 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	default boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return getCurrentBaseSqlTypeIndicators().isXmlFormatMapperLegacyFormatEnabled();
+	}
+
+	/**
 	 * Provides access to the {@link TypeConfiguration} for access to various type system related registries.
 	 */
 	TypeConfiguration getTypeConfiguration();

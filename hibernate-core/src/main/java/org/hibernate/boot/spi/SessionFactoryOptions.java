@@ -572,6 +572,15 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	FormatMapper getXmlFormatMapper();
 
 	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	boolean isXmlFormatMapperLegacyFormatEnabled();
+
+	/**
 	 * The default tenant identifier java type to use, in case no explicit tenant identifier property is defined.
 	 *
 	 * @since 6.4

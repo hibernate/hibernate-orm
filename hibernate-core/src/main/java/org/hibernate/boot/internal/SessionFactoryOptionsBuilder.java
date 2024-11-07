@@ -169,6 +169,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Object validatorFactoryReference;
 	private FormatMapper jsonFormatMapper;
 	private FormatMapper xmlFormatMapper;
+	private final boolean xmlFormatMapperLegacyFormatEnabled;
 
 	// SessionFactory behavior
 	private final boolean jpaBootstrap;
@@ -326,7 +327,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 		this.xmlFormatMapper = determineXmlFormatMapper(
 				configurationSettings.get( AvailableSettings.XML_FORMAT_MAPPER ),
-				strategySelector
+				strategySelector,
+				this.xmlFormatMapperLegacyFormatEnabled = context.getMetadataBuildingOptions().isXmlFormatMapperLegacyFormatEnabled()
 		);
 
 		this.sessionFactoryName = (String) configurationSettings.get( SESSION_FACTORY_NAME );
@@ -892,13 +894,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	private static FormatMapper determineXmlFormatMapper(Object setting, StrategySelector strategySelector) {
+	private static FormatMapper determineXmlFormatMapper(Object setting, StrategySelector strategySelector, boolean legacyFormat) {
 		return strategySelector.resolveDefaultableStrategy(
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull();
-					return jacksonFormatMapper != null ? jacksonFormatMapper : new JaxbXmlFormatMapper();
+					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull( legacyFormat );
+					return jacksonFormatMapper != null ? jacksonFormatMapper : new JaxbXmlFormatMapper( legacyFormat );
 				}
 		);
 	}
@@ -1356,6 +1358,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public FormatMapper getXmlFormatMapper() {
 		return xmlFormatMapper;
+	}
+
+	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return xmlFormatMapperLegacyFormatEnabled;
 	}
 
 	@Override

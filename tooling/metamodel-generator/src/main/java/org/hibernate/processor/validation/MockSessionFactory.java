@@ -437,6 +437,11 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return false;
+	}
+
+	@Override
 	public FastSessionServices getFastSessionServices() {
 		throw new UnsupportedOperationException("operation not supported");
 	}

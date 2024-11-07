@@ -6,6 +6,7 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -143,6 +144,15 @@ public interface MetadataBuildingOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	boolean isMultiTenancyEnabled();
+
+	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	boolean isXmlFormatMapperLegacyFormatEnabled();
 
 	/**
 	 * @return the {@link TypeConfiguration} belonging to the {@link BootstrapContext}

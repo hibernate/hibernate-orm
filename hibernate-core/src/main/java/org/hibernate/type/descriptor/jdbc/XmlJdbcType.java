@@ -77,7 +77,7 @@ public class XmlJdbcType implements AggregateJdbcType {
 		return XmlHelper.fromString( embeddableMappingType, (String) rawJdbcValue, false, options );
 	}
 
-	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
+	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) throws SQLException {
 		if ( embeddableMappingType != null ) {
 			return XmlHelper.toString( embeddableMappingType, value, options );
 		}

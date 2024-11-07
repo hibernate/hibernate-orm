@@ -4242,8 +4242,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <p>
 	 * Support for identity columns is insufficient here, we require something like:
 	 * <ol>
-	 * <li>{@code insert ... returning ...}
-	 * <li>{@code select from final table (insert ... )}
+	 * <li>{@code insert ... returning ...}, or
+	 * <li>{@code select from final table (insert ... )}.
 	 * </ol>
 	 *
 	 * @return {@code true} if {@link org.hibernate.id.insert.InsertReturningDelegate}

@@ -19,11 +19,11 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -232,6 +232,6 @@ public class H2GenerateSeriesFunction extends NumberSeriesGenerateSeriesFunction
 	}
 
 	private static boolean needsEmulation(Expression expression) {
-		return !( expression instanceof Literal || expression instanceof JdbcParameter);
+		return !( expression instanceof Literal || AbstractSqlAstTranslator.isParameter( expression ) );
 	}
 }

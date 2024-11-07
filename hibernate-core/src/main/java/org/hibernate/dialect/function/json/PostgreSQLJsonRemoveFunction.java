@@ -10,10 +10,10 @@ import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -33,7 +33,7 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			SqlAstTranslator<?> translator) {
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
-		final boolean needsCast = !isJsonType( json ) && json instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType( json ) && AbstractSqlAstTranslator.isParameter( json );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}

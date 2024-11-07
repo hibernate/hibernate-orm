@@ -43,22 +43,31 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 		arguments.jsonDocument().accept( walker );
 		if ( arguments.jsonPath() != null ) {
 			sqlAppender.appendSql( ',' );
-			// Default behavior is NULL ON ERROR
-			final String prefix = arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ? "strict " : "";
-			final String jsonPathString;
+			final String rawJsonPath;
 			if ( arguments.passingClause() != null ) {
-				jsonPathString = prefix + JsonPathHelper.inlinedJsonPathIncludingPassingClause( arguments.jsonPath(),
-						arguments.passingClause(), walker );
+				rawJsonPath = JsonPathHelper.inlinedJsonPathIncludingPassingClause(
+						arguments.jsonPath(),
+						arguments.passingClause(),
+						walker
+				);
 			}
 			else {
-				jsonPathString = prefix + walker.getLiteralValue( arguments.jsonPath() );
+				rawJsonPath = walker.getLiteralValue( arguments.jsonPath() );
 			}
-			if ( jsonPathString.endsWith( "[*]" ) ) {
-				sqlAppender.appendSingleQuoteEscapedString( jsonPathString.substring( 0, jsonPathString.length() - 3 ) );
+			final String jsonPath;
+			if ( arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ) {
+				// Default behavior is NULL ON ERROR
+				jsonPath = "strict " + rawJsonPath;
 			}
 			else {
-				sqlAppender.appendSingleQuoteEscapedString( jsonPathString );
+				jsonPath = rawJsonPath;
 			}
+			sqlAppender.appendSingleQuoteEscapedString(
+					// openjson unwraps arrays automatically and doesn't support this syntax, so remove it
+					jsonPath.endsWith( "[*]" )
+							? jsonPath.substring( 0, jsonPath.length() - 3 )
+							: jsonPath
+			);
 		}
 		else if ( arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ) {
 			// Default behavior is NULL ON ERROR

@@ -9,10 +9,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
@@ -59,7 +59,7 @@ public class PostgreSQLJsonTableFunction extends JsonTableFunction {
 
 		sqlAppender.appendSql( " from jsonb_path_query(" );
 
-		final boolean needsCast = !arguments.isJsonType() && arguments.jsonDocument() instanceof JdbcParameter;
+		final boolean needsCast = !arguments.isJsonType() && AbstractSqlAstTranslator.isParameter( arguments.jsonDocument() );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}

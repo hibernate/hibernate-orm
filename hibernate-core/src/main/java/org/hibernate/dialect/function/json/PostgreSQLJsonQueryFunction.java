@@ -10,10 +10,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
@@ -65,7 +65,7 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 		else {
 			sqlAppender.appendSql( "(select t.v from jsonb_path_query(" );
 		}
-		final boolean needsCast = !isJsonType && jsonDocument instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocument );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}

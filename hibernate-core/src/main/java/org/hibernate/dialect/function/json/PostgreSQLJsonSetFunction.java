@@ -10,10 +10,10 @@ import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,7 +36,7 @@ public class PostgreSQLJsonSetFunction extends AbstractJsonSetFunction {
 		final Expression jsonPath = (Expression) arguments.get( 1 );
 		final SqlAstNode value = arguments.get( 2 );
 		sqlAppender.appendSql( "jsonb_set(" );
-		final boolean needsCast = !isJsonType( json ) && json instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType( json ) && AbstractSqlAstTranslator.isParameter( json );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}

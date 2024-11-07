@@ -11,9 +11,9 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -61,7 +61,7 @@ public class CockroachDBJsonExistsFunction extends JsonExistsFunction {
 			boolean isJsonType,
 			@Nullable JsonPathPassingClause jsonPathPassingClause,
 			SqlAstTranslator<?> walker) {
-		final boolean needsCast = !isJsonType && jsonDocument instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocument );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}

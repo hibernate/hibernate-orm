@@ -11,9 +11,9 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
@@ -76,7 +76,7 @@ public class CockroachDBJsonQueryFunction extends JsonQueryFunction {
 			boolean isJsonType,
 			@Nullable JsonPathPassingClause jsonPathPassingClause,
 			SqlAstTranslator<?> walker) {
-		final boolean needsCast = !isJsonType && jsonDocumentExpression instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocumentExpression );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}

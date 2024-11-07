@@ -10,10 +10,10 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
@@ -63,7 +63,7 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 		if ( castTarget != null ) {
 			sqlAppender.appendSql( "cast(" );
 		}
-		final boolean needsCast = !isJsonType && jsonDocument instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocument );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}

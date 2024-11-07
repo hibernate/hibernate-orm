@@ -29,6 +29,8 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -589,7 +591,14 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			// We use NO_UNTYPED here so that expressions which require type inference are casted explicitly,
 			// since we don't know how the custom write expression looks like where this is embedded,
 			// so we have to be pessimistic and avoid ambiguities
-			translator.render( expression.getValueExpression( selectableMapping ), SqlAstNodeRenderingMode.NO_UNTYPED );
+			final Expression valueExpression = expression.getValueExpression( selectableMapping );
+			if ( valueExpression instanceof Literal literal && literal.getLiteralValue() == null ) {
+				// Except for the null literal. That is just rendered as-is
+				sb.append( "null" );
+			}
+			else {
+				translator.render( valueExpression, SqlAstNodeRenderingMode.NO_UNTYPED );
+			}
 			sb.append( customWriteExpressionEnd );
 		}
 	}

@@ -8,10 +8,11 @@ import java.io.Serializable;
 import java.sql.Types;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
@@ -36,27 +37,35 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
- *
  * @since 5.3
  */
 public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serializable {
 	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
-	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<Integer, JdbcTypeConstructor> descriptorConstructorMap = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, AggregateJdbcType> aggregateDescriptorMap = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Integer, JdbcType> descriptorMap;
+	private final ConcurrentMap<Integer, JdbcTypeConstructor> descriptorConstructorMap;
+	private final ConcurrentMap<String, AggregateJdbcType> aggregateDescriptorMap;
 	/**
 	 * A registry for storing the constructed {@link JdbcType} for both
 	 * {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, JdbcType, ColumnTypeInformation)} and
 	 * {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, BasicType, ColumnTypeInformation)} in a single
 	 * map.
 	 */
-	private final ConcurrentHashMap<TypeConstructedJdbcTypeKey, JdbcType> typeConstructorDescriptorMap = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, SqlTypedJdbcType> sqlTypedDescriptorMap = new ConcurrentHashMap<>();
+	private final ConcurrentMap<TypeConstructedJdbcTypeKey, JdbcType> typeConstructorDescriptorMap;
+	private final ConcurrentMap<String, SqlTypedJdbcType> sqlTypedDescriptorMap;
 
 	public JdbcTypeRegistry(TypeConfiguration typeConfiguration) {
+		this( typeConfiguration, 1000, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+	}
+
+	public JdbcTypeRegistry(TypeConfiguration typeConfiguration, int capacity, int concurrency, BoundedConcurrentHashMap.Eviction evictionPolicy) {
 		this.typeConfiguration = typeConfiguration;
+		descriptorMap = new BoundedConcurrentHashMap<>( capacity, concurrency, evictionPolicy );
+		descriptorConstructorMap = new BoundedConcurrentHashMap<>( capacity, concurrency, evictionPolicy );
+		aggregateDescriptorMap = new BoundedConcurrentHashMap<>( capacity, concurrency, evictionPolicy );
+		typeConstructorDescriptorMap = new BoundedConcurrentHashMap<>( capacity, concurrency, evictionPolicy );
+		sqlTypedDescriptorMap = new BoundedConcurrentHashMap<>( capacity, concurrency, evictionPolicy );
 		JdbcTypeBaseline.prime( this );
 	}
 

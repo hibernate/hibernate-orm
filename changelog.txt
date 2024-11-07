@@ -3,6 +3,66 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.2.Final (November 07, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32350
+
+** Bug
+    * [HHH-18773] - Multiple selections of same alias triggers possible non-threadsafe access to the session
+    * [HHH-18770] - NPE when using the JFR integration with JFR disabled
+    * [HHH-18764] - Class cast exception when using non basic type as identifier and in an embedded field using a natural ID
+    * [HHH-18761] - named query method generation for @NamedQuery on entity
+    * [HHH-18739] - Do not support join queries when using Mysql
+    * [HHH-18730] - Multi-column association in aggregate component doesn't work
+    * [HHH-18720] - Type check on select columns in union all gives SemanticException when there is a null column
+    * [HHH-18719] - Previous row state reuse can provide detached entities to the consumer
+    * [HHH-18713] - saveOrUpdate changed behaviour with bytecode enhancer
+    * [HHH-18712] - Warning about attempts to update an immutable entity for normal (not immutable) entity
+    * [HHH-18702] - Exception using @EmbeddedId with @OneToMany that refers to an alternate key column
+    * [HHH-18699] - Correctly handle @Id and @Version fields in query validation in Hibernate Processor
+    * [HHH-18697] - JPA 3.2 spec compliance for uppercasing of names in Hibernate Processor
+    * [HHH-18696] - @Find method for single @NaturalId field
+    * [HHH-18692] - Hibernate attempts to close batched statements multiple times 
+    * [HHH-18681] - InterpretationException executing subquery in case-when : o.h.query.sqm.tree.select.SqmSelection.getExpressible() is null
+    * [HHH-18675] - Self-referencing many-to-many relation on generic entity gives NullPointerException in mapping
+    * [HHH-18669] - NullPointerException in the AgroalConnectionProvider
+    * [HHH-18667] - Annotation processor leaks - OOME when used in Eclipse IDE
+    * [HHH-18658] - Inner join prevents finding an entity instance referencing an empty map
+    * [HHH-18645] - AssertionError in AbstractBatchEntitySelectFetchInitializer#registerToBatchFetchQueue
+    * [HHH-18642] - DB2: select from new table with identity column not working when missing read permission
+    * [HHH-18635] - Avoid using `bigdatetime` column type on Sybase jconn when not necessary
+    * [HHH-18632] - Concurrency issue with AbstractEntityPersister#nonLazyPropertyLoadPlansByName
+    * [HHH-18631] - AssertionError when loading an entity after removing another, associated entity
+    * [HHH-18628] - Regression: Unable to determine TableReference
+    * [HHH-18617] - Fetching unowned side of bidirectional OneToOne mappings including tenant identifier triggers EntityFilteredException
+    * [HHH-18614] - TransientObjectException: session.update() does not save new entities in OneToMany relation when using bytecode enhancement
+    * [HHH-18608] - NPE in EntityInitializerImpl.resolveInstanceSubInitializers
+    * [HHH-18596] - ValueHandlingMode hack in query pagination
+    * [HHH-18582] - Mapping array of arrays with @JdbcTypeCode(SqlTypes.ARRAY) causes NPE
+    * [HHH-18575] - IN predicate with numeric/decimal parameter types leads to Binding is multi-valued; illegal call to #getBindValue
+    * [HHH-18564] - Literal expressions using AttributeConverters stopped working in hibernate 6
+    * [HHH-18551] - Memory leak caused by AbstractArrayJavaType#getRecommendedJdbcType
+    * [HHH-18515] - Unrecognized discriminator value exception when running native query on entity with discriminator column
+    * [HHH-18513] - Session Metrics for pre-partial-flushes are wrong
+    * [HHH-18500] - Gradle plugin crashes on module-info when extended enhancement is set
+    * [HHH-18494] - UnknownTableReferenceException in native query with placeholder when entity contains a to-one with a join table
+    * [HHH-18491] - Resuming null transaction in JtaIsolationDelegate
+    * [HHH-18471] -  Since 6.2.2 Dialect SybaseAnywhereDialect does not render table names in the selection query
+    * [HHH-18450] - Inconsistent "SELECT 1" versus "SELECT ?1" with result type Object[]
+    * [HHH-18409] - In 6.5.2.Final, byte[] instance variables annotated with @NaturalId cannot be found with a natural ID query (regression from Hibernate 5.6.15.Final)
+    * [HHH-18389] - `merge()` with `orphanRemoval = true` leads to "HibernateException: A collection with cascade="all-delete-orphan" was no longer referenced by the owning entity instance"
+    * [HHH-18321] - SqlTreeCreationException when using sum/diff with coalesce on properties of embeddable component
+    * [HHH-18131] - Composite identifiers with associations stopped working with @IdClass
+    * [HHH-17739] - unhelpful CCE for field with unsupported collection type
+    * [HHH-16572] - Skip enhancement for PROPERTY attributes with mismatched field and method names
+
+** Improvement
+    * [HHH-18698] - respect @Nonnull annotation applied to parameters of @Find method
+    * [HHH-18654] - Change setting docs to use an asciidoc section per setting (User Guide)
+    * [HHH-18640] - Add note to migration guide about @Table and subclasses
+
+
 Changes in 6.6.1.Final (September 17, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

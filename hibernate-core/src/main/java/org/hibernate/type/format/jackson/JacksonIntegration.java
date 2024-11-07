@@ -13,6 +13,7 @@ public final class JacksonIntegration {
 	private static final boolean JACKSON_XML_AVAILABLE = ableToLoadJacksonXMLMapper();
 	private static final boolean JACKSON_JSON_AVAILABLE = ableToLoadJacksonJSONMapper();
 	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper() : null;
+	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER_PORTABLE = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper( false ) : null;
 	private static final JacksonJsonFormatMapper JSON_FORMAT_MAPPER = JACKSON_JSON_AVAILABLE ? new JacksonJsonFormatMapper() : null;
 
 	private JacksonIntegration() {
@@ -29,6 +30,10 @@ public final class JacksonIntegration {
 
 	public static FormatMapper getXMLJacksonFormatMapperOrNull() {
 		return XML_FORMAT_MAPPER;
+	}
+
+	public static FormatMapper getXMLJacksonFormatMapperOrNull(boolean legacyFormat) {
+		return legacyFormat ? XML_FORMAT_MAPPER : XML_FORMAT_MAPPER_PORTABLE;
 	}
 
 	public static FormatMapper getJsonJacksonFormatMapperOrNull() {

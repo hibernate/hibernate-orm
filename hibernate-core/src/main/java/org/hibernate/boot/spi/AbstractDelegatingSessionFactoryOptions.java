@@ -524,6 +524,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
+	}
+
+	@Override
 	public boolean isPassProcedureParameterNames() {
 		return delegate.isPassProcedureParameterNames();
 	}

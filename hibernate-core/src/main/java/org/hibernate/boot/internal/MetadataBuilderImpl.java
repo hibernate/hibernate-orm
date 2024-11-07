@@ -93,6 +93,7 @@ import jakarta.persistence.SharedCacheMode;
 
 import static org.hibernate.cfg.AvailableSettings.JPA_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
+import static org.hibernate.cfg.MappingSettings.XML_FORMAT_MAPPER_LEGACY_FORMAT;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
@@ -652,6 +653,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
 		private final boolean allowExtensionsInCdi;
+		private final boolean xmlFormatMapperLegacyFormat;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -670,6 +672,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					BOOLEAN,
 					true
 			);
+			xmlFormatMapperLegacyFormat = configService.getSetting( XML_FORMAT_MAPPER_LEGACY_FORMAT, BOOLEAN, false );
 
 			implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
@@ -952,6 +955,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isAllowExtensionsInCdi() {
 			return allowExtensionsInCdi;
+		}
+
+		@Override
+		public boolean isXmlFormatMapperLegacyFormatEnabled() {
+			return xmlFormatMapperLegacyFormat;
 		}
 
 		/**

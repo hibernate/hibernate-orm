@@ -182,4 +182,9 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	public boolean isAllowExtensionsInCdi() {
 		return delegate.isAllowExtensionsInCdi();
 	}
+
+	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
+	}
 }

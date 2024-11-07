@@ -10,10 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
+import org.hibernate.dialect.XmlHelper;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -65,19 +68,21 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 			//noinspection unchecked
 			return (X) sqlxml;
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return XmlHelper.arrayFromString( javaType, this, string, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		final JdbcType elementJdbcType = getElementJdbcType();
+		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
+		if ( elementJdbcType instanceof XmlJdbcType xmlElementJdbcType ) {
+			final EmbeddableMappingType embeddableMappingType = xmlElementJdbcType.getEmbeddableMappingType();
+			return XmlHelper.arrayToString( embeddableMappingType, domainObjects, options );
+		}
+		else {
+			assert !( elementJdbcType instanceof AggregateJdbcType );
+			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
+			return XmlHelper.arrayToString( elementJavaType, elementJdbcType, domainObjects, options );
+		}
 	}
 
 	@Override

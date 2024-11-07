@@ -326,6 +326,17 @@ public interface MappingSettings {
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**
+	 * Specifies whether to use the legacy provider specific and non-portable XML format for collections and byte arrays
+	 * for XML serialization/deserialization.
+	 * <p>
+	 * {@code false} by default. This property only exists for backwards compatibility.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String XML_FORMAT_MAPPER_LEGACY_FORMAT = "hibernate.type.xml_format_mapper.legacy_format";
+
+	/**
 	 * Configurable control over how to handle {@code Byte[]} and {@code Character[]} types
 	 * encountered in the application domain model.  Allowable semantics are defined by
 	 * {@link WrapperArrayHandling}.  Accepted values include:<ol>

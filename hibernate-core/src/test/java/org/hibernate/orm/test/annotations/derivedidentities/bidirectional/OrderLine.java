@@ -10,9 +10,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.processing.Exclude;
 
 @SuppressWarnings("serial")
 @Entity
+@Exclude
 @Table(name = "order_line")
 // @IdClass(OrderLinePK.class)
 public class OrderLine implements Serializable

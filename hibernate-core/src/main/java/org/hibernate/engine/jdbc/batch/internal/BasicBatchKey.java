@@ -8,7 +8,7 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.jdbc.Expectations;
 
 /**
- * Normal implementation of BatchKey
+ * Normal implementation of {@link BatchKey}
  *
  * @author Steve Ebersole
  */

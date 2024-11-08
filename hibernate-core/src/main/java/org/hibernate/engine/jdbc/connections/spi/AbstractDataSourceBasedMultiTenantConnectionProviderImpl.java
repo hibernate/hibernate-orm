@@ -11,7 +11,8 @@ import javax.sql.DataSource;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
- * Basic support for implementations of {@link MultiTenantConnectionProvider} based on DataSources.
+ * Basic support for implementations of {@link MultiTenantConnectionProvider} based on {@link DataSource}s.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T> implements MultiTenantConnectionProvider<T> {

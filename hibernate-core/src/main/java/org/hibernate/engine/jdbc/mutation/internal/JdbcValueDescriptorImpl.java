@@ -11,7 +11,7 @@ import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 /**
- * Standard JdbcValueDescriptor implementation
+ * Standard {@link JdbcValueDescriptor} implementation
  *
  * @author Steve Ebersole
  */

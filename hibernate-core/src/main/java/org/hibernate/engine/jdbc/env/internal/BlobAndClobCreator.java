@@ -22,9 +22,9 @@ import org.hibernate.engine.jdbc.proxy.NClobProxy;
  * {@link LobCreator} which can use {@link Connection#createBlob} and {@link Connection#createClob},
  * but {@link java.sql.NClob} references are created locally.
  *
- * @see NClobProxy
- *
  * @author Steve Ebersole
+ *
+ * @see NClobProxy
  */
 public class BlobAndClobCreator extends AbstractLobCreator implements LobCreator {
 

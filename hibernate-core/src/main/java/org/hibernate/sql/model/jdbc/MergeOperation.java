@@ -13,7 +13,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 
 /**
- * JdbcMutation implementation for MERGE handling
+ * {@link JdbcMutationOperation} implementation for MERGE handling
  *
  * @author Steve Ebersole
  */

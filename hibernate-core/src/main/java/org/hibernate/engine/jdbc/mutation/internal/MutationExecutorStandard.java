@@ -36,7 +36,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
- * Standard MutationExecutor implementation
+ * Standard {@link org.hibernate.engine.jdbc.mutation.MutationExecutor}
  *
  * @author Steve Ebersole
  */

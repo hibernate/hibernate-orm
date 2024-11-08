@@ -24,7 +24,7 @@ import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.ch
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
- * Base support for MutationExecutor implementations
+ * Base support for {@link MutationExecutor} implementations
  *
  * @author Steve Ebersole
  */

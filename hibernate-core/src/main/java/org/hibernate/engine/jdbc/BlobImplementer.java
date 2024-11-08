@@ -7,7 +7,7 @@ package org.hibernate.engine.jdbc;
 import java.sql.SQLException;
 
 /**
- * Marker interface for non-contextually created {@link java.sql.Blob} instances..
+ * Marker interface for non-contextually created {@link java.sql.Blob} instances.
  *
  * @author Steve Ebersole
  */

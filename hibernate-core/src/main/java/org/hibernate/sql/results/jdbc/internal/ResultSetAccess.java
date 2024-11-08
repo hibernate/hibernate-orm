@@ -21,7 +21,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.EnumType;
 
 /**
- * Access to a JDBC ResultSet and information about it.
+ * Access to a JDBC {@link ResultSet} and information about it.
  *
  * @author Steve Ebersole
  */

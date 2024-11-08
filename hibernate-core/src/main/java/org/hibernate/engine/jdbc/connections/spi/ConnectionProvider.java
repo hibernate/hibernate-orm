@@ -19,7 +19,7 @@ import org.hibernate.service.spi.Wrapped;
  * A {@code ConnectionProvider} may be selected using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER}.
  * <p>
- * It's not usual for an applications to implement its on {@code ConnectionProvider}.
+ * It's not usual for an application to implement its own {@code ConnectionProvider}.
  * Instead, the Hibernate project provides pre-built implementations for a variety of
  * connection pools as add-on modules.
  * <p>

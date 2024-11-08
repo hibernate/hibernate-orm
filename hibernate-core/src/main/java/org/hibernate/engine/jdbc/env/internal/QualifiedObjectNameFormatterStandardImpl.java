@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
 /**
- * Standard implementation of QualifiedObjectNameFormatter which uses information reported
+ * Standard implementation of {@link QualifiedObjectNameFormatter} which uses information reported
  * by {@link DatabaseMetaData} to render qualified names.
  *
  * @author Steve Ebersole

@@ -9,11 +9,11 @@ import org.hibernate.Length;
 import java.io.Serializable;
 
 /**
- * Models size restrictions/requirements on a column's datatype.
+ * Models size restrictions/requirements on a column's data type.
  *
- * @implNote Since we do not necessarily know the datatype up front, and therefore do not necessarily know
+ * @implNote Since we do not necessarily know the data type up front, and therefore do not necessarily know
  * whether length or precision/scale sizing is needed, we simply account for both here. Additionally, LOB
- * sizes, by standard, are allowed a "multiplier", {@code K} (Kb), {@code M} (Mb) or {@code G} (Gb).
+ * sizes, by standard, are allowed a "multiplier": {@code K} (Kb), {@code M} (Mb), or {@code G} (Gb).
  *
  * @author Steve Ebersole
  */

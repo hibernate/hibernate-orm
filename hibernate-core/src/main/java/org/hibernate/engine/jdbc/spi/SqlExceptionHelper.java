@@ -24,7 +24,7 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
 /**
- * Helper for handling SQLExceptions in various manners.
+ * Helper for handling {@link SQLException}s in various manners.
  *
  * @author Steve Ebersole
  */

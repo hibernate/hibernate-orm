@@ -6,7 +6,7 @@ package org.hibernate.jdbc;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates that more rows were affected then we were expecting to be.
+ * Indicates that more rows were affected than we were expecting to be.
  * Typically indicates presence of duplicate "PK" values in the
  * given table.
  *

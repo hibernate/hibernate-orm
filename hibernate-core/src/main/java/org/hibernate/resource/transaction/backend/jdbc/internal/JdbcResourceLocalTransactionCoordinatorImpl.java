@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * An implementation of {@link TransactionCoordinator} based on managing a
- * transaction through the JDBC Connection via {@link JdbcResourceTransaction}.
+ * transaction through the JDBC {@link Connection} via {@link JdbcResourceTransaction}.
  *
  * @author Steve Ebersole
  *

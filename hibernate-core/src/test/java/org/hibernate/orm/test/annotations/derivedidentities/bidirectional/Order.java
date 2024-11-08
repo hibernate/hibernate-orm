@@ -13,9 +13,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.processing.Exclude;
 
 @SuppressWarnings("serial")
 @Entity
+@Exclude
 @Table(name = "orders")
 public class Order implements Serializable
 {

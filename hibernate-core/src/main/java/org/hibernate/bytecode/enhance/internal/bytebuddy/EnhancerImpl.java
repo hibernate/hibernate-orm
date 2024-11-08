@@ -465,6 +465,11 @@ public class EnhancerImpl implements Enhancer {
 			methodFieldName = methodFieldName.substring(0, 1).toLowerCase() + methodFieldName.substring(1);
 			TypeList typeList = methodDescription.getDeclaredAnnotations().asTypeList();
 			if (typeList.stream().anyMatch(typeDefinitions ->
+					(typeDefinitions.getName().equals("jakarta.persistence.Transient")))) {
+				// transient property so ignore it
+				continue;
+			}
+			if (typeList.stream().anyMatch(typeDefinitions ->
 					(typeDefinitions.getName().contains("jakarta.persistence")))) {
 				propertyHasAnnotation = true;
 			}

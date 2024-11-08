@@ -7,7 +7,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id 'org.hibernate.build.xjc-jakarta'
+    id "local-xjc-plugin"
 }
 
 description = 'Hibernate\'s core ORM functionality'
@@ -87,10 +87,6 @@ dependencies {
     // dependency here.
     antlr libs.antlr
     antlr libs.antlrRuntime
-
-    xjc jakartaLibs.xjc
-    xjc jakartaLibs.jaxb
-    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 }
 
 jar {

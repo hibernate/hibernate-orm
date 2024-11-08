@@ -108,6 +108,8 @@ import static org.hibernate.processor.util.TypeUtils.propertyName;
  */
 public class AnnotationMetaEntity extends AnnotationMeta {
 
+	private static final String ID_CLASS_MEMBER_NAME = "<ID_CLASS>";
+
 	private final ImportContext importContext;
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
@@ -438,6 +440,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 			addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 			addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
+
+			addIdClassIfNeeded( fieldsOfClass, gettersAndSettersOfClass );
 		}
 
 		addAuxiliaryMembers();
@@ -449,6 +453,33 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private void addIdClassIfNeeded(List<? extends Element> fields, List<? extends Element> methods) {
+		if ( hasAnnotation( element, ID_CLASS ) ) {
+			return;
+		}
+		final List<MetaAttribute> components = new ArrayList<>();
+		for ( Element field : fields ) {
+			if ( hasAnnotation( field, ID ) && isPersistent( field, AccessType.FIELD ) ) {
+				final String propertyName = propertyName( this, field );
+				if ( members.containsKey( propertyName ) ) {
+					components.add( members.get( propertyName ) );
+				}
+			}
+		}
+		for ( Element method : methods ) {
+			if ( hasAnnotation( method, ID ) && isPersistent( method, AccessType.PROPERTY ) ) {
+				final String propertyName = propertyName( this, method );
+				if ( members.containsKey( propertyName ) ) {
+					components.add( members.get( propertyName ) );
+				}
+			}
+		}
+		if ( components.size() < 2 ) {
+			return;
+		}
+		putMember( ID_CLASS_MEMBER_NAME, new IdClassMetaAttribute( this, components ) );
 	}
 
 	private boolean checkEntities(List<ExecutableElement> lifecycleMethods) {

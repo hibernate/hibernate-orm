@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.AccessType;
@@ -183,6 +184,13 @@ public class InheritanceState {
 			return classDetails;
 		}
 		else {
+			final long count = Stream.concat(
+					classDetails.getFields().stream(),
+					classDetails.getMethods().stream()
+			).filter( t -> t.hasDirectAnnotationUsage( Id.class ) ).count();
+			if ( count > 1 ) {
+				return classDetails;
+			}
 			final InheritanceState state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
 			if ( state != null ) {
 				return state.getClassWithIdClass( true );

@@ -466,7 +466,7 @@ Furthermore, the link:{doc-javadoc-url}org/hibernate/annotations/ValueGeneration
 [NOTE]
 // .The older APIs are still available in Hibernate 6
 ====
-These APIs are new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface and `@GenericGenerator` annotation from older versions of Hibernate.
+These APIs were new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface and `@GenericGenerator` annotation from older versions of Hibernate.
 However, the older APIs are still available and custom ``IdentifierGenerator``s written for older versions of Hibernate continue to work in Hibernate 6.
 ====
 

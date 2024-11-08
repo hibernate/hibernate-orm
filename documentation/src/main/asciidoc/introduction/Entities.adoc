@@ -549,7 +549,7 @@ Hibernate slightly extends this list with the following types:
 | Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, and even `ZonedDateTime`
 | JDBC LOB types | `java.sql` | `Blob`, `Clob`, `NClob`
 | Java class object | `java.lang` | `Class`
-| Miscellaneous types | `java.util` | `Currency`, `URL`, `TimeZone`
+| Miscellaneous types | `java.util` | `Currency`, `Locale`, `URL`, `TimeZone`
 |====
 
 The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
@@ -807,7 +807,7 @@ The types defined by the JDBC specification are enumerated by the integer type c
 Each JDBC type is an abstraction of a commonly-available type in SQL.
 For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on Oracle).
 
-Since Hibernate understands more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
+Since Hibernate understands more SQL types than JDBC, there's an extended list of integer type codes in the class link:{doc-javadoc-url}org/hibernate/type/SqlTypes.html[`org.hibernate.type.SqlTypes`].
 For example, `SqlTypes.GEOMETRY` represents the spatial data type `GEOMETRY`.
 ****
 

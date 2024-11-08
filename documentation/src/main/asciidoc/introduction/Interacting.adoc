@@ -799,7 +799,7 @@ Of course, we could construct a HQL query by string concatenation, but this is a
 
 .HQL is implemented in terms of criteria objects
 ****
-Actually, in Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
+Actually, since Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
 This ensures that the semantics of HQL and criteria queries are identical.
 ****
 

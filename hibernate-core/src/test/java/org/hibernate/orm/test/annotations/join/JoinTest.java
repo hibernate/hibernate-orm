@@ -11,10 +11,12 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -23,9 +25,12 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Join;
 
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -145,13 +150,13 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testReferenceColumnWithBacktics() {
-		Session s=openSession();
+		Session s = openSession();
 		s.beginTransaction();
-		SysGroupsOrm g=new SysGroupsOrm();
-		SysUserOrm u=new SysUserOrm();
+		SysGroupsOrm g = new SysGroupsOrm();
+		SysUserOrm u = new SysUserOrm();
 		u.setGroups( new ArrayList<>() );
 		u.getGroups().add( g );
 		s.save( g );
@@ -159,7 +164,53 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
+	private SQLStatementInterceptor sqlStatementInterceptor;
+
+	@Override
+	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+		super.configureStandardServiceRegistryBuilder( ssrb );
+		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
+	}
+
+	@Test
+	public void testJoinTableQueryCount() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		// create book with 10 pages
+		Book b = new Book();
+		b.setPages( new ArrayList<>() );
+		for ( int i = 0; i < 10; i++ ) {
+			Page p = new Page();
+			b.getPages().add( p );
+			s.persist( p );
+		}
+
+		s.persist( b );
+		s.getTransaction().commit();
+
+		s.close();
+
+		// fresh session
+		s = openSession();
+		s.beginTransaction();
+		sqlStatementInterceptor.clear();
+
+		Book existingBook = s.find( Book.class, b.getBookId() ); // get existing book
+		Page newPage = new Page(); // create new page
+		existingBook.getPages().add( newPage ); // add new page to existing book with already many pages
+		s.persist( newPage ); // persist new page
+		s.persist( existingBook ); // persist book
+		log.debug( "" );
+		s.getTransaction().commit();
+		// expected: select BOOKS, insert PAGES, insert BOOK_PAGES
+		// actual: select BOOKS, select BOOK_PAGES, insert PAGES, delete BOOK_PAGES, insert BOOK_PAGES (11x)
+		assertThat( sqlStatementInterceptor.getQueryCount(), is( 3 ) );
+
+		s.close();
+	}
+
 	@Test
 	public void testUniqueConstaintOnSecondaryTable() {
 		Cat cat = new Cat();
@@ -198,7 +249,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( cat );
 		s.flush();
 		s.clear();
-		
+
 		s.get( Cat.class, cat.getId() );
 		//Find a way to test it, I need to define the secondary table on a subclass
 
@@ -219,7 +270,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.clear();
 
 		Cat c = s.get( Cat.class, cat.getId() );
-		assertEquals( storyPart2.toUpperCase(Locale.ROOT), c.getStoryPart2() );
+		assertEquals( storyPart2.toUpperCase( Locale.ROOT ), c.getStoryPart2() );
 
 		tx.rollback();
 		s.close();
@@ -227,7 +278,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testMappedSuperclassAndSecondaryTable() {
-		Session s = openSession( );
+		Session s = openSession();
 		s.getTransaction().begin();
 		C c = new C();
 		c.setAge( 12 );
@@ -236,7 +287,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( c );
 		s.flush();
 		s.clear();
-		c= s.get( C.class, c.getId() );
+		c = s.get( C.class, c.getId() );
 		assertNotNull( c.getCreateDate() );
 		assertNotNull( c.getName() );
 		s.getTransaction().rollback();
@@ -251,7 +302,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Life.class,
 				Death.class,
 				Cat.class,
@@ -260,7 +311,9 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 				B.class,
 				C.class,
 				SysGroupsOrm.class,
-				SysUserOrm.class
+				SysUserOrm.class,
+				Book.class,
+				Page.class
 		};
 	}
 }

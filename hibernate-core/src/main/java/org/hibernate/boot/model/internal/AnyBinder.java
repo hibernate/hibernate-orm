@@ -9,6 +9,7 @@ import java.util.Locale;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
@@ -19,6 +20,9 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
@@ -109,8 +113,9 @@ public class AnyBinder {
 		);
 
 		final AnyDiscriminator anyDiscriminator = property.getDirectAnnotationUsage( AnyDiscriminator.class );
-		if ( anyDiscriminator != null ) {
-			value.setDiscriminatorValueStrategy( anyDiscriminator.valueStrategy() );
+		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		if ( anyDiscriminatorImplicitValues != null ) {
+			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
 
 		final PropertyBinder binder = new PropertyBinder();
@@ -133,5 +138,37 @@ public class AnyBinder {
 		//composite FK columns are in the same table, so it's OK
 		propertyHolder.addProperty( prop, inferredData.getAttributeMember(), columns, inferredData.getDeclaringClass() );
 		binder.callAttributeBindersInSecondPass( prop );
+	}
+
+	public static ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(
+			AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues,
+			MetadataBuildingContext context) {
+		final AnyDiscriminatorImplicitValues.Strategy strategy = anyDiscriminatorImplicitValues.value();
+
+		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.FULL_NAME ) {
+			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+		}
+
+		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.SHORT_NAME ) {
+			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+		}
+
+		assert strategy == AnyDiscriminatorImplicitValues.Strategy.CUSTOM;
+
+		final Class<? extends ImplicitDiscriminatorStrategy> customStrategy = anyDiscriminatorImplicitValues.implementation();
+
+		if ( ImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return null;
+		}
+
+		if ( FullNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+		}
+
+		if ( ShortNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+		}
+
+		return context.getBootstrapContext().getCustomTypeProducer().produceBeanInstance( customStrategy );
 	}
 }

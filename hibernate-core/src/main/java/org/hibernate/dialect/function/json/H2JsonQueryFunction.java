@@ -45,11 +45,20 @@ public class H2JsonQueryFunction extends JsonQueryFunction {
 				arguments.jsonPath(),
 				arguments.passingClause(),
 				arguments.wrapMode(),
+				arguments.emptyBehavior(),
 				walker
 		);
 	}
 
-	static void appendJsonQuery(SqlAppender sqlAppender, Expression jsonDocument, boolean isJsonType, Expression jsonPathExpression, @Nullable JsonPathPassingClause passingClause, @Nullable JsonQueryWrapMode wrapMode, SqlAstTranslator<?> walker) {
+	static void appendJsonQuery(
+			SqlAppender sqlAppender,
+			Expression jsonDocument,
+			boolean isJsonType,
+			Expression jsonPathExpression,
+			@Nullable JsonPathPassingClause passingClause,
+			@Nullable JsonQueryWrapMode wrapMode,
+			@Nullable JsonQueryEmptyBehavior emptyBehavior,
+			SqlAstTranslator<?> walker) {
 		final String jsonPath;
 		try {
 			jsonPath = walker.getLiteralValue( jsonPathExpression );
@@ -57,16 +66,27 @@ public class H2JsonQueryFunction extends JsonQueryFunction {
 		catch (Exception ex) {
 			throw new QueryException( "H2 json_query only support literal json paths, but got " + jsonPathExpression );
 		}
-		appendJsonQuery( sqlAppender, jsonDocument, isJsonType, jsonPath, passingClause, wrapMode, walker );
+		appendJsonQuery( sqlAppender, jsonDocument, isJsonType, jsonPath, passingClause, wrapMode, emptyBehavior, walker );
 	}
 
-	static void appendJsonQuery(SqlAppender sqlAppender, Expression jsonDocument, boolean isJsonType, String jsonPath, @Nullable JsonPathPassingClause passingClause, @Nullable JsonQueryWrapMode wrapMode, SqlAstTranslator<?> walker) {
+	static void appendJsonQuery(
+			SqlAppender sqlAppender,
+			Expression jsonDocument,
+			boolean isJsonType,
+			String jsonPath,
+			@Nullable JsonPathPassingClause passingClause,
+			@Nullable JsonQueryWrapMode wrapMode,
+			@Nullable JsonQueryEmptyBehavior emptyBehavior,
+			SqlAstTranslator<?> walker) {
+		if ( emptyBehavior == JsonQueryEmptyBehavior.EMPTY_ARRAY || emptyBehavior == JsonQueryEmptyBehavior.EMPTY_OBJECT ) {
+			sqlAppender.appendSql( "coalesce(" );
+		}
+
 		if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
 			sqlAppender.appendSql( "'['||" );
 		}
 
-		sqlAppender.appendSql( "stringdecode(btrim(nullif(" );
-		sqlAppender.appendSql( "cast(" );
+		sqlAppender.appendSql( "stringdecode(regexp_replace(nullif(" );
 		H2JsonValueFunction.renderJsonPath(
 				sqlAppender,
 				jsonDocument,
@@ -75,10 +95,15 @@ public class H2JsonQueryFunction extends JsonQueryFunction {
 				jsonPath,
 				passingClause
 		);
-		sqlAppender.appendSql( " as varchar)" );
-		sqlAppender.appendSql( ",'null'),'\"'))");
+		sqlAppender.appendSql( ",JSON'null'),'^\"(.*)\"$','$1'))");
 		if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
 			sqlAppender.appendSql( "||']'" );
+		}
+		if ( emptyBehavior == JsonQueryEmptyBehavior.EMPTY_ARRAY ) {
+			sqlAppender.appendSql( ",'[]')" );
+		}
+		else if ( emptyBehavior == JsonQueryEmptyBehavior.EMPTY_OBJECT ) {
+			sqlAppender.appendSql( ",'{}')" );
 		}
 	}
 }

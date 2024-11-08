@@ -335,7 +335,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	private boolean definesAttribute(SqmPathSource<?> containerType, String name) {
 		return !( containerType.getSqmType() instanceof BasicDomainType )
-				&& containerType.findSubPathSource( name, getJpaMetamodel() ) != null;
+				&& containerType.findSubPathSource( name, true ) != null;
 	}
 
 	private JpaMetamodel getJpaMetamodel() {

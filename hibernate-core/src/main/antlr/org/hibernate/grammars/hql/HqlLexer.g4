@@ -307,7 +307,7 @@ SET					: [sS] [eE] [tT];
 SIZE				: [sS] [iI] [zZ] [eE];
 SOME				: [sS] [oO] [mM] [eE];
 SUBSTRING			: [sS] [uU] [bB] [sS] [tT] [rR] [iI] [nN] [gG];
-SUM					: [sS] [uM] [mM];
+SUM					: [sS] [uU] [mM];
 THEN				: [tT] [hH] [eE] [nN];
 TIES				: [tT] [iI] [eE] [sS];
 TIME				: [tT] [iI] [mM] [eE];

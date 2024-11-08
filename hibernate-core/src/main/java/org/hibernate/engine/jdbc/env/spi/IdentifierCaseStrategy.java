@@ -5,7 +5,7 @@
 package org.hibernate.engine.jdbc.env.spi;
 
 /**
- * An enumeration of the way DatabaseMetaData might store and return identifiers
+ * An enumeration of the way {@link java.sql.DatabaseMetaData} might store and return identifiers
  *
  * @author Steve Ebersole
  */

@@ -20,8 +20,8 @@ import static java.util.Collections.addAll;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
- * Builder for IdentifierHelper instances.  Mainly here to allow progressive
- * building of the immutable (after instantiation) IdentifierHelper.
+ * Builder for {@link IdentifierHelper} instances.  Mainly here to allow progressive
+ * building of the immutable (after instantiation) {@link IdentifierHelper}.
  *
  * @author Steve Ebersole
  */

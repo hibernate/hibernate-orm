@@ -57,7 +57,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.ActionQueue.TransactionCompletionProcesses;
@@ -1655,8 +1655,8 @@ public class SessionImpl
 	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
 		checkOpen();
-		if ( selectQuery instanceof CriteriaDefinition ) {
-			return (QueryImplementor<T>) ((CriteriaDefinition<T>) selectQuery).createSelectionQuery(this);
+		if ( selectQuery instanceof CriteriaDefinition<T> criteriaDefinition ) {
+			return (QueryImplementor<T>) criteriaDefinition.createSelectionQuery(this);
 		}
 		else {
 			try {

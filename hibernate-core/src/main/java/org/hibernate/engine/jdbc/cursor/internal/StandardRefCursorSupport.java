@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.jboss.logging.Logger;
 
 /**
- * Standard implementation of RefCursorSupport
+ * Standard implementation of {@link RefCursorSupport}
  *
  * @author Steve Ebersole
  */

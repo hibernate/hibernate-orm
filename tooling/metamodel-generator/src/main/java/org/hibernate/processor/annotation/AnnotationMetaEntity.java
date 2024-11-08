@@ -75,6 +75,7 @@ import static org.hibernate.grammars.hql.HqlLexer.HAVING;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSpecialParam;
 import static org.hibernate.processor.annotation.QueryMethod.isOrderParam;
@@ -966,8 +967,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					final TypeElement assocTypeElement = (TypeElement) assocDeclaredType.asElement();
 					if ( hasAnnotation(assocTypeElement, ENTITY) ) {
 						final AnnotationValue mappedBy = getAnnotationValue(annotation, "mappedBy");
-						final String propertyName = mappedBy == null ? null : mappedBy.getValue().toString();
-						validateBidirectionalMapping(memberOfClass, annotation, propertyName, assocTypeElement);
+						if ( mappedBy != null ) {
+							validateBidirectionalMapping(memberOfClass, annotation, mappedBy, assocTypeElement);
+						}
 					}
 					else {
 						message(memberOfClass, "type '" + assocTypeElement.getSimpleName()
@@ -983,30 +985,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void validateBidirectionalMapping(
-			Element memberOfClass, AnnotationMirror annotation, @Nullable String mappedBy, TypeElement assocTypeElement) {
-		if ( mappedBy != null && !mappedBy.isEmpty() ) {
-			if ( mappedBy.equals("<error>") ) {
-				return;
-//							throw new ProcessLaterException();
-			}
-			if ( mappedBy.indexOf('.')>0 ) {
+			Element memberOfClass, AnnotationMirror annotation, AnnotationValue annotationVal, TypeElement assocTypeElement) {
+		final String mappedBy = annotationVal.getValue().toString();
+		if ( mappedBy != null && !mappedBy.isEmpty()
+				// this happens for a typesafe ref, e.g. Page_BOOK
+				// TODO: we should queue it to validate it later somehow
+				&& !mappedBy.equals( "<error>" ) ) {
+			if ( mappedBy.indexOf( '.' ) > 0 ) {
 				//we don't know how to handle paths yet
 				return;
 			}
-			final AnnotationValue annotationVal =
-					castNonNull(getAnnotationValue(annotation, "mappedBy"));
-			for ( Element member : context.getAllMembers(assocTypeElement) ) {
-				if ( propertyName(this, member).contentEquals(mappedBy)
-						&& compatibleAccess(assocTypeElement, member) ) {
-					validateBackRef(memberOfClass, annotation, assocTypeElement, member, annotationVal);
+			for ( Element member : context.getAllMembers( assocTypeElement ) ) {
+				if ( propertyName( this, member ).contentEquals( mappedBy )
+						&& compatibleAccess( assocTypeElement, member ) ) {
+					validateBackRef( memberOfClass, annotation, assocTypeElement, member, annotationVal );
 					return;
 				}
 			}
 			// not found
-			message(memberOfClass, annotation,
-					annotationVal,
+			message( memberOfClass, annotation, annotationVal,
 					"no matching member in '" + assocTypeElement.getSimpleName() + "'",
-					Diagnostic.Kind.ERROR);
+					Diagnostic.Kind.ERROR );
 		}
 	}
 
@@ -1024,51 +1023,62 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			Element memberOfClass,
 			AnnotationMirror annotation,
 			TypeElement assocTypeElement,
-			Element member,
+			Element referencedMember,
 			AnnotationValue annotationVal) {
 		final TypeMirror backType;
+		final String expectedMappingAnnotation;
 		switch ( annotation.getAnnotationType().asElement().toString() ) {
 			case ONE_TO_ONE:
-				backType = attributeType(member);
-				if ( !hasAnnotation(member, ONE_TO_ONE) ) {
-					message(memberOfClass, annotation, annotationVal,
-							"member '" + member.getSimpleName()
-									+ "' of '" + assocTypeElement.getSimpleName()
-									+ "' is not annotated '@OneToOne'",
-							Diagnostic.Kind.WARNING);
-				}
+				backType = attributeType(referencedMember);
+				expectedMappingAnnotation = ONE_TO_ONE;
 				break;
 			case ONE_TO_MANY:
-				backType = attributeType(member);
-				if ( !hasAnnotation(member, MANY_TO_ONE) ) {
-					message(memberOfClass, annotation, annotationVal,
-							"member '" + member.getSimpleName()
-									+ "' of '" + assocTypeElement.getSimpleName()
-									+ "' is not annotated '@ManyToOne'",
-							Diagnostic.Kind.WARNING);
-				}
+				backType = attributeType(referencedMember);
+				expectedMappingAnnotation = MANY_TO_ONE;
 				break;
 			case MANY_TO_MANY:
-				backType = elementType( attributeType(member) );
-				if ( !hasAnnotation(member, MANY_TO_MANY) ) {
-					message(memberOfClass, annotation, annotationVal,
-							"member '" + member.getSimpleName()
-									+ "' of '" + assocTypeElement.getSimpleName()
-									+ "' is not annotated '@ManyToMany'",
-							Diagnostic.Kind.WARNING);
-				}
+				backType = elementType( attributeType(referencedMember) );
+				expectedMappingAnnotation = MANY_TO_MANY;
 				break;
 			default:
 				throw new AssertionFailure("should not have a mappedBy");
 		}
-		if ( backType!=null
-				&& !context.getTypeUtils().isSameType(backType, element.asType()) ) {
-			message(memberOfClass, annotation, annotationVal,
-					"member '" + member.getSimpleName()
-							+ "' of '" + assocTypeElement.getSimpleName()
-							+ "' is not of type '" + element.getSimpleName() + "'",
-					Diagnostic.Kind.WARNING);
+		if ( backType != null ) {
+			final Element idMember = getIdMember();
+			final Types typeUtils = context.getTypeUtils();
+			if ( idMember != null && typeUtils.isSameType( backType, idMember.asType() ) ) {
+				// mappedBy references a regular field of the same type as the entity id
+				//TODO: any other validation to do here??
+			}
+			else if ( typeUtils.isSameType( backType, element.asType() ) ) {
+				// mappedBy references a field of the same type as the entity
+				// it needs to be mapped as the appropriate sort of association
+				if ( !hasAnnotation( referencedMember, expectedMappingAnnotation ) ) {
+					message(memberOfClass, annotation, annotationVal,
+							"member '" + referencedMember.getSimpleName()
+									+ "' of '" + assocTypeElement.getSimpleName()
+									+ "' is not annotated '@" + unqualify(expectedMappingAnnotation) + "'",
+							Diagnostic.Kind.WARNING);
+				}
+			}
+			else {
+				// mappedBy references a field which seems to be of the wrong type
+				message( memberOfClass, annotation, annotationVal,
+						"member '" + referencedMember.getSimpleName()
+								+ "' of '" + assocTypeElement.getSimpleName()
+								+ "' is not of type '" + element.getSimpleName() + "'",
+						Diagnostic.Kind.WARNING );
+			}
 		}
+	}
+
+	private @Nullable Element getIdMember() {
+		for ( Element e : element.getEnclosedElements() ) {
+			if ( hasAnnotation( e, ID, EMBEDDED_ID ) ) {
+				return e;
+			}
+		}
+		return null;
 	}
 
 	private boolean isPersistent(Element memberOfClass, AccessType membersKind) {

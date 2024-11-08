@@ -3777,12 +3777,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Should BLOB, CLOB, and NCLOB be created solely using respectively
-	 * {@link Connection#createBlob()}, {@link Connection#createClob()},
-	 * and {@link Connection#createNClob()}.
+	 * Should {@link Blob}, {@link Clob}, and {@link NClob} be created solely
+	 * using {@link Connection#createBlob()}, {@link Connection#createClob()},
+	 * and {@link Connection#createNClob()}, instead of allowing the use of
+	 * our own implementations.
 	 *
-	 * @return True if BLOB, CLOB, and NCLOB should be created using JDBC
-	 * {@link Connection}.
+	 * @return True if these types should be instantiated using {@link Connection}.
 	 *
 	 * @since 6.6
 	 */
@@ -4242,8 +4242,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <p>
 	 * Support for identity columns is insufficient here, we require something like:
 	 * <ol>
-	 * <li>{@code insert ... returning ...}
-	 * <li>{@code select from final table (insert ... )}
+	 * <li>{@code insert ... returning ...}, or
+	 * <li>{@code select from final table (insert ... )}.
 	 * </ol>
 	 *
 	 * @return {@code true} if {@link org.hibernate.id.insert.InsertReturningDelegate}

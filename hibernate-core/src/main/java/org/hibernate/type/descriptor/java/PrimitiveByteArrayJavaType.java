@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.RowVersionComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -107,7 +107,7 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 			return (X) new ByteArrayInputStream( value );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( value );
+			return (X) new ArrayBackedBinaryStream( value );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( value );

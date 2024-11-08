@@ -5,9 +5,9 @@
 package org.hibernate.engine.jdbc;
 
 /**
- * Marker interface for non-contextually created java.sql.NClob instances..
+ * Marker interface for non-contextually created {@link java.sql.NClob} instances.
  * <p>
- * java.sql.NClob is a new type introduced in JDK 1.6 (JDBC 4)
+ * {@link java.sql.NClob} is a new type introduced in JDK 1.6 (JDBC 4)
  *
  * @author Steve Ebersole
  */

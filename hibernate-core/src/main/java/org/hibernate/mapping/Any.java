@@ -4,19 +4,19 @@
  */
 package org.hibernate.mapping;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Consumer;
-
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * A mapping model object representing a {@linkplain org.hibernate.annotations.Any polymorphic association}
@@ -35,7 +35,7 @@ public class Any extends SimpleValue {
 
 	// common
 	private Map<Object,String> metaValueToEntityNameMap;
-	private AnyDiscriminatorValueStrategy discriminatorValueStrategy = AnyDiscriminatorValueStrategy.AUTO;
+	private ImplicitDiscriminatorStrategy implicitValueStrategy;
 	private boolean lazy = true;
 
 	private AnyType resolvedType;
@@ -75,7 +75,7 @@ public class Any extends SimpleValue {
 		this.metaValueToEntityNameMap = original.metaValueToEntityNameMap == null
 				? null
 				: new HashMap<>(original.metaValueToEntityNameMap);
-		this.discriminatorValueStrategy = original.discriminatorValueStrategy;
+		this.implicitValueStrategy = original.implicitValueStrategy;
 		this.lazy = original.lazy;
 	}
 
@@ -131,28 +131,6 @@ public class Any extends SimpleValue {
 		this.keyMapping.setTypeName( identifierType );
 	}
 
-	/**
-	 * Current strategy for interpreting {@linkplain org.hibernate.annotations.AnyDiscriminatorValue} definitions,
-	 * especially in terms of implicit, explicit and potentially missing values.
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	public AnyDiscriminatorValueStrategy getDiscriminatorValueStrategy() {
-		return discriminatorValueStrategy;
-	}
-
-	/**
-	 * Set the strategy
-	 *
-	 * @see #getDiscriminatorValueStrategy
-	 * @since 7.0
-	 */
-	@Incubating
-	public void setDiscriminatorValueStrategy(AnyDiscriminatorValueStrategy discriminatorValueStrategy) {
-		this.discriminatorValueStrategy = discriminatorValueStrategy;
-	}
-
 	@Override
 	public AnyType getType() throws MappingException {
 		if ( resolvedType == null ) {
@@ -175,8 +153,8 @@ public class Any extends SimpleValue {
 			resolvedType = MappingHelper.anyMapping(
 					discriminatorType,
 					identifierType,
-					discriminatorValueStrategy,
 					metaValueToEntityNameMap,
+					implicitValueStrategy,
 					isLazy(),
 					getBuildingContext()
 			);
@@ -240,6 +218,19 @@ public class Any extends SimpleValue {
 	public void setMetaValues(Map metaValueToEntityNameMap) {
 		//noinspection unchecked
 		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
+	}
+
+	/**
+	 * Set the strategy for dealing with discriminator mappings which are not explicitly defined by
+	 * {@linkplain org.hibernate.annotations.AnyDiscriminatorValue}.
+	 *
+	 * @apiNote {@code null} indicates to not allow implicit mappings.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
+		this.implicitValueStrategy = implicitValueStrategy;
 	}
 
 	public boolean isLazy() {
@@ -334,7 +325,6 @@ public class Any extends SimpleValue {
 	public static class MetaValue extends SimpleValue {
 		private String typeName;
 		private String columnName;
-		private AnyDiscriminatorValueStrategy valueStrategy;
 
 		private final Consumer<Selectable> selectableConsumer;
 
@@ -426,10 +416,6 @@ public class Any extends SimpleValue {
 		public boolean isValid(MappingContext mappingContext) {
 			return columnName != null
 				&& getType().getColumnSpan( mappingContext ) == 1;
-		}
-
-		public AnyDiscriminatorValueStrategy getValueStrategy() {
-			return valueStrategy;
 		}
 	}
 

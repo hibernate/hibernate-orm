@@ -16,7 +16,7 @@ import java.util.TimeZone;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;

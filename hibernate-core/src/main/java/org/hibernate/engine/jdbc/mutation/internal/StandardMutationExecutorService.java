@@ -19,7 +19,7 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 /**
- * Standard MutationExecutorService implementation
+ * Standard {@link MutationExecutorService} implementation
  *
  * @see MutationExecutorServiceInitiator
  *

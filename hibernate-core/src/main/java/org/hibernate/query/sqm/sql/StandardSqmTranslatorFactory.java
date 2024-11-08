@@ -44,14 +44,14 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 
 	@Override
 	public SqmTranslator<? extends MutationStatement> createMutationTranslator(
-			SqmDmlStatement<?> sqmDeleteStatement,
+			SqmDmlStatement<?> sqmDmlStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext creationContext) {
 		return new StandardSqmTranslator<>(
-				sqmDeleteStatement,
+				sqmDmlStatement,
 				queryOptions,
 				domainParameterXref,
 				domainParameterBindings,

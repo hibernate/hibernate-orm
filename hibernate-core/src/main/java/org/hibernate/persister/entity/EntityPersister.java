@@ -1195,6 +1195,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Set the identifier and version of the given instance back to its "unsaved"
 	 * value, that is, the value it had before it was made persistent.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#isIdentifierRollbackEnabled
 	 */
 	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
 

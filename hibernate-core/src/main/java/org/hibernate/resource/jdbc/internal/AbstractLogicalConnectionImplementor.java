@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.TransactionException;
+import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalJdbcTransaction;
@@ -16,7 +17,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.jboss.logging.Logger;
 
 /**
- * Base support for LogicalConnection implementations
+ * Base support for {@link LogicalConnection} implementations
  *
  * @author Steve Ebersole
  */

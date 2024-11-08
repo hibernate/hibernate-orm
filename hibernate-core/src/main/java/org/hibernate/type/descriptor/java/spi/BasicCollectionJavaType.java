@@ -20,7 +20,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
@@ -341,7 +341,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( SerializationHelper.serialize( asArrayList( value ) ) );
+			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( asArrayList( value ) ) );
 		}
 		else if ( type == Object[].class ) {
 			//noinspection unchecked

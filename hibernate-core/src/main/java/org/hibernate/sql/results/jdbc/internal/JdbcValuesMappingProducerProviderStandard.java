@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import java.util.List;
 
 /**
- * Standard JdbcValuesMappingProducerProvider implementation
+ * Standard {@link JdbcValuesMappingProducerProvider} implementation
  *
  * @author Steve Ebersole
  */

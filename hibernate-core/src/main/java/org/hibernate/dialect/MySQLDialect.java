@@ -129,6 +129,7 @@ public class MySQLDialect extends Dialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
+
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
 		public Size resolveSize(

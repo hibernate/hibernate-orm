@@ -48,7 +48,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 						navigableRole,
 						discriminatorBaseType,
 						bootAnyMapping.getMetaValues(),
-						discriminatorType.getValueStrategy(),
+						discriminatorType.getImplicitValueStrategy(),
 						mappingMetamodel
 				)
 		);

@@ -5746,11 +5746,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderCasted( expression );
 			}
 		}
-		else if ( expression instanceof CaseSimpleExpression ) {
-			visitCaseSimpleExpression( (CaseSimpleExpression) expression, true );
+		else if ( expression instanceof CaseSimpleExpression caseSimpleExpression ) {
+			visitCaseSimpleExpression( caseSimpleExpression, true );
 		}
-		else if ( expression instanceof CaseSearchedExpression ) {
-			visitCaseSearchedExpression( (CaseSearchedExpression) expression, true );
+		else if ( expression instanceof CaseSearchedExpression caseSearchedExpression ) {
+			visitCaseSearchedExpression( caseSearchedExpression, true );
 		}
 		else {
 			renderExpressionAsClauseItem( expression );
@@ -5758,8 +5758,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderCasted(Expression expression) {
-		if ( expression instanceof SqmParameterInterpretation ) {
-			expression = ( (SqmParameterInterpretation) expression ).getResolvedExpression();
+		if ( expression instanceof SqmParameterInterpretation parameterInterpretation ) {
+			expression = parameterInterpretation.getResolvedExpression();
 		}
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
@@ -5935,8 +5935,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		processNestedTableGroupJoins( tableGroup, null );
 		processTableGroupJoins( tableGroup );
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof EntityPersister ) {
-			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister persister ) {
+			final String[] querySpaces = (String[]) persister.getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6113,7 +6113,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof EntityPersister persister ) {
-			String[] querySpaces = (String[]) persister.getQuerySpaces();
+			final String[] querySpaces = (String[]) persister.getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}

@@ -15,13 +15,14 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
-import org.hibernate.engine.jdbc.ClobProxy;
-import org.hibernate.engine.jdbc.WrappedClob;
-import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.engine.jdbc.proxy.ClobProxy;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+
+import static org.hibernate.type.descriptor.java.DataHelper.extractString;
 
 /**
  * Descriptor for {@link Clob} handling.
@@ -52,7 +53,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	}
 
 	public String toString(Clob value) {
-		return DataHelper.extractString( value );
+		return extractString( value );
 	}
 
 	public Clob fromString(CharSequence string) {
@@ -82,37 +83,37 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		}
 
 		try {
-			if ( CharacterStream.class.isAssignableFrom( type ) ) {
+			if ( Clob.class.isAssignableFrom( type ) ) {
+				return (X) options.getLobCreator().toJdbcClob( value );
+			}
+			else if ( String.class.isAssignableFrom( type ) ) {
+				if (value instanceof ClobImplementer clobImplementer) {
+					// if the incoming Clob is a wrapper, just grab the string from its CharacterStream
+					return (X) clobImplementer.getUnderlyingStream().asString();
+				}
+				else {
+					// otherwise extract the bytes from the stream manually
+					return (X) extractString( value.getCharacterStream() );
+				}
+			}
+			else if ( Reader.class.isAssignableFrom( type ) ) {
+				if (value instanceof ClobImplementer clobImplementer) {
+					// if the incoming NClob is a wrapper, just pass along its BinaryStream
+					return (X) clobImplementer.getUnderlyingStream().asReader();
+				}
+				else {
+					// otherwise we need to build a CharacterStream...
+					return (X) value.getCharacterStream();
+				}
+			}
+			else if ( CharacterStream.class.isAssignableFrom( type ) ) {
 				if (value instanceof ClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just pass along its CharacterStream
 					return (X) clobImplementer.getUnderlyingStream();
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
-					return (X) new CharacterStreamImpl( DataHelper.extractString( value.getCharacterStream() ) );
-				}
-			}
-			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer clobImplementer) {
-					// if the incoming Clob is a wrapper, just grab the bytes from its BinaryStream
-					return (X) clobImplementer.getUnderlyingStream().asString();
-				}
-				else {
-					// otherwise extract the bytes from the stream manually
-					return (X) DataHelper.extractString( value.getCharacterStream() );
-				}
-			}
-			else if ( Clob.class.isAssignableFrom( type ) ) {
-				return (X) getOrCreateClob( value, options );
-			}
-			else if ( String.class.isAssignableFrom( type ) ) {
-				if (value instanceof ClobImplementer clobImplementer) {
-					// if the incoming Clob is a wrapper, just get the underlying String.
-					return (X) clobImplementer.getUnderlyingStream().asString();
-				}
-				else {
-					// otherwise we need to extract the String.
-					return (X) DataHelper.extractString( value.getCharacterStream() );
+					return (X) value.getCharacterStream();
 				}
 			}
 		}
@@ -123,39 +124,28 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 		throw unknownUnwrap( type );
 	}
 
-	private Clob getOrCreateClob(Clob value, WrapperOptions options) throws SQLException {
-		if ( value instanceof WrappedClob wrappedClob ) {
-			value = wrappedClob.getWrappedClob();
-		}
-		if ( options.getDialect().useConnectionToCreateLob() ) {
-			if ( value.length() == 0 ) {
-				// empty Clob
-				return options.getLobCreator().createClob( "" );
-			}
-			else {
-				return options.getLobCreator().createClob( value.getSubString( 1, (int) value.length() ) );
-			}
-		}
-		else {
-			return value;
-		}
-	}
-
 	public <X> Clob wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof Clob clob ) {
-			return options.getLobCreator().wrap( clob );
+		else {
+			final LobCreator lobCreator = options.getLobCreator();
+			if ( value instanceof Clob clob ) {
+				return lobCreator.wrap( clob );
+			}
+			else if ( value instanceof String string ) {
+				return lobCreator.createClob( string );
+			}
+			else if ( value instanceof Reader reader ) {
+				return lobCreator.createClob( extractString( reader ) );
+			}
+			else if ( value instanceof CharacterStream stream ) {
+				return lobCreator.createClob( stream.asReader(), stream.getLength() );
+			}
+			else {
+				throw unknownWrap( value.getClass() );
+			}
 		}
-		else if ( value instanceof String string ) {
-			return options.getLobCreator().createClob( string );
-		}
-		else if ( value instanceof Reader reader ) {
-			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
-		}
-
-		throw unknownWrap( value.getClass() );
 	}
 
 	@Override

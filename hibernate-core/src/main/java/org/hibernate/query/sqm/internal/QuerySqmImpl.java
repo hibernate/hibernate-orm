@@ -63,7 +63,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
@@ -221,12 +220,11 @@ public class QuerySqmImpl<R>
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				bindCriteriaParameter((SqmJpaCriteriaParameterWrapper<?>) sqmParameter);
+			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
+				bindCriteriaParameter( wrapper );
 			}
 		}
-		if ( sqm instanceof SqmSelectStatement<?> ) {
-			final SqmSelectStatement<R> selectStatement = (SqmSelectStatement<R>) sqm;
+		if ( sqm instanceof SqmSelectStatement<R> selectStatement ) {
 			final SqmQueryPart<R> queryPart = selectStatement.getQueryPart();
 			// For criteria queries, we have to validate the fetch structure here
 			queryPart.validateQueryStructureAndFetchOwners();
@@ -464,13 +462,13 @@ public class QuerySqmImpl<R>
 
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final QueryInterpretationCache.Key cacheKey = createInterpretationsKey( this );
-		if ( cacheKey != null ) {
-			return getSession().getFactory().getQueryEngine().getInterpretationCache()
-					.resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan );
-		}
-		else {
-			return buildSelectQueryPlan();
-		}
+		return cacheKey != null
+				? interpretationCache().resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan )
+				: buildSelectQueryPlan();
+	}
+
+	private QueryInterpretationCache interpretationCache() {
+		return getSessionFactory().getQueryEngine().getInterpretationCache();
 	}
 
 
@@ -525,8 +523,7 @@ public class QuerySqmImpl<R>
 		NonSelectQueryPlan queryPlan = null;
 
 		final QueryInterpretationCache.Key cacheKey = generateNonSelectKey( this );
-		final QueryInterpretationCache interpretationCache =
-				getSessionFactory().getQueryEngine().getInterpretationCache();
+		final QueryInterpretationCache interpretationCache = interpretationCache();
 		if ( cacheKey != null ) {
 			queryPlan = interpretationCache.getNonSelectQueryPlan( cacheKey );
 		}
@@ -544,19 +541,19 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildNonSelectQueryPlan() {
 		// to get here the SQM statement has already been validated to be
 		// a non-select variety...
-		if ( getSqmStatement() instanceof SqmDeleteStatement<?> ) {
+		final SqmStatement<R> sqmStatement = getSqmStatement();
+		if ( sqmStatement instanceof SqmDeleteStatement<?> ) {
 			return buildDeleteQueryPlan();
 		}
-
-		if ( getSqmStatement() instanceof SqmUpdateStatement<?> ) {
+		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
 			return buildUpdateQueryPlan();
 		}
-
-		if ( getSqmStatement() instanceof SqmInsertStatement<?> ) {
+		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
 			return buildInsertQueryPlan();
 		}
-
-		throw new UnsupportedOperationException( "Query#executeUpdate for Statements of type [" + getSqmStatement() + "] not supported" );
+		else {
+			throw new UnsupportedOperationException( "Query#executeUpdate for Statements of type [" + sqmStatement + "] not supported" );
+		}
 	}
 
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
@@ -569,8 +566,9 @@ public class QuerySqmImpl<R>
 
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(SqmDeleteStatement<?> sqmDelete) {
 		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getModel();
-		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
-		final EntityPersister persister = getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToDelete );
+		final EntityPersister persister =
+				getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 		final SqmMultiTableMutationStrategy multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		if ( multiTableStrategy != null ) {
 			// NOTE : MultiTableDeleteQueryPlan and SqmMultiTableMutationStrategy already handle soft-deletes internally
@@ -591,11 +589,9 @@ public class QuerySqmImpl<R>
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
 		final SqmUpdateStatement<R> sqmUpdate = (SqmUpdateStatement<R>) getSqmStatement();
-
-		final String entityNameToUpdate = sqmUpdate.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister persister =
-				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToUpdate );
-
+				getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( sqmUpdate.getTarget().getModel().getHibernateEntityName() );
 		final SqmMultiTableMutationStrategy multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		return multiTableStrategy == null
 				? new SimpleUpdateQueryPlan( sqmUpdate, domainParameterXref )
@@ -604,17 +600,16 @@ public class QuerySqmImpl<R>
 
 	private NonSelectQueryPlan buildInsertQueryPlan() {
 		final SqmInsertStatement<R> sqmInsert = (SqmInsertStatement<R>) getSqmStatement();
-
-		final String entityNameToInsert = sqmInsert.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister persister =
-				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToInsert );
+				getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( sqmInsert.getTarget().getModel().getHibernateEntityName() );
 
 		boolean useMultiTableInsert = persister.hasMultipleTables();
 		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, persister ) ) {
 			final Generator identifierGenerator = persister.getGenerator();
 			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
-					&& identifierGenerator instanceof OptimizableGenerator ) {
-				final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
+					&& identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
+				final Optimizer optimizer = optimizableGenerator.getOptimizer();
 				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
 					useMultiTableInsert = !hasIdentifierAssigned( sqmInsert, persister );
 				}
@@ -627,15 +622,15 @@ public class QuerySqmImpl<R>
 					persister.getSqmMultiTableInsertStrategy()
 			);
 		}
-		else if ( sqmInsert instanceof SqmInsertValuesStatement<?>
-				&& ( (SqmInsertValuesStatement<R>) sqmInsert ).getValuesList().size() != 1
+		else if ( sqmInsert instanceof SqmInsertValuesStatement<R> insertValues
+				&& insertValues.getValuesList().size() != 1
 				&& !getSessionFactory().getJdbcServices().getDialect().supportsValuesListForInsert() ) {
 			// Split insert-values queries if the dialect doesn't support values lists
-			final SqmInsertValuesStatement<R> insertValues = (SqmInsertValuesStatement<R>) sqmInsert;
 			final List<SqmValues> valuesList = insertValues.getValuesList();
 			final NonSelectQueryPlan[] planParts = new NonSelectQueryPlan[valuesList.size()];
 			for ( int i = 0; i < valuesList.size(); i++ ) {
-				final SqmInsertValuesStatement<?> subInsert = insertValues.copyWithoutValues( SqmCopyContext.simpleContext() );
+				final SqmInsertValuesStatement<?> subInsert =
+						insertValues.copyWithoutValues( SqmCopyContext.simpleContext() );
 				subInsert.values( valuesList.get( i ) );
 				planParts[i] = new SimpleInsertQueryPlan( subInsert, domainParameterXref );
 			}
@@ -652,13 +647,10 @@ public class QuerySqmImpl<R>
 				? identifierMapping.getAttributeName()
 				: EntityIdentifierMapping.ID_ROLE_NAME;
 		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
-			final SqmPath<?> lhs = insertionTargetPath.getLhs();
-			if ( !( lhs instanceof SqmRoot<?> ) ) {
-				continue;
-			}
-			final SqmPathSource<?> referencedPathSource = insertionTargetPath.getReferencedPathSource();
-			if ( referencedPathSource.getPathName().equals( partName ) ) {
-				return true;
+			if ( insertionTargetPath.getLhs() instanceof SqmRoot<?> ) {
+				if ( insertionTargetPath.getReferencedPathSource().getPathName().equals( partName ) ) {
+					return true;
+				}
 			}
 		}
 

@@ -17,6 +17,7 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -172,10 +173,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( resolution != null ) {
 			throw new IllegalStateException( "BasicValue already resolved" );
 		}
-
 		this.ownerName = className;
 		this.propertyName = propertyName;
-
 		super.setTypeUsingReflection( className, propertyName );
 	}
 
@@ -197,7 +196,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
 		setAttributeConverterDescriptor( descriptor );
-
 		super.setJpaAttributeConverterDescriptor( descriptor );
 	}
 
@@ -249,8 +247,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			if ( temporalPrecision != null ) {
 				return temporalPrecision;
 			}
-			final Integer precision = column.getPrecision();
-			return precision == null ? NO_COLUMN_PRECISION : precision;
+			else {
+				final Integer precision = column.getPrecision();
+				return precision == null ? NO_COLUMN_PRECISION : precision;
+			}
 		}
 		else {
 			return NO_COLUMN_PRECISION;
@@ -313,7 +313,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public void addFormula(Formula formula) {
 		super.addFormula( formula );
-
 		checkSelectable( formula );
 	}
 
@@ -324,7 +323,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	public Type getType() throws MappingException {
 		resolve();
 		assert getResolution() != null;
-
 		return getResolution().getLegacyResolvedBasicType();
 	}
 
@@ -343,32 +341,30 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( resolution != null ) {
 			return resolution;
 		}
-
-		resolution = buildResolution();
-
-		if ( resolution == null ) {
-			throw new IllegalStateException( "Unable to resolve BasicValue : " + this );
-		}
-
-		final Selectable selectable = getColumn();
-		final Size size;
-		if ( selectable instanceof Column column ) {
-			resolveColumn( column, getDialect() );
-			size = column.calculateColumnSize( getDialect(), getBuildingContext().getMetadataCollector() );
-		}
 		else {
-			size = Size.nil();
+			resolution = buildResolution();
+			if ( resolution == null ) {
+				throw new IllegalStateException( "Unable to resolve BasicValue : " + this );
+			}
+			else {
+				final Size size;
+				if ( getColumn() instanceof Column column ) {
+					resolveColumn( column, getDialect() );
+					size = column.calculateColumnSize( getDialect(), getMetadataCollector() );
+				}
+				else {
+					size = Size.nil();
+				}
+				resolution.getJdbcType().addAuxiliaryDatabaseObjects(
+						resolution.getRelationalJavaType(),
+						resolution.getValueConverter(),
+						size,
+						getMetadataCollector().getDatabase(),
+						this
+				);
+				return resolution;
+			}
 		}
-
-		resolution.getJdbcType().addAuxiliaryDatabaseObjects(
-				resolution.getRelationalJavaType(),
-				resolution.getValueConverter(),
-				size,
-				getBuildingContext().getMetadataCollector().getDatabase(),
-				this
-		);
-
-		return resolution;
 	}
 
 	@Override
@@ -378,7 +374,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 						resolution.getRelationalJavaType(),
 						getColumn().getText(),
 						getTable().getName(),
-						getBuildingContext().getMetadataCollector().getDatabase()
+						getMetadataCollector().getDatabase()
 				);
 	}
 
@@ -483,26 +479,18 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
 		if ( conversionWasUnspecified ) {
 			final JdbcType jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType);
+			final ClassmateContext classmateContext = getBuildingContext().getBootstrapContext().getClassmateContext();
 			if ( jdbcType.isNumber() ) {
-				return new InstanceBasedConverterDescriptor(
-						NumericBooleanConverter.INSTANCE,
-						getBuildingContext().getBootstrapContext().getClassmateContext()
-				);
+				return new InstanceBasedConverterDescriptor( NumericBooleanConverter.INSTANCE, classmateContext );
 			}
 			else if ( jdbcType.isString() ) {
 				// here we pick 'T' / 'F' storage, though 'Y' / 'N' is equally valid - its 50/50
-				return new InstanceBasedConverterDescriptor(
-						TrueFalseConverter.INSTANCE,
-						getBuildingContext().getBootstrapContext().getClassmateContext()
-				);
+				return new InstanceBasedConverterDescriptor( TrueFalseConverter.INSTANCE, classmateContext );
 			}
 			else {
 				// should indicate BIT or BOOLEAN == no conversion needed
 				//		- we still create the converter to properly set up JDBC type, etc
-				return new InstanceBasedConverterDescriptor(
-						PassThruSoftDeleteConverter.INSTANCE,
-						getBuildingContext().getBootstrapContext().getClassmateContext()
-				);
+				return new InstanceBasedConverterDescriptor( PassThruSoftDeleteConverter.INSTANCE, classmateContext );
 			}
 		}
 		else {

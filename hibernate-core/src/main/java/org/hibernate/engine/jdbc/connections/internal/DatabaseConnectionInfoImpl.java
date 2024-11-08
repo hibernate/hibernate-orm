@@ -20,7 +20,7 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
- * Standard implementation of DatabaseConnectionInfo
+ * Standard implementation of {@link DatabaseConnectionInfo}
  *
  * @author Jan Schatteman
  */

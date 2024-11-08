@@ -131,6 +131,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
 
+	/**
+	 * Should generated identifiers be reset after entity removal?
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
+	 */
 	boolean isIdentifierRollbackEnabled();
 
 	boolean isCheckNullability();

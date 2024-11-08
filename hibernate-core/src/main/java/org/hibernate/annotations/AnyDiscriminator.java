@@ -4,17 +4,15 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.DiscriminatorType;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import jakarta.persistence.DiscriminatorType;
-import org.hibernate.type.AnyDiscriminatorValueStrategy;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.hibernate.type.AnyDiscriminatorValueStrategy.AUTO;
 
 /**
  * A simplified way to specify the type of the discriminator in an {@link Any}
@@ -34,6 +32,8 @@ import static org.hibernate.type.AnyDiscriminatorValueStrategy.AUTO;
  * {@code @AnyDiscriminator}.
  *
  * @see Any
+ * @see AnyDiscriminatorValue
+ * @see AnyDiscriminatorImplicitValues
  *
  * @since 6.0
  */
@@ -46,12 +46,4 @@ public @interface AnyDiscriminator {
 	 * or {@link JdbcTypeCode}.
 	 */
 	DiscriminatorType value() default DiscriminatorType.STRING;
-
-	/**
-	 * How the discriminator value should be handled in regard to explicit
-	 * {@linkplain AnyDiscriminatorValue} mappings, if any.
-	 *
-	 * @since 7.0
-	 */
-	AnyDiscriminatorValueStrategy valueStrategy() default AUTO;
 }

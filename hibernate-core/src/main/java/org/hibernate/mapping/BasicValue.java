@@ -983,19 +983,15 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	public static TimeZoneStorageStrategy timeZoneStorageStrategy(
 			TimeZoneStorageType timeZoneStorageType,
 			MetadataBuildingContext buildingContext) {
-		if ( timeZoneStorageType != null ) {
-			switch ( timeZoneStorageType ) {
-				case COLUMN:
-					return TimeZoneStorageStrategy.COLUMN;
-				case NATIVE:
-					return TimeZoneStorageStrategy.NATIVE;
-				case NORMALIZE:
-					return TimeZoneStorageStrategy.NORMALIZE;
-				case NORMALIZE_UTC:
-					return TimeZoneStorageStrategy.NORMALIZE_UTC;
-			}
-		}
-		return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
+		return timeZoneStorageType == null
+				? buildingContext.getBuildingOptions().getDefaultTimeZoneStorage()
+				: switch ( timeZoneStorageType ) {
+					case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+					case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+					case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+					case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+					case AUTO, DEFAULT -> buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
+				};
 	}
 
 	public void setExplicitTypeParams(Map<String,String> explicitLocalTypeParams) {

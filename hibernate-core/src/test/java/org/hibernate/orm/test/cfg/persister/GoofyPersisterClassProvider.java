@@ -109,6 +109,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public boolean managesColumns(String[] columnNames) {
+			return false;
+		}
+
+		@Override
 		public NavigableRole getNavigableRole() {
 			return null;
 		}
@@ -1331,5 +1336,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public EntityPersister getElementPersister() {
 			return null;
 		}
+
+
 	}
 }

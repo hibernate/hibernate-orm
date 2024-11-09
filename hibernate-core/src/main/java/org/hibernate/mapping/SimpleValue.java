@@ -37,7 +37,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -63,6 +62,7 @@ import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
+import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
@@ -208,7 +208,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	protected void justAddColumn(Column column, boolean insertable, boolean updatable) {
-		int index = columns.indexOf( column );
+		final int index = columns.indexOf( column );
 		if ( index == -1 ) {
 			columns.add( column );
 			insertability.add( insertable );
@@ -289,26 +289,23 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void setTypeName(String typeName) {
 		if ( typeName != null && typeName.startsWith( TYPE_NAME_PREFIX ) ) {
-			final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
-			final ClassLoaderService cls = getMetadata()
-					.getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.requireService( ClassLoaderService.class );
-			try {
-				final Class<? extends AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
-				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
-						converterClass,
-						false,
-						( (InFlightMetadataCollector) getMetadata() ).getBootstrapContext().getClassmateContext()
-				);
-				return;
-			}
-			catch (Exception e) {
-				log.logBadHbmAttributeConverterType( typeName, e.getMessage() );
-			}
+			setAttributeConverterDescriptor( typeName );
 		}
+		else {
+			this.typeName = typeName;
+		}
+	}
 
-		this.typeName = typeName;
+	void setAttributeConverterDescriptor(String typeName) {
+		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
+		this.attributeConverterDescriptor =
+				new ClassBasedConverterDescriptor( classLoaderService().classForName( converterClassName ),
+						false, getBuildingContext().getBootstrapContext().getClassmateContext() );
+	}
+
+	ClassLoaderService classLoaderService() {
+		return getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+				.requireService( ClassLoaderService.class );
 	}
 
 	public void makeVersion() {
@@ -675,14 +672,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private Class<?> getClass(String className, String propertyName) {
-		return ReflectHelper.reflectedPropertyClass(
-				className,
-				propertyName,
-				getMetadata()
-						.getMetadataBuildingOptions()
-						.getServiceRegistry()
-						.requireService( ClassLoaderService.class )
-		);
+		return reflectedPropertyClass( className, propertyName, classLoaderService() );
 	}
 
 	/**
@@ -738,8 +728,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	private <T> Type buildAttributeConverterTypeAdapter(
 			JpaAttributeConverter<T, ?> jpaAttributeConverter) {
-		JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
-		JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
+		final JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
+		final JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Going back to the illustration, this should be a SqlTypeDescriptor that handles the Integer <-> String
@@ -951,16 +941,11 @@ public abstract class SimpleValue implements KeyValue {
 			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = getAnnotations( attributeMember );
-
-			final ClassLoaderService classLoaderService =
-					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-							.requireService( ClassLoaderService.class );
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
-							classLoaderService.classForTypeName(
-									typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)
-							),
+							classLoaderService()
+									.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
 							attributeMember != null ? attributeMember.getType() : null,
 							annotations,
 							table.getCatalog(),
@@ -1003,13 +988,9 @@ public abstract class SimpleValue implements KeyValue {
 			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = getAnnotations( attributeMember );
-
-			final ClassLoaderService classLoaderService =
-					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-							.requireService( ClassLoaderService.class );
-
 			return new ParameterTypeImpl(
-					classLoaderService.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
+					classLoaderService()
+							.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
 					attributeMember != null ? attributeMember.getType() : null,
 					annotations,
 					table.getCatalog(),

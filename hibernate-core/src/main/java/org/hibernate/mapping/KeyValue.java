@@ -22,10 +22,18 @@ public interface KeyValue extends Value {
 
 	boolean isCascadeDeleteEnabled();
 
+	enum NullValueSemantic { VALUE, NULL, NEGATIVE, UNDEFINED, NONE, ANY }
+
+	NullValueSemantic getNullValueSemantic();
+
 	String getNullValue();
 
 	boolean isUpdateable();
 
+	/**
+	 * @deprecated No longer called, except from tests.
+	 *             Use {@link #createGenerator(Dialect, RootClass, Property, GeneratorSettings)}
+	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	Generator createGenerator(Dialect dialect, RootClass rootClass);
 

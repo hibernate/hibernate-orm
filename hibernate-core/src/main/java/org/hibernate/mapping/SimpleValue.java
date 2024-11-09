@@ -91,6 +91,7 @@ public abstract class SimpleValue implements KeyValue {
 	private boolean isNationalized;
 	private boolean isLob;
 
+	private NullValueSemantic nullValueSemantic;
 	private String nullValue;
 
 	private Table table;
@@ -410,8 +411,8 @@ public abstract class SimpleValue implements KeyValue {
 			final IdGeneratorCreationContext context =
 					new IdGeneratorCreationContext( rootClass, property, defaults );
 			final Generator generator = customIdGeneratorCreator.createGenerator( context );
-			if ( generator.allowAssignedIdentifiers() && getNullValue() == null ) {
-				setNullValue( "undefined" );
+			if ( generator.allowAssignedIdentifiers() && nullValue == null ) {
+				setNullValueUndefined();
 			}
 			return generator;
 		}
@@ -449,17 +450,73 @@ public abstract class SimpleValue implements KeyValue {
 		return table;
 	}
 
+	/**
+	 * The property or field value which indicates that field
+	 * or property has never been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 * @see org.hibernate.engine.spi.IdentifierValue
+	 * @see org.hibernate.engine.spi.VersionValue
+	 */
 	@Override
 	public String getNullValue() {
 		return nullValue;
 	}
 
 	/**
-	 * Sets the nullValue.
-	 * @param nullValue The nullValue to set
+	 * Set the property or field value indicating that field
+	 * or property has never been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 * @see org.hibernate.engine.spi.IdentifierValue
+	 * @see org.hibernate.engine.spi.VersionValue
 	 */
 	public void setNullValue(String nullValue) {
-		this.nullValue = nullValue;
+		nullValueSemantic = switch (nullValue) {
+			// magical values (legacy of hbm.xml)
+			case "null" -> NullValueSemantic.NULL;
+			case "none" -> NullValueSemantic.NONE;
+			case "any" -> NullValueSemantic.ANY;
+			case "undefined" -> NullValueSemantic.UNDEFINED;
+			default -> NullValueSemantic.VALUE;
+		};
+		if ( nullValueSemantic == NullValueSemantic.VALUE ) {
+			this.nullValue = nullValue;
+		}
+	}
+
+	/**
+	 * The rule for determining if the field or
+	 * property has been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 */
+	@Override
+	public NullValueSemantic getNullValueSemantic() {
+		return nullValueSemantic;
+	}
+
+	/**
+	 * Specifies the rule for determining if the field or
+	 * property has been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 */
+	public void setNullValueSemantic(NullValueSemantic nullValueSemantic) {
+		this.nullValueSemantic = nullValueSemantic;
+	}
+
+	/**
+	 * Specifies that there is no well-defined property or
+	 * field value indicating that field or property has never
+	 * been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 * @see org.hibernate.engine.spi.IdentifierValue#UNDEFINED
+	 * @see org.hibernate.engine.spi.VersionValue#UNDEFINED
+	 */
+	public void setNullValueUndefined() {
+		nullValueSemantic = NullValueSemantic.UNDEFINED;
 	}
 
 	public String getForeignKeyName() {

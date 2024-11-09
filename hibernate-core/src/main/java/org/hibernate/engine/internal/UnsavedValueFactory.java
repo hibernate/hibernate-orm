@@ -6,10 +6,10 @@ package org.hibernate.engine.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.KeyValue.NullValueSemantic;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
@@ -35,28 +35,31 @@ public class UnsavedValueFactory {
 			JavaType<?> idJavaType,
 			Getter getter,
 			Supplier<?> templateInstanceAccess) {
-		final String unsavedValue = bootIdMapping.getNullValue();
-		if ( unsavedValue == null ) {
-			if ( getter != null && templateInstanceAccess != null ) {
-				// use the id value of a newly instantiated instance as the unsaved-value
-				final Object defaultValue = getter.get( templateInstanceAccess.get() );
-				return new IdentifierValue( defaultValue );
-			}
-			else if ( idJavaType instanceof PrimitiveJavaType<?> primitiveJavaType ) {
-				return new IdentifierValue( primitiveJavaType.getDefaultValue() );
-			}
-			else {
-				return IdentifierValue.NULL;
-			}
+		final NullValueSemantic nullValueSemantic = bootIdMapping.getNullValueSemantic();
+		return nullValueSemantic == null
+				? inferUnsavedIdentifierValue( idJavaType, getter, templateInstanceAccess )
+				: switch ( nullValueSemantic ) {
+					case UNDEFINED -> IdentifierValue.UNDEFINED;
+					case NULL -> IdentifierValue.NULL;
+					case ANY -> IdentifierValue.ANY;
+					case NONE -> IdentifierValue.NONE;
+					case VALUE -> new IdentifierValue( idJavaType.fromString( bootIdMapping.getNullValue() ) );
+					default -> throw new IllegalArgumentException( "Illegal null-value semantic: " + nullValueSemantic );
+				};
+	}
+
+	private static IdentifierValue inferUnsavedIdentifierValue(
+			JavaType<?> idJavaType, Getter getter, Supplier<?> templateInstanceAccess) {
+		if ( getter != null && templateInstanceAccess != null ) {
+			// use the id value of a newly instantiated instance as the unsaved-value
+			final Object defaultValue = getter.get( templateInstanceAccess.get() );
+			return new IdentifierValue( defaultValue );
+		}
+		else if ( idJavaType instanceof PrimitiveJavaType<?> primitiveJavaType ) {
+			return new IdentifierValue( primitiveJavaType.getDefaultValue() );
 		}
 		else {
-			return switch ( unsavedValue ) {
-				case "null" -> IdentifierValue.NULL;
-				case "undefined" -> IdentifierValue.UNDEFINED;
-				case "none" -> IdentifierValue.NONE;
-				case "any" -> IdentifierValue.ANY;
-				default -> new IdentifierValue( idJavaType.fromString( unsavedValue ) );
-			};
+			return IdentifierValue.NULL;
 		}
 	}
 
@@ -72,31 +75,33 @@ public class UnsavedValueFactory {
 			VersionJavaType<T> versionJavaType,
 			Getter getter,
 			Supplier<?> templateInstanceAccess) {
-		final String unsavedValue = bootVersionMapping.getNullValue();
-		if ( unsavedValue == null ) {
-			if ( getter != null && templateInstanceAccess != null ) {
-				final Object defaultValue = getter.get( templateInstanceAccess.get() );
-				// if the version of a newly instantiated object is null
-				// or a negative number, use that value as the unsaved-value,
-				// otherwise assume it's the initial version set by program
-				return isNullInitialVersion( defaultValue )
-						? new VersionValue( defaultValue )
-						: VersionValue.UNDEFINED;
-			}
-			else {
-				return VersionValue.UNDEFINED;
-			}
+		final NullValueSemantic nullValueSemantic = bootVersionMapping.getNullValueSemantic();
+		return nullValueSemantic == null
+				? inferUnsavedVersionValue( versionJavaType, getter, templateInstanceAccess )
+				: switch ( nullValueSemantic ) {
+					case UNDEFINED -> VersionValue.UNDEFINED;
+					case NULL -> VersionValue.NULL;
+					case NEGATIVE -> VersionValue.NEGATIVE;
+					// this should not happen since the DTD prevents it
+					case VALUE -> new VersionValue( versionJavaType.fromString( bootVersionMapping.getNullValue() ) );
+					default -> throw new IllegalArgumentException( "Illegal null-value semantic: " + nullValueSemantic );
+				};
+	}
+
+	private static VersionValue inferUnsavedVersionValue(
+			VersionJavaType<?> versionJavaType, Getter getter, Supplier<?> templateInstanceAccess) {
+		if ( getter != null && templateInstanceAccess != null ) {
+			final Object defaultValue = getter.get( templateInstanceAccess.get() );
+			// if the version of a newly instantiated object is null
+			// or a negative number, use that value as the unsaved-value,
+			// otherwise assume it's the initial version set by program
+			return isNullInitialVersion( defaultValue )
+					? new VersionValue( defaultValue )
+					: VersionValue.UNDEFINED;
 		}
 		else {
-			// this should not happen since the DTD prevents it
-			return switch ( unsavedValue ) {
-				case "undefined" -> VersionValue.UNDEFINED;
-				case "null" -> VersionValue.NULL;
-				case "negative" -> VersionValue.NEGATIVE;
-				default -> throw new MappingException( "Could not parse version unsaved-value: " + unsavedValue );
-			};
+			return VersionValue.UNDEFINED;
 		}
-
 	}
 
 	private UnsavedValueFactory() {

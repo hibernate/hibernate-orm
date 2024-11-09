@@ -385,7 +385,7 @@ public class PropertyBinder {
 					buildingContext
 			);
 			rootClass.setIdentifier( identifier );
-			identifier.setNullValue( "undefined" );
+			identifier.setNullValueUndefined();
 			rootClass.setEmbeddedIdentifier( true );
 			rootClass.setIdentifierMapper( identifier );
 			return identifier;

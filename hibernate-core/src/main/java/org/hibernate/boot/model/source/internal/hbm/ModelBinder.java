@@ -923,7 +923,7 @@ public class ModelBinder {
 			versionValue.setNullValue( versionAttributeSource.getUnsavedValue() );
 		}
 		else {
-			versionValue.setNullValue( "undefined" );
+			versionValue.setNullValueUndefined();
 		}
 		if ( versionAttributeSource.getSource().equals("db") ) {
 			property.setValueGeneratorCreator(

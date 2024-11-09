@@ -47,6 +47,7 @@ public class MapKeyColumnBiDiOneToManyFKTest extends BaseNonConfigCoreFunctional
 					Address2 address = session.get( Address2.class, 1 );
 
 					address.holder = holder;
+					address.type = "work";
 					holder.addresses.put( "work", address );
 
 					session.persist( holder );

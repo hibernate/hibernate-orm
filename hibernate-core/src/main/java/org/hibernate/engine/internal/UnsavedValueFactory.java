@@ -7,11 +7,7 @@ package org.hibernate.engine.internal;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
-import org.hibernate.SharedSessionContract;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.IdentifierValue;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionDelegatorBaseImpl;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.property.access.spi.Getter;
@@ -36,38 +32,31 @@ public class UnsavedValueFactory {
 	 */
 	public static IdentifierValue getUnsavedIdentifierValue(
 			KeyValue bootIdMapping,
-			JavaType<?> idJtd,
+			JavaType<?> idJavaType,
 			Getter getter,
 			Supplier<?> templateInstanceAccess) {
 		final String unsavedValue = bootIdMapping.getNullValue();
-
 		if ( unsavedValue == null ) {
 			if ( getter != null && templateInstanceAccess != null ) {
 				// use the id value of a newly instantiated instance as the unsaved-value
-				final Object templateInstance = templateInstanceAccess.get();
-				final Object defaultValue = getter.get( templateInstance );
+				final Object defaultValue = getter.get( templateInstanceAccess.get() );
 				return new IdentifierValue( defaultValue );
 			}
-			else if ( idJtd instanceof PrimitiveJavaType ) {
-				return new IdentifierValue( ( (PrimitiveJavaType<?>) idJtd ).getDefaultValue() );
+			else if ( idJavaType instanceof PrimitiveJavaType<?> primitiveJavaType ) {
+				return new IdentifierValue( primitiveJavaType.getDefaultValue() );
 			}
 			else {
 				return IdentifierValue.NULL;
 			}
 		}
 		else {
-			switch (unsavedValue) {
-				case "null":
-					return IdentifierValue.NULL;
-				case "undefined":
-					return IdentifierValue.UNDEFINED;
-				case "none":
-					return IdentifierValue.NONE;
-				case "any":
-					return IdentifierValue.ANY;
-				default:
-					return new IdentifierValue( idJtd.fromString( unsavedValue ) );
-			}
+			return switch ( unsavedValue ) {
+				case "null" -> IdentifierValue.NULL;
+				case "undefined" -> IdentifierValue.UNDEFINED;
+				case "none" -> IdentifierValue.NONE;
+				case "any" -> IdentifierValue.ANY;
+				default -> new IdentifierValue( idJavaType.fromString( unsavedValue ) );
+			};
 		}
 	}
 
@@ -80,15 +69,13 @@ public class UnsavedValueFactory {
 	 */
 	public static <T> VersionValue getUnsavedVersionValue(
 			KeyValue bootVersionMapping,
-			VersionJavaType<T> jtd,
+			VersionJavaType<T> versionJavaType,
 			Getter getter,
 			Supplier<?> templateInstanceAccess) {
 		final String unsavedValue = bootVersionMapping.getNullValue();
 		if ( unsavedValue == null ) {
 			if ( getter != null && templateInstanceAccess != null ) {
-				final Object templateInstance = templateInstanceAccess.get();
-				@SuppressWarnings("unchecked")
-				final T defaultValue = (T) getter.get( templateInstance );
+				final Object defaultValue = getter.get( templateInstanceAccess.get() );
 				// if the version of a newly instantiated object is null
 				// or a negative number, use that value as the unsaved-value,
 				// otherwise assume it's the initial version set by program
@@ -101,44 +88,15 @@ public class UnsavedValueFactory {
 			}
 		}
 		else {
-			switch (unsavedValue) {
-				case "undefined":
-					return VersionValue.UNDEFINED;
-				case "null":
-					return VersionValue.NULL;
-				case "negative":
-					return VersionValue.NEGATIVE;
-				default:
-					// this should not happen since the DTD prevents it
-					throw new MappingException("Could not parse version unsaved-value: " + unsavedValue);
-			}
+			// this should not happen since the DTD prevents it
+			return switch ( unsavedValue ) {
+				case "undefined" -> VersionValue.UNDEFINED;
+				case "null" -> VersionValue.NULL;
+				case "negative" -> VersionValue.NEGATIVE;
+				default -> throw new MappingException( "Could not parse version unsaved-value: " + unsavedValue );
+			};
 		}
 
-	}
-
-	private static SharedSessionDelegatorBaseImpl mockSession(SessionFactoryImplementor sessionFactory) {
-		return new SharedSessionDelegatorBaseImpl(null) {
-
-			@Override
-			protected SharedSessionContract delegate() {
-				throw new UnsupportedOperationException( "Operation not supported" );
-			}
-
-			@Override
-			public SessionFactoryImplementor getFactory() {
-				return sessionFactory;
-			}
-
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
-			}
-
-			@Override
-			public JdbcServices getJdbcServices() {
-				return sessionFactory.getJdbcServices();
-			}
-		};
 	}
 
 	private UnsavedValueFactory() {

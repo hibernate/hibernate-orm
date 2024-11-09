@@ -22,8 +22,6 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -74,6 +72,8 @@ import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
+import static org.hibernate.internal.util.NullnessHelper.areAllNonNull;
+import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
@@ -99,6 +99,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final boolean keyIsNullable;
 	private final MutationExecutorService mutationExecutorService;
 
+	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
+
 	public OneToManyPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
@@ -106,13 +108,19 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		keyIsNullable = collectionBinding.getKey().isNullable();
 
-		this.rowMutationOperations = buildRowMutationOperations();
+		doWriteEvenWhenInverse = isInverse
+				&& hasIndex()
+				&& !indexContainsFormula
+				&& isAnyTrue( indexColumnIsSettable )
+				&& !getElementPersisterInternal().managesColumns( indexColumnNames );
 
-		this.insertRowsCoordinator = buildInsertCoordinator();
-		this.updateRowsCoordinator = buildUpdateCoordinator();
-		this.deleteRowsCoordinator = buildDeleteCoordinator();
-		this.removeCoordinator = buildDeleteAllCoordinator();
-		this.mutationExecutorService = creationContext.getServiceRegistry().getService(	MutationExecutorService.class );
+		rowMutationOperations = buildRowMutationOperations();
+
+		insertRowsCoordinator = buildInsertCoordinator();
+		updateRowsCoordinator = buildUpdateCoordinator();
+		deleteRowsCoordinator = buildDeleteCoordinator();
+		removeCoordinator = buildDeleteAllCoordinator();
+		mutationExecutorService = creationContext.getServiceRegistry().getService(	MutationExecutorService.class );
 	}
 
 	@Override
@@ -179,66 +187,59 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			Object key,
 			boolean resetIndex,
 			SharedSessionContractImplementor session) {
-		if ( !entries.hasNext() ) {
-			// no entries to update
-			return;
-		}
+		// See HHH-5732 and HHH-18830.
+		// Claim: "If one-to-many and inverse, still need to create the index."
+		// In fact this is wrong: JPA is very clear that bidirectional associations
+		// are persisted from the owning side. However, since this is a very ancient
+		// mistake, I have fixed it in a backward-compatible way, by writing to the
+		// order column if there is no mapping at all for it on the other side.
+		// But if the owning entity does have a mapping for the order column, don't
+		// do superfluous SQL UPDATEs here from the unowned side, no matter how many
+		// users complain.
+		if ( doWriteEvenWhenInverse && entries.hasNext() ) {
 
-		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
-		final boolean doWrite = isInverse
-				&& hasIndex()
-				&& !indexContainsFormula
-				&& ArrayHelper.countTrue( indexColumnIsSettable ) > 0;
-		if ( !doWrite ) {
-			return;
-		}
+			final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+			final RowMutationOperations.Values updateRowValues = rowMutationOperations.getUpdateRowValues();
+			final RowMutationOperations.Restrictions updateRowRestrictions = rowMutationOperations.getUpdateRowRestrictions();
+			assert areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
 
-		final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
-		final RowMutationOperations.Values updateRowValues = rowMutationOperations.getUpdateRowValues();
-		final RowMutationOperations.Restrictions updateRowRestrictions = rowMutationOperations.getUpdateRowRestrictions();
-		assert NullnessHelper.areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
+			final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+					() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
+					MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, this, updateRowOperation ),
+					session
+			);
 
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
-				() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
-				MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, this, updateRowOperation ),
-				session
-		);
-
-		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-
-		try {
-			int nextIndex = ( resetIndex ? 0 : getSize( key, session ) ) +
-					Math.max( getAttributeMapping().getIndexMetadata().getListIndexBase(), 0 );
-
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-
-				if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
-					updateRowValues.applyValues(
-							collection,
-							key,
-							entry,
-							nextIndex,
-							session,
-							jdbcValueBindings
-					);
-
-					updateRowRestrictions.applyRestrictions(
-							collection,
-							key,
-							entry,
-							nextIndex,
-							session,
-							jdbcValueBindings
-					);
-
-					mutationExecutor.execute( collection, null, null, null, session );
-					nextIndex++;
+			final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+			try {
+				int nextIndex = ( resetIndex ? 0 : getSize( key, session ) ) +
+						Math.max( getAttributeMapping().getIndexMetadata().getListIndexBase(), 0 );
+				while ( entries.hasNext() ) {
+					final Object entry = entries.next();
+					if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
+						updateRowValues.applyValues(
+								collection,
+								key,
+								entry,
+								nextIndex,
+								session,
+								jdbcValueBindings
+						);
+						updateRowRestrictions.applyRestrictions(
+								collection,
+								key,
+								entry,
+								nextIndex,
+								session,
+								jdbcValueBindings
+						);
+						mutationExecutor.execute( collection, null, null, null, session );
+						nextIndex++;
+					}
 				}
 			}
-		}
-		finally {
-			mutationExecutor.release();
+			finally {
+				mutationExecutor.release();
+			}
 		}
 
 	}
@@ -368,11 +369,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final OperationProducer writeIndexOperationProducer;
 		final RowMutationOperations.Values writeIndexValues;
 		final RowMutationOperations.Restrictions writeIndexRestrictions;
-		final boolean needsWriteIndex = isInverse
-				&& hasIndex()
-				&& !indexContainsFormula
-				&& !ArrayHelper.isAllFalse( indexColumnIsSettable );
-		if ( needsWriteIndex ) {
+		if ( doWriteEvenWhenInverse ) {
 			writeIndexOperationProducer = this::generateWriteIndexOperation;
 			writeIndexValues = this::applyWriteIndexValues;
 			writeIndexRestrictions = this::applyWriteIndexRestrictions;

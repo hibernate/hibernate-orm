@@ -24,7 +24,7 @@ public enum SqlAstJoinType {
 	RIGHT( "right " ),
 
 	/**
-	 * Represents a cross join (aka a cartesian product).
+	 * Represents a cross join (aka a Cartesian product).
 	 */
 	CROSS( "cross " ),
 

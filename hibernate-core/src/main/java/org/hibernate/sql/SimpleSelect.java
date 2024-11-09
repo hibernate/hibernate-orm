@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
- * A SQL {@code SELECT} statement with no table joins.
+ * An SQL {@code SELECT} statement with no table joins.
  *
  * @author Gavin King
  */

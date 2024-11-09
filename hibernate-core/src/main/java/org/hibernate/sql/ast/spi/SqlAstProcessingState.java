@@ -6,7 +6,7 @@ package org.hibernate.sql.ast.spi;
 
 /**
  * Generalized access to state information relative to the "current process" of
- * creating a SQL AST.
+ * creating an SQL AST.
  *
  * @author Steve Ebersole
  */

@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Helper used in creating unique SQL table aliases for a SQL AST
+ * Helper used in creating unique SQL table aliases for an SQL AST
  *
  * @author Steve Ebersole
  */

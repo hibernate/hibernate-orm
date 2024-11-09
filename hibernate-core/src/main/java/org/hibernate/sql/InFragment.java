@@ -12,7 +12,7 @@ import org.hibernate.Internal;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A SQL {@code IN} expression.
+ * An SQL {@code IN} expression.
  *
  * @author Gavin King
  */

@@ -12,7 +12,7 @@ package org.hibernate.sql.exec.spi;
 public enum JdbcLockStrategy {
 
 	/**
-	 * Use a dialect specific check to determine how to apply locks.
+	 * Use a dialect-specific check to determine how to apply locks.
 	 */
 	AUTO,
 	/**

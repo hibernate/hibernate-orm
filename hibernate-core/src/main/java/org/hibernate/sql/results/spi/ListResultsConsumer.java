@@ -33,8 +33,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	/**
-	 * Let's be reasonable, a row estimate greater than 1M rows is probably either a mis-estimation or bug,
-	 * so let's set 2^20 which is a bit above 1M as maximum collection size.
+	 * Let's be reasonable, a row estimated greater than 1M rows is probably either a mis-estimation or bug,
+	 * so let's set {@code 2^20} which is a bit above 1M as maximum collection size.
 	 */
 	private static final int INITIAL_COLLECTION_SIZE_LIMIT = 1 << 20;
 

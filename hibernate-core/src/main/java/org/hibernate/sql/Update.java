@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
- * A SQL {@code UPDATE} statement.
+ * An SQL {@code UPDATE} statement.
  *
  * @author Gavin King
  */

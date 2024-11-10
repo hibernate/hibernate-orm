@@ -164,21 +164,6 @@ public class DB2Dialect extends Dialect {
 		return MINIMUM_VERSION;
 	}
 
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		//not keywords, at least not in DB2 11,
-		//but perhaps they were in older versions?
-		registerKeyword( "current" );
-		registerKeyword( "date" );
-		registerKeyword( "time" );
-		registerKeyword( "timestamp" );
-		registerKeyword( "fetch" );
-		registerKeyword( "first" );
-		registerKeyword( "rows" );
-		registerKeyword( "only" );
-	}
-
 	/**
 	 * DB2 LUW Version
 	 */

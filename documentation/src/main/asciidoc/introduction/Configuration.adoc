@@ -494,6 +494,32 @@ Writing your own `PhysicalNamingStrategy` and/or `ImplicitNamingStrategy` is an 
 We'll have more to say about them in <<naming-strategies>>.
 ====
 
+[[quoted-identifiers]]
+=== Quoting SQL identifiers
+
+By default, Hibernate never quotes SQL table and column names in generated SQL.
+This behavior is usually much more convenient, especially when working with a legacy schema, since unquoted identifiers aren't case-sensitive, and so Hibernate doesn't need to know or care whether a column is named `NAME`, `name`, or `Name` on the database side.
+
+The following settings enable automatic quoting:
+
+.Settings for identifier quoting
+[%breakable,cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| `hibernate.auto_quote_keyword`          | Automatically quote any identifier which is a SQL keyword
+| `hibernate.globally_quoted_identifiers` | Automatically quote every identifier
+|===
+
+Note that `hibernate.globally_quoted_identifiers` is a synonym for `<delimited-identifiers/>` in <<configuration-jpa,`persistence.xml`>>.
+We don't recommend the use of global identifier quoting, and in fact these settings are rarely used.
+
+[TIP]
+====
+A better alternative is to explicitly quote table and column names where necessary, by writing `@Table(name="\"View\")` or `@Column(name="\"number\"")`.
+Since that's kinda ugly, Hibernate lets us use a backtick as the quote character instead of the double quote.
+====
+
 [[nationalized-chars]]
 === Nationalized character data in SQL Server
 

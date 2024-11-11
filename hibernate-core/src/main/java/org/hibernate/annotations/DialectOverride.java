@@ -91,33 +91,6 @@ public interface DialectOverride {
 	}
 
 	/**
-	 * Specializes an {@link org.hibernate.annotations.OrderBy}
-	 * in a certain dialect.
-	 *
-	 * @deprecated Use {@link SQLOrder}
-	 */
-	@Target({METHOD, FIELD})
-	@Retention(RUNTIME)
-	@Repeatable(OrderBys.class)
-	@OverridesAnnotation(org.hibernate.annotations.OrderBy.class)
-	@Deprecated(since = "6.3", forRemoval = true)
-	@interface OrderBy {
-		/**
-		 * The {@link Dialect} in which this override applies.
-		 */
-		Class<? extends Dialect> dialect();
-		Version before() default @Version(major = MAX_VALUE);
-		Version sameOrAfter() default @Version(major = MIN_VALUE);
-
-		org.hibernate.annotations.OrderBy override();
-	}
-	@Target({METHOD, FIELD})
-	@Retention(RUNTIME)
-	@interface OrderBys {
-		OrderBy[] value();
-	}
-
-	/**
 	 * Specializes an {@link org.hibernate.annotations.SQLOrder}
 	 * in a certain dialect.
 	 */

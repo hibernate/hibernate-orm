@@ -470,10 +470,6 @@ public interface HibernateAnnotations {
 			OptimisticLocking.class,
 			OptimisticLockingAnnotation.class
 	);
-	OrmAnnotationDescriptor<OrderBy,OrderByAnnotation> ORDER_BY = new OrmAnnotationDescriptor<>(
-			OrderBy.class,
-			OrderByAnnotation.class
-	);
 	OrmAnnotationDescriptor<ParamDef,ParamDefAnnotation> PARAM_DEF = new OrmAnnotationDescriptor<>(
 			ParamDef.class,
 			ParamDefAnnotation.class

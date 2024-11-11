@@ -57,7 +57,7 @@ class ColumnDefinitions {
 			return true;
 		}
 		else {
-			int sqlType = columnInformation.getTypeCode();
+			final int sqlType = columnInformation.getTypeCode();
 			if ( isStringType( sqlType ) ) {
 				final int actualLength = columnInformation.getColumnSize();
 				final Size size = column.getColumnSize( dialect, metadata );
@@ -91,14 +91,14 @@ class ColumnDefinitions {
 			Metadata metadata,
 			Dialect dialect,
 			SqlStringGenerationContext context) {
-		StringBuilder definition = new StringBuilder();
+		final StringBuilder definition = new StringBuilder();
 		appendColumn( definition, column, table, metadata, dialect, context );
 		return definition.toString();
 	}
 
 
 	static String getColumnDefinition(Column column, Metadata metadata, Dialect dialect) {
-		StringBuilder definition = new StringBuilder();
+		final StringBuilder definition = new StringBuilder();
 		appendColumnDefinition( definition, column, metadata, dialect );
 		appendComment( definition, column, dialect );
 		return definition.toString();
@@ -235,28 +235,19 @@ class ColumnDefinitions {
 		}
 		else {
 			final String lowercaseTypeName = typeName.toLowerCase(Locale.ROOT);
-			switch (lowercaseTypeName) {
-				case "int":
-					return "integer";
-				case "character":
-					return "char";
-				case "character varying":
-					return "varchar";
-				case "binary varying":
-					return "varbinary";
-				case "character large object":
-					return "clob";
-				case "binary large object":
-					return "blob";
-				case "interval second":
-					return "interval";
-				case "double precision":
-					return "double";
+			return switch ( lowercaseTypeName ) {
+				case "int" -> "integer";
+				case "character" -> "char";
+				case "character varying" -> "varchar";
+				case "binary varying" -> "varbinary";
+				case "character large object" -> "clob";
+				case "binary large object" -> "blob";
+				case "interval second" -> "interval";
+				case "double precision" -> "double";
 				// todo: normalize DECIMAL to NUMERIC?
 				//       normalize REAL to FLOAT?
-				default:
-					return lowercaseTypeName;
-			}
+				default -> lowercaseTypeName;
+			};
 		}
 	}
 
@@ -265,7 +256,7 @@ class ColumnDefinitions {
 			return null;
 		}
 		else {
-			int i = typeExpression.indexOf('(');
+			final int i = typeExpression.indexOf('(');
 			return i>0 ? typeExpression.substring(0,i).trim() : typeExpression;
 		}
 	}

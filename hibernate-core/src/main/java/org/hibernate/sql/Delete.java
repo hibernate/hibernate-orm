@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
- * An SQL {@code DELETE} statement.
+ * A SQL {@code DELETE} statement.
  *
  * @author Gavin King
  */

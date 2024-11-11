@@ -12,7 +12,7 @@ import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
- * Access to stuff used while creating an SQL AST
+ * Access to stuff used while creating a SQL AST
  *
  * @author Steve Ebersole
  */

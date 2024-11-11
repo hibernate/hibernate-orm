@@ -7,7 +7,7 @@ package org.hibernate.sql;
 import org.hibernate.Internal;
 
 /**
- * Nullness restriction - IS (NOT) NULL ?
+ * Nullness restriction - IS (NOT)? NULL
  *
  * @author Steve Ebersole
  */

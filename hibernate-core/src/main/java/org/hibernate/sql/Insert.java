@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 
 /**
- * An SQL {@code INSERT} statement.
+ * A SQL {@code INSERT} statement.
  *
  * @author Gavin King
  */

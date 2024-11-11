@@ -28,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		Person.class,
 		Measurement.class,
 		Height.class,
+		WeightClass.class,
+		Weight.class,
 } )
 public class EmbeddableMetaModelTest {
 	@Test
@@ -59,6 +61,20 @@ public class EmbeddableMetaModelTest {
 			assertEquals( MAPPED_SUPERCLASS, embeddable.getSuperType().getPersistenceType() );
 			assertEquals( Measurement.class, embeddable.getSuperType().getJavaType() );
 			assertNotNull( Height_.height );
+			assertNotNull( Measurement_.unit );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18819" )
+	public void testIdClass(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final EmbeddableDomainType<Weight> embeddable = (EmbeddableDomainType<Weight>) entityManager.getMetamodel()
+					.embeddable( Weight.class );
+			assertNotNull( embeddable.getSuperType() );
+			assertEquals( MAPPED_SUPERCLASS, embeddable.getSuperType().getPersistenceType() );
+			assertEquals( Measurement.class, embeddable.getSuperType().getJavaType() );
+			assertNotNull( Weight_.weight );
 			assertNotNull( Measurement_.unit );
 		} );
 	}

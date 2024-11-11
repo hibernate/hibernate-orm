@@ -4781,15 +4781,22 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			String startToken = matcher.group( 1 );
 			String endToken = matcher.group( 2 );
 
+			// optimizer hint
+			if ( hints.startsWith( "/*+" ) && hints.endsWith( "*/" ) ) {
+				return startToken +
+						" " +
+						hints +
+						" " +
+						endToken;
+			}
+
 			return startToken +
 					" use index (" +
 					hints +
 					") " +
 					endToken;
 		}
-		else {
-			return query;
-		}
+		return query;
 	}
 
 	/**

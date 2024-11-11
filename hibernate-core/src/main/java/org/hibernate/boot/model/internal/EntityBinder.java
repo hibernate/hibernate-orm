@@ -94,6 +94,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
+import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.UnionSubclass;
@@ -558,7 +559,7 @@ public class EntityBinder {
 				propertyAccessor,
 				isIdClass
 		);
-		final Property mapperProperty = new Property();
+		final Property mapperProperty = new SyntheticProperty();
 		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 		mapperProperty.setUpdateable( false );
 		mapperProperty.setInsertable( false );

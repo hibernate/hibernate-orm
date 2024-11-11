@@ -246,7 +246,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * When emulating the recursive WITH clause subclauses SEARCH and CYCLE,
-	 * we need to build a string path and some database like MySQL requires that
+	 * we need to build a string path and some databases like MySQL require that
 	 * we cast the expression to a char with certain size.
 	 * To estimate the size, we need to assume a certain max recursion depth.
 	 */

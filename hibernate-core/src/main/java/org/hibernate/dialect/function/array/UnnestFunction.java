@@ -66,7 +66,7 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 		}
 	}
 
-	protected String getDdlType(SqlTypedMapping sqlTypedMapping, SqlAstTranslator<?> translator) {
+	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
 		final String columnDefinition = sqlTypedMapping.getColumnDefinition();
 		if ( columnDefinition != null ) {
 			return columnDefinition;
@@ -88,11 +88,16 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "json_table(" );
 		array.accept( walker );
-		sqlAppender.appendSql( ",'$[*]' columns(" );
+		sqlAppender.appendSql( ",'$[*]' columns" );
+		renderJsonTableColumns( sqlAppender, tupleType, walker, false );
+		sqlAppender.appendSql( ')' );
+	}
+
+	protected void renderJsonTableColumns(SqlAppender sqlAppender, AnonymousTupleTableGroupProducer tupleType, SqlAstTranslator<?> walker, boolean errorOnError) {
 		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
-					sqlAppender.append( ' ' );
+					sqlAppender.append( '(' );
 				}
 				else {
 					sqlAppender.append( ',' );
@@ -103,17 +108,20 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 					sqlAppender.append( " for ordinality" );
 				}
 				else {
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '$." );
 					sqlAppender.append( selectableMapping.getSelectableName() );
 					sqlAppender.appendSql( '\'' );
+					if ( errorOnError ) {
+						sqlAppender.appendSql( " error on error" );
+					}
 				}
 			} );
 		}
 		else {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
-					sqlAppender.append( ' ' );
+					sqlAppender.append( '(' );
 				}
 				else {
 					sqlAppender.append( ',' );
@@ -124,12 +132,15 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 				}
 				else {
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '$'" );
+					if ( errorOnError ) {
+						sqlAppender.appendSql( " error on error" );
+					}
 				}
 			} );
 		}
-		sqlAppender.appendSql( "))" );
+		sqlAppender.appendSql( ')' );
 	}
 
 	protected void renderXmlTable(
@@ -165,7 +176,7 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 				}
 				else {
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '" );
 					sqlAppender.appendSql( selectableMapping.getSelectableName() );
 					sqlAppender.appendSql( "/text()" );
@@ -187,7 +198,7 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 				}
 				else {
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '" );
 					sqlAppender.appendSql( "text()" );
 					sqlAppender.appendSql( "'" );

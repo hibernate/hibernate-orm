@@ -13,6 +13,8 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.HANAAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
@@ -534,6 +536,11 @@ public class HANADialect extends Dialect {
 				return new HANASqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return HANAAggregateSupport.valueOf( this );
 	}
 
 	/**

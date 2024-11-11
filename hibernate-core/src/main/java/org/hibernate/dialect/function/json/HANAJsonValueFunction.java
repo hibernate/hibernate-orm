@@ -7,12 +7,15 @@ package org.hibernate.dialect.function.json;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.sql.ast.spi.AbstractSqlAstTranslator.getCastTypeName;
 
 /**
  * HANA json_value function.
@@ -52,11 +55,34 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		}
 	}
 
+	public static String jsonValueReturningType(SqlTypedMapping column) {
+		final String columnDefinition = column.getColumnDefinition();
+		assert columnDefinition != null;
+		return jsonValueReturningType( columnDefinition );
+	}
+
+	public static String jsonValueReturningType(String columnDefinition) {
+		final int parenthesisIndex = columnDefinition.indexOf( '(' );
+		final String baseName = parenthesisIndex == -1
+				? columnDefinition
+				: columnDefinition.substring( 0, parenthesisIndex );
+		return switch ( baseName ) {
+			case "real", "float", "double", "decimal" -> "decimal";
+			case "tinyint", "smallint" -> "integer";
+			case "clob" -> "varchar(5000)";
+			case "nclob" -> "nvarchar(5000)";
+			default -> columnDefinition;
+		};
+	}
+
 	@Override
 	protected void renderReturningClause(SqlAppender sqlAppender, JsonValueArguments arguments, SqlAstTranslator<?> walker) {
 		// No return type for booleans, this is handled via decode
 		if ( arguments.returningType() != null && !isEncodedBoolean( arguments.returningType().getJdbcMapping() ) ) {
-			super.renderReturningClause( sqlAppender, arguments, walker );
+			sqlAppender.appendSql( " returning " );
+			sqlAppender.appendSql( jsonValueReturningType(
+					getCastTypeName( arguments.returningType(), walker.getSessionFactory().getTypeConfiguration() )
+			) );
 		}
 	}
 

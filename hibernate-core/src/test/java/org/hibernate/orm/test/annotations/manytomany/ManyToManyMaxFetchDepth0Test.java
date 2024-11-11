@@ -12,7 +12,6 @@ import org.hibernate.cfg.Environment;
  *
  * @author Gail Badner
  */
-@SuppressWarnings("unchecked")
 public class ManyToManyMaxFetchDepth0Test extends ManyToManyTest {
 	@Override
 	protected void configure(Configuration cfg) {

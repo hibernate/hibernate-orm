@@ -410,6 +410,16 @@ Previously, `char` and `Character` fields were, by default, mapped to `char(1)` 
 However, MySQL treats a `char(1)` containing a single space as an empty string, resulting in broken behavior for some HQL and SQL functions.
 Now, `varchar(1)` is used by default.
 
+[[unowned-order-column]]
+== `@OrderColumn` in unowned `@OneToMany` associations
+
+In an unowned (`mappedBy`) one-to-many association, an `@OrderColumn` should, in principle, also be mapped by a field of the associated entity, and the value of the order column should be determined by the value of this field, not by the position in the list.
+
+Previously, since version 4.1, https://hibernate.atlassian.net/issues/HHH-18830[Hibernate would issue superfluous SQL `UPDATE` statements] to set the value of the order column based on the state of the unowned collection.
+This was incorrect according to the JPA specification, and inconsistent with the natural semantics of Hibernate.
+
+In Hibernate 7, these SQL `UPDATE` statements only occur if the `@OrderColumn` is _not_ also mapped by a field of the entity.
+
 [[cleanup]]
 == Cleanup
 

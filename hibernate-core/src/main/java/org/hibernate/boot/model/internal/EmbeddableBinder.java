@@ -835,8 +835,9 @@ public class EmbeddableBinder {
 
 		for ( int i = 0; i < classElements.size(); i++ ) {
 			final PropertyData idClassPropertyData = classElements.get( i );
+			final String propertyName = idClassPropertyData.getPropertyName();
 			final PropertyData entityPropertyData =
-					baseClassElementsByName.get( idClassPropertyData.getPropertyName() );
+					baseClassElementsByName.get( propertyName );
 			if ( propertyHolder.isInIdClass() ) {
 				if ( entityPropertyData == null ) {
 					throw new AnnotationException(
@@ -852,9 +853,36 @@ public class EmbeddableBinder {
 					//the annotation overriding will be dealt with by a mechanism similar to @MapsId
 					continue;
 				}
+				if ( !hasCompatibleType( idClassPropertyData.getTypeName(), entityPropertyData.getTypeName() ) ) {
+					throw new AnnotationException(
+							"Property '" + propertyName + "' in @IdClass '" + idClassPropertyData.getDeclaringClass().getName()
+									+ "' doesn't match type in entity class '" + baseInferredData.getPropertyType().getName()
+									+ "' (expected '" + entityPropertyData.getTypeName() + "' but was '" + idClassPropertyData.getTypeName() + "')"
+					);
+				}
 			}
 			classElements.set( i, entityPropertyData );  //this works since they are in the same order
 		}
+	}
+
+	private static boolean hasCompatibleType(String typeNameInIdClass, String typeNameInEntityClass) {
+		return typeNameInIdClass.equals( typeNameInEntityClass )
+				|| canonicalize( typeNameInIdClass ).equals( typeNameInEntityClass )
+				|| typeNameInIdClass.equals( canonicalize( typeNameInEntityClass ) );
+	}
+
+	private static String canonicalize(String typeName) {
+		return switch (typeName) {
+			case "boolean" -> Boolean.class.getName();
+			case "char" -> Character.class.getName();
+			case "int" -> Integer.class.getName();
+			case "long" -> Long.class.getName();
+			case "short" -> Short.class.getName();
+			case "byte" -> Byte.class.getName();
+			case "float" -> Float.class.getName();
+			case "double" -> Double.class.getName();
+			default -> typeName;
+		};
 	}
 
 	static Component createEmbeddable(

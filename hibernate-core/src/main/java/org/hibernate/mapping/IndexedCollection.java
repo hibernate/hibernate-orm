@@ -47,6 +47,10 @@ public abstract class IndexedCollection extends Collection {
 		return true;
 	}
 
+	public boolean hasMapKeyProperty() {
+		return false;
+	}
+
 	@Override
 	public boolean isSame(Collection other) {
 		return other instanceof IndexedCollection

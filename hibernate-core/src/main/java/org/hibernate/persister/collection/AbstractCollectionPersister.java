@@ -400,14 +400,14 @@ public abstract class AbstractCollectionPersister
 
 		// INDEX AND ROW SELECT
 
-		final boolean hasIndex = collectionBootDescriptor.isIndexed();
-		if ( hasIndex ) {
+		if ( collectionBootDescriptor instanceof IndexedCollection indexedCollection ) {
+			assert collectionBootDescriptor.isIndexed();
 			// NativeSQL: collect index column and auto-aliases
-			final IndexedCollection indexedCollection = (IndexedCollection) collectionBootDescriptor;
-			indexType = indexedCollection.getIndex().getType();
-			final int indexSpan = indexedCollection.getIndex().getColumnSpan();
-			final boolean[] indexColumnInsertability = indexedCollection.getIndex().getColumnInsertability();
-			final boolean[] indexColumnUpdatability = indexedCollection.getIndex().getColumnUpdateability();
+			final Value index = indexedCollection.getIndex();
+			indexType = index.getType();
+			final int indexSpan = index.getColumnSpan();
+			final boolean[] indexColumnInsertability = index.getColumnInsertability();
+			final boolean[] indexColumnUpdatability = index.getColumnUpdateability();
 			indexColumnNames = new String[indexSpan];
 			indexFormulaTemplates = new String[indexSpan];
 			indexFormulas = new String[indexSpan];
@@ -416,7 +416,7 @@ public abstract class AbstractCollectionPersister
 			indexColumnAliases = new String[indexSpan];
 			int i = 0;
 			boolean hasFormula = false;
-			for ( Selectable selectable: indexedCollection.getIndex().getSelectables() ) {
+			for ( Selectable selectable: index.getSelectables() ) {
 				indexColumnAliases[i] = selectable.getAlias( dialect );
 				if ( selectable.isFormula() ) {
 					final Formula indexForm = (Formula) selectable;
@@ -428,19 +428,16 @@ public abstract class AbstractCollectionPersister
 					indexFormulas[i] = indexForm.getFormula();
 					hasFormula = true;
 				}
-				// Treat a mapped-by index like a formula to avoid trying to set it in insert/update
-				// Previously this was a sub-query formula, but was changed to represent the proper mapping
-				// which enables optimizations for queries. The old insert/update code wasn't adapted yet though.
-				// For now, this is good enough, because the formula is never used anymore,
-				// since all read paths go through the new code that can properly handle this case
-				else if ( indexedCollection instanceof org.hibernate.mapping.Map map
-						&& map.getMapKeyPropertyName() != null ) {
-					final Column indexCol = (Column) selectable;
-					indexFormulaTemplates[i] = Template.TEMPLATE + indexCol.getQuotedName( dialect );
-					indexFormulas[i] = indexCol.getQuotedName( dialect );
-					hasFormula = true;
-				}
 				else {
+					if ( indexedCollection.hasMapKeyProperty() ) {
+						// If the Map key is set via @MapKey, it should not be written
+						// since it is a reference to a field of the associated entity.
+						// (Note that the analogous situation for Lists never arises
+						// because @OrderBy is treated as defining a sorted bag.)
+						indexColumnInsertability[i] = false;
+						indexColumnUpdatability[i] = false;
+						hasFormula = true; // this is incorrect, but needed for some reason
+					}
 					final Column indexCol = (Column) selectable;
 					indexColumnNames[i] = indexCol.getQuotedName( dialect );
 					indexColumnIsGettable[i] = true;

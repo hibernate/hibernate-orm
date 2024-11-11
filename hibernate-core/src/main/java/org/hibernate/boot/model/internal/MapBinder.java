@@ -88,9 +88,10 @@ public class MapBinder extends CollectionBinder {
 
 	@Override
 	SecondPass getSecondPass() {
-		return new CollectionSecondPass( MapBinder.this.collection ) {
+		return new CollectionSecondPass( collection ) {
 			public void secondPass(java.util.Map<String, PersistentClass> persistentClasses)
 					throws MappingException {
+				getMap().setHasMapKeyProperty( hasMapKeyProperty );
 				bindStarToManySecondPass( persistentClasses );
 				bindKeyFromAssociationTable(
 						getElementType(),

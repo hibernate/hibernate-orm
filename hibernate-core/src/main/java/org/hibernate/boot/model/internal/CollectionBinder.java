@@ -1292,23 +1292,48 @@ public abstract class CollectionBinder {
 	}
 
 	private void detectMappedByProblem(boolean isMappedBy) {
-		if ( isMappedBy
-				&& ( property.hasDirectAnnotationUsage( JoinColumn.class )
-					|| property.hasDirectAnnotationUsage( JoinColumns.class ) ) ) {
-			throw new AnnotationException( "Association '"
-					+ qualify( propertyHolder.getPath(), propertyName )
-					+ "' is 'mappedBy' another entity and may not specify the '@JoinColumn'" );
+		if ( isMappedBy ) {
+			if ( property.hasDirectAnnotationUsage( JoinColumn.class )
+					|| property.hasDirectAnnotationUsage( JoinColumns.class ) ) {
+				throw new AnnotationException( "Association '"
+						+ qualify( propertyHolder.getPath(), propertyName )
+						+ "' is 'mappedBy' another entity and may not specify the '@JoinColumn'" );
+			}
+			if ( propertyHolder.getJoinTable( property ) != null ) {
+				throw new AnnotationException( "Association '"
+						+ qualify( propertyHolder.getPath(), propertyName )
+						+ "' is 'mappedBy' another entity and may not specify the '@JoinTable'" );
+			}
+			if ( oneToMany ) {
+				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
+					LOG.warn( "Association '"
+							+ qualify( propertyHolder.getPath(), propertyName )
+							+ "' is 'mappedBy' another entity and should not specify a '@MapKeyColumn'"
+							+ " (use '@MapKey' instead)" );
+				}
+				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
+					LOG.warn( "Association '"
+							+ qualify( propertyHolder.getPath(), propertyName )
+							+ "' is 'mappedBy' another entity and should not specify an '@OrderColumn'"
+							+ " (use '@OrderBy' instead)" );
+				}
+			}
+			else {
+				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
+					throw new AnnotationException( "Association '"
+							+ qualify( propertyHolder.getPath(), propertyName )
+							+ "' is 'mappedBy' another entity and may not specify a '@MapKeyColumn'"
+							+ " (use '@MapKey' instead)" );
+				}
+				if ( property.hasDirectAnnotationUsage( OrderColumn.class ) ) {
+					throw new AnnotationException( "Association '"
+							+ qualify( propertyHolder.getPath(), propertyName )
+							+ "' is 'mappedBy' another entity and may not specify an '@OrderColumn'"
+							+ " (use '@OrderBy' instead)" );
+				}
+			}
 		}
-
-		if ( isMappedBy
-				&& propertyHolder.getJoinTable( property ) != null ) {
-			throw new AnnotationException( "Association '"
-					+ qualify( propertyHolder.getPath(), propertyName )
-					+ "' is 'mappedBy' another entity and may not specify the '@JoinTable'" );
-		}
-
-		if ( !isMappedBy
-				&& oneToMany
+		else if ( oneToMany
 				&& property.hasDirectAnnotationUsage( OnDelete.class )
 				&& !property.hasDirectAnnotationUsage( JoinColumn.class )
 				&& !property.hasDirectAnnotationUsage( JoinColumns.class )) {

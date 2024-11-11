@@ -442,14 +442,14 @@ public class PropertyBinder {
 	}
 
 	private void handleLob(Property property) {
-		if ( this.memberDetails != null ) {
+		if ( memberDetails != null ) {
 			// HHH-4635 -- needed for dialect-specific property ordering
-			property.setLob( this.memberDetails.hasDirectAnnotationUsage( Lob.class ) );
+			property.setLob( memberDetails.hasDirectAnnotationUsage( Lob.class ) );
 		}
 	}
 
 	private void handleMutability(Property property) {
-		if ( this.memberDetails != null && this.memberDetails.hasDirectAnnotationUsage( Immutable.class ) ) {
+		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Immutable.class ) ) {
 			updatable = false;
 		}
 		property.setInsertable( insertable );
@@ -457,8 +457,8 @@ public class PropertyBinder {
 	}
 
 	private void handleOptional(Property property) {
-		if ( this.memberDetails != null ) {
-			property.setOptional( !isId && isOptional( this.memberDetails, this.holder ) );
+		if ( memberDetails != null ) {
+			property.setOptional( !isId && isOptional( memberDetails, holder ) );
 			if ( property.isOptional() ) {
 				final OptionalDeterminationSecondPass secondPass = persistentClasses -> {
 					// Defer determining whether a property and its columns are nullable,
@@ -487,8 +487,8 @@ public class PropertyBinder {
 	}
 
 	private void handleNaturalId(Property property) {
-		if ( this.memberDetails != null && entityBinder != null ) {
-			final NaturalId naturalId = this.memberDetails.getDirectAnnotationUsage( NaturalId.class );
+		if ( memberDetails != null && entityBinder != null ) {
+			final NaturalId naturalId = memberDetails.getDirectAnnotationUsage( NaturalId.class );
 			if ( naturalId != null ) {
 				if ( !entityBinder.isRootEntity() ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
@@ -505,11 +505,11 @@ public class PropertyBinder {
 
 	private void inferOptimisticLocking(Property property) {
 		// this is already handled for collections in CollectionBinder...
-		if ( value instanceof Collection ) {
-			property.setOptimisticLocked( ((Collection) value).isOptimisticLocked() );
+		if ( value instanceof Collection collection ) {
+			property.setOptimisticLocked( collection.isOptimisticLocked() );
 		}
-		else if ( this.memberDetails != null && this.memberDetails.hasDirectAnnotationUsage( OptimisticLock.class ) ) {
-			final OptimisticLock optimisticLock = this.memberDetails.getDirectAnnotationUsage( OptimisticLock.class );
+		else if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( OptimisticLock.class ) ) {
+			final OptimisticLock optimisticLock = memberDetails.getDirectAnnotationUsage( OptimisticLock.class );
 			final boolean excluded = optimisticLock.excluded();
 			validateOptimisticLock( excluded );
 			property.setOptimisticLocked( !excluded );

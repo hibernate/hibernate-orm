@@ -40,9 +40,11 @@ public abstract class IndexedCollection extends Collection {
 	public Value getIndex() {
 		return index;
 	}
+
 	public void setIndex(Value index) {
 		this.index = index;
 	}
+
 	public final boolean isIndexed() {
 		return true;
 	}
@@ -53,18 +55,18 @@ public abstract class IndexedCollection extends Collection {
 
 	@Override
 	public boolean isSame(Collection other) {
-		return other instanceof IndexedCollection
-				&& isSame( (IndexedCollection) other );
+		return other instanceof IndexedCollection indexedCollection
+			&& isSame( indexedCollection );
 	}
 
 	public boolean isSame(IndexedCollection other) {
 		return super.isSame( other )
-				&& isSame( index, other.index );
+			&& isSame( index, other.index );
 	}
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
+			final PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getKey() );
 
 			// index should be last column listed
@@ -94,6 +96,7 @@ public abstract class IndexedCollection extends Collection {
 //		}
 	}
 
+	@Deprecated
 	public void validate(Mapping mapping) throws MappingException {
 		validate( (MappingContext) mapping);
 	}

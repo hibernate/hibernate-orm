@@ -21,6 +21,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.UserCollectionType;
 
+import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -65,14 +66,8 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	private void bindIndex() {
-		final PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
-				collection,
-				qualify( collection.getRole(), "key" ),
-				null,
-				null,
-				propertyHolder,
-				getBuildingContext()
-		);
+		final PropertyHolder valueHolder =
+				buildPropertyHolder( collection, getPath(), null, null, propertyHolder, buildingContext );
 
 		if ( !collection.isOneToMany() ) {
 			indexColumn.forceNotNull();
@@ -92,6 +87,10 @@ public class ListBinder extends CollectionBinder {
 		list.setBaseIndex( indexColumn.getBase() );
 
 		createBackref();
+	}
+
+	private String getPath() {
+		return qualify( collection.getRole(), "key" );
 	}
 
 	private void createBackref() {

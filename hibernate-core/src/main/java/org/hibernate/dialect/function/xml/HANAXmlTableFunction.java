@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.function.xml;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -29,6 +30,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmXmlTableFunction;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.internal.ColumnQualifierCollectorSqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -406,6 +408,13 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 
 		renderColumnPath( definition.name(), definition.xpath(), sqlAppender, walker );
 		renderDefaultExpression( definition.defaultExpression(), sqlAppender, walker );
+	}
+
+	protected void renderDefaultExpression(@Nullable Expression expression, SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
+		if ( expression != null ) {
+			sqlAppender.appendSql( " default " );
+			sqlAppender.appendSingleQuoteEscapedString( walker.getLiteralValue( expression ) );
+		}
 	}
 
 	static boolean isBoolean(JdbcMapping type) {

@@ -52,6 +52,8 @@ import org.hibernate.dialect.HANASqlAstTranslator;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.HANAAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
@@ -532,6 +534,11 @@ public class HANALegacyDialect extends Dialect {
 				return new HANASqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return HANAAggregateSupport.valueOf( this );
 	}
 
 	/**

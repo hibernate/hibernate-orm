@@ -37,7 +37,7 @@ public class HANAJsonObjectAggFunction extends JsonObjectAggFunction {
 			throw new QueryException( "Can't emulate json_objectagg 'with unique keys' clause." );
 		}
 		sqlAppender.appendSql( "'{'||string_agg(" );
-		renderArgument( sqlAppender, arguments.key(), arguments.nullBehavior(), translator );
+		renderArgument( sqlAppender, arguments.key(), JsonNullBehavior.NULL, translator );
 		sqlAppender.appendSql( "||':'||" );
 		if ( caseWrapper ) {
 			if ( arguments.nullBehavior() != JsonNullBehavior.ABSENT ) {
@@ -76,8 +76,11 @@ public class HANAJsonObjectAggFunction extends JsonObjectAggFunction {
 			}
 			sqlAppender.appendSql( "json_query((select " );
 			arg.accept( translator );
-			sqlAppender.appendSql(
-					" V from sys.dummy for json('arraywrap'='no','omitnull'='no') returns nvarchar(" + Integer.MAX_VALUE + ")),'$.V')" );
+			sqlAppender.appendSql( " V from sys.dummy for json('arraywrap'='no'" );
+			if ( nullBehavior != JsonNullBehavior.NULL ) {
+				sqlAppender.appendSql( ",'omitnull'='no'" );
+			}
+			sqlAppender.appendSql( ") returns nvarchar(" + Integer.MAX_VALUE + ")),'$.V')" );
 			if ( nullBehavior != JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( ",'null')" );
 			}

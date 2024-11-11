@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
@@ -106,7 +107,7 @@ public class DB2UnnestFunction extends UnnestFunction {
 			}
 			else {
 				sqlAppender.appendSql( " returning " );
-				sqlAppender.append( getDdlType( elementMapping, walker ) );
+				sqlAppender.append( getDdlType( elementMapping, SqlTypes.JSON_ARRAY, walker ) );
 				sqlAppender.append( ") " );
 			}
 
@@ -136,10 +137,10 @@ public class DB2UnnestFunction extends UnnestFunction {
 					}
 					sqlAppender.append( selectableMapping.getSelectionExpression() );
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '$." );
 					sqlAppender.append( selectableMapping.getSelectableName() );
-					sqlAppender.appendSql( '\'' );
+					sqlAppender.appendSql( "' error on error" );
 				}
 			} );
 			sqlAppender.appendSql( ") error on error) t on json_exists('{\"a\":'||" );

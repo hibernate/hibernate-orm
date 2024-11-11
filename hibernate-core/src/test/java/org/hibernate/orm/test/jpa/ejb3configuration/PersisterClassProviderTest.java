@@ -1074,6 +1074,11 @@ public class PersisterClassProviderTest {
 		public String getAttributeMutationTableName(int i) {
 			return "";
 		}
+
+		@Override
+		public boolean managesColumns(String[] columnNames) {
+			return false;
+		}
 	}
 
 	public static class GoofyException extends RuntimeException {

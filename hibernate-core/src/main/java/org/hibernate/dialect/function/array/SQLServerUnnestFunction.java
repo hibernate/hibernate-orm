@@ -39,14 +39,14 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 		final ModelPart ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
 		if ( ordinalityPart != null ) {
 			sqlAppender.appendSql( "(select t.*,row_number() over (order by (select null)) " );
-			sqlAppender.appendSql( ordinalityPart.asBasicValuedModelPart().getSelectableName() );
+			sqlAppender.appendSql( ordinalityPart.asBasicValuedModelPart().getSelectionExpression() );
 			sqlAppender.appendSql( " from openjson(" );
 		}
 		else {
 			sqlAppender.appendSql( "openjson(" );
 		}
 		array.accept( walker );
-		sqlAppender.appendSql( ",'$[*]') with (" );
+		sqlAppender.appendSql( ") with (" );
 
 		boolean[] comma = new boolean[1];
 		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
@@ -62,7 +62,7 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 					sqlAppender.append( selectableMapping.getSelectionExpression() );
 					sqlAppender.append( ' ' );
 					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
-					sqlAppender.appendSql( " path '$." );
+					sqlAppender.appendSql( " '$." );
 					sqlAppender.append( selectableMapping.getSelectableName() );
 					sqlAppender.appendSql( '\'' );
 				}
@@ -81,7 +81,7 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 					sqlAppender.append( selectableMapping.getSelectionExpression() );
 					sqlAppender.append( ' ' );
 					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
-					sqlAppender.appendSql( " path '$'" );
+					sqlAppender.appendSql( " '$'" );
 				}
 			} );
 		}

@@ -19,6 +19,8 @@ import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SQLServerCastingXmlArrayJdbcTypeConstructor;
 import org.hibernate.dialect.SQLServerCastingXmlJdbcType;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
@@ -502,6 +504,11 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				return new SQLServerLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SQLServerAggregateSupport.valueOf( this );
 	}
 
 	@Override

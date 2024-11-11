@@ -10,7 +10,6 @@ import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
@@ -44,23 +43,21 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 		arguments.jsonDocument().accept( walker );
 		if ( arguments.jsonPath() != null ) {
 			sqlAppender.appendSql( ',' );
-			final JsonPathPassingClause passingClause = arguments.passingClause();
-			if ( passingClause != null ) {
-				JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
-						sqlAppender,
-						// Default behavior is NULL ON ERROR
-						arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ? "strict " : "",
-						arguments.jsonPath(),
-						passingClause,
-						walker
-				);
+			// Default behavior is NULL ON ERROR
+			final String prefix = arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ? "strict " : "";
+			final String jsonPathString;
+			if ( arguments.passingClause() != null ) {
+				jsonPathString = prefix + JsonPathHelper.inlinedJsonPathIncludingPassingClause( arguments.jsonPath(),
+						arguments.passingClause(), walker );
 			}
 			else {
-				if ( arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ) {
-					// Default behavior is NULL ON ERROR
-					sqlAppender.appendSql( "'strict '+" );
-				}
-				arguments.jsonPath().accept( walker );
+				jsonPathString = prefix + walker.getLiteralValue( arguments.jsonPath() );
+			}
+			if ( jsonPathString.endsWith( "[*]" ) ) {
+				sqlAppender.appendSingleQuoteEscapedString( jsonPathString.substring( 0, jsonPathString.length() - 3 ) );
+			}
+			else {
+				sqlAppender.appendSingleQuoteEscapedString( jsonPathString );
 			}
 		}
 		else if ( arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ) {

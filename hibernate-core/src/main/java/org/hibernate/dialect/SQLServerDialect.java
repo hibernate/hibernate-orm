@@ -25,6 +25,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
@@ -509,6 +511,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return new SQLServerSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SQLServerAggregateSupport.valueOf( this );
 	}
 
 	@Override

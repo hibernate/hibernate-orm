@@ -237,7 +237,6 @@ public abstract class CollectionBinder {
 	private boolean hibernateExtensionMapping;
 
 	private jakarta.persistence.OrderBy jpaOrderBy;
-	private org.hibernate.annotations.OrderBy sqlOrderBy;
 	private SQLOrder sqlOrder;
 	private SortNatural naturalSort;
 	private SortComparator comparatorSort;
@@ -287,7 +286,6 @@ public abstract class CollectionBinder {
 		collectionBinder.setMapKey( property.getAnnotationUsage( MapKey.class, sourceModelContext ) );
 		collectionBinder.setPropertyName( inferredData.getPropertyName() );
 		collectionBinder.setJpaOrderBy( property.getAnnotationUsage( OrderBy.class, sourceModelContext ) );
-		collectionBinder.setSqlOrderBy( getOverridableAnnotation( property, org.hibernate.annotations.OrderBy.class, context ) );
 		collectionBinder.setSqlOrder( getOverridableAnnotation( property, SQLOrder.class, context ) );
 		collectionBinder.setNaturalSort( property.getAnnotationUsage( SortNatural.class, sourceModelContext ) );
 		collectionBinder.setComparatorSort( property.getAnnotationUsage( SortComparator.class, sourceModelContext ) );
@@ -841,11 +839,6 @@ public abstract class CollectionBinder {
 		this.jpaOrderBy = jpaOrderBy;
 	}
 
-	@SuppressWarnings("removal")
-	public void setSqlOrderBy(org.hibernate.annotations.OrderBy sqlOrderBy) {
-		this.sqlOrderBy = sqlOrderBy;
-	}
-
 	public void setSqlOrder(SQLOrder sqlOrder) {
 		this.sqlOrder = sqlOrder;
 	}
@@ -1095,7 +1088,7 @@ public abstract class CollectionBinder {
 			}
 
 			if ( property.hasDirectAnnotationUsage( jakarta.persistence.OrderBy.class )
-					|| property.hasDirectAnnotationUsage( org.hibernate.annotations.OrderBy.class ) ) {
+					|| property.hasDirectAnnotationUsage( org.hibernate.annotations.SQLOrder.class ) ) {
 				return CollectionClassification.BAG;
 			}
 
@@ -1443,15 +1436,12 @@ public abstract class CollectionBinder {
 			comparatorClass = null;
 		}
 
-		if ( jpaOrderBy != null && ( sqlOrderBy != null || sqlOrder != null ) ) {
+		if ( jpaOrderBy != null && sqlOrder != null ) {
 			throw buildIllegalOrderCombination();
 		}
-		boolean ordered = jpaOrderBy != null || sqlOrderBy != null || sqlOrder != null ;
+		final boolean ordered = jpaOrderBy != null || sqlOrder != null ;
 		if ( ordered ) {
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
-			if ( sqlOrderBy != null ) {
-				collection.setOrderBy( sqlOrderBy.clause() );
-			}
 			if ( sqlOrder != null ) {
 				collection.setOrderBy( sqlOrder.value() );
 			}
@@ -1490,7 +1480,7 @@ public abstract class CollectionBinder {
 						"Collection '%s' is annotated both '@%s' and '@%s'",
 						safeCollectionRole(),
 						jakarta.persistence.OrderBy.class.getName(),
-						org.hibernate.annotations.OrderBy.class.getName()
+						org.hibernate.annotations.SQLOrder.class.getName()
 				)
 		);
 	}
@@ -1502,7 +1492,7 @@ public abstract class CollectionBinder {
 						"Collection '%s' is both sorted and ordered (only one of '@%s', '@%s', '@%s', and '@%s' may be used)",
 						safeCollectionRole(),
 						jakarta.persistence.OrderBy.class.getName(),
-						org.hibernate.annotations.OrderBy.class.getName(),
+						org.hibernate.annotations.SQLOrder.class.getName(),
 						SortComparator.class.getName(),
 						SortNatural.class.getName()
 				)

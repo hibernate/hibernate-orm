@@ -7,9 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.Collection;
@@ -45,13 +43,6 @@ public class ListBinder extends CollectionBinder {
 	@Override
 	protected Collection createCollection(PersistentClass owner) {
 		return new List( getCustomTypeBeanResolver(), owner, getBuildingContext() );
-	}
-
-	@Override
-	public void setSqlOrderBy(OrderBy orderByAnn) {
-		if ( orderByAnn != null ) {
-			throw new AnnotationException( "A collection of type 'List' is annotated '@OrderBy'" );
-		}
 	}
 
 	@Override

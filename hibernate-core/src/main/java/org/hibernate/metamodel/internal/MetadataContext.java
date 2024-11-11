@@ -575,15 +575,24 @@ public class MetadataContext {
 		return null;
 	}
 
-	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
-		final JavaTypeRegistry registry = getTypeConfiguration()
-				.getJavaTypeRegistry();
-		final Class<?> componentClass = idClassComponent.getComponentClass();
-		final JavaType<?> javaType = registry.resolveManagedTypeDescriptor( componentClass );
+	private <Y> EmbeddableTypeImpl<Y> applyIdClassMetadata(Component idClassComponent) {
+		final JavaType<Y> javaType =
+				getTypeConfiguration().getJavaTypeRegistry()
+						.resolveManagedTypeDescriptor( idClassComponent.getComponentClass() );
 
-		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
+		final MappedSuperclass mappedSuperclass = idClassComponent.getMappedSuperclass();
+		final MappedSuperclassDomainType<? super Y> superType;
+		if ( mappedSuperclass != null ) {
+			//noinspection unchecked
+			superType = (MappedSuperclassDomainType<? super Y>) locateMappedSuperclassType( mappedSuperclass );
+		}
+		else {
+			superType = null;
+		}
+
+		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
 				javaType,
-				null,
+				superType,
 				null,
 				false,
 				getJpaMetamodel()

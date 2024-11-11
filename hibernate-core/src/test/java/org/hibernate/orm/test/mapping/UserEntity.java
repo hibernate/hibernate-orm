@@ -16,7 +16,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,7 +29,6 @@ public class UserEntity implements Serializable{
 	@Column(name = "user_id")
 	private Long id;
 
-	@OrderColumn(name = "cnf_order")
 	@OneToMany(mappedBy="user", fetch = EAGER, cascade = ALL, orphanRemoval = true)
 	private Set<UserConfEntity> confs =  new HashSet<UserConfEntity>();
 

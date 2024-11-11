@@ -6,10 +6,20 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyClass;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -34,8 +44,6 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -49,6 +57,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
+import org.hibernate.models.spi.ArrayTypeDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -93,6 +102,7 @@ import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * A stateful binder responsible for creating {@link Property} objects.
@@ -275,29 +285,29 @@ public class PropertyBinder {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void callAttributeBinders(Property property, Map<String, PersistentClass> persistentClasses) {
-		final List<? extends Annotation> metaAnnotatedTargets = memberDetails.getMetaAnnotated(
-				AttributeBinderType.class,
-				getSourceModelContext()
-		);
+		final List<? extends Annotation> metaAnnotatedTargets =
+				memberDetails.getMetaAnnotated( AttributeBinderType.class, getSourceModelContext() );
 
-		if ( CollectionHelper.isEmpty( metaAnnotatedTargets ) ) {
-			return;
-		}
-
-		final AnnotationDescriptorRegistry descriptorRegistry = getSourceModelContext().getAnnotationDescriptorRegistry();
-		for ( int i = 0; i < metaAnnotatedTargets.size(); i++ ) {
-			final Annotation metaAnnotatedTarget = metaAnnotatedTargets.get( i );
-			final AnnotationDescriptor<? extends Annotation> metaAnnotatedDescriptor = descriptorRegistry.getDescriptor( metaAnnotatedTarget.annotationType() );
-			final AttributeBinderType binderTypeAnn = metaAnnotatedDescriptor.getDirectAnnotationUsage( AttributeBinderType.class );
-			try {
-				final AttributeBinder binder = binderTypeAnn.binder().getConstructor().newInstance();
-				final PersistentClass persistentClass = entityBinder != null
-						? entityBinder.getPersistentClass()
-						: persistentClasses.get( holder.getEntityName() );
-				binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
-			}
-			catch ( Exception e ) {
-				throw new AnnotationException( "error processing @AttributeBinderType annotation '" + metaAnnotatedDescriptor.getAnnotationType().getName() + "'", e );
+		if ( !isEmpty( metaAnnotatedTargets ) ) {
+			final AnnotationDescriptorRegistry descriptorRegistry =
+					getSourceModelContext().getAnnotationDescriptorRegistry();
+			for ( int i = 0; i < metaAnnotatedTargets.size(); i++ ) {
+				final Annotation metaAnnotatedTarget = metaAnnotatedTargets.get( i );
+				final AnnotationDescriptor<? extends Annotation> metaAnnotatedDescriptor =
+						descriptorRegistry.getDescriptor( metaAnnotatedTarget.annotationType() );
+				final AttributeBinderType binderTypeAnn =
+						metaAnnotatedDescriptor.getDirectAnnotationUsage( AttributeBinderType.class );
+				try {
+					final AttributeBinder binder = binderTypeAnn.binder().getConstructor().newInstance();
+					final PersistentClass persistentClass = entityBinder != null
+							? entityBinder.getPersistentClass()
+							: persistentClasses.get( holder.getEntityName() );
+					binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
+				}
+				catch ( Exception e ) {
+					throw new AnnotationException( "error processing @AttributeBinderType annotation '" +
+							metaAnnotatedDescriptor.getAnnotationType().getName() + "'", e );
+				}
 			}
 		}
 	}
@@ -398,12 +408,14 @@ public class PropertyBinder {
 	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(
 			MemberDetails property,
 			ClassDetails embeddableClass) {
-		final org.hibernate.annotations.EmbeddableInstantiator onEmbedded = property.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator onEmbedded =
+				property.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( onEmbedded != null ) {
 			return onEmbedded.value();
 		}
 
-		final org.hibernate.annotations.EmbeddableInstantiator onEmbeddable = embeddableClass.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator onEmbeddable =
+				embeddableClass.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( onEmbeddable != null ) {
 			return onEmbeddable.value();
 		}
@@ -414,6 +426,7 @@ public class PropertyBinder {
 	//used when the value is provided and the binding is done elsewhere
 	public Property makeProperty() {
 		validateMake();
+		validateAnnotationsAgainstType();
 		LOG.debugf( "Building property %s", name );
 		Property property = new Property();
 		property.setName( name );
@@ -505,7 +518,7 @@ public class PropertyBinder {
 
 	private void inferOptimisticLocking(Property property) {
 		// this is already handled for collections in CollectionBinder...
-		if ( value instanceof Collection collection ) {
+		if ( value instanceof org.hibernate.mapping.Collection collection ) {
 			property.setOptimisticLocked( collection.isOptimisticLocked() );
 		}
 		else if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( OptimisticLock.class ) ) {
@@ -516,6 +529,37 @@ public class PropertyBinder {
 		}
 		else {
 			property.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???
+		}
+	}
+
+	private void validateAnnotationsAgainstType() {
+		if ( memberDetails != null ) {
+			if ( !(memberDetails.getType() instanceof ArrayTypeDetails) ) {
+				checkAnnotation( OrderColumn.class, List.class );
+				if ( memberDetails.hasDirectAnnotationUsage( OrderBy.class )
+						&& !memberDetails.getType().isImplementor( Collection.class )
+						&& !memberDetails.getType().isImplementor( Map.class ) ) {
+					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+							+ "' is annotated '@OrderBy' but is not of type 'Collection' or 'Map'" );
+				}
+			}
+			checkAnnotation( MapKey.class, Map.class );
+			checkAnnotation( MapKeyColumn.class, Map.class );
+			checkAnnotation( MapKeyClass.class, Map.class );
+			checkAnnotation( MapKeyEnumerated.class, Map.class );
+			checkAnnotation( MapKeyTemporal.class, Map.class );
+			checkAnnotation( MapKeyColumn.class, Map.class );
+			checkAnnotation( MapKeyJoinColumn.class, Map.class );
+			checkAnnotation( MapKeyJoinColumns.class, Map.class );
+		}
+	}
+
+	private void checkAnnotation(Class<? extends Annotation> annotationClass, Class<?> propertyType) {
+		if ( memberDetails.hasDirectAnnotationUsage( annotationClass )
+				&& !memberDetails.getType().isImplementor( propertyType ) ) {
+			throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
+					+ "' is annotated '@" + annotationClass.getSimpleName()
+					+ "' but is not of type '" + propertyType.getTypeName() + "'" );
 		}
 	}
 
@@ -587,7 +631,8 @@ public class PropertyBinder {
 			inFlightPropertyDataList.add( 0, propertyAnnotatedElement );
 			handleIdProperty( propertyContainer, context, declaringClass, ownerType, element );
 			if ( hasToOneAnnotation( element ) ) {
-				context.getMetadataCollector().addToOneAndIdProperty( ownerType.determineRawClass(), propertyAnnotatedElement );
+				context.getMetadataCollector()
+						.addToOneAndIdProperty( ownerType.determineRawClass(), propertyAnnotatedElement );
 			}
 			idPropertyCounter++;
 		}
@@ -595,7 +640,8 @@ public class PropertyBinder {
 			inFlightPropertyDataList.add( propertyAnnotatedElement );
 		}
 		if ( element.hasDirectAnnotationUsage( MapsId.class ) ) {
-			context.getMetadataCollector().addPropertyAnnotatedWithMapsId( ownerType.determineRawClass(), propertyAnnotatedElement );
+			context.getMetadataCollector()
+					.addPropertyAnnotatedWithMapsId( ownerType.determineRawClass(), propertyAnnotatedElement );
 		}
 
 		return idPropertyCounter;
@@ -603,13 +649,14 @@ public class PropertyBinder {
 
 	private static void checkIdProperty(MemberDetails property, PropertyData propertyData) {
 		final Id incomingIdProperty = property.getDirectAnnotationUsage( Id.class );
-		final Id existingIdProperty = propertyData.getAttributeMember().getDirectAnnotationUsage( Id.class );
+		final MemberDetails attributeMember = propertyData.getAttributeMember();
+		final Id existingIdProperty = attributeMember.getDirectAnnotationUsage( Id.class );
 		if ( incomingIdProperty != null && existingIdProperty == null ) {
 			throw new MappingException(
 					String.format(
 							"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass",
-							propertyData.getAttributeMember().getName(),
-							propertyData.getAttributeMember().getDeclaringType().getName(),
+							attributeMember.getName(),
+							attributeMember.getDeclaringType().getName(),
 							property.getDeclaringType().getName()
 					)
 			);
@@ -631,7 +678,8 @@ public class PropertyBinder {
 			if ( element.hasDirectAnnotationUsage( Id.class ) && element.hasDirectAnnotationUsage( Column.class ) ) {
 				final String columnName = element.getDirectAnnotationUsage( Column.class ).name();
 				declaringClass.forEachField( (index, fieldDetails) -> {
-					if ( !element.hasDirectAnnotationUsage( MapsId.class ) && isJoinColumnPresent( columnName, element, sourceModelContext ) ) {
+					if ( !element.hasDirectAnnotationUsage( MapsId.class )
+							&& isJoinColumnPresent( columnName, element, sourceModelContext ) ) {
 						//create a PropertyData for the specJ property holding the mapping
 						context.getMetadataCollector().addPropertyAnnotatedWithMapsIdSpecj(
 								ownerType.determineRawClass(),
@@ -1157,7 +1205,8 @@ public class PropertyBinder {
 			MemberDetails property,
 			ClassDetails returnedClass,
 			PropertyData overridingProperty) {
-		final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElementType().determineRawClass() );
+		final InheritanceState state =
+				inheritanceStatePerClass.get( overridingProperty.getClassOrElementType().determineRawClass() );
 		return state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
 	}
 

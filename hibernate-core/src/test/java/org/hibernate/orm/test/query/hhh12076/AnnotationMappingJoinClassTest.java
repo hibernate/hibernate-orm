@@ -35,7 +35,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -720,7 +719,6 @@ public class AnnotationMappingJoinClassTest {
 		private SettlementStatus status = SettlementStatus.RESERVED;
 
 		@OneToMany(mappedBy = "settlement", cascade = CascadeType.ALL, orphanRemoval = true)
-		@OrderColumn(name = "orderindex")
 		private Set<SettlementExtension> extensions = new HashSet<>();
 
 		private transient Map<Class<?>, SettlementExtension> extensionMap;

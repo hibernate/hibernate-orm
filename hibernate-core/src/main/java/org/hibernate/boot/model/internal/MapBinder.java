@@ -291,20 +291,18 @@ public class MapBinder extends CollectionBinder {
 	private CollectionPropertyHolder buildCollectionPropertyHolder(
 			MemberDetails property,
 			ClassDetails keyClass) {
-		final CollectionPropertyHolder holder = buildPropertyHolder(
-				collection,
-				qualify( collection.getRole(), "mapkey" ),
-				keyClass,
-				property,
-				propertyHolder,
-				buildingContext
-		);
+		final CollectionPropertyHolder holder =
+				buildPropertyHolder( collection, getPath(), keyClass, property, propertyHolder, buildingContext );
 		// 'propertyHolder' is the PropertyHolder for the owner of the collection
 		// 'holder' is the CollectionPropertyHolder.
 		// 'property' is the collection XProperty
 		propertyHolder.startingProperty( property );
 		holder.prepare( property, !( collection.getKey().getType() instanceof BasicType ) );
 		return holder;
+	}
+
+	private String getPath() {
+		return qualify( collection.getRole(), "mapkey" );
 	}
 
 	private void handleForeignKey(MemberDetails property, ManyToOne element) {
@@ -472,8 +470,8 @@ public class MapBinder extends CollectionBinder {
 			Collection collection,
 			PersistentClass associatedClass,
 			PersistentClass targetPropertyPersistentClass) {
-		if ( value instanceof Component ) {
-			return createIndexComponent( collection, associatedClass, (Component) value );
+		if ( value instanceof Component component ) {
+			return createIndexComponent( collection, associatedClass, component );
 		}
 		else {
 			// HHH-11005 - only if we are @OneToMany and location of map key property is
@@ -481,11 +479,11 @@ public class MapBinder extends CollectionBinder {
 			final Table mapKeyTable = !associatedClass.equals( targetPropertyPersistentClass )
 					? targetPropertyPersistentClass.getTable()
 					: associatedClass.getTable();
-			if ( value instanceof BasicValue ) {
-				return createDependantBasicValue( mapKeyTable, (BasicValue) value );
+			if ( value instanceof BasicValue basicValue ) {
+				return createDependantBasicValue( mapKeyTable, basicValue );
 			}
-			else if ( value instanceof SimpleValue ) {
-				return createTargetValue( mapKeyTable, (SimpleValue) value );
+			else if ( value instanceof SimpleValue simpleValue ) {
+				return createTargetValue( mapKeyTable, simpleValue );
 			}
 			else {
 				throw new AssertionFailure( "Unknown type encountered for map key: " + value.getClass() );
@@ -526,11 +524,11 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private static void addSelectable(SimpleValue targetValue, Selectable selectable) {
-		if ( selectable instanceof Column ) {
-			targetValue.addColumn( ( (Column) selectable).clone(), false, false  );
+		if ( selectable instanceof Column column ) {
+			targetValue.addColumn( column.clone(), false, false  );
 		}
-		else if ( selectable instanceof Formula ) {
-			targetValue.addFormula( new Formula( ( (Formula) selectable).getFormula() ) );
+		else if ( selectable instanceof Formula formula ) {
+			targetValue.addFormula( new Formula( formula.getFormula() ) );
 		}
 		else {
 			throw new AssertionFailure( "Unknown element in column iterator: " + selectable.getClass() );

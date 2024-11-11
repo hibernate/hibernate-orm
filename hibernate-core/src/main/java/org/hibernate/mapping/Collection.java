@@ -533,7 +533,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	@Override
 	public boolean isSame(Value other) {
 		return this == other
-			|| other instanceof Collection && isSame( (Collection) other );
+			|| other instanceof Collection collection && isSame( collection );
 	}
 
 	protected static boolean isSame(Value v1, Value v2) {
@@ -770,8 +770,8 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	@SuppressWarnings("rawtypes")
 	public void setTypeParameters(java.util.Map typeParameters) {
-		if ( typeParameters instanceof Properties ) {
-			this.typeParameters = (Properties) typeParameters;
+		if ( typeParameters instanceof Properties properties ) {
+			this.typeParameters = properties;
 		}
 		else {
 			this.typeParameters = new Properties();

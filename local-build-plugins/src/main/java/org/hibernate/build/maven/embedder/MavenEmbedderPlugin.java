@@ -3,8 +3,10 @@ package org.hibernate.build.maven.embedder;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.services.BuildServiceRegistry;
+import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -31,25 +33,58 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 				MavenEmbedderConfig.class
 		);
 
+		final Provider<Directory> workingDirectory = project.getLayout().getBuildDirectory().dir("maven-embedder/working-directory");
+
 		// add the MavenEmbedderService shared-build-service
 		final Provider<MavenEmbedderService> embedderServiceProvider = sharedServices.registerIfAbsent(
 				"maven-embedder",
 				MavenEmbedderService.class, (spec) -> {
 					spec.getParameters().getProjectVersion().set( project.getVersion().toString() );
-					spec.getParameters().getWorkingDirectory().set( project.getLayout().getProjectDirectory() );
+					spec.getParameters().getWorkingDirectory().set( workingDirectory );
 					spec.getParameters().getMavenLocalDirectory().set( dsl.getLocalRepositoryDirectory() );
 				}
 		);
 
+		final Provider<RegularFile> mavenPluginPom = project.getLayout().getBuildDirectory().file( "publications/hibernateMavenPlugin/pom-default.xml" );
+
+		final TaskProvider<Copy> copyPomTask = project.getTasks().register( "copyPluginPom", Copy.class, (task) -> {
+			task.setGroup( "maven embedder" );
+			task.usesService( embedderServiceProvider );
+			task.from( mavenPluginPom.get().getAsFile() );
+			task.setDestinationDir( workingDirectory.get().getAsFile());
+			task.rename( "pom-default.xml", "pom.xml" );
+			task.dependsOn( "generatePomFileForHibernateMavenPluginPublication" );
+		} );
+
 		final Project coreProject = project.getRootProject().project( "hibernate-core" );
 		final Provider<Directory> hibernateCoreLibsFolder  = coreProject.getLayout().getBuildDirectory().dir("libs");
-
+		final Provider<RegularFile> hibernateCorePom = project.getLayout().getBuildDirectory().file( "publications/hibernateCore/pom-default.xml" );
 		final TaskProvider<MavenInstallArtifactTask> installHibernateCoreTask = project.getTasks().register( "installHibernateCore", MavenInstallArtifactTask.class, (task) -> {
 			task.setGroup( "maven embedder" );
 			task.getMavenEmbedderService().set( embedderServiceProvider );
 			task.usesService( embedderServiceProvider );
 			task.artifactId = "hibernate-core";
 			task.getArtifactFolder().set( hibernateCoreLibsFolder );
+			task.pomFilePath = hibernateCorePom.get().getAsFile().getAbsolutePath();
+			task.dependsOn("generatePomFileForHibernateCorePublication");
+		} );
+
+		final Project scanJandexProject = project.getRootProject().project( "hibernate-scan-jandex" );
+		final Provider<Directory> hibernateScanJandexLibsFolder  = scanJandexProject.getLayout().getBuildDirectory().dir("libs");
+		final TaskProvider<MavenInstallArtifactTask> installHibernateScanJandexTask = project.getTasks().register( "installHibernateScanJandex", MavenInstallArtifactTask.class, (task) -> {
+			task.setGroup( "maven embedder" );
+			task.getMavenEmbedderService().set( embedderServiceProvider );
+			task.usesService( embedderServiceProvider );
+			task.artifactId = "hibernate-scan-jandex";
+			task.getArtifactFolder().set( hibernateScanJandexLibsFolder );
+		} );
+
+		final TaskProvider<Copy> copySourcesTask = project.getTasks().register( "copySources", Copy.class, (task) -> {
+			task.setGroup( "maven embedder" );
+			task.usesService( embedderServiceProvider );
+			task.from( new File(project.getProjectDir(), "src").toPath() );
+			task.setDestinationDir( new File(workingDirectory.get().getAsFile(), "src"));
+			task.dependsOn( copyPomTask );
 		} );
 
 		// Via the plugin's POM, we tell Maven to generate the descriptors into
@@ -78,8 +113,18 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 
 			// the hibernate-core jar needs to be present in the local repository
 			// we need compilation to happen before we generate the descriptors
-			task.dependsOn("installHibernateCore", "compileJava" );
+			task.dependsOn( "compileJava", copySourcesTask);
 
+		} );
+
+		final TaskProvider<MavenInstallArtifactTask> installHibernateMavenPluginTask = project.getTasks().register( "installHibernateMavenPlugin", MavenInstallArtifactTask.class, (task) -> {
+			task.setGroup( "maven embedder" );
+			task.getMavenEmbedderService().set( embedderServiceProvider );
+			task.usesService( embedderServiceProvider );
+			task.artifactId = "hibernate-maven-plugin";
+			task.getArtifactFolder().set( project.getLayout().getBuildDirectory().dir("libs" ));
+			task.pomFilePath = mavenPluginPom.get().getAsFile().getAbsolutePath();
+			task.dependsOn("jar", generatePluginDescriptorTask);
 		} );
 
 		final TaskProvider<MavenInvokerRunTask> integrationTestTask = project.getTasks().register( "integrationTest", MavenInvokerRunTask.class, (task) -> {
@@ -88,10 +133,12 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.getMavenEmbedderService().set( embedderServiceProvider );
 			task.usesService( embedderServiceProvider );
 
-			task.dependsOn("jar");
+			task.dependsOn("installHibernateMavenPlugin");
 
 		} );
 
+		// compilation can only happen when hibernate core is available in the local repo
+		project.getTasks().named("compileJava", (compileTask -> compileTask.dependsOn( installHibernateCoreTask, installHibernateScanJandexTask )));
 		// we need the descriptor generation to happen before we jar
 		project.getTasks().named( "jar", (jarTask) -> jarTask.dependsOn( generatePluginDescriptorTask ) );
 		project.getTasks().named( "check" , (checkTask) -> checkTask.dependsOn( integrationTestTask ) );

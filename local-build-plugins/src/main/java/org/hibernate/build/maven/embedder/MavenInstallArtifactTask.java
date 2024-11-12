@@ -1,13 +1,10 @@
 package org.hibernate.build.maven.embedder;
 
 import org.gradle.api.DefaultTask;
-import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
-import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -19,6 +16,7 @@ public abstract class MavenInstallArtifactTask extends DefaultTask {
 	abstract Property<MavenEmbedderService> getMavenEmbedderService();
 
 	String artifactId;
+	String pomFilePath;
 
 	@InputDirectory
 	abstract DirectoryProperty getArtifactFolder();
@@ -37,6 +35,9 @@ public abstract class MavenInstallArtifactTask extends DefaultTask {
 		taskAndArgs.add("-DlocalRepositoryPath=" + getPathToLocalRepository());
 		taskAndArgs.add("-Dfile=" + getPathToArtifact());
 		taskAndArgs.add("-DartifactId=" + artifactId);
+		if (pomFilePath != null) {
+			taskAndArgs.add( "-DpomFile=" + pomFilePath );
+		}
 		return taskAndArgs.toArray(new String[0]);
 	}
 

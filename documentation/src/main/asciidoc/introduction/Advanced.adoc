@@ -711,7 +711,9 @@ sessionFactory.inTransaction(session -> {
 Java lists and maps don't map very naturally to foreign key relationships between tables, and so we tend to avoid using them to represent associations between our entity classes.
 But if you feel like you _really_ need a collection with a fancier structure than `Set`, Hibernate does have options.
 
-The first three options let us map the index of a `List` or key of a `Map` to a column, and are usually used with a `@ElementCollection`, or on the owning side of an association:
+TIP: For more detail about the use of these annotations, please refer to https://in.relation.to/2024/11/12/-what-collection/[this post on the Hibernate blog].
+
+The first three options let us map the index of a `List` or key of a `Map` to a column, and are usually used with `@ElementCollection`, or on the owning side of an association:
 
 .Annotations for mapping lists and maps
 [%breakable,cols="22,~,^13"]

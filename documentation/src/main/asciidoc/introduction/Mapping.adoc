@@ -351,6 +351,8 @@ These annotations specify how elements of the domain model map to columns of tab
 | `@MapKeyColumn` | Specified a column that should be used to persist the keys of a `Map`.
 |===
 
+We'll come back to the last two annotations much later, in <<ordered-sorted>>.
+
 We use the `@Column` annotation to map basic attributes.
 
 [[regular-column-mappings]]

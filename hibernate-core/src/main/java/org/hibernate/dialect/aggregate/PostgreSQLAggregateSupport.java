@@ -52,7 +52,8 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			String aggregateParentReadExpression,
 			String columnExpression,
 			int aggregateColumnTypeCode,
-			SqlTypedMapping column) {
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON_ARRAY:
 			case JSON:

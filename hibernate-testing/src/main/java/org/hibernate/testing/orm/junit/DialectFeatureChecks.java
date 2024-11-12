@@ -600,7 +600,8 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						)
+						),
+						new TypeConfiguration()
 				) != null;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {
@@ -626,7 +627,8 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						)
+						),
+						new TypeConfiguration()
 				) != null;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {
@@ -652,7 +654,8 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						)
+						),
+						new TypeConfiguration()
 				) != null;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {
@@ -665,6 +668,18 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			try {
 				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.JSON );
+				return true;
+			}
+			catch (UnsupportedOperationException | IllegalArgumentException e) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsXmlComponentUpdate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.SQLXML );
 				return true;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {

@@ -111,7 +111,6 @@ public class JsonHelper {
 			Object domainValue,
 			char separator) {
 		final Object[] values = embeddableMappingType.getValues( domainValue );
-		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < values.length; i++ ) {
 			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof SelectableMapping ) {
@@ -312,13 +311,7 @@ public class JsonHelper {
 			case SqlTypes.MATERIALIZED_BLOB:
 				// These types need to be serialized as JSON string, and for efficiency uses appendString directly
 				appender.append( '"' );
-				appender.write(
-						javaType.unwrap(
-								value,
-								byte[].class,
-								options
-						)
-				);
+				appender.write( javaType.unwrap( value, byte[].class, options ) );
 				appender.append( '"' );
 				break;
 			case SqlTypes.ARRAY:

@@ -713,7 +713,12 @@ But if you feel like you _really_ need a collection with a fancier structure tha
 
 TIP: For more detail about the use of these annotations, please refer to https://in.relation.to/2024/11/12/-what-collection/[this post on the Hibernate blog].
 
-The first three options let us map the index of a `List` or key of a `Map` to a column, and are usually used with `@ElementCollection`, or on the owning side of an association:
+The following options let us map the index of a `List` or key of a `Map` to a column, and are used with:
+
+- `@ElementCollection`, or
+- on the owning side of an association.
+
+They should not be used on the unowned (that is, `mappedBy`) side of an association.
 
 .Annotations for mapping lists and maps
 [%breakable,cols="22,~,^13"]
@@ -728,6 +733,8 @@ The first three options let us map the index of a `List` or key of a `Map` to a 
 (used when the key is an entity) | &#10004;
 |===
 
+The name of the `@OrderColumn` or `@MapKeyColumn` may be defaulted, for example:
+
 [source,java]
 ----
 @ManyToMany
@@ -735,12 +742,17 @@ The first three options let us map the index of a `List` or key of a `Map` to a 
 List<Author> authors = new ArrayList<>();
 ----
 
+But it's usually better to specify the column name explicitly:
+
 [source,java]
 ----
 @ElementCollection
-@OrderColumn(name="tag_order") @ListIndexBase(1) // order column and base value
+@OrderColumn(name="tag_order")
+@ListIndexBase(1) // order column and base value
 List<String> tags;
 ----
+
+Such mappings can get pretty complicated:
 
 [source,java]
 ----
@@ -752,8 +764,10 @@ List<String> tags;
 Map<Author,String> biographies;
 ----
 
-For a `Map` representing an unowned `@OneToMany` association, the column must also be mapped on the owning side, usually by an attribute of the target entity.
-In this case we usually use a different annotation:
+As you can imagine, we think you should use such mappings very sparingly, if at all.
+
+For a `Map` representing an unowned `@OneToMany` association, the column holding the key of the map must also be mapped on the owning side, usually by an attribute of the target entity.
+In this case we use a different annotation:
 
 .Annotation for mapping an entity attribute to a map key
 [%breakable,cols="22,~,^13"]
@@ -763,12 +777,16 @@ In this case we usually use a different annotation:
 | `@MapKey` | Specifies an attribute of the target entity which acts as the key of the map | &#10004;
 |===
 
+Note that `@MapKey` specifies a field or property name, not a column name.
+
 [source,java]
 ----
 @OneToMany(mappedBy = Book_.PUBLISHER)
 @MapKey(name = Book_.TITLE) // the key of the map is the title of the book
 Map<String,Book> booksByTitle = new HashMap<>();
 ----
+
+In fact, `@MapKey` may also be used for owned collections.
 
 Now, let's introduce a little distinction:
 

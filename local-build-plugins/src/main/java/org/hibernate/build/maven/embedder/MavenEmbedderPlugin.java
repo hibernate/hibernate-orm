@@ -141,6 +141,6 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 		project.getTasks().named("compileJava", (compileTask -> compileTask.dependsOn( installHibernateCoreTask, installHibernateScanJandexTask )));
 		// we need the descriptor generation to happen before we jar
 		project.getTasks().named( "jar", (jarTask) -> jarTask.dependsOn( generatePluginDescriptorTask ) );
-		project.getTasks().named( "check" , (checkTask) -> checkTask.dependsOn( integrationTestTask ) );
+		project.getTasks().named( "check" , (checkTask) -> checkTask.dependsOn( integrationTestTask, generatePluginDescriptorTask ) );
 	}
 }

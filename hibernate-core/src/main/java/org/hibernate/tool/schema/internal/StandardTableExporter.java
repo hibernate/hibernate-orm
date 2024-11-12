@@ -279,7 +279,8 @@ public class StandardTableExporter implements Exporter<Table> {
 							subColumnName,
 							aggregatePath,
 							subColumnName,
-							aggregateColumn, subColumn
+							aggregateColumn,
+							subColumn
 					);
 					if ( !subColumn.isNullable() ) {
 						buf.append( separator );

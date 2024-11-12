@@ -119,7 +119,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			String aggregateParentReadExpression,
 			String columnExpression,
 			int aggregateColumnTypeCode,
-			SqlTypedMapping column) {
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:

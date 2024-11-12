@@ -21,7 +21,14 @@ public class AggregateSupportImpl implements AggregateSupport {
 	public static final AggregateSupport INSTANCE = new AggregateSupportImpl();
 
 	@Override
-	public String aggregateComponentCustomReadExpression(String template, String placeholder, String aggregateParentReadExpression, String columnExpression, int aggregateColumnTypeCode, SqlTypedMapping column) {
+	public String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
 	}
 

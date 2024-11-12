@@ -54,7 +54,8 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 						"t.v",
 						selectableMapping.getSelectableName(),
 						SqlTypes.JSON,
-						selectableMapping
+						selectableMapping,
+						walker.getSessionFactory().getTypeConfiguration()
 				) );
 			}
 			sqlAppender.append( " as " );

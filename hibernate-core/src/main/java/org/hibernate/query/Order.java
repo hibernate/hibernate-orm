@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 
@@ -42,11 +43,11 @@ public class Order<X> {
 	private final SingularAttribute<X,?> attribute;
 	private final Class<X> entityClass;
 	private final String attributeName;
-	private final NullPrecedence nullPrecedence;
+	private final Nulls nullPrecedence;
 	private final int element;
 	private final boolean ignoreCase;
 
-	private Order(SortDirection order, NullPrecedence nullPrecedence, SingularAttribute<X, ?> attribute) {
+	private Order(SortDirection order, Nulls nullPrecedence, SingularAttribute<X, ?> attribute) {
 		this.order = order;
 		this.attribute = attribute;
 		this.attributeName = attribute.getName();
@@ -56,7 +57,7 @@ public class Order<X> {
 		this.ignoreCase = false;
 	}
 
-	private Order(SortDirection order, NullPrecedence nullPrecedence, SingularAttribute<X, ?> attribute, boolean ignoreCase) {
+	private Order(SortDirection order, Nulls nullPrecedence, SingularAttribute<X, ?> attribute, boolean ignoreCase) {
 		this.order = order;
 		this.attribute = attribute;
 		this.attributeName = attribute.getName();
@@ -66,7 +67,7 @@ public class Order<X> {
 		this.ignoreCase = ignoreCase;
 	}
 
-	private Order(SortDirection order, NullPrecedence nullPrecedence, Class<X> entityClass, String attributeName) {
+	private Order(SortDirection order, Nulls nullPrecedence, Class<X> entityClass, String attributeName) {
 		this.order = order;
 		this.entityClass = entityClass;
 		this.attributeName = attributeName;
@@ -76,7 +77,7 @@ public class Order<X> {
 		this.ignoreCase = false;
 	}
 
-	private Order(SortDirection order, NullPrecedence nullPrecedence, int element) {
+	private Order(SortDirection order, Nulls nullPrecedence, int element) {
 		this.order = order;
 		this.entityClass = null;
 		this.attributeName = null;
@@ -86,7 +87,7 @@ public class Order<X> {
 		this.ignoreCase = false;
 	}
 
-	private Order(SortDirection order, NullPrecedence nullPrecedence, Class<X> entityClass, String attributeName, boolean ignoreCase) {
+	private Order(SortDirection order, Nulls nullPrecedence, Class<X> entityClass, String attributeName, boolean ignoreCase) {
 		this.order = order;
 		this.entityClass = entityClass;
 		this.attributeName = attributeName;
@@ -96,7 +97,7 @@ public class Order<X> {
 		this.ignoreCase = ignoreCase;
 	}
 
-	private Order(SortDirection order, NullPrecedence nullPrecedence, int element, boolean ignoreCase) {
+	private Order(SortDirection order, Nulls nullPrecedence, int element, boolean ignoreCase) {
 		this.order = order;
 		this.entityClass = null;
 		this.attributeName = null;
@@ -126,7 +127,7 @@ public class Order<X> {
 		this.ignoreCase = ignoreCase;
 	}
 
-	private Order(Order<X> other, NullPrecedence nullPrecedence) {
+	private Order(Order<X> other, Nulls nullPrecedence) {
 		this.order = other.order;
 		this.attribute = other.attribute;
 		this.entityClass = other.entityClass;
@@ -142,7 +143,7 @@ public class Order<X> {
 	 * type, the ordering is case-sensitive.
 	 */
 	public static <T> Order<T> asc(SingularAttribute<T,?> attribute) {
-		return new Order<>(ASCENDING, NullPrecedence.NONE, attribute);
+		return new Order<>(ASCENDING, Nulls.NONE, attribute);
 	}
 
 	/**
@@ -151,7 +152,7 @@ public class Order<X> {
 	 * type, the ordering is case-sensitive.
 	 */
 	public static <T> Order<T> desc(SingularAttribute<T,?> attribute) {
-		return new Order<>(DESCENDING, NullPrecedence.NONE, attribute);
+		return new Order<>(DESCENDING, Nulls.NONE, attribute);
 	}
 
 	/**
@@ -160,7 +161,7 @@ public class Order<X> {
 	 * type, the ordering is case-sensitive.
 	 */
 	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction) {
-		return new Order<>(direction, NullPrecedence.NONE, attribute);
+		return new Order<>(direction, Nulls.NONE, attribute);
 	}
 
 	/**
@@ -168,7 +169,7 @@ public class Order<X> {
 	 * in the given direction, with the specified case-sensitivity.
 	 */
 	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, boolean ignoreCase) {
-		return new Order<>(direction, NullPrecedence.NONE, attribute, ignoreCase);
+		return new Order<>(direction, Nulls.NONE, attribute, ignoreCase);
 	}
 
 	/**
@@ -177,7 +178,7 @@ public class Order<X> {
 	 * null values. If the give attribute is of textual type, the
 	 * ordering is case-sensitive.
 	 */
-	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, NullPrecedence nullPrecedence) {
+	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, Nulls nullPrecedence) {
 		return new Order<>(direction, nullPrecedence, attribute);
 	}
 
@@ -188,7 +189,7 @@ public class Order<X> {
 	 * case-sensitive.
 	 */
 	public static <T> Order<T> asc(Class<T> entityClass, String attributeName) {
-		return new Order<>( ASCENDING, NullPrecedence.NONE, entityClass, attributeName );
+		return new Order<>( ASCENDING, Nulls.NONE, entityClass, attributeName );
 	}
 
 	/**
@@ -198,7 +199,7 @@ public class Order<X> {
 	 * case-sensitive.
 	 */
 	public static <T> Order<T> desc(Class<T> entityClass, String attributeName) {
-		return new Order<>( DESCENDING, NullPrecedence.NONE, entityClass, attributeName );
+		return new Order<>( DESCENDING, Nulls.NONE, entityClass, attributeName );
 	}
 
 	/**
@@ -208,7 +209,7 @@ public class Order<X> {
 	 * case-sensitive.
 	 */
 	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction) {
-		return new Order<>( direction, NullPrecedence.NONE, entityClass, attributeName );
+		return new Order<>( direction, Nulls.NONE, entityClass, attributeName );
 	}
 
 	/**
@@ -217,7 +218,7 @@ public class Order<X> {
 	 * the specified case-sensitivity.
 	 */
 	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, boolean ignoreCase) {
-		return new Order<>( direction, NullPrecedence.NONE, entityClass, attributeName, ignoreCase );
+		return new Order<>( direction, Nulls.NONE, entityClass, attributeName, ignoreCase );
 	}
 
 	/**
@@ -227,7 +228,7 @@ public class Order<X> {
 	 * precedence for null values. If the named attribute is of
 	 * textual type, the ordering is case-sensitive.
 	 */
-	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, NullPrecedence nullPrecedence) {
+	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, Nulls nullPrecedence) {
 		return new Order<>( direction, nullPrecedence, entityClass, attributeName );
 	}
 
@@ -237,7 +238,7 @@ public class Order<X> {
 	 * item is of textual type, the ordering is case-sensitive.
 	 */
 	public static Order<Object[]> asc(int element) {
-		return new Order<>( ASCENDING, NullPrecedence.NONE, element );
+		return new Order<>( ASCENDING, Nulls.NONE, element );
 	}
 
 	/**
@@ -246,7 +247,7 @@ public class Order<X> {
 	 * item is of textual type, the ordering is case-sensitive.
 	 */
 	public static Order<Object[]> desc(int element) {
-		return new Order<>( DESCENDING, NullPrecedence.NONE, element );
+		return new Order<>( DESCENDING, Nulls.NONE, element );
 	}
 
 	/**
@@ -255,7 +256,7 @@ public class Order<X> {
 	 * is of textual type, the ordering is case-sensitive.
 	 */
 	public static Order<Object[]> by(int element, SortDirection direction) {
-		return new Order<>( direction, NullPrecedence.NONE, element );
+		return new Order<>( direction, Nulls.NONE, element );
 	}
 
 	/**
@@ -264,7 +265,7 @@ public class Order<X> {
 	 * case-sensitivity.
 	 */
 	public static Order<Object[]> by(int element, SortDirection direction, boolean ignoreCase) {
-		return new Order<>( direction, NullPrecedence.NONE, element, ignoreCase );
+		return new Order<>( direction, Nulls.NONE, element, ignoreCase );
 	}
 
 	/**
@@ -273,7 +274,7 @@ public class Order<X> {
 	 * precedence for null values. If the named attribute is of
 	 * textual type, the ordering is case-sensitive.
 	 */
-	public static Order<Object[]> by(int element, SortDirection direction, NullPrecedence nullPrecedence) {
+	public static Order<Object[]> by(int element, SortDirection direction, Nulls nullPrecedence) {
 		return new Order<>( direction, nullPrecedence, element );
 	}
 
@@ -281,7 +282,7 @@ public class Order<X> {
 		return order;
 	}
 
-	public NullPrecedence getNullPrecedence() {
+	public Nulls getNullPrecedence() {
 		return nullPrecedence;
 	}
 
@@ -326,7 +327,7 @@ public class Order<X> {
 	 * @since 6.5
 	 */
 	public Order<X> withNullsFirst() {
-		return new Order<>( this, NullPrecedence.FIRST );
+		return new Order<>( this, Nulls.FIRST );
 	}
 
 	/**
@@ -334,7 +335,37 @@ public class Order<X> {
 	 * @since 6.5
 	 */
 	public Order<X> withNullsLast() {
-		return new Order<>( this, NullPrecedence.LAST );
+		return new Order<>( this, Nulls.LAST );
+	}
+
+	/**
+	 * An order based on this order, possibly reversed.
+	 *
+	 * @param reverse {@code true} if the returned order should be
+	 *                {@linkplain #reverse reversed}
+	 * @return this order, but reversed if the argument is {@code true}
+	 *
+	 * @apiNote This is a convenience for use with Jakarta Data
+	 *
+	 * @since 7.0
+	 */
+	public Order<X> reversedIf(boolean reverse) {
+		return reverse ? reverse() : this;
+	}
+
+	/**
+	 * An order based on this order, possibly without case-sensitivity.
+	 *
+	 * @param ignoreCase {@code true} if this order should be
+	 *                   {@linkplain #ignoringCase ignore case}
+	 * @return this order, but ignoring case if the argument is {@code true}
+	 *
+	 * @apiNote This is a convenience for use with Jakarta Data
+	 *
+	 * @since 7.0
+	 */
+	public Order<X> ignoringCaseIf(boolean ignoreCase) {
+		return ignoreCase ? ignoringCase() : this;
 	}
 
 	@Override
@@ -343,9 +374,8 @@ public class Order<X> {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( o instanceof Order) {
-			Order<?> that = (Order<?>) o;
+	public boolean equals(Object object) {
+		if ( object instanceof Order<?> that) {
 			return that.order == this.order
 				&& that.nullPrecedence == this.nullPrecedence
 				&& that.ignoreCase == this.ignoreCase

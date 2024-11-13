@@ -4,13 +4,10 @@
  */
 package org.hibernate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.internal.util.collections.CollectionHelper;
+
+import java.util.List;
 
 /**
  * Loads multiple instances of a given entity type at once, by
@@ -174,27 +171,4 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 * @return The managed entities.
 	 */
 	List<T> multiLoad(List<?> ids);
-
-	/**
-	 * Helper for creating a {@link Map} that represents the value of a
-	 * composite natural id. An even number of arguments is expected,
-	 * with each attribute name followed by its value.
-	 *
-	 * @see NaturalIdLoadAccess#using(Object...)
-	 *
-	 * @deprecated use {@link Map#of} instead
-	 */
-	@Deprecated(since = "6.3", forRemoval = true)
-	static Map<String,?> compoundValue(Object... elements) {
-		assert elements != null;
-		assert elements.length % 2 == 0;
-
-		final HashMap<String, Object> map = new HashMap<>();
-		CollectionHelper.collectMapEntries( map::put, elements );
-		for ( int i = 0; i < elements.length; i += 2 ) {
-			map.put( (String) elements[ i ], (Object) elements[ i+1 ] );
-		}
-
-		return map;
-	}
 }

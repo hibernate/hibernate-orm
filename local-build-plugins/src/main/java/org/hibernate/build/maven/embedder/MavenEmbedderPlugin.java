@@ -66,7 +66,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.artifactId = "hibernate-core";
 			task.getArtifactFolder().set( hibernateCoreLibsFolder );
 			task.pomFilePath = hibernateCorePom.get().getAsFile().getAbsolutePath();
-			task.dependsOn("generatePomFileForHibernateCorePublication");
+			task.dependsOn("generatePomFileForHibernateCorePublication", ":hibernate-core:jar");
 		} );
 
 		final Project scanJandexProject = project.getRootProject().project( "hibernate-scan-jandex" );
@@ -77,6 +77,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.usesService( embedderServiceProvider );
 			task.artifactId = "hibernate-scan-jandex";
 			task.getArtifactFolder().set( hibernateScanJandexLibsFolder );
+			task.dependsOn( ":hibernate-scan-jandex:jar" );
 		} );
 
 		final TaskProvider<Copy> copySourcesTask = project.getTasks().register( "copySources", Copy.class, (task) -> {

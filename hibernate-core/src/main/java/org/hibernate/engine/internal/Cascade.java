@@ -601,10 +601,20 @@ public final class Cascade {
 			}
 		}
 
+		// a newly instantiated collection can't have orphans
+		final PersistentCollection<?> persistentCollection;
+		if ( child instanceof PersistentCollection<?> pc ) {
+			persistentCollection = pc;
+		}
+		else {
+			persistentCollection = eventSource.getPersistenceContext()
+					.getCollectionHolder( child );
+		}
+
 		final boolean deleteOrphans = style.hasOrphanDelete()
 				&& action.deleteOrphans()
 				&& elemType instanceof EntityType
-				&& child instanceof PersistentCollection<?> persistentCollection
+				&& persistentCollection != null
 				// a newly instantiated collection can't have orphans
 				&& !persistentCollection.isNewlyInstantiated();
 
@@ -617,7 +627,7 @@ public final class Cascade {
 			// 1. newly instantiated collections
 			// 2. arrays (we can't track orphans for detached arrays)
 			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
-			deleteOrphans( eventSource, entityName, (PersistentCollection<?>) child );
+			deleteOrphans( eventSource, entityName, persistentCollection );
 
 			if ( traceEnabled ) {
 				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );

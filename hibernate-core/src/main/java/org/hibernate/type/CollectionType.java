@@ -25,6 +25,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
+import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -641,11 +642,36 @@ public abstract class CollectionType extends AbstractType implements Association
 			if ( target == null ) {
 				return null;
 			}
-			if ( target instanceof PersistentCollection ) {
-				final Collection collection = (Collection) target;
-				collection.clear();
-				return collection;
+			if ( target instanceof Collection<?> ) {
+				( (Collection<?>) target ).clear();
+				return target;
 			}
+			else if ( target instanceof Map<?, ?> ) {
+				( (Map<?, ?>) target ).clear();
+				return target;
+			}
+			else {
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				final PersistentCollection<?> collectionHolder = persistenceContext
+						.getCollectionHolder( target );
+				if ( collectionHolder != null ) {
+					if ( collectionHolder instanceof PersistentArrayHolder<?> ) {
+						PersistentArrayHolder<?> persistentArrayHolder = (PersistentArrayHolder<?>) collectionHolder;
+						persistenceContext.removeCollectionHolder( target );
+						persistentArrayHolder.beginRead();
+						persistentArrayHolder.injectLoadedState(
+								persistenceContext.getCollectionEntry( collectionHolder )
+										.getLoadedPersister()
+										.getAttributeMapping(), null
+						);
+						persistentArrayHolder.endRead();
+						persistentArrayHolder.dirty();
+						persistenceContext.addCollectionHolder( collectionHolder );
+						return persistentArrayHolder.getArray();
+					}
+				}
+			}
+
 			return null;
 		}
 		if ( !Hibernate.isInitialized( original ) ) {

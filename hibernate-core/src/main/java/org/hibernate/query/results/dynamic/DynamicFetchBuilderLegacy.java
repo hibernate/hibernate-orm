@@ -60,6 +60,8 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	private final Map<Fetchable, FetchBuilder> fetchBuilderMap;
 	private final DynamicResultBuilderEntityStandard resultBuilderEntity;
 
+	private LockMode lockMode;
+
 	public DynamicFetchBuilderLegacy(
 			String tableAlias,
 			String ownerTableAlias,
@@ -106,6 +108,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 
 	@Override
 	public NativeQuery.FetchReturn setLockMode(LockMode lockMode) {
+		this.lockMode = lockMode;
 		return this;
 	}
 
@@ -176,6 +179,9 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 		final DomainResultCreationStateImpl creationState = impl( domainResultCreationState );
 		final TableGroup ownerTableGroup = creationState.getFromClauseAccess().findByAlias( ownerTableAlias );
 		final TableGroup tableGroup;
+		if ( lockMode != null ) {
+			domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, lockMode );
+		}
 		if ( fetchable instanceof TableGroupJoinProducer ) {
 			final SqlAliasBase sqlAliasBase = new SqlAliasBaseConstant( tableAlias );
 			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
@@ -346,11 +352,6 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 		fetchBuilderMap.put( fetchable, fetchBuilder );
 	}
 
-//	@Override
-//	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
-//		fetchBuilderMap.forEach( consumer );
-//	}
-
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -364,6 +365,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 		return tableAlias.equals( that.tableAlias )
 				&& ownerTableAlias.equals( that.ownerTableAlias )
 				&& fetchable.equals( that.fetchable )
+				&& lockMode.equals( that.lockMode )
 				&& Objects.equals( columnNames, that.columnNames )
 				&& Objects.equals( fetchBuilderMap, that.fetchBuilderMap )
 				&& Objects.equals( resultBuilderEntity, that.resultBuilderEntity );
@@ -374,6 +376,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 		int result = tableAlias.hashCode();
 		result = 31 * result + ownerTableAlias.hashCode();
 		result = 31 * result + fetchable.hashCode();
+		result = 31 * result + lockMode.hashCode();
 		result = 31 * result + ( columnNames != null ? columnNames.hashCode() : 0 );
 		result = 31 * result + ( fetchBuilderMap != null ? fetchBuilderMap.hashCode() : 0 );
 		result = 31 * result + ( resultBuilderEntity != null ? resultBuilderEntity.hashCode() : 0 );

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.jpa.ejb3configuration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -216,6 +217,13 @@ public class ConfigurationObjectSettingTest {
 		);
 	}
 
+	public static void applyToProperties(Properties properties, Object... pairs) {
+		assert pairs.length % 2 == 0;
+		for ( int i = 0; i < pairs.length; i+=2 ) {
+			properties.put( pairs[i], pairs[i+1] );
+		}
+	}
+
 	private void verifyJdbcSettings(String jdbcUrl, String jdbcDriver, String jdbcUser, String jdbcPassword) {
 		final String urlValue = "some:url";
 		final String driverValue = "some.jdbc.Driver";
@@ -228,7 +236,7 @@ public class ConfigurationObjectSettingTest {
 		{
 			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
-					CollectionHelper.toMap(
+					Map.of(
 							jdbcUrl, urlValue,
 							jdbcDriver, driverValue,
 							jdbcUser, userValue,
@@ -246,7 +254,7 @@ public class ConfigurationObjectSettingTest {
 		}
 
 		PersistenceUnitInfoAdapter pui = new PersistenceUnitInfoAdapter();
-		CollectionHelper.applyToProperties(
+		applyToProperties(
 				pui.getProperties(),
 				jdbcUrl, urlValue,
 				jdbcDriver, driverValue,

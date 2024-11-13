@@ -40,7 +40,6 @@ import jakarta.persistence.EntityManagerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
-import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
+import java.util.Map;
 
 @SessionFactory
 @DomainModel(annotatedClasses = { Account.class, Client.class, Record.class })
@@ -254,7 +254,7 @@ public class TenantIdTest implements SessionFactoryProducer {
 
 		currentTenant = null;
 		final EntityManagerFactory emf = scope.getSessionFactory();
-		try (EntityManager em = emf.createEntityManager( toMap( HINT_TENANT_ID, "mine" ) ) ) {
+		try (EntityManager em = emf.createEntityManager( Map.of( HINT_TENANT_ID, "mine" ) ) ) {
 			Record r = em.find( Record.class, record.id );
 			assertEquals( "mine", r.state.tenantId );
 

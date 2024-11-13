@@ -758,7 +758,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Query<R> setOrder(List<Order<? super R>> orders) {
+	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
 		super.setOrder(orders);
 		return this;
 	}

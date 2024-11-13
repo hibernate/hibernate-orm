@@ -922,7 +922,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> setLockMode(LockModeType lockMode);
 
 	@Override @Incubating
-	Query<R> setOrder(List<Order<? super R>> orderList);
+	Query<R> setOrder(List<? extends Order<? super R>> orderList);
 
 	@Override @Incubating
 	Query<R> setOrder(Order<? super R> order);

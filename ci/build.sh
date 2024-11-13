@@ -3,7 +3,7 @@
 goal=
 if [ "$RDBMS" == "h2" ]; then
   # This is the default.
-  goal=""
+  goal="preVerifyRelease"
 elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then

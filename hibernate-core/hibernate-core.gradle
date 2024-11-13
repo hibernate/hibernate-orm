@@ -48,8 +48,6 @@ dependencies {
 //    annotationProcessor project( ":annotation-descriptor-generator" )
     compileOnly project( ":annotation-descriptor-generator" )
 
-    runtimeOnly project(':hibernate-scan-jandex')
-
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')

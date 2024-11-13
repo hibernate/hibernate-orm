@@ -28,7 +28,19 @@ dependencies {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Publishing
 
+publishing {
+	publications {
+		// main publication
+		publishedArtifacts {
+			// Add the Java component to the main publication
+			from components.java
+		}
+	}
+}
+
 java {
+	// include javadoc and sources jar in the Java component
+	// 		- classes jar included by default
 	withJavadocJar()
 	withSourcesJar()
 }

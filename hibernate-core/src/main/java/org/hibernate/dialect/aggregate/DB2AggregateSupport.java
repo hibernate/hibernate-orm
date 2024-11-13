@@ -50,12 +50,15 @@ import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 public class DB2AggregateSupport extends AggregateSupportImpl {
 
 	public static final AggregateSupport INSTANCE = new DB2AggregateSupport( false );
 	public static final AggregateSupport JSON_INSTANCE = new DB2AggregateSupport( true );
+	private static final String JSON_QUERY_START = "json_query(";
+	private static final String JSON_QUERY_JSON_END = "')";
 
 	private final boolean jsonSupport;
 
@@ -77,25 +80,32 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 				if ( !jsonSupport ) {
 					break;
 				}
+				final String parentPartExpression;
+				if ( aggregateParentReadExpression.startsWith( JSON_QUERY_START ) && aggregateParentReadExpression.endsWith( JSON_QUERY_JSON_END ) ) {
+					parentPartExpression = aggregateParentReadExpression.substring( JSON_QUERY_START.length(), aggregateParentReadExpression.length() - JSON_QUERY_JSON_END.length() ) + ".";
+				}
+				else {
+					parentPartExpression = aggregateParentReadExpression + ",'$.";
+				}
 				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case BOOLEAN:
 						if ( SqlTypes.isNumericType( column.getJdbcMapping().getJdbcType().getDdlTypeCode() ) ) {
 							return template.replace(
 									placeholder,
-									"decode(json_value(" + aggregateParentReadExpression + ",'$." + columnExpression + "'),'true',1,'false',0)"
+									"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',1,'false',0)"
 							);
 						}
 						else {
 							return template.replace(
 									placeholder,
-									"decode(json_value(" + aggregateParentReadExpression + ",'$." + columnExpression + "'),'true',true,'false',false)"
+									"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',true,'false',false)"
 							);
 						}
 					case TIMESTAMP_WITH_TIMEZONE:
 					case TIMESTAMP_UTC:
 						return template.replace(
 								placeholder,
-								"cast(trim(trailing 'Z' from json_value(" + aggregateParentReadExpression + ",'$." + columnExpression + "' returning varchar(35))) as " + column.getColumnDefinition() + ")"
+								"cast(trim(trailing 'Z' from json_value(" + parentPartExpression + columnExpression + "' returning varchar(35))) as " + column.getColumnDefinition() + ")"
 						);
 					case BINARY:
 					case VARBINARY:
@@ -104,18 +114,23 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								"hextoraw(json_value(" + aggregateParentReadExpression + ",'$." + columnExpression + "'))"
+								"hextoraw(json_value(" + parentPartExpression + columnExpression + "'))"
+						);
+					case UUID:
+						return template.replace(
+								placeholder,
+								"hextoraw(replace(json_value(" + parentPartExpression + columnExpression + "'),'-',''))"
 						);
 					case JSON:
 					case JSON_ARRAY:
 						return template.replace(
 								placeholder,
-								"json_query(" + aggregateParentReadExpression + ",'$." + columnExpression + "')"
+								"json_query(" + parentPartExpression + columnExpression + "')"
 						);
 					default:
 						return template.replace(
 								placeholder,
-								"json_value(" + aggregateParentReadExpression + ",'$." + columnExpression + "' returning " + column.getColumnDefinition() + ")"
+								"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ")"
 						);
 				}
 			case STRUCT:
@@ -133,6 +148,8 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			case BLOB:
 				// We encode binary data as hex
 				return "hex(" + customWriteExpression + ")";
+			case UUID:
+				return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')";
 			case ARRAY:
 			case JSON_ARRAY:
 				return "(" + customWriteExpression + ") format json";

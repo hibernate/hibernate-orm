@@ -82,7 +82,6 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.OracleUUIDJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -1041,8 +1040,6 @@ public class OracleDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
-
-		typeContributions.contributeJavaType( OracleUUIDJavaType.INSTANCE );
 
 		if(getVersion().isSameOrAfter(23)) {
 			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();

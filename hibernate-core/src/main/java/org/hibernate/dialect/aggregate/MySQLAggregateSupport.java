@@ -42,6 +42,7 @@ import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
@@ -89,6 +90,14 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 								placeholder,
 								"unhex(json_unquote(" + queryExpression( aggregateParentReadExpression, columnExpression ) + "))"
 						);
+					case UUID:
+						if ( column.getJdbcMapping().getJdbcType().isBinary() ) {
+							return template.replace(
+									placeholder,
+									"unhex(replace(json_unquote(" + queryExpression( aggregateParentReadExpression, columnExpression ) + "),'-',''))"
+							);
+						}
+						// Fall-through intended
 					default:
 						return template.replace(
 								placeholder,
@@ -148,14 +157,14 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%f')";
 			case TIMESTAMP_UTC:
 				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%fZ')";
+			case UUID:
+				if ( jdbcMapping.getJdbcType().isBinary() ) {
+					return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')";
+				}
+				// Fall-through intended
 			default:
 				return customWriteExpression;
 		}
-	}
-
-	@Override
-	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		return super.aggregateComponentSqlTypeCode( aggregateColumnSqlTypeCode, columnSqlTypeCode );
 	}
 
 	@Override

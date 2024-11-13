@@ -189,6 +189,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										placeholder,
 										"hextoraw(json_value(" + parentPartExpression + columnExpression + "'))"
 								);
+							case UUID:
+								return template.replace(
+										placeholder,
+										"hextoraw(replace(json_value(" + parentPartExpression + columnExpression + "'),'-',''))"
+								);
 							case CLOB:
 							case NCLOB:
 							case BLOB:
@@ -277,12 +282,16 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				switch ( sqlTypeCode ) {
 					case CLOB:
 						return "to_clob(" + customWriteExpression + ")";
+					case UUID:
+						return "regexp_replace(lower(rawtohex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')";
 					case ARRAY:
 						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
 						final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
 						switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
 							case CLOB:
 								return "(select json_arrayagg(to_clob(t.column_value)) from table(" + customWriteExpression + ") t)";
+							case UUID:
+								return "(select json_arrayagg(regexp_replace(lower(rawtohex(t.column_value)),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')) from table(" + customWriteExpression + ") t)";
 							case BIT:
 								return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
 							case BOOLEAN:

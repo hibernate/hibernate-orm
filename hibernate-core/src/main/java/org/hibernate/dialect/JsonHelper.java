@@ -1232,6 +1232,13 @@ public class JsonHelper {
 						),
 						options
 				);
+			case SqlTypes.UUID:
+				return jdbcJavaType.wrap(
+						PrimitiveByteArrayJavaType.INSTANCE.fromString(
+								string.substring( start, end ).replace( "-", "" )
+						),
+						options
+				);
 			case SqlTypes.DATE:
 				return jdbcJavaType.wrap(
 						JdbcDateJavaType.INSTANCE.fromEncodedString(

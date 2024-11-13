@@ -3,6 +3,7 @@ package org.hibernate.build.maven.embedder;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.services.BuildServiceRegistry;
@@ -45,7 +46,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 				}
 		);
 
-		final Provider<RegularFile> mavenPluginPom = project.getLayout().getBuildDirectory().file( "publications/hibernateMavenPlugin/pom-default.xml" );
+		final Provider<RegularFile> mavenPluginPom = project.getLayout().getBuildDirectory().file( "publications/publishedArtifacts/pom-default.xml" );
 
 		final TaskProvider<Copy> copyPomTask = project.getTasks().register( "copyPluginPom", Copy.class, (task) -> {
 			task.setGroup( "maven embedder" );
@@ -53,12 +54,13 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.from( mavenPluginPom.get().getAsFile() );
 			task.setDestinationDir( workingDirectory.get().getAsFile());
 			task.rename( "pom-default.xml", "pom.xml" );
-			task.dependsOn( "generatePomFileForHibernateMavenPluginPublication" );
+			task.dependsOn( "generatePomFileForPublishedArtifactsPublication" );
 		} );
 
-		final Project coreProject = project.getRootProject().project( "hibernate-core" );
-		final Provider<Directory> hibernateCoreLibsFolder  = coreProject.getLayout().getBuildDirectory().dir("libs");
-		final Provider<RegularFile> hibernateCorePom = project.getLayout().getBuildDirectory().file( "publications/hibernateCore/pom-default.xml" );
+		final Project hibernateCoreProject = project.getRootProject().project( "hibernate-core" );
+		final DirectoryProperty hibernateCoreBuildDirectory = hibernateCoreProject.getLayout().getBuildDirectory();
+		final Provider<Directory> hibernateCoreLibsFolder  = hibernateCoreBuildDirectory.dir("libs");
+		final Provider<RegularFile> hibernateCorePom = hibernateCoreBuildDirectory.file( "publications/publishedArtifacts/pom-default.xml" );
 		final TaskProvider<MavenInstallArtifactTask> installHibernateCoreTask = project.getTasks().register( "installHibernateCore", MavenInstallArtifactTask.class, (task) -> {
 			task.setGroup( "maven embedder" );
 			task.getMavenEmbedderService().set( embedderServiceProvider );
@@ -66,7 +68,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.artifactId = "hibernate-core";
 			task.getArtifactFolder().set( hibernateCoreLibsFolder );
 			task.pomFilePath = hibernateCorePom.get().getAsFile().getAbsolutePath();
-			task.dependsOn("generatePomFileForHibernateCorePublication", ":hibernate-core:jar");
+			task.dependsOn(":hibernate-core:generatePomFileForPublishedArtifactsPublication", ":hibernate-core:jar");
 		} );
 
 		final Project scanJandexProject = project.getRootProject().project( "hibernate-scan-jandex" );

@@ -23,7 +23,7 @@ dependencies {
 
 publishing {
     publications {
-        hibernateMavenPlugin(MavenPublication) {
+        publishedArtifacts(MavenPublication) {
             from components.java
             pom.withXml {
                 asNode()
@@ -76,14 +76,6 @@ publishing {
                         }
             }
         }
-        hibernateCore(MavenPublication) {
-            artifactId 'hibernate-core'
-            from project(":hibernate-core").components.java
-        }
     }
-    repositories {
-        mavenLocal {
-            url = file(layout.buildDirectory.dir('maven-embedder/maven-local'))
-        }
-    }
+
 }

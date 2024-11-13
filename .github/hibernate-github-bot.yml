@@ -5,6 +5,7 @@ jira:
   ignoreFiles:
     # Git
     - ".git*"
+    - "*/.git*"
     - ".mailmap"
     # Gradle
     - "gradlew*"
@@ -19,6 +20,7 @@ jira:
     - "ci/"
     - "databases/"
     - "*.sh"
+    - "*.bat"
     - "Jenkinsfile"
     - "*/Jenkinsfile"
     - "*.Jenkinsfile"
@@ -37,6 +39,8 @@ jira:
     - "release/"
     - "rules/"
     - "shared/"
+    - ".sdkmanrc"
+    - "*/.sdkmanrc"
 develocity:
   buildScan:
     addCheck: true

@@ -43,7 +43,6 @@ import org.hibernate.id.uuid.UuidValueGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -74,6 +73,7 @@ import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorCla
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.combineUntyped;
 import static org.hibernate.resource.beans.internal.Helper.allowExtensionsInCdi;
 
 /**
@@ -883,7 +883,7 @@ public class GeneratorBinder {
 					Locale.ROOT,
 					"Identifier attribute '%s' has too many generator annotations: %s",
 					getPath( propertyHolder, inferredData ),
-					CollectionHelper.combineUntyped( idGeneratorAnnotations, generatorAnnotations )
+					combineUntyped( idGeneratorAnnotations, generatorAnnotations )
 			) );
 		}
 		if ( !idGeneratorAnnotations.isEmpty() ) {

@@ -19,7 +19,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
@@ -34,6 +33,8 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -294,6 +295,22 @@ public class ConfigurationObjectSettingTest {
 //		verifySchemaGenSettingsPrecedence();
 	}
 
+	public static Map<String,String> toMap(String... pairs) {
+		assert pairs.length % 2 == 0;
+		switch ( pairs.length ) {
+			case 0:
+				return emptyMap();
+			case 2:
+				return singletonMap( pairs[0], pairs[1] );
+			default:
+				final Map<String,String> result = new HashMap<>();
+				for ( int i = 0; i < pairs.length; i+=2 ) {
+					result.put( pairs[i], pairs[i+1] );
+				}
+				return result;
+		}
+	}
+
 	private void verifySchemaGenSettings(
 			String dbActionSettingName,
 			String scriptActionSettingName,
@@ -304,7 +321,7 @@ public class ConfigurationObjectSettingTest {
 		final boolean createSchemas = true;
 		final String dbName = "H2";
 
-		final Map<String, String> settings = CollectionHelper.toMap(
+		final Map<String, String> settings = toMap(
 				dbActionSettingName, dbAction.getExternalJpaName(),
 				scriptActionSettingName, scriptAction.getExternalJpaName(),
 				createSchemasSettingName, Boolean.toString( createSchemas ),

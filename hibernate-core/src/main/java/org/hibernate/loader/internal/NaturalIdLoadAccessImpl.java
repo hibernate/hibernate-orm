@@ -49,7 +49,7 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated(forRemoval = true)
 	public NaturalIdLoadAccess<T> using(Object... mappings) {
 		CollectionHelper.collectMapEntries( naturalIdParameters::put, mappings );
 		return this;

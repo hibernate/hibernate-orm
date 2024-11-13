@@ -84,4 +84,4 @@ function logAndExec() {
   exec "${@}"
 }
 
-logAndExec ./gradlew ${gradleOpts} ciCheck ${goal} "${@}" -Plog-test-progress=true --stacktrace
+logAndExec ./gradlew ciCheck ${goal} "${@}" -Plog-test-progress=true --stacktrace

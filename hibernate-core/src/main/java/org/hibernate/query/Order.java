@@ -20,7 +20,22 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  * <p>
  * This is a convenience class which allows query result ordering
  * rules to be passed around the system before being applied to
- * a {@link Query} by calling {@link SelectionQuery#setOrder}.
+ * a {@link Query} by calling {@link SelectionQuery#setOrder(Order)}.
+ * <pre>
+ * session.createSelectionQuery("from Book b join b.authors a where a.name = :name", Book.class)
+ *         .setParameter("name", authorName)
+ *         .setOrder(asc(Book_.publicationDate))
+ *         .getResultList();
+ * </pre>
+ * <p>
+ * {@code Order}s may be stacked using {@link List#of} and
+ * {@link SelectionQuery#setOrder(List)}.
+ * <pre>
+ * session.createSelectionQuery("from Book b join b.authors a where a.name = :name", Book.class)
+ *         .setParameter("name", authorName)
+ *         .setOrder(List.of(asc(Book_.publicationDate), desc(Book_.ssn)))
+ *         .getResultList();
+ * </pre>
  * <p>
  * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
  * finder method} or {@linkplain org.hibernate.annotations.processing.HQL
@@ -29,6 +44,10 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  * where {@code E} is the entity type returned by the query.
  *
  * @param <X> The result type of the query to be sorted
+ *
+ * @apiNote This class is similar to {@code jakarta.data.Sort}, and is
+ *          used by Hibernate Data Repositories to implement Jakarta Data
+ *          query methods.
  *
  * @see SelectionQuery#setOrder(Order)
  * @see SelectionQuery#setOrder(java.util.List)

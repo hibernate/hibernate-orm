@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
@@ -374,17 +373,6 @@ public final class CollectionHelper {
 			default:
 				arrayList.trimToSize();
 				return arrayList;
-		}
-	}
-
-	@Deprecated(forRemoval = true)
-	@SuppressWarnings( "unchecked" )
-	public static <K,V> void collectMapEntries(BiConsumer<K, V> mapEntryConsumer, Object[] mappings) {
-		// even numbered
-		assert mappings.length % 2 == 0;
-
-		for ( int i = 0; i < mappings.length; i += 2 ) {
-			mapEntryConsumer.accept( (K) mappings[i], (V) mappings[i+1] );
 		}
 	}
 

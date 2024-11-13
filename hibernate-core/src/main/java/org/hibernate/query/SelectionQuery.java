@@ -590,7 +590,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> setOrder(List<Order<? super R>> orderList);
+	SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList);
 
 	/**
 	 * If the result type of this query is an entity class, add a

@@ -6,10 +6,13 @@ package org.hibernate.orm.test.mapping.mutability.converted;
 
 import java.util.Map;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.join;
+import static org.hibernate.internal.util.StringHelper.split;
 
 /**
  * @author Steve Ebersole
@@ -17,17 +20,11 @@ import jakarta.persistence.AttributeConverter;
 public class MapConverter implements AttributeConverter<Map<String, String>, String> {
 	@Override
 	public String convertToDatabaseColumn(Map<String, String> map) {
-		if ( CollectionHelper.isEmpty( map ) ) {
-			return null;
-		}
-		return StringHelper.join( ", ", CollectionHelper.asPairs( map ) );
+		return CollectionHelper.isEmpty( map ) ? null : join( ", ", CollectionHelper.asPairs( map ) );
 	}
 
 	@Override
 	public Map<String, String> convertToEntityAttribute(String pairs) {
-		if ( StringHelper.isEmpty( pairs ) ) {
-			return null;
-		}
-		return CollectionHelper.toMap( StringHelper.split( ", ", pairs ) );
+		return isEmpty( pairs ) ? null : CollectionHelper.toMap( split( ", ", pairs ) );
 	}
 }

@@ -1581,7 +1581,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public Query<R> setOrder(List<Order<? super R>> orderList) {
+	public Query<R> setOrder(List<? extends Order<? super R>> orderList) {
 		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
 	}
 

@@ -4,15 +4,17 @@
  */
 package org.hibernate.orm.test.id.uuid;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.hibernate.annotations.JdbcType;
+import jakarta.persistence.Table;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,13 +31,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class SybaseASEUUIDTest {
 
-	private static final UUID uuid = UUID.fromString("53886a8a-7082-4879-b430-25cb94415b00");
+	private static final UUID THE_UUID = UUID.fromString("53886a8a-7082-4879-b430-25cb94415b00");
 
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Book book = new Book(uuid, "John Doe");
-			session.persist( book );
+			session.createNativeQuery( "insert into book (id, author) values (?,?)" )
+					.setParameter( 1, UUIDJavaType.ToBytesTransformer.INSTANCE.transform( THE_UUID ) )
+					.setParameter( 2, "John Doe" )
+					.executeUpdate();
 		} );
 	}
 
@@ -49,22 +53,22 @@ public class SybaseASEUUIDTest {
 	@Test
 	@JiraKey( value = "HHH-17246" )
 	public void testTrailingZeroByteTruncation(SessionFactoryScope scope) {
-		scope.inSession(
-			session -> assertEquals( 15, session.createNativeQuery("select id from Book", byte[].class).getSingleResult().length )
-		);
 		scope.inTransaction(
 				session -> {
+					// Assert that our assumption is correct i.e. Sybase truncates trailing zero bytes
+					assertEquals( 15, session.createNativeQuery("select id from book", byte[].class).getSingleResult().length );
 					Book b = session.createQuery( "from Book", Book.class ).getSingleResult();
-					assertEquals(uuid, b.id);
+					assertEquals( THE_UUID, b.id );
 				}
 		);
 	}
 
 	@Entity(name = "Book")
+	@Table(name = "book")
 	static class Book {
 		@Id
 		// The purpose is to effectively provoke the trailing 0 bytes truncation
-		@JdbcType( SybaseUuidAsVarbinaryJdbcType.class )
+		@Column(columnDefinition = "varbinary(16)")
 		UUID id;
 
 		String author;

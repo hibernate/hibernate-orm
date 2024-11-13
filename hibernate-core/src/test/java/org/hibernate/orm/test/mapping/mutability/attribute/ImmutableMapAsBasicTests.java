@@ -7,7 +7,6 @@ package org.hibernate.orm.test.mapping.mutability.attribute;
 import java.util.Map;
 
 import org.hibernate.annotations.Immutable;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -171,7 +170,7 @@ public class ImmutableMapAsBasicTests {
 		scope.inTransaction( (session) -> {
 			session.persist( new TestEntity(
 					1,
-					CollectionHelper.toMap(
+					Map.of(
 							"abc", "123",
 							"def", "456"
 					)

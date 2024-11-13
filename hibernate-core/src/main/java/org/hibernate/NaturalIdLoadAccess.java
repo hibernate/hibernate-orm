@@ -154,7 +154,7 @@ public interface NaturalIdLoadAccess<T> {
 	 * @deprecated use {@link #using(Map)} with {@link Map#of}, which is
 	 *             slightly more typesafe
 	 */
-	@Deprecated(since = "6.3")
+	@Deprecated(since = "6.3", forRemoval = true)
 	NaturalIdLoadAccess<T> using(Object... mappings);
 
 	/**

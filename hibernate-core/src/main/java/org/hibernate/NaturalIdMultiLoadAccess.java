@@ -4,13 +4,13 @@
  */
 package org.hibernate;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-
-import static org.hibernate.internal.util.collections.CollectionHelper.asMap;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Loads multiple instances of a given entity type at once, by
@@ -184,8 +184,17 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 *
 	 * @deprecated use {@link Map#of} instead
 	 */
-	@Deprecated(since = "6.3")
+	@Deprecated(since = "6.3", forRemoval = true)
 	static Map<String,?> compoundValue(Object... elements) {
-		return asMap( elements );
+		assert elements != null;
+		assert elements.length % 2 == 0;
+
+		final HashMap<String, Object> map = new HashMap<>();
+		CollectionHelper.collectMapEntries( map::put, elements );
+		for ( int i = 0; i < elements.length; i += 2 ) {
+			map.put( (String) elements[ i ], (Object) elements[ i+1 ] );
+		}
+
+		return map;
 	}
 }

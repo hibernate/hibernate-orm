@@ -113,8 +113,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	private SqmSelectStatement<R> getSqmSelectStatement() {
 		final SqmStatement<R> sqmStatement = getSqmStatement();
-		if ( sqmStatement instanceof SqmSelectStatement ) {
-			return (SqmSelectStatement<R>) sqmStatement;
+		if ( sqmStatement instanceof SqmSelectStatement<R> selectStatement ) {
+			return selectStatement;
 		}
 		else {
 			throw new IllegalSelectQueryException( "Not a select query" );
@@ -157,8 +157,9 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( keyedPage == null ) {
 			throw new IllegalArgumentException( "KeyedPage was null" );
 		}
-		final List<KeyedResult<R>> results = new SqmSelectionQueryImpl<KeyedResult<R>>( this, keyedPage )
-				.getResultList();
+		final List<KeyedResult<R>> results =
+				new SqmSelectionQueryImpl<KeyedResult<R>>( this, keyedPage )
+						.getResultList();
 		final Page page = keyedPage.getPage();
 		return new KeyedResultList<>(
 				collectResults( results, page.getSize(), keyedPage.getKeyInterpretation() ),

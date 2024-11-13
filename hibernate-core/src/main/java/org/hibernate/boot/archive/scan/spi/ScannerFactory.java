@@ -18,9 +18,7 @@ import org.hibernate.service.Service;
 @JavaServiceLoadable
 public interface ScannerFactory extends Service {
 	/**
-	 * Create a scanner
-	 * @param archiveDescriptorFactory
-	 * @return
+	 * Create a scanner.
 	 */
 	Scanner getScanner(ArchiveDescriptorFactory archiveDescriptorFactory);
 }

@@ -1,8 +1,8 @@
 # By default, detect text files automatically, and use whatever line terminators make sense for the OS
-* text=auto
+* text=auto eol=lf
 
 # Java files are text, and we want Java-friendly readable hunk headers for diff
-*.java text diff=java
+*.java text diff=java eol=lf
 
 # Force LF/CRLF format for files that are known to require it.
 *.sh text eol=lf

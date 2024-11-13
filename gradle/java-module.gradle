@@ -519,16 +519,14 @@ tasks.register( "ciCheck" ) {
 	group "verification"
 	description "Checks for CI environments"
 	dependsOn tasks.check
+}
 
-	// These are already enforced by the formatChecks task
-	spotlessApply {
-		enabled = false
-	}
-	spotlessJavaApply {
-		enabled = false
-	}
-	enforceRules {
-		enabled = false
+gradle.taskGraph.whenReady {
+	if ( it.hasTask( tasks.ciCheck ) ) {
+		// These are already enforced by the formatChecks task
+		tasks.spotlessApply.enabled = false
+		tasks.spotlessJavaApply.enabled = false
+		tasks.enforceRules.enabled = false
 	}
 }
 

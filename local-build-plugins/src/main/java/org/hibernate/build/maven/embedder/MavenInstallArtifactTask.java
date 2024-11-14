@@ -2,9 +2,11 @@ package org.hibernate.build.maven.embedder;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.services.ServiceReference;
 import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -18,8 +20,8 @@ public abstract class MavenInstallArtifactTask extends DefaultTask {
 	String artifactId;
 	String pomFilePath;
 
-	@InputDirectory
-	abstract DirectoryProperty getArtifactFolder();
+	@InputFile
+	abstract RegularFileProperty getArtifact();
 
 	@TaskAction
 	public void installArtifact() {
@@ -42,9 +44,7 @@ public abstract class MavenInstallArtifactTask extends DefaultTask {
 	}
 
 	private String getPathToArtifact() {
-		File artifactFolder = getArtifactFolder().getAsFile().get();
-		File artifactFile = new File(artifactFolder, getArtifactName());
-		return artifactFile.getAbsolutePath();
+		return getArtifact().get().getAsFile().getAbsolutePath();
 	}
 
 	private String getPathToLocalRepository() {
@@ -59,10 +59,6 @@ public abstract class MavenInstallArtifactTask extends DefaultTask {
 
 	private String getProjectVersion() {
 		return getMavenEmbedderService().get().getParameters().getProjectVersion().get();
-	}
-
-	private String getArtifactName() {
-		return artifactId + "-" + getProjectVersion() + ".jar";
 	}
 
 	private String getGroupId() {

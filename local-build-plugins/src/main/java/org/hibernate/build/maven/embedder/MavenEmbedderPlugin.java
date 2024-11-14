@@ -65,8 +65,9 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.setGroup( "maven embedder" );
 			task.getMavenEmbedderService().set( embedderServiceProvider );
 			task.usesService( embedderServiceProvider );
+			final String artifactName = "hibernate-core-" + project.getVersion() + ".jar";
 			task.artifactId = "hibernate-core";
-			task.getArtifactFolder().set( hibernateCoreLibsFolder );
+			task.getArtifact().set( new File( hibernateCoreLibsFolder.get().getAsFile(), artifactName ));
 			task.pomFilePath = hibernateCorePom.get().getAsFile().getAbsolutePath();
 			task.dependsOn(":hibernate-core:generatePomFileForPublishedArtifactsPublication", ":hibernate-core:jar");
 		} );
@@ -77,8 +78,9 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.setGroup( "maven embedder" );
 			task.getMavenEmbedderService().set( embedderServiceProvider );
 			task.usesService( embedderServiceProvider );
+			final String artifactName = "hibernate-scan-jandex-" + project.getVersion() + ".jar";
 			task.artifactId = "hibernate-scan-jandex";
-			task.getArtifactFolder().set( hibernateScanJandexLibsFolder );
+			task.getArtifact().set( new File(hibernateScanJandexLibsFolder.get().getAsFile(), artifactName ));
 			task.dependsOn( ":hibernate-scan-jandex:jar" );
 		} );
 
@@ -130,8 +132,9 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.setGroup( "maven embedder" );
 			task.getMavenEmbedderService().set( embedderServiceProvider );
 			task.usesService( embedderServiceProvider );
+			final String artifactName = "hibernate-maven-plugin-" + project.getVersion() + ".jar";
 			task.artifactId = "hibernate-maven-plugin";
-			task.getArtifactFolder().set( project.getLayout().getBuildDirectory().dir("libs" ));
+			task.getArtifact().set( new File(project.getLayout().getBuildDirectory().dir("libs" ).get().getAsFile(), artifactName));
 			task.pomFilePath = mavenPluginPom.get().getAsFile().getAbsolutePath();
 			task.dependsOn("jar", generatePluginDescriptorTask);
 		} );

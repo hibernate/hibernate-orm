@@ -6,8 +6,6 @@ package org.hibernate.boot.model.source.spi;
 
 import java.util.Set;
 
-import org.hibernate.boot.model.TruthValue;
-
 /**
  * Contract for source information pertaining to a physical column definition specific to a particular attribute
  * context.
@@ -44,7 +42,7 @@ public interface ColumnSource extends RelationalValueSource {
 	 *
 	 * @return {@code true} indicates it is nullable; {@code false} non-nullable.
 	 */
-	TruthValue isNullable();
+	Boolean isNullable();
 
 	/**
 	 * Obtain a specified default value for the column

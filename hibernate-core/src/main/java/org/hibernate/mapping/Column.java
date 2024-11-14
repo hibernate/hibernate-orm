@@ -14,7 +14,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -435,8 +434,8 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	@Override
-	public TruthValue getNullable() {
-		return nullable ? TruthValue.TRUE : TruthValue.FALSE;
+	public Boolean getNullable() {
+		return nullable;
 	}
 
 	@Override

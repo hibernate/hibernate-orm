@@ -4,7 +4,6 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 
 /**
@@ -29,11 +28,13 @@ public interface ColumnInformation extends ColumnTypeInformation {
 	Identifier getColumnIdentifier();
 
 	/**
-	 * Is the column nullable.  The database is allowed to report unknown, hence the use of TruthValue
+	 * Is the column nullable.
+	 * <p>
+	 * The database is allowed to report unknown, hence the use of {@link Boolean}.
 	 *
-	 * @return nullability.
+	 * @return nullability, if known
 	 */
-	TruthValue getNullable();
+	Boolean getNullable();
 
 	/**
 	 * The JDBC type-code.

@@ -7,7 +7,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -150,7 +149,8 @@ public class RelationalObjectBinder {
 			}
 		}
 
-		column.setNullable( interpretNullability( columnSource.isNullable(), areColumnsNullableByDefault ) );
+		final Boolean nullable = columnSource.isNullable();
+		column.setNullable( nullable == null ? areColumnsNullableByDefault : nullable );
 
 		column.setUnique( columnSource.isUnique() );
 		if ( columnSource.isUnique() && table != null ) {
@@ -179,15 +179,6 @@ public class RelationalObjectBinder {
 			for ( String name : columnSource.getUniqueKeyConstraintNames() ) {
 				table.getOrCreateUniqueKey( name ).addColumn( column );
 			}
-		}
-	}
-
-	private static boolean interpretNullability(TruthValue nullable, boolean areColumnsNullableByDefault) {
-		if ( nullable == null || nullable == TruthValue.UNKNOWN ) {
-			return areColumnsNullableByDefault;
-		}
-		else {
-			return nullable == TruthValue.TRUE;
 		}
 	}
 

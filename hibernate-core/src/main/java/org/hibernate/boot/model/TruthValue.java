@@ -18,17 +18,22 @@ public enum TruthValue {
 	FALSE,
 	UNKNOWN;
 
-	public boolean toBoolean(boolean defaultValue) {
-		switch (this) {
-			case TRUE:
-				return true;
-			case FALSE:
-				return false;
-			default:
-				return defaultValue;
-		}
+	public static TruthValue of(boolean bool) {
+		return bool ? TRUE : FALSE;
 	}
 
+	public boolean toBoolean(boolean defaultValue) {
+		return switch ( this ) {
+			case TRUE -> true;
+			case FALSE -> false;
+			default -> defaultValue;
+		};
+	}
+
+	/**
+	 * @deprecated No longer used
+	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public static boolean toBoolean(TruthValue value, boolean defaultValue) {
 		return value != null ? value.toBoolean( defaultValue ) : defaultValue;
 	}

@@ -14,13 +14,13 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.query.results.complete.CompleteFetchBuilderEntityValuedModelPart;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilder;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.complete.CompleteFetchBuilderEntityValuedModelPart;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilder;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 

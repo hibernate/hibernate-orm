@@ -7,10 +7,10 @@ package org.hibernate.generator.values;
 import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.ResultsHelper;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -20,8 +20,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
-import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
+import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
 
 /**
  * Simple implementation of {@link ResultBuilder} for retrieving generated basic values.

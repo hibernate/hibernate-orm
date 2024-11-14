@@ -17,7 +17,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;

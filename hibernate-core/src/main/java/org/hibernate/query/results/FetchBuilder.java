@@ -9,7 +9,7 @@ import java.util.function.BiFunction;
 
 import org.hibernate.Incubating;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;

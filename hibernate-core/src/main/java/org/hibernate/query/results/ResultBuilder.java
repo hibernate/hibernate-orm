@@ -8,7 +8,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -21,12 +21,25 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  */
 @Incubating
 public interface ResultBuilder {
+	/**
+	 * Build a result
+	 *
+	 * @param jdbcResultsMetadata The JDBC values and metadata
+	 * @param resultPosition The position in the domain results for the result to be built
+	 * @param legacyFetchResolver Support for allowing some legacy-style fetch resolution
+	 * @param domainResultCreationState Access to useful stuff
+	 */
 	DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 
+	/**
+	 * The Java type of the value returned for a {@linkplain DomainResult result} built by this builder.
+	 *
+	 * @see DomainResult#getResultJavaType()
+	 */
 	Class<?> getJavaType();
 
 	ResultBuilder cacheKeyInstance();

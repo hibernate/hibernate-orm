@@ -86,7 +86,7 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.singletonList;
-import static org.hibernate.query.results.ResultsHelper.attributeName;
+import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
 /**
  * Builder for SQL AST trees used by {@link Loader} implementations.

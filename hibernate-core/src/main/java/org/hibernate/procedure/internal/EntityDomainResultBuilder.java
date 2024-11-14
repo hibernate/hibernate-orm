@@ -10,11 +10,11 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.BasicValuedFetchBuilder;
+import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.complete.EntityResultImpl;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.query.results.internal.complete.EntityResultImpl;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -26,7 +26,7 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
-	private final BasicValuedFetchBuilder discriminatorFetchBuilder;
+	private final FetchBuilderBasicValued discriminatorFetchBuilder;
 
 	public EntityDomainResultBuilder(EntityMappingType entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;

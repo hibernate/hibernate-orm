@@ -8,8 +8,8 @@ import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;

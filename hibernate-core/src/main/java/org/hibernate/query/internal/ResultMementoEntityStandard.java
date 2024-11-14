@@ -15,10 +15,10 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
-import org.hibernate.query.results.BasicValuedFetchBuilder;
+import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
-import org.hibernate.query.results.complete.CompleteResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityStandard;
 
 /**
  * @author Steve Ebersole
@@ -60,8 +60,8 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 
-		final BasicValuedFetchBuilder discriminatorResultBuilder = discriminatorMemento != null
-				? (BasicValuedFetchBuilder) discriminatorMemento.resolve( this, querySpaceConsumer, context )
+		final FetchBuilderBasicValued discriminatorResultBuilder = discriminatorMemento != null
+				? (FetchBuilderBasicValued) discriminatorMemento.resolve( this, querySpaceConsumer, context )
 				: null;
 
 		final HashMap<String, FetchBuilder> fetchBuilderMap = new HashMap<>();

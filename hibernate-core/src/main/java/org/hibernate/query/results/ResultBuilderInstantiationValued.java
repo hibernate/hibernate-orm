@@ -5,7 +5,9 @@
 package org.hibernate.query.results;
 
 /**
- * Nominal extension to ResultBuilder for cases involving dynamic-instantiation results
+ * ResultBuilder specialization for cases involving dynamic-instantiation results.
+ *
+ * @see jakarta.persistence.ConstructorResult
  *
  * @author Steve Ebersole
  */

@@ -25,7 +25,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
-import static org.hibernate.query.results.ResultsHelper.attributeName;
+import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
 /**
  * Contains state related to building {@link DomainResult} and

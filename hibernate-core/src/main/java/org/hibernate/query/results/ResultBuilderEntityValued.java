@@ -6,13 +6,15 @@ package org.hibernate.query.results;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
- * Specialization of ResultBuilder for building an EntityResult
+ * ResultBuilder specialization for cases involving entity results.
+ *
+ * @see jakarta.persistence.EntityResult
  *
  * @author Steve Ebersole
  */

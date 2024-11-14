@@ -6,13 +6,15 @@ package org.hibernate.query.results;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
- * Nominal extension to ResultBuilder for cases involving scalar results
+ * ResultBuilder specialization for cases involving scalar results.
+ *
+ * @see jakarta.persistence.ColumnResult
  *
  * @author Steve Ebersole
  */

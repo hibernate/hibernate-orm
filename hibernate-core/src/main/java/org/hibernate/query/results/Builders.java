@@ -23,23 +23,23 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderAttribute;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderBasic;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicConverted;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderBasicStandard;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityCalculated;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderDiscriminatedAssociation;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntity;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntityPart;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderPlural;
-import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
-import org.hibernate.query.results.implicit.ImplicitResultClassBuilder;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderAttribute;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasic;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicConverted;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityCalculated;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderInstantiation;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilder;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderDiscriminatedAssociation;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderEmbeddable;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderEntity;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderEntityPart;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderPlural;
+import org.hibernate.query.results.internal.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.query.results.internal.implicit.ImplicitResultClassBuilder;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -52,6 +52,8 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
+ * Commonly helpful creators for {@linkplain ResultBuilder} and {@linkplain FetchBuilder} references.
+ *
  * @author Steve Ebersole
  */
 public class Builders {

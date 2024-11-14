@@ -34,7 +34,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 				MavenEmbedderConfig.class
 		);
 
-		final Provider<Directory> workingDirectory = project.getLayout().getBuildDirectory().dir("maven-embedder/working-directory");
+		final Provider<Directory> workingDirectory = project.getLayout().getBuildDirectory().dir("maven-embedder/workspace");
 
 		// add the MavenEmbedderService shared-build-service
 		final Provider<MavenEmbedderService> embedderServiceProvider = sharedServices.registerIfAbsent(
@@ -90,6 +90,13 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.dependsOn( copyPomTask );
 		} );
 
+		final TaskProvider<Copy> copyClassesTask = project.getTasks().register( "copyClasses", Copy.class, (task) -> {
+			task.setGroup( "maven embedder" );
+			task.from(new File(project.getProjectDir(), "target/classes/java/main").toPath());
+			task.setDestinationDir( new File(workingDirectory.get().getAsFile(), "target/classes"));
+			task.dependsOn( "compileJava" );
+		} );
+
 		// Via the plugin's POM, we tell Maven to generate the descriptors into
 		// `target/generated/sources/plugin-descriptors/META-INF/maven`.
 		// `META-INF/maven` is the relative path we need inside the jar, so we
@@ -116,8 +123,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 
 			// the hibernate-core jar needs to be present in the local repository
 			// we need compilation to happen before we generate the descriptors
-			task.dependsOn( "compileJava", copySourcesTask);
-
+			task.dependsOn( copySourcesTask, copyClassesTask);
 		} );
 
 		final TaskProvider<MavenInstallArtifactTask> installHibernateMavenPluginTask = project.getTasks().register( "installHibernateMavenPlugin", MavenInstallArtifactTask.class, (task) -> {

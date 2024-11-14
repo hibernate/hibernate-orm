@@ -32,7 +32,6 @@ public abstract class MavenPluginDescriptorTask extends DefaultTask {
 	}
 
 	private void performDescriptorGeneration() {
-		getMavenEmbedderService().get().execute( "compile" );
 		getMavenEmbedderService().get().execute( "plugin:descriptor" );
 	}
 

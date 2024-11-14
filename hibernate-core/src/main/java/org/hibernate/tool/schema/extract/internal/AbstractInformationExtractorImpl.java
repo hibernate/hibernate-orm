@@ -18,7 +18,6 @@ import java.util.Objects;
 import java.util.StringTokenizer;
 
 import org.hibernate.JDBCException;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -50,7 +49,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 	private final String[] tableTypes;
 
-	private String[] extraPhysicalTableTypes;
+	private final String[] extraPhysicalTableTypes;
 
 	private final ExtractionContext extractionContext;
 
@@ -430,8 +429,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						.getIdentifierHelper()
 						.toIdentifier( extractionContext.getJdbcConnection().getSchema() );
 			}
-			catch (SQLException ignore) {
-				LOG.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			catch (SQLException sqle) {
+				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
 			}
 			catch (AbstractMethodError ignore) {
 				// jConnect and jTDS report that they "support" schemas, but they don't really
@@ -911,25 +910,24 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	protected TruthValue interpretNullable(int nullable) {
-		switch ( nullable ) {
-			case ResultSetMetaData.columnNullable:
-				return TruthValue.TRUE;
-			case ResultSetMetaData.columnNoNulls:
-				return TruthValue.FALSE;
-			default:
-				return TruthValue.UNKNOWN;
-		}
+	protected Boolean interpretNullable(int nullable) {
+		return switch ( nullable ) {
+			case ResultSetMetaData.columnNullable -> Boolean.TRUE;
+			case ResultSetMetaData.columnNoNulls -> Boolean.FALSE;
+			default -> null;
+		};
 	}
 
-	private TruthValue interpretTruthValue(String nullable) {
+	private Boolean interpretTruthValue(String nullable) {
 		if ( "yes".equalsIgnoreCase( nullable ) ) {
-			return TruthValue.TRUE;
+			return Boolean.TRUE;
 		}
 		else if ( "no".equalsIgnoreCase( nullable ) ) {
-			return TruthValue.FALSE;
+			return Boolean.FALSE;
 		}
-		return TruthValue.UNKNOWN;
+		else {
+			return null;
+		}
 	}
 
 	// This method is not currently used.

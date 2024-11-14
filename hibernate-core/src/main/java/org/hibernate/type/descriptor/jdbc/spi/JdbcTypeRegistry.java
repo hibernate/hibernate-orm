@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -165,7 +164,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			registrationKey = null;
 		}
 		final JdbcType descriptor = getDescriptor( jdbcTypeCode );
-		if ( !( descriptor instanceof AggregateJdbcType ) ) {
+		if ( !(descriptor instanceof AggregateJdbcType aggregateJdbcType) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Tried to resolve the JdbcType [%s] as AggregateJdbcType but it does not implement that interface!",
@@ -173,7 +172,6 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 					)
 			);
 		}
-		final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) descriptor;
 		final AggregateJdbcType resolvedJdbcType = aggregateJdbcType.resolveAggregateJdbcType(
 				embeddableMappingType,
 				typeName,
@@ -181,8 +179,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		);
 		if ( registrationKey != null ) {
 			aggregateDescriptorMap.put( registrationKey, resolvedJdbcType );
-			if ( resolvedJdbcType instanceof SqlTypedJdbcType ) {
-				final SqlTypedJdbcType sqlTypedJdbcType = (SqlTypedJdbcType) resolvedJdbcType;
+			if ( resolvedJdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
 				sqlTypedDescriptorMap.put( sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ), sqlTypedJdbcType );
 			}
 		}
@@ -295,7 +292,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	private static final class TypeConstructedJdbcTypeKey {
 		private final int typeConstructorTypeCode;
 		private final Object jdbcTypeOrBasicType;
-		private final TruthValue nullable;
+		private final Boolean nullable;
 		private final int typeCode;
 		private final @Nullable String typeName;
 		private final int columnSize;
@@ -308,7 +305,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			this.typeConstructorTypeCode = typeConstructorTypeCode;
 			this.jdbcTypeOrBasicType = jdbcTypeOrBasicType;
 			if ( columnTypeInformation == null ) {
-				this.nullable = TruthValue.UNKNOWN;
+				this.nullable = null;
 				this.typeCode = Types.OTHER;
 				this.typeName = null;
 				this.columnSize = 0;

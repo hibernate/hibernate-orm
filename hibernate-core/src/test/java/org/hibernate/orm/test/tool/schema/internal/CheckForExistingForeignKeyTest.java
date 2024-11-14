@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Namespace.Name;
@@ -362,9 +361,7 @@ public class CheckForExistingForeignKeyTest {
 		String typeName = null;
 		int columnSize = 0;
 		int decimalDigits = 0;
-		TruthValue nullable = null;
-		ColumnInformationImpl columnInformation = new ColumnInformationImpl( containingTableInformation, columnIdentifier, typeCode, typeName, columnSize,
-				decimalDigits, nullable );
-		return columnInformation;
+		return new ColumnInformationImpl( containingTableInformation, columnIdentifier, typeCode, typeName, columnSize,
+				decimalDigits, null );
 	}
 }

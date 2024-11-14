@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.complete.CompleteFetchBuilderBasicPart;
+import org.hibernate.query.results.internal.complete.CompleteFetchBuilderBasicPart;
 
 /**
  * Memento describing a basic-valued fetch.  A basic-value cannot be

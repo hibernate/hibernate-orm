@@ -475,6 +475,11 @@ In Hibernate 7, these SQL `UPDATE` statements only occur if the `@OrderColumn` i
 ** Removed `hibernate.allow_refresh_detached_entity`
 
 
+[[reorg]]
+== Reorganize Packages (for api/spi/internal, etc)
+
+* Re-organized the `org.hibernate.query.results` package
+
 
 [[todo]]
 == Todos (dev)

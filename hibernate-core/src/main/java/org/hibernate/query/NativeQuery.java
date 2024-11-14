@@ -4,12 +4,6 @@
  */
 package org.hibernate.query;
 
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -18,7 +12,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -30,6 +23,12 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
+
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},

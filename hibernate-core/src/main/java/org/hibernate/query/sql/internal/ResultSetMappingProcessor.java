@@ -28,11 +28,12 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderContainer;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderCollectionStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderContainer;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -102,13 +103,11 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		// so that role returns can be more easily resolved to their owners
 		resultSetMapping.visitResultBuilders(
 				(i, resultBuilder) -> {
-					if ( resultBuilder instanceof NativeQuery.RootReturn ) {
-						final NativeQuery.RootReturn rootReturn = (NativeQuery.RootReturn) resultBuilder;
+					if ( resultBuilder instanceof NativeQuery.RootReturn rootReturn ) {
 						alias2Return.put( rootReturn.getTableAlias(), rootReturn );
 						resultBuilder.visitFetchBuilders( this::processFetchBuilder );
 					}
-					else if ( resultBuilder instanceof NativeQuery.CollectionReturn ) {
-						final NativeQuery.CollectionReturn collectionReturn = (NativeQuery.CollectionReturn) resultBuilder;
+					else if ( resultBuilder instanceof NativeQuery.CollectionReturn collectionReturn ) {
 						alias2Return.put( collectionReturn.getTableAlias(), collectionReturn );
 						Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()
 						addCollection(
@@ -119,12 +118,12 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					}
 				}
 		);
-		resultSetMapping.visitLegacyFetchBuilders(
-				fetchBuilder -> {
-					alias2Return.put( fetchBuilder.getTableAlias(), fetchBuilder );
-					alias2OwnerAlias.put( fetchBuilder.getTableAlias(), fetchBuilder.getOwnerAlias() );
-				}
-		);
+
+		// handle fetches defined using {@code hbm.xml} or NativeQuery apis
+		resultSetMapping.visitLegacyFetchBuilders( (fetchBuilder) -> {
+			alias2Return.put( fetchBuilder.getTableAlias(), (NativeQuery.ReturnableResultNode) fetchBuilder );
+			alias2OwnerAlias.put( fetchBuilder.getTableAlias(), fetchBuilder.getOwnerAlias() );
+		} );
 
 		// Now, process the returns
 		for ( NativeQuery.ResultNode queryReturn : alias2Return.values() ) {
@@ -135,11 +134,10 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private void processFetchBuilder(String attributeName, FetchBuilder fetchBuilder) {
-		if ( fetchBuilder instanceof DynamicFetchBuilderLegacy ) {
-			resultSetMapping.addLegacyFetchBuilder( (DynamicFetchBuilderLegacy) fetchBuilder );
+		if ( fetchBuilder instanceof LegacyFetchBuilder ) {
+			resultSetMapping.addLegacyFetchBuilder( (LegacyFetchBuilder) fetchBuilder );
 		}
-		else if ( fetchBuilder instanceof NativeQuery.FetchReturn ) {
-			final NativeQuery.FetchReturn fetchReturn = (NativeQuery.FetchReturn) fetchBuilder;
+		else if ( fetchBuilder instanceof NativeQuery.FetchReturn fetchReturn ) {
 			alias2Return.put( fetchReturn.getTableAlias(), fetchReturn );
 			alias2OwnerAlias.put( fetchReturn.getTableAlias(), fetchReturn.getOwnerAlias() );
 		}
@@ -155,8 +153,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		final Set<String> visited = new HashSet<>();
 		this.resultSetMapping.visitResultBuilders(
 				(i, resultBuilder) -> {
-					if ( resultBuilder instanceof NativeQuery.RootReturn ) {
-						final NativeQuery.RootReturn rootReturn = (NativeQuery.RootReturn) resultBuilder;
+					if ( resultBuilder instanceof NativeQuery.RootReturn rootReturn ) {
 						final String suffix = alias2Suffix.get( rootReturn.getTableAlias() );
 						visited.add( rootReturn.getTableAlias() );
 						if ( suffix == null ) {
@@ -172,8 +169,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 							alias2Return.put( rootReturn.getTableAlias(), resultBuilderEntity );
 						}
 					}
-					else if ( resultBuilder instanceof NativeQuery.CollectionReturn ) {
-						final NativeQuery.CollectionReturn collectionReturn = (NativeQuery.CollectionReturn) resultBuilder;
+					else if ( resultBuilder instanceof NativeQuery.CollectionReturn collectionReturn ) {
 						final String suffix = alias2CollectionSuffix.get( collectionReturn.getTableAlias() );
 						if ( suffix == null ) {
 							resultSetMapping.addResultBuilder( resultBuilder );
@@ -202,7 +198,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 	private void applyFetchBuilder(
 			ResultSetMapping resultSetMapping,
-			DynamicFetchBuilderLegacy fetchBuilder,
+			LegacyFetchBuilder fetchBuilder,
 			Set<String> visited) {
 		if ( !visited.add( fetchBuilder.getTableAlias() ) ) {
 			return;
@@ -273,7 +269,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		}
 	}
 
-	private NavigablePath determineNavigablePath(DynamicFetchBuilderLegacy fetchBuilder) {
+	private NavigablePath determineNavigablePath(LegacyFetchBuilder fetchBuilder) {
 		final NativeQuery.ResultNode ownerResult = alias2Return.get( fetchBuilder.getOwnerAlias() );
 		if ( ownerResult instanceof NativeQuery.RootReturn ) {
 			return ( (NativeQuery.RootReturn) ownerResult ).getNavigablePath()
@@ -349,8 +345,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			String propertyName,
 			String[] columnAliases,
 			Type propertyType) {
-		if ( propertyType instanceof CollectionType ) {
-			final CollectionType collectionType = (CollectionType) propertyType;
+		if ( propertyType instanceof CollectionType collectionType ) {
 			final String[] keyColumnAliases;
 			if ( collectionType.useLHSPrimaryKey() ) {
 				keyColumnAliases = identifierAliases;
@@ -363,7 +358,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			}
 			resultBuilderEntity.addProperty( propertyName, keyColumnAliases );
 		}
-		else if ( propertyType instanceof ComponentType ) {
+		else if ( propertyType instanceof ComponentType componentType ) {
 			final Map<String, FetchBuilder> fetchBuilderMap = new HashMap<>();
 			final DynamicFetchBuilderLegacy fetchBuilder = new DynamicFetchBuilderLegacy(
 					"",
@@ -372,7 +367,6 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					null,
 					fetchBuilderMap
 			);
-			final ComponentType componentType = (ComponentType) propertyType;
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] propertyTypes = componentType.getSubtypes();
 			int aliasIndex = 0;
@@ -574,8 +568,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			addCollection( role, alias, propertyResultsMap );
 //			collectionOwnerAliases.add( ownerAlias );
 		}
-		else if ( returnType instanceof EntityType ) {
-			EntityType eType = ( EntityType ) returnType;
+		else if ( returnType instanceof EntityType eType ) {
 			String returnEntityName = eType.getAssociatedEntityName();
 			EntityPersister persister = getSQLLoadable( returnEntityName );
 			Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()

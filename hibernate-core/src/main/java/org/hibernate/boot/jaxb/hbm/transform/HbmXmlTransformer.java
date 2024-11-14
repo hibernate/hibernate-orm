@@ -231,12 +231,7 @@ public class HbmXmlTransformer {
 		final List<Binding<JaxbEntityMappingsImpl>> transformations = XmlPreprocessor.preprocessHbmXml( hbmXmlBindings, transformationState );
 
 		// build and perform a pass over the boot model building the rest of the transformation-state
-		BootModelPreprocessor.preprocessBooModel(
-				hbmXmlBindings,
-				bootModel,
-				serviceRegistry,
-				transformationState
-		);
+		BootModelPreprocessor.preprocessBooModel( bootModel, transformationState );
 
 		// now we are ready to fully build the mapping.xml transformations
 		for ( int i = 0; i < hbmXmlBindings.size(); i++ ) {
@@ -244,9 +239,7 @@ public class HbmXmlTransformer {
 					hbmXmlBindings.get( i ),
 					transformations.get( i ),
 					transformationState,
-					bootModel,
-					unsupportedFeatureHandling,
-					serviceRegistry
+					unsupportedFeatureHandling
 			);
 
 			hbmXmlTransformer.performTransformation();
@@ -260,10 +253,8 @@ public class HbmXmlTransformer {
 	private final Binding<JaxbEntityMappingsImpl> mappingXmlBinding;
 
 	private final TransformationState transformationState;
-	private final MetadataImplementor bootModel;
 
 	private final UnsupportedFeatureHandling unsupportedFeatureHandling;
-	private final ServiceRegistry serviceRegistry;
 
 	// todo (7.0) : use transformation-state instead
 	private final Map<String,JaxbEmbeddableImpl> jaxbEmbeddableByClassName = new HashMap<>();
@@ -274,15 +265,11 @@ public class HbmXmlTransformer {
 			Binding<JaxbHbmHibernateMapping> hbmXmlBinding,
 			Binding<JaxbEntityMappingsImpl> mappingXmlBinding,
 			TransformationState transformationState,
-			MetadataImplementor bootModel,
-			UnsupportedFeatureHandling unsupportedFeatureHandling,
-			ServiceRegistry serviceRegistry) {
+			UnsupportedFeatureHandling unsupportedFeatureHandling) {
 		this.hbmXmlBinding = hbmXmlBinding;
 		this.mappingXmlBinding = mappingXmlBinding;
 		this.transformationState = transformationState;
-		this.bootModel = bootModel;
 		this.unsupportedFeatureHandling = unsupportedFeatureHandling;
-		this.serviceRegistry = serviceRegistry;
 	}
 
 

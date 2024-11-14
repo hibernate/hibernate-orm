@@ -15,6 +15,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
@@ -250,6 +252,11 @@ public class SybaseASEDialect extends SybaseDialect {
 				return new SybaseASESqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SybaseASEAggregateSupport.valueOf( this );
 	}
 
 	/**

@@ -168,7 +168,6 @@ public class XmlHelper {
 			case SqlTypes.DOUBLE:
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
-			case SqlTypes.UUID:
 				return jdbcJavaType.fromEncodedString(
 						string,
 						start,
@@ -224,6 +223,13 @@ public class XmlHelper {
 								string,
 								start,
 								end
+						),
+						options
+				);
+			case SqlTypes.UUID:
+				return jdbcJavaType.wrap(
+						PrimitiveByteArrayJavaType.INSTANCE.fromString(
+								string.substring( start, end ).replace( "-", "" )
 						),
 						options
 				);

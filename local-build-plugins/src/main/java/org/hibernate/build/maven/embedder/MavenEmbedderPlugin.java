@@ -48,15 +48,6 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 
 		final Provider<RegularFile> mavenPluginPom = project.getLayout().getBuildDirectory().file( "publications/publishedArtifacts/pom-default.xml" );
 
-		final TaskProvider<Copy> copyPomTask = project.getTasks().register( "copyPluginPom", Copy.class, (task) -> {
-			task.setGroup( "maven embedder" );
-			task.usesService( embedderServiceProvider );
-			task.from( mavenPluginPom.get().getAsFile() );
-			task.setDestinationDir( workingDirectory.get().getAsFile());
-			task.rename( "pom-default.xml", "pom.xml" );
-			task.dependsOn( "generatePomFileForPublishedArtifactsPublication" );
-		} );
-
 		final Project hibernateCoreProject = project.getRootProject().project( "hibernate-core" );
 		final DirectoryProperty hibernateCoreBuildDirectory = hibernateCoreProject.getLayout().getBuildDirectory();
 		final Provider<Directory> hibernateCoreLibsFolder  = hibernateCoreBuildDirectory.dir("libs");
@@ -82,21 +73,6 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.artifactId = "hibernate-scan-jandex";
 			task.getArtifact().set( new File(hibernateScanJandexLibsFolder.get().getAsFile(), artifactName ));
 			task.dependsOn( ":hibernate-scan-jandex:jar" );
-		} );
-
-		final TaskProvider<Copy> copySourcesTask = project.getTasks().register( "copySources", Copy.class, (task) -> {
-			task.setGroup( "maven embedder" );
-			task.usesService( embedderServiceProvider );
-			task.from( new File(project.getProjectDir(), "src").toPath() );
-			task.setDestinationDir( new File(workingDirectory.get().getAsFile(), "src"));
-			task.dependsOn( copyPomTask );
-		} );
-
-		final TaskProvider<Copy> copyClassesTask = project.getTasks().register( "copyClasses", Copy.class, (task) -> {
-			task.setGroup( "maven embedder" );
-			task.from(new File(project.getProjectDir(), "target/classes/java/main").toPath());
-			task.setDestinationDir( new File(workingDirectory.get().getAsFile(), "target/classes"));
-			task.dependsOn( "compileJava" );
 		} );
 
 		// Via the plugin's POM, we tell Maven to generate the descriptors into
@@ -125,7 +101,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 
 			// the hibernate-core jar needs to be present in the local repository
 			// we need compilation to happen before we generate the descriptors
-			task.dependsOn( copySourcesTask, copyClassesTask);
+			task.dependsOn( "prepareWorkspace", "installHibernateCore", "installHibernateScanJandex");
 		} );
 
 		final TaskProvider<MavenInstallArtifactTask> installHibernateMavenPluginTask = project.getTasks().register( "installHibernateMavenPlugin", MavenInstallArtifactTask.class, (task) -> {
@@ -149,8 +125,6 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 
 		} );
 
-		// compilation can only happen when hibernate core is available in the local repo
-		project.getTasks().named("compileJava", (compileTask -> compileTask.dependsOn( installHibernateCoreTask, installHibernateScanJandexTask )));
 		// we need the descriptor generation to happen before we jar
 		project.getTasks().named( "jar", (jarTask) -> jarTask.dependsOn( generatePluginDescriptorTask ) );
 		project.getTasks().named( "check" , (checkTask) -> checkTask.dependsOn( integrationTestTask, generatePluginDescriptorTask ) );

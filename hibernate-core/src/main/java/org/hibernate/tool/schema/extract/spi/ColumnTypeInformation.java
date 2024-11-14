@@ -45,7 +45,7 @@ public interface ColumnTypeInformation {
 	};
 
 	/**
-	 * Is the column nullable.
+	 * Is the column nullable?
 	 * <p>
 	 * The database is allowed to report unknown, hence the use of {@link Boolean}.
 	 *
@@ -65,9 +65,9 @@ public interface ColumnTypeInformation {
 	 *
 	 * @return Type name
 	 */
-	public String getTypeName();
+	String getTypeName();
 
-	// todo : wrap these in org.hibernate.metamodel.spi.relational.Size ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo : wrap these in org.hibernate.metamodel.spi.relational.Size
 
 	/**
 	 * The column size (length).

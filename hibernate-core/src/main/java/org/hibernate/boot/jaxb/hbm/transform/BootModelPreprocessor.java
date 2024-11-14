@@ -5,13 +5,10 @@
 package org.hibernate.boot.jaxb.hbm.transform;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -21,7 +18,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Steve Ebersole
@@ -29,25 +25,20 @@ import org.hibernate.service.ServiceRegistry;
 public class BootModelPreprocessor {
 	private static final Map<String,String> entityByNameMap = new HashMap<>();
 
-	static void preprocessBooModel(
-			List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings,
-			MetadataImplementor bootModel,
-			ServiceRegistry serviceRegistry,
-			TransformationState transformationState) {
+	static void preprocessBooModel(MetadataImplementor bootModel, TransformationState transformationState) {
 		entityByNameMap.clear();
 
 		bootModel.getEntityBindings().forEach( (persistentClass) -> {
 			final Table table = TransformationHelper.determineEntityTable( persistentClass );
 			final EntityTypeInfo entityTypeInfo = new EntityTypeInfo( table, persistentClass );
 			transformationState.getEntityInfoByName().put( persistentClass.getEntityName(), entityTypeInfo );
-			buildPersistentClassPropertyInfos( persistentClass, entityTypeInfo, bootModel, transformationState );
+			buildPersistentClassPropertyInfos( persistentClass, entityTypeInfo, transformationState );
 		} );
 	}
 
 	private static void buildPersistentClassPropertyInfos(
 			PersistentClass persistentClass,
 			EntityTypeInfo entityTypeInfo,
-			MetadataImplementor bootModel,
 			TransformationState transformationState) {
 		if ( persistentClass.getClassName() != null ) {
 			final String previous = entityByNameMap.put( persistentClass.getClassName(), persistentClass.getEntityName() );

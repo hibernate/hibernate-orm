@@ -53,8 +53,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( ResultSet resultSet =
-					  getJdbcDatabaseMetaData()
-							  .getSchemas( catalog, schemaPattern ) ) {
+					getJdbcDatabaseMetaData()
+							.getSchemas( catalog, schemaPattern ) ) {
 			return processor.process( resultSet );
 		}
 	}
@@ -68,8 +68,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( ResultSet resultSet =
-					  getJdbcDatabaseMetaData()
-							  .getTables( catalog, schemaPattern, tableNamePattern, types) ) {
+					getJdbcDatabaseMetaData()
+							.getTables( catalog, schemaPattern, tableNamePattern, types) ) {
 			return processor.process( resultSet );
 		}
 	}
@@ -83,8 +83,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( ResultSet resultSet =
-					 getJdbcDatabaseMetaData()
-							 .getColumns( catalog, schemaPattern, tableNamePattern, columnNamePattern ) ) {
+					getJdbcDatabaseMetaData()
+							.getColumns( catalog, schemaPattern, tableNamePattern, columnNamePattern ) ) {
 			return processor.process( resultSet );
 		}
 	}
@@ -97,8 +97,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( ResultSet resultSet =
-					 getJdbcDatabaseMetaData()
-							 .getPrimaryKeys( catalogFilter, schemaFilter, tableName.getText() ) ) {
+					getJdbcDatabaseMetaData()
+							.getPrimaryKeys( catalogFilter, schemaFilter, tableName.getText() ) ) {
 			return processor.process( resultSet );
 		}
 	}
@@ -113,8 +113,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( ResultSet resultSet =
-					  getJdbcDatabaseMetaData()
-							  .getIndexInfo( catalog, schema, table, unique, approximate ) ) {
+					getJdbcDatabaseMetaData()
+							.getIndexInfo( catalog, schema, table, unique, approximate ) ) {
 			return processor.process( resultSet );
 		}
 	}
@@ -127,8 +127,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( ResultSet resultSet =
-					  getJdbcDatabaseMetaData()
-							  .getImportedKeys( catalog, schema, table ) ) {
+					getJdbcDatabaseMetaData()
+							.getImportedKeys( catalog, schema, table ) ) {
 			return processor.process( resultSet );
 		}
 	}
@@ -144,9 +144,9 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			ExtractionContext.ResultSetProcessor<T> processor)
 					throws SQLException {
 		try ( ResultSet resultSet =
-					 getJdbcDatabaseMetaData()
-							 .getCrossReference( parentCatalog, parentSchema, parentTable,
-									 foreignCatalog, foreignSchema, foreignTable) ) {
+					getJdbcDatabaseMetaData()
+							.getCrossReference( parentCatalog, parentSchema, parentTable,
+									foreignCatalog, foreignSchema, foreignTable) ) {
 			return processor.process( resultSet );
 		}
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -28,6 +29,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 		super( extractionContext );
 	}
 
+	private DatabaseMetaData getJdbcDatabaseMetaData() {
+		return getExtractionContext().getJdbcDatabaseMetaData();
+	}
+
 	@Override
 	protected String getResultSetTableTypesPhysicalTableConstant() {
 		return "TABLE";
@@ -35,7 +40,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 	@Override
 	public <T> T processCatalogsResultSet(ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
-		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getCatalogs() ) {
+		try (ResultSet resultSet = getJdbcDatabaseMetaData().getCatalogs() ) {
 			return processor.process( resultSet );
 		}
 	}
@@ -45,7 +50,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			String catalog,
 			String schemaPattern,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
-		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getSchemas(
+		try (ResultSet resultSet = getJdbcDatabaseMetaData().getSchemas(
 				catalog,
 				schemaPattern ) ) {
 			return processor.process( resultSet );
@@ -60,7 +65,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			String[] types,
 			ExtractionContext.ResultSetProcessor<T> processor
 	) throws SQLException {
-		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getTables(
+		try (ResultSet resultSet = getJdbcDatabaseMetaData().getTables(
 				catalog,
 				schemaPattern,
 				tableNamePattern,
@@ -76,7 +81,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			String tableNamePattern,
 			String columnNamePattern,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
-		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getColumns(
+		try (ResultSet resultSet = getJdbcDatabaseMetaData().getColumns(
 				catalog,
 				schemaPattern,
 				tableNamePattern,
@@ -91,7 +96,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			String schemaFilter,
 			Identifier tableName,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
-		try( ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getPrimaryKeys(
+		try( ResultSet resultSet = getJdbcDatabaseMetaData().getPrimaryKeys(
 				catalogFilter,
 				schemaFilter,
 				tableName.getText() ) ) {
@@ -108,7 +113,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			boolean approximate,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
 
-		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getIndexInfo(
+		try (ResultSet resultSet = getJdbcDatabaseMetaData().getIndexInfo(
 				catalog,
 				schema,
 				table,
@@ -124,7 +129,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			String schema,
 			String table,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
-		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getImportedKeys(
+		try (ResultSet resultSet = getJdbcDatabaseMetaData().getImportedKeys(
 				catalog,
 				schema,
 				table ) ) {
@@ -141,7 +146,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 			String foreignSchema,
 			String foreignTable,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
-		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getCrossReference(
+		try (ResultSet resultSet = getJdbcDatabaseMetaData().getCrossReference(
 				parentCatalog,
 				parentSchema,
 				parentTable,
@@ -153,9 +158,9 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 	}
 
 	protected void addColumns(TableInformation tableInformation) {
-		final Dialect dialect = getExtractionContext().getJdbcEnvironment().getDialect();
-
+		final Dialect dialect = getJdbcEnvironment().getDialect();
 		final ExtractionContext extractionContext = getExtractionContext();
+
 		// We use this dummy query to retrieve the table information through the ResultSetMetaData
 		// This is significantly better than to use the DatabaseMetaData especially on Oracle with synonyms enabled
 		final String tableName = extractionContext.getSqlStringGenerationContext().format(

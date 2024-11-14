@@ -6,7 +6,6 @@ package org.hibernate.tool.schema.extract.internal;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +41,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 import static java.util.Collections.addAll;
 import static org.hibernate.boot.model.naming.DatabaseIdentifier.toIdentifier;
+import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.splitTrimmingTokens;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
@@ -85,31 +85,37 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						""
 				)
 		);
+		final Dialect dialect = extractionContext.getJdbcEnvironment().getDialect();
+		this.extraPhysicalTableTypes = getPhysicalTableTypes( extraPhysicalTableTypesConfig, dialect );
+		this.tableTypes = getTableTypes( configService, dialect );
+	}
+
+	private String[] getPhysicalTableTypes(String extraPhysicalTableTypesConfig, Dialect dialect) {
 		final List<String> physicalTableTypesList = new ArrayList<>();
 		if ( !isBlank( extraPhysicalTableTypesConfig ) ) {
 			addAll( physicalTableTypesList, splitTrimmingTokens( ",;", extraPhysicalTableTypesConfig, false ) );
 		}
-		final Dialect dialect = extractionContext.getJdbcEnvironment().getDialect();
 		dialect.augmentPhysicalTableTypes( physicalTableTypesList );
-		this.extraPhysicalTableTypes = physicalTableTypesList.toArray( new String[0] );
+		return physicalTableTypesList.toArray( EMPTY_STRINGS );
+	}
 
+	private String[] getTableTypes(ConfigurationService configService, Dialect dialect) {
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
 		tableTypesList.add( "VIEW" );
 		if ( getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings() ) ) {
-			if ( dialect instanceof DB2Dialect ) {
+			if ( dialect instanceof DB2Dialect ) { //TODO: should not use Dialect types directly!
 				tableTypesList.add( "ALIAS" );
 			}
 			tableTypesList.add( "SYNONYM" );
 		}
 		addAll( tableTypesList, extraPhysicalTableTypes );
 		dialect.augmentRecognizedTableTypes( tableTypesList );
-
-		this.tableTypes = tableTypesList.toArray( new String[0] );
+		return tableTypesList.toArray( EMPTY_STRINGS );
 	}
 
-	protected IdentifierHelper identifierHelper() {
-		return getIdentifierHelper();
+	private IdentifierHelper getIdentifierHelper() {
+		return getJdbcEnvironment().getIdentifierHelper();
 	}
 
 	protected JDBCException convertSQLException(SQLException sqlException, String message) {
@@ -272,13 +278,17 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	protected abstract <T> T processSchemaResultSet(
 			String catalog,
 			String schemaPattern,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	@Override
 	public boolean schemaExists(Identifier catalog, Identifier schema) {
-		final String catalogFilter = determineCatalogFilter( catalog );
-		final String schemaFilter = determineSchemaFilter( schema );
-
+		final String catalogFilter =
+				getIdentifierHelper()
+						.toMetaDataCatalogName( catalog == null ? extractionContext.getDefaultCatalog() : catalog );
+		final String schemaFilter =
+				getIdentifierHelper()
+						.toMetaDataSchemaName( schema == null ? extractionContext.getDefaultSchema() : schema );
 		try {
 			return processSchemaResultSet(
 					catalogFilter,
@@ -308,32 +318,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	private IdentifierHelper getIdentifierHelper() {
-		return getJdbcEnvironment().getIdentifierHelper();
-	}
-
-	protected String determineCatalogFilter(Identifier catalog) {
-		Identifier identifierToUse = catalog;
-		if ( identifierToUse == null ) {
-			identifierToUse = extractionContext.getDefaultCatalog();
-		}
-
-		return getIdentifierHelper().toMetaDataCatalogName( identifierToUse );
-	}
-
-	protected String determineSchemaFilter(Identifier schema) {
-		Identifier identifierToUse = schema;
-		if ( identifierToUse == null ) {
-			identifierToUse = extractionContext.getDefaultSchema();
-		}
-
-		return getIdentifierHelper().toMetaDataSchemaName( identifierToUse );
-	}
-
 	private TableInformation extractTableInformation(ResultSet resultSet) throws SQLException {
 		return new TableInformationImpl(
 				this,
-				identifierHelper(),
+				getIdentifierHelper(),
 				extractTableName( resultSet ),
 				isPhysicalTableType( resultSet.getString( getResultSetTableTypeLabel() ) ),
 				resultSet.getString( getResultSetRemarksLabel() )
@@ -616,7 +604,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String schemaPattern,
 			String tableNamePattern,
 			String columnNamePattern,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	private void populateTablesWithColumns(
 			String catalogFilter,
@@ -637,7 +626,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 								currentTable = tables.getTableInformation( currentTableName );
 							}
 							if ( currentTable != null ) {
-								addExtractedColumnInformation( currentTable, resultSet );
+								currentTable.addColumn( columnInformation( currentTable, resultSet ) );
 							}
 						}
 						return null;
@@ -649,9 +638,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	protected void addExtractedColumnInformation(TableInformation tableInformation, ResultSet resultSet)
+	private ColumnInformationImpl columnInformation(TableInformation tableInformation, ResultSet resultSet)
 			throws SQLException {
-		final ColumnInformation columnInformation = new ColumnInformationImpl(
+		return new ColumnInformationImpl(
 				tableInformation,
 				toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) ),
 				resultSet.getInt( getResultSetSqlTypeCodeLabel() ),
@@ -660,14 +649,13 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 				resultSet.getInt( getResultSetDecimalDigitsLabel() ),
 				interpretTruthValue( resultSet.getString( getResultSetIsNullableLabel() ) )
 		);
-		tableInformation.addColumn( columnInformation );
 	}
 
-	private NameSpaceTablesInformation extractNameSpaceTablesInformation(ResultSet resultSet) throws SQLException {
-		final NameSpaceTablesInformation tables = new NameSpaceTablesInformation( identifierHelper() );
+	private NameSpaceTablesInformation extractNameSpaceTablesInformation(ResultSet resultSet)
+			throws SQLException {
+		final NameSpaceTablesInformation tables = new NameSpaceTablesInformation( getIdentifierHelper() );
 		while ( resultSet.next() ) {
-			final TableInformation tableInformation = extractTableInformation( resultSet );
-			tables.addTableInformation( tableInformation );
+			tables.addTableInformation( extractTableInformation( resultSet ) );
 		}
 		return tables;
 	}
@@ -721,8 +709,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String schemaPattern,
 			String tableNamePattern,
 			String[] types,
-			ExtractionContext.ResultSetProcessor<T> processor
-	) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	private TableInformation locateTableInNamespace(
 			Identifier catalog,
@@ -735,6 +723,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final String schemaFilter;
 
 		final NameQualifierSupport nameQualifierSupport = getNameQualifierSupport();
+
 		if ( nameQualifierSupport.supportsCatalogs() ) {
 			if ( catalog == null ) {
 				String defaultCatalog;
@@ -780,12 +769,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					schemaFilter,
 					tableNameFilter,
 					tableTypes,
-					resultSet -> extractTableInformation(
-							catalogToUse,
-							schemaToUse,
-							tableName,
-							resultSet
-					)
+					resultSet -> extractTableInformation( catalogToUse, schemaToUse, tableName, resultSet )
 			);
 
 		}
@@ -802,15 +786,16 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			Identifier catalog,
 			Identifier schema,
 			Identifier tableName,
-			ResultSet resultSet) throws SQLException {
+			ResultSet resultSet)
+					throws SQLException {
 
 		boolean found = false;
 		TableInformation tableInformation = null;
 		while ( resultSet.next() ) {
-			if ( tableName.equals( Identifier.toIdentifier(
-					resultSet.getString( getResultSetTableNameLabel() ),
-					tableName.isQuoted()
-			) ) ) {
+			final Identifier identifier =
+					toIdentifier( resultSet.getString( getResultSetTableNameLabel() ),
+							tableName.isQuoted() );
+			if ( tableName.equals( identifier ) ) {
 				if ( found ) {
 					LOG.multipleTablesFound( tableName.render() );
 					throw new SchemaExtractionException(
@@ -867,7 +852,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					"%",
 					resultSet -> {
 						while ( resultSet.next() ) {
-							addExtractedColumnInformation( tableInformation, resultSet );
+							tableInformation.addColumn( columnInformation( tableInformation, resultSet ) );
 						}
 						return null;
 					}
@@ -877,14 +862,6 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		catch (SQLException e) {
 			throw convertSQLException( e, "Error accessing tables metadata" );
 		}
-	}
-
-	protected Boolean interpretNullable(int nullable) {
-		return switch ( nullable ) {
-			case ResultSetMetaData.columnNullable -> Boolean.TRUE;
-			case ResultSetMetaData.columnNoNulls -> Boolean.FALSE;
-			default -> null;
-		};
 	}
 
 	private Boolean interpretTruthValue(String nullable) {
@@ -904,7 +881,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String catalogFilter,
 			String schemaFilter,
 			Identifier tableName,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	@Override
 	public PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation) {
@@ -926,10 +904,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	private PrimaryKeyInformation extractPrimaryKeyInformation(
-			TableInformation tableInformation,
-			ResultSet resultSet
-	) throws SQLException {
+	private PrimaryKeyInformation extractPrimaryKeyInformation(TableInformation tableInformation, ResultSet resultSet)
+			throws SQLException {
 
 		final List<ColumnInformation> pkColumns = new ArrayList<>();
 		boolean firstPass = true;
@@ -937,19 +913,16 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 		while ( resultSet.next() ) {
 			final String currentPkName = resultSet.getString( getResultSetPrimaryKeyNameLabel() );
-			final Identifier currentPkIdentifier = currentPkName == null ? null : toIdentifier( currentPkName );
+			final Identifier currentPkIdentifier =
+					currentPkName == null ? null : toIdentifier( currentPkName );
 			if ( firstPass ) {
 				pkIdentifier = currentPkIdentifier;
 				firstPass = false;
 			}
 			else {
 				if ( !Objects.equals( pkIdentifier, currentPkIdentifier ) ) {
-					throw new SchemaExtractionException(
-							String.format(
-									"Encountered primary keys differing name on table %s",
-									tableInformation.getName().toString()
-							)
-					);
+					throw new SchemaExtractionException( "Encountered primary keys differing name on table "
+							+ tableInformation.getName().toString() );
 				}
 			}
 
@@ -1054,7 +1027,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String table,
 			boolean unique,
 			boolean approximate,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	@Override
 	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation) {
@@ -1186,8 +1160,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String catalog,
 			String schema,
 			String table,
-			ExtractionContext.ResultSetProcessor<T> processor
-	) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	/**
 	 * Must do the following:
@@ -1271,8 +1245,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String foreignCatalog,
 			String foreignSchema,
 			String foreignTable,
-			ExtractionContext.ResultSetProcessor<T> processor
-	) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 
 	@Override
@@ -1322,8 +1296,11 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		return fks;
 	}
 
-	private void process(TableInformation tableInformation, ResultSet resultSet, Map<Identifier, ForeignKeyBuilder> fkBuilders)
-			throws SQLException {
+	private void process(
+			TableInformation tableInformation,
+			ResultSet resultSet,
+			Map<Identifier, ForeignKeyBuilder> fkBuilders)
+					throws SQLException {
 		while ( resultSet.next() ) {
 			// IMPL NOTE : The builder is mainly used to collect the column reference mappings
 			final Identifier fkIdentifier = toIdentifier( resultSet.getString( getResultSetForeignKeyLabel() ) );

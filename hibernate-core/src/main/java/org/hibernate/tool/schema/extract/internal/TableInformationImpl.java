@@ -35,7 +35,7 @@ public class TableInformationImpl implements TableInformation {
 	private PrimaryKeyInformation primaryKey;
 	private Map<Identifier, ForeignKeyInformation> foreignKeys;
 	private Map<Identifier, IndexInformation> indexes;
-	private Map<Identifier, ColumnInformation> columns = new HashMap<>(  );
+	private final Map<Identifier, ColumnInformation> columns = new HashMap<>();
 
 	private boolean wasPrimaryKeyLoaded = false; // to avoid multiple db reads since primary key can be null.
 

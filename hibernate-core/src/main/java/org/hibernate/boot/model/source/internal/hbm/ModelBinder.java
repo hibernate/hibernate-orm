@@ -22,9 +22,8 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
-import org.hibernate.boot.model.Caching;
+import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.internal.FkSecondPass;
 import org.hibernate.boot.model.internal.SimpleToOneFkSecondPass;
@@ -278,7 +277,7 @@ public class ModelBinder {
 		);
 
 		if ( hierarchySource.getNaturalIdCaching() != null ) {
-			if ( hierarchySource.getNaturalIdCaching().getRequested() == TruthValue.TRUE ) {
+			if ( hierarchySource.getNaturalIdCaching().isRequested() ) {
 				rootEntityDescriptor.setNaturalIdCacheRegionName( hierarchySource.getNaturalIdCaching().getRegion() );
 			}
 		}
@@ -303,7 +302,7 @@ public class ModelBinder {
 		return switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
 			case UNSPECIFIED, ENABLE_SELECTIVE ->
 				// this is default behavior for hbm.xml
-					caching != null && caching.getRequested().toBoolean(false);
+					caching != null && caching.isRequested(false);
 			case NONE ->
 				// this option is actually really useful
 					false;
@@ -314,7 +313,7 @@ public class ModelBinder {
 			case DISABLE_SELECTIVE ->
 				// makes no sense for hbm.xml, and also goes against our
 				// ideology, and so it hurts me to support it here
-					caching == null || caching.getRequested().toBoolean(true);
+					caching == null || caching.isRequested(true);
 		};
 	}
 

@@ -26,43 +26,4 @@ public interface ColumnInformation extends ColumnTypeInformation {
 	 * @return The column simple identifier.
 	 */
 	Identifier getColumnIdentifier();
-
-	/**
-	 * Is the column nullable.
-	 * <p>
-	 * The database is allowed to report unknown, hence the use of {@link Boolean}.
-	 *
-	 * @return nullability, if known
-	 */
-	Boolean getNullable();
-
-	/**
-	 * The JDBC type-code.
-	 *
-	 * @return JDBC type-code
-	 */
-	int getTypeCode();
-
-	/**
-	 * The database specific type name.
-	 *
-	 * @return Type name
-	 */
-	String getTypeName();
-
-	// todo : wrap these in org.hibernate.metamodel.spi.relational.Size ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * The column size (length).
-	 *
-	 * @return The column length
-	 */
-	int getColumnSize();
-
-	/**
-	 * The precision, for numeric types
-	 *
-	 * @return The numeric precision
-	 */
-	int getDecimalDigits();
 }

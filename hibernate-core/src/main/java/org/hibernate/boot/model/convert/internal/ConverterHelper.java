@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;

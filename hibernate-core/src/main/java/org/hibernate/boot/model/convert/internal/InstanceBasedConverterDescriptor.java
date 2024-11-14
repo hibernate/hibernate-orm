@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;

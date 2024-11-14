@@ -2,14 +2,18 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.internal;
+package org.hibernate.boot.spi;
 
 import com.fasterxml.classmate.MemberResolver;
 import com.fasterxml.classmate.TypeResolver;
+import org.hibernate.Incubating;
 
 /**
+ * Exposes the Classmate {@link TypeResolver} and {@link MemberResolver}.
+ *
  * @author Steve Ebersole
  */
+@Incubating
 public class ClassmateContext {
 	private TypeResolver typeResolver = new TypeResolver();
 	private MemberResolver memberResolver = new MemberResolver( typeResolver );

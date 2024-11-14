@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorStandardImpl;
 import org.hibernate.boot.model.convert.internal.ConverterHelper;

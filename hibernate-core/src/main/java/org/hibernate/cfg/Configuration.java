@@ -26,7 +26,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;

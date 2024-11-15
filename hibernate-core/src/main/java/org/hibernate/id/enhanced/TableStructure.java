@@ -111,6 +111,13 @@ public class TableStructure implements DatabaseStructure {
 		return physicalTableName;
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public Identifier getLogicalValueColumnNameIdentifier() {
+		return logicalValueColumnNameIdentifier;
+	}
+
 	@Override
 	public int getInitialValue() {
 		return initialValue;

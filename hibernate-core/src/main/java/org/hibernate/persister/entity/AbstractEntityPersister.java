@@ -469,11 +469,38 @@ public abstract class AbstractEntityPersister
 	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
 	private ConcurrentHashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
 
+	/**
+	 * A factory for the creation of an EntityMetamodel.
+	 * <p>
+	 * Hibernate Reactive uses it to pass its own entity metamodel class
+	 * and adapt the identifier generators.
+	 */
+	public static class EntityMetamodelFactory {
+		public EntityMetamodel createEntityMetamodel(
+				PersistentClass persistentClass,
+				EntityPersister persister,
+				RuntimeModelCreationContext creationContext) {
+			return new EntityMetamodel( persistentClass, persister, creationContext );
+		}
+	}
+
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, new EntityMetamodelFactory() );
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public AbstractEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext,
+			final EntityMetamodelFactory entityMetamodelFactory) throws HibernateException {
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 
 		//set it here, but don't call it, since it's still uninitialized!
@@ -500,7 +527,7 @@ public abstract class AbstractEntityPersister
 			isLazyPropertiesCacheable = true;
 		}
 
-		entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
+		entityMetamodel = entityMetamodelFactory.createEntityMetamodel( persistentClass, this, creationContext );
 
 		entityEntryFactory = entityMetamodel.isMutable()
 				? MutableEntityEntryFactory.INSTANCE

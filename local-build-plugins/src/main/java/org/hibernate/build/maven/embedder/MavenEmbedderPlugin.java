@@ -104,6 +104,14 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.dependsOn( "prepareWorkspace", "installHibernateCore", "installHibernateScanJandex");
 		} );
 
+		final TaskProvider<MavenWrapperTask> createMavenWrapperTask = project.getTasks().register( "createMavenWrapper", MavenWrapperTask.class, (task) -> {
+			task.setGroup("maven embedder");
+			task.getMavenEmbedderService().set( embedderServiceProvider );
+			task.usesService( embedderServiceProvider );
+			task.getIntegrationTestSourcesFolder().set( workingDirectory.get().dir( "src/it/enhance" ) );
+			task.dependsOn( "prepareWorkspace" );
+		} );
+
 		final TaskProvider<MavenInstallArtifactTask> installHibernateMavenPluginTask = project.getTasks().register( "installHibernateMavenPlugin", MavenInstallArtifactTask.class, (task) -> {
 			task.setGroup( "maven embedder" );
 			task.getMavenEmbedderService().set( embedderServiceProvider );
@@ -121,7 +129,7 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 			task.getMavenEmbedderService().set( embedderServiceProvider );
 			task.usesService( embedderServiceProvider );
 
-			task.dependsOn("installHibernateMavenPlugin");
+			task.dependsOn("createMavenWrapper", "installHibernateMavenPlugin");
 
 		} );
 

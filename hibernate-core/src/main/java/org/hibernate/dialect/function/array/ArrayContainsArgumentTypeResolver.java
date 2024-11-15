@@ -47,10 +47,15 @@ public class ArrayContainsArgumentTypeResolver implements FunctionArgumentTypeRe
 			}
 		}
 		else if ( argumentIndex == 1 ) {
+			final SqmTypedNode<?> nodeToResolve = function.getArguments().get( 1 );
+			if ( nodeToResolve.getExpressible() instanceof MappingModelExpressible<?> ) {
+				// If the node already has suitable type, don't infer it to be treated as an array
+				return null;
+			}
 			final SqmTypedNode<?> node = function.getArguments().get( 0 );
 			if ( node instanceof SqmExpression<?> ) {
 				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
-				if ( expressible != null ) {
+				if ( expressible instanceof BasicPluralType<?, ?> ) {
 					return expressible;
 				}
 			}

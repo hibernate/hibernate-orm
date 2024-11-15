@@ -224,7 +224,6 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				domainResult = resultBuilder.buildResult(
 						jdbcResultsMetadata,
 						domainResults.size(),
-						creationState.getLegacyFetchResolver()::resolve,
 						creationState
 				);
 			}

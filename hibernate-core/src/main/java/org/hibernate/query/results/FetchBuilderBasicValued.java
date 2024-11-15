@@ -4,10 +4,7 @@
  */
 package org.hibernate.query.results;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
@@ -24,6 +21,5 @@ public interface FetchBuilderBasicValued extends FetchBuilder {
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 }

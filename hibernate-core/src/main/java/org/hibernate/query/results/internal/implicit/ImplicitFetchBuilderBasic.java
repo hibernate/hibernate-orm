@@ -4,18 +4,13 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
-import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -23,6 +18,9 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -61,14 +59,12 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		if ( fetchBuilder != null ) {
 			return (BasicFetch<?>) fetchBuilder.buildFetch(
 					parent,
 					fetchPath,
 					jdbcResultsMetadata,
-					legacyFetchResolver,
 					domainResultCreationState
 			);
 		}

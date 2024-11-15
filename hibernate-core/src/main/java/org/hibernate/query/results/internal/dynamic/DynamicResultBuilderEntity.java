@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
@@ -19,6 +17,5 @@ public interface DynamicResultBuilderEntity extends DynamicResultBuilder, Result
 	EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 }

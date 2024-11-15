@@ -4,20 +4,18 @@
  */
 package org.hibernate.query.results.internal.complete;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-
-import org.hibernate.query.sqm.DynamicInstantiationNature;
-import org.hibernate.query.results.ResultBuilderInstantiationValued;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.ResultBuilderInstantiationValued;
+import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.instantiation.internal.ArgumentDomainResult;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiationResultImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ResultBuilder for dynamic instantiation results ({@link jakarta.persistence.ConstructorResult}
@@ -51,7 +49,6 @@ public class CompleteResultBuilderInstantiation
 	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final List<ArgumentDomainResult<?>> argumentDomainResults = new ArrayList<>( argumentResultBuilders.size() );
 
@@ -62,7 +59,6 @@ public class CompleteResultBuilderInstantiation
 					argumentResultBuilder.buildResult(
 							jdbcResultsMetadata,
 							i,
-							legacyFetchResolver,
 							domainResultCreationState
 					)
 			);

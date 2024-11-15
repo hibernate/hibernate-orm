@@ -4,29 +4,27 @@
  */
 package org.hibernate.query.results.internal.complete;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.BiFunction;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.FetchBuilderBasicValued;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.MissingSqlSelectionException;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
@@ -74,7 +72,6 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 

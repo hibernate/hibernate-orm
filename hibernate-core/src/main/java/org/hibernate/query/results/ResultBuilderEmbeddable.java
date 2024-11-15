@@ -4,9 +4,6 @@
  */
 package org.hibernate.query.results;
 
-import java.util.function.BiFunction;
-
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -21,6 +18,5 @@ public interface ResultBuilderEmbeddable extends ResultBuilder {
 	EmbeddableResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 }

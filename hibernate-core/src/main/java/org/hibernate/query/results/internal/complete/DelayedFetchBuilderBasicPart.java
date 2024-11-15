@@ -4,20 +4,18 @@
  */
 package org.hibernate.query.results.internal.complete;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.BiFunction;
-
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.FetchBuilderBasicValued;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Christian Beikov
@@ -57,7 +55,6 @@ public class DelayedFetchBuilderBasicPart
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		return new BasicFetch<>(
 				-1,

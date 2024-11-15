@@ -4,20 +4,19 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-
-import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.Builders;
+import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.ResultBuilderInstantiationValued;
+import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.instantiation.internal.ArgumentDomainResult;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiationResultImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -96,15 +95,14 @@ public class DynamicResultBuilderInstantiation<J>
 	}
 
 	@Override
-	public DynamicResultBuilderInstantiation cacheKeyInstance() {
-		return new DynamicResultBuilderInstantiation( this );
+	public DynamicResultBuilderInstantiation<?> cacheKeyInstance() {
+		return new DynamicResultBuilderInstantiation<>( this );
 	}
 
 	@Override
 	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		if ( argumentResultBuilders.isEmpty() ) {
 			throw new IllegalStateException( "DynamicResultBuilderInstantiation defined no arguments" );
@@ -119,7 +117,6 @@ public class DynamicResultBuilderInstantiation<J>
 					argument.argumentBuilder.buildResult(
 							jdbcResultsMetadata,
 							i,
-							legacyFetchResolver,
 							domainResultCreationState
 					)
 			);

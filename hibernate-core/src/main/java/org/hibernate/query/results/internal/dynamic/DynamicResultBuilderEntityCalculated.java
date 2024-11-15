@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
@@ -106,7 +104,6 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 

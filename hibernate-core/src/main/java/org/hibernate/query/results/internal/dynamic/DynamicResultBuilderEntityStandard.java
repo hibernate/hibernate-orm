@@ -4,14 +4,6 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -23,8 +15,8 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.query.results.internal.complete.CompleteFetchBuilder;
 import org.hibernate.spi.NavigablePath;
@@ -38,6 +30,13 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -138,7 +137,6 @@ public class DynamicResultBuilderEntityStandard
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		return buildResultOrFetch(
 				(tableGroup) -> (EntityResult) entityMapping.createDomainResult(
@@ -221,8 +219,7 @@ public class DynamicResultBuilderEntityStandard
 		if ( keyColumnAliases != null ) {
 			final ModelPart keyPart;
 			final TableGroup keyTableGroup;
-			if ( fetchable instanceof PluralAttributeMapping ) {
-				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+			if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 				if ( pluralAttributeMapping.getCollectionDescriptor().isOneToMany() ) {
 					keyPart = entityMapping.getIdentifierMapping();
 					keyTableGroup = tableGroup;

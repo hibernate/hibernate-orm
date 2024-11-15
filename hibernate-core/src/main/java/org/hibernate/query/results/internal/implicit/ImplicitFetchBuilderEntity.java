@@ -4,29 +4,27 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.Builders;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
+import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -67,8 +65,7 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		final Map<NavigablePath, FetchBuilder> fetchBuilders;
 		if ( explicitAssociationKeyFetchBuilder == null ) {
 			final MappingType partMappingType = foreignKeyDescriptor.getPartMappingType();
-			if ( partMappingType instanceof EmbeddableMappingType ) {
-				final EmbeddableMappingType embeddableValuedModelPart = (EmbeddableMappingType) partMappingType;
+			if ( partMappingType instanceof EmbeddableMappingType embeddableValuedModelPart ) {
 				final int size = embeddableValuedModelPart.getNumberOfFetchables();
 				fetchBuilders = CollectionHelper.linkedMapOfSize( size );
 				for ( int i = 0; i < size; i++ ) {
@@ -122,9 +119,8 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
-		final Fetch fetch = parent.generateFetchableFetch(
+		return parent.generateFetchableFetch(
 				fetchable,
 				fetchPath,
 				fetchable.getMappedFetchOptions().getTiming(),
@@ -132,18 +128,6 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 				null,
 				creationState
 		);
-//		final FetchParent fetchParent = (FetchParent) fetch;
-//		fetchBuilders.forEach(
-//				(subFetchPath, fetchBuilder) -> fetchBuilder.buildFetch(
-//						fetchParent,
-//						subFetchPath,
-//						jdbcResultsMetadata,
-//						legacyFetchResolver,
-//						creationState
-//				)
-//		);
-
-		return fetch;
 	}
 
 	@Override

@@ -4,17 +4,14 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.complete.EntityResultImpl;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -57,7 +54,6 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 
 		return new EntityResultImpl(
@@ -73,7 +69,6 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 							entityResult,
 							navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 							jdbcResultsMetadata,
-							legacyFetchResolver,
 							domainResultCreationState
 					);
 				},

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.results;
+package org.hibernate.query.results.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +23,9 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderAttribute;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasic;

@@ -4,16 +4,12 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import java.util.Objects;
-import java.util.function.BiFunction;
-
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.results.internal.ResultsHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -21,7 +17,10 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.Objects;
 
 /**
  * Standard DynamicResultBuilder for basic values.
@@ -118,7 +117,6 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final SessionFactoryImplementor sessionFactory = domainResultCreationState.getSqlAstCreationState()
 				.getCreationContext()

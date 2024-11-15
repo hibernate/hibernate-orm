@@ -4,19 +4,11 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.results.Builders;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
+import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -27,6 +19,12 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -92,11 +90,11 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
 
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().resolveTableGroup(
+		// make sure the TableGroup is available
+		creationStateImpl.getFromClauseAccess().resolveTableGroup(
 				fetchPath,
 				navigablePath -> {
 					final TableGroup parentTableGroup = creationStateImpl
@@ -117,15 +115,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 				}
 		);
 
-		final Fetch fetch = parent.generateFetchableFetch(
-				fetchable,
-				fetchPath,
-				FetchTiming.IMMEDIATE,
-				true,
-				null,
-				creationState
-		);
-//		final FetchParent fetchParent = (FetchParent) fetch;
+		//		final FetchParent fetchParent = (FetchParent) fetch;
 //		fetchBuilders.forEach(
 //				(subFetchPath, fetchBuilder) -> fetchBuilder.buildFetch(
 //						fetchParent,
@@ -136,7 +126,14 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 //				)
 //		);
 
-		return fetch;
+		return parent.generateFetchableFetch(
+				fetchable,
+				fetchPath,
+				FetchTiming.IMMEDIATE,
+				true,
+				null,
+				creationState
+		);
 	}
 
 	@Override

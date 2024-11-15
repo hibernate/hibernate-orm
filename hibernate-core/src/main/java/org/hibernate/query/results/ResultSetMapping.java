@@ -20,12 +20,12 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  * or {@link org.hibernate.procedure.ProcedureCall} / {@link jakarta.persistence.StoredProcedureQuery}
  * instances.  These mappings can be defined<ul>
  *     <li>
- *         {@linkplain org.hibernate.query.results.complete statically} using
+ *         {@linkplain org.hibernate.query.results.internal.complete statically} using
  *         {@link jakarta.persistence.SqlResultSetMapping}, {@code orm.xml},
  *         {@code mapping.xml} or {@code hbm.xml}
  *     </li>
  *     <li>
- *         {@linkplain org.hibernate.query.results.dynamic dynamically} using Hibernate-specific APIs:<ul>
+ *         {@linkplain org.hibernate.query.results.internal.dynamic dynamically} using Hibernate-specific APIs:<ul>
  *             <li>{@link NativeQuery#addScalar}</li>
  *             <li>{@link NativeQuery#addEntity}</li>
  *             <li>{@link NativeQuery#addJoin}</li>

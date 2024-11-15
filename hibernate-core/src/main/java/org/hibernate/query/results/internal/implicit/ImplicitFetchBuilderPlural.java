@@ -4,12 +4,10 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -41,7 +39,6 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
 
 		final Fetch fetch = parent.generateFetchableFetch(

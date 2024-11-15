@@ -4,17 +4,11 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import java.util.Objects;
-import java.util.function.BiFunction;
-
 import jakarta.persistence.AttributeConverter;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
@@ -24,9 +18,13 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.Objects;
 
 /**
  * A ResultBuilder for explicitly converted scalar results
@@ -84,7 +82,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 	}
 
 	@Override
-	public DynamicResultBuilderBasicConverted cacheKeyInstance() {
+	public DynamicResultBuilderBasicConverted<?,?> cacheKeyInstance() {
 		return this;
 	}
 
@@ -92,7 +90,6 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final TypeConfiguration typeConfiguration = domainResultCreationState.getSqlAstCreationState()
 				.getCreationContext()

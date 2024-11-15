@@ -4,13 +4,11 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.function.BiFunction;
-
+import jakarta.persistence.NamedNativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -19,8 +17,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.NamedNativeQuery;
 
 /**
  * ResultBuilder for handling {@link NamedNativeQuery#resultClass()} when the
@@ -39,7 +35,6 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		assert resultPosition == 0;
 

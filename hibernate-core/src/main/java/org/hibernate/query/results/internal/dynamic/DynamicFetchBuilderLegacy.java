@@ -4,13 +4,6 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -20,8 +13,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -35,6 +28,12 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -124,7 +123,6 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationState = impl( domainResultCreationState );
 		final TableGroup ownerTableGroup = creationState.getFromClauseAccess().findByAlias( ownerTableAlias );
@@ -153,8 +151,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 
 		if ( columnNames != null ) {
 			final ForeignKeyDescriptor keyDescriptor;
-			if ( attributeMapping instanceof PluralAttributeMapping ) {
-				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+			if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
 				keyDescriptor = pluralAttributeMapping.getKeyDescriptor();
 			}
 			else {
@@ -166,20 +163,18 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			}
 
 			if ( !columnNames.isEmpty() ) {
-				keyDescriptor.forEachSelectable(
-						(selectionIndex, selectableMapping) -> {
-							resolveSqlSelection(
-									columnNames.get( selectionIndex ),
-									tableGroup.resolveTableReference(
-											fetchPath,
-											keyDescriptor.getKeyPart(),
-											selectableMapping.getContainingTableExpression()
-									),
-									selectableMapping,
-									jdbcResultsMetadata,
-									domainResultCreationState
-							);
-						}
+				keyDescriptor.forEachSelectable( (selectionIndex, selectableMapping) -> {
+					resolveSqlSelection(
+							columnNames.get( selectionIndex ),
+							tableGroup.resolveTableReference(
+									fetchPath,
+									keyDescriptor.getKeyPart(),
+									selectableMapping.getContainingTableExpression()
+							),
+							selectableMapping,
+							jdbcResultsMetadata,
+							domainResultCreationState
+					); }
 				);
 			}
 

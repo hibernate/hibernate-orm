@@ -53,7 +53,7 @@ import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.results.Builders;
+import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;
@@ -114,7 +114,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
-import static org.hibernate.query.results.Builders.resultClassBuilder;
+import static org.hibernate.query.results.internal.Builders.resultClassBuilder;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
 
 /**

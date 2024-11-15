@@ -4,13 +4,10 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -40,7 +37,6 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		assert fetchPath.equals( navigablePath );
 

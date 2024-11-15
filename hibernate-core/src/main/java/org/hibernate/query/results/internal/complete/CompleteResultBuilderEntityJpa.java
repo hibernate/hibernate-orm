@@ -4,25 +4,23 @@
  */
 package org.hibernate.query.results.internal.complete;
 
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.results.FetchBuilderBasicValued;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /**
  * CompleteResultBuilderEntityValued implementation specific to JPA.  In JPA
@@ -87,7 +85,6 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final String implicitAlias = entityDescriptor.getSqlAliasStem() + resultPosition;
 		final SqlAliasBase sqlAliasBase = domainResultCreationState.getSqlAliasBaseManager().createSqlAliasBase( implicitAlias );
@@ -126,7 +123,6 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 								entityResult,
 								navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 								jdbcResultsMetadata,
-								legacyFetchResolver,
 								domainResultCreationState
 						);
 					},

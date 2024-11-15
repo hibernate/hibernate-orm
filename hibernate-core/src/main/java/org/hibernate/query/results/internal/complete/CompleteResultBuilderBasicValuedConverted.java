@@ -4,27 +4,24 @@
  */
 package org.hibernate.query.results.internal.complete;
 
-import java.util.Objects;
-import java.util.function.BiFunction;
-
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.internal.ResultsHelper;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.AttributeConverter;
+import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -49,6 +46,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			BasicValuedMapping underlyingMapping) {
 		this.explicitColumnName = explicitColumnName;
 		this.underlyingMapping = underlyingMapping;
+		//noinspection unchecked,rawtypes
 		this.valueConverter = new JpaAttributeConverterImpl<>(
 				converterBean,
 				converterJtd,
@@ -71,7 +69,6 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();

@@ -4,12 +4,6 @@
  */
 package org.hibernate.query.results.internal;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
@@ -27,12 +21,10 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
-import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.internal.dynamic.LegacyFetchResolver;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -54,6 +46,12 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
@@ -81,7 +79,7 @@ public class DomainResultCreationStateImpl
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
 
-	private final LegacyFetchResolverImpl legacyFetchResolver;
+	private final LegacyFetchResolver legacyFetchResolver;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final Stack<Function> fetchBuilderResolverStack = new StandardStack<>( Function.class, fetchableName -> null );
@@ -105,13 +103,9 @@ public class DomainResultCreationStateImpl
 		this.fromClauseAccess = new FromClauseAccessImpl();
 		this.sqlAliasBaseManager = new SqlAliasBaseManager();
 
-		this.legacyFetchResolver = new LegacyFetchResolverImpl( legacyFetchBuilders );
+		this.legacyFetchResolver = new LegacyFetchResolver( legacyFetchBuilders );
 
 		this.sessionFactory = sessionFactory;
-	}
-
-	public LegacyFetchResolver getLegacyFetchResolver() {
-		return legacyFetchResolver;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -333,14 +327,13 @@ public class DomainResultCreationStateImpl
 		return (SqlSelection) expression;
 	}
 
-	private static class LegacyFetchResolverImpl implements LegacyFetchResolver {
+	private static class LegacyFetchResolver {
 		private final Map<String,Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
 
-		public LegacyFetchResolverImpl(Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders) {
+		public LegacyFetchResolver(Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders) {
 			this.legacyFetchBuilders = legacyFetchBuilders;
 		}
 
-		@Override
 		public DynamicFetchBuilderLegacy resolve(String ownerTableAlias, String fetchedPartPath) {
 			if ( legacyFetchBuilders == null ) {
 				return null;
@@ -424,9 +417,6 @@ public class DomainResultCreationStateImpl
 					fetchParent,
 					fetchPath,
 					jdbcResultsMetadata,
-					(s, s2) -> {
-						throw new UnsupportedOperationException();
-					},
 					this
 			);
 		}
@@ -528,9 +518,6 @@ public class DomainResultCreationStateImpl
 						fetchParent,
 						fetchPath,
 						jdbcResultsMetadata,
-						(s, s2) -> {
-							throw new UnsupportedOperationException();
-						},
 						this
 				);
 				fetches.add( fetch );

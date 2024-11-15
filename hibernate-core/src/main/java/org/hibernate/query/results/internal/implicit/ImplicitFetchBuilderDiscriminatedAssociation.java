@@ -4,12 +4,10 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -43,7 +41,6 @@ public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFet
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState creationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
 

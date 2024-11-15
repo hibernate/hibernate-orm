@@ -4,23 +4,21 @@
  */
 package org.hibernate.query.results.internal.complete;
 
-import java.util.Objects;
-import java.util.function.BiFunction;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.internal.ResultsHelper;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -43,6 +41,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			String explicitColumnName,
 			BasicValuedMapping explicitType,
 			JavaType<?> explicitJavaType) {
+		//noinspection unchecked
 		assert explicitType == null || explicitType.getJdbcMapping()
 				.getJavaTypeDescriptor()
 				.getJavaTypeClass()
@@ -67,7 +66,6 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();

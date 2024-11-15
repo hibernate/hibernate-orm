@@ -5,11 +5,9 @@
 package org.hibernate.query.results;
 
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 import org.hibernate.Incubating;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -29,7 +27,6 @@ public interface FetchBuilder {
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 
 	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {

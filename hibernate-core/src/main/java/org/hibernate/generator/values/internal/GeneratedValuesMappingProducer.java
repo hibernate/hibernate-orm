@@ -57,7 +57,6 @@ public class GeneratedValuesMappingProducer implements JdbcValuesMappingProducer
 			final DomainResult<?> domainResult = resultBuilder.buildResult(
 					jdbcResultsMetadata,
 					domainResults.size(),
-					creationState.getLegacyFetchResolver()::resolve,
 					creationState
 			);
 

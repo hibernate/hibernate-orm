@@ -4,15 +4,12 @@
  */
 package org.hibernate.query.results.internal.implicit;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderEmbeddable;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -47,10 +44,9 @@ public class ImplicitModelPartResultBuilderEmbeddable
 	}
 
 	@Override
-	public EmbeddableResult buildResult(
+	public EmbeddableResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 		creationStateImpl.disallowPositionalSelections();
@@ -85,7 +81,7 @@ public class ImplicitModelPartResultBuilderEmbeddable
 				}
 		);
 
-		return (EmbeddableResult) modelPart.createDomainResult(
+		return (EmbeddableResult<?>) modelPart.createDomainResult(
 				navigablePath,
 				tableGroup,
 				null,

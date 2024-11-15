@@ -20,6 +20,8 @@ public abstract class AbstractSingularAttributeMapping
 		extends AbstractStateArrayContributorMapping
 		implements SingularAttributeMapping {
 
+	private Generator generator;
+
 	public AbstractSingularAttributeMapping(
 			String name,
 			int stateArrayPosition,
@@ -52,7 +54,20 @@ public abstract class AbstractSingularAttributeMapping
 
 	@Override
 	public Generator getGenerator() {
-		return findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
+		if ( generator != null ) {
+			return generator;
+		}
+		final int stateArrayPosition = getStateArrayPosition();
+		if ( stateArrayPosition < 0 ) {
+			return null;
+		}
+		final Generator[] generators = findContainingEntityMapping().getEntityPersister().getEntityMetamodel()
+				.getGenerators();
+		if ( generators.length == 0 ) {
+			return null;
+		}
+		generator = generators[stateArrayPosition];
+		return generator;
 	}
 
 }

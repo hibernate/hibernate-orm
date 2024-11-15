@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.MergeContext;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -331,5 +332,10 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	@Override
 	public Fetchable getFetchable(int position) {
 		return getPartMappingType().getFetchable( position );
+	}
+
+	@Override
+	public Generator getGenerator() {
+		return null;
 	}
 }

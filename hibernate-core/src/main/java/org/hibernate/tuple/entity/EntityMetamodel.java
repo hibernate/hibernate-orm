@@ -529,19 +529,24 @@ public class EntityMetamodel implements Serializable {
 			final Property mappingProperty,
 			final RuntimeModelCreationContext context) {
 		final GeneratorCreator generatorCreator = mappingProperty.getValueGeneratorCreator();
+		if ( mappingProperty.getValue() instanceof Component component ) {
+			final CompositeGeneratorBuilder builder =
+					new CompositeGeneratorBuilder( entityName, mappingProperty, context.getDialect() );
+			for ( Property property : component.getProperties() ) {
+				if ( property.getValue() instanceof Component ) {
+					builder.add( property.getName(), buildGenerator( entityName, property, context ) );
+				}
+				else {
+					builder.add( property.getName(), property.createGenerator( context ) );
+				}
+			}
+			return builder.build();
+		}
 		if ( generatorCreator != null ) {
 			final Generator generator = mappingProperty.createGenerator( context );
 			if ( generator.generatesSometimes() ) {
 				return generator;
 			}
-		}
-		if ( mappingProperty.getValue() instanceof Component component ) {
-			final CompositeGeneratorBuilder builder =
-					new CompositeGeneratorBuilder( entityName, mappingProperty, context.getDialect() );
-			for ( Property property : component.getProperties() ) {
-				builder.add( property.createGenerator( context ) );
-			}
-			return builder.build();
 		}
 		return null;
 	}

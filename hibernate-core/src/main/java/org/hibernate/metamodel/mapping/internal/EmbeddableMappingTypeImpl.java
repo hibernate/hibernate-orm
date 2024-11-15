@@ -24,6 +24,9 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.CompositeOnExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -171,6 +174,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private final boolean aggregateMappingRequiresColumnWriter;
 	private final boolean preferSelectAggregateMapping;
 	private final boolean preferBindAggregateMapping;
+	private final CompositeOnExecutionGenerator generator;
 
 	private EmbeddableMappingTypeImpl(
 			Component bootDescriptor,
@@ -251,6 +255,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			this.preferSelectAggregateMapping = false;
 			this.preferBindAggregateMapping = false;
 		}
+		this.generator = resolveOnExecutionGenerator( valueMapping );
 	}
 
 	private JdbcMapping resolveJdbcMapping(Component bootDescriptor, RuntimeModelCreationContext creationContext) {
@@ -371,6 +376,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						attributeMappings
 				)
 		);
+		this.generator = resolveOnExecutionGenerator( valueMapping );
 	}
 
 	public EmbeddableMappingType createInverseMappingType(
@@ -436,13 +442,17 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		// Reset the attribute mappings that were added in previous attempts
 		attributeMappings.clear();
-
 		for ( final Property bootPropertyDescriptor : bootDescriptor.getProperties() ) {
+
 			final AttributeMapping attributeMapping;
 
 			final Type subtype = subtypes[attributeIndex];
 			final Value value = bootPropertyDescriptor.getValue();
+			final String name = bootPropertyDescriptor.getName();
 			if ( subtype instanceof BasicType ) {
+				boolean isInsertable = isInsertable( generator, insertability[columnPosition], name );
+				boolean isUpdatable = isUpdatable( generator, updateability[columnPosition], name );
+
 				final BasicValue basicValue = (BasicValue) value;
 				final Selectable selectable = dependantValue != null ?
 						dependantValue.getColumns().get( dependantColumnIndex + columnPosition ) :
@@ -474,7 +484,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					containingTableExpression = rootTableExpression;
 					columnExpression = rootTableKeyColumnNames[columnPosition];
 				}
-				final NavigableRole role = valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() );
+				final NavigableRole role = valueMapping.getNavigableRole().append( name );
 				final SelectablePath selectablePath;
 				final String columnDefinition;
 				final Long length;
@@ -502,10 +512,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					temporalPrecision = null;
 					isLob = false;
 					nullable = bootPropertyDescriptor.isOptional();
-					selectablePath = new SelectablePath( determineEmbeddablePrefix() + bootPropertyDescriptor.getName() );
+					selectablePath = new SelectablePath( determineEmbeddablePrefix() + name );
 				}
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
-						bootPropertyDescriptor.getName(),
+						name,
 						role,
 						attributeIndex,
 						attributeIndex,
@@ -525,8 +535,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						temporalPrecision,
 						isLob,
 						nullable,
-						insertability[columnPosition],
-						updateability[columnPosition],
+						isInsertable,
+						isUpdatable,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
@@ -556,7 +566,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				);
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
-						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						valueMapping.getNavigableRole().append( name ),
 						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
 						this,
 						attributeIndex,
@@ -585,7 +595,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				}
 
 				attributeMapping = MappingModelCreationHelper.buildEmbeddedAttributeMapping(
-						bootPropertyDescriptor.getName(),
+						name,
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
@@ -604,7 +614,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			else if ( subtype instanceof CollectionType ) {
 				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
-						bootPropertyDescriptor.getName(),
+						name,
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
@@ -619,8 +629,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
 
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
-						bootPropertyDescriptor.getName(),
-						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
+						name,
+						valueMapping.getNavigableRole().append( name ),
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
@@ -639,7 +649,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								Locale.ROOT,
 								"Unable to determine attribute nature : %s#%s",
 								bootDescriptor.getOwner().getEntityName(),
-								bootPropertyDescriptor.getName()
+								name
 						)
 				);
 			}
@@ -665,6 +675,30 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		);
 
 		return true;
+	}
+
+	private boolean isInsertable(CompositeOnExecutionGenerator generator, boolean propertyInsertability, String propertyName) {
+		if ( propertyInsertability && generator != null ) {
+			final OnExecutionGenerator propertyGenerator = generator.getPropertyGenerator( propertyName );
+			if ( propertyGenerator != null
+					&& propertyGenerator.generatesOnInsert()
+					&& !propertyGenerator.writePropertyValue() ) {
+				return false;
+			}
+		}
+		return propertyInsertability;
+	}
+
+	private boolean isUpdatable(CompositeOnExecutionGenerator generator, boolean propertyUpdatability, String propertyName) {
+		if ( propertyUpdatability && generator != null ) {
+			final OnExecutionGenerator propertyGenerator = generator.getPropertyGenerator( propertyName );
+			if ( propertyGenerator != null
+					&& propertyGenerator.generatesOnUpdate()
+					&& !propertyGenerator.writePropertyValue() ) {
+				return false;
+			}
+		}
+		return propertyUpdatability;
 	}
 
 	private boolean isDefinedInClassOrSuperclass(Component bootDescriptor, String declaringClass, String subclass) {
@@ -1120,5 +1154,26 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	@Override
 	public boolean shouldBindAggregateMapping() {
 		return preferBindAggregateMapping;
+	}
+
+	private static CompositeOnExecutionGenerator resolveOnExecutionGenerator(EmbeddableValuedModelPart valueMapping) {
+		if ( valueMapping instanceof EmbeddedAttributeMapping attributeMapping ) {
+			if ( attributeMapping.getDeclaringType() instanceof EmbeddableMappingTypeImpl embeddableMappingType ) {
+				if ( embeddableMappingType.getGenerator() instanceof CompositeOnExecutionGenerator compositeOnExecutionGenerator ) {
+					if ( compositeOnExecutionGenerator.getPropertyGenerator( attributeMapping.getAttributeName() )
+							instanceof CompositeOnExecutionGenerator composite ) {
+						return composite;
+					}
+				}
+			}
+			else if ( attributeMapping.getGenerator() instanceof CompositeOnExecutionGenerator compositeOnExecutionGenerator ) {
+				return compositeOnExecutionGenerator;
+			}
+		}
+		return null;
+	}
+
+	public Generator getGenerator() {
+		return generator;
 	}
 }

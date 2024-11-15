@@ -40,6 +40,7 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -664,7 +665,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			InclusionChecker inclusionChecker,
 			InclusionChecker lockingChecker,
 			SharedSessionContractImplementor session) {
-
 		final Generator generator = attributeMapping.getGenerator();
 		final boolean generated = isValueGenerated( generator );
 		final boolean needsDynamicUpdate =
@@ -1220,7 +1220,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		final Generator generator = attributeMapping.getGenerator();
 		if ( needsValueGeneration( entity, session, generator ) ) {
-			handleValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator );
+			handleUpdatableValueGeneration( attributeMapping, updateGroupBuilder, (OnExecutionGenerator) generator );
 		}
 		else if ( versionMapping != null
 				&& versionMapping.getVersionAttribute() == attributeMapping) {
@@ -1538,6 +1538,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		public boolean isValueGeneratedInSqlNoWrite() {
+			if ( attribute instanceof EmbeddedAttributeMapping ) {
+				return false;
+			}
 			return valueGeneratedInSqlNoWrite;
 		}
 

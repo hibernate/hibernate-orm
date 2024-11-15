@@ -412,7 +412,10 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 							attributeMapping.forEachInsertable( insertGroupBuilder );
 						}
 						else if ( isValueGenerationInSql( generator, factory.getJdbcServices().getDialect() ) ) {
-							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+							handleInsertableValueGeneration(
+									attributeMapping,
+									insertGroupBuilder,
+									(OnExecutionGenerator) generator );
 						}
 					}
 				}

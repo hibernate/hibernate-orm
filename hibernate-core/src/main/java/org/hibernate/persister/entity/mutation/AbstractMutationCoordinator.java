@@ -14,6 +14,7 @@ import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.CompositeOnExecutionGenerator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
@@ -116,22 +117,101 @@ public abstract class AbstractMutationCoordinator {
 		}
 	}
 
-	protected void handleValueGeneration(
+	protected void handleInsertableValueGeneration(
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
 			OnExecutionGenerator generator) {
+		if ( generator instanceof CompositeOnExecutionGenerator compositeOnExecutionGenerator ) {
+			handleInsertableValueGeneration( attributeMapping, mutationGroupBuilder, compositeOnExecutionGenerator );
+		}
+		else {
+			final Dialect dialect = factory.getJdbcServices().getDialect();
+			final boolean writePropertyValue = generator.writePropertyValue();
+			final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
+			attributeMapping.forEachSelectable( (j, mapping) -> {
+				if ( mapping.isInsertable() ) {
+					final String tableName = entityPersister.physicalTableNameForMutation( mapping );
+					final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder(
+							tableName );
+					tableUpdateBuilder.addValueColumn(
+							mapping.getSelectionExpression(),
+							writePropertyValue ? "?" : columnValues[j],
+							mapping.getJdbcMapping(),
+							mapping.isLob()
+					);
+				}
+			} );
+		}
+	}
+
+	protected void handleInsertableValueGeneration(
+			AttributeMapping attributeMapping,
+			MutationGroupBuilder mutationGroupBuilder,
+			CompositeOnExecutionGenerator generator) {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
-		final boolean writePropertyValue = generator.writePropertyValue();
-		final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
+		final boolean[] writePropertyValue = generator.writePropertyValues();
+		final String[] columnValues = generator.getReferencedColumnValues( dialect );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
-			final String tableName = entityPersister.physicalTableNameForMutation( mapping );
-			final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder( tableName );
-			tableUpdateBuilder.addValueColumn(
-					mapping.getSelectionExpression(),
-					writePropertyValue ? "?" : columnValues[j],
-					mapping.getJdbcMapping(),
-					mapping.isLob()
-			);
+			if ( mapping.isInsertable() ) {
+				final String tableName = entityPersister.physicalTableNameForMutation( mapping );
+				final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder(
+						tableName );
+				tableUpdateBuilder.addValueColumn(
+						mapping.getSelectionExpression(),
+						writePropertyValue[j] ? "?" : columnValues[j],
+						mapping.getJdbcMapping(),
+						mapping.isLob()
+				);
+			}
+		} );
+	}
+
+	protected void handleUpdatableValueGeneration(
+			AttributeMapping attributeMapping,
+			MutationGroupBuilder mutationGroupBuilder,
+			OnExecutionGenerator generator) {
+		if ( generator instanceof CompositeOnExecutionGenerator compositeOnExecutionGenerator ) {
+			handleUpdatableValueGeneration( attributeMapping, mutationGroupBuilder, compositeOnExecutionGenerator );
+		}
+		else {
+			final Dialect dialect = factory.getJdbcServices().getDialect();
+			final boolean writePropertyValue = generator.writePropertyValue();
+			final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
+			attributeMapping.forEachSelectable( (j, mapping) -> {
+				if ( mapping.isUpdateable() ) {
+					final String tableName = entityPersister.physicalTableNameForMutation( mapping );
+					final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder(
+							tableName );
+					tableUpdateBuilder.addValueColumn(
+							mapping.getSelectionExpression(),
+							writePropertyValue ? "?" : columnValues[j],
+							mapping.getJdbcMapping(),
+							mapping.isLob()
+					);
+				}
+			} );
+		}
+	}
+
+	protected void handleUpdatableValueGeneration(
+			AttributeMapping attributeMapping,
+			MutationGroupBuilder mutationGroupBuilder,
+			CompositeOnExecutionGenerator generator) {
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final boolean[] writePropertyValue = generator.writePropertyValues();
+		final String[] columnValues = generator.getReferencedColumnValues( dialect );
+		attributeMapping.forEachSelectable( (j, mapping) -> {
+			if ( mapping.isUpdateable() ) {
+				final String tableName = entityPersister.physicalTableNameForMutation( mapping );
+				final ColumnValuesTableMutationBuilder tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder(
+						tableName );
+				tableUpdateBuilder.addValueColumn(
+						mapping.getSelectionExpression(),
+						writePropertyValue[j] ? "?" : columnValues[j],
+						mapping.getJdbcMapping(),
+						mapping.isLob()
+				);
+			}
 		} );
 	}
 

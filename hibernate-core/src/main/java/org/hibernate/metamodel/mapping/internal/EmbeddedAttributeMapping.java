@@ -409,6 +409,11 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public boolean isEntityIdentifierMapping() {
+		return getAttributeMetadata() instanceof EmbeddedIdentifierMappingImpl;
+	}
+
+	@Override
 	public int compare(Object value1, Object value2) {
 		return embeddableMappingType.compare( value1, value2 );
 	}

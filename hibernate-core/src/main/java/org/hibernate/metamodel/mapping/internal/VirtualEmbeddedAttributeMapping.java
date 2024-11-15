@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.generator.Generator;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -97,4 +98,8 @@ public class VirtualEmbeddedAttributeMapping extends EmbeddedAttributeMapping im
 		);
 	}
 
+	@Override
+	public Generator getGenerator() {
+		return null;
+	}
 }

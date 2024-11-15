@@ -12,7 +12,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -53,7 +52,6 @@ public class FetchModeLazySubselectTest {
 			final LazySelectRoot root = new LazySelectRoot();
 			root.id = 1;
 
-			root.rootNode = rootNode;
 			root.nodes.add( rootNode );
 			root.nodes.add( child1 );
 			root.nodes.add( child2 );
@@ -98,14 +96,11 @@ public class FetchModeLazySubselectTest {
 		@Id
 		public Integer id;
 
-		@OneToOne(cascade = CascadeType.ALL, optional = false, fetch = FetchType.LAZY)
-		public LazySelectNode rootNode;
-
 		/**
 		 * FIXME: Upon setting fetchtype to LAZY the subselects are created because they are loaded in a
 		 * subsequent load event. If they are joinfetched using EAGER they are not. I suspect this might be wrong?
 		 */
-		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "root")
+		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "root")
 		public Set<LazySelectNode> nodes = new HashSet<>();
 	}
 

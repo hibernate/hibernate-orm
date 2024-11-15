@@ -42,7 +42,6 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
 import static org.hibernate.dialect.StructHelper.instantiate;
@@ -363,16 +362,17 @@ public class JsonHelper {
 		return (X) values;
 	}
 
+	// This is also used by Hibernate Reactive
 	public static <X> X arrayFromString(
 			JavaType<X> javaType,
-			JsonArrayJdbcType jsonArrayJdbcType,
+			JdbcType elementJdbcType,
 			String string,
 			WrapperOptions options) throws SQLException {
 		if ( string == null ) {
 			return null;
 		}
 		final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
-		final Class<?> preferredJavaTypeClass = jsonArrayJdbcType.getElementJdbcType().getPreferredJavaTypeClass( options );
+		final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
 		final JavaType<?> jdbcJavaType;
 		if ( preferredJavaTypeClass == null || preferredJavaTypeClass == elementJavaType.getJavaTypeClass() ) {
 			jdbcJavaType = elementJavaType;
@@ -390,7 +390,7 @@ public class JsonHelper {
 				arrayList,
 				elementJavaType,
 				jdbcJavaType,
-				jsonArrayJdbcType.getElementJdbcType()
+				elementJdbcType
 		);
 		assert string.charAt( i - 1 ) == ']';
 		return javaType.wrap( arrayList, options );

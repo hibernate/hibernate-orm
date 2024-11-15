@@ -13,6 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -149,6 +150,18 @@ public class EntityMetamodel implements Serializable {
 			PersistentClass persistentClass,
 			EntityPersister persister,
 			RuntimeModelCreationContext creationContext) {
+		this( persistentClass, persister, creationContext,
+				rootName -> buildIdGenerator( rootName, persistentClass, creationContext ) );
+	}
+
+	/*
+	 * Used by Hibernate Reactive to adapt the id generators
+	 */
+	public EntityMetamodel(
+			PersistentClass persistentClass,
+			EntityPersister persister,
+			RuntimeModelCreationContext creationContext,
+			Function<String, Generator> generatorSupplier) {
 		this.sessionFactory = creationContext.getSessionFactory();
 
 		// Improves performance of EntityKey#equals by avoiding content check in String#equals
@@ -160,7 +173,7 @@ public class EntityMetamodel implements Serializable {
 
 		subclassId = persistentClass.getSubclassId();
 
-		final Generator idgenerator = buildIdGenerator( persistentClass, creationContext );
+		final Generator idgenerator = generatorSupplier.apply( rootName );
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute( persistentClass, idgenerator );
 
 		versioned = persistentClass.isVersioned();
@@ -483,7 +496,7 @@ public class EntityMetamodel implements Serializable {
 		return writePropertyValue;
 	}
 
-	private Generator buildIdGenerator(PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
+	private static Generator buildIdGenerator(String rootName, PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
 		final Generator existing = creationContext.getGenerators().get( rootName );
 		if ( existing != null ) {
 			return existing;

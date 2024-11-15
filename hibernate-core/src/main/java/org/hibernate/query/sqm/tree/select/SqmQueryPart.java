@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.query.sqm.FetchClauseType;
@@ -17,6 +16,8 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Defines the ordering and fetch/offset part of a query which is shared with query groups.
@@ -129,11 +130,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	@Override
 	public List<SqmSortSpecification> getSortSpecifications() {
-		if ( getOrderByClause() == null ) {
-			return Collections.emptyList();
-		}
-
-		return getOrderByClause().getSortSpecifications();
+		return getOrderByClause() == null ? emptyList() : getOrderByClause().getSortSpecifications();
 	}
 
 	@Override

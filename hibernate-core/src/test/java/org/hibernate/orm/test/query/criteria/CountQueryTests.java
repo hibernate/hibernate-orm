@@ -89,6 +89,48 @@ public class CountQueryTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-18850" )
+	public void testForHHH18850(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					JpaCriteriaQuery<Contract> cq = cb.createQuery( Contract.class );
+					cq.distinct( true );
+					Root<Contract> root = cq.from( Contract.class );
+					cq.select( root );
+					cq.orderBy( cb.asc( root.get( "customerName" ) ) );
+					TypedQuery<Long> query = session.createQuery( cq.createCountQuery() );
+					try {
+						// Leads to NPE on pre-6.5 versions
+						query.getSingleResult();
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					JpaCriteriaQuery<Contract> cq = cb.createQuery( Contract.class );
+					cq.distinct( false );
+					Root<Contract> root = cq.from( Contract.class );
+					cq.select( root );
+					cq.orderBy( cb.desc( root.get( "customerName" ) ) );
+					TypedQuery<Long> query = session.createQuery( cq.createCountQuery() );
+					try {
+						// Leads to NPE on pre-6.5 versions
+						query.getSingleResult();
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+				}
+		);
+	}
+
+	@Test
 	@JiraKey("HHH-17410")
 	public void testBasic(SessionFactoryScope scope) {
 		scope.inTransaction(

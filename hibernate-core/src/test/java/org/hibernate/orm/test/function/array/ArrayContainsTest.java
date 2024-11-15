@@ -15,6 +15,7 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -153,6 +154,24 @@ public class ArrayContainsTest {
 			//end::hql-array-in-hql-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-18851" )
+	public void testInArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Tuple> results = em.createQuery(
+							"select e.id " +
+									"from EntityWithArrays e " +
+									"where :p in e.theArray",
+							Tuple.class
+					)
+					.setParameter( "p", "abc" )
+					.getResultList();
+
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).get( 0 ) );
 		} );
 	}
 

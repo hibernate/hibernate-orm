@@ -207,7 +207,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		return false;
 	}
 
-	private void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+	protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
 		final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
 		final int checkStart = buf.length();
 		buf.append( ", check (" );

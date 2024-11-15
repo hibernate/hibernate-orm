@@ -306,6 +306,18 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
+	public void testUpdateAggregateMemberOnNestedNull() {
+		sessionFactoryScope().inTransaction(
+				entityManager -> {
+					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField = 'Abc'" ).executeUpdate();
+					assertEquals( "Abc", entityManager.find( XmlHolder.class, 1L ).getTheXml().simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {

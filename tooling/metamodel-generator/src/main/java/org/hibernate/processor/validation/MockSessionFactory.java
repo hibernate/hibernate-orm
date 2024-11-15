@@ -702,12 +702,6 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public EntityPersister locateEntityPersister(String entityName)
-				throws MappingException {
-			return createEntityPersister(entityName);
-		}
-
-		@Override
 		public CollectionPersister getCollectionDescriptor(String role) {
 			return createCollectionPersister(role);
 		}

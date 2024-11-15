@@ -50,7 +50,7 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 	@JiraKey( value = "HHH-9856" )
 	public void testGetAndFindNonEntityThrowsIllegalArgumentException() {
 		try {
-			sessionFactory().getMappingMetamodel().locateEntityPersister(Cellular.class);
+			sessionFactory().getMappingMetamodel().findEntityDescriptor(Cellular.class);
 			sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( Cellular.class );
 
 		}

@@ -2886,11 +2886,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			final SqmExpression<?> arrayExpr = (SqmExpression<?>) arrayInListContext.expression().accept( this );
 			final SqmExpressible<?> arrayExpressible = arrayExpr.getExpressible();
-			if ( arrayExpressible != null && !( arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
-				throw new SemanticException(
-						"Right operand for in-array predicate must be a basic plural type expression, but found: " + arrayExpressible.getSqmType(),
-						query
-				);
+			if ( arrayExpressible != null ) {
+				if ( !(arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
+					throw new SemanticException(
+							"Right operand for in-array predicate must be a basic plural type expression, but found: " + arrayExpressible.getSqmType(),
+							query
+					);
+				}
+				testExpression.applyInferableType( ( (BasicPluralType<?, ?>) arrayExpressible.getSqmType() ).getElementType() );
 			}
 			final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
 					asList( arrayExpr, testExpression ),

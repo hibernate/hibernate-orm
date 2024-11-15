@@ -100,7 +100,7 @@ public class FetchModeLazySubselectTest {
 		 * FIXME: Upon setting fetchtype to LAZY the subselects are created because they are loaded in a
 		 * subsequent load event. If they are joinfetched using EAGER they are not. I suspect this might be wrong?
 		 */
-		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "root")
+		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "root")
 		public Set<LazySelectNode> nodes = new HashSet<>();
 	}
 

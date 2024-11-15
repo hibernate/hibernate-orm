@@ -500,7 +500,7 @@ public abstract class AbstractEntityPersister
 			isLazyPropertiesCacheable = true;
 		}
 
-		entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
+		entityMetamodel = creationContext.createEntityMetamodel( persistentClass, this );
 
 		entityEntryFactory = entityMetamodel.isMutable()
 				? MutableEntityEntryFactory.INSTANCE

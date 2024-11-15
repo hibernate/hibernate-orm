@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.idClass;
 
@@ -16,23 +14,23 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(
-        annotatedClasses = MyEntity.class
+		annotatedClasses = MyEntity.class
 )
 @SessionFactory
 public class IdClassSyntheticAttributesTest {
 
-    @Jira("https://hibernate.atlassian.net/browse/HHH-18841")
-    @Test
-    public void test(DomainModelScope scope) {
-        final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding(MyEntity.class.getName());
-        assertThat(entityBinding.getProperties()).hasSize(2)
-                .anySatisfy(p -> {
-                    assertThat(p.isSynthetic()).isTrue();
-                    assertThat(p.getName()).isEqualTo("_identifierMapper");
-                })
-                .anySatisfy(p -> {
-                    assertThat(p.isSynthetic()).isFalse();
-                    assertThat(p.getName()).isEqualTo("notes");
-                });
-    }
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18841")
+	@Test
+	public void test(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding(MyEntity.class.getName());
+		assertThat(entityBinding.getProperties()).hasSize(2)
+				.anySatisfy(p -> {
+					assertThat(p.isSynthetic()).isTrue();
+					assertThat(p.getName()).isEqualTo("_identifierMapper");
+				})
+				.anySatisfy(p -> {
+					assertThat(p.isSynthetic()).isFalse();
+					assertThat(p.getName()).isEqualTo("notes");
+				});
+	}
 }

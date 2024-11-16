@@ -39,7 +39,12 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 /**
  * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
  *
+ * @apiNote This type belongs to an SPI package. Due to a historical mistake, it is exposed
+ * via the deprecated method {@link org.hibernate.SessionFactory#getSessionFactoryOptions}.
+ *
  * @since 5.0
+ *
+ * @see SessionFactoryImplementor#getSessionFactoryOptions
  */
 public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**

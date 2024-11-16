@@ -842,6 +842,67 @@ long currentTimeMillis;
 
 Let's abandon our analogy right here, before we start calling this basic type a "throuple".
 
+[[datetime-types]]
+=== Date and time types, and time zones
+
+Dates and times should always be represented using the types defined in `java.time`.
+
+[WARNING]
+====
+Never use the legacy types `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, or `java.util.Date`.
+At our urging, support for these types has even been https://in.relation.to/2024/04/22/stop-using-date/[officially deprecated in JPA 3.2].
+Eventually, we hope to completely remove support for these types.
+====
+
+Some of the types in `java.time` map naturally to an ANSI SQL column type.
+A source of confusion is that some databases still don't follow the ANSI standard naming here.
+Also, as you're probably aware, the `DATE` type on Oracle is not an ANSI SQL `DATE`.
+
+.Type mappings from `java.time` to ANSI SQL
+|====
+| `java.time` class | ANSI SQL type | MySQL | SQL Server
+
+| `LocalDate` | `DATE` | `DATE` | `DATE`
+| `LocalTime` | `TIME` | `TIME` | `TIME`
+| `LocalDateTime` | `TIMSTAMP` | `DATETIME` | `DATETIME2`
+| `OffsetDateTime` | `TIMESTAMP WITH TIME ZONE` | `TIMESTAMP` 💀 | `DATETIMEOFFSET`
+|====
+
+On the other hand, there are no perfectly natural mappings for `Instant` and `Duration`.
+By default:
+
+- `Duration` is mapped to a column of type `NUMERIC(21)` holding the length of the duration in nanoseconds, and
+- `Instant` is mapped to a column of type `TIMESTAMP` (`DATETIME` on MySQL).
+
+Fortunately, these mappings can be modified by specifying the `JdbcType`.
+
+For example, if we wanted to store an `Instant` using `TIMESTAMP WITH TIME ZONE` (`TIMESTAMP` on MySQL) instead of `TIMESTAMP`, then we could annotated the field:
+
+[source,java]
+----
+@JdbcTypeCode(SqlTypes.TIMESTAMP_WITH_TIMEZONE)
+Instant instant;
+----
+
+Alternatively, we could set the property `hibernate.type.preferred_instant_jdbc_type`:
+
+
+[source,java]
+----
+config.setProperty(MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, SqlTypes.TIMESTAMP_WITH_TIMEZONE);
+----
+
+We have worked very hard to make sure that Java date and time types work with consistent and correct semantics across all databases supported by Hibernate.
+In particular, Hibernate is very careful in how it handles time zones.
+
+[WARNING]
+====
+Unfortunately, most SQL databases feature embarrassingly poor support for timezones.
+Even some databases which do supposedly support `TIMESTAMP WITH TIME ZONE` simply covert the datetime to UTC.
+Here, Hibernate is limited by the capabilities of the databases themselves, and so on many databases, time zone information will not, by default, be preserved for an `OffsetDateTime` or `ZonedDateTime`.
+The still-experimental annotation link:{doc-javadoc-url}org/hibernate/annotation/TimeZoneStorage.html[`@TimeZoneStorage`] provides some additional options in case the default behavior falls short.
+====
+
 [[embeddable-objects]]
 === Embeddable objects
 

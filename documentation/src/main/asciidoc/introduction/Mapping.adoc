@@ -845,22 +845,7 @@ In addition, there are link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.h
 | `hibernate.type.prefer_native_enum_types` | Use <<named-enums,named enum types>> on PostgreSQL and Oracle
 |===
 
-For example, if we wanted to store an `Instant` using `timestamp with time zone` (called `timestamp` on MySQL, and `datetimeoffset` on SQL Server) instead of `timestamp` (`datetime` on MySQL, `datetime2` on SQL Server), then we could annotate every field of type `Instant`:
-
-[source,java]
-----
-@JdbcTypeCode(SqlTypes.TIMESTAMP_WITH_TIMEZONE)
-Instant instant;
-----
-
-Alternatively, we could set the property `hibernate.type.preferred_instant_jdbc_type`:
-
-
-[source,java]
-----
-config.setProperty(MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, SqlTypes.TIMESTAMP_WITH_TIMEZONE);
-----
-
+Earlier, we saw how to use these settings to control the default mappings for <<datetime-types,`Instant` and `Duration`>>.
 
 [TIP]
 ====

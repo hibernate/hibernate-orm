@@ -643,10 +643,15 @@ public class SqlTypes {
 
 	/**
 	 * A type code representing a SQL {@code ENUM} type for databases like
-	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} where
+	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} or
+	 * {@link org.hibernate.dialect.OracleDialect Oracle} where
 	 * {@code ENUM} types must have names.
+	 * <p>
+	 * A named enum type is declared in DDL using {@code create type ... as enum}
+	 * or {@code create type ... as domain}.
 	 *
 	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.OracleEnumJdbcType
 	 *
 	 * @since 6.3
 	 */

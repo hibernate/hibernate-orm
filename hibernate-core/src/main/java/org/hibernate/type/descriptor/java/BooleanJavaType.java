@@ -187,15 +187,12 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<Boolean, ?> converter, Dialect dialect) {
 		if ( converter != null ) {
 			if ( jdbcType.isString() ) {
-				@SuppressWarnings("unchecked")
-				final BasicValueConverter<Boolean, ?> stringConverter =
-						(BasicValueConverter<Boolean, ?>) converter;
-				final Object falseValue = stringConverter.toRelationalValue( false );
-				final Object trueValue = stringConverter.toRelationalValue( true );
-				final String[] values = getPossibleStringValues( stringConverter, falseValue, trueValue );
+				final Object falseValue = converter.toRelationalValue( false );
+				final Object trueValue = converter.toRelationalValue( true );
+				final String[] values = getPossibleStringValues( converter, falseValue, trueValue );
 				return dialect.getCheckCondition( columnName, values );
 			}
 			else if ( jdbcType.isInteger() ) {

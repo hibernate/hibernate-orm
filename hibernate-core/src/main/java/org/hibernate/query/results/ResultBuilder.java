@@ -12,13 +12,19 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import java.util.function.BiConsumer;
 
 /**
- * Responsible for building a single {@link DomainResult} instance as part of
- * the overall mapping of native / procedure query results.
+ * Responsible for building a single {@link DomainResult}.
+ * Given the following HQL for illustration,
+ * <pre>
+ *     select b from Book b join fetch b.authors
+ * </pre>
+ * we have a single result : `Book(b)`
+ *
+ * @see FetchBuilder
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface ResultBuilder {
+public interface ResultBuilder extends GraphNodeBuilder {
 	/**
 	 * Build a result
 	 *

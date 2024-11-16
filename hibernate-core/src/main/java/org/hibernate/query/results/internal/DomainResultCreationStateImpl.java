@@ -22,7 +22,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -92,7 +92,7 @@ public class DomainResultCreationStateImpl
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
+			Map<String, Map<String, LegacyFetchBuilder>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
@@ -328,18 +328,18 @@ public class DomainResultCreationStateImpl
 	}
 
 	private static class LegacyFetchResolver {
-		private final Map<String,Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
+		private final Map<String,Map<String, LegacyFetchBuilder>> legacyFetchBuilders;
 
-		public LegacyFetchResolver(Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders) {
+		public LegacyFetchResolver(Map<String, Map<String, LegacyFetchBuilder>> legacyFetchBuilders) {
 			this.legacyFetchBuilders = legacyFetchBuilders;
 		}
 
-		public DynamicFetchBuilderLegacy resolve(String ownerTableAlias, String fetchedPartPath) {
+		public LegacyFetchBuilder resolve(String ownerTableAlias, String fetchedPartPath) {
 			if ( legacyFetchBuilders == null ) {
 				return null;
 			}
 
-			final Map<String, DynamicFetchBuilderLegacy> fetchBuilders = legacyFetchBuilders.get( ownerTableAlias );
+			final Map<String, LegacyFetchBuilder> fetchBuilders = legacyFetchBuilders.get( ownerTableAlias );
 			if ( fetchBuilders == null ) {
 				return null;
 			}
@@ -377,7 +377,7 @@ public class DomainResultCreationStateImpl
 		final Fetchable identifierFetchable = (Fetchable) identifierMapping;
 		//noinspection unchecked
 		final FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack.getCurrent().apply( fullPath );
-		DynamicFetchBuilderLegacy fetchBuilderLegacy;
+		LegacyFetchBuilder fetchBuilderLegacy;
 		if ( explicitFetchBuilder == null ) {
 			fetchBuilderLegacy = legacyFetchResolver.resolve(
 					fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
@@ -464,7 +464,7 @@ public class DomainResultCreationStateImpl
 			final String fullPath = currentEntry.getKey();
 			//noinspection unchecked
 			FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack.getCurrent().apply( fullPath );
-			DynamicFetchBuilderLegacy fetchBuilderLegacy;
+			LegacyFetchBuilder fetchBuilderLegacy;
 			if ( explicitFetchBuilder == null ) {
 				fetchBuilderLegacy = legacyFetchResolver.resolve(
 						fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )

@@ -11,9 +11,9 @@ import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.internal.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -44,7 +44,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	private final String mappingIdentifier;
 	private final boolean isDynamic;
 	private List<ResultBuilder> resultBuilders;
-	private Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
+	private Map<String, Map<String, LegacyFetchBuilder>> legacyFetchBuilders;
 
 	public ResultSetMappingImpl(String mappingIdentifier) {
 		this( mappingIdentifier, false );
@@ -72,10 +72,10 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			this.legacyFetchBuilders = null;
 		}
 		else {
-			final Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders = new HashMap<>( original.legacyFetchBuilders.size() );
-			for ( Map.Entry<String, Map<String, DynamicFetchBuilderLegacy>> entry : original.legacyFetchBuilders.entrySet() ) {
-				final Map<String, DynamicFetchBuilderLegacy> newValue = new HashMap<>( entry.getValue().size() );
-				for ( Map.Entry<String, DynamicFetchBuilderLegacy> builderEntry : entry.getValue().entrySet() ) {
+			final Map<String, Map<String, LegacyFetchBuilder>> legacyFetchBuilders = new HashMap<>( original.legacyFetchBuilders.size() );
+			for ( Map.Entry<String, Map<String, LegacyFetchBuilder>> entry : original.legacyFetchBuilders.entrySet() ) {
+				final Map<String, LegacyFetchBuilder> newValue = new HashMap<>( entry.getValue().size() );
+				for ( Map.Entry<String, LegacyFetchBuilder> builderEntry : entry.getValue().entrySet() ) {
 					newValue.put( builderEntry.getKey(), builderEntry.getValue().cacheKeyInstance() );
 				}
 				legacyFetchBuilders.put( entry.getKey(), newValue );
@@ -118,13 +118,13 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
-	public void visitLegacyFetchBuilders(Consumer<DynamicFetchBuilderLegacy> resultBuilderConsumer) {
+	public void visitLegacyFetchBuilders(Consumer<LegacyFetchBuilder> resultBuilderConsumer) {
 		if ( legacyFetchBuilders == null ) {
 			return;
 		}
 
-		for ( Map.Entry<String, Map<String, DynamicFetchBuilderLegacy>> entry : legacyFetchBuilders.entrySet() ) {
-			for ( DynamicFetchBuilderLegacy fetchBuilder : entry.getValue().values() ) {
+		for ( Map.Entry<String, Map<String, LegacyFetchBuilder>> entry : legacyFetchBuilders.entrySet() ) {
+			for ( LegacyFetchBuilder fetchBuilder : entry.getValue().values() ) {
 				resultBuilderConsumer.accept( fetchBuilder );
 			}
 		}
@@ -139,8 +139,8 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
-	public void addLegacyFetchBuilder(DynamicFetchBuilderLegacy fetchBuilder) {
-		final Map<String, DynamicFetchBuilderLegacy> existingFetchBuildersByOwner;
+	public void addLegacyFetchBuilder(LegacyFetchBuilder fetchBuilder) {
+		final Map<String, LegacyFetchBuilder> existingFetchBuildersByOwner;
 
 		if ( legacyFetchBuilders == null ) {
 			legacyFetchBuilders = new HashMap<>();
@@ -150,7 +150,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			existingFetchBuildersByOwner = legacyFetchBuilders.get( fetchBuilder.getOwnerAlias() );
 		}
 
-		final Map<String, DynamicFetchBuilderLegacy> fetchBuildersByOwner;
+		final Map<String, LegacyFetchBuilder> fetchBuildersByOwner;
 		if ( existingFetchBuildersByOwner == null ) {
 			fetchBuildersByOwner = new HashMap<>();
 			legacyFetchBuilders.put( fetchBuilder.getOwnerAlias(), fetchBuildersByOwner );

@@ -4,25 +4,29 @@
  */
 package org.hibernate.query.results;
 
-import java.util.function.BiConsumer;
-
 import org.hibernate.Incubating;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
+import java.util.function.BiConsumer;
+
 /**
- * Responsible for building a single {@link DomainResult} instance as part of
- * the overall mapping of native / procedure query results.
+ * Responsible for building a single {@link Fetch} instance.
+ * Given the following HQL for illustration,
+ * <pre>
+ *     select b from Book b join fetch b.authors
+ * </pre>
+ * we have a single fetch : `Book(b).authors`
  *
- * @apiNote By definition a fetch is a reference to the fetched ModelPart
+ * @see ResultBuilder
+ *
  * @author Steve Ebersole
  */
 @Incubating
-public interface FetchBuilder {
+public interface FetchBuilder extends GraphNodeBuilder {
 	Fetch buildFetch(
 			FetchParent parent,
 			NavigablePath fetchPath,

@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.LegacyFetchBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
@@ -41,7 +42,8 @@ import static org.hibernate.query.results.internal.ResultsHelper.impl;
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQuery.FetchReturn, DynamicFetchBuilderContainer {
+public class DynamicFetchBuilderLegacy
+		implements LegacyFetchBuilder, DynamicFetchBuilder, NativeQuery.FetchReturn, NativeQuery.ReturnableResultNode, DynamicFetchBuilderContainer {
 
 	private static final String ELEMENT_PREFIX = CollectionPart.Nature.ELEMENT.getName() + ".";
 	private static final String INDEX_PREFIX = CollectionPart.Nature.INDEX.getName() + ".";

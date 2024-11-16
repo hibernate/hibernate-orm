@@ -5,24 +5,17 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.processor.Context;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.type.descriptor.java.JavaType;
 
-import javax.lang.model.element.ModuleElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import java.util.List;
 import java.util.TreeSet;
 
 import static org.hibernate.processor.util.StringUtil.nameToFieldName;
-import static org.hibernate.processor.validation.ProcessorSessionFactory.findEntityByUnqualifiedName;
+import static org.hibernate.processor.util.SqmTypeUtils.resultType;
 
 /**
  * @author Gavin King
@@ -96,27 +89,6 @@ class NamedQueryMethod implements MetaAttribute {
 		return "QUERY_" + nameToFieldName(name);
 	}
 
-	private String returnType() {
-		final JavaType<?> javaType = select.getSelection().getJavaTypeDescriptor();
-		if ( javaType != null ) {
-			return javaType.getTypeName();
-		}
-		else {
-			final List<SqmSelectableNode<?>> items =
-					select.getQuerySpec().getSelectClause().getSelectionItems();
-			final SqmExpressible<?> expressible;
-			if ( items.size() == 1 && ( expressible = items.get( 0 ).getExpressible() ) != null ) {
-				final String typeName = expressible.getTypeName();
-				final TypeElement entityType = entityType( typeName );
-				return entityType == null ? typeName : entityType.getQualifiedName().toString();
-
-			}
-			else {
-				return "Object[]";
-			}
-		}
-	}
-
 	void notNull(StringBuilder declaration) {
 		if ( addNonnullAnnotation ) {
 			declaration
@@ -149,7 +121,7 @@ class NamedQueryMethod implements MetaAttribute {
 		declaration
 				.append(annotationMeta.importType(Constants.LIST))
 				.append('<')
-				.append(annotationMeta.importType(returnType()))
+				.append( annotationMeta.importType( resultType( select, annotationMeta.getContext() ) ) )
 				.append("> ")
 				.append(name);
 		if ( reactive ) {
@@ -191,28 +163,6 @@ class NamedQueryMethod implements MetaAttribute {
 		final SqmExpressible<?> expressible = param.getExpressible();
 		final String paramType = expressible == null ? "unknown" : expressible.getTypeName(); //getTypeName() can return "unknown"
 		return "unknown".equals(paramType) ? "Object" : annotationMeta.importType(paramType);
-	}
-
-	private @Nullable TypeElement entityType(String entityName) {
-		final Context context = annotationMeta.getContext();
-		final Elements elementUtils = context.getElementUtils();
-		final String qualifiedName = context.qualifiedNameForEntityName(entityName);
-		if ( qualifiedName != null ) {
-			return elementUtils.getTypeElement(qualifiedName);
-		}
-		TypeElement symbol =
-				findEntityByUnqualifiedName( entityName,
-						elementUtils.getModuleElement("") );
-		if ( symbol != null ) {
-			return symbol;
-		}
-		for ( ModuleElement module : elementUtils.getAllModuleElements() ) {
-			symbol = findEntityByUnqualifiedName( entityName, module );
-			if ( symbol != null ) {
-				return symbol;
-			}
-		}
-		return null;
 	}
 
 	@Override

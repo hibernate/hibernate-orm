@@ -13,11 +13,7 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
-import org.hibernate.query.criteria.JpaEntityJoin;
-import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -33,6 +29,7 @@ import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.processor.util.SqmTypeUtils.resultType;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -126,7 +123,7 @@ public abstract class AnnotationMeta implements Metamodel {
 							);
 						}
 						if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
-							final String resultType = resultType( selectStatement );
+							final String resultType = resultType( selectStatement, context );
 							if ( resultType != null ) {
 								putMember( "QUERY_" + name,
 										new TypedMetaAttribute( this, name, "QUERY_", resultType,
@@ -136,27 +133,6 @@ public abstract class AnnotationMeta implements Metamodel {
 					}
 				}
 			}
-		}
-	}
-
-	private static @Nullable String resultType(SqmSelectStatement<?> selectStatement) {
-		final JpaSelection<?> selection = selectStatement.getSelection();
-		if (selection == null) {
-			return null;
-		}
-		else if (selection instanceof SqmSelectClause from) {
-			return from.getSelectionItems().size() > 1
-					? "Object[]"
-					: from.getSelectionItems().get(0).getJavaTypeName();
-		}
-		else if (selection instanceof JpaRoot<?> root) {
-			return root.getModel().getTypeName();
-		}
-		else if (selection instanceof JpaEntityJoin<?, ?> join) {
-			return join.getModel().getTypeName();
-		}
-		else {
-			return selection.getJavaTypeName();
 		}
 	}
 

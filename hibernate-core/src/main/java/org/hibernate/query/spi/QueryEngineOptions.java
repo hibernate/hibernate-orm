@@ -26,6 +26,8 @@ public interface QueryEngineOptions {
 	 * Translator for transforming HQL (as an Antlr parse tree) into an SQM tree.
 	 *
 	 * @see org.hibernate.query.hql
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#SEMANTIC_QUERY_PRODUCER
 	 */
 	HqlTranslator getCustomHqlTranslator();
 
@@ -34,6 +36,8 @@ public interface QueryEngineOptions {
 	 * For standard ORM implementations this will generally be some form of SQL tree.
 	 *
 	 * @see org.hibernate.sql.ast.tree
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#SEMANTIC_QUERY_TRANSLATOR
 	 */
 	SqmTranslatorFactory getCustomSqmTranslatorFactory();
 
@@ -59,19 +63,32 @@ public interface QueryEngineOptions {
 	/**
 	 * Contract for handling SQM trees representing mutation (UPDATE or DELETE) queries
 	 * where the target of the mutation is a multi-table entity.
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_MUTATION_STRATEGY
 	 */
 	SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy();
 
 	/**
 	 * Contract for handling SQM trees representing insertion (INSERT) queries where the
 	 * target of the mutation is a multi-table entity.
+	 *
+	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_INSERT_STRATEGY
 	 */
 	SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy();
 
+	/**
+	 * @see org.hibernate.cfg.JpaComplianceSettings
+	 */
 	JpaCompliance getJpaCompliance();
 
+	/**
+	 * @see org.hibernate.cfg.QuerySettings#CRITERIA_VALUE_HANDLING_MODE
+	 */
 	ValueHandlingMode getCriteriaValueHandlingMode();
 
+	/**
+	 * @see org.hibernate.cfg.QuerySettings#IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
+	 */
 	default ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
 	}

@@ -1169,6 +1169,17 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 Useful with associations annotated `@NotFound`. | ✖
 |===
 
+[[array-functions]]
+==== Array, XML, and JSON functions
+
+On supported platforms, HQL provides a rich suite of functions for working with:
+
+- link:{doc-user-guide-url}#hql-functions-arrays[SQL arrays],
+- link:{doc-user-guide-url}#hql-functions-json[JSON], and
+- link:{doc-user-guide-url}#hql-functions-xml[XML]
+
+The use of these functions is outside the scope of this guide.
+
 [[embedding-sql]]
 ==== Embedding SQL expressions
 
@@ -1442,8 +1453,9 @@ This less-than-lovely fragment of the HQL ANTLR grammar tells us that the thing 
 
 - a list of values enclosed in parentheses,
 - a subquery,
-- one of the collection-handling functions defined <<elements-indices,above>>, or
-- a query parameter,
+- one of the collection-handling functions defined <<elements-indices,above>>,
+- a query parameter, or
+- an expression evaluating to a link:{doc-introduction-url}#arrays[SQL array].
 
 The type of the expression on the left, and the types of all the values on the right must be compatible.
 

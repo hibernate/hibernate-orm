@@ -941,6 +941,7 @@ Its BNF is given by:
 "PAD" "(" expression "WITH" expression ("LEADING" | "TRAILING") padCharacter? ")"
 ----
 
+[[collations]]
 [discrete]
 ===== Collations
 

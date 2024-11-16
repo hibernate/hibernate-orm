@@ -734,6 +734,7 @@ Of course, the behavior here depends very much on the JDBC driver, and so we rea
 
 There's a couple of alternative ways to represent an embeddable type on the database side.
 
+[[embeddable-udt]]
 [discrete]
 ==== Embeddables as UDTs
 
@@ -818,32 +819,33 @@ Here we summarize the ones we've just seen in the second half of this chapter, a
 |===
 | Annotation | Interpretation
 
-| `@Enumerated`, `@EnumeratedValue` | Specify how an `enum` type should be persisted
-| `@Nationalized` | Use a nationalized character type: `NCHAR`, `NVARCHAR`, or `NCLOB`
-| `@Lob` 💀 | Use JDBC LOB APIs to read and write the annotated attribute
-| `@Array` | Map a collection to a SQL `ARRAY` type of the specified length
-| `@Struct` | Map an embeddable to a SQL UDT with the given name
-| `@TimeZoneStorage` | Specify how the time zone information should be persisted
-| `@JdbcType` or `@JdbcTypeCode` | Use an implementation of `JdbcType` to map an arbitrary SQL type
+| `@Enumerated`, `@EnumeratedValue` | Specify how an <<enums,`enum` type should be persisted>>
+| `@Nationalized` | Use a <<nationalized-chars,nationalized character type>>: `NCHAR`, `NVARCHAR`, or `NCLOB`
+| `@Lob` 💀 | Use <<lobs,JDBC LOB APIs>> to read and write the annotated attribute
+| `@Array` | Map a collection to a <<arrays,SQL `ARRAY` type>> of the specified length
+| `@Struct` | Map an <<embeddable-udt,embeddable to a SQL UDT>> with the given name
+| `@TimeZoneStorage` | Specify how the link:{doc-javadoc-url}org/hibernate/annotations/TimeZoneStorageType.html[time zone information should be persisted]
+| `@JdbcType` or `@JdbcTypeCode` | Use an implementation of <<jdbc-type,`JdbcType`>> to map an arbitrary SQL type
 | `@Collate` | Specify a collation for a column
 |===
 
-In addition, there are link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html[some configuration properties] which have a _global_ affect on how basic types map to SQL column types:
+In addition, there are link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html[some configuration properties] which have a _global_ effect on how basic types map to SQL column types:
 
 .Type mapping settings
 [%autowidth.stretch]
 |===
 | Configuration property name | Purpose
 
-| `hibernate.use_nationalized_character_data` | Enable use of nationalized character types by default
-| `hibernate.type.preferred_boolean_jdbc_type` | Specify the default SQL column type for mapping `boolean`
-| `hibernate.type.preferred_uuid_jdbc_type` | Specify the default SQL column type for mapping `UUID`
-| `hibernate.type.preferred_duration_jdbc_type` | Specify the default SQL column type for mapping `Duration`
-| `hibernate.type.preferred_instant_jdbc_type` | Specify the default SQL column type for mapping `Instant`
-| `hibernate.timezone.default_storage` | Specify the default strategy for storing time zone information
+| `hibernate.use_nationalized_character_data` | Enable use of <<nationalized-chars,nationalized character types>> by default
+| `hibernate.type.preferred_boolean_jdbc_type` | Specify the default SQL column type for storing a `boolean`
+| `hibernate.type.preferred_uuid_jdbc_type` | Specify the default SQL column type for storing a `UUID`
+| `hibernate.type.preferred_duration_jdbc_type` | Specify the default SQL column type for storing a `Duration`
+| `hibernate.type.preferred_instant_jdbc_type` | Specify the default SQL column type for storing an `Instant`
+| `hibernate.timezone.default_storage` | Specify the default strategy for link:{doc-javadoc-url}org/hibernate/annotations/TimeZoneStorageType.html[storing time zone information]
+| `hibernate.type.prefer_native_enum_types` | Use <<named-enums,named enum types>> on PostgreSQL and Oracle
 |===
 
-For example, if we wanted to store an `Instant` using `timestamp with time zone` (called `timestamp` on MySQL, and `datetimeoffset` on SQL Server) instead of `timestamp` (`datetime` on MySQL, `datetime2` on SQL Server), then we could annotated every field of type `Instant`:
+For example, if we wanted to store an `Instant` using `timestamp with time zone` (called `timestamp` on MySQL, and `datetimeoffset` on SQL Server) instead of `timestamp` (`datetime` on MySQL, `datetime2` on SQL Server), then we could annotate every field of type `Instant`:
 
 [source,java]
 ----
@@ -851,7 +853,7 @@ For example, if we wanted to store an `Instant` using `timestamp with time zone`
 Instant instant;
 ----
 
-Alternatively, we could affect every field of type `Instant` with the property `hibernate.type.preferred_instant_jdbc_type`:
+Alternatively, we could set the property `hibernate.type.preferred_instant_jdbc_type`:
 
 
 [source,java]

@@ -656,10 +656,20 @@ But in the country I was born, `SUNDAY` is the _first_ day of the week!
 So we prefer `@Enumerated(STRING)` for most `enum` attributes.
 ====
 
-An interesting special case is PostgreSQL.
-Postgres supports _named_ `ENUM` types, which must be declared using a DDL `CREATE TYPE` statement.
-Sadly, these `ENUM` types aren't well-integrated with the language nor well-supported by the Postgres JDBC driver, so Hibernate doesn't use them by default.
-But if you would like to use a named enumerated type on Postgres, just annotate your `enum` attribute like this:
+An interesting special case arises on PostgreSQL and Oracle.
+
+[[named-enums]]
+.Named enumerated types
+****
+Some databases support _named_ `ENUM` types, which must be declared using in DDL using:
+
+- `CREATE TYPE ... AS ENUM` on PostgreSQL, or
+- `CREATE DOMAIN ... AS ENUM` on Oracle.
+
+These look like a perfect match for Java ``enum``s, which also have names!
+
+Sadly, these `ENUM` types aren't well-integrated with the SQL language, nor well-supported by the JDBC drivers, so Hibernate doesn't use them by default.
+But if you would like to use a named enumerated type on Postgres or Oracle, just annotate your `enum` attribute like this:
 
 [source,java]
 ----
@@ -667,6 +677,9 @@ But if you would like to use a named enumerated type on Postgres, just annotate 
 @Basic(optional=false)
 Status status;
 ----
+
+Alternatively, you may enable the configuration property link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PREFER_NATIVE_ENUM_TYPES[`hibernate.type.prefer_native_enum_types`].
+****
 
 The limited set of pre-defined basic attribute types can be stretched a bit further by supplying a _converter_.
 
@@ -740,6 +753,7 @@ Hibernate considers a "basic type" to be formed by the marriage of two objects:
 
 When mapping a basic attribute, we may explicitly specify a `JavaType`, a `JdbcType`, or both.
 
+[[java-type]]
 [discrete]
 ==== JavaType
 
@@ -771,6 +785,7 @@ BitSet bitSet;
 
 Alternatively, the `@JavaTypeRegistration` annotation may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
 
+[[jdbc-type]]
 [discrete]
 ==== JdbcType
 

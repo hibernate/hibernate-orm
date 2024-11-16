@@ -279,6 +279,9 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@link Dialect#getPreferredSqlTypeCodeForArray()}.
 	 *
+	 * @see org.hibernate.type.SqlTypes#ARRAY
+	 * @see org.hibernate.type.SqlTypes#TABLE
+	 *
 	 * @since 6.6
 	 */
 	@Incubating

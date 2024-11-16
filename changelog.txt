@@ -3,6 +3,64 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.Beta2 (November 13, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32358
+
+** Bug
+    * [HHH-18816] - Error when rendering the fk-side of an association in an exists subquery
+    * [HHH-18808] - HqlParser.g4 outputs wrong token for `nakedIdentifier` and `identifier` when keyword is used
+    * [HHH-18807] - a bug in HqlLexer.g4
+    * [HHH-18806] - handling of nationalized strings on Sybase / jTDS
+    * [HHH-18773] - Multiple selections of same alias triggers possible non-threadsafe access to the session
+    * [HHH-18770] - NPE when using the JFR integration with JFR disabled
+    * [HHH-18764] - Class cast exception when using non basic type as identifier and in an embedded field using a natural ID
+    * [HHH-18761] - named query method generation for @NamedQuery on entity
+    * [HHH-18739] - Do not support join queries when using Mysql
+    * [HHH-18738] - Schema of database sequence is not configured if xml mapping is used
+    * [HHH-18730] - Multi-column association in aggregate component doesn't work
+    * [HHH-18720] - Type check on select columns in union all gives SemanticException when there is a null column
+    * [HHH-18719] - Previous row state reuse can provide detached entities to the consumer
+    * [HHH-18712] - Warning about attempts to update an immutable entity for normal (not immutable) entity
+    * [HHH-18703] - JoinedSubclassEntityPersister#getTableNameForColumn KO
+    * [HHH-18702] - Exception using @EmbeddedId with @OneToMany that refers to an alternate key column
+    * [HHH-18699] - Correctly handle @Id and @Version fields in query validation in Hibernate Processor
+    * [HHH-18697] - JPA 3.2 spec compliance for uppercasing of names in Hibernate Processor
+    * [HHH-18696] - @Find method for single @NaturalId field
+    * [HHH-18692] - Hibernate attempts to close batched statements multiple times 
+    * [HHH-18689] - 'FULL' query cache sometimes incomplete
+    * [HHH-18681] - InterpretationException executing subquery in case-when : o.h.query.sqm.tree.select.SqmSelection.getExpressible() is null
+    * [HHH-18675] - Self-referencing many-to-many relation on generic entity gives NullPointerException in mapping
+    * [HHH-18671] - Fix setting name (spelling)
+    * [HHH-18669] - NullPointerException in the AgroalConnectionProvider
+    * [HHH-18667] - Annotation processor leaks - OOME when used in Eclipse IDE
+    * [HHH-18662] - Attribute not mentioned in orm.xml ends up not being mapped in Hibernate ORM 7
+    * [HHH-18658] - Inner join prevents finding an entity instance referencing an empty map
+    * [HHH-18647] - SemanticException when using createCriteriaInsertValues to insert into foreign key column
+    * [HHH-18645] - AssertionError in AbstractBatchEntitySelectFetchInitializer#registerToBatchFetchQueue
+    * [HHH-18642] - DB2: select from new table with identity column not working when missing read permission
+    * [HHH-18635] - Avoid using `bigdatetime` column type on Sybase jconn when not necessary
+    * [HHH-18632] - Concurrency issue with AbstractEntityPersister#nonLazyPropertyLoadPlansByName
+    * [HHH-18631] - AssertionError when loading an entity after removing another, associated entity
+    * [HHH-18628] - Regression: Unable to determine TableReference
+    * [HHH-18626] - @Id annotation in @Embeddable class results in AssertionFailure
+    * [HHH-18617] - Fetching unowned side of bidirectional OneToOne mappings including tenant identifier triggers EntityFilteredException
+    * [HHH-18608] - NPE in EntityInitializerImpl.resolveInstanceSubInitializers
+    * [HHH-18596] - ValueHandlingMode hack in query pagination
+    * [HHH-18585] - exposure of internal types via Dialect
+    * [HHH-18582] - Mapping array of arrays with @JdbcTypeCode(SqlTypes.ARRAY) causes NPE
+    * [HHH-18581] - Performance degradation from Hibernate 5 to 6 on NativeQuery
+    * [HHH-18575] - IN predicate with numeric/decimal parameter types leads to Binding is multi-valued; illegal call to #getBindValue
+    * [HHH-18571] - Entities and collections with batch size 1 are treated as batchable
+    * [HHH-18570] - Invalid SQL when filter contains identifier named date
+    * [HHH-18565] - Bytecode enhancement, assertion error on reloading *toOne entities
+    * [HHH-18564] - Literal expressions using AttributeConverters stopped working in hibernate 6
+    * [HHH-18561] - Informix primary key constraint syntax error
+    * [HHH-18560] - DB2iDialect executes incompatible query in combination with @AuditJoinTable mapping
+    * [HHH-18558] - Informix UUID type support
+
+
 Changes in 7.0.0.Beta1 (August 01, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

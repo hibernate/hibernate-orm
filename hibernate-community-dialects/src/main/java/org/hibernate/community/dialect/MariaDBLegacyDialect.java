@@ -10,6 +10,9 @@ import java.sql.SQLException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -18,6 +21,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -29,8 +33,6 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -123,6 +125,13 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
+	public AggregateSupport getAggregateSupport() {
+		return getVersion().isSameOrAfter( 10, 2 )
+				? MySQLAggregateSupport.LONGTEXT_INSTANCE
+				: AggregateSupportImpl.INSTANCE;
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -150,13 +159,20 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		// Make sure we register the JSON type descriptor before calling super, because MariaDB does not need casting
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addTypeConstructorIfAbsent( JsonArrayJdbcTypeConstructor.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MariaDBCastingJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MariaDBCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( VarcharUUIDJdbcType.INSTANCE );
 		}
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		return to == CastType.JSON
+				? "json_extract(?1,'$')"
+				: super.castPattern( from, to );
 	}
 
 	@Override

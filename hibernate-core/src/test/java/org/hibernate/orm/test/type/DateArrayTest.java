@@ -10,6 +10,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -142,6 +143,7 @@ public class DateArrayTest {
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {

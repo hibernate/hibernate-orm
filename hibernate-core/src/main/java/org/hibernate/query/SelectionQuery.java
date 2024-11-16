@@ -66,6 +66,24 @@ import org.hibernate.graph.GraphSemantic;
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
+ * A query which returns multiple results should be executed via
+ * {@link #getResultList()}:
+ * <pre>
+ * List&lt;Book&gt; books =
+ *         session.createSelectionQuery("from Book left join fetch authors where title like :title")
+ *                 .setParameter("title", title)
+ *                 .setMaxResults(50)
+ *                 .getResultList();
+ * </pre>
+ * A query which is expected to return exactly one on result should be executed
+ * via {@link #getSingleResult()}, or, if it might not return a result,
+ * {@link #getSingleResultOrNull()}:
+ * <pre>
+ * Book book =
+ *         session.createSelectionQuery("from Book where isbn = ?1")
+ *                 .setParameter(1, isbn)
+ *                 .getSingleResultOrNull();
+ * </pre>
  * <p>
  * A query may have explicit <em>fetch joins</em>, specified using the syntax
  * {@code join fetch} in HQL, or via {@link jakarta.persistence.criteria.From#fetch}
@@ -572,7 +590,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> setOrder(List<Order<? super R>> orderList);
+	SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList);
 
 	/**
 	 * If the result type of this query is an entity class, add a

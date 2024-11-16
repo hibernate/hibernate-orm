@@ -46,6 +46,11 @@ import jakarta.persistence.TemporalType;
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
+ * <pre>
+ * session.createMutationQuery("delete Draft where lastUpdated < local date - ?1 year")
+ *         .setParameter(1, years)
+ *         .executeUpdate();
+ * </pre>
  *
  * @author Steve Ebersole
  */

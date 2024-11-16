@@ -58,6 +58,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 			case JSON:
 				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case JSON:
+					case JSON_ARRAY:
 						return template.replace(
 								placeholder,
 								aggregateParentReadExpression + "->'" + columnExpression + "'"

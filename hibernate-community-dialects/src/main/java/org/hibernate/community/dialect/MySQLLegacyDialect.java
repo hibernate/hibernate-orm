@@ -16,6 +16,8 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
@@ -263,7 +265,10 @@ public class MySQLLegacyDialect extends Dialect {
 				//MySQL doesn't let you cast to DOUBLE/FLOAT
 				//but don't just return 'decimal' because
 				//the default scale is 0 (no decimal places)
-				return "decimal($p,$s)";
+				return getMySQLVersion().isSameOrAfter( 8, 0, 17 )
+					// In newer versions of MySQL, casting to float/double is supported
+					? super.castType( sqlTypeCode )
+					: "decimal($p,$s)";
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
@@ -383,6 +388,13 @@ public class MySQLLegacyDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return getMySQLVersion().isSameOrAfter( 5, 7 )
+				? MySQLAggregateSupport.JSON_INSTANCE
+				: super.getAggregateSupport();
 	}
 
 	@Deprecated

@@ -22,7 +22,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
 import org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer;
 import org.hibernate.boot.model.CustomSql;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
 import org.hibernate.boot.model.source.spi.AttributeSource;
@@ -389,12 +388,6 @@ public abstract class AbstractEntitySourceImpl
 	@Override
 	public List<JaxbHbmNamedNativeQueryType> getNamedNativeQueries() {
 		return jaxbEntityMapping.getSqlQuery();
-	}
-
-	@Override
-	public TruthValue quoteIdentifiersLocalToEntity() {
-		// HBM does not allow for this
-		return TruthValue.UNKNOWN;
 	}
 
 }

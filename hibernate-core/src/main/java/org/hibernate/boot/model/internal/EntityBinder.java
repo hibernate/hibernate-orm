@@ -94,6 +94,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
+import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.UnionSubclass;
@@ -201,7 +202,11 @@ public class EntityBinder {
 	private CacheLayout queryCacheLayout;
 
 	private SourceModelBuildingContext getSourceModelContext() {
-		return context.getMetadataCollector().getSourceModelBuildingContext();
+		return getMetadataCollector().getSourceModelBuildingContext();
+	}
+
+	private InFlightMetadataCollector getMetadataCollector() {
+		return context.getMetadataCollector();
 	}
 
 	/**
@@ -215,12 +220,14 @@ public class EntityBinder {
 			LOG.debugf( "Binding entity from annotated class: %s", clazzToProcess.getName() );
 		}
 
+		final InFlightMetadataCollector collector = context.getMetadataCollector();
+
 		//TODO: be more strict with secondary table allowance (not for ids, not for secondary table join columns etc)
 
 		final InheritanceState inheritanceState = inheritanceStates.get( clazzToProcess );
 		final PersistentClass superEntity = getSuperEntity( clazzToProcess, inheritanceStates, context, inheritanceState );
 		final PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
-		checkOverrides( clazzToProcess, superEntity, context.getMetadataCollector().getSourceModelBuildingContext() );
+		checkOverrides( clazzToProcess, superEntity, collector.getSourceModelBuildingContext() );
 
 		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
 		entityBinder.bindEntity();
@@ -240,7 +247,6 @@ public class EntityBinder {
 		entityBinder.handleInheritance( inheritanceState, superEntity, holder );
 		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState );
 
-		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
@@ -327,7 +333,8 @@ public class EntityBinder {
 		ClassDetails classToCheck = classDetails.getSuperClass();
 		while ( classToCheck != null ) {
 			final SoftDelete fromSuper = classToCheck.getAnnotationUsage( SoftDelete.class, sourceModelContext );
-			if ( fromSuper != null && classToCheck.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, sourceModelContext ) ) {
+			if ( fromSuper != null
+					&& classToCheck.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, sourceModelContext ) ) {
 				return fromSuper;
 			}
 
@@ -366,7 +373,8 @@ public class EntityBinder {
 	}
 
 	private void callTypeBinders(PersistentClass persistentClass) {
-		final List<? extends Annotation> metaAnnotatedList = annotatedClass.getMetaAnnotated( TypeBinderType.class, getSourceModelContext() );
+		final List<? extends Annotation> metaAnnotatedList =
+				annotatedClass.getMetaAnnotated( TypeBinderType.class, getSourceModelContext() );
 		for ( Annotation metaAnnotated : metaAnnotatedList ) {
 			applyTypeBinder( metaAnnotated, persistentClass );
 		}
@@ -424,9 +432,8 @@ public class EntityBinder {
 			TableBinder.addTableOptions( table, jpaTableUsage.options() );
 		}
 
-		final InFlightMetadataCollector.EntityTableXref entityTableXref = context
-				.getMetadataCollector()
-				.getEntityTableXref( persistentClass.getEntityName() );
+		final InFlightMetadataCollector.EntityTableXref entityTableXref =
+				getMetadataCollector().getEntityTableXref( persistentClass.getEntityName() );
 
 		annotatedClass.forEachAnnotationUsage( jakarta.persistence.SecondaryTable.class, getSourceModelContext(), (usage) -> {
 			final Identifier secondaryTableLogicalName = toIdentifier( usage.name() );
@@ -476,7 +483,9 @@ public class EntityBinder {
 		if ( classWithIdClass != null ) {
 			final IdClass idClassAnn = classWithIdClass.getDirectAnnotationUsage( IdClass.class );
 			final Class<?> idClassValue = idClassAnn.value();
-			final ClassDetails compositeClass = context.getMetadataCollector().getSourceModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( idClassValue.getName() );
+			final ClassDetails compositeClass =
+					getMetadataCollector().getSourceModelBuildingContext().getClassDetailsRegistry()
+							.resolveClassDetails( idClassValue.getName() );
 			final TypeDetails compositeType = new ClassTypeDetailsImpl( compositeClass, TypeDetails.Kind.CLASS );
 			final TypeDetails classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
 
@@ -558,7 +567,7 @@ public class EntityBinder {
 				propertyAccessor,
 				isIdClass
 		);
-		final Property mapperProperty = new Property();
+		final Property mapperProperty = new SyntheticProperty();
 		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 		mapperProperty.setUpdateable( false );
 		mapperProperty.setInsertable( false );
@@ -657,7 +666,8 @@ public class EntityBinder {
 
 			}
 			else {
-				final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+				final SourceModelBuildingContext sourceModelContext =
+						context.getMetadataCollector().getSourceModelBuildingContext();
 				final IdClass idClass = associatedClassWithIdClass.getAnnotationUsage( IdClass.class, sourceModelContext );
 				return compositeClass.getName().equals( idClass.value().getName() );
 			}
@@ -731,7 +741,8 @@ public class EntityBinder {
 		final String table;
 		final String catalog;
 		final UniqueConstraint[] uniqueConstraints;
-		final jakarta.persistence.Table tableAnnotation = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, getSourceModelContext() );
+		final jakarta.persistence.Table tableAnnotation =
+				annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, getSourceModelContext() );
 		if ( tableAnnotation != null ) {
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();
@@ -778,7 +789,7 @@ public class EntityBinder {
 				rowId == null ? null : rowId.value(),
 				view == null ? null : view.query(),
 				inheritanceState.hasDenormalizedTable()
-						? context.getMetadataCollector().getEntityTableXref( superEntity.getEntityName() )
+						? getMetadataCollector().getEntityTableXref( superEntity.getEntityName() )
 						: null
 		);
 	}
@@ -838,10 +849,9 @@ public class EntityBinder {
 			final OnDelete onDelete = annotatedClass.getAnnotationUsage( OnDelete.class, getSourceModelContext() );
 			key.setOnDeleteAction( onDelete == null ? null : onDelete.action() );
 			//we are never in a second pass at that stage, so queue it
-			context.getMetadataCollector()
-					.addSecondPass( new JoinedSubclassFkSecondPass( jsc, joinColumns, key, context) );
-			context.getMetadataCollector()
-					.addSecondPass( new CreateKeySecondPass( jsc ) );
+			final InFlightMetadataCollector metadataCollector = getMetadataCollector();
+			metadataCollector.addSecondPass( new JoinedSubclassFkSecondPass( jsc, joinColumns, key, context) );
+			metadataCollector.addSecondPass( new CreateKeySecondPass( jsc ) );
 		}
 
 		final AnnotatedDiscriminatorColumn discriminatorColumn = processJoinedDiscriminatorProperties( state );
@@ -936,8 +946,7 @@ public class EntityBinder {
 			rootClass.setPolymorphic( true );
 			final String rootEntityName = rootClass.getEntityName();
 			LOG.tracev( "Setting discriminator for entity {0}", rootEntityName);
-			context.getMetadataCollector()
-					.addSecondPass( new NullableDiscriminatorColumnSecondPass( rootEntityName ) );
+			getMetadataCollector().addSecondPass( new NullableDiscriminatorColumnSecondPass( rootEntityName ) );
 		}
 	}
 
@@ -945,10 +954,13 @@ public class EntityBinder {
 	 * Process all discriminator-related metadata per rules for "single table" inheritance
 	 */
 	private AnnotatedDiscriminatorColumn processSingleTableDiscriminatorProperties(InheritanceState inheritanceState) {
-		final DiscriminatorColumn discriminatorColumn = annotatedClass.getAnnotationUsage( DiscriminatorColumn.class, getSourceModelContext() );
-		final DiscriminatorFormula discriminatorFormula = getOverridableAnnotation( annotatedClass, DiscriminatorFormula.class, context );
+		final DiscriminatorColumn discriminatorColumn =
+				annotatedClass.getAnnotationUsage( DiscriminatorColumn.class, getSourceModelContext() );
+		final DiscriminatorFormula discriminatorFormula =
+				getOverridableAnnotation( annotatedClass, DiscriminatorFormula.class, context );
 
-		if ( !inheritanceState.hasParents() || annotatedClass.hasAnnotationUsage( Inheritance.class, getSourceModelContext() ) ) {
+		if ( !inheritanceState.hasParents()
+				|| annotatedClass.hasAnnotationUsage( Inheritance.class, getSourceModelContext() ) ) {
 			return buildDiscriminatorColumn(
 					discriminatorColumn,
 					discriminatorFormula,
@@ -982,8 +994,10 @@ public class EntityBinder {
 					+  "' has 'JOINED' inheritance and is annotated '@DiscriminatorFormula'" );
 		}
 
-		final DiscriminatorColumn discriminatorColumn = annotatedClass.getAnnotationUsage( DiscriminatorColumn.class, getSourceModelContext() );
-		if ( !inheritanceState.hasParents() || annotatedClass.hasAnnotationUsage( Inheritance.class, getSourceModelContext() ) ) {
+		final DiscriminatorColumn discriminatorColumn =
+				annotatedClass.getAnnotationUsage( DiscriminatorColumn.class, getSourceModelContext() );
+		if ( !inheritanceState.hasParents()
+				|| annotatedClass.hasAnnotationUsage( Inheritance.class, getSourceModelContext() ) ) {
 			return useDiscriminatorColumnForJoined( discriminatorColumn )
 					? buildDiscriminatorColumn( discriminatorColumn, null, null, DEFAULT_DISCRIMINATOR_COLUMN_NAME, context )
 					: null;
@@ -1009,14 +1023,14 @@ public class EntityBinder {
 	 */
 	private boolean useDiscriminatorColumnForJoined(DiscriminatorColumn discriminatorColumn) {
 		if ( discriminatorColumn != null ) {
-			boolean ignore = context.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance();
+			final boolean ignore = context.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
 				LOG.debugf( "Ignoring explicit @DiscriminatorColumn annotation on: %s", annotatedClass.getName() );
 			}
 			return !ignore;
 		}
 		else {
-			boolean createImplicit = context.getBuildingOptions().createImplicitDiscriminatorsForJoinedInheritance();
+			final boolean createImplicit = context.getBuildingOptions().createImplicitDiscriminatorsForJoinedInheritance();
 			if ( createImplicit ) {
 				LOG.debugf( "Inferring implicit @DiscriminatorColumn using defaults for: %s", annotatedClass.getName() );
 			}
@@ -1121,9 +1135,11 @@ public class EntityBinder {
 		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
 
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext sourceModelContext =
+				context.getMetadataCollector().getSourceModelBuildingContext();
 
-		final PrimaryKeyJoinColumns primaryKeyJoinColumns = clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumns.class, sourceModelContext );
+		final PrimaryKeyJoinColumns primaryKeyJoinColumns =
+				clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumns.class, sourceModelContext );
 		if ( primaryKeyJoinColumns != null ) {
 			final PrimaryKeyJoinColumn[] columns = primaryKeyJoinColumns.value();
 			if ( !ArrayHelper.isEmpty( columns ) ) {
@@ -1138,7 +1154,8 @@ public class EntityBinder {
 				}
 			}
 			else {
-				final PrimaryKeyJoinColumn columnAnnotation = clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumn.class, sourceModelContext );
+				final PrimaryKeyJoinColumn columnAnnotation =
+						clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumn.class, sourceModelContext );
 				buildInheritanceJoinColumn(
 						columnAnnotation,
 						null,
@@ -1171,8 +1188,9 @@ public class EntityBinder {
 			return null;
 		}
 		else {
-			final PersistentClass superEntity = context.getMetadataCollector()
-					.getEntityBinding( superState.getClassDetails().getName() );
+			final PersistentClass superEntity =
+					context.getMetadataCollector()
+							.getEntityBinding( superState.getClassDetails().getName() );
 			//check if superclass is not a potential persistent class
 			if ( superEntity == null && inheritanceState.hasParents() ) {
 				throw new AssertionFailure( "Subclass has to be bound after its parent class: "
@@ -1185,7 +1203,8 @@ public class EntityBinder {
 	/**
 	 * See {@link JpaEventListener} for a better (?) alternative
 	 */
-	private static void bindCallbacks(ClassDetails entityClass, PersistentClass persistentClass, MetadataBuildingContext context) {
+	private static void bindCallbacks(
+			ClassDetails entityClass, PersistentClass persistentClass, MetadataBuildingContext context) {
 		for ( CallbackType callbackType : CallbackType.values() ) {
 			persistentClass.addCallbackDefinitions( CallbackDefinitionResolver.resolveEntityCallbacks(
 					context,
@@ -1249,22 +1268,27 @@ public class EntityBinder {
 	}
 
 	private void bindRowManagement() {
-		final DynamicInsert dynamicInsertAnn = annotatedClass.getAnnotationUsage( DynamicInsert.class, getSourceModelContext() );
+		final DynamicInsert dynamicInsertAnn =
+				annotatedClass.getAnnotationUsage( DynamicInsert.class, getSourceModelContext() );
 		persistentClass.setDynamicInsert( dynamicInsertAnn != null );
 
-		final DynamicUpdate dynamicUpdateAnn = annotatedClass.getAnnotationUsage( DynamicUpdate.class, getSourceModelContext() );
+		final DynamicUpdate dynamicUpdateAnn =
+				annotatedClass.getAnnotationUsage( DynamicUpdate.class, getSourceModelContext() );
 		persistentClass.setDynamicUpdate( dynamicUpdateAnn != null );
 
-		if ( persistentClass.useDynamicInsert() && annotatedClass.hasAnnotationUsage( SQLInsert.class, getSourceModelContext() ) ) {
+		if ( persistentClass.useDynamicInsert()
+				&& annotatedClass.hasAnnotationUsage( SQLInsert.class, getSourceModelContext() ) ) {
 			throw new AnnotationException( "Entity '" + name + "' is annotated both '@DynamicInsert' and '@SQLInsert'" );
 		}
-		if ( persistentClass.useDynamicUpdate() && annotatedClass.hasAnnotationUsage( SQLUpdate.class, getSourceModelContext() ) ) {
+		if ( persistentClass.useDynamicUpdate()
+				&& annotatedClass.hasAnnotationUsage( SQLUpdate.class, getSourceModelContext() ) ) {
 			throw new AnnotationException( "Entity '" + name + "' is annotated both '@DynamicUpdate' and '@SQLUpdate'" );
 		}
 	}
 
 	private void bindOptimisticLocking() {
-		final OptimisticLocking optimisticLockingAnn = annotatedClass.getAnnotationUsage( OptimisticLocking.class, getSourceModelContext() );
+		final OptimisticLocking optimisticLockingAnn =
+				annotatedClass.getAnnotationUsage( OptimisticLocking.class, getSourceModelContext() );
 		persistentClass.setOptimisticLockStyle( fromLockType( optimisticLockingAnn == null
 				? OptimisticLockType.VERSION
 				: optimisticLockingAnn.type() ) );
@@ -1347,10 +1371,11 @@ public class EntityBinder {
 	private void registerImportName() {
 		LOG.debugf( "Import with entity name %s", name );
 		try {
-			context.getMetadataCollector().addImport( name, persistentClass.getEntityName() );
+			final InFlightMetadataCollector metadataCollector = getMetadataCollector();
+			metadataCollector.addImport( name, persistentClass.getEntityName() );
 			final String entityName = persistentClass.getEntityName();
 			if ( !entityName.equals( name ) ) {
-				context.getMetadataCollector().addImport( entityName, entityName );
+				metadataCollector.addImport( entityName, entityName );
 			}
 		}
 		catch (MappingException me) {
@@ -1461,12 +1486,10 @@ public class EntityBinder {
 		//			- if so, we return the matched override
 		//			- if not, we return the normal SQLInsert (if one)
 		final Class<Annotation> overrideAnnotation = getOverrideAnnotation( annotationType );
-		final Annotation[] dialectOverrides = annotatedClass.getRepeatedAnnotationUsages(
-				overrideAnnotation,
-				getSourceModelContext()
-		);
+		final Annotation[] dialectOverrides =
+				annotatedClass.getRepeatedAnnotationUsages( overrideAnnotation, getSourceModelContext() );
 		if ( isNotEmpty( dialectOverrides ) ) {
-			final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
+			final Dialect dialect = getMetadataCollector().getDatabase().getDialect();
 			for ( int i = 0; i < dialectOverrides.length; i++ ) {
 				//noinspection unchecked
 				final DialectOverrider<A> dialectOverride = (DialectOverrider<A>) dialectOverrides[i];
@@ -1507,7 +1530,7 @@ public class EntityBinder {
 	}
 
 	private String getDefaultFilterCondition(String filterName) {
-		final FilterDefinition definition = context.getMetadataCollector().getFilterDefinition( filterName );
+		final FilterDefinition definition = getMetadataCollector().getFilterDefinition( filterName );
 		if ( definition == null ) {
 			throw new AnnotationException( "Entity '" + name
 					+ "' has a '@Filter' for an undefined filter named '" + filterName + "'" );
@@ -1523,16 +1546,14 @@ public class EntityBinder {
 
 	private void bindSynchronize() {
 		final Synchronize synchronize = annotatedClass.getAnnotationUsage( Synchronize.class, getSourceModelContext() );
-		if ( synchronize == null ) {
-			return;
-		}
-
-		final JdbcEnvironment jdbcEnvironment = context.getMetadataCollector().getDatabase().getJdbcEnvironment();
-		final boolean logical = synchronize.logical();
-		final String[] tableNames = synchronize.value();
-		for ( String tableName : tableNames ) {
-			String physicalName = logical ? toPhysicalName( jdbcEnvironment, tableName ) : tableName;
-			persistentClass.addSynchronizedTable( physicalName );
+		if ( synchronize != null ) {
+			final JdbcEnvironment jdbcEnvironment = getMetadataCollector().getDatabase().getJdbcEnvironment();
+			final boolean logical = synchronize.logical();
+			final String[] tableNames = synchronize.value();
+			for ( String tableName : tableNames ) {
+				final String physicalName = logical ? toPhysicalName( jdbcEnvironment, tableName ) : tableName;
+				persistentClass.addSynchronizedTable( physicalName );
+			}
 		}
 	}
 
@@ -1553,16 +1574,16 @@ public class EntityBinder {
 	}
 
 	private void processNamedEntityGraph(NamedEntityGraph annotation) {
-		if ( annotation == null ) {
-			return;
+		if ( annotation != null ) {
+			getMetadataCollector()
+					.addNamedEntityGraph( new NamedEntityGraphDefinition( annotation, name,
+							persistentClass.getEntityName() ) );
 		}
-		context.getMetadataCollector().addNamedEntityGraph(
-				new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() )
-		);
 	}
 
 	public void bindDiscriminatorValue() {
-		final DiscriminatorValue discriminatorValueAnn = annotatedClass.getAnnotationUsage( DiscriminatorValue.class, getSourceModelContext() );
+		final DiscriminatorValue discriminatorValueAnn =
+				annotatedClass.getAnnotationUsage( DiscriminatorValue.class, getSourceModelContext() );
 		final String discriminatorValue = discriminatorValueAnn != null
 				? discriminatorValueAnn.value()
 				: null;
@@ -1594,7 +1615,8 @@ public class EntityBinder {
 	}
 
 	public void bindConcreteProxy() {
-		final ConcreteProxy annotationUsage = annotatedClass.getAnnotationUsage( ConcreteProxy.class, getSourceModelContext() );
+		final ConcreteProxy annotationUsage =
+				annotatedClass.getAnnotationUsage( ConcreteProxy.class, getSourceModelContext() );
 		if ( annotationUsage != null ) {
 			if ( persistentClass.getSuperclass() != null ) {
 				throw new AnnotationException( "Entity class '" + persistentClass.getClassName()
@@ -1617,7 +1639,8 @@ public class EntityBinder {
 
 	private void bindNaturalIdCache() {
 		naturalIdCacheRegion = null;
-		final NaturalIdCache naturalIdCacheAnn = annotatedClass.getAnnotationUsage( NaturalIdCache.class, getSourceModelContext() );
+		final NaturalIdCache naturalIdCacheAnn =
+				annotatedClass.getAnnotationUsage( NaturalIdCache.class, getSourceModelContext() );
 		if ( naturalIdCacheAnn == null ) {
 			return;
 		}
@@ -1686,7 +1709,8 @@ public class EntityBinder {
 		cacheRegion = effectiveCache.region();
 		cacheLazyProperty = isCacheLazy( effectiveCache, annotatedClass );
 
-		final QueryCacheLayout queryCache = annotatedClass.getAnnotationUsage( QueryCacheLayout.class, getSourceModelContext() );
+		final QueryCacheLayout queryCache =
+				annotatedClass.getAnnotationUsage( QueryCacheLayout.class, getSourceModelContext() );
 		queryCacheLayout = queryCache == null ? null : queryCache.layout();
 	}
 
@@ -1722,7 +1746,8 @@ public class EntityBinder {
 	}
 
 	private static Cache buildCacheMock(ClassDetails classDetails, MetadataBuildingContext context) {
-		final CacheAnnotation cacheUsage = HibernateAnnotations.CACHE.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+		final CacheAnnotation cacheUsage =
+				HibernateAnnotations.CACHE.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
 		cacheUsage.region( classDetails.getName() );
 		cacheUsage.usage( determineCacheConcurrencyStrategy( context ) );
 		return cacheUsage;
@@ -1802,7 +1827,7 @@ public class EntityBinder {
 			);
 		}
 
-		final InFlightMetadataCollector collector = context.getMetadataCollector();
+		final InFlightMetadataCollector collector = getMetadataCollector();
 		final InFlightMetadataCollector.EntityTableXref superTableXref =
 				collector.getEntityTableXref( entityName );
 		final Table primaryTable = superTableXref.getPrimaryTable();
@@ -1851,12 +1876,11 @@ public class EntityBinder {
 //			table.setComment( comment.value() );
 //		}
 
-		context.getMetadataCollector()
-				.addEntityTableXref( entityName, logicalName, table, denormalizedSuperTableXref );
+		getMetadataCollector().addEntityTableXref( entityName, logicalName, table, denormalizedSuperTableXref );
 
-		if ( persistentClass instanceof TableOwner ) {
+		if ( persistentClass instanceof TableOwner tableOwner ) {
 			LOG.debugf( "Bind entity %s on table %s", entityName, table.getName() );
-			( (TableOwner) persistentClass ).setTable( table );
+			tableOwner.setTable( table );
 		}
 		else {
 			throw new AssertionFailure( "binding a table for a subclass" );
@@ -2109,11 +2133,8 @@ public class EntityBinder {
 		return new QualifiedTableName(
 				toIdentifier( catalog ),
 				toIdentifier( schema ),
-				context.getMetadataCollector()
-						.getDatabase()
-						.getJdbcEnvironment()
-						.getIdentifierHelper()
-						.toIdentifier( name )
+				getMetadataCollector().getDatabase().getJdbcEnvironment()
+						.getIdentifierHelper().toIdentifier( name )
 		);
 	}
 
@@ -2129,7 +2150,7 @@ public class EntityBinder {
 
 		final String entityName = persistentClass.getEntityName();
 		final InFlightMetadataCollector.EntityTableXref tableXref
-				= context.getMetadataCollector().getEntityTableXref( entityName );
+				= getMetadataCollector().getEntityTableXref( entityName );
 		assert tableXref != null : "Could not locate EntityTableXref for entity [" + entityName + "]";
 		tableXref.addSecondaryTable( logicalName, join );
 
@@ -2278,7 +2299,7 @@ public class EntityBinder {
 
 		ClassDetails classToProcess = annotatedClass.getSuperClass();
 		while ( classToProcess != null ) {
-			final AnnotatedClassType classType = context.getMetadataCollector().getClassType( classToProcess );
+			final AnnotatedClassType classType = getMetadataCollector().getClassType( classToProcess );
 			if ( classType == MAPPED_SUPERCLASS ) {
 				bindFilters( classToProcess );
 			}

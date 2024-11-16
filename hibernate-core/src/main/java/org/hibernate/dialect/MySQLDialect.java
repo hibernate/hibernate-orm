@@ -21,6 +21,8 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
@@ -316,12 +318,15 @@ public class MySQLDialect extends Dialect {
 			// MySQL doesn't let you cast to DOUBLE/FLOAT
 			// but don't just return 'decimal' because
 			// the default scale is 0 (no decimal places)
-			case FLOAT, REAL, DOUBLE -> "decimal($p,$s)";
+			case FLOAT, REAL, DOUBLE -> getMySQLVersion().isSameOrAfter( 8, 0, 17 )
+					// In newer versions of MySQL, casting to float/double is supported
+					? super.castType( sqlTypeCode )
+					: "decimal($p,$s)";
 			// MySQL doesn't let you cast to TEXT/LONGTEXT
-			case CHAR, VARCHAR, LONG32VARCHAR -> "char";
-			case NCHAR, NVARCHAR, LONG32NVARCHAR -> "char character set utf8mb4";
+			case CHAR, VARCHAR, LONG32VARCHAR, CLOB -> "char";
+			case NCHAR, NVARCHAR, LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
 			// MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
-			case BINARY, VARBINARY, LONG32VARBINARY -> "binary";
+			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "binary";
 			default -> super.castType(sqlTypeCode);
 		};
 	}
@@ -431,6 +436,11 @@ public class MySQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return MySQLAggregateSupport.JSON_INSTANCE;
 	}
 
 	@Deprecated(since="6.4")

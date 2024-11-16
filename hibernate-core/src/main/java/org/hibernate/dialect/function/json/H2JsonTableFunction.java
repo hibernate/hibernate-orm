@@ -53,6 +53,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -153,12 +154,31 @@ public class H2JsonTableFunction extends JsonTableFunction {
 				final TableGroup parentTableGroup = querySpec.getFromClause().queryTableGroups(
 						tg -> tg.findTableGroupJoin( functionTableGroup ) == null ? null : tg
 				);
-				final TableGroupJoin join = parentTableGroup.findTableGroupJoin( functionTableGroup );
+				final PredicateContainer predicateContainer;
+				if ( parentTableGroup != null ) {
+					predicateContainer = parentTableGroup.findTableGroupJoin( functionTableGroup );
+				}
+				else {
+					predicateContainer = querySpec;
+				}
 				final BasicType<Integer> integerType = converter.getCreationContext()
 						.getSessionFactory()
 						.getNodeBuilder()
 						.getIntegerType();
-				final Expression lhs = new ArrayLengthExpression( arguments.jsonDocument(), integerType );
+				final Expression jsonDocument;
+				if ( arguments.jsonDocument().getColumnReference() == null ) {
+					jsonDocument = new ColumnReference(
+							functionTableGroup.getPrimaryTableReference().getIdentificationVariable() + "_",
+							"d",
+							false,
+							null,
+							arguments.jsonDocument().getExpressionType().getSingleJdbcMapping()
+					);
+				}
+				else {
+					jsonDocument = arguments.jsonDocument();
+				}
+				final Expression lhs = new ArrayLengthExpression( jsonDocument, integerType );
 				final Expression rhs = new ColumnReference(
 						functionTableGroup.getPrimaryTableReference().getIdentificationVariable(),
 						// The default column name for the system_range function
@@ -167,7 +187,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 						null,
 						integerType
 				);
-				join.applyPredicate(
+				predicateContainer.applyPredicate(
 						new ComparisonPredicate( lhs, ComparisonOperator.GREATER_THAN_OR_EQUAL, rhs ) );
 			}
 			final int lastArrayIndex = getLastArrayIndex( arguments.columnsClause(), 0 );
@@ -176,6 +196,19 @@ public class H2JsonTableFunction extends JsonTableFunction {
 				// for every nested path for arrays
 				final String tableIdentifierVariable = functionTableGroup.getPrimaryTableReference()
 						.getIdentificationVariable();
+				final Expression jsonDocument;
+				if ( arguments.jsonDocument().getColumnReference() == null ) {
+					jsonDocument = new ColumnReference(
+							tableIdentifierVariable + "_",
+							"d",
+							false,
+							null,
+							arguments.jsonDocument().getExpressionType().getSingleJdbcMapping()
+					);
+				}
+				else {
+					jsonDocument = arguments.jsonDocument();
+				}
 				final TableGroup tableGroup = new FunctionTableGroup(
 						functionTableGroup.getNavigablePath().append( "{synthetic}" ),
 						null,
@@ -184,6 +217,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 								new NestedPathFunctionRenderer(
 										tableIdentifierVariable,
 										arguments,
+										jsonDocument,
 										maximumArraySize,
 										lastArrayIndex
 								),
@@ -207,7 +241,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 				// The join predicate compares the length of the last array expression against system_range() index.
 				// Since a table function expression can't render its own `on` clause, this split of logic is necessary
 				final Expression lhs = new ArrayLengthExpression(
-						determineLastArrayExpression( tableIdentifierVariable, arguments ),
+						determineLastArrayExpression( tableIdentifierVariable, arguments, jsonDocument ),
 						integerType
 				);
 				final Expression rhs = new ColumnReference(
@@ -226,10 +260,10 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			return querySpec;
 		}
 
-		private static Expression determineLastArrayExpression(String tableIdentifierVariable, JsonTableArguments arguments) {
+		private static Expression determineLastArrayExpression(String tableIdentifierVariable, JsonTableArguments arguments, Expression jsonDocument) {
 			final ArrayExpressionEntry arrayExpressionEntry = determineLastArrayExpression(
 					tableIdentifierVariable,
-					determineJsonElement( tableIdentifierVariable, arguments ),
+					determineJsonElement( tableIdentifierVariable, arguments, jsonDocument ),
 					arguments.columnsClause(),
 					new ArrayExpressionEntry( 0, null )
 			);
@@ -253,7 +287,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 					final ArrayExpressionEntry nextArrayExpression;
 					if ( isArray ) {
 						final int nextArrayIndex = currentArrayEntry.arrayIndex() + 1;
-						jsonElement = new ArrayAccessExpression( jsonQueryResult, tableIdentifierVariable + "_" + nextArrayIndex + "_.x" );
+						jsonElement = new ArrayAccessExpression( jsonQueryResult, ordinalityExpression( tableIdentifierVariable, nextArrayIndex ) );
 						nextArrayExpression = new ArrayExpressionEntry( nextArrayIndex, jsonQueryResult );
 					}
 					else {
@@ -271,10 +305,9 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			return currentArrayEntry;
 		}
 
-		private static Expression determineJsonElement(String tableIdentifierVariable, JsonTableArguments arguments) {
+		private static Expression determineJsonElement(String tableIdentifierVariable, JsonTableArguments arguments, Expression jsonDocument) {
 			// Applies the json path and array index access to obtain the "current" processing element
 
-			final Expression jsonDocument = arguments.jsonDocument();
 			final boolean isArray;
 			final Expression jsonQueryResult;
 			if ( arguments.jsonPath() != null ) {
@@ -309,19 +342,21 @@ public class H2JsonTableFunction extends JsonTableFunction {
 		private static class NestedPathFunctionRenderer implements FunctionRenderer {
 			private final String tableIdentifierVariable;
 			private final JsonTableArguments arguments;
+			private final Expression jsonDocument;
 			private final int maximumArraySize;
 			private final int lastArrayIndex;
 
-			public NestedPathFunctionRenderer(String tableIdentifierVariable, JsonTableArguments arguments, int maximumArraySize, int lastArrayIndex) {
+			public NestedPathFunctionRenderer(String tableIdentifierVariable, JsonTableArguments arguments, Expression jsonDocument, int maximumArraySize, int lastArrayIndex) {
 				this.tableIdentifierVariable = tableIdentifierVariable;
 				this.arguments = arguments;
+				this.jsonDocument = jsonDocument;
 				this.maximumArraySize = maximumArraySize;
 				this.lastArrayIndex = lastArrayIndex;
 			}
 
 			@Override
 			public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, ReturnableType<?> returnType, SqlAstTranslator<?> walker) {
-				final Expression jsonElement = determineJsonElement( tableIdentifierVariable, arguments );
+				final Expression jsonElement = determineJsonElement( tableIdentifierVariable, arguments, jsonDocument );
 				renderNestedColumnJoins( sqlAppender, tableIdentifierVariable, jsonElement, arguments.columnsClause(), 0, lastArrayIndex, walker );
 			}
 
@@ -352,17 +387,15 @@ public class H2JsonTableFunction extends JsonTableFunction {
 							sqlAppender.appendSql( nextArrayIndex );
 							sqlAppender.appendSql( '_' );
 
+							final String ordinalityExpression = ordinalityExpression( tableIdentifierVariable, nextArrayIndex );
 							// The join condition for the last array will be rendered via TableGroupJoin
 							if ( nextArrayIndex != lastArrayIndex ) {
 								sqlAppender.appendSql( " on coalesce(array_length(" );
 								jsonQueryResult.accept( walker );
 								sqlAppender.append( "),0)>=" );
-								sqlAppender.appendSql( tableIdentifierVariable );
-								sqlAppender.appendSql( '_' );
-								sqlAppender.appendSql( nextArrayIndex );
-								sqlAppender.appendSql( "_.x" );
+								sqlAppender.appendSql( ordinalityExpression );
 							}
-							jsonElement = new ArrayAccessExpression( jsonQueryResult, tableIdentifierVariable + "_" + nextArrayIndex + "_.x" );
+							jsonElement = new ArrayAccessExpression( jsonQueryResult, ordinalityExpression );
 						}
 						else {
 							jsonElement = jsonQueryResult;
@@ -384,6 +417,12 @@ public class H2JsonTableFunction extends JsonTableFunction {
 	}
 
 	@Override
+	public boolean rendersIdentifierVariable(List<SqlAstNode> arguments, SessionFactoryImplementor sessionFactory) {
+		// To make our lives simpler when supporting non-column JSON document arguments
+		return true;
+	}
+
+	@Override
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			JsonTableArguments arguments,
@@ -397,13 +436,27 @@ public class H2JsonTableFunction extends JsonTableFunction {
 		final Expression jsonPathExpression = arguments.jsonPath();
 		final boolean isArray = isArrayAccess( jsonPathExpression, walker );
 
+		if ( arguments.jsonDocument().getColumnReference() == null ) {
+			sqlAppender.append( '(' );
+		}
 		if ( isArray ) {
 			sqlAppender.append( "system_range(1," );
 			sqlAppender.append( Integer.toString( maximumArraySize ) );
-			sqlAppender.append( ")" );
+			sqlAppender.append( ") " );
 		}
 		else {
-			sqlAppender.append( "system_range(1,1)" );
+			sqlAppender.append( "system_range(1,1) " );
+		}
+		sqlAppender.append( tableIdentifierVariable );
+		if ( arguments.jsonDocument().getColumnReference() == null ) {
+			sqlAppender.append( " join (values (" );
+			arguments.jsonDocument().accept( walker );
+			if ( !arguments.isJsonType() ) {
+				sqlAppender.append( " format json" );
+			}
+			sqlAppender.append( ")) " );
+			sqlAppender.append( tableIdentifierVariable );
+			sqlAppender.append( "_(d) on 1=1)" );
 		}
 	}
 
@@ -526,6 +579,13 @@ public class H2JsonTableFunction extends JsonTableFunction {
 		}
 	}
 
+	private static String ordinalityExpression(String tableIdentifierVariable, int clauseLevel) {
+		if ( clauseLevel == 0 ) {
+			return tableIdentifierVariable + ".x";
+		}
+		return tableIdentifierVariable + "_" + clauseLevel + "_.x";
+	}
+
 	/**
 	 * This type resolver essentially implements all the JSON path handling and casting via column read expressions
 	 * instead of rendering to the {@code from} clause like other {@code json_table()} implementations.
@@ -545,10 +605,15 @@ public class H2JsonTableFunction extends JsonTableFunction {
 				boolean withOrdinality,
 				SqmToSqlAstConverter converter) {
 			final JsonTableArguments arguments = JsonTableArguments.extract( sqlAstNodes );
-			final ColumnReference columnReference = arguments.jsonDocument().getColumnReference();
-			assert columnReference != null;
-
-			final String documentPath = columnReference.getExpressionText();
+			final Expression jsonDocument = arguments.jsonDocument();
+			final String documentPath;
+			final ColumnReference columnReference = jsonDocument.getColumnReference();
+			if ( columnReference != null ) {
+				documentPath = columnReference.getExpressionText();
+			}
+			else {
+				documentPath = tableIdentifierVariable + "_." + "d";
+			}
 
 			final String parentPath;
 			final boolean isArray;
@@ -620,7 +685,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			final String readExpression;
 			if ( isArray ) {
 				nextClauseLevel = clauseLevel + 1;
-				readExpression = "array_get(" + parentPath + "," + tableIdentifierVariable + "_" + nextClauseLevel + "_.x)";
+				readExpression = "array_get(" + parentPath + "," + ordinalityExpression( tableIdentifierVariable, nextClauseLevel ) + ")";
 			}
 			else {
 				nextClauseLevel = clauseLevel;
@@ -633,7 +698,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			addSelectableMapping(
 					selectableMappings,
 					definition.name(),
-					tableIdentifierVariable + "_" + clauseLevel + "_.x",
+					ordinalityExpression( tableIdentifierVariable, clauseLevel ),
 					converter.getCreationContext().getTypeConfiguration().getBasicTypeForJavaType( Long.class )
 			);
 		}

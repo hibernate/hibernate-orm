@@ -13,7 +13,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -61,7 +60,7 @@ public interface BootstrapContext {
 	/**
 	 * The {@link BeanInstanceProducer} to use when creating custom type references.
 	 *
-	 * @implNote Usually a {@link org.hibernate.boot.model.TypeBeanInstanceProducer}.
+	 * @implNote Usually a {@link org.hibernate.boot.internal.TypeBeanInstanceProducer}.
 	 */
 	BeanInstanceProducer getCustomTypeProducer();
 
@@ -104,9 +103,8 @@ public interface BootstrapContext {
 	/**
 	 * Access to the shared {@link ClassmateContext} object used
 	 * throughout the bootstrap process.
-	 *
-	 * @return Access to the shared {@link ClassmateContext} delegates.
 	 */
+	@Incubating
 	ClassmateContext getClassmateContext();
 
 	/**

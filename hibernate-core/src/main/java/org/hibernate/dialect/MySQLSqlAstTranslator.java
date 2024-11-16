@@ -48,6 +48,11 @@ import java.util.Locale;
  */
 public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	/**
+	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
+	 */
+	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
+
 	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
@@ -64,7 +69,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
 		if ( sqlType != null ) {
 			int parenthesesIndex = sqlType.indexOf( '(' );
-			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex );
+			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex ).trim();
 			switch ( baseName.toLowerCase( Locale.ROOT ) ) {
 				case "bit":
 					return "unsigned";
@@ -76,6 +81,9 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "float":
 				case "real":
 				case "double precision":
+					if ( ((MySQLDialect) dialect).getMySQLVersion().isSameOrAfter( 8, 0, 17 ) ) {
+						return sqlType;
+					}
 					final int precision = castTarget.getPrecision() == null
 							? dialect.getDefaultDecimalPrecision()
 							: castTarget.getPrecision();
@@ -85,6 +93,10 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "varchar":
 				case "nchar":
 				case "nvarchar":
+				case "text":
+				case "mediumtext":
+				case "longtext":
+				case "enum":
 					if ( castTarget.getLength() == null ) {
 						// TODO: this is ugly and fragile, but could easily be handled in a DdlType
 						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
@@ -94,9 +106,11 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 							return "char";
 						}
 					}
-					return "char(" + castTarget.getLength() + ")";
+					return castTarget.getLength() > MAX_CHAR_SIZE ? "char" : "char(" + castTarget.getLength() + ")";
 				case "binary":
 				case "varbinary":
+				case "mediumblob":
+				case "longblob":
 					return castTarget.getLength() == null
 						? "binary"
 						: "binary(" + castTarget.getLength() + ")";

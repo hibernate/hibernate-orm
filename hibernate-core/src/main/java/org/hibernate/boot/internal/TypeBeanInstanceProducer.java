@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.model;
+package org.hibernate.boot.internal;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.Internal;
@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * @author Christian Beikov
  */
-@Internal //TODO: move this to org.hibernate.boot.internal, where its only usage is
+@Internal
 public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBootstrapContext {
 	private final ConfigurationService configurationService;
 

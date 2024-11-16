@@ -4226,6 +4226,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * DB2 unnest() function
+	 */
+	public void unnest_db2(int maximumArraySize) {
+		functionRegistry.register( "unnest", new DB2UnnestFunction( maximumArraySize ) );
+	}
+
+	/**
 	 * Standard generate_series() function
 	 */
 	public void generateSeries(@Nullable String defaultValueColumnName, String defaultIndexSelectionExpression, boolean coerceToTimestamp) {
@@ -4305,8 +4312,8 @@ public class CommonFunctionFactory {
 	/**
 	 * DB2 json_table() function
 	 */
-	public void jsonTable_db2() {
-		functionRegistry.register( "json_table", new DB2JsonTableFunction( typeConfiguration ) );
+	public void jsonTable_db2(int maximumSeriesSize) {
+		functionRegistry.register( "json_table", new DB2JsonTableFunction( maximumSeriesSize, typeConfiguration ) );
 	}
 
 	/**

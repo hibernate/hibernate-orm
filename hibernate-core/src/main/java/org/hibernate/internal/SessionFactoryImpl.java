@@ -757,7 +757,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 							}
 						}
 				);
-				runtimeMetamodels.getMappingMetamodel().close();
+//				runtimeMetamodels.getMappingMetamodel().close();
 			}
 
 			if ( queryEngine != null ) {

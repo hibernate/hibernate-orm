@@ -295,7 +295,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 
 	@Override
 	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(List<Order<? super R>> orders) {
+	public SqmSelectionQueryImplementor<R> setOrder(List<? extends Order<? super R>> orders) {
 		getDelegate().setOrder( orders );
 		return this;
 	}

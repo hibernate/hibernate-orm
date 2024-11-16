@@ -28,6 +28,7 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
@@ -355,6 +356,8 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 			case VARBINARY:
 			case LONG32VARBINARY:
 				return "hextoraw(" + expression + ")";
+			case UUID:
+				return "hextoraw(replace(" + expression + ",'-',''))";
 			default:
 				return expression;
 		}

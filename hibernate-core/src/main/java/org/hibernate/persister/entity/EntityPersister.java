@@ -14,6 +14,7 @@ import jakarta.persistence.Entity;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -1485,4 +1486,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean isSharedColumn(String columnExpression);
 
 	String[][] getConstraintOrderedTableKeyColumnClosure();
+
+	@Internal
+	boolean managesColumns(String[] columnNames);
 }

@@ -1,4 +1,4 @@
-= Hibernate 7.0.0.Beta1
+= Hibernate 7.0.0.Beta2
 Steve Ebersole
 :toc:
 :toclevels: 2
@@ -14,7 +14,7 @@ Steve Ebersole
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
 
-The Hibernate ORM 7.0 Beta1 release has just been published.  Here are some highlights...
+The Hibernate ORM 7.0 Beta2 release has just been published.  Here are some highlights...
 
 
 [[jpa-32]]

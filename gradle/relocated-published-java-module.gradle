@@ -8,11 +8,6 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 publishing {
     publications {
-        // main publication
-        publishedArtifacts {
-            from components.java
-        }
-
         // relocation for the published artifacts based on the old groupId
         relocationPom( MavenPublication ) {
             pom {

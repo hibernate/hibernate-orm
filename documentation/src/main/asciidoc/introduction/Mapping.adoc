@@ -351,6 +351,8 @@ These annotations specify how elements of the domain model map to columns of tab
 | `@MapKeyColumn` | Specified a column that should be used to persist the keys of a `Map`.
 |===
 
+We'll come back to the last two annotations much later, in <<ordered-sorted>>.
+
 We use the `@Column` annotation to map basic attributes.
 
 [[regular-column-mappings]]
@@ -826,7 +828,7 @@ Here we summarize the ones we've just seen in the second half of this chapter, a
 | `@Collate` | Specify a collation for a column
 |===
 
-In addition, there are some configuration properties which have a _global_ affect on how basic types map to SQL column types:
+In addition, there are link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html[some configuration properties] which have a _global_ affect on how basic types map to SQL column types:
 
 .Type mapping settings
 [%autowidth.stretch]
@@ -839,8 +841,24 @@ In addition, there are some configuration properties which have a _global_ affec
 | `hibernate.type.preferred_duration_jdbc_type` | Specify the default SQL column type for mapping `Duration`
 | `hibernate.type.preferred_instant_jdbc_type` | Specify the default SQL column type for mapping `Instant`
 | `hibernate.timezone.default_storage` | Specify the default strategy for storing time zone information
-| `` |
 |===
+
+For example, if we wanted to store an `Instant` using `timestamp with time zone` (called `timestamp` on MySQL, and `datetimeoffset` on SQL Server) instead of `timestamp` (`datetime` on MySQL, `datetime2` on SQL Server), then we could annotated every field of type `Instant`:
+
+[source,java]
+----
+@JdbcTypeCode(SqlTypes.TIMESTAMP_WITH_TIMEZONE)
+Instant instant;
+----
+
+Alternatively, we could affect every field of type `Instant` with the property `hibernate.type.preferred_instant_jdbc_type`:
+
+
+[source,java]
+----
+config.setProperty(MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, SqlTypes.TIMESTAMP_WITH_TIMEZONE);
+----
+
 
 [TIP]
 ====
@@ -861,7 +879,7 @@ Thus, the attribute is a sort of "derived" value.
 |===
 | Annotation | Purpose
 
-| `@Formula` | Map an attribute to a SQL formula
+| link:{doc-javadoc-url}org/hibernate/annotations/Formula.html[`@Formula`] | Map an attribute to a SQL formula
 | `@JoinFormula` | Map an association to a SQL formula
 | `@DiscriminatorFormula` | Use a SQL formula as the discriminator in <<mapping-inheritance,single table inheritance>>.
 |===
@@ -884,6 +902,8 @@ class Order {
     ...
 }
 ----
+
+The formula is evaluated every time the entity is read from the database.
 
 [[derived-identity]]
 === Derived Identity

@@ -23,6 +23,7 @@ import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
+import org.hibernate.AssertionFailure;
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
@@ -33,6 +34,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.engine.spi.CompositeOwner;
@@ -171,7 +173,7 @@ public class EnhancerImpl implements Enhancer {
 		}
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
-			if ( hasUnsupportedAttributeNaming( managedCtClass ) ) {
+			if ( checkUnsupportedAttributeNaming( managedCtClass ) ) {
 				// do not enhance classes with mismatched names for PROPERTY-access persistent attributes
 				return null;
 			}
@@ -335,7 +337,7 @@ public class EnhancerImpl implements Enhancer {
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-			if ( hasUnsupportedAttributeNaming( managedCtClass ) ) {
+			if ( checkUnsupportedAttributeNaming( managedCtClass ) ) {
 				// do not enhance classes with mismatched names for PROPERTY-access persistent attributes
 				return null;
 			}
@@ -375,7 +377,7 @@ public class EnhancerImpl implements Enhancer {
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 
 			// Check for HHH-16572 (PROPERTY attributes with mismatched field and method names)
-			if ( hasUnsupportedAttributeNaming( managedCtClass ) ) {
+			if ( checkUnsupportedAttributeNaming( managedCtClass ) ) {
 				return null;
 			}
 
@@ -399,8 +401,22 @@ public class EnhancerImpl implements Enhancer {
 	 * Check whether an entity class ({@code managedCtClass}) has mismatched names between a persistent field and its
 	 * getter/setter when using {@link AccessType#PROPERTY}, which Hibernate does not currently support for enhancement.
 	 * See https://hibernate.atlassian.net/browse/HHH-16572
+	 *
+	 * @return {@code true} if enhancement of the class must be {@link org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy#SKIP skipped}
+	 * because it has mismatched names.
+	 * {@code false} if enhancement of the class must proceed, either because it doesn't have any mismatched names,
+	 * or because {@link org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy#LEGACY legacy mode} was opted into.
+	 * @throws EnhancementException if enhancement of the class must {@link org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy#FAIL abort} because it has mismatched names.
 	 */
-	private boolean hasUnsupportedAttributeNaming(TypeDescription managedCtClass) {
+	@SuppressWarnings("deprecation")
+	private boolean checkUnsupportedAttributeNaming(TypeDescription managedCtClass) {
+		var strategy = enhancementContext.getUnsupportedEnhancementStrategy();
+		if ( UnsupportedEnhancementStrategy.LEGACY.equals( strategy ) ) {
+			// Don't check anything and act as if there was nothing unsupported in the class.
+			// This is unsafe but that's what LEGACY is about.
+			return false;
+		}
+
 		// For process access rules, See https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#default-access-type
 		// and https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#a122
 		//
@@ -447,6 +463,11 @@ public class EnhancerImpl implements Enhancer {
 			methodFieldName = methodFieldName.substring(0, 1).toLowerCase() + methodFieldName.substring(1);
 			TypeList typeList = methodDescription.getDeclaredAnnotations().asTypeList();
 			if (typeList.stream().anyMatch(typeDefinitions ->
+					(typeDefinitions.getName().equals("jakarta.persistence.Transient")))) {
+				// transient property so ignore it
+				continue;
+			}
+			if (typeList.stream().anyMatch(typeDefinitions ->
 					(typeDefinitions.getName().contains("jakarta.persistence")))) {
 				propertyHasAnnotation = true;
 			}
@@ -462,10 +483,23 @@ public class EnhancerImpl implements Enhancer {
 					}
 				}
 			}
-			if (propertyHasAnnotation && !propertyNameMatchesFieldName) {
-				log.debugf("Skipping enhancement of [%s]: due to class [%s] not having a property accessor method name matching field name [%s]",
-						managedCtClass, methodDescription.getDeclaringType().getActualName(), methodFieldName);
-				return true;
+			if ( propertyHasAnnotation && !propertyNameMatchesFieldName ) {
+				switch ( strategy ) {
+					case SKIP:
+						log.debugf(
+								"Skipping enhancement of [%s] because no field named [%s] could be found for property accessor method [%s]."
+										+ " To fix this, make sure all property accessor methods have a matching field.",
+								managedCtClass.getName(), methodFieldName, methodDescription.getName() );
+						return true;
+					case FAIL:
+						throw new EnhancementException( String.format(
+								"Enhancement of [%s] failed because no field named [%s] could be found for property accessor method [%s]."
+										+ " To fix this, make sure all property accessor methods have a matching field.",
+								managedCtClass.getName(), methodFieldName, methodDescription.getName() ) );
+					default:
+						// We shouldn't even be in this method if using LEGACY, see top of this method.
+						throw new AssertionFailure( "Unexpected strategy at this point: " + strategy );
+				}
 			}
 		}
 		return false;

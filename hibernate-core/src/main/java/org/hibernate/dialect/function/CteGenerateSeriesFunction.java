@@ -126,7 +126,7 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 		};
 	}
 
-	protected static class CteGenerateSeriesQueryTransformer extends NumberSeriesQueryTransformer {
+	public static class CteGenerateSeriesQueryTransformer extends NumberSeriesQueryTransformer {
 
 		public static final String NAME = "max_series";
 		protected final int maxSeriesSize;
@@ -146,6 +146,10 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 		}
 
 		protected CteStatement createSeriesCte(SqmToSqlAstConverter converter) {
+			return createSeriesCte( maxSeriesSize, converter );
+		}
+
+		public static CteStatement createSeriesCte(int maxSeriesSize, SqmToSqlAstConverter converter) {
 			final BasicType<Long> longType = converter.getCreationContext().getTypeConfiguration()
 					.getBasicTypeForJavaType( Long.class );
 			final Expression one = new UnparsedNumericLiteral<>( "1", NumericTypeCategory.LONG, longType );

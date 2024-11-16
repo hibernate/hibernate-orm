@@ -54,7 +54,7 @@ First, add the following dependency to your project:
 org.hibernate.orm:hibernate-core:{version}
 ----
 
-Where `{version}` is the version of Hibernate you're using.
+Where `{version}` is the version of Hibernate you're using, `{fullVersion}`, for example.
 
 You'll also need to add a dependency for the JDBC
 driver for your database.
@@ -307,7 +307,7 @@ The properties you really do need to get started are these three:
 [IMPORTANT]
 // .You don't need `hibernate.dialect` anymore!
 ====
-In Hibernate 6, you don't need to specify `hibernate.dialect`.
+Since Hibernate 6, you don't need to specify `hibernate.dialect`.
 The correct Hibernate SQL `Dialect` will be determined for you automatically.
 The only reason to specify this property is if you're using a custom user-written `Dialect` class.
 
@@ -494,6 +494,32 @@ Writing your own `PhysicalNamingStrategy` and/or `ImplicitNamingStrategy` is an 
 We'll have more to say about them in <<naming-strategies>>.
 ====
 
+[[quoted-identifiers]]
+=== Quoting SQL identifiers
+
+By default, Hibernate never quotes SQL table and column names in generated SQL.
+This behavior is usually much more convenient, especially when working with a legacy schema, since unquoted identifiers aren't case-sensitive, and so Hibernate doesn't need to know or care whether a column is named `NAME`, `name`, or `Name` on the database side.
+
+The following settings enable automatic quoting:
+
+.Settings for identifier quoting
+[%breakable,cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| `hibernate.auto_quote_keyword`          | Automatically quote any identifier which is a SQL keyword
+| `hibernate.globally_quoted_identifiers` | Automatically quote every identifier
+|===
+
+Note that `hibernate.globally_quoted_identifiers` is a synonym for `<delimited-identifiers/>` in <<configuration-jpa,`persistence.xml`>>.
+We don't recommend the use of global identifier quoting, and in fact these settings are rarely used.
+
+[TIP]
+====
+A better alternative is to explicitly quote table and column names where necessary, by writing `@Table(name="\"View\")` or `@Column(name="\"number\"")`.
+Since that's kinda ugly, Hibernate lets us use a backtick as the quote character instead of the double quote.
+====
+
 [[nationalized-chars]]
 === Nationalized character data in SQL Server
 
@@ -509,7 +535,7 @@ So, if you're working with SQL Server, you might need to force Hibernate to use 
 | `hibernate.use_nationalized_character_data` | Use `nchar` and `nvarchar` instead of `char` and `varchar`
 |===
 
-On the other hand, if only _some_ columns store nationalized data, use the `@Nationalized` annotation to indicate fields of your entities which map these columns.
+On the other hand, if only _some_ columns store nationalized data, use the link:{doc-javadoc-url}org/hibernate/annotations/Nationalized.html[`@Nationalized`] annotation to indicate fields of your entities which map these columns.
 
 [TIP]
 // .Configuring SQL Server to use UTF-8 by default

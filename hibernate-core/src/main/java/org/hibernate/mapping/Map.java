@@ -22,6 +22,7 @@ import org.hibernate.usertype.UserCollectionType;
 public class Map extends IndexedCollection {
 
 	private String mapKeyPropertyName;
+	private boolean hasMapKeyProperty;
 
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
@@ -74,5 +75,14 @@ public class Map extends IndexedCollection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean hasMapKeyProperty() {
+		return hasMapKeyProperty;
+	}
+
+	public void setHasMapKeyProperty(boolean hasMapKeyProperty) {
+		this.hasMapKeyProperty = hasMapKeyProperty;
 	}
 }

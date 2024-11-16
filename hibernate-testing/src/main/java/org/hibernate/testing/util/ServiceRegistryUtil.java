@@ -46,12 +46,13 @@ public class ServiceRegistryUtil {
 
 	public static void applySettings(Map<?, ?> properties) {
 		if ( !properties.containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
-			//noinspection unchecked
-			( (Map<Object, Object>) properties ).put(
+			@SuppressWarnings( "unchecked" )
+			final Map<Object, Object> objectMap = (Map<Object, Object>) properties;
+			objectMap.put(
 					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()
 			);
-			( (Map<Object, Object>) properties ).put(
+			objectMap.put(
 					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
 					Boolean.TRUE
 			);

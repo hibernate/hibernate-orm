@@ -3,7 +3,9 @@
 goal=
 if [ "$RDBMS" == "h2" ]; then
   # This is the default.
-  goal=""
+  goal="preVerifyRelease"
+  # Settings needed for `preVerifyRelease` execution - for asciidoctor doc rendering
+	export GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'
 elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then
@@ -82,4 +84,4 @@ function logAndExec() {
   exec "${@}"
 }
 
-logAndExec ./gradlew check ${goal} "${@}" -Plog-test-progress=true --stacktrace
+logAndExec ./gradlew ciCheck ${goal} "${@}" -Plog-test-progress=true --stacktrace

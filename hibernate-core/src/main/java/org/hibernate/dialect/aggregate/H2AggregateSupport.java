@@ -38,7 +38,7 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 	public static @Nullable AggregateSupport valueOf(Dialect dialect) {
 		return dialect.getVersion().isSameOrAfter( 2, 2, 220 )
 				? H2AggregateSupport.INSTANCE
-				: null;
+				: AggregateSupportImpl.INSTANCE;
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import java.util.Set;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
-import org.hibernate.engine.jdbc.Size;
+import org.hibernate.dialect.function.json.HANAJsonValueFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -54,7 +54,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -74,7 +74,6 @@ public class HANAUnnestFunction extends UnnestFunction {
 	protected <T> SelfRenderingSqmSetReturningFunction<T> generateSqmSetReturningFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			QueryEngine queryEngine) {
-		//noinspection unchecked
 		return new SelfRenderingSqmSetReturningFunction<>(
 				this,
 				this,
@@ -357,7 +356,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 				else {
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '" );
 					sqlAppender.appendSql( selectableMapping.getSelectableName() );
 					sqlAppender.appendSql( "'" );
@@ -378,7 +377,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 				}
 				else {
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '" );
 					sqlAppender.appendSql( "." );
 					sqlAppender.appendSql( "'" );
@@ -446,6 +445,15 @@ public class HANAUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
+		final String ddlType = super.getDdlType( sqlTypedMapping, containerSqlTypeCode, translator );
+		if ( containerSqlTypeCode == SqlTypes.JSON_ARRAY ) {
+			return HANAJsonValueFunction.jsonValueReturningType( ddlType );
+		}
+		return ddlType;
+	}
+
+	@Override
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			Expression array,
@@ -454,12 +462,6 @@ public class HANAUnnestFunction extends UnnestFunction {
 			AnonymousTupleTableGroupProducer tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
-		final BasicType<?> elementType = pluralType.getElementType();
-		final String columnType = walker.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry().getTypeName(
-				elementType.getJdbcType().getDdlTypeCode(),
-				sqlTypedMapping == null ? Size.nil() : sqlTypedMapping.toSize(),
-				elementType
-		);
 		sqlAppender.appendSql( "json_table(" );
 		array.accept( walker );
 
@@ -474,18 +476,14 @@ public class HANAUnnestFunction extends UnnestFunction {
 				sqlAppender.appendSql( "'," );
 			}
 
-			sqlAppender.appendSql( "nested path '$.v' columns (" );
-			sqlAppender.append( tupleType.getColumnNames().get( 0 ) );
-			sqlAppender.appendSql( ' ' );
-			sqlAppender.append( columnType );
-			sqlAppender.appendSql( " path '$')))" );
+			sqlAppender.appendSql( "nested path '$.v' columns" );
+			renderJsonTableColumns( sqlAppender, tupleType, walker, true );
+			sqlAppender.appendSql( "))" );
 		}
 		else {
-			sqlAppender.appendSql( ",'$[*]' columns(" );
-			sqlAppender.append( tupleType.getColumnNames().get( 0 ) );
-			sqlAppender.appendSql( ' ' );
-			sqlAppender.append( columnType );
-			sqlAppender.appendSql( " path '$'))" );
+			sqlAppender.appendSql( ",'$[*]' columns" );
+			renderJsonTableColumns( sqlAppender, tupleType, walker, true );
+			sqlAppender.appendSql( ")" );
 		}
 	}
 
@@ -519,9 +517,11 @@ public class HANAUnnestFunction extends UnnestFunction {
 				separator = ',';
 			}
 			sqlAppender.appendSql( " from sys.dummy for json('arraywrap'='no')))||" );
-			sqlAppender.appendSql( "',\"v\":'||" );
+			sqlAppender.appendSql( "',\"v\":'||case when " );
 			argument.accept( walker );
-			sqlAppender.appendSql( "||'}'" );
+			sqlAppender.appendSql( " not like '[]' then " );
+			argument.accept( walker );
+			sqlAppender.appendSql( " end||'}'" );
 		}
 
 		@Override

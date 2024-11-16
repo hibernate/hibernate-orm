@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -59,7 +60,7 @@ public class SybaseASEUnnestFunction extends UnnestFunction {
 				}
 				else {
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '" );
 					sqlAppender.appendSql( selectableMapping.getSelectableName() );
 					sqlAppender.appendSql( "'" );
@@ -80,7 +81,7 @@ public class SybaseASEUnnestFunction extends UnnestFunction {
 				}
 				else {
 					sqlAppender.append( ' ' );
-					sqlAppender.append( getDdlType( selectableMapping, walker ) );
+					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( " path '" );
 					sqlAppender.appendSql( "." );
 					sqlAppender.appendSql( "'" );

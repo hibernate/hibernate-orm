@@ -10,7 +10,6 @@ import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
@@ -44,24 +43,31 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 		arguments.jsonDocument().accept( walker );
 		if ( arguments.jsonPath() != null ) {
 			sqlAppender.appendSql( ',' );
-			final JsonPathPassingClause passingClause = arguments.passingClause();
-			if ( passingClause != null ) {
-				JsonPathHelper.appendInlinedJsonPathIncludingPassingClause(
-						sqlAppender,
-						// Default behavior is NULL ON ERROR
-						arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ? "strict " : "",
+			final String rawJsonPath;
+			if ( arguments.passingClause() != null ) {
+				rawJsonPath = JsonPathHelper.inlinedJsonPathIncludingPassingClause(
 						arguments.jsonPath(),
-						passingClause,
+						arguments.passingClause(),
 						walker
 				);
 			}
 			else {
-				if ( arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ) {
-					// Default behavior is NULL ON ERROR
-					sqlAppender.appendSql( "'strict '+" );
-				}
-				arguments.jsonPath().accept( walker );
+				rawJsonPath = walker.getLiteralValue( arguments.jsonPath() );
 			}
+			final String jsonPath;
+			if ( arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ) {
+				// Default behavior is NULL ON ERROR
+				jsonPath = "strict " + rawJsonPath;
+			}
+			else {
+				jsonPath = rawJsonPath;
+			}
+			sqlAppender.appendSingleQuoteEscapedString(
+					// openjson unwraps arrays automatically and doesn't support this syntax, so remove it
+					jsonPath.endsWith( "[*]" )
+							? jsonPath.substring( 0, jsonPath.length() - 3 )
+							: jsonPath
+			);
 		}
 		else if ( arguments.errorBehavior() == JsonTableErrorBehavior.ERROR ) {
 			// Default behavior is NULL ON ERROR

@@ -298,7 +298,7 @@ public class JsonHelper {
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DURATION:
-				case SqlTypes.UUID:
+			case SqlTypes.UUID:
 				// These types need to be serialized as JSON string, but don't have a need for escaping
 				appender.append( '"' );
 				javaType.appendEncodedString( appender, value );
@@ -322,6 +322,7 @@ public class JsonHelper {
 				appender.append( '"' );
 				break;
 			case SqlTypes.ARRAY:
+			case SqlTypes.JSON_ARRAY:
 				final int length = Array.getLength( value );
 				appender.append( '[' );
 				if ( length != 0 ) {
@@ -1228,6 +1229,13 @@ public class JsonHelper {
 							string,
 							start,
 							end
+						),
+						options
+				);
+			case SqlTypes.UUID:
+				return jdbcJavaType.wrap(
+						PrimitiveByteArrayJavaType.INSTANCE.fromString(
+								string.substring( start, end ).replace( "-", "" )
 						),
 						options
 				);

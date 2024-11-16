@@ -29,6 +29,8 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -62,6 +64,7 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 public class OracleAggregateSupport extends AggregateSupportImpl {
@@ -186,6 +189,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										placeholder,
 										"hextoraw(json_value(" + parentPartExpression + columnExpression + "'))"
 								);
+							case UUID:
+								return template.replace(
+										placeholder,
+										"hextoraw(replace(json_value(" + parentPartExpression + columnExpression + "'),'-',''))"
+								);
 							case CLOB:
 							case NCLOB:
 							case BLOB:
@@ -207,6 +215,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									case BINARY:
 									case VARBINARY:
 									case LONG32VARBINARY:
+									case UUID:
 										return template.replace(
 												placeholder,
 												jdbcType.getSqlTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"
@@ -218,6 +227,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										);
 								}
 							case JSON:
+							case JSON_ARRAY:
 								return template.replace(
 										placeholder,
 										"json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + ")"
@@ -272,12 +282,16 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				switch ( sqlTypeCode ) {
 					case CLOB:
 						return "to_clob(" + customWriteExpression + ")";
+					case UUID:
+						return "regexp_replace(lower(rawtohex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')";
 					case ARRAY:
 						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
 						final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
 						switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
 							case CLOB:
 								return "(select json_arrayagg(to_clob(t.column_value)) from table(" + customWriteExpression + ") t)";
+							case UUID:
+								return "(select json_arrayagg(regexp_replace(lower(rawtohex(t.column_value)),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')) from table(" + customWriteExpression + ") t)";
 							case BIT:
 								return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
 							case BOOLEAN:
@@ -588,7 +602,14 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			// We use NO_UNTYPED here so that expressions which require type inference are casted explicitly,
 			// since we don't know how the custom write expression looks like where this is embedded,
 			// so we have to be pessimistic and avoid ambiguities
-			translator.render( expression.getValueExpression( selectableMapping ), SqlAstNodeRenderingMode.NO_UNTYPED );
+			final Expression valueExpression = expression.getValueExpression( selectableMapping );
+			if ( valueExpression instanceof Literal literal && literal.getLiteralValue() == null ) {
+				// Except for the null literal. That is just rendered as-is
+				sb.append( "null" );
+			}
+			else {
+				translator.render( valueExpression, SqlAstNodeRenderingMode.NO_UNTYPED );
+			}
 			sb.append( customWriteExpressionEnd );
 		}
 	}

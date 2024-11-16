@@ -13,7 +13,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 /**
@@ -46,12 +45,6 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 	@Override
 	public NaturalIdLoadAccess<T> using(Map<String, ?> mappings) {
 		naturalIdParameters.putAll( mappings );
-		return this;
-	}
-
-	@Override @Deprecated
-	public NaturalIdLoadAccess<T> using(Object... mappings) {
-		CollectionHelper.collectMapEntries( naturalIdParameters::put, mappings );
 		return this;
 	}
 

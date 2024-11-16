@@ -238,7 +238,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return java.sql.Date.valueOf( accessor.query( LocalDate::from ) );
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse time string " + charSequence, pe );
+			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

@@ -4,8 +4,8 @@
           xmlns:xsd="http://www.w3.org/2001/XMLSchema"
           xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
           jaxb:extensionBindingPrefixes="inheritance simplify"
-          xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
-          xmlns:simplify="http://jaxb2-commons.dev.java.net/basic/simplify"
+          xmlns:inheritance="http://jvnet.org/basicjaxb/xjc/inheritance"
+          xmlns:simplify="http://jvnet.org/basicjaxb/xjc/simplify"
           version="3.0">
 
     <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-7.0.xsd" node="/xsd:schema">

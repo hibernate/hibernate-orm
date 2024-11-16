@@ -20,6 +20,8 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
@@ -299,6 +301,11 @@ public class H2LegacyDialect extends Dialect {
 		}
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
 	}
 
 	@Override

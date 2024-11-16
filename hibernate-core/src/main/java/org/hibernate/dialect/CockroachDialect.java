@@ -26,6 +26,8 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.CockroachDBAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
@@ -665,6 +667,11 @@ public class CockroachDialect extends Dialect {
 	public NationalizationSupport getNationalizationSupport() {
 		// TEXT / STRING inherently support nationalized data
 		return NationalizationSupport.IMPLICIT;
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return CockroachDBAggregateSupport.valueOf( this );
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -42,6 +43,7 @@ public interface MappingMetamodel extends Metamodel {
 	// SQM model -> Mapping model
 
 	// todo (6.0) : POC intended for use in SQM to SQL translation
+	@Internal
 	MappingModelExpressible<?> resolveMappingExpressible(
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath,
@@ -61,6 +63,8 @@ public interface MappingMetamodel extends Metamodel {
 	 * Visit all entity mapping descriptors defined in the model
 	 */
 	void forEachEntityDescriptor(Consumer<EntityPersister> action);
+
+	@Deprecated(forRemoval = true, since = "7")
 	Stream<EntityPersister> streamEntityDescriptors();
 
 	/**
@@ -123,30 +127,11 @@ public interface MappingMetamodel extends Metamodel {
 	 * direct entity name.
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(forRemoval = true, since = "7")
 	EntityPersister locateEntityDescriptor(Class<?> byClass);
-
-	/**
-	 * @see #locateEntityDescriptor
-	 *
-	 * @deprecated use {@link #locateEntityDescriptor(Class)} instead
-	 */
-	@Deprecated(since = "6.0")
-	default EntityPersister locateEntityPersister(Class<?> byClass) {
-		return locateEntityDescriptor( byClass );
-	}
-
-	/**
-	 * Locate the entity persister by name.
-	 *
-	 * @return The located EntityPersister, never {@code null}
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
-	 *
-	 * @deprecated - use {@link #getEntityDescriptor(String)} instead
-	 */
-	@Deprecated(since = "6.0")
-	EntityPersister locateEntityPersister(String byName);
 
 	String getImportedName(String name);
 
@@ -158,6 +143,8 @@ public interface MappingMetamodel extends Metamodel {
 	 * Visit the mapping descriptors for all collections defined in the model
 	 */
 	void forEachCollectionDescriptor(Consumer<CollectionPersister> action);
+
+	@Deprecated(forRemoval = true, since = "7")
 	Stream<CollectionPersister> streamCollectionDescriptors();
 
 	/**

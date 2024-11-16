@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <jaxb:bindings xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
-		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-		xmlns:xs="http://www.w3.org/2001/XMLSchema"
-		xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
-		jaxb:extensionBindingPrefixes="inheritance"
-		version="3.0">
+			   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+			   xmlns:inheritance="http://jvnet.org/basicjaxb/xjc/inheritance"
+			   jaxb:extensionBindingPrefixes="inheritance"
+			   version="3.0">
 
 	<jaxb:bindings schemaLocation="../resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd" node="/xsd:schema">
 

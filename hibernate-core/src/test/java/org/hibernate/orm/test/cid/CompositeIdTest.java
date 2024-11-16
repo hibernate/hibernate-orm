@@ -159,10 +159,8 @@ public class CompositeIdTest {
 
 					statementInspector.clear();
 					session.flush();
-					statementInspector.assertExecutedCount( 3 );
+					statementInspector.assertExecutedCount( 1 );
 					statementInspector.assertIsInsert( 0 );
-					statementInspector.assertIsUpdate( 1 );
-					statementInspector.assertIsUpdate( 2 );
 
 
 					statementInspector.clear();

@@ -37,7 +37,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -63,6 +62,7 @@ import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
+import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
@@ -91,6 +91,7 @@ public abstract class SimpleValue implements KeyValue {
 	private boolean isNationalized;
 	private boolean isLob;
 
+	private NullValueSemantic nullValueSemantic;
 	private String nullValue;
 
 	private Table table;
@@ -207,7 +208,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	protected void justAddColumn(Column column, boolean insertable, boolean updatable) {
-		int index = columns.indexOf( column );
+		final int index = columns.indexOf( column );
 		if ( index == -1 ) {
 			columns.add( column );
 			insertability.add( insertable );
@@ -288,26 +289,23 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void setTypeName(String typeName) {
 		if ( typeName != null && typeName.startsWith( TYPE_NAME_PREFIX ) ) {
-			final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
-			final ClassLoaderService cls = getMetadata()
-					.getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.requireService( ClassLoaderService.class );
-			try {
-				final Class<? extends AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
-				this.attributeConverterDescriptor = new ClassBasedConverterDescriptor(
-						converterClass,
-						false,
-						( (InFlightMetadataCollector) getMetadata() ).getBootstrapContext().getClassmateContext()
-				);
-				return;
-			}
-			catch (Exception e) {
-				log.logBadHbmAttributeConverterType( typeName, e.getMessage() );
-			}
+			setAttributeConverterDescriptor( typeName );
 		}
+		else {
+			this.typeName = typeName;
+		}
+	}
 
-		this.typeName = typeName;
+	void setAttributeConverterDescriptor(String typeName) {
+		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
+		this.attributeConverterDescriptor =
+				new ClassBasedConverterDescriptor( classLoaderService().classForName( converterClassName ),
+						false, getBuildingContext().getBootstrapContext().getClassmateContext() );
+	}
+
+	ClassLoaderService classLoaderService() {
+		return getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+				.requireService( ClassLoaderService.class );
 	}
 
 	public void makeVersion() {
@@ -410,8 +408,8 @@ public abstract class SimpleValue implements KeyValue {
 			final IdGeneratorCreationContext context =
 					new IdGeneratorCreationContext( rootClass, property, defaults );
 			final Generator generator = customIdGeneratorCreator.createGenerator( context );
-			if ( generator.allowAssignedIdentifiers() && getNullValue() == null ) {
-				setNullValue( "undefined" );
+			if ( generator.allowAssignedIdentifiers() && nullValue == null ) {
+				setNullValueUndefined();
 			}
 			return generator;
 		}
@@ -449,17 +447,73 @@ public abstract class SimpleValue implements KeyValue {
 		return table;
 	}
 
+	/**
+	 * The property or field value which indicates that field
+	 * or property has never been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 * @see org.hibernate.engine.spi.IdentifierValue
+	 * @see org.hibernate.engine.spi.VersionValue
+	 */
 	@Override
 	public String getNullValue() {
 		return nullValue;
 	}
 
 	/**
-	 * Sets the nullValue.
-	 * @param nullValue The nullValue to set
+	 * Set the property or field value indicating that field
+	 * or property has never been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 * @see org.hibernate.engine.spi.IdentifierValue
+	 * @see org.hibernate.engine.spi.VersionValue
 	 */
 	public void setNullValue(String nullValue) {
-		this.nullValue = nullValue;
+		nullValueSemantic = switch (nullValue) {
+			// magical values (legacy of hbm.xml)
+			case "null" -> NullValueSemantic.NULL;
+			case "none" -> NullValueSemantic.NONE;
+			case "any" -> NullValueSemantic.ANY;
+			case "undefined" -> NullValueSemantic.UNDEFINED;
+			default -> NullValueSemantic.VALUE;
+		};
+		if ( nullValueSemantic == NullValueSemantic.VALUE ) {
+			this.nullValue = nullValue;
+		}
+	}
+
+	/**
+	 * The rule for determining if the field or
+	 * property has been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 */
+	@Override
+	public NullValueSemantic getNullValueSemantic() {
+		return nullValueSemantic;
+	}
+
+	/**
+	 * Specifies the rule for determining if the field or
+	 * property has been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 */
+	public void setNullValueSemantic(NullValueSemantic nullValueSemantic) {
+		this.nullValueSemantic = nullValueSemantic;
+	}
+
+	/**
+	 * Specifies that there is no well-defined property or
+	 * field value indicating that field or property has never
+	 * been set.
+	 *
+	 * @see org.hibernate.engine.internal.UnsavedValueFactory
+	 * @see org.hibernate.engine.spi.IdentifierValue#UNDEFINED
+	 * @see org.hibernate.engine.spi.VersionValue#UNDEFINED
+	 */
+	public void setNullValueUndefined() {
+		nullValueSemantic = NullValueSemantic.UNDEFINED;
 	}
 
 	public String getForeignKeyName() {
@@ -618,14 +672,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	private Class<?> getClass(String className, String propertyName) {
-		return ReflectHelper.reflectedPropertyClass(
-				className,
-				propertyName,
-				getMetadata()
-						.getMetadataBuildingOptions()
-						.getServiceRegistry()
-						.requireService( ClassLoaderService.class )
-		);
+		return reflectedPropertyClass( className, propertyName, classLoaderService() );
 	}
 
 	/**
@@ -681,8 +728,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	private <T> Type buildAttributeConverterTypeAdapter(
 			JpaAttributeConverter<T, ?> jpaAttributeConverter) {
-		JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
-		JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
+		final JavaType<T> domainJavaType = jpaAttributeConverter.getDomainJavaType();
+		final JavaType<?> relationalJavaType = jpaAttributeConverter.getRelationalJavaType();
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Going back to the illustration, this should be a SqlTypeDescriptor that handles the Integer <-> String
@@ -894,16 +941,11 @@ public abstract class SimpleValue implements KeyValue {
 			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = getAnnotations( attributeMember );
-
-			final ClassLoaderService classLoaderService =
-					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-							.requireService( ClassLoaderService.class );
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
-							classLoaderService.classForTypeName(
-									typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)
-							),
+							classLoaderService()
+									.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
 							attributeMember != null ? attributeMember.getType() : null,
 							annotations,
 							table.getCatalog(),
@@ -946,13 +988,9 @@ public abstract class SimpleValue implements KeyValue {
 			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = getAnnotations( attributeMember );
-
-			final ClassLoaderService classLoaderService =
-					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-							.requireService( ClassLoaderService.class );
-
 			return new ParameterTypeImpl(
-					classLoaderService.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
+					classLoaderService()
+							.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
 					attributeMember != null ? attributeMember.getType() : null,
 					annotations,
 					table.getCatalog(),

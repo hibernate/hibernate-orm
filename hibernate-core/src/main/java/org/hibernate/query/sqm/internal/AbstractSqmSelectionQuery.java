@@ -113,8 +113,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	private SqmSelectStatement<R> getSqmSelectStatement() {
 		final SqmStatement<R> sqmStatement = getSqmStatement();
-		if ( sqmStatement instanceof SqmSelectStatement ) {
-			return (SqmSelectStatement<R>) sqmStatement;
+		if ( sqmStatement instanceof SqmSelectStatement<R> selectStatement ) {
+			return selectStatement;
 		}
 		else {
 			throw new IllegalSelectQueryException( "Not a select query" );
@@ -122,29 +122,26 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	@Override
-	public SelectionQuery<R> setOrder(List<Order<? super R>> orderList) {
-		SqmSelectStatement<R> sqm = getSqmSelectStatement();
-		sqm = sqm.copy( noParamCopyContext() );
-		final SqmSelectStatement<R> select = sqm;
-		sqm.orderBy( orderList.stream().map( order -> sortSpecification( select, order ) )
+	public SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList) {
+		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext() );
+		selectStatement.orderBy( orderList.stream().map( order -> sortSpecification( selectStatement, order ) )
 				.collect( toList() ) );
 		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
 		//       simply cache the new SQM as if it were a criteria query, and remove this:
 		getQueryOptions().setQueryPlanCachingEnabled( false );
-		setSqmStatement( sqm );
+		setSqmStatement( selectStatement );
 		return this;
 	}
 
 
 	@Override
 	public SelectionQuery<R> setOrder(Order<? super R> order) {
-		SqmSelectStatement<R> sqm = getSqmSelectStatement();
-		sqm = sqm.copy( noParamCopyContext() );
-		sqm.orderBy( sortSpecification( sqm, order ) );
+		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext() );
+		selectStatement.orderBy( sortSpecification( selectStatement, order ) );
 		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
 		//       simply cache the new SQM as if it were a criteria query, and remove this:
 		getQueryOptions().setQueryPlanCachingEnabled( false );
-		setSqmStatement( sqm );
+		setSqmStatement( selectStatement );
 		return this;
 	}
 
@@ -160,8 +157,9 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( keyedPage == null ) {
 			throw new IllegalArgumentException( "KeyedPage was null" );
 		}
-		final List<KeyedResult<R>> results = new SqmSelectionQueryImpl<KeyedResult<R>>( this, keyedPage )
-				.getResultList();
+		final List<KeyedResult<R>> results =
+				new SqmSelectionQueryImpl<KeyedResult<R>>( this, keyedPage )
+						.getResultList();
 		final Page page = keyedPage.getPage();
 		return new KeyedResultList<>(
 				collectResults( results, page.getSize(), keyedPage.getKeyInterpretation() ),

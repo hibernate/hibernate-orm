@@ -55,9 +55,4 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 				.map( CollectionPersister::getRole )
 				.toArray( String[]::new );
 	}
-
-	default void close() {
-
-	}
-
 }

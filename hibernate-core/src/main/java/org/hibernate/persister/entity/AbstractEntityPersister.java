@@ -299,6 +299,7 @@ import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
+import static org.hibernate.internal.util.collections.ArrayHelper.isAllTrue;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toObjectArray;
@@ -6192,5 +6193,29 @@ public abstract class AbstractEntityPersister
 
 	protected String getSqlWhereStringTableExpression(){
 		return sqlWhereStringTableExpression;
+	}
+
+	@Override
+	public boolean managesColumns(String[] columnNames) {
+		for (String columnName : columnNames) {
+			if ( !writesToColumn( columnName ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean writesToColumn(String columnName) {
+		if ( contains( rootTableKeyColumnNames, columnName ) ) {
+			return true;
+		}
+		for ( int i = 0; i < propertyColumnNames.length; i++ ) {
+			if ( contains( propertyColumnNames[i], columnName )
+					&& isAllTrue( propertyColumnInsertable[i] )
+					&& isAllTrue( propertyColumnUpdateable[i] ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

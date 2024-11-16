@@ -45,13 +45,13 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 				sqlAppender.append( ',' );
 			}
 			if ( CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
-				sqlAppender.appendSql( "t.ordinality" );
+				sqlAppender.appendSql( "t.i" );
 			}
 			else {
 				sqlAppender.append( aggregateSupport.aggregateComponentCustomReadExpression(
 						"",
 						"",
-						"t.value",
+						"t.v",
 						selectableMapping.getSelectableName(),
 						SqlTypes.JSON,
 						selectableMapping
@@ -64,8 +64,10 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 		array.accept( walker );
 		sqlAppender.appendSql( ')' );
 		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
-			sqlAppender.appendSql( " with ordinality" );
+			sqlAppender.appendSql( " with ordinality t(v,i))" );
 		}
-		sqlAppender.appendSql( " t)" );
+		else {
+			sqlAppender.appendSql( " t(v))" );
+		}
 	}
 }

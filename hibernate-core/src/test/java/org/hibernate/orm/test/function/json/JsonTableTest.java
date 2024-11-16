@@ -161,6 +161,50 @@ public class JsonTableTest {
 		} );
 	}
 
+	@Test
+	public void testArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final String query = """
+					select
+					t.idx,
+					t.val
+					from json_table('[1,2]','$[*]' columns(val Integer path '$', idx for ordinality)) t
+					order by t.idx
+					""";
+			List<Tuple> resultList = em.createQuery( query, Tuple.class ).getResultList();
+
+			assertEquals( 2, resultList.size() );
+
+			assertEquals( 1L, resultList.get( 0 ).get( 0 ) );
+			assertEquals( 1, resultList.get( 0 ).get( 1 ) );
+			assertEquals( 2L, resultList.get( 1 ).get( 0 ) );
+			assertEquals( 2, resultList.get( 1 ).get( 1 ) );
+		} );
+	}
+
+	@Test
+	public void testArrayParam(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final String query = """
+					select
+					t.idx,
+					t.val
+					from json_table(:arr,'$[*]' columns(val Integer path '$', idx for ordinality)) t
+					order by t.idx
+					""";
+			List<Tuple> resultList = em.createQuery( query, Tuple.class )
+					.setParameter( "arr", "[1,2]" )
+					.getResultList();
+
+			assertEquals( 2, resultList.size() );
+
+			assertEquals( 1L, resultList.get( 0 ).get( 0 ) );
+			assertEquals( 1, resultList.get( 0 ).get( 1 ) );
+			assertEquals( 2L, resultList.get( 1 ).get( 0 ) );
+			assertEquals( 2, resultList.get( 1 ).get( 1 ) );
+		} );
+	}
+
 	private static void assertTupleEquals(Tuple tuple, long arrayIndex, String arrayValue) {
 		assertEquals( 1, tuple.get( 0 ) );
 		assertEquals( 0.1F, tuple.get( 1 ) );

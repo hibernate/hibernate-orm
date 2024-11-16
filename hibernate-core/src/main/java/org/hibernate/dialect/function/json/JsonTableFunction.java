@@ -62,7 +62,7 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 				"json_table",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.between( 1, 2 ),
-						FunctionParameterType.JSON,
+						FunctionParameterType.IMPLICIT_JSON,
 						FunctionParameterType.STRING
 				),
 				setReturningFunctionTypeResolver,

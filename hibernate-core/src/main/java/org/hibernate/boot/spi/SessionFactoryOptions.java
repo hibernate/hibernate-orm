@@ -59,6 +59,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.internal.SessionFactoryRegistry#getSessionFactory
 	 * @see SessionFactoryImplementor#getUuid
 	 */
+	@Override
 	String getUuid();
 
 	/**
@@ -81,6 +82,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.JpaComplianceSettings
 	 */
+	@Override
 	JpaCompliance getJpaCompliance();
 
 	/**
@@ -111,6 +113,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME
 	 */
+	@Override
 	String getSessionFactoryName();
 
 	/**
@@ -378,6 +381,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_VALUE_HANDLING_MODE
 	 */
+	@Override
 	default ValueHandlingMode getCriteriaValueHandlingMode() {
 		return ValueHandlingMode.BIND;
 	}

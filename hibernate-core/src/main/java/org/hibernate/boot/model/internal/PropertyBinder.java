@@ -555,15 +555,15 @@ public class PropertyBinder {
 	/**
 	 * @param elements List of {@link PropertyData} instances
 	 * @param propertyContainer Metadata about a class and its properties
+	 * @param idPropertyCounter number of id properties already present in list of {@link PropertyData} instances
 	 *
-	 * @return the number of id properties found while iterating the elements of
-	 *         {@code annotatedClass} using the determined access strategy
+	 * @return total number of id properties found after iterating the elements of
+	 * {@code annotatedClass} using the determined access strategy
 	 */
 	static int addElementsOfClass(
 			List<PropertyData> elements,
 			PropertyContainer propertyContainer,
-			MetadataBuildingContext context) {
-		int idPropertyCounter = 0;
+			MetadataBuildingContext context, int idPropertyCounter) {
 		for ( XProperty property : propertyContainer.propertyIterator() ) {
 			idPropertyCounter = addProperty( propertyContainer, property, elements, context, idPropertyCounter );
 		}

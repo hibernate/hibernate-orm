@@ -349,7 +349,7 @@ public interface JavaType<T> extends Serializable {
 	 * @since 6.2
 	 */
 	@Incubating
-	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<T, ?> converter, Dialect dialect) {
 		return null;
 	}
 }

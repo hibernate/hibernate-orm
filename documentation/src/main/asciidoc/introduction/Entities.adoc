@@ -656,10 +656,20 @@ But in the country I was born, `SUNDAY` is the _first_ day of the week!
 So we prefer `@Enumerated(STRING)` for most `enum` attributes.
 ====
 
-An interesting special case is PostgreSQL.
-Postgres supports _named_ `ENUM` types, which must be declared using a DDL `CREATE TYPE` statement.
-Sadly, these `ENUM` types aren't well-integrated with the language nor well-supported by the Postgres JDBC driver, so Hibernate doesn't use them by default.
-But if you would like to use a named enumerated type on Postgres, just annotate your `enum` attribute like this:
+An interesting special case arises on PostgreSQL and Oracle.
+
+[[named-enums]]
+.Named enumerated types
+****
+Some databases support _named_ `ENUM` types, which must be declared using in DDL using:
+
+- `CREATE TYPE ... AS ENUM` on PostgreSQL, or
+- `CREATE DOMAIN ... AS ENUM` on Oracle.
+
+These look like a perfect match for Java ``enum``s, which also have names!
+
+Sadly, these `ENUM` types aren't well-integrated with the SQL language, nor well-supported by the JDBC drivers, so Hibernate doesn't use them by default.
+But if you would like to use a named enumerated type on Postgres or Oracle, just annotate your `enum` attribute like this:
 
 [source,java]
 ----
@@ -667,6 +677,9 @@ But if you would like to use a named enumerated type on Postgres, just annotate 
 @Basic(optional=false)
 Status status;
 ----
+
+Alternatively, you may enable the configuration property link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PREFER_NATIVE_ENUM_TYPES[`hibernate.type.prefer_native_enum_types`].
+****
 
 The limited set of pre-defined basic attribute types can be stretched a bit further by supplying a _converter_.
 
@@ -740,6 +753,7 @@ Hibernate considers a "basic type" to be formed by the marriage of two objects:
 
 When mapping a basic attribute, we may explicitly specify a `JavaType`, a `JdbcType`, or both.
 
+[[java-type]]
 [discrete]
 ==== JavaType
 
@@ -771,6 +785,7 @@ BitSet bitSet;
 
 Alternatively, the `@JavaTypeRegistration` annotation may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
 
+[[jdbc-type]]
 [discrete]
 ==== JdbcType
 
@@ -826,6 +841,82 @@ long currentTimeMillis;
 ----
 
 Let's abandon our analogy right here, before we start calling this basic type a "throuple".
+
+[[datetime-types]]
+=== Date and time types, and time zones
+
+Dates and times should always be represented using the types defined in `java.time`.
+
+[WARNING]
+====
+Never use the legacy types `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, or `java.util.Date`.
+At our urging, support for these types has even been https://in.relation.to/2024/04/22/stop-using-date/[officially deprecated in JPA 3.2].
+Eventually, we hope to completely remove support for these types from the JPA spec and from Hibernate.
+====
+
+Some of the types in `java.time` map naturally to an ANSI SQL column type.
+A source of confusion is that some databases still don't follow the ANSI standard naming here.
+Also, as you're probably aware, the `DATE` type on Oracle is not an ANSI SQL `DATE`.
+In fact, Oracle doesn't have `DATE` or `TIME` types--every date or time must be stored as a timestamp.
+
+.Type mappings from `java.time` to ANSI SQL
+|====
+| `java.time` class | ANSI SQL type | MySQL | SQL Server | Oracle
+
+| `LocalDate` | `DATE` | `DATE` | `DATE` | `DATE` 💀
+| `LocalTime` | `TIME` | `TIME` | `TIME` | `TIMESTAMP` 💀
+| `LocalDateTime` | `TIMSTAMP` | `DATETIME` | `DATETIME2` | `TIMESTAMP`
+| `OffsetDateTime`, `ZonedDateTime` | `TIMESTAMP WITH TIME ZONE` | `TIMESTAMP` 🙄 | `DATETIMEOFFSET` | `TIMESTAMP WITH TIME ZONE`
+|====
+
+On the other hand, there are no perfectly natural mappings for `Instant` and `Duration` on must databases.
+By default:
+
+- `Duration` is mapped to a column of type `NUMERIC(21)` holding the length of the duration in nanoseconds, and
+- `Instant` is mapped to a column of type `TIMESTAMP` (`DATETIME` on MySQL).
+
+Fortunately, these mappings can be modified by specifying the `JdbcType`.
+
+For example, if we wanted to store an `Instant` using `TIMESTAMP WITH TIME ZONE` (`TIMESTAMP` on MySQL) instead of `TIMESTAMP`, then we could annotate the field:
+
+[source,java]
+----
+// store the Instant as a TIMESTAMP WITH TIME ZONE, instead of as a TIMESTAMP
+@JdbcTypeCode(SqlTypes.TIMESTAMP_WITH_TIMEZONE)
+Instant instant;
+----
+
+Alternatively, we could set the configuration property `hibernate.type.preferred_instant_jdbc_type`:
+
+
+[source,java]
+----
+// store field of type Instant as TIMESTAMP WITH TIME ZONE, instead of as a TIMESTAMP
+config.setProperty(MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, SqlTypes.TIMESTAMP_WITH_TIMEZONE);
+----
+
+We have worked very hard to make sure that Java date and time types work with consistent and correct semantics across all databases supported by Hibernate.
+In particular, Hibernate is very careful in how it handles time zones.
+
+[WARNING]
+====
+Unfortunately, with the notable exception of Oracle, most SQL databases feature embarrassingly poor support for timezones.
+Even some databases which do supposedly support `TIMESTAMP WITH TIME ZONE` simply covert the datetime to UTC.
+Here, Hibernate is limited by the capabilities of the databases themselves, and so on many databases, time zone information will not, by default, be preserved for an `OffsetDateTime` or `ZonedDateTime`.
+====
+
+[TIP]
+====
+The still-experimental annotation link:{doc-javadoc-url}org/hibernate/annotations/TimeZoneStorage.html[`@TimeZoneStorage`] provides some additional options in case the default behavior falls short.
+//
+// [source,java]
+// ----
+// @TimeZoneStorage(COLUMN)
+// @TimeZoneColumn(name = "event_offset")
+// @Column(name = "event_timestamp")
+// private OffsetDateTime eventDateTime;
+// ----
+====
 
 [[embeddable-objects]]
 === Embeddable objects

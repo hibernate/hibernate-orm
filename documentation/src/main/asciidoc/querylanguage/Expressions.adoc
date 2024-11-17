@@ -900,6 +900,18 @@ select substring(title, 1, position(' for Dummies' in title)) from Book         
 select substring(title from 1 for position(' for Dummies' in title)) from Book  /* ANSI SQL-style */
 ----
 
+Alternatively, slicing may be performed using an operator, which is just syntax sugar for the `substring()` function:
+
+[source, hql]
+----
+select title[1:position(' for Dummies' in title)] from Book         /* Operator-style */
+----
+
+[source,hql]
+----
+select name.first[1]||name.last[1] as initials from Author
+----
+
 [discrete]
 ===== Trimming strings
 The `trim()` function follows the syntax and semantics of ANSI SQL.
@@ -941,6 +953,7 @@ Its BNF is given by:
 "PAD" "(" expression "WITH" expression ("LEADING" | "TRAILING") padCharacter? ")"
 ----
 
+[[collations]]
 [discrete]
 ===== Collations
 
@@ -1166,6 +1179,32 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 | `naturalid()` | The value of the entity `@NaturalId` attribute. | ✖
 | `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@OneToOne`) association.
 Useful with associations annotated `@NotFound`. | ✖
+|===
+
+[[array-functions]]
+==== Array, XML, and JSON functions
+
+On supported platforms, HQL provides a rich suite of functions for working with:
+
+- link:{doc-user-guide-url}#hql-functions-arrays[SQL arrays],
+- link:{doc-user-guide-url}#hql-functions-json[JSON], and
+- link:{doc-user-guide-url}#hql-functions-xml[XML]
+
+The use of these functions is outside the scope of this guide.
+However, we note that the following language constructs work with arrays, and are implemented as syntactic sugar for the underlying functions:
+
+[[array-syntax-sugar]]
+|===
+| Syntax | Interpretation
+
+| `[1, 2]` | Instantiate an array
+| `array[1]` | Array element
+| `array[1:2]` | Array slice
+| `length(array)` | Length of an array
+| `position(element in array)` | Position of an element within an array
+| `cast(array as String)` | Typecast array to string
+| `element in array` or `array contains element` | Determine if an element belongs to an array
+| `array includes subarray` | Determine if the elements of one array include all the elements of a second array
 |===
 
 [[embedding-sql]]
@@ -1441,8 +1480,9 @@ This less-than-lovely fragment of the HQL ANTLR grammar tells us that the thing 
 
 - a list of values enclosed in parentheses,
 - a subquery,
-- one of the collection-handling functions defined <<elements-indices,above>>, or
-- a query parameter,
+- one of the collection-handling functions defined <<elements-indices,above>>,
+- a query parameter, or
+- an expression evaluating to a link:{doc-introduction-url}#arrays[SQL array].
 
 The type of the expression on the left, and the types of all the values on the right must be compatible.
 

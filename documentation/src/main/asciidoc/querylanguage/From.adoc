@@ -212,7 +212,7 @@ Every explicit association join specifies an entity attribute to be joined.
 The specified attribute:
 
 * is usually a `@OneToMany`, `@ManyToMany`, `@OneToOne`, or `@ManyToOne` association, but
-* it could be an `@ElementCollection`, and
+* it could be an `@ElementCollection`, or even just a link:{doc-introduction-url}#arrays[SQL array], and
 * it might even be an attribute of embeddable type.
 
 In the case of an association or collection, the generated SQL will have a join of the same type.

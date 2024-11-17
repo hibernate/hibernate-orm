@@ -235,12 +235,11 @@ public class InheritanceState {
 						classDetails,
 						accessType
 				);
-				int currentIdPropertyCount = addElementsOfClass(
+				idPropertyCount = addElementsOfClass(
 						elements,
 						propertyContainer,
-						buildingContext
-				);
-				idPropertyCount += currentIdPropertyCount;
+						buildingContext,
+						idPropertyCount );
 			}
 
 			if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {

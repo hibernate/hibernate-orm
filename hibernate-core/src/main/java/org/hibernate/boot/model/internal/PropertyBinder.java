@@ -565,7 +565,7 @@ public class PropertyBinder {
 			MetadataBuildingContext context) {
 		int idPropertyCounter = 0;
 		for ( XProperty property : propertyContainer.propertyIterator() ) {
-			idPropertyCounter += addProperty( propertyContainer, property, elements, context );
+			idPropertyCounter = addProperty( propertyContainer, property, elements, context, idPropertyCounter );
 		}
 		return idPropertyCounter;
 	}
@@ -574,20 +574,19 @@ public class PropertyBinder {
 			PropertyContainer propertyContainer,
 			XProperty property,
 			List<PropertyData> inFlightPropertyDataList,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context, int idPropertyCounter) {
 		// see if inFlightPropertyDataList already contains a PropertyData for this name,
 		// and if so, skip it..
 		for ( PropertyData propertyData : inFlightPropertyDataList ) {
 			if ( propertyData.getPropertyName().equals( property.getName() ) ) {
 				checkIdProperty( property, propertyData );
 				// EARLY EXIT!!!
-				return 0;
+				return idPropertyCounter;
 			}
 		}
 
 		final XClass declaringClass = propertyContainer.getDeclaringClass();
 		final XClass entity = propertyContainer.getEntityAtStake();
-		int idPropertyCounter = 0;
 		final PropertyData propertyAnnotatedElement = new PropertyInferredData(
 				declaringClass,
 				property,

@@ -147,7 +147,12 @@ pipeline {
 
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
-					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
+
+					def matchingFiles = findFiles(glob: "/release_announcement.adoc")
+					env.SCRIPT_OPTIONS = "--notes=${matchingFiles[0]}"
+					if ( params.RELEASE_DRY_RUN ) {
+					    env.SCRIPT_OPTIONS += " -d"
+					}
 
 					// Determine version id to check if Jira version exists
 					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"

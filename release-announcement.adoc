@@ -1,10 +1,3 @@
-= Hibernate 7.0.0.Beta2
-Steve Ebersole
-:toc:
-:toclevels: 2
-:awestruct-tags: ["Hibernate ORM", "Releases"]
-:awestruct-layout: blog-post
-
 :family: 7.0
 
 :docs-url: https://docs.jboss.org/hibernate/orm/{family}
@@ -13,9 +6,6 @@ Steve Ebersole
 :intro-guide-url: {docs-url}/introduction/html_single/Hibernate_Introduction.html
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 :ql-guide-url: {docs-url}/querylanguage/html_single/Hibernate_Query_Language.html
-
-The Hibernate ORM 7.0 Beta2 release has just been published.  Here are some highlights...
-
 
 [[jpa-32]]
 == Jakarta Persistence 3.2

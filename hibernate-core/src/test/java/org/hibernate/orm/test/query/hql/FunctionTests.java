@@ -2527,6 +2527,23 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testSlice(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals("ring",
+							session.createSelectionQuery("select theString[3:6] from EntityOfBasics", String.class)
+									.getSingleResult());
+					assertEquals('s',
+							session.createSelectionQuery("select theString[1] from EntityOfBasics", Character.class)
+									.getSingleResult());
+					assertEquals('y',
+							session.createSelectionQuery("select theString[7] from EntityOfBasics", Character.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
 	@SkipForDialect(dialectClass = H2Dialect.class)
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = HSQLDialect.class)

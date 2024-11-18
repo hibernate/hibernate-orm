@@ -1,7 +1,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.18') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {

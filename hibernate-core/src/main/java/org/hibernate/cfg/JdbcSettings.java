@@ -255,9 +255,11 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 
 	/**
 	 * Controls the autocommit mode of JDBC connections obtained from any
-	 * {@link ConnectionProvider} implementation
-	 * which respects this setting, which the built-in implementations do, except for
+	 * {@link ConnectionProvider} implementation which respects this setting,
+	 * which includes the built-in implementations do, except for
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 *
+	 * @settingDefault {@code false}
 	 */
 	String AUTOCOMMIT = "hibernate.connection.autocommit";
 

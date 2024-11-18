@@ -220,7 +220,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link Session} and use it to perform an action.
 	 */
-	default void inSession(Consumer<Session> action) {
+	default void inSession(Consumer<? super Session> action) {
 		try ( Session session = openSession() ) {
 			action.accept( session );
 		}
@@ -231,7 +231,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default void inStatelessSession(Consumer<StatelessSession> action) {
+	default void inStatelessSession(Consumer<? super StatelessSession> action) {
 		try ( StatelessSession session = openStatelessSession() ) {
 			action.accept( session );
 		}
@@ -244,7 +244,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @apiNote This method competes with the JPA-defined method
 	 *          {@link #runInTransaction}
 	 */
-	default void inTransaction(Consumer<Session> action) {
+	default void inTransaction(Consumer<? super Session> action) {
 		inSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
@@ -254,14 +254,14 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default void inStatelessTransaction(Consumer<StatelessSession> action) {
+	default void inStatelessTransaction(Consumer<? super StatelessSession> action) {
 		inStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
 	/**
 	 * Open a {@link Session} and use it to obtain a value.
 	 */
-	default <R> R fromSession(Function<Session,R> action) {
+	default <R> R fromSession(Function<? super Session,R> action) {
 		try ( Session session = openSession() ) {
 			return action.apply( session );
 		}
@@ -272,7 +272,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default <R> R fromStatelessSession(Function<StatelessSession,R> action) {
+	default <R> R fromStatelessSession(Function<? super StatelessSession,R> action) {
 		try ( StatelessSession session = openStatelessSession() ) {
 			return action.apply( session );
 		}
@@ -285,7 +285,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @apiNote This method competes with the JPA-defined method
 	 *          {@link #callInTransaction}
 	 */
-	default <R> R fromTransaction(Function<Session,R> action) {
+	default <R> R fromTransaction(Function<? super Session,R> action) {
 		return fromSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
@@ -295,7 +295,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default <R> R fromStatelessTransaction(Function<StatelessSession,R> action) {
+	default <R> R fromStatelessTransaction(Function<? super StatelessSession,R> action) {
 		return fromStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 

@@ -193,6 +193,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
@@ -5761,7 +5762,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final List<HqlParser.ExpressionContext> slicedFragments = ctx.slicedPathAccessFragment().expression();
 			final SqmTypedNode<?> lhs = (SqmTypedNode<?>) visitSimplePath( ctx.simplePath() );
 			final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
-			if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			if ( lhsExpressible == null ) {
+				throw new SemanticException( "Slice operator applied to expression of unknown type", query );
+			}
+			else if ( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
 				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
 						List.of(
 								lhs,
@@ -5772,7 +5776,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						creationContext.getQueryEngine()
 				);
 			}
-			else {
+			else if ( lhsExpressible.getRelationalJavaType() instanceof StringJavaType
+					&& !(lhs instanceof SqmPluralValuedSimplePath) ) {
 				final SqmExpression<?> start = (SqmExpression<?>) slicedFragments.get( 0 ).accept( this );
 				final SqmExpression<?> end = (SqmExpression<?>) slicedFragments.get( 1 ).accept( this );
 				return getFunctionDescriptor( "substring" ).generateSqmExpression(
@@ -5800,6 +5805,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						null,
 						creationContext.getQueryEngine()
 				);
+			}
+			else {
+				throw new SemanticException( "Slice operator applied to expression which is not a string or SQL array", query );
 			}
 		}
 		else {

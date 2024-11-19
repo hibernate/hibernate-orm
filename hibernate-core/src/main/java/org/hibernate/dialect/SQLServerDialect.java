@@ -54,8 +54,10 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.SQLServerCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -75,6 +77,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -159,6 +162,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 								length == null ? getDefaultLobLength() : length );
 				default -> super.resolveSize( jdbcType, javaType, precision, scale, length );
 			};
+		}
+	};
+	private final StandardTableExporter sqlServerTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isXml() ) {
+				// XML columns can't have check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
 		}
 	};
 
@@ -1107,6 +1121,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.sqlServerTableExporter;
 	}
 
 	@Override

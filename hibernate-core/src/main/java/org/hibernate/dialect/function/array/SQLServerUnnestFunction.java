@@ -126,9 +126,9 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 					sqlAppender.appendSql( selectableMapping.getSelectionExpression() );
 				}
 				else {
-					sqlAppender.appendSql( "t.v.value('");
+					sqlAppender.appendSql( "t.v.value('(");
 					sqlAppender.appendSql( selectableMapping.getSelectableName() );
-					sqlAppender.appendSql( "/text()[1]','" );
+					sqlAppender.appendSql( "/text())[1]','" );
 					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( "') " );
 					sqlAppender.appendSql( selectableMapping.getSelectionExpression() );

@@ -188,6 +188,35 @@ public class EntityValuedPathsGroupByOrderByTest {
 		).getResultList() ).hasSize( 2 ) );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select s.id from EntityB ignore) from EntityA a join a.secondary s group by s.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupByAndOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select s.id from EntityB ignore) from EntityA a"
+						+ " join a.secondary s group by s.id order by s.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupByAndOrderByImplicit(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select a.secondary.id from EntityB ignore) from EntityA a"
+						+ " group by a.secondary.id order by a.secondary.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
 	@Entity( name = "EntityA" )
 	public static class EntityA {
 		@Id

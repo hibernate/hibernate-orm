@@ -271,8 +271,11 @@ public class XmlHelper {
 			String string,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
+		if ( NULL_TAG.equals( string ) ) {
+			return null;
+		}
 		if ( !string.startsWith( START_TAG ) || !string.endsWith( END_TAG ) ) {
-			throw new IllegalArgumentException( "Illegal XML for struct: " + string );
+			throw new IllegalArgumentException( "XML not properly formatted: " + string );
 		}
 		int end;
 		final Object[] array;

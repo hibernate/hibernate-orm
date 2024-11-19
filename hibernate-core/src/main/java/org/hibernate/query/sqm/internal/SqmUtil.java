@@ -173,11 +173,9 @@ public class SqmUtil {
 		if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
 				&& modelPartContainer.getPartMappingType() != modelPartContainer
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
-			final ModelPart modelPart =
-					modelPartContainer instanceof PluralAttributeMapping pluralAttributeMapping
-							? getCollectionPart( pluralAttributeMapping,
-									castNonNull( sqmPath.getNavigablePath().getParent() ) )
-							: modelPartContainer;
+			final ModelPart modelPart = modelPartContainer instanceof PluralAttributeMapping plural ?
+					getCollectionPart( plural, castNonNull( sqmPath.getNavigablePath().getParent() ) )
+					: modelPartContainer;
 			if ( modelPart instanceof EntityAssociationMapping association ) {
 				if ( shouldRenderTargetSide( sqmPath, association, sqlAstCreationState ) ) {
 					return association.getAssociatedEntityMappingType();
@@ -200,26 +198,18 @@ public class SqmUtil {
 			final Clause clause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
 			return clause == Clause.GROUP || clause == Clause.ORDER
 				|| !isFkOptimizationAllowed( sqmPath.getLhs(), association )
-				|| clauseContainsPath( Clause.GROUP, sqmPath, sqlAstCreationState )
-				|| clauseContainsPath( Clause.ORDER, sqmPath, sqlAstCreationState );
+				|| inGroupByOrOrderBy( sqmPath, sqlAstCreationState );
 		}
 	}
 
-	private static boolean clauseContainsPath(
-			Clause clauseToCheck,
-			SqmPath<?> sqmPath,
-			SqmToSqlAstConverter sqlAstCreationState) {
-		final Stack<SqmQueryPart> queryPartStack = sqlAstCreationState.getSqmQueryPartStack();
-		final NavigablePath navigablePath = sqmPath.getNavigablePath();
+	private static boolean inGroupByOrOrderBy(SqmPath<?> sqmPath, SqmToSqlAstConverter converter) {
+		final Stack<SqmQueryPart> queryPartStack = converter.getSqmQueryPartStack();
+		final NavigablePath np = sqmPath.getNavigablePath();
 		final Boolean found = queryPartStack.findCurrentFirst( queryPart -> {
 			final SqmQuerySpec<?> spec = queryPart.getFirstQuerySpec();
-			if ( clauseToCheck == Clause.GROUP && spec.groupByClauseContains( navigablePath, sqlAstCreationState )
-				|| clauseToCheck == Clause.ORDER && spec.orderByClauseContains( navigablePath, sqlAstCreationState ) ) {
-				return true;
-			}
-			else {
-				return null;
-			}
+			return spec.groupByClauseContains( np, converter ) || spec.orderByClauseContains( np, converter ) ?
+					true :
+					null;
 		} );
 		return Boolean.TRUE.equals( found );
 	}

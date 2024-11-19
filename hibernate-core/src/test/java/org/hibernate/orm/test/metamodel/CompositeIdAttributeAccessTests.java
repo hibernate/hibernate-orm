@@ -14,6 +14,7 @@ import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -79,6 +80,50 @@ public class CompositeIdAttributeAccessTests {
 		assertThat( key2Attribute.isId() ).isFalse();
 		assertThat( key2Attribute.getJavaType() ).isEqualTo( Integer.class );
 		assertThat( key2Attribute.getJavaMember().getDeclaringClass() ).isEqualTo( AnEntity.PK.class );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-12996")
+	@DomainModel(annotatedClasses = {BasicEntity.class, IdClassEntity.class, IdClassEntity.PK.class, NestedIdClassEntity.class, NestedIdClassEntity.PK.class, AnEntity.PK.class, AnEntity.class, AnotherEntity.class})
+	@SessionFactory
+	void testQuery(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "select a.idClassEntity.basicEntity.key1 from NestedIdClassEntity a" ).getResultList();
+			session.createQuery( "select a.idClassEntity.basicEntity.name from NestedIdClassEntity a" ).getResultList();
+
+			session.createQuery( "select a.key2.id from AnEntity a" ).getResultList();
+			session.createQuery( "select a.key2.name from AnEntity a" ).getResultList();
+		} );
+	}
+
+	@Entity(name = "BasicEntity")
+	public static class BasicEntity {
+		@Id Long key1;
+		String name;
+	}
+
+	@Entity(name = "IdClassEntity")
+	@IdClass( IdClassEntity.PK.class )
+	public static class IdClassEntity {
+		@Id @ManyToOne BasicEntity basicEntity;
+		@Id Long key2;
+
+		public static class PK implements Serializable {
+			Long basicEntity;
+			Long key2;
+		}
+	}
+
+	@Entity(name = "NestedIdClassEntity")
+	@IdClass( NestedIdClassEntity.PK.class )
+	public static class NestedIdClassEntity {
+		@Id @ManyToOne IdClassEntity idClassEntity;
+		@Id Long key3;
+
+		public static class PK implements Serializable {
+			IdClassEntity.PK idClassEntity;
+			Long key3;
+		}
 	}
 
 	@Entity(name="AnEntity")

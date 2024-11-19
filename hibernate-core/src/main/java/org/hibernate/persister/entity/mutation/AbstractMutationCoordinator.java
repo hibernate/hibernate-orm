@@ -82,8 +82,7 @@ public abstract class AbstractMutationCoordinator {
 			case 0:
 				return MutationOperationGroupFactory.noOperations( mutationGroup );
 			case 1: {
-				final MutationOperation operation = mutationGroup.getSingleTableMutation()
-						.createMutationOperation( valuesAnalysis, factory() );
+				final MutationOperation operation = createOperation( valuesAnalysis, mutationGroup.getSingleTableMutation() );
 				return operation == null
 						? MutationOperationGroupFactory.noOperations( mutationGroup )
 						: MutationOperationGroupFactory.singleOperation( mutationGroup, operation );
@@ -114,6 +113,13 @@ public abstract class AbstractMutationCoordinator {
 				return MutationOperationGroupFactory.manyOperations( mutationGroup.getMutationType(), entityPersister, operations );
 			}
 		}
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected MutationOperation createOperation(ValuesAnalysis valuesAnalysis, TableMutation<?> singleTableMutation) {
+		return singleTableMutation.createMutationOperation( valuesAnalysis, factory() );
 	}
 
 	protected void handleValueGeneration(

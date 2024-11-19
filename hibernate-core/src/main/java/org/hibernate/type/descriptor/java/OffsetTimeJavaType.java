@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.Calendar;
@@ -92,57 +92,69 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			return (X) offsetTime.withOffsetSameInstant( getCurrentSystemOffset() ).toLocalTime();
+			return (X) offsetTime.withOffsetSameInstant( options.getSystemZoneOffset() ).toLocalTime();
 		}
 
 		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
-			return (X) offsetTime.atDate( LocalDate.EPOCH );
+			return (X) offsetDateTimeAtEpoch( offsetTime );
 		}
 
 		// for legacy types, we assume that the JDBC timezone is passed to JDBC
 		// (since PS.setTime() and friends do accept a timezone passed as a Calendar)
 
-		final OffsetTime jdbcOffsetTime = offsetTime.withOffsetSameInstant( getCurrentJdbcOffset(options) );
 
 		if ( Time.class.isAssignableFrom( type ) ) {
+			// Use ZoneOffset rather than ZoneId in the conversion,
+			// since the offset for a zone varies over time, but
+			// a Time does not have an attached Date.
+			final OffsetTime jdbcOffsetTime =
+					offsetTime.withOffsetSameInstant( options.getJdbcZoneOffset() ); // convert to the JDBC timezone
 			final Time time = Time.valueOf( jdbcOffsetTime.toLocalTime() );
-			if ( jdbcOffsetTime.getNano() == 0 ) {
-				return (X) time;
-			}
-			// Preserve milliseconds, which java.sql.Time supports
-			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( jdbcOffsetTime.getNano(), 3 ) / 1000000 );
+			// Time.valueOf() throws away milliseconds
+			return (X) withMillis( jdbcOffsetTime, time );
 		}
 
-		final OffsetDateTime jdbcOffsetDateTime = jdbcOffsetTime.atDate( LocalDate.EPOCH );
-
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			/*
-			 * Workaround for HHH-13266 (JDK-8061577).
-			 * Ideally we'd want to use Timestamp.from( jdbcOffsetDateTime.toInstant() ),
-			 * but this won't always work since Timestamp.from() assumes the number of
-			 * milliseconds since the epoch means the same thing in Timestamp and Instant,
-			 * but it doesn't, in particular before 1900.
-			 */
-			return (X) Timestamp.valueOf( jdbcOffsetDateTime.toLocalDateTime() );
+			final OffsetTime jdbcOffsetTime =
+					offsetTime.withOffsetSameInstant( options.getJdbcZoneOffset() ); // convert to the JDBC timezone
+			return (X) Timestamp.valueOf( offsetDateTimeAtEpoch( jdbcOffsetTime ).toLocalDateTime() );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			return (X) GregorianCalendar.from( jdbcOffsetDateTime.toZonedDateTime() );
+			return (X) GregorianCalendar.from( offsetDateTimeAtEpoch( offsetTime ).toZonedDateTime() );
 		}
 
 		// for instants, we assume that the JDBC timezone, if any, is ignored
 
-		final Instant instant = offsetTime.atDate( LocalDate.EPOCH ).toInstant();
-
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( instant.toEpochMilli() );
+			return (X) Long.valueOf( instantAtEpoch( offsetTime ).toEpochMilli() );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) Date.from( instant );
+			return (X) Date.from( instantAtEpoch( offsetTime ) );
 		}
 
 		throw unknownUnwrap( type );
+	}
+
+	private static Time withMillis(OffsetTime jdbcOffsetTime, Time time) {
+		final int nanos = jdbcOffsetTime.getNano();
+		if ( nanos == 0 ) {
+			return time;
+		}
+		else {
+			// Preserve milliseconds, which java.sql.Time supports
+			final long millis = DateTimeUtils.roundToPrecision( nanos, 3 ) / 1_000_000;
+			return new Time( time.getTime() + millis );
+		}
+	}
+
+	private static OffsetDateTime offsetDateTimeAtEpoch(OffsetTime jdbcOffsetTime) {
+		return jdbcOffsetTime.atDate( LocalDate.EPOCH );
+	}
+
+	private static Instant instantAtEpoch(OffsetTime offsetTime) {
+		return offsetDateTimeAtEpoch( offsetTime ).toInstant();
 	}
 
 	@Override
@@ -159,67 +171,39 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 		}
 
 		if (value instanceof LocalTime localTime) {
-			return localTime.atOffset( getCurrentSystemOffset() );
+			return localTime.atOffset( options.getSystemZoneOffset() );
 		}
 
 		if ( value instanceof OffsetDateTime offsetDateTime) {
 			return offsetDateTime.toOffsetTime();
 		}
 
-		/*
-		 * Also, in order to fix HHH-13357, and to be consistent with the conversion to Time (see above),
-		 * we set the offset to the current offset of the JVM (OffsetDateTime.now().getOffset()).
-		 * This is different from setting the *zone* to the current *zone* of the JVM (ZoneId.systemDefault()),
-		 * since a zone has a varying offset over time,
-		 * thus the zone might have a different offset for the given timezone than it has for the current date/time.
-		 * For example, if the timestamp represents 1970-01-01TXX:YY,
-		 * and the JVM is set to use Europe/Paris as a timezone, and the current time is 2019-04-16-08:53,
-		 * then applying the JVM timezone to the timestamp would result in the offset +01:00,
-		 * but applying the JVM offset would result in the offset +02:00, since DST is in effect at 2019-04-16-08:53.
-		 *
-		 * Of course none of this would be a problem if we just stored the offset in the database,
-		 * but I guess there are historical reasons that explain why we don't.
-		 */
-
-		// for legacy types, we assume that the JDBC timezone is passed to JDBC
-		// (since PS.setTime() and friends do accept a timezone passed as a Calendar)
-
 		if (value instanceof Time time) {
-			final OffsetTime offsetTime = time.toLocalTime()
-					.atOffset( getCurrentJdbcOffset( options) )
-					.withOffsetSameInstant( getCurrentSystemOffset() );
-			long millis = time.getTime() % 1000;
-			if ( millis == 0 ) {
-				return offsetTime;
-			}
-			if ( millis < 0 ) {
-				// The milliseconds for a Time could be negative,
-				// which usually means the time is in a different time zone
-				millis += 1_000L;
-			}
-			return offsetTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
+			// Use ZoneOffset rather than ZoneId in the conversion,
+			// since the offset for a zone varies over time, but
+			// a Time does not have an attached Date.
+			final OffsetTime offsetTime =
+					time.toLocalTime().atOffset( options.getJdbcZoneOffset() ) // the Timestamp is in the current JDBC timezone offset
+							.withOffsetSameInstant( options.getSystemZoneOffset() ); // convert back to the VM timezone
+			// Time.toLocalTime() strips off nanos
+			return withNanos( time, offsetTime );
 		}
 
 		if (value instanceof Timestamp timestamp) {
-			/*
-			 * Workaround for HHH-13266 (JDK-8061577).
-			 * Ideally we'd want to use OffsetDateTime.ofInstant( ts.toInstant(), ... ),
-			 * but this won't always work since ts.toInstant() assumes the number of
-			 * milliseconds since the epoch means the same thing in Timestamp and Instant,
-			 * but it doesn't, in particular before 1900.
-			 */
-			return timestamp.toLocalDateTime().toLocalTime().atOffset( getCurrentJdbcOffset(options) )
-					.withOffsetSameInstant( getCurrentSystemOffset() );
+			return timestamp.toLocalDateTime()
+					.atZone( options.getJdbcZoneId() ) // the Timestamp is in the JDBC timezone
+					.withZoneSameInstant( ZoneId.systemDefault() ) // convert back to the VM timezone
+					.toOffsetDateTime().toOffsetTime(); // return the time part
 		}
 
 		if (value instanceof Date date) {
-			return OffsetTime.ofInstant( date.toInstant(), getCurrentSystemOffset() );
+			return OffsetTime.ofInstant( date.toInstant(), options.getSystemZoneOffset() );
 		}
 
 		// for instants, we assume that the JDBC timezone, if any, is ignored
 
 		if (value instanceof Long millis) {
-			return OffsetTime.ofInstant( Instant.ofEpochMilli(millis), getCurrentSystemOffset() );
+			return OffsetTime.ofInstant( Instant.ofEpochMilli(millis), options.getSystemZoneOffset() );
 		}
 
 		if (value instanceof Calendar calendar) {
@@ -229,17 +213,21 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	private static ZoneOffset getCurrentJdbcOffset(WrapperOptions options) {
-		if (  options.getJdbcTimeZone() != null ) {
-			return OffsetDateTime.now().atZoneSameInstant( options.getJdbcTimeZone().toZoneId() ).getOffset();
+	private static OffsetTime withNanos(Time time, OffsetTime offsetTime) {
+		final long millis = time.getTime() % 1000;
+		final long nanos;
+		if ( millis == 0 ) {
+			return offsetTime;
+		}
+		else if ( millis < 0 ) {
+			// The milliseconds for a Time could be negative,
+			// which usually means the time is in a different time zone
+			nanos = (millis + 1_000L) * 1_000_000L;
 		}
 		else {
-			return getCurrentSystemOffset();
+			nanos = millis * 1_000_000L;
 		}
-	}
-
-	private static ZoneOffset getCurrentSystemOffset() {
-		return OffsetDateTime.now().getOffset();
+		return offsetTime.with( ChronoField.NANO_OF_SECOND, nanos );
 	}
 
 	@Override

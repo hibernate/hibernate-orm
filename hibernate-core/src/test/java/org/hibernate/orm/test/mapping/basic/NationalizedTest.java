@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -18,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnicodeNClob.class)
 public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

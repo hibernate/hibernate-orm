@@ -417,7 +417,10 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 	}
 
 	static boolean isBoolean(JdbcMapping type) {
-		return type.getJdbcType().isBoolean();
+		return switch ( type.getCastType() ) {
+			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;
+			default -> false;
+		};
 	}
 
 	private static class DB2XmlTableSetReturningFunctionTypeResolver extends XmlTableSetReturningFunctionTypeResolver {

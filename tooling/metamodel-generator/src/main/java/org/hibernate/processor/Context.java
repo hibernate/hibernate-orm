@@ -412,7 +412,7 @@ public final class Context {
 	public void setUsesQuarkusOrm(boolean b) {
 		usesQuarkusOrm = b;
 	}
-	
+
 	public boolean usesQuarkusOrm() {
 		return usesQuarkusOrm;
 	}
@@ -420,7 +420,7 @@ public final class Context {
 	public void setUsesQuarkusReactive(boolean b) {
 		usesQuarkusReactive = b;
 	}
-	
+
 	public boolean usesQuarkusReactive() {
 		return usesQuarkusReactive;
 	}
@@ -504,7 +504,21 @@ public final class Context {
 		return enumTypesByValue;
 	}
 
-	public void addEnumValue(String type, String value) {
-		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( type );
+	public void addEnumValue(
+			String qualifiedTypeName, String shortTypeName,
+			@Nullable String outerTypeQualifiedName, @Nullable String outerShortTypeName,
+			String value) {
+		addEnumValue( qualifiedTypeName, value );
+		addEnumValue( qualifiedTypeName, qualifiedTypeName + '.' + value );
+		addEnumValue( qualifiedTypeName, shortTypeName + '.' + value );
+		if ( outerShortTypeName != null ) {
+			addEnumValue( qualifiedTypeName, outerShortTypeName + '.' + shortTypeName + '.' + value );
+			addEnumValue( qualifiedTypeName, outerShortTypeName + '$' + shortTypeName + '.' + value );
+			addEnumValue( qualifiedTypeName, outerTypeQualifiedName + '$' + shortTypeName + '.' + value );
+		}
+	}
+
+	private void addEnumValue(String qualifiedTypeName, String value) {
+		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( qualifiedTypeName );
 	}
 }

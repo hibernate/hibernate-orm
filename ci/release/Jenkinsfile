@@ -17,7 +17,7 @@ import org.hibernate.jenkins.pipeline.helpers.version.Version
 // Global build configuration
 env.PROJECT = "orm"
 env.JIRA_KEY = "HHH"
-def RELEASE_ON_PUSH = false // Set to `true` *only* on branches where you want a release on each push.
+def RELEASE_ON_PUSH = true // Set to `true` *only* on branches where you want a release on each push.
 
 print "INFO: env.PROJECT = ${env.PROJECT}"
 print "INFO: env.JIRA_KEY = ${env.JIRA_KEY}"
@@ -123,7 +123,8 @@ pipeline {
 						def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true)
 						if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
 							print "INFO: Automatic release skipped because last commits were for the previous release"
-							currentBuild.result = 'ABORTED'
+							currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
+							sleep(1)   // Interrupt is not blocking and does not take effect immediately.
 							return
 						}
 

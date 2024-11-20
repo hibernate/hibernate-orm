@@ -30,7 +30,6 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -48,7 +47,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
@@ -85,10 +83,12 @@ import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.determineAccessTypeForHierarchy;
 import static org.hibernate.processor.util.TypeUtils.determineAnnotationSpecifiedAccessType;
+import static org.hibernate.processor.util.TypeUtils.extendsClass;
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
+import static org.hibernate.processor.util.TypeUtils.implementsInterface;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
 
@@ -652,41 +652,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean isPanacheType(TypeElement type) {
-		return isOrmPanacheType( type )
-			|| isReactivePanacheType( type );
+		return context.usesQuarkusOrm() && isOrmPanacheType( type )
+			|| context.usesQuarkusReactive() && isReactivePanacheType( type );
 	}
 
 	private boolean isOrmPanacheType(TypeElement type) {
-		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
-		final Elements elements = processingEnvironment.getElementUtils();
-		final TypeElement panacheRepositorySuperType = elements.getTypeElement( PANACHE_ORM_REPOSITORY_BASE );
-		final TypeElement panacheEntitySuperType = elements.getTypeElement( PANACHE_ORM_ENTITY_BASE );
-		if ( panacheRepositorySuperType == null || panacheEntitySuperType == null ) {
-			return false;
-		}
-		else {
-			final Types types = processingEnvironment.getTypeUtils();
-			// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
-			return types.isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
-				|| types.isSubtype( type.asType(), panacheEntitySuperType.asType() );
-		}
+		return implementsInterface( type, PANACHE_ORM_REPOSITORY_BASE )
+			|| extendsClass( type, PANACHE_ORM_ENTITY_BASE );
 	}
 
 	private boolean isReactivePanacheType(TypeElement type) {
-		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
-		final Elements elements = processingEnvironment.getElementUtils();
-		final TypeElement panacheRepositorySuperType = elements.getTypeElement( PANACHE_REACTIVE_REPOSITORY_BASE );
-		final TypeElement panacheEntitySuperType = elements.getTypeElement( PANACHE_REACTIVE_ENTITY_BASE );
-
-		if ( panacheRepositorySuperType == null || panacheEntitySuperType == null ) {
-			return false;
-		}
-		else {
-			final Types types = processingEnvironment.getTypeUtils();
-			// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
-			return types.isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
-				|| types.isSubtype( type.asType(), panacheEntitySuperType.asType() );
-		}
+		return implementsInterface( type, PANACHE_REACTIVE_REPOSITORY_BASE )
+			|| extendsClass( type, PANACHE_REACTIVE_ENTITY_BASE );
 	}
 
 	/**

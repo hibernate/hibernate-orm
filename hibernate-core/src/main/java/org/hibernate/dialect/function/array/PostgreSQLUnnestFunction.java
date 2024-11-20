@@ -57,7 +57,7 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 						selectableMapping
 				) );
 			}
-			sqlAppender.append( ' ' );
+			sqlAppender.append( " as " );
 			sqlAppender.append( selectableMapping.getSelectionExpression() );
 		} );
 		sqlAppender.appendSql( " from jsonb_array_elements(" );

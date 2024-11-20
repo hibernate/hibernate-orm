@@ -269,13 +269,9 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		final String suppressedWarnings = options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION );
 		if ( suppressedWarnings != null ) {
-			if ( parseBoolean(suppressedWarnings) ) {
-				// legacy behavior from HHH-12068
-				context.setSuppressedWarnings(new String[] {"deprecation", "rawtypes"});
-			}
-			else {
-				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",\\s*") );
-			}
+			context.setSuppressedWarnings( parseBoolean( suppressedWarnings )
+					? new String[] {"deprecation", "rawtypes"} // legacy behavior from HHH-12068
+					: suppressedWarnings.replace( " ", "" ).split( ",\\s*" ) );
 		}
 
 		context.setInclude( options.getOrDefault( INCLUDE, "*" ) );

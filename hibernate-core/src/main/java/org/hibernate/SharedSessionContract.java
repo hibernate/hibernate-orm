@@ -68,6 +68,17 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * Begin a unit of work and return the associated {@link Transaction} object.
 	 * If a new underlying transaction is required, begin the transaction. Otherwise,
 	 * continue the new work in the context of the existing underlying transaction.
+	 * <p>
+	 * The JPA-standard way to begin a new transaction is by calling
+	 * {@link #getTransaction getTransaction().begin()}. When
+	 * {@linkplain org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled
+	 * strict JPA transaction compliance} is enabled via, for example, setting
+	 * {@value org.hibernate.cfg.JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE},
+	 * or when resource-local transactions are used, the call to {@code begin()}
+	 * fails if the transaction is already {@linkplain Transaction#isActive active}.
+	 * On the other hand, this method does not fail when a transaction is already
+	 * active, and simply returns the {@link Transaction} object representing the
+	 * active transaction.
 	 *
 	 * @return an instance of {@link Transaction} representing the new transaction
 	 *

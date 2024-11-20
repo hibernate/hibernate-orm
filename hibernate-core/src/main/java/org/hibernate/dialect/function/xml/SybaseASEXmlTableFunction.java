@@ -203,6 +203,9 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 	}
 
 	public static boolean isBoolean(JdbcMapping type) {
-		return type.getJavaTypeDescriptor().getJavaTypeClass() == Boolean.class;
+		return switch ( type.getCastType() ) {
+			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;
+			default -> false;
+		};
 	}
 }

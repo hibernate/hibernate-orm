@@ -87,25 +87,7 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
-		return new BasicBinder<>( javaType, this ) {
-			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-					throws SQLException {
-				final String xml = ( (XmlArrayJdbcType ) getJdbcType() ).toString( value, getJavaType(), options );
-				SQLXML sqlxml = st.getConnection().createSQLXML();
-				sqlxml.setString( xml );
-				st.setSQLXML( index, sqlxml );
-			}
-
-			@Override
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-					throws SQLException {
-				final String xml = ( (XmlArrayJdbcType ) getJdbcType() ).toString( value, getJavaType(), options );
-				SQLXML sqlxml = st.getConnection().createSQLXML();
-				sqlxml.setString( xml );
-				st.setSQLXML( name, sqlxml );
-			}
-		};
+		return new XmlArrayBinder<>( javaType, this );
 	}
 
 	@Override
@@ -138,5 +120,29 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 			}
 
 		};
+	}
+
+	protected static class XmlArrayBinder<X> extends BasicBinder<X> {
+		public XmlArrayBinder(JavaType<X> javaType, XmlArrayJdbcType jdbcType) {
+			super( javaType, jdbcType );
+		}
+
+		@Override
+		protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+				throws SQLException {
+			final String xml = ( (XmlArrayJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
+			SQLXML sqlxml = st.getConnection().createSQLXML();
+			sqlxml.setString( xml );
+			st.setSQLXML( index, sqlxml );
+		}
+
+		@Override
+		protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+				throws SQLException {
+			final String xml = ( (XmlArrayJdbcType ) getJdbcType() ).toString( value, getJavaType(), options );
+			SQLXML sqlxml = st.getConnection().createSQLXML();
+			sqlxml.setString( xml );
+			st.setSQLXML( name, sqlxml );
+		}
 	}
 }

@@ -27,7 +27,6 @@ import java.util.Map;
 
 import static org.hibernate.dialect.function.json.HANAJsonValueFunction.jsonValueReturningType;
 import static org.hibernate.dialect.function.xml.HANAXmlTableFunction.xmlValueReturningType;
-import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -282,19 +281,6 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 				return null;
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
-	}
-
-	@Override
-	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		if ( aggregateColumnSqlTypeCode == JSON ) {
-			return columnSqlTypeCode == ARRAY ? JSON_ARRAY : columnSqlTypeCode;
-		}
-		if ( aggregateColumnSqlTypeCode == SQLXML ) {
-			return columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
-		}
-		else {
-			return columnSqlTypeCode;
-		}
 	}
 
 	@Override

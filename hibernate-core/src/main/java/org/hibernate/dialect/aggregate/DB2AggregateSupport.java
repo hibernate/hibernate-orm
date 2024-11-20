@@ -308,7 +308,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 		// We need to know what array this is STRUCT_ARRAY/JSON_ARRAY/XML_ARRAY,
 		// which we can easily get from the type code of the aggregate column
 		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
-		switch ( sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode ) {
+		switch ( sqlTypeCode == ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:
 				if ( jsonSupport ) {
@@ -350,19 +350,13 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 
 	@Override
 	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		if ( aggregateColumnSqlTypeCode == STRUCT ) {
+		return switch (aggregateColumnSqlTypeCode) {
 			// DB2 doesn't support booleans in structs
-			return columnSqlTypeCode == BOOLEAN ? SMALLINT : columnSqlTypeCode;
-		}
-		else if ( aggregateColumnSqlTypeCode == JSON ) {
-			return columnSqlTypeCode == ARRAY ? JSON_ARRAY : columnSqlTypeCode;
-		}
-		else if ( aggregateColumnSqlTypeCode == SQLXML ) {
-			return columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
-		}
-		else {
-			return columnSqlTypeCode;
-		}
+			case STRUCT -> columnSqlTypeCode == BOOLEAN ? SMALLINT : columnSqlTypeCode;
+			case JSON -> columnSqlTypeCode == ARRAY ? JSON_ARRAY : columnSqlTypeCode;
+			case SQLXML -> columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
+			default -> columnSqlTypeCode;
+		};
 	}
 
 	@Override

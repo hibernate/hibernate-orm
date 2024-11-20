@@ -280,19 +280,6 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	}
 
 	@Override
-	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		if ( aggregateColumnSqlTypeCode == JSON ) {
-			return columnSqlTypeCode == ARRAY ? JSON_ARRAY : columnSqlTypeCode;
-		}
-		else if ( aggregateColumnSqlTypeCode == SQLXML ) {
-			return columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
-		}
-		else {
-			return columnSqlTypeCode;
-		}
-	}
-
-	@Override
 	public boolean requiresAggregateCustomWriteExpressionRenderer(int aggregateSqlTypeCode) {
 		return aggregateSqlTypeCode == JSON || aggregateSqlTypeCode == SQLXML;
 	}

@@ -17,6 +17,7 @@ public class UserDefinedArrayType extends AbstractUserDefinedType {
 	private Integer arraySqlTypeCode;
 	private String elementTypeName;
 	private Integer elementSqlTypeCode;
+	private Integer elementDdlTypeCode;
 	private Integer arrayLength;
 
 	public UserDefinedArrayType(String contributor, Namespace namespace, Identifier physicalTypeName) {
@@ -45,6 +46,14 @@ public class UserDefinedArrayType extends AbstractUserDefinedType {
 
 	public void setElementSqlTypeCode(Integer elementSqlTypeCode) {
 		this.elementSqlTypeCode = elementSqlTypeCode;
+	}
+
+	public Integer getElementDdlTypeCode() {
+		return elementDdlTypeCode;
+	}
+
+	public void setElementDdlTypeCode(Integer elementDdlTypeCode) {
+		this.elementDdlTypeCode = elementDdlTypeCode;
 	}
 
 	public Integer getArrayLength() {

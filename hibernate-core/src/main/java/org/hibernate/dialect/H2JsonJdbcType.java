@@ -11,6 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -29,6 +30,11 @@ public class H2JsonJdbcType extends JsonJdbcType {
 
 	protected H2JsonJdbcType(EmbeddableMappingType embeddableMappingType) {
 		super( embeddableMappingType );
+	}
+
+	@Override
+	public int getJdbcTypeCode() {
+		return SqlTypes.VARBINARY;
 	}
 
 	@Override

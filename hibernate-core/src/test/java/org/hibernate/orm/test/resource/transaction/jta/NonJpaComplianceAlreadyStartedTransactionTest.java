@@ -50,7 +50,8 @@ public class NonJpaComplianceAlreadyStartedTransactionTest extends BaseNonConfig
 	public void noIllegalStateExceptionShouldBeThrownWhenBeginTxIsCalledWithAnAlreadyActiveTx() throws Exception {
 		tm.begin();
 		try (Session s = openSession()) {
-			Transaction tx = s.beginTransaction();
+			Transaction tx = s.getTransaction();
+			tx.begin();
 			try {
 				s.persist( new TestEntity( "ABC" ) );
 				tx.commit();

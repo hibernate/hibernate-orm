@@ -610,9 +610,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public Transaction beginTransaction() {
 		checkOpen();
-		final Transaction result = getTransaction();
-		result.begin();
-		return result;
+		final Transaction transaction = getTransaction();
+		// only need to begin a transaction if it was not
+		// already active (this is the documented semantics)
+		if ( !transaction.isActive() ) {
+			transaction.begin();
+		}
+		return transaction;
 	}
 
 	protected void checkTransactionSynchStatus() {

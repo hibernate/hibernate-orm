@@ -463,10 +463,28 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
 			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
-				case EQUAL:
-				case NOT_DISTINCT_FROM:
-				case NOT_EQUAL:
 				case DISTINCT_FROM:
+					if ( !supportsDistinctFromPredicate() ) {
+						appendSql( "not " );
+					}
+				case NOT_DISTINCT_FROM: {
+					if ( !supportsDistinctFromPredicate() ) {
+						appendSql( "exists (select cast(" );
+						getClauseStack().push( Clause.SELECT );
+						visitSqlSelectExpression( lhs );
+						appendSql( " as nvarchar(max))" );
+						appendSql( getFromDualForSelectOnly() );
+						appendSql( " intersect select cast(" );
+						visitSqlSelectExpression( rhs );
+						appendSql( " as nvarchar(max))" );
+						appendSql( getFromDualForSelectOnly() );
+						getClauseStack().pop();
+						appendSql( CLOSE_PARENTHESIS );
+						return;
+					}
+				}
+				case EQUAL:
+				case NOT_EQUAL:
 					appendSql( "cast(" );
 					lhs.accept( this );
 					appendSql( " as nvarchar(max))" );
@@ -480,7 +498,17 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 					break;
 			}
 		}
-		renderComparisonEmulateIntersect( lhs, operator, rhs );
+		if ( supportsDistinctFromPredicate() ) {
+			renderComparisonStandard( lhs, operator, rhs );
+		}
+		else {
+			renderComparisonEmulateIntersect( lhs, operator, rhs );
+		}
+	}
+
+	@Override
+	protected boolean supportsDistinctFromPredicate() {
+		return getDialect().getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override

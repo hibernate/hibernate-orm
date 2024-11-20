@@ -162,6 +162,11 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 		sqlAppender.appendSql( "' passing " );
 		array.accept( walker );
 		sqlAppender.appendSql( " as \"d\" columns" );
+		renderXmlTableColumns( sqlAppender, tupleType, walker );
+		sqlAppender.appendSql( ')' );
+	}
+
+	protected void renderXmlTableColumns(SqlAppender sqlAppender, AnonymousTupleTableGroupProducer tupleType, SqlAstTranslator<?> walker) {
 		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
@@ -205,8 +210,6 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 				}
 			} );
 		}
-
-		sqlAppender.appendSql( ')' );
 	}
 
 	protected void renderUnnest(

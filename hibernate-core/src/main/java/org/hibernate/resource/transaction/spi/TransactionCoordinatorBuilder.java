@@ -40,6 +40,8 @@ public interface TransactionCoordinatorBuilder extends Service {
 	PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode();
 
 	default DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
-		return isJta() ? new DdlTransactionIsolatorJtaImpl( jdbcContext ) : new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
+		return isJta()
+				? new DdlTransactionIsolatorJtaImpl( jdbcContext )
+				: new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

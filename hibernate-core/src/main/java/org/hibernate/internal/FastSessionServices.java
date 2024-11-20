@@ -358,18 +358,16 @@ public final class FastSessionServices {
 
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
 		final CacheRetrieveMode cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
-		if ( cacheRetrieveMode == null ) {
-			return (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE );
-		}
-		return cacheRetrieveMode;
+		return cacheRetrieveMode == null
+				? (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE )
+				: cacheRetrieveMode;
 	}
 
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
 		final CacheStoreMode cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
-		if ( cacheStoreMode == null ) {
-			return ( CacheStoreMode ) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE );
-		}
-		return cacheStoreMode;
+		return cacheStoreMode == null
+				? (CacheStoreMode) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE )
+				: cacheStoreMode;
 	}
 
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {

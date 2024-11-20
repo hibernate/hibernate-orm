@@ -5,6 +5,7 @@
 package org.hibernate.dialect.function.array;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.dialect.XmlHelper;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
@@ -14,6 +15,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 
 
 /**
@@ -70,5 +72,28 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 		else {
 			sqlAppender.appendSql( " t(v))" );
 		}
+	}
+
+	protected void renderXmlTable(
+			SqlAppender sqlAppender,
+			Expression array,
+			BasicPluralType<?, ?> pluralType,
+			@Nullable SqlTypedMapping sqlTypedMapping,
+			AnonymousTupleTableGroupProducer tupleType,
+			String tableIdentifierVariable,
+			SqlAstTranslator<?> walker) {
+		final XmlHelper.CollectionTags collectionTags = XmlHelper.determineCollectionTags(
+				(BasicPluralJavaType<?>) pluralType.getJavaTypeDescriptor(), walker.getSessionFactory()
+		);
+
+		sqlAppender.appendSql( "xmltable('/" );
+		sqlAppender.appendSql( collectionTags.rootName() );
+		sqlAppender.appendSql( '/' );
+		sqlAppender.appendSql( collectionTags.elementName() );
+		sqlAppender.appendSql( "' passing " );
+		array.accept( walker );
+		sqlAppender.appendSql( " columns" );
+		renderXmlTableColumns( sqlAppender, tupleType, walker );
+		sqlAppender.appendSql( ')' );
 	}
 }

@@ -53,6 +53,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
@@ -76,6 +78,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -143,6 +147,17 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	protected final PostgreSQLDriverKind driverKind;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isXml() ) {
+				// Requires the use of xmltable which is not supported in check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public PostgreSQLLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -1534,6 +1549,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return postgresqlTableExporter;
 	}
 
 	/**

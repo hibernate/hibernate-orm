@@ -148,7 +148,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			transactionCoordinatorOwner.setTransactionTimeOut( timeOut );
 		}
 
-
 		// report entering into a "transactional context"
 		transactionCoordinatorOwner.startTransactionBoundary();
 
@@ -184,7 +183,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		log.tracef( "ResourceLocalTransactionCoordinatorImpl#afterCompletionCallback(%s)", successful );
 		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
-
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
 		for ( TransactionObserver observer : observers() ) {
 			observer.afterCompletion( successful, false );
@@ -216,7 +214,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		private boolean rollbackOnly = false;
 
 		public TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
-			super();
 			this.jdbcResourceTransaction = jdbcResourceTransaction;
 		}
 
@@ -227,7 +224,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		@Override
 		public void begin() {
 			errorIfInvalid();
-
 			jdbcResourceTransaction.begin();
 			JdbcResourceLocalTransactionCoordinatorImpl.this.afterBeginCallback();
 		}
@@ -242,30 +238,13 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		public void commit() {
 			try {
 				if ( rollbackOnly ) {
-					log.debug( "On commit, transaction was marked for roll-back only, rolling back" );
-
-					try {
-						rollback();
-
-						if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
-							log.debug( "Throwing RollbackException on roll-back of transaction marked rollback-only on commit" );
-							throw new RollbackException( "Transaction was marked for rollback-only" );
-						}
-
-						return;
-					}
-					catch (RollbackException e) {
-						throw e;
-					}
-					catch (RuntimeException e) {
-						log.debug( "Encountered failure rolling back failed commit", e );
-						throw e;
-					}
+					commitRollbackOnly();
 				}
-
-				JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
-				jdbcResourceTransaction.commit();
-				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+				else {
+					JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
+					jdbcResourceTransaction.commit();
+					JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+				}
 			}
 			catch (RollbackException e) {
 				throw e;
@@ -281,6 +260,23 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			}
 		}
 
+		private void commitRollbackOnly() {
+			log.debug( "On commit, transaction was marked for roll-back only, rolling back" );
+			try {
+				rollback();
+				if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
+					throw new RollbackException( "Transaction was marked for rollback-only" );
+				}
+			}
+			catch (RollbackException e) {
+				throw e;
+			}
+			catch (RuntimeException e) {
+				log.debug( "Encountered failure rolling back failed commit", e );
+				throw e;
+			}
+		}
+
 		@Override
 		public void rollback() {
 			try {
@@ -292,8 +288,6 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			finally {
 				rollbackOnly = false;
 			}
-
-			// no-op otherwise.
 		}
 
 		@Override
@@ -305,12 +299,9 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		public void markRollbackOnly() {
 			if ( getStatus() != TransactionStatus.ROLLED_BACK ) {
 				if ( log.isDebugEnabled() ) {
-					log.debug(
-							"JDBC transaction marked for rollback-only (exception provided for stack trace)",
-							new Exception( "exception just for purpose of providing stack trace" )
-					);
+					log.debug( "JDBC transaction marked for rollback-only (exception provided for stack trace)",
+							new Exception( "exception just for purpose of providing stack trace" ) );
 				}
-
 				rollbackOnly = true;
 			}
 		}

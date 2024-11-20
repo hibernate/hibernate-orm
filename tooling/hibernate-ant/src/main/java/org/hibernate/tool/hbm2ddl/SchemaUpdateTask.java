@@ -193,7 +193,7 @@ public class SchemaUpdateTask extends MatchingTask {
 			throw new BuildException( "File not found: " + e.getMessage(), e );
 		}
 		catch (IOException e) {
-			throw new BuildException( "IOException : " + e.getMessage(), e );
+			throw new BuildException( "IOException: " + e.getMessage(), e );
 		}
 		catch (BuildException e) {
 			throw e;

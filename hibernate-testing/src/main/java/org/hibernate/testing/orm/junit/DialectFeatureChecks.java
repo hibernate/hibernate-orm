@@ -66,6 +66,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TiDBDialect;
@@ -1020,6 +1021,15 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;
+		}
+	}
+
+	public static class SupportsUnicodeNClob implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SybaseASEDialect aseDialect)
+					// The jconn driver apparently doesn't support unicode characters
+					|| aseDialect.getDriverKind() == SybaseDriverKind.JTDS;
 		}
 	}
 

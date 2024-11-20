@@ -28,47 +28,20 @@ stage('Configure') {
 	requireApprovalForPullRequest 'hibernate'
 
 	this.environments = [
-//		new BuildEnvironment( dbName: 'h2' ),
-//		new BuildEnvironment( dbName: 'hsqldb' ),
-//		new BuildEnvironment( dbName: 'derby' ),
-//		new BuildEnvironment( dbName: 'mysql' ),
-//		new BuildEnvironment( dbName: 'mariadb' ),
-//		new BuildEnvironment( dbName: 'postgresql' ),
-//		new BuildEnvironment( dbName: 'edb' ),
-//		new BuildEnvironment( dbName: 'oracle' ),
-//		new BuildEnvironment( dbName: 'db2' ),
-//		new BuildEnvironment( dbName: 'mssql' ),
-//		new BuildEnvironment( dbName: 'sybase' ),
-// Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
-// 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
-				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
+		new BuildEnvironment( dbName: 'sybase_jconn' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
+		new BuildEnvironment( testJdkVersion: '21' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' ),
 		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
 	];
-
-	if ( env.CHANGE_ID ) {
-		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ) )
-		}
-		if ( pullRequest.labels.contains( 'hana' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
-		}
-		if ( pullRequest.labels.contains( 'sybase' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'sybase_jconn' ) )
-		}
-	}
 
 	helper.configure {
 		file 'job-configuration.yaml'
@@ -97,15 +70,17 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	currentBuild.result = 'NOT_BUILT'
   	return
 }
+// This is a limited maintenance branch, so don't run this on pushes to the branch, only on PRs
+if ( !env.CHANGE_ID ) {
+	print "INFO: Build skipped because this job should only run for pull request, not for branch pushes"
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
 
 stage('Build') {
 	Map<String, Closure> executions = [:]
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
-		// Don't build environments for newer JDKs when this is a PR
-		if ( helper.scmSource.pullRequest && buildEnv.testJdkVersion ) {
-			return
-		}
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
@@ -198,6 +173,9 @@ stage('Build') {
 			}
 		})
 	}
+	executions.put('Hibernate Search Update Dependency', {
+		build job: '/hibernate-search-dependency-update/7.2', propagate: true, parameters: [string(name: 'UPDATE_JOB', value: 'orm6.6'), string(name: 'ORM_REPOSITORY', value: helper.scmSource.remoteUrl), string(name: 'ORM_PULL_REQUEST_ID', value: helper.scmSource.pullRequest.id)]
+	})
 	parallel(executions)
 }
 

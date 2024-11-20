@@ -1,9 +1,6 @@
 name: GH Actions CI
 
 on:
-  push:
-    branches:
-      - '6.6'
   pull_request:
     branches:
       - '6.6'

@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -18,6 +19,11 @@ public class OracleJsonArrayJdbcType extends OracleJsonArrayBlobJdbcType {
 
 	public OracleJsonArrayJdbcType(JdbcType elementJdbcType) {
 		super( elementJdbcType );
+	}
+
+	@Override
+	public int getDdlTypeCode() {
+		return SqlTypes.JSON;
 	}
 
 	@Override

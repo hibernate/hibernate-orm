@@ -26,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -278,16 +277,6 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 				return null;
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
-	}
-
-	@Override
-	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		if ( aggregateColumnSqlTypeCode == SQLXML ) {
-			return columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
-		}
-		else {
-			return columnSqlTypeCode;
-		}
 	}
 
 	@Override

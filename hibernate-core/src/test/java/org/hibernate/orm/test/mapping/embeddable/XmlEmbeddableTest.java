@@ -108,10 +108,10 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testFetchNull() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
-					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 2", XmlHolder.class ).getResultList();
-					assertEquals( 1, XmlHolders.size() );
-					assertEquals( 2L, XmlHolders.get( 0 ).getId() );
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate2(), XmlHolders.get( 0 ).getAggregate() );
+					List<XmlHolder> xmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 2", XmlHolder.class ).getResultList();
+					assertEquals( 1, xmlHolders.size() );
+					assertEquals( 2L, xmlHolders.get( 0 ).getId() );
+					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate2(), xmlHolders.get( 0 ).getAggregate() );
 				}
 		);
 	}

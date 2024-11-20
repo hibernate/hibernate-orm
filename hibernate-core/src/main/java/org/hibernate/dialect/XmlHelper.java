@@ -91,6 +91,14 @@ public class XmlHelper {
 									sb.append( '&' );
 									i += 4;
 								}
+								else if ( i + 5 < end
+									&& string.charAt( i + 2 ) == 'p'
+									&& string.charAt( i + 3 ) == 'o'
+									&& string.charAt( i + 4 ) == 's'
+									&& string.charAt( i + 5 ) == ';' ) {
+									sb.append( '\'' );
+									i += 5;
+								}
 								break OUTER;
 							case 'g':
 								if ( string.charAt( i + 2 ) == 't' && string.charAt( i + 3 ) == ';' ) {
@@ -274,7 +282,14 @@ public class XmlHelper {
 		if ( NULL_TAG.equals( string ) ) {
 			return null;
 		}
-		if ( !string.startsWith( START_TAG ) || !string.endsWith( END_TAG ) ) {
+		int contentEnd = string.length() - 1;
+		while ( contentEnd >= 0 ) {
+			if ( !Character.isWhitespace( string.charAt( contentEnd ) ) ) {
+				break;
+			}
+			contentEnd--;
+		}
+		if ( !string.startsWith( START_TAG ) || !string.regionMatches( contentEnd - END_TAG.length()+ 1, END_TAG, 0, END_TAG.length() ) ) {
 			throw new IllegalArgumentException( "XML not properly formatted: " + string );
 		}
 		int end;
@@ -289,7 +304,7 @@ public class XmlHelper {
 			array = new Object[embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
 			end = fromString( embeddableMappingType, string, returnEmbeddable, options, array, START_TAG.length() );
 		}
-		assert end + END_TAG.length() == string.length();
+		assert end + END_TAG.length() == contentEnd + 1;
 
 		if ( returnEmbeddable ) {
 			final StructAttributeValues attributeValues = StructHelper.getAttributeValues( embeddableMappingType, array, options );

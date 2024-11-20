@@ -350,6 +350,9 @@ public interface JdbcType extends Serializable {
 			case JSON:
 			case JSON_ARRAY:
 				return CastType.JSON;
+			case SQLXML:
+			case XML_ARRAY:
+				return CastType.XML;
 			case NULL:
 				return CastType.NULL;
 			default:

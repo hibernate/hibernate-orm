@@ -4,8 +4,6 @@
  */
 package org.hibernate.dialect;
 
-import java.util.Locale;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -16,18 +14,16 @@ import org.hibernate.tool.schema.internal.StandardUserDefinedTypeExporter;
 import org.hibernate.type.SqlTypes;
 
 import static java.sql.Types.BOOLEAN;
-import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BIT;
+import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.DATE;
-import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TABLE;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
@@ -61,11 +57,13 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 		}
 		final int arrayLength = userDefinedType.getArrayLength();
 		final Integer elementSqlTypeCode = userDefinedType.getElementSqlTypeCode();
+		final Integer elementDdlTypeCode = userDefinedType.getElementDdlTypeCode();
 		final String jsonTypeName = metadata.getDatabase().getTypeConfiguration().getDdlTypeRegistry().getTypeName(
 				SqlTypes.JSON,
 				dialect
 		);
-		final String valueExpression = determineValueExpression( "t.value", elementSqlTypeCode, elementType );
+		final String valueExpression = determineValueExpression( "t.value", elementSqlTypeCode, elementDdlTypeCode, elementType );
+		final String jsonElementType = determineJsonElementType( elementSqlTypeCode, elementDdlTypeCode, elementType );
 		return new String[] {
 				"create or replace type " + arrayTypeName + " as varying array(" + arrayLength + ") of " + elementType,
 				"create or replace function " + arrayTypeName + "_cmp(a in " + arrayTypeName +
@@ -266,7 +264,7 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 						"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
 						"if arr is null then return null; end if; " +
 						"select " + valueExpression + " bulk collect into res " +
-						"from json_table(arr,'$[*]' columns (value path '$')) t; " +
+						"from json_table(arr,'$[*]' columns (value " + jsonElementType + " path '$')) t; " +
 						"return res; " +
 						"end;"
 		};
@@ -332,17 +330,8 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 		return dialect.getVersion().isSameOrAfter( 23 );
 	}
 
-	private String determineValueExpression(String expression, int elementSqlTypeCode, String elementType) {
+	private String determineValueExpression(String expression, int elementSqlTypeCode, Integer elementDdlTypeCode, String elementType) {
 		switch ( elementSqlTypeCode ) {
-			case BOOLEAN:
-				if ( elementType.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
-					return "decode(" + expression + ",'true',1,'false',0,null)";
-				}
-			case TINYINT:
-			case SMALLINT:
-			case INTEGER:
-			case BIGINT:
-				return "cast(" + expression + " as " + elementType + ")";
 			case DATE:
 				return "to_date(" + expression + ",'YYYY-MM-DD')";
 			case TIME:
@@ -355,11 +344,44 @@ public class OracleUserDefinedTypeExporter extends StandardUserDefinedTypeExport
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
-				return "hextoraw(" + expression + ")";
+			case BLOB:
+				return "xmlcast(xmlcdata(" + expression + ") as " + elementType + ")";
 			case UUID:
 				return "hextoraw(replace(" + expression + ",'-',''))";
+			case BIT:
+				return "decode(" + expression + ",'true',1,'false',0,null)";
+			case BOOLEAN:
+				if ( SqlTypes.isNumericType( elementDdlTypeCode ) ) {
+					return "decode(" + expression + ",'true',1,'false',0,null)";
+				}
+				// Fall-through intended
 			default:
 				return expression;
+		}
+	}
+
+	private String determineJsonElementType(Integer elementSqlTypeCode, Integer elementDdlTypeCode, String elementType) {
+		switch ( elementSqlTypeCode ) {
+			case BINARY:
+			case VARBINARY:
+			case LONG32VARBINARY:
+			case BLOB:
+				return "clob";
+			case BOOLEAN:
+				if ( !SqlTypes.isNumericType( elementDdlTypeCode ) ) {
+					return elementType;
+				}
+				// Fall-through intended
+			case BIT:
+			case DATE:
+			case TIME:
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+			case TIMESTAMP_UTC:
+			case UUID:
+				return "varchar2(4000)";
+			default:
+				return elementType;
 		}
 	}
 

@@ -253,6 +253,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 		userDefinedArrayType.setArraySqlTypeCode( getDdlTypeCode() );
 		userDefinedArrayType.setElementTypeName( elementTypeName );
 		userDefinedArrayType.setElementSqlTypeCode( elementJdbcType.getDefaultSqlTypeCode() );
+		userDefinedArrayType.setElementDdlTypeCode( elementJdbcType.getDdlTypeCode() );
 		userDefinedArrayType.setArrayLength( columnSize.getArrayLength() == null ? 127 : columnSize.getArrayLength() );
 	}
 

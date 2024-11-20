@@ -4620,8 +4620,20 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String determineTableName(Table table) {
-		return MappingModelCreationHelper.getTableIdentifierExpression( table, factory );
+		if ( table.getSubselect() != null ) {
+			final SQLQueryParser sqlQueryParser = new SQLQueryParser(
+					table.getSubselect(),
+					null,
+					// NOTE : this allows finer control over catalog and schema used for placeholder
+					// handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
+					new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
+			);
+			return "( " + sqlQueryParser.process() + " )";
+		}
+
+		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
+
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {

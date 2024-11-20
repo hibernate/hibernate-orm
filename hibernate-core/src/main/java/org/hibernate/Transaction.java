@@ -17,7 +17,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * depending on how Hibernate is configured.
  * <p>
  * Every resource-local transaction is associated with a {@link Session} and begins with
- * an explicit call to {@link Session#beginTransaction()}, or, equivalently, with
+ * an explicit call to {@link Session#beginTransaction()}, or, almost equivalently, with
  * {@code session.getTransaction().begin()}, and ends with a call to {@link #commit()}
  * or {@link #rollback()}.
  * <p>
@@ -30,6 +30,11 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * and is not usually used to control transactions that affect multiple resources.
  * <p>
  * A {@code Transaction} object is not threadsafe.
+ *
+ * @apiNote JPA doesn't allow an {@link EntityTransaction} to represent a JTA transaction.
+ * But when {@linkplain org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled
+ * strict JPA transaction compliance} is disabled, as it is by default, Hibernate allows an
+ * instance of this interface to represent the current JTA transaction context.
  *
  * @author Anton van Straaten
  * @author Steve Ebersole

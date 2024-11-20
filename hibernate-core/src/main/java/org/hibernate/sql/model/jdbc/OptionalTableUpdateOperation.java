@@ -263,7 +263,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private JdbcDeleteMutation createJdbcDelete(SharedSessionContractImplementor session) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcDeleteMutation createJdbcDelete(SharedSessionContractImplementor session) {
 		final TableDelete tableDelete;
 		if ( tableMapping.getDeleteDetails() != null
 				&& tableMapping.getDeleteDetails().getCustomSql() != null ) {
@@ -305,39 +308,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
 		MODEL_MUTATION_LOGGER.tracef( "#performUpdate(%s)", tableMapping.getTableName() );
-
-		final TableUpdate<JdbcMutationOperation> tableUpdate;
-		if ( tableMapping.getUpdateDetails() != null
-				&& tableMapping.getUpdateDetails().getCustomSql() != null ) {
-			tableUpdate = new TableUpdateCustomSql(
-					new MutatingTableReference( tableMapping ),
-					mutationTarget,
-					"upsert update for " + mutationTarget.getRolePath(),
-					valueBindings,
-					keyBindings,
-					optimisticLockBindings,
-					parameters
-			);
-		}
-		else {
-			tableUpdate = new TableUpdateStandard(
-					new MutatingTableReference( tableMapping ),
-					mutationTarget,
-					"upsert update for " + mutationTarget.getRolePath(),
-					valueBindings,
-					keyBindings,
-					optimisticLockBindings,
-					parameters
-			);
-		}
-
-		final SqlAstTranslator<JdbcMutationOperation> translator = session
-				.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( tableUpdate, session.getFactory() );
-
-		final JdbcMutationOperation jdbcUpdate = translator.translate( null, MutationQueryOptions.INSTANCE );
+		final JdbcMutationOperation jdbcUpdate = createJdbcUpdate( session );
 
 		final PreparedStatementGroupSingleTable statementGroup = new PreparedStatementGroupSingleTable( jdbcUpdate, session );
 		final PreparedStatementDetails statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
@@ -372,6 +343,44 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					statementDetails.getSqlString()
 			);
 		}
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcMutationOperation createJdbcUpdate(SharedSessionContractImplementor session) {
+		final TableUpdate<JdbcMutationOperation> tableUpdate;
+		if ( tableMapping.getUpdateDetails() != null
+				&& tableMapping.getUpdateDetails().getCustomSql() != null ) {
+			tableUpdate = new TableUpdateCustomSql(
+					new MutatingTableReference( tableMapping ),
+					mutationTarget,
+					"upsert update for " + mutationTarget.getRolePath(),
+					valueBindings,
+					keyBindings,
+					optimisticLockBindings,
+					parameters
+			);
+		}
+		else {
+			tableUpdate = new TableUpdateStandard(
+					new MutatingTableReference( tableMapping ),
+					mutationTarget,
+					"upsert update for " + mutationTarget.getRolePath(),
+					valueBindings,
+					keyBindings,
+					optimisticLockBindings,
+					parameters
+			);
+		}
+
+		final SqlAstTranslator<JdbcMutationOperation> translator = session
+				.getJdbcServices()
+				.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( tableUpdate, session.getFactory() );
+
+		return translator.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	private void performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
@@ -414,7 +423,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
 		final TableInsert tableInsert;
 		if ( tableMapping.getInsertDetails() != null
 				&& tableMapping.getInsertDetails().getCustomSql() != null ) {

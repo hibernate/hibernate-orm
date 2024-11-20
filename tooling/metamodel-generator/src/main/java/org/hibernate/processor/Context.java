@@ -504,12 +504,25 @@ public final class Context {
 		return enumTypesByValue;
 	}
 
-	public void addEnumValue(String type, String value) {
-		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( type );
+	public void addEnumValue(
+			String qualifiedTypeName, String shortTypeName,
+			@Nullable String outerTypeQualifiedName, @Nullable String outerShortTypeName,
+			String value) {
+		addEnumValue( qualifiedTypeName, value );
+		addEnumValue( qualifiedTypeName, qualifiedTypeName + '.' + value );
+		addEnumValue( qualifiedTypeName, shortTypeName + '.' + value );
+		if ( outerShortTypeName != null ) {
+			addEnumValue( qualifiedTypeName, outerShortTypeName + '.' + shortTypeName + '.' + value );
+			addEnumValue( qualifiedTypeName, outerShortTypeName + '$' + shortTypeName + '.' + value );
+			addEnumValue( qualifiedTypeName, outerTypeQualifiedName + '$' + shortTypeName + '.' + value );
+		}
 	}
 
-	@Nullable
-	public TypeElement entityType(String entityName) {
+	private void addEnumValue(String qualifiedTypeName, String value) {
+		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( qualifiedTypeName );
+	}
+
+	public @Nullable TypeElement entityType(String entityName) {
 		final Elements elementUtils = getElementUtils();
 		final String qualifiedName = qualifiedNameForEntityName(entityName);
 		if ( qualifiedName != null ) {

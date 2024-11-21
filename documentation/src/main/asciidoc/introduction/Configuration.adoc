@@ -553,7 +553,7 @@ By default, Hibernate handles date and time types defined by `java.time` by:
 
 This works best when the database server time zone agrees with JVM system time zone.
 
-TIP: We therefore recommend setting things up so that the database server and the JVM agree on the same time zone. **Hint:** when in doubt, UTC quite a nice time zone.
+TIP: We therefore recommend setting things up so that the database server and the JVM agree on the same time zone. **Hint:** when in doubt, UTC is quite a nice time zone.
 
 There are two system configuration properties which influence this behavior:
 

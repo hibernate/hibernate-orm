@@ -212,6 +212,7 @@ jobs:
 
       - name: Run build script
         env:
+          HOME: /home/opc/actions-runner
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
         run: ./ci/build-github.sh

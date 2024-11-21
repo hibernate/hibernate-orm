@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				{@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"),
 				@Setting(name = JdbcSettings.JDBC_TIME_ZONE, value = "+01:00")})
 @SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL hangs dropping the table")
+@SkipForDialect(dialectClass = TiDBDialect.class, reason = "Values stored in timestamp DDL type columns get the JDBC time zone offset subtracted")
 public class InstantWithNormalizedTest {
 	@Test
 	public void test(EntityManagerFactoryScope scope) {

@@ -127,7 +127,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	@Override
 	public AggregateSupport getAggregateSupport() {
 		return getVersion().isSameOrAfter( 10, 2 )
-				? MySQLAggregateSupport.LONGTEXT_INSTANCE
+				? MySQLAggregateSupport.forMariaDB( this )
 				: AggregateSupportImpl.INSTANCE;
 	}
 

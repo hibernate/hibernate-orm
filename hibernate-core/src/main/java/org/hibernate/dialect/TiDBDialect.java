@@ -5,6 +5,8 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sequence.TiDBSequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -88,6 +90,11 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return TiDBSequenceSupport.INSTANCE;
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return MySQLAggregateSupport.forTiDB( this );
 	}
 
 	@Override

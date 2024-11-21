@@ -9,6 +9,7 @@ package org.hibernate.query.sql.spi;
 import java.util.Set;
 
 import jakarta.persistence.SqlResultSetMapping;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -49,6 +50,8 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 	 * An implicit entity mapping by entity class
 	 */
 	Class<?> getResultMappingClass();
+
+	@Nullable Class<?> getResultType();
 
 	Integer getFirstResult();
 
@@ -135,6 +138,7 @@ public interface NamedNativeQueryMemento extends NamedQueryMemento {
 		public NamedNativeQueryMemento build(SessionFactoryImplementor sessionFactory) {
 			return new NamedNativeQueryMementoImpl(
 					name,
+					null,
 					queryString,
 					queryString,
 					resultSetMappingName,

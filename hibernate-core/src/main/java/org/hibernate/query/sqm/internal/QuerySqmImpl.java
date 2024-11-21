@@ -904,6 +904,7 @@ public class QuerySqmImpl<R>
 			}
 			return new NamedCriteriaQueryMementoImpl(
 					name,
+					getResultType(),
 					sqmStatement,
 					getQueryOptions().getLimit().getFirstRow(),
 					getQueryOptions().getLimit().getMaxRows(),
@@ -923,6 +924,7 @@ public class QuerySqmImpl<R>
 
 		return new NamedHqlQueryMementoImpl(
 				name,
+				getResultType(),
 				getQueryString(),
 				getQueryOptions().getLimit().getFirstRow(),
 				getQueryOptions().getLimit().getMaxRows(),

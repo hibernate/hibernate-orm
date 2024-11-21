@@ -14,12 +14,15 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  * @author Gavin King
  */
 public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 	private final String name;
+	private final @Nullable Class<?> resultType;
 
 	private final Boolean cacheable;
 	private final String cacheRegion;
@@ -37,6 +40,7 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 
 	protected AbstractNamedQueryMemento(
 			String name,
+			@Nullable Class<?> resultType,
 			Boolean cacheable,
 			String cacheRegion,
 			CacheMode cacheMode,
@@ -47,6 +51,7 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 			String comment,
 			Map<String, Object> hints) {
 		this.name = name;
+		this.resultType = resultType;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
 		this.cacheMode = cacheMode;
@@ -61,6 +66,10 @@ public abstract class AbstractNamedQueryMemento implements NamedQueryMemento {
 	@Override
 	public String getRegistrationName() {
 		return name;
+	}
+
+	public @Nullable Class<?> getResultType() {
+		return resultType;
 	}
 
 	@Override

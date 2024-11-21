@@ -22,6 +22,8 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Definition of a named query, defined in the mapping metadata.
  * Additionally, as of JPA 2.1, named query definition can also come
@@ -41,6 +43,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 
 	public NamedHqlQueryMementoImpl(
 			String name,
+			@Nullable Class<?> resultType,
 			String hqlString,
 			Integer firstResult,
 			Integer maxResults,
@@ -57,6 +60,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 			Map<String,Object> hints) {
 		super(
 				name,
+				resultType,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -103,6 +107,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 	public NamedSqmQueryMemento makeCopy(String name) {
 		return new NamedHqlQueryMementoImpl(
 				name,
+				getResultType(),
 				hqlString,
 				firstResult,
 				maxResults,

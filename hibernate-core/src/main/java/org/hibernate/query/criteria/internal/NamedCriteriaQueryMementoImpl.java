@@ -22,6 +22,8 @@ import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento implements NamedSqmQueryMemento, Serializable {
 
 	private final SqmStatement sqmStatement;
@@ -33,6 +35,7 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 
 	public NamedCriteriaQueryMementoImpl(
 			String name,
+			@Nullable Class<?> resultType,
 			SqmStatement sqmStatement,
 			Integer firstResult,
 			Integer maxResults,
@@ -47,7 +50,7 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 			String comment,
 			Map<String, String> parameterTypes,
 			Map<String, Object> hints) {
-		super( name, cacheable, cacheRegion, cacheMode, flushMode, readOnly, timeout, fetchSize, comment, hints );
+		super( name, resultType, cacheable, cacheRegion, cacheMode, flushMode, readOnly, timeout, fetchSize, comment, hints );
 		this.sqmStatement = sqmStatement;
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
@@ -114,6 +117,7 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 	public NamedSqmQueryMemento makeCopy(String name) {
 		return new NamedCriteriaQueryMementoImpl(
 				name,
+				getResultType(),
 				sqmStatement,
 				firstResult,
 				maxResults,

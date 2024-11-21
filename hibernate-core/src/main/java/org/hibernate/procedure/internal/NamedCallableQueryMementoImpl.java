@@ -64,6 +64,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			Map<String, Object> hints) {
 		super(
 				name,
+				Object.class,
 				cacheable,
 				cacheRegion,
 				cacheMode,

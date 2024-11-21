@@ -38,6 +38,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 
 	public NamedNativeQueryMementoImpl(
 			String name,
+			Class<?> resultClass,
 			String sqlString,
 			String originalSqlString,
 			String resultSetMappingName,
@@ -56,6 +57,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 			Map<String,Object> hints) {
 		super(
 				name,
+				resultClass,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -123,6 +125,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	public NamedNativeQueryMemento makeCopy(String name) {
 		return new NamedNativeQueryMementoImpl(
 				name,
+				getResultType(),
 				sqlString,
 				originalSqlString,
 				resultSetMappingName,
@@ -149,7 +152,8 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 
 	@Override
 	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
-		return new NativeQueryImpl<>( this, session );
+		//noinspection unchecked
+		return new NativeQueryImpl<>( this, (Class<T>) getResultType(), session );
 	}
 
 	@Override

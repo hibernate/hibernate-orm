@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import jakarta.persistence.EntityGraph;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
@@ -891,22 +892,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// dynamic native (SQL) query handling
 
 	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImpl createNativeQuery(String sqlString) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		try {
-			final NativeQueryImpl query = new NativeQueryImpl<>( sqlString, this );
-			if ( isEmpty( query.getComment() ) ) {
-				query.setComment( "dynamic native SQL query" );
-			}
-			applyQuerySettingsAndHints( query );
-			return query;
-		}
-		catch (RuntimeException he) {
-			throw getExceptionConverter().convert( he );
-		}
+	public NativeQueryImplementor createNativeQuery(String sqlString) {
+		return createNativeQuery( sqlString, (Class) null );
 	}
 
 	@Override @SuppressWarnings("rawtypes")
@@ -939,12 +926,28 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	//note: we're doing something a bit funny here to work around
 	//      the clashing signatures declared by the supertypes
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		final NativeQueryImpl query = createNativeQuery( sqlString );
-		addResultType( resultClass, query );
-		return query;
+	public NativeQueryImplementor createNativeQuery(String sqlString, @Nullable Class resultClass) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		delayedAfterCompletion();
+
+		try {
+			final NativeQueryImpl query = new NativeQueryImpl<>( sqlString, resultClass, this );
+			if ( isEmpty( query.getComment() ) ) {
+				query.setComment( "dynamic native SQL query" );
+			}
+			applyQuerySettingsAndHints( query );
+			return query;
+		}
+		catch (RuntimeException he) {
+			throw getExceptionConverter().convert( he );
+		}
 	}
 
+	/**
+	 * @deprecated Use {@link NativeQueryImpl#NativeQueryImpl(String, Class, SharedSessionContractImplementor)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	protected <T> void addResultType(Class<T> resultClass, NativeQueryImplementor<T> query) {
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setTupleTransformer( NativeQueryTupleTransformer.INSTANCE );

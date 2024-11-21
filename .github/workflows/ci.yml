@@ -210,6 +210,9 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
+      - name: Print home path
+        run: echo ~/
+
       - name: Run build script
         env:
           HOME: /home/opc/actions-runner

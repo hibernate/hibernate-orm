@@ -18,6 +18,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sql.internal.NamedNativeQueryMementoImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -86,15 +88,16 @@ public class NamedNativeQueryDefinitionImpl extends AbstractNamedQueryDefinition
 
 	@Override
 	public NamedNativeQueryMemento resolve(SessionFactoryImplementor factory) {
+		Class<?> resultClass = isNotEmpty( resultSetMappingClassName )
+				? factory.getServiceRegistry().requireService( ClassLoaderService.class ).classForName( resultSetMappingClassName )
+				: null;
 		return new NamedNativeQueryMementoImpl(
 				getRegistrationName(),
+				resultClass,
 				sqlString,
 				sqlString,
 				resultSetMappingName,
-				isNotEmpty( resultSetMappingClassName )
-						? factory.getServiceRegistry().requireService( ClassLoaderService.class )
-								.classForName( resultSetMappingClassName )
-						: null,
+				resultClass,
 				querySpaces,
 				getCacheable(),
 				getCacheRegion(),

@@ -70,6 +70,7 @@ public class NamedHqlQueryDefinitionImpl extends AbstractNamedQueryDefinition im
 	public NamedSqmQueryMemento resolve(SessionFactoryImplementor factory) {
 		return new NamedHqlQueryMementoImpl(
 				getRegistrationName(),
+				null,
 				hqlString,
 				firstResult,
 				maxResults,

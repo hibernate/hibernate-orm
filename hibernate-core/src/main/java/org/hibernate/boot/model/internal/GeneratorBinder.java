@@ -507,8 +507,8 @@ public class GeneratorBinder {
 				annotationType,
 				creationContext,
 				generatorClass
-				)
-			);
+			)
+		);
 	}
 
 	/**

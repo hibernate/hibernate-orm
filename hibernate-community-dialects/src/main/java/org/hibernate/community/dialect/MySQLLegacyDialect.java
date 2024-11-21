@@ -392,9 +392,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return getMySQLVersion().isSameOrAfter( 5, 7 )
-				? MySQLAggregateSupport.JSON_INSTANCE
-				: super.getAggregateSupport();
+		return MySQLAggregateSupport.forMySQL( this );
 	}
 
 	@Deprecated

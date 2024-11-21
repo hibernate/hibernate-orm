@@ -125,7 +125,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return MySQLAggregateSupport.LONGTEXT_INSTANCE;
+		return MySQLAggregateSupport.forMariaDB( this );
 	}
 
 	@Override

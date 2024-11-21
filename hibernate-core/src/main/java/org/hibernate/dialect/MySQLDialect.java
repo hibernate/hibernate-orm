@@ -440,7 +440,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return MySQLAggregateSupport.JSON_INSTANCE;
+		return MySQLAggregateSupport.forMySQL( this );
 	}
 
 	@Deprecated(since="6.4")

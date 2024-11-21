@@ -617,7 +617,8 @@ public class EntityBinder {
 				inferredData.getPropertyClass(),
 				propertyAccessor
 		);
-		addElementsOfClass( baseClassElements, propContainer, context, 0 );
+		final int idPropertyCount = addElementsOfClass( baseClassElements, propContainer, context, 0 );
+		assert idPropertyCount == 1;
 		//Id properties are on top and there is only one
 		return baseClassElements.get( 0 );
 	}

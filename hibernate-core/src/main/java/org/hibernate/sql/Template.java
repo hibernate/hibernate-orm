@@ -23,12 +23,12 @@ import static org.hibernate.internal.util.StringHelper.WHITESPACE;
  * should be written in the native SQL dialect of the target database,
  * with the following special exceptions:
  * <ul>
- *     <li>any backtick-quoted identifiers, for example {@code `hello`},
+ *     <li>any backtick-quoted identifier, for example {@code `hello`},
  *     is interpreted as a quoted identifier and re-quoted using the
  *     {@linkplain Dialect#quote native quoted identifier syntax} of
  *     the database, and</li>
  *     <li>the literal identifiers {@code true} and {@code false} are
- *     interpreted are literal boolean values, and replaced with
+ *     interpreted as literal boolean values, and replaced with
  *     {@linkplain Dialect#toBooleanValueString dialect-specific
  *     literal values}.
  *     </li>

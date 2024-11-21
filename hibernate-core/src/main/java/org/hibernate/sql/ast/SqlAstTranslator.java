@@ -57,8 +57,8 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	Stack<Clause> getCurrentClauseStack();
 
 	/**
-	 * Not the best spot for this.  Its the table names collected while walking the SQL AST.
-	 * Its ok here because the translator is consider a one-time-use.  It just needs to be called
+	 * Not the best spot for this.  Returns the table names collected while walking the SQL AST.
+	 * It's ok here because the translator is consider a one-time-use.  It just needs to be called
 	 * after translation.
 	 *
 	 * A better option is probably to have "translation" objects that expose the affected table-names.

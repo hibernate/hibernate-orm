@@ -84,4 +84,4 @@ function logAndExec() {
   exec "${@}"
 }
 
-logAndExec ./gradlew ciCheck ${goal} "${@}" -Plog-test-progress=true --stacktrace --info
+logAndExec ./gradlew hibernate-maven-plugin:integrationTest ${goal} "${@}" -Plog-test-progress=true --stacktrace --debug

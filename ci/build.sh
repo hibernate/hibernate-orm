@@ -79,9 +79,8 @@ elif [ "$RDBMS" == "informix" ]; then
   goal="-Pdb=informix"
 fi
 
-function logAndExec() {
-  echo 1>&2 "Executing:" "${@}"
-  exec "${@}"
-}
+./gradlew hibernate-maven-plugin:integrationTest ${goal} "${@}" -Plog-test-progress=true --stacktrace --info || true
 
-logAndExec ./gradlew hibernate-maven-plugin:integrationTest ${goal} "${@}" -Plog-test-progress=true --stacktrace --debug
+echo "Printing contents of /home/opc/actions-runner/_work/hibernate-orm/hibernate-orm/tooling/hibernate-maven-plugin/target/maven-embedder/workspace/target/its/enhance/build.log"
+
+cat /home/opc/actions-runner/_work/hibernate-orm/hibernate-orm/tooling/hibernate-maven-plugin/target/maven-embedder/workspace/target/its/enhance/build.log

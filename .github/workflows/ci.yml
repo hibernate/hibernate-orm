@@ -213,6 +213,9 @@ jobs:
       - name: Print home path
         run: echo ~/
 
+      - name: Print users
+        run: cat /etc/passwd
+
       - name: Run build script
         env:
           HOME: /home/opc/actions-runner

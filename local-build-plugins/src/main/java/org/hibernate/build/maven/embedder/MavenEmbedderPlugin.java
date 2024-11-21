@@ -147,6 +147,10 @@ public class MavenEmbedderPlugin implements Plugin<Project> {
 	}
 
 	private void configureIntegrationTestTask(RunMavenTask task) {
+		List<String> arguments = new ArrayList<String>(task.getArguments().get());
+		arguments.add("-e"); // enable full stack trace of errors
+		arguments.add("-X"); // enable full debug logging
+		task.getArguments().set( arguments );
 		task.getGoals().set( "invoker:run" );
 		task.dependsOn("createMavenWrapper", "installHibernateMavenPlugin");
 	}

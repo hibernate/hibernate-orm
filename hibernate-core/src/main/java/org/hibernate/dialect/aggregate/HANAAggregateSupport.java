@@ -115,7 +115,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 						if ( SqlTypes.isBinaryType( column.getJdbcMapping().getJdbcType().getDdlTypeCode() ) ) {
 							return template.replace(
 									placeholder,
-									"hextobin(json_value(" + parentPartExpression + columnExpression + "'))"
+									"hextobin(replace(json_value(" + parentPartExpression + columnExpression + "'),'-',''))"
 							);
 						}
 						// Fall-through intended

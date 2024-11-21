@@ -3,6 +3,28 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.3.Final (November 21, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32365
+
+** Bug
+    * [HHH-18862] - Group by error due to subselect using foreign key reference instead of primary key in HQL query
+    * [HHH-18851] - ArrayContainsArgumentTypeResolver wrongly infers array type for needle argument
+    * [HHH-18842] - Regression: CollectionType.replace() breaks if target is PersistentCollection, but not instance of Collection (e.g. PersistentMap)
+    * [HHH-18832] - Bytecode enhancement skipped for entities with "compute-only" @Transient properties
+    * [HHH-18816] - Error when rendering the fk-side of an association in an exists subquery
+    * [HHH-18703] - JoinedSubclassEntityPersister#getTableNameForColumn KO
+    * [HHH-18647] - SemanticException when using createCriteriaInsertValues to insert into foreign key column
+
+** Improvement
+    * [HHH-18841] - Make `_identifierMapper` property added for a IdClass synthetic
+    * [HHH-18833] - Configuration to fail bytecode enhancement instead of skipping it on unsupported models
+
+** Task
+    * [HHH-18846] - Enable release automation for ORM 6.6
+
+
 Changes in 6.6.2.Final (November 07, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

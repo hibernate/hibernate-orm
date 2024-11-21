@@ -4,8 +4,12 @@
  */
 package org.hibernate.processor.annotation;
 
+
 import javax.lang.model.element.ExecutableElement;
 
+import java.util.Set;
+
+import static java.lang.Character.toUpperCase;
 import static org.hibernate.processor.util.Constants.UNI;
 
 public class LifecycleMethod extends AbstractAnnotatedMethod {
@@ -52,14 +56,21 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		return false;
 	}
 
+	private String capitalize(String string) {
+		return toUpperCase(string.charAt(0)) + string.substring(1);
+	}
+
+	static final Set<String> eventTypes = Set.of("insert", "update", "delete");
+
 	@Override
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
 		preamble(declaration);
 		nullCheck(declaration);
+		preEvent( declaration );
 		declaration.append("\ttry {\n");
 		delegateCall(declaration);
-		returnArgument(declaration);
+		returnArgumentReactively(declaration);
 		declaration.append("\t}\n");
 		if ( operationName.equals("insert") ) {
 			convertException(declaration,
@@ -74,31 +85,76 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		convertException(declaration,
 				"jakarta.persistence.PersistenceException",
 				"jakarta.data.exceptions.DataException");
+		postEvent( declaration );
+		returnArgument(declaration);
 		declaration.append("}");
 		return declaration.toString();
 	}
 
-	private void returnArgument(StringBuilder declaration) {
-		if ( returnArgument ) {
-			if ( isReactive() ) {
+	private void postEvent(StringBuilder declaration) {
+		if ( annotationMetaEntity.getContext().addDependentAnnotation()
+				&& eventTypes.contains( operationName )
+				&& !isReactive() ) {
+			final String postEventType = "Post" + capitalize( operationName ) + "Event";
+			annotationMetaEntity.importType( "jakarta.data.event." + postEventType );
+			declaration
+					.append( "\tevent.select(new TypeLiteral<" )
+					.append( postEventType )
+					.append( "<" )
+					.append( annotationMetaEntity.importType( entity ) )
+					.append( ">>(){}).fire(new " )
+					.append( postEventType )
+					.append( "<>(" )
+					.append( parameterName )
+					.append( "));\n" );
+		}
+	}
+
+	private void preEvent(StringBuilder declaration) {
+		if ( annotationMetaEntity.getContext().addDependentAnnotation()
+				&& eventTypes.contains( operationName )
+				&& !isReactive()) {
+			final String preEventType = "Pre" + capitalize( operationName ) + "Event";
+			annotationMetaEntity.importType( "jakarta.data.event." + preEventType );
+			annotationMetaEntity.importType( "jakarta.data.event.LifecycleEvent" );
+			annotationMetaEntity.importType( "jakarta.enterprise.util.TypeLiteral" );
+			annotationMetaEntity.importType( "jakarta.enterprise.event.Event" );
+			annotationMetaEntity.importType( "jakarta.inject.Inject" );
+			declaration
+					.append( "\tevent.select(new TypeLiteral<" )
+					.append( preEventType )
+					.append( "<" )
+					.append( annotationMetaEntity.importType( entity ) )
+					.append( ">>(){}).fire(new " )
+					.append( preEventType )
+					.append( "<>(" )
+					.append( parameterName )
+					.append( "));\n" );
+		}
+	}
+
+	private void returnArgumentReactively(StringBuilder declaration) {
+		if ( isReactive() ) {
+			if ( returnArgument ) {
 				declaration
-					.append(".replaceWith(")
-					.append(parameterName)
-					.append(")");
+						.append(".replaceWith(")
+						.append(parameterName)
+						.append(")")
+						.append(";\n");
 			}
 			else {
 				declaration
-						.append("\t\treturn ")
-						.append(parameterName);
-			}
-			declaration
-					.append(";\n");
-		}
-		else {
-			if ( isReactive() ) {
-				declaration
 						.append(";\n");
 			}
+		}
+	}
+
+	private void returnArgument(StringBuilder declaration) {
+		if ( returnArgument && !isReactive() ) {
+			declaration
+					.append( "\treturn " )
+					.append( parameterName )
+					.append( ";\n" );
 		}
 	}
 

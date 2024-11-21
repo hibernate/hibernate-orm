@@ -110,6 +110,10 @@ public final class ClassWriter {
 
 			pw.println();
 
+			if ( context.addDependentAnnotation() && entity.isImplementation() ) {
+				pw.println("\t@Inject private Event<? super LifecycleEvent<?>> event;\n");
+			}
+
 			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember.hasTypedAttribute() ) {
 					metaMember.getAttributeDeclarationString().lines()

@@ -585,8 +585,8 @@ public class PropertyBinder {
 	 * @param propertyContainer Metadata about a class and its properties
 	 * @param idPropertyCounter number of id properties already present in list of {@link PropertyData} instances
 	 *
-	 * @return total number of id properties found after iterating the elements of
-	 * {@code annotatedClass} using the determined access strategy
+	 * @return total number of id properties found after iterating the elements of {@code annotatedClass}
+	 * using the determined access strategy (starting from the provided {@code idPropertyCounter})
 	 */
 	static int addElementsOfClass(
 			List<PropertyData> elements,
@@ -602,7 +602,8 @@ public class PropertyBinder {
 			PropertyContainer propertyContainer,
 			MemberDetails property,
 			List<PropertyData> inFlightPropertyDataList,
-			MetadataBuildingContext context, int idPropertyCounter) {
+			MetadataBuildingContext context,
+			int idPropertyCounter) {
 		// see if inFlightPropertyDataList already contains a PropertyData for this name,
 		// and if so, skip it...
 		for ( PropertyData propertyData : inFlightPropertyDataList ) {

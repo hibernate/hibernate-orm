@@ -22,7 +22,7 @@ Hibernate 7.0 therefore baselines on Java 17 whereas previous versions baseline 
 * misplaced annotations such as an annotated getter method with FIELD access
 * stricter following of JavaBean conventions
 
-See the [Migration Guide](https://docs.jboss.org/hibernate/orm/7.0/migration-guide/migration-guide.html#annotation-validation) for details.
+See the [Migration Guide](https://docs.jboss.org/hibernate/orm/7.0/migration-guide/migration-guide.html#model-validation) for details.
 
 
 ### <a name="mapping-xml"></a> mapping.xsd
@@ -82,9 +82,7 @@ Second, it allows mixing of explicit and implicit value strategies.
 
 See the [Migration Guide](https://docs.jboss.org/hibernate/orm/7.0/userguide/html_single/Hibernate_User_Guide.html#associations-any) for details.
 
-
-[[cleanup]]
-== Clean-up
+### <a name=cleanup"></a> Clean-up
 
 A lot of deprecated contracts and behavior has been removed.
 See the [Migration Guide](https://docs.jboss.org/hibernate/orm/7.0/migration-guide/migration-guide.html#cleanup) for details.

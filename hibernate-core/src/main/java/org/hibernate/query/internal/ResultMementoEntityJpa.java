@@ -16,12 +16,12 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
-import org.hibernate.query.results.BasicValuedFetchBuilder;
+import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
-import org.hibernate.query.results.complete.CompleteResultBuilderEntityJpa;
-import org.hibernate.query.results.complete.DelayedFetchBuilderBasicPart;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityJpa;
+import org.hibernate.query.results.internal.complete.DelayedFetchBuilderBasicPart;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -56,14 +56,14 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		final BasicValuedFetchBuilder discriminatorFetchBuilder;
+		final FetchBuilderBasicValued discriminatorFetchBuilder;
 		if ( discriminatorMapping == null || !entityDescriptor.hasSubclasses() ) {
 			assert discriminatorMemento == null;
 			discriminatorFetchBuilder = null;
 		}
 		else {
 			if ( discriminatorMemento != null ) {
-				discriminatorFetchBuilder = (BasicValuedFetchBuilder) discriminatorMemento.resolve( this, querySpaceConsumer, context );
+				discriminatorFetchBuilder = (FetchBuilderBasicValued) discriminatorMemento.resolve( this, querySpaceConsumer, context );
 			}
 			else {
 				discriminatorFetchBuilder = new ImplicitFetchBuilderBasic( navigablePath, discriminatorMapping );

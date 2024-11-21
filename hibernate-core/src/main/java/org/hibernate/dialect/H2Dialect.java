@@ -14,12 +14,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -43,9 +45,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -79,7 +81,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
-import static org.hibernate.query.sqm.TemporalUnit.SECOND;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -89,7 +91,6 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -229,7 +230,6 @@ public class H2Dialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
@@ -246,9 +246,15 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonArrayJdbcType.INSTANCE );
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -358,6 +364,10 @@ public class H2Dialect extends Dialect {
 		functionFactory.xmlforest_h2();
 		functionFactory.xmlconcat_h2();
 		functionFactory.xmlpi_h2();
+
+		functionFactory.unnest_h2( getMaximumArraySize() );
+		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
+		functionFactory.jsonTable_h2( getMaximumArraySize() );
 	}
 
 	/**
@@ -368,6 +378,21 @@ public class H2Dialect extends Dialect {
 	 */
 	protected int getMaximumArraySize() {
 		return 1000;
+	}
+
+	/**
+	 * Since H2 doesn't support ordinality for the {@code system_range} function or {@code lateral},
+	 * it's impossible to use {@code system_range} for non-constant cases.
+	 * Luckily, correlation can be emulated, but requires that there is an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "nord";
 	}
 
 	@Override
@@ -902,7 +927,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return addQueryHints( query, hints );
 	}
 
 	@Override

@@ -8,9 +8,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.BindableType;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -19,6 +24,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +52,7 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 public class BasicListTest {
 
-	private BindableType<List<Integer>> integerListType;
+	private BasicType<List<Integer>> integerListType;
 
 	@BeforeAll
 	public void startUp(SessionFactoryScope scope) {
@@ -117,11 +123,18 @@ public class BasicListTest {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = integerListType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			QueryImplementor<TableWithIntegerList> tq = em.createNativeQuery(
-						"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " :data",
+						"SELECT * FROM table_with_integer_list t WHERE the_list " + op + " " + param,
 					TableWithIntegerList.class
 			);
 			tq.setParameter( "data", Arrays.asList( 512, 112, null, 0 ), integerListType );

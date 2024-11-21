@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.results.jdbc.internal;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
@@ -37,7 +37,7 @@ public class JdbcValuesMappingResolutionImpl implements JdbcValuesMappingResolut
 	}
 
 	private static Initializer<?>[] getResultInitializers(DomainResultAssembler<?>[] resultAssemblers) {
-		final ArrayList<Initializer<?>> initializers = new ArrayList<>( resultAssemblers.length );
+		final LinkedHashSet<Initializer<?>> initializers = new LinkedHashSet<>( resultAssemblers.length );
 		for ( DomainResultAssembler<?> resultAssembler : resultAssemblers ) {
 			resultAssembler.forEachResultAssembler( (initializer, list) -> list.add( initializer ), initializers );
 		}

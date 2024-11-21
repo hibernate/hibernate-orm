@@ -28,7 +28,7 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 				FunctionKind.NORMAL,
 				null,
 				StandardFunctionReturnTypeResolvers.invariant(
-						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON_ARRAY )
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
 				),
 				null
 		);
@@ -44,6 +44,7 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 		char separator = '(';
 		if ( sqlAstArguments.isEmpty() ) {
 			sqlAppender.appendSql( separator );
+			renderReturningClause( sqlAppender, walker );
 		}
 		else {
 			final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
@@ -65,11 +66,16 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			if ( nullBehavior == JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( " null on null" );
 			}
+			renderReturningClause( sqlAppender, walker );
 		}
 		sqlAppender.appendSql( ')' );
 	}
 
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
 		value.accept( walker );
+	}
+
+	protected void renderReturningClause(SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
+		// No-op
 	}
 }

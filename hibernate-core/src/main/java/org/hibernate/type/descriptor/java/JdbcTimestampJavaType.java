@@ -167,24 +167,24 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Timestamp ) {
-			return (Timestamp) value;
+		if ( value instanceof Timestamp timestamp ) {
+			return timestamp;
 		}
 
-		if ( value instanceof Date ) {
-			return new Timestamp( ( (Date) value ).getTime() );
+		if ( value instanceof Date date ) {
+			return new Timestamp( date.getTime() );
 		}
 
-		if ( value instanceof LocalDateTime ) {
-			return Timestamp.valueOf( (LocalDateTime) value );
+		if ( value instanceof LocalDateTime localDateTime ) {
+			return Timestamp.valueOf( localDateTime );
 		}
 
-		if ( value instanceof Long ) {
-			return new Timestamp( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return new Timestamp( longValue );
 		}
 
-		if ( value instanceof Calendar ) {
-			return new Timestamp( ( (Calendar) value ).getTimeInMillis() );
+		if ( value instanceof Calendar calendar ) {
+			return new Timestamp( calendar.getTimeInMillis() );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -192,15 +192,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-			case "java.util.Date":
-			case "java.util.Calendar":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date", "java.sql.Timestamp", "java.util.Date", "java.util.Calendar" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -241,7 +236,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			return timestamp;
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse timestamp string " + charSequence, pe );
+			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

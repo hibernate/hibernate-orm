@@ -5,7 +5,7 @@
 package org.hibernate.engine.jdbc.dialect.spi;
 
 /**
- * Contract for the source of DialectResolutionInfo.
+ * Contract for the source of {@link DialectResolutionInfo}.
  */
 @FunctionalInterface
 public interface DialectResolutionInfoSource {

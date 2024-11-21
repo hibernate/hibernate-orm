@@ -44,13 +44,13 @@ public class DefaultTest {
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
 			assertEquals( "new", entity.status );
-			entity.status = "old"; //should be ignored when fetch=true
+			entity.status = "old";
 		} );
 		scope.inTransaction( session -> {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
-			assertEquals( "new", entity.status );
+			assertEquals( "old", entity.status );
 		} );
 	}
 

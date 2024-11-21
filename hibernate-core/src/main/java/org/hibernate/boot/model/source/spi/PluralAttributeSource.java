@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.boot.model.Caching;
 import org.hibernate.boot.model.CustomSql;
 
 /**

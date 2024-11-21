@@ -1139,8 +1139,17 @@ public class FunctionTests {
 					assertEquals( 'A',
 							session.createQuery("select cast('ABCDEF' as Character)", Character.class)
 									.getSingleResult() );
+					assertEquals( ' ',
+							session.createQuery("select cast(' X ' as Character)", Character.class)
+									.getSingleResult() );
 					assertEquals( "ABC",
 							session.createQuery("select cast('ABCDEF' as String(3))", String.class)
+									.getSingleResult() );
+					assertEquals( "ABC",
+							session.createQuery("select cast('ABC' as String(6))", String.class)
+									.getSingleResult() );
+					assertEquals( "ABC ",
+							session.createQuery("select cast('ABC DEF' as String(4))", String.class)
 									.getSingleResult() );
 				}
 		);
@@ -2512,6 +2521,23 @@ public class FunctionTests {
 				session -> {
 					assertArrayEquals(new Object[]{5, 1.0, "hello"},
 							(Object[]) session.createSelectionQuery("select (5, 1.0, 'hello')", Object.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	public void testSlice(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals("ring",
+							session.createSelectionQuery("select theString[3:6] from EntityOfBasics", String.class)
+									.getSingleResult());
+					assertEquals('s',
+							session.createSelectionQuery("select theString[1] from EntityOfBasics", Character.class)
+									.getSingleResult());
+					assertEquals('y',
+							session.createSelectionQuery("select theString[7] from EntityOfBasics", Character.class)
 									.getSingleResult());
 				}
 		);

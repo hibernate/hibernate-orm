@@ -15,8 +15,6 @@ import org.hibernate.stat.SessionStatistics;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.ConnectionConsumer;
-import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
@@ -194,6 +192,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException if changes could not be synchronized with the database
 	 */
+	@Override
 	void flush();
 
 	/**
@@ -205,7 +204,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param flushMode the new {@link FlushModeType}
 	 *
-	 * @see #setHibernateFlushMode(FlushMode) for additional options
+	 * @see #setHibernateFlushMode(FlushMode)
 	 */
 	@Override
 	void setFlushMode(FlushModeType flushMode);
@@ -232,6 +231,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Get the current {@linkplain FlushModeType JPA flush mode} for this session.
 	 *
 	 * @return the {@link FlushModeType} currently in effect
+	 *
+	 * @see #getHibernateFlushMode()
 	 */
 	@Override
 	FlushModeType getFlushMode();
@@ -267,6 +268,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	CacheStoreMode getCacheStoreMode();
 
 	/**
@@ -276,6 +278,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	/**
@@ -287,6 +290,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	void setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
 	/**
@@ -298,6 +302,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
@@ -475,8 +480,120 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void evict(Object object);
 
 	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance.
+	 * <p>
+	 * The object returned by {@code get()} or {@code find()} is either an unproxied instance
+	 * of the given entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * This operation requests {@link LockMode#NONE}, that is, no lock, allowing the object
+	 * to be retrieved from the cache without the cost of database access. However, if it is
+	 * necessary to read the state from the database, the object will be returned with the
+	 * lock mode {@link LockMode#READ}.
+	 * <p>
+	 * To bypass the {@linkplain Cache second-level cache}, and ensure that the state of the
+	 * requested instance is read directly from the database, either:
+	 * <ul>
+	 * <li>call {@link #find(Class, Object, FindOption...)}, passing
+	 *     {@link CacheRetrieveMode#BYPASS} as an option,
+	 * <li>call {@link #find(Class, Object, LockMode)} with the explicit lock mode
+	 *     {@link LockMode#READ}, or
+	 * <li>{@linkplain #setCacheRetrieveMode set the cache mode} to
+	 *     {@link CacheRetrieveMode#BYPASS} before calling this method.
+	 * </ul>
+	 *
+	 * @apiNote This operation is very similar to {@link #get(Class, Object)}.
+	 *
+	 * @param entityType the entity type
+	 * @param id an identifier
+	 *
+	 * @return a fully-fetched persistent instance or null
+	 */
+	@Override
+	<T> T find(Class<T> entityType, Object id);
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
+	 * <p>
+	 * Convenient form of {@link #find(Class, Object, LockOptions)}.
+	 *
+	 * @param entityType the entity type
+	 * @param id an identifier
+	 * @param lockMode the lock mode
+	 *
+	 * @return a fully-fetched persistent instance or null
+	 *
+	 * @since 7.0
+	 *
+	 * @see #find(Class, Object, LockOptions)
+	 */
+	<T> T find(Class<T> entityType, Object id, LockMode lockMode);
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
+	 *
+	 * @param entityType the entity type
+	 * @param id an identifier
+	 * @param lockOptions the lock mode
+	 *
+	 * @return a fully-fetched persistent instance or null
+	 *
+	 * @since 7.0
+	 */
+	<T> T find(Class<T> entityType, Object id, LockOptions lockOptions);
+
+	/**
+	 * Return the persistent instances of the given entity class with the given identifiers
+	 * as a list. The position of an instance in the returned list matches the position of its
+	 * identifier in the given list of identifiers, and the returned list contains a null value
+	 * if there is no persistent instance matching a given identifier. If an instance is already
+	 * associated with the session, that instance is returned. This method never returns an
+	 * uninitialized instance.
+	 * <p>
+	 * Every object returned by {@code findMultiple()} is either an unproxied instance of the
+	 * given entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * This method accepts {@link BatchSize} as an option, allowing control over the number of
+	 * records retrieved in a single database request. The performance impact of setting a batch
+	 * size depends on whether a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which {@linkplain org.hibernate.dialect.Dialect#supportsStandardArrays
+	 *     support standard SQL arrays}, a smaller batch size might be extremely inefficient
+	 *     compared to a very large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
+	 *     in long SQL statements with many JDBC parameters.
+	 * </ul>
+	 * <p>
+	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
+	 * {@link MultiIdentifierLoadAccess}.
+	 *
+	 * @param entityType the entity type
+	 * @param ids the list of identifiers
+	 * @param options options, if any
+	 *
+	 * @return an ordered list of persistent instances, with null elements representing missing
+	 *         entities, whose positions in the list match the positions of their ids in the
+	 *         given list of identifiers
+	 * @see #byMultipleIds(Class)
+	 * @since 7.0
+	 */
+	<E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options);
+
+	/**
 	 * Read the persistent state associated with the given identifier into the given
 	 * transient instance.
+	 *
+	 * @param object a transient instance of an entity class
+	 * @param id an identifier
 	 */
 	void load(Object object, Object id);
 
@@ -524,6 +641,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @return an updated persistent instance
 	 */
+	@Override
 	<T> T merge(T object);
 
 	/**
@@ -554,6 +672,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param object a transient instance to be made persistent
 	 */
+	@Override
 	void persist(Object object);
 
 	/**
@@ -635,6 +754,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param object a persistent instance associated with this session
 	 */
+	@Override
 	void refresh(Object object);
 
 	/**
@@ -688,38 +808,14 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * saves, updates and deletions. Do not close open iterators or instances of
 	 * {@link ScrollableResults}.
 	 */
+	@Override
 	void clear();
-
-	/**
-	 * Return the persistent instances of the given entity class with the given identifiers
-	 * as a list. The position of an instance in the list matches the position of its identifier
-	 * in the given array, and the list contains a null value if there is no persistent instance
-	 * matching a given identifier. If an instance is already associated with the session, that
-	 * instance is returned. This method never returns an uninitialized instance.
-	 * <p>
-	 * Every object returned by {@code findAll()} is either an unproxied instance of the given
-	 * entity class, or a fully-fetched proxy object.
-	 * <p>
-	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
-	 * {@link MultiIdentifierLoadAccess}.
-	 *
-	 * @param entityType the entity type
-	 * @param ids        the identifiers
-	 * @param options    options, if any
-	 * @return an ordered list of persistent instances, with null elements representing missing
-	 *         entities
-	 * @see #byMultipleIds(Class)
-	 * @since 7.0
-	 */
-	<E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized
 	 * instance.
-	 * <p>
-	 * This operation is very similar to {@link #find(Class, Object)}.
 	 * <p>
 	 * The object returned by {@code get()} or {@code find()} is either an unproxied instance
 	 * of the given entity class, or a fully-fetched proxy object.
@@ -734,15 +830,21 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <ul>
 	 * <li>call {@link #get(Class, Object, LockMode)} with the explicit lock mode
 	 *     {@link LockMode#READ}, or
-	 * <li>{@linkplain #setCacheMode(CacheMode) set the cache mode} to {@link CacheMode#IGNORE}
+	 * <li>{@linkplain #setCacheMode set the cache mode} to {@link CacheMode#IGNORE}
 	 *     before calling this method.
 	 * </ul>
+	 *
+	 * @apiNote This operation is very similar to {@link #find(Class, Object)}.
 	 *
 	 * @param entityType the entity type
 	 * @param id an identifier
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated Because the semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object)} instead.
 	 */
+	@Deprecated(since = "7")
 	<T> T get(Class<T> entityType, Object id);
 
 	/**
@@ -752,8 +854,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * instance. Obtain the specified lock mode if the instance exists.
 	 * <p>
 	 * Convenient form of {@link #get(Class, Object, LockOptions)}.
-	 * <p>
-	 * This operation is very similar to {@link #find(Class, Object, jakarta.persistence.LockModeType)}.
+	 *
+	 * @apiNote This operation is very similar to {@link #find(Class, Object, LockModeType)}.
 	 *
 	 * @param entityType the entity type
 	 * @param id an identifier
@@ -762,7 +864,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return a persistent instance or null
 	 *
 	 * @see #get(Class, Object, LockOptions)
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object, LockMode)} instead.
 	 */
+	@Deprecated(since = "7")
 	<T> T get(Class<T> entityType, Object id, LockMode lockMode);
 
 	/**
@@ -776,7 +882,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param lockOptions the lock mode
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object, LockOptions)} instead.
 	 */
+	@Deprecated(since = "7")
 	<T> T get(Class<T> entityType, Object id, LockOptions lockOptions);
 
 	/**
@@ -789,7 +899,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param id an identifier
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
+	@Deprecated(since = "7")
 	Object get(String entityName, Object id);
 
 	/**
@@ -807,7 +920,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return a persistent instance or null
 	 *
 	 * @see #get(String, Object, LockOptions)
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
+	@Deprecated(since = "7")
 	Object get(String entityName, Object id, LockMode lockMode);
 
 	/**
@@ -821,7 +937,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param lockOptions contains the lock mode
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
+	@Deprecated(since = "7")
 	Object get(String entityName, Object id, LockOptions lockOptions);
 
 	/**
@@ -886,6 +1005,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 6.0
 	 */
+	@Override
 	<T> T getReference(T object);
 
 	/**
@@ -922,7 +1042,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 *
-	 * @see #findAll(Class, List, FindOption...)
+	 * @see #findMultiple(Class, List, FindOption...)
 	 */
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
 
@@ -1025,15 +1145,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *                            or if the entity does not declare a natural id
 	 */
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
-
-	@Override
-	Filter enableFilter(String filterName);
-
-	@Override
-	Filter getEnabledFilter(String filterName);
-
-	@Override
-	void disableFilter(String filterName);
 
 	/**
 	 * Get the {@linkplain SessionStatistics statistics} for this session.
@@ -1196,32 +1307,4 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaUpdate updateQuery);
-
-
-	@Override
-	default <C> void runWithConnection(ConnectionConsumer<C> action) {
-		doWork( connection -> {
-			try {
-				//noinspection unchecked
-				action.accept( (C) connection );
-			}
-			catch (Exception e) {
-				throw new RuntimeException( e );
-			}
-		} );
-	}
-
-	@Override
-	default <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
-		return doReturningWork( (connection) -> {
-			try {
-				//noinspection unchecked
-				return function.apply( (C) connection );
-			}
-			catch (Exception e) {
-				throw new RuntimeException( e );
-			}
-		} );
-	}
-
 }

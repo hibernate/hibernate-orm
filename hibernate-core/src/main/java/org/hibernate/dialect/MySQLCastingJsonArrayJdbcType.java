@@ -5,16 +5,17 @@
 package org.hibernate.dialect;
 
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 /**
  * @author Christian Beikov
  */
 public class MySQLCastingJsonArrayJdbcType extends JsonArrayJdbcType {
-	/**
-	 * Singleton access
-	 */
-	public static final JsonArrayJdbcType INSTANCE = new MySQLCastingJsonArrayJdbcType();
+
+	public MySQLCastingJsonArrayJdbcType(JdbcType elementJdbcType) {
+		super( elementJdbcType );
+	}
 
 	@Override
 	public void appendWriteExpression(

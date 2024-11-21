@@ -11,7 +11,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.service.Service;
 
 /**
- * A factory for generating Dialect instances.
+ * A factory for generating {@link Dialect} instances.
  *
  * @author Steve Ebersole
  */

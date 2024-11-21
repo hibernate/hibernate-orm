@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
-import org.hibernate.query.results.complete.CompleteResultBuilderBasicModelPart;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicModelPart;
 
 /**
  * @author Steve Ebersole

@@ -69,9 +69,13 @@ public interface Transaction extends EntityTransaction {
 
 	/**
 	 * Attempt to mark the underlying transaction for rollback only.
+	 * <p>
+	 * Unlike {@link #setRollbackOnly()}, which is specified by JPA
+	 * to throw when the transaction is inactive, this operation may
+	 * be called on an inactive transaction, in which case it has no
+	 * effect.
+	 *
+	 * @see #setRollbackOnly()
 	 */
-	default void markRollbackOnly() {
-		setRollbackOnly();
-	}
-
+	void markRollbackOnly();
 }

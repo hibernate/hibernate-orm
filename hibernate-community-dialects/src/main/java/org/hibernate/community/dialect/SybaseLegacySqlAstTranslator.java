@@ -204,7 +204,7 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		append( '(' );
 		visitValuesListEmulateSelectUnion( tableReference.getValuesList() );
 		append( ')' );
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override

@@ -517,7 +517,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToObtainConnectionMetadata(SQLException error);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Could not obtain connection to query metadata", id = 342)
+	@Message(value = "Could not obtain connection to query JDBC database metadata", id = 342)
 	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
 
 	@LogMessage(level = ERROR)
@@ -719,10 +719,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "Creating pooled optimizer (lo) with [incrementSize=%s; returnClass=%s]", id = 467)
 	void creatingPooledLoOptimizer(int incrementSize, String name);
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to interpret type [%s] as an AttributeConverter due to an exception: %s", id = 468)
-	void logBadHbmAttributeConverterType(String type, String exceptionMessage);
 
 	@LogMessage(level = WARN)
 	@Message(value = "An unexpected session is defined for a collection, but the collection is not connected to that session. A persistent collection may only be associated with one session at a time. Overwriting session. %s", id = 470)

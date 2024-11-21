@@ -11,7 +11,7 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -29,7 +29,6 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
 
 /**
  * @author Andrea Boriero
@@ -121,7 +120,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public IndexView getJandexView() {
+	public Object getJandexView() {
 		return delegate.getJandexView();
 	}
 

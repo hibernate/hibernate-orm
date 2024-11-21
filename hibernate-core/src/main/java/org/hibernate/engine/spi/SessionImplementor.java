@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.spi;
 
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
@@ -108,4 +110,29 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 		return true;
 	}
 
+	@Override
+	default <C> void runWithConnection(ConnectionConsumer<C> action) {
+		doWork( connection -> {
+			try {
+				//noinspection unchecked
+				action.accept( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
+	@Override
+	default <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
+		return doReturningWork( connection -> {
+			try {
+				//noinspection unchecked
+				return function.apply( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
 }

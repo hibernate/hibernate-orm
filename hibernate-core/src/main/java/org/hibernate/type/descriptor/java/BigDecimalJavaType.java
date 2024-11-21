@@ -82,37 +82,32 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof BigDecimal ) {
-			return (BigDecimal) value;
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return bigDecimal;
 		}
-		if ( value instanceof BigInteger ) {
-			return new BigDecimal( (BigInteger) value );
+		if ( value instanceof BigInteger bigInteger ) {
+			return new BigDecimal( bigInteger );
 		}
-		if ( value instanceof Number ) {
-			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
+		if ( value instanceof Number number ) {
+			return BigDecimal.valueOf( number.doubleValue() );
 		}
-		if ( value instanceof String ) {
-			return new BigDecimal( (String) value );
+		if ( value instanceof String string ) {
+			return new BigDecimal( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-			case "int":
-			case "java.lang.Integer":
-			case "long":
-			case "java.lang.Long":
-			case "java.math.BigInteger":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer",
+				"long", "java.lang.Long",
+				"java.math.BigInteger" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -131,17 +126,17 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 			return null;
 		}
 
-		if ( value instanceof BigDecimal ) {
-			return (BigDecimal) value;
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return bigDecimal;
 		}
 
-		if ( value instanceof Number ) {
-			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
+		if ( value instanceof Number number ) {
+			return BigDecimal.valueOf( number.doubleValue() );
 		}
 
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> BigDecimal.valueOf( Double.parseDouble( (String) value ) )
+					() -> BigDecimal.valueOf( Double.parseDouble( string ) )
 			);
 		}
 

@@ -14,10 +14,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import jakarta.persistence.RollbackException;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -117,8 +119,14 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 			parallelTx.commit();
 			fail( "All optimistic locking should have make it fail" );
 		}
-		catch (OptimisticLockException e) {
-			if ( parallelTx != null ) parallelTx.rollback();
+		catch (Exception e) {
+			if (getDialect() instanceof CockroachDialect) {
+				// CockroachDB always runs in SERIALIZABLE isolation, and throws a RollbackException
+				assertTrue( e instanceof RollbackException );
+			} else {
+				assertTrue( e instanceof OptimisticLockException );
+			}
+			parallelTx.rollback();
 		}
 		finally {
 			parallelSession.close();

@@ -139,25 +139,6 @@ public interface NaturalIdLoadAccess<T> {
 	NaturalIdLoadAccess<T> using(Map<String,?> mappings);
 
 	/**
-	 * Set multiple {@link org.hibernate.annotations.NaturalId @NaturalId}
-	 * attribute values at once. An even number of arguments is expected,
-	 * with each attribute name followed by its value, for example:
-	 * <pre>
-	 * Book book =
-	 *         session.byNaturalId(Book.class)
-	 *             .using(Book_.ISBN, isbn, Book_.PRINTING, printing)
-	 *             .load();
-	 * </pre>
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #using(Map)} with {@link Map#of}, which is
-	 *             slightly more typesafe
-	 */
-	@Deprecated(since = "6.3")
-	NaturalIdLoadAccess<T> using(Object... mappings);
-
-	/**
 	 * Determines if cached natural id cross-references are synchronized
 	 * before query execution with unflushed modifications made in memory
 	 * to {@linkplain org.hibernate.annotations.NaturalId#mutable mutable}

@@ -5,6 +5,7 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import org.hibernate.internal.build.AllowSysOut;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 
 /**
  * A {@link GenerationTarget} that writed DDL to {@link System#out}.

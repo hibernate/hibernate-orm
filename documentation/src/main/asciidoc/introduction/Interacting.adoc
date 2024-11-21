@@ -172,7 +172,19 @@ finally {
 }
 ----
 
-Using Hibernate's native APIs we might write something really similar,
+But this code is extremely tedious, so there's a cleaner option:
+
+[source,java]
+----
+entityManagerFactory.runInTransaction(entityManager -> {
+    // do the work
+    ...
+});
+----
+
+When we need to return a value from within the anonymous function, we use `callInTransaction()` instead of `runInTransaction()`.
+
+Using Hibernate's native APIs we can write something very similar:
 // [source,java]
 // ----
 // Session session = sessionFactory.openSession();
@@ -191,8 +203,6 @@ Using Hibernate's native APIs we might write something really similar,
 //     session.close();
 // }
 // ----
-but since this sort of code is extremely tedious, we have a much nicer option:
-
 [source,java]
 ----
 sessionFactory.inTransaction(session -> {
@@ -207,12 +217,21 @@ In a container environment, the container itself is usually responsible for mana
 In Java EE or Quarkus, you'll probably indicate the boundaries of the transaction using the `@Transactional` annotation.
 ****
 
-JPA doesn't have a standard way to set the transaction timeout, but Hibernate does:
+The `EntityTransaction` interface provides a standard way to set the transaction timeout:
 
 [source,java]
 ----
-session.getTransaction().setTimeout(30); // 30 seconds
+entityManager.getTransaction().setTimeout(30); // 30 seconds
 ----
+
+`EntityTransaction` also provides a way to set the transaction to rollback-only mode:
+
+[source,java]
+----
+entityManager.getTransaction().setRollbackOnly();
+----
+
+A transaction in rollback-only mode will be rolled back when it completes.
 
 [[persistence-operations]]
 === Operations on the persistence context
@@ -256,6 +275,8 @@ On the other hand, except for `getReference()`, the following operations all res
 | Obtain a persistent object given its type and its id
 | `find(Class,Object,LockModeType)`
 | Obtain a persistent object given its type and its id, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
+| `find(EntityGraph,Object)`
+| Obtain a persistent object given its id and an `EntityGraph` specifying its type and associations which should be eagerly fetched
 | `getReference(Class,id)`
 | Obtain a reference to a persistent object given its type and its id, without actually loading its state from the database
 | `getReference(Object)`
@@ -264,7 +285,7 @@ On the other hand, except for `getReference()`, the following operations all res
 | Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database
 | `refresh(Object,LockModeType)`
 | Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
-| `lock(Object, LockModeType)`
+| `lock(Object,LockModeType)`
 | Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object
 |===
 
@@ -279,6 +300,46 @@ Therefore, a session is considered to be unusable after any of its methods throw
 The persistence context is fragile.
 If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
 ====
+
+Four of these operations accept _options_, allowing influence over their behavior.
+
+[%breakable,cols="50,~"]
+|===
+| Method name and parameters | Effect
+
+| `find(Class,Object,FindOption...)`
+| Obtain a persistent object given its type and its id, using the specified options
+| `find(EntityGraph,Object,FindOption...)`
+| Obtain a persistent object given its id and an `EntityGraph` specifying its type and associations which should be eagerly fetched, using the specified options
+| `refresh(Object,LockModeType,RefreshOption...)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>, using the specified options
+| `lock(Object,LockModeType,LockOption...)`
+| Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object, using the specified options
+|===
+
+For example, JPA provides the `Timeout` class which is a `FindOption`, a `RefreshOption`, and a `LockOption`.
+
+[source,java]
+----
+var book = entityManger.find(Book.class, isbn, Timeout.ms(100), CacheStoreMode.BYPASS);
+----
+
+Finally, the Hibernate `Session` offers the following method, which is capable of efficiently loading multiple entity instances in parallel:
+
+[%breakable,cols="50,~"]
+|===
+| Method name and parameters | Effect
+
+| `findMultiple(Class,List<Object>,FindOption...)`
+| Obtain a list of persistent objects given their type and their ids, using the specified options
+|===
+
+The following code results in a single SQL `select` statement:
+
+[source,java]
+----
+List<Book> books = session.findMultiple(Book.class, bookIds);
+----
 
 Each of the operations we've seen so far affects a single entity instance passed as an argument.
 But there's a way to set things up so that an operation will propagate to associated entities.
@@ -380,8 +441,25 @@ Hibernate has a slightly easier way to do it:
 boolean authorsFetched = Hibernate.isInitialized(book.getAuthors());
 ----
 
-But the static methods of the link:{doc-javadoc-url}org/hibernate/Hibernate.html[`Hibernate`] class let us do a lot more, and it's worth getting a bit familiar with them.
+Similarly, `PersistenceUnitUtil.load()` force-fetches a proxy or collection:
 
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+entityManagerFactory.getPersistenceUnitUtil().load(book.getAuthors());
+----
+
+Again, `Hibernate.initialize()` is slightly more convenient:
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+Hibernate.initialize(book.getAuthors());  // fetch the Authors
+----
+
+On the other hand, the above code is very inefficient, requiring two trips to the database to obtain data that could in principle be retrieved with just one query.
+
+The static methods of the link:{doc-javadoc-url}org/hibernate/Hibernate.html[`Hibernate`] class let us do a lot more, and it's worth getting a bit familiar with them.
 Of particular interest are the operations which let us work with unfetched collections without fetching their state from the database.
 For example, consider this code:
 
@@ -394,16 +472,6 @@ boolean isByAuthor = Hibernate.contains(book.getAuthors(), authorRef); // no fet
 
 This code fragment leaves both the set `book.authors` and the proxy `authorRef` unfetched.
 
-Finally, `Hibernate.initialize()` is a convenience method that force-fetches a proxy or collection:
-
-[source,java]
-----
-Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
-Hibernate.initialize(book.getAuthors());  // fetch the Authors
-----
-
-But of course, this code is very inefficient, requiring two trips to the database to obtain data that could in principle be retrieved with just one query.
-
 It's clear from the discussion above that we need a way to request that an association be _eagerly_ fetched using a database `join`, thus protecting ourselves from the infamous N+1 selects.
 One way to do this is by passing an `EntityGraph` to `find()`.
 
@@ -413,24 +481,20 @@ One way to do this is by passing an `EntityGraph` to `find()`.
 When an association is mapped `fetch=LAZY`, it won't, by default, be fetched when we call the `find()` method.
 We may request that an association be fetched eagerly (immediately) by passing an `EntityGraph` to `find()`.
 
-The JPA-standard API for this is a bit unwieldy:
-
 [source,java]
 ----
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
-Book book = entityManager.find(Book.class, bookId, Map.of(SpecHints.HINT_SPEC_FETCH_GRAPH, graph));
+Book book = entityManager.find(graph, bookId);
 ----
 
-This is untypesafe and unnecessarily verbose.
-Hibernate has a better way:
-
-[source,java]
-----
-var graph = session.createEntityGraph(Book.class);
-graph.addSubgraph(Book_.publisher);
-Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
-----
+//
+// [source,java]
+// ----
+// var graph = session.createEntityGraph(Book.class);
+// graph.addSubgraph(Book_.publisher);
+// Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
+// ----
 
 This code adds a `left outer join` to our SQL query, fetching the associated `Publisher` along with the `Book`.
 
@@ -441,15 +505,22 @@ We may even attach additional nodes to our `EntityGraph`:
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
 graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
-Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
-
+Book book = entityManager.find(graph, bookId);
 ----
+
+// [source,java]
+// ----
+// var graph = session.createEntityGraph(Book.class);
+// graph.addSubgraph(Book_.publisher);
+// graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
+// Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
+// ----
 
 This results in a SQL query with _four_ ``left outer join``s.
 
 [NOTE]
 ====
-In the code examples above, The classes `Book_` and `Author_` are generated by the <<metamodel-generator,JPA Metamodel Generator>> we saw earlier.
+In the code examples above, The classes `Book_` and `Author_` are generated by <<metamodel-generator,Hibernate Processor>>, as we saw earlier.
 They let us refer to attributes of our model in a completely type-safe way.
 We'll use them again, below, when we talk about <<criteria-queries>>.
 ====
@@ -460,8 +531,13 @@ JPA specifies that any given `EntityGraph` may be interpreted in two different w
   Any association not belonging to the entity graph is proxied and loaded lazily only if required.
 - A _load graph_ specifies that the associations in the entity graph are to be fetched in addition to the associations mapped `fetch=EAGER`.
 
+An `EntityGraph` passed directly to `find()` is always interpreted as a load graph.
+
+[TIP]
+====
 You're right, the names make no sense.
 But don't worry, if you take our advice, and map your associations `fetch=LAZY`, there's no difference between a "fetch" graph and a "load" graph, so the names don't matter.
+====
 
 [NOTE]
 ====
@@ -579,6 +655,13 @@ A second way to reduce the cost of flushing is to load entities in _read-only_ m
 - `Session.setDefaultReadOnly(true)` specifies that all entities loaded by a given session should be loaded in read-only mode by default,
 - `SelectionQuery.setReadOnly(true)` specifies that every entity returned by a given query should be loaded in read-only mode, and
 - `Session.setReadOnly(Object, true)` specifies that a given entity already loaded by the session should be switched to read-only mode.
+
+Hibernate's `ReadOnlyMode` is a custom `FindOption`:
+
+[source,java]
+----
+var book = entityManager.find(Book.class, isbn, ReadOnlyMode.READ_ONLY);
+----
 
 It's not necessary to dirty-check an entity instance in read-only mode.
 
@@ -716,7 +799,7 @@ Of course, we could construct a HQL query by string concatenation, but this is a
 
 .HQL is implemented in terms of criteria objects
 ****
-Actually, in Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
+Actually, since Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
 This ensures that the semantics of HQL and criteria queries are identical.
 ****
 
@@ -776,7 +859,7 @@ query.select(book).where(where)
     .orderBy(builder.asc(book.get(Book_.title)));
 ----
 
-Here, as before, the classes `Book_` and `Author_` are generated by Hibernate's <<metamodel-generator,JPA Metamodel Generator>>.
+Here, as before, the classes `Book_` and `Author_` are generated by <<metamodel-generator,Hibernate Processor>>.
 
 [NOTE]
 // .Injection attacks and criteria queries
@@ -1143,8 +1226,8 @@ We can place the `@NamedQuery` annotation on any class, even on an entity class.
 
 [source,java]
 ----
-@NamedQuery(name="10BooksByTitle",
-            query="from Book where title like :titlePattern order by title fetch first 10 rows only")
+@NamedQuery(name = "10BooksByTitle",
+            query = "from Book where title like :titlePattern order by title fetch first 10 rows only")
 class BookQueries {}
 ----
 
@@ -1173,8 +1256,8 @@ There's much less advantage to using `@NamedNativeQuery`, because there is very 
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation | `createNamedMutationQuery(String)` | `createNamedQuery(String)` | `executeUpdate()`
+| Selection | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(TypedQueryReference)`, `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, `getSingleResultOrNull()`
+| Mutation | `createNamedMutationQuery(String)` | `createNamedQuery(TypedQueryReference)`, `createNamedQuery(String)` | `executeUpdate()`
 |===
 
 We execute our named query like this:
@@ -1182,12 +1265,12 @@ We execute our named query like this:
 [source,java]
 ----
 List<Book> books =
-        entityManager.createNamedQuery(BookQueries_.QUERY_10_BOOKS_BY_TITLE)
+        entityManager.createQuery(BookQueries_._10BooksByTitle_)
             .setParameter("titlePattern", titlePattern)
             .getResultList()
 ----
 
-Here, `BookQueries_.QUERY_10_BOOKS_BY_TITLE` is a constant with value `"10BooksByTitle"`, generated by the Metamodel Generator.
+Here, `BookQueries_.\_10BooksByTitle_` is an element of the JPA static metamodel of type `TypedQueryReference<Book>`, generated by Hibernate Processor.
 
 Note that the code which executes the named query is not aware of whether the query was written in HQL or in native SQL, making it slightly easier to change and optimize the query later.
 
@@ -1197,7 +1280,7 @@ Note that the code which executes the named query is not aware of whether the qu
 
 It's nice to have our queries checked at startup time.
 It's even better to have them checked at compile time.
-In <<organizing-persistence>>, we mentioned that the Metamodel Generator can do that for us, with the help of the `@CheckHQL` annotation, and we presented that as a reason to use `@NamedQuery`.
+In <<organizing-persistence>>, we mentioned that the Hibernate Processor can do that for us, with the help of the `@CheckHQL` annotation, and we presented that as a reason to use `@NamedQuery`.
 
 But actually, Hibernate has a separate <<query-validator,Query Validator>> capable of performing compile-time validation of HQL query strings that occur as arguments to `createQuery()` and friends.
 If we use the Query Validator, there's not much advantage to the use of named queries.
@@ -1210,9 +1293,9 @@ We can do almost anything via HQL, criteria, or native SQL queries.
 But when we already know the identifier of the entity we need, a query can feel like overkill.
 And queries don't make efficient use of the <<second-level-cache,second level cache>>.
 
-We met the <<persistence-operations,`find()`>> method earlier.
-It's the most basic way to perform a _lookup_ by id.
-But as we also <<entity-graph,already saw>>, it can't quite do everything.
+We met the `find()` and `findMultiple()` methods <<persistence-operations,earlier>>.
+These are the most basic ways to perform a _lookup_ by id.
+But they can't quite do everything.
 Therefore, Hibernate has some APIs that streamline certain more complicated lookups:
 
 .Operations for lookup by id
@@ -1223,6 +1306,11 @@ Therefore, Hibernate has some APIs that streamline certain more complicated look
 | `byId()` | Lets us specify association fetching via an `EntityGraph`, as we saw; also lets us specify some additional options, including how the lookup <<second-level-cache-management,interacts with the second level cache>>, and whether the entity should be loaded in read-only mode
 | `byMultipleIds()` | Lets us load a _batch_ of ids at the same time
 |===
+
+[WARNING]
+====
+Since the introduction of `FindOption` in JPA 3.2, `byId()` is now much less useful.
+====
 
 Batch loading is very useful when we need to retrieve multiple instances of the same entity class by id:
 
@@ -1264,13 +1352,27 @@ Book book =
             .load();
 ----
 
-Notice that this code fragment is completely typesafe, again thanks to the <<metamodel-generator,Metamodel Generator>>.
+Notice that this code fragment is completely typesafe, again thanks to <<metamodel-generator,Hibernate Processor>>.
 
 [[jdbc]]
 === Interacting directly with JDBC
 
 From time to time we run into the need to write some code that calls JDBC directly.
-Unfortunately, JPA offers no good way to do this, but the Hibernate `Session` does.
+The `EntityManager` now offers a convenient way to do this:
+
+[source,java]
+----
+entityManager.runWithConnection((Connection connection) -> {
+    try (var callable = connection.prepareCall("{call myproc(?)}")) {
+        callable.setLong(1, argument);
+        callable.execute();
+    }
+});
+----
+
+To return a value, use `callWithConnection()` instead of `runWithConnection()`.
+
+The Hibernate `Session` has an older, slightly simpler API:
 
 [source,java]
 ----
@@ -1282,9 +1384,9 @@ session.doWork(connection -> {
 });
 ----
 
-The `Connection` passed to the work is the same connection being used by the session, and so any work performed using that connection occurs in the same transaction context.
-
 If the work returns a value, use `doReturningWork()` instead of `doWork()`.
+
+The `Connection` passed to the work is the same connection being used by the session, and so any work performed using that connection occurs in the same transaction context.
 
 [TIP]
 ====

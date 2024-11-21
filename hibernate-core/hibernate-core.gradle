@@ -7,12 +7,12 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id 'org.hibernate.build.xjc-jakarta'
+    id "local-xjc-plugin"
 }
 
 description = 'Hibernate\'s core ORM functionality'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
 
@@ -28,8 +28,6 @@ dependencies {
     api jakartaLibs.jta
 
     implementation libs.hibernateModels
-    implementation libs.hibernateModelsJandex
-    implementation libs.jandex
     implementation libs.classmate
     implementation libs.byteBuddy
 
@@ -52,6 +50,8 @@ dependencies {
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
+    testImplementation project(':hibernate-scan-jandex')
+
     testImplementation testLibs.shrinkwrapApi
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors
@@ -71,6 +71,7 @@ dependencies {
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
     testRuntimeOnly testLibs.wildFlyTxnClient
+    testImplementation libs.jandex
     testImplementation jakartaLibs.jsonb
     testImplementation libs.jackson
     testRuntimeOnly libs.jacksonXml
@@ -84,10 +85,6 @@ dependencies {
     // dependency here.
     antlr libs.antlr
     antlr libs.antlrRuntime
-
-    xjc jakartaLibs.xjc
-    xjc jakartaLibs.jaxb
-    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 }
 
 jar {

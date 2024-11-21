@@ -4,17 +4,19 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
+import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-
-import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.type.AnyType;
-import org.hibernate.type.Type;
-import org.hibernate.type.MappingContext;
 
 /**
  * A mapping model object representing a {@linkplain org.hibernate.annotations.Any polymorphic association}
@@ -33,6 +35,7 @@ public class Any extends SimpleValue {
 
 	// common
 	private Map<Object,String> metaValueToEntityNameMap;
+	private ImplicitDiscriminatorStrategy implicitValueStrategy;
 	private boolean lazy = true;
 
 	private AnyType resolvedType;
@@ -72,6 +75,7 @@ public class Any extends SimpleValue {
 		this.metaValueToEntityNameMap = original.metaValueToEntityNameMap == null
 				? null
 				: new HashMap<>(original.metaValueToEntityNameMap);
+		this.implicitValueStrategy = original.implicitValueStrategy;
 		this.lazy = original.lazy;
 	}
 
@@ -150,6 +154,7 @@ public class Any extends SimpleValue {
 					discriminatorType,
 					identifierType,
 					metaValueToEntityNameMap,
+					implicitValueStrategy,
 					isLazy(),
 					getBuildingContext()
 			);
@@ -213,6 +218,19 @@ public class Any extends SimpleValue {
 	public void setMetaValues(Map metaValueToEntityNameMap) {
 		//noinspection unchecked
 		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
+	}
+
+	/**
+	 * Set the strategy for dealing with discriminator mappings which are not explicitly defined by
+	 * {@linkplain org.hibernate.annotations.AnyDiscriminatorValue}.
+	 *
+	 * @apiNote {@code null} indicates to not allow implicit mappings.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
+		this.implicitValueStrategy = implicitValueStrategy;
 	}
 
 	public boolean isLazy() {
@@ -301,6 +319,9 @@ public class Any extends SimpleValue {
 		}
 	}
 
+	/**
+	 * The discriminator {@linkplain Value}
+	 */
 	public static class MetaValue extends SimpleValue {
 		private String typeName;
 		private String columnName;

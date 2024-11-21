@@ -18,6 +18,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -25,6 +26,8 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.CockroachDBAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
@@ -50,7 +53,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -79,9 +82,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
+import static org.hibernate.query.common.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -92,7 +95,6 @@ import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INET;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -263,11 +265,9 @@ public class CockroachLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 20 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "jsonb", this ) );
 		}
 		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		}
 		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
@@ -372,11 +372,11 @@ public class CockroachLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
-					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
 				}
 				else {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
-					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonArrayJdbcType( serviceRegistry ) );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonArrayJdbcType( serviceRegistry ) );
 				}
 			}
 			else {
@@ -384,11 +384,11 @@ public class CockroachLegacyDialect extends Dialect {
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
-					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 				}
 				else {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
-					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
+					jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSON_INSTANCE );
 				}
 			}
 		}
@@ -398,11 +398,11 @@ public class CockroachLegacyDialect extends Dialect {
 			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSONB_INSTANCE );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonArrayJdbcType.JSON_INSTANCE );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSON_INSTANCE );
 			}
 		}
 
@@ -424,6 +424,7 @@ public class CockroachLegacyDialect extends Dialect {
 				)
 		);
 
+		// Replace the standard array constructor
 		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
 	}
 
@@ -518,6 +519,10 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
 
+		functionFactory.unnest_postgresql();
+		functionFactory.generateSeries( null, "ordinality", true );
+		functionFactory.jsonTable_cockroachdb();
+
 		// Postgres uses # instead of ^ for XOR
 		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1#?2)" )
 				.setExactArgumentCount( 2 )
@@ -532,6 +537,11 @@ public class CockroachLegacyDialect extends Dialect {
 				)
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "ordinality";
 	}
 
 	@Override
@@ -689,6 +699,11 @@ public class CockroachLegacyDialect extends Dialect {
 	public NationalizationSupport getNationalizationSupport() {
 		// TEXT / STRING inherently support nationalized data
 		return NationalizationSupport.IMPLICIT;
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return CockroachDBAggregateSupport.valueOf( this );
 	}
 
 	@Override

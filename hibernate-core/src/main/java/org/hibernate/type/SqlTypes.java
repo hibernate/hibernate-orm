@@ -643,10 +643,15 @@ public class SqlTypes {
 
 	/**
 	 * A type code representing a SQL {@code ENUM} type for databases like
-	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} where
+	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} or
+	 * {@link org.hibernate.dialect.OracleDialect Oracle} where
 	 * {@code ENUM} types must have names.
+	 * <p>
+	 * A named enum type is declared in DDL using {@code create type ... as enum}
+	 * or {@code create type ... as domain}.
 	 *
 	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.OracleEnumJdbcType
 	 *
 	 * @since 6.3
 	 */
@@ -676,8 +681,9 @@ public class SqlTypes {
 
 
 	/**
-	 * A type code representing an {@code embedding vector} type for databases like
-	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} and {@link org.hibernate.dialect.OracleDialect Oracle 23ai}.
+	 * A type code representing an {@code embedding vector} type for databases
+	 * like {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} and
+	 * {@link org.hibernate.dialect.OracleDialect Oracle 23ai}.
 	 * An embedding vector essentially is a {@code float[]} with a fixed size.
 	 *
 	 * @since 6.4
@@ -685,17 +691,17 @@ public class SqlTypes {
 	public static final int VECTOR = 10_000;
 
 	/**
-	 * A type code representing a single-byte integer vector type for oracle 23ai database.
+	 * A type code representing a single-byte integer vector type for Oracle 23ai database.
 	 */
 	public static final int VECTOR_INT8 = 10_001;
 
 	/**
-	 * A type code representing a single-precision floating-point vector type for oracle 23ai database.
+	 * A type code representing a single-precision floating-point vector type for Oracle 23ai database.
 	 */
 	public static final int VECTOR_FLOAT32 = 10_002;
 
 	/**
-	 * A type code representing a double-precision floating-point type for oracle 23ai database.
+	 * A type code representing a double-precision floating-point type for Oracle 23ai database.
 	 */
 	public static final int VECTOR_FLOAT64 = 10_003;
 

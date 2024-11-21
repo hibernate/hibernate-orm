@@ -8,7 +8,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 /**
  * An anonymous call block (sometimes called an anonymous procedure) to be executed
- * on the database.  The format of this various by database, but it is essentially an
+ * on the database.  The format of this varies by database, but it is essentially an
  * unnamed procedure without OUT, INOUT or REF_CURSOR type parameters
  *
  * @author Steve Ebersole

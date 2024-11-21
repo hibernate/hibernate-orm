@@ -73,10 +73,12 @@ dependencyResolutionManagement {
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
+            // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
+            // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.14.18"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.9.1"
-            def hibernateModelsVersion = version "hibernateModels", "0.9.1"
+            def hibernateModelsVersion = version "hibernateModels", "0.9.3"
             def jandexVersion = version "jandex", "3.2.0"
             def jacksonVersion = version "jackson", "2.17.0"
             def jbossLoggingVersion = version "jbossLogging", "3.6.0.Final"
@@ -306,7 +308,7 @@ buildCache {
         enabled = !settings.ext.isCiEnvironment
     }
     remote(develocity.buildCache) {
-        enabled = true
+        enabled = settings.ext.useRemoteCache
         // Check access key presence to avoid build cache errors on PR builds when access key is not present
         def accessKey = System.getenv("DEVELOCITY_ACCESS_KEY")
         push = settings.ext.populateRemoteBuildCache && accessKey
@@ -347,6 +349,8 @@ if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.nam
     include 'hibernate-jfr'
 }
 
+include 'hibernate-scan-jandex'
+
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-processor'
@@ -354,8 +358,8 @@ project(':metamodel-generator').name = 'hibernate-processor'
 include 'hibernate-gradle-plugin'
 project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")
 
-include 'hibernate-enhance-maven-plugin'
-project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
+include 'hibernate-maven-plugin'
+project(':hibernate-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-maven-plugin")
 
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
@@ -367,3 +371,5 @@ rootProject.children.each { project ->
     assert project.buildFile.isFile()
 }
 include 'hibernate-platform'
+
+

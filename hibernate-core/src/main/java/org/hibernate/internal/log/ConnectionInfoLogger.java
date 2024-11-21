@@ -7,6 +7,7 @@ package org.hibernate.internal.log;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 
+import org.hibernate.cfg.JdbcSettings;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -45,7 +46,11 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	void logConnectionInfoDetails(String databaseConnectionInfo);
 
 	@LogMessage(level = WARN)
-	@Message(id = 10001006, value = "No JDBC Driver class was specified by property `jakarta.persistence.jdbc.driver`, `hibernate.driver` or `javax.persistence.jdbc.driver`")
+	@Message(id = 10001006,
+			value = "No JDBC Driver class was specified by property '"
+					+ JdbcSettings.JAKARTA_JDBC_DRIVER + "', '"
+					+ JdbcSettings.JPA_JDBC_DRIVER +  "', or '"
+					+ JdbcSettings.DRIVER + "'")
 	void jdbcDriverNotSpecified();
 
 	@LogMessage(level = DEBUG)

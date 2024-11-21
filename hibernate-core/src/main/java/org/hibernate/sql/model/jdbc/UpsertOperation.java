@@ -13,7 +13,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 
 /**
- * JdbcMutation implementation for UPSERT handling
+ * {@link JdbcMutationOperation} implementation for UPSERT handling
  *
  * @author Steve Ebersole
  */

@@ -7,6 +7,8 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 /**
+ * Defines the ability to perform post-creation processing for entity mappings.
+ *
  * @author Steve Ebersole
  */
 public interface InFlightEntityMappingType extends EntityMappingType {

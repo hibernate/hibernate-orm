@@ -34,7 +34,7 @@ public class DriverManagerConnectionCreator extends BasicConnectionCreator {
 			return DriverManager.getConnection( url, connectionProps );
 		}
 		catch (SQLException e) {
-			throw convertSqlException( "Error calling DriverManager.getConnection()", e );
+			throw convertSqlException( "Error calling JDBC 'DriverManager.getConnection()'", e );
 		}
 	}
 }

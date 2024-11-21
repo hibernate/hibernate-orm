@@ -177,6 +177,20 @@ public class JsonFunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	public void testJsonValueBoolean(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select json_value(e.json, '$.theBoolean' returning boolean) from JsonHolder e where json_value(e.json, '$.theBoolean' returning boolean) = true",
+							Tuple.class
+					).getSingleResult();
+					assertEquals( true, tuple.get( 0 ) );
+				}
+		);
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQuery.class)
 	public void testJsonQuery(SessionFactoryScope scope) {
 		scope.inTransaction(

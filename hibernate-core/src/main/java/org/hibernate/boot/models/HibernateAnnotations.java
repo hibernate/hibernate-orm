@@ -36,6 +36,10 @@ public interface HibernateAnnotations {
 			AnyDiscriminator.class,
 			AnyDiscriminatorAnnotation.class
 	);
+	OrmAnnotationDescriptor<AnyDiscriminatorImplicitValues,AnyDiscriminatorImplicitValuesAnnotation> ANY_DISCRIMINATOR_IMPLICIT_VALUES = new OrmAnnotationDescriptor<>(
+			AnyDiscriminatorImplicitValues.class,
+			AnyDiscriminatorImplicitValuesAnnotation.class
+	);
 	OrmAnnotationDescriptor<AnyDiscriminatorValues,AnyDiscriminatorValuesAnnotation> ANY_DISCRIMINATOR_VALUES = new OrmAnnotationDescriptor<>(
 			AnyDiscriminatorValues.class,
 			AnyDiscriminatorValuesAnnotation.class
@@ -438,6 +442,10 @@ public interface HibernateAnnotations {
 			Nationalized.class,
 			NationalizedAnnotation.class
 	);
+	OrmAnnotationDescriptor<NativeGenerator, NativeGeneratorAnnotation> NATIVE_GENERATOR = new OrmAnnotationDescriptor<>(
+			NativeGenerator.class,
+			NativeGeneratorAnnotation.class
+	);
 	OrmAnnotationDescriptor<NaturalId, NaturalIdAnnotation> NATURAL_ID = new OrmAnnotationDescriptor<>(
 			NaturalId.class,
 			NaturalIdAnnotation.class
@@ -461,10 +469,6 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<OptimisticLocking,OptimisticLockingAnnotation> OPTIMISTIC_LOCKING = new OrmAnnotationDescriptor<>(
 			OptimisticLocking.class,
 			OptimisticLockingAnnotation.class
-	);
-	OrmAnnotationDescriptor<OrderBy,OrderByAnnotation> ORDER_BY = new OrmAnnotationDescriptor<>(
-			OrderBy.class,
-			OrderByAnnotation.class
 	);
 	OrmAnnotationDescriptor<ParamDef,ParamDefAnnotation> PARAM_DEF = new OrmAnnotationDescriptor<>(
 			ParamDef.class,

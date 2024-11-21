@@ -60,7 +60,7 @@ import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -78,6 +78,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -161,21 +162,6 @@ public class DB2Dialect extends Dialect {
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
-	}
-
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		//not keywords, at least not in DB2 11,
-		//but perhaps they were in older versions?
-		registerKeyword( "current" );
-		registerKeyword( "date" );
-		registerKeyword( "time" );
-		registerKeyword( "timestamp" );
-		registerKeyword( "fetch" );
-		registerKeyword( "first" );
-		registerKeyword( "rows" );
-		registerKeyword( "only" );
 	}
 
 	/**
@@ -417,13 +403,14 @@ public class DB2Dialect extends Dialect {
 		functionFactory.listagg( null );
 
 		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			functionFactory.jsonValue_no_passing();
+			functionFactory.jsonValue_db2();
 			functionFactory.jsonQuery_no_passing();
 			functionFactory.jsonExists_no_passing();
 			functionFactory.jsonObject_db2();
 			functionFactory.jsonArray_db2();
 			functionFactory.jsonArrayAgg_db2();
 			functionFactory.jsonObjectAgg_db2();
+			functionFactory.jsonTable_db2( getMaximumSeriesSize() );
 		}
 
 		functionFactory.xmlelement();
@@ -440,6 +427,25 @@ public class DB2Dialect extends Dialect {
 			functionFactory.xmlexists_db2_legacy();
 		}
 		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
+
+		functionFactory.unnest_db2( getMaximumSeriesSize() );
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
+	}
+
+	/**
+	 * DB2 doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Even if DB2 11 supports JSON functions, it's not possible to unnest a JSON array to rows, so stick to XML
+		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override
@@ -1060,7 +1066,9 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return DB2AggregateSupport.INSTANCE;
+		return getDB2Version().isSameOrAfter( 11 )
+				? DB2AggregateSupport.JSON_INSTANCE
+				: DB2AggregateSupport.INSTANCE;
 	}
 
 	@Override

@@ -22,9 +22,12 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
  */
 public interface SharedSessionContract extends QueryProducer, AutoCloseable, Serializable {
 	/**
-	 * Obtain the tenant identifier associated with this session.
+	 * Obtain the tenant identifier associated with this session, as a string.
 	 *
 	 * @return The tenant identifier associated with this session, or {@code null}
+	 *
+	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
+	 * @see SessionBuilder#tenantIdentifier(Object)
 	 */
 	String getTenantIdentifier();
 
@@ -33,6 +36,9 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 *
 	 * @return The tenant identifier associated with this session, or {@code null}
 	 * @since 6.4
+	 *
+	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
+	 * @see SessionBuilder#tenantIdentifier(Object)
 	 */
 	Object getTenantIdentifierValue();
 
@@ -41,19 +47,20 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 *
 	 * @throws HibernateException Indicates problems cleaning up.
 	 */
+	@Override
 	void close() throws HibernateException;
 
 	/**
 	 * Check if the session is still open.
 	 *
-	 * @return boolean
+	 * @return {@code true} if it is open
 	 */
 	boolean isOpen();
 
 	/**
 	 * Check if the session is currently connected.
 	 *
-	 * @return boolean
+	 * @return {@code true} if it is connected
 	 */
 	boolean isConnected();
 
@@ -62,16 +69,18 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * If a new underlying transaction is required, begin the transaction. Otherwise,
 	 * continue the new work in the context of the existing underlying transaction.
 	 *
-	 * @return a {@link Transaction} instance
+	 * @return an instance of {@link Transaction} representing the new transaction
 	 *
 	 * @see #getTransaction()
+	 * @see Transaction#begin()
 	 */
 	Transaction beginTransaction();
 
 	/**
 	 * Get the {@link Transaction} instance associated with this session.
 	 *
-	 * @return a Transaction instance
+	 * @return an instance of {@link Transaction} representing the transaction
+	 *         associated with this session
 	 *
 	 * @see jakarta.persistence.EntityManager#getTransaction()
 	 */
@@ -194,8 +203,8 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 
 	/**
 	 * Set the session-level JDBC batch size. Override the
-	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize() factory-level}
-	 * JDBC batch size controlled by the configuration property
+	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
+	 * factory-level} JDBC batch size controlled by the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
 	 *
 	 * @param jdbcBatchSize the new session-level JDBC batch size
@@ -228,10 +237,11 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * @param work The work to be performed.
 	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link jakarta.persistence.EntityManager#runWithConnection}
 	 */
-	default void doWork(Work work) throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
+	void doWork(Work work) throws HibernateException;
 
 	/**
 	 * Perform work using the {@link java.sql.Connection} underlying by this session,
@@ -243,10 +253,11 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * @return the result of calling {@link ReturningWork#execute}.
 	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link jakarta.persistence.EntityManager#callWithConnection}
 	 */
-	default <T> T doReturningWork(ReturningWork<T> work) throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
+	<T> T doReturningWork(ReturningWork<T> work);
 
 	/**
 	 * Create a new mutable {@link EntityGraph} with only a root node.

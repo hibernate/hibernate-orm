@@ -47,6 +47,10 @@ import java.util.List;
  * }
  * </pre>
  *
+ * @apiNote This class is similar to {@code jakarta.data.page.CursoredPage},
+ *          and is used by Hibernate Data Repositories to implement
+ *          Jakarta Data query methods.
+ *
  * @since 6.5
  *
  * @see KeyedPage

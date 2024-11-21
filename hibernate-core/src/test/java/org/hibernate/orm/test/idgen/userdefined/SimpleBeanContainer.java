@@ -13,12 +13,12 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 /**
  * @author Yanming Zhou
  */
-@SuppressWarnings("unchecked")
 public class SimpleBeanContainer implements BeanContainer {
 
 	public static final long INITIAL_VALUE = 23L;
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <B> ContainedBean<B> getBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,

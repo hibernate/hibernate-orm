@@ -156,7 +156,7 @@ after the collection is loaded, the collection would need to be refreshed to re-
 the elements.  For this reason, ordered sets are not recommended - if the application
 needs ordering of the set elements, a sorted set should be preferred.  For this reason,
 it is not covered in the User Guide.  See the javadocs for `jakarta.persistence.OrderBy`
-or `org.hibernate.annotations.OrderBy` for details.
+or `org.hibernate.annotations.SQLOrder` for details.
 
 There are 2 options for sorting a set - naturally or using an explicit comparator.
 

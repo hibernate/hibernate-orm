@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
 /**

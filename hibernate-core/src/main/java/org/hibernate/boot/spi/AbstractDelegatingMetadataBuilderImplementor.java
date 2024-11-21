@@ -23,8 +23,6 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.jandex.IndexView;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
 
@@ -98,7 +96,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyIndexView(IndexView jandexView) {
+	public MetadataBuilder applyIndexView(Object jandexView) {
 		delegate.applyIndexView( jandexView );
 		return getThis();
 	}

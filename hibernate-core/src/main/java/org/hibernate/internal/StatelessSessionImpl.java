@@ -105,6 +105,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		temporaryPersistenceContext = new StatefulPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
 		setUpMultitenancy( factory, influencers );
+		setJdbcBatchSize( 0 );
 	}
 
 	@Override
@@ -120,6 +121,20 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public void insertMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				insert( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
+		}
+	}
+
+	@Override
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
 		final EntityPersister persister = getEntityPersister( entityName, entity );
@@ -131,32 +146,47 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		final Generator generator = persister.getGenerator();
-		if ( !generator.generatedOnExecution( entity, this ) ) {
-			if ( generator.generatesOnInsert() ) {
-				id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+		if ( generator.generatedBeforeExecution( entity, this ) ) {
+			if ( !generator.generatesOnInsert() ) {
+				throw new IdentifierGenerationException( "Identifier generator must generate on insert" );
+			}
+			id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+			if ( firePreInsert(entity, id, state, persister) ) {
+				return id;
 			}
 			else {
-				id = persister.getIdentifier( entity, this );
-				if ( id == null ) {
-					throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName() + "' must be manually assigned before calling 'insert()'" );
-				}
+				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				persister.getInsertCoordinator().insert( entity, id, state, this );
+				persister.setIdentifier( entity, id, this );
+			}
+		}
+		else if ( generator.generatedOnExecution( entity, this ) ) {
+			if ( !generator.generatesOnInsert() ) {
+				throw new IdentifierGenerationException( "Identifier generator must generate on insert" );
+			}
+			if ( firePreInsert(entity, null, state, persister) ) {
+				return null;
+			}
+			else {
+				getInterceptor().onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+				id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+				persister.setIdentifier( entity, id, this );
+			}
+		}
+		else { // assigned identifier
+			id = persister.getIdentifier( entity, this );
+			if ( id == null ) {
+				throw new IdentifierGenerationException( "Identifier of entity '" + persister.getEntityName() + "' must be manually assigned before calling 'insert()'" );
 			}
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;
 			}
-			getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			persister.getInsertCoordinator().insert( entity, id, state, this );
-		}
-		else {
-			if ( firePreInsert(entity, null, state, persister) ) {
-				return null;
+			else {
+				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				persister.getInsertCoordinator().insert( entity, id, state, this );
 			}
-			getInterceptor()
-					.onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
-			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
-			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
-		persister.setIdentifier( entity, id, this );
 		forEachOwnedCollection( entity, id, persister,
 				(descriptor, collection) -> {
 					descriptor.recreate( collection, id, this);
@@ -178,6 +208,20 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void delete(Object entity) {
 		delete( null, entity );
+	}
+
+	@Override
+	public void deleteMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				delete( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
+		}
 	}
 
 	@Override
@@ -215,8 +259,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void upsert(Object entity) {
-		upsert( null, entity );
+	public void updateMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				update( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
+		}
 	}
 
 	@Override
@@ -254,6 +307,25 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( persister.getEntityName() );
 			}
+		}
+	}
+
+	@Override
+	public void upsert(Object entity) {
+		upsert( null, entity );
+	}
+
+	@Override
+	public void upsertMultiple(List<Object> entities) {
+		final Integer batchSize = getJdbcBatchSize();
+		setJdbcBatchSize( entities.size() );
+		try {
+			for ( Object entity : entities ) {
+				upsert( null, entity );
+			}
+		}
+		finally {
+			setJdbcBatchSize( batchSize );
 		}
 	}
 
@@ -511,7 +583,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public <T> List<T> getAll(Class<T> entityClass, List<Object> ids) {
+	public <T> List<T> getMultiple(Class<T> entityClass, List<Object> ids) {
 		for (Object id : ids) {
 			if ( id == null ) {
 				throw new IllegalArgumentException("Null id");

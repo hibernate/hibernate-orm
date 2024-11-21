@@ -4,43 +4,9 @@
  */
 package org.hibernate.dialect;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.lang.invoke.MethodHandles;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.regex.Pattern;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
@@ -66,9 +32,9 @@ import org.hibernate.dialect.function.ExtractFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.LpadRpadPadEmulation;
+import org.hibernate.dialect.function.OrdinalFunction;
 import org.hibernate.dialect.function.SqlFunction;
 import org.hibernate.dialect.function.TrimFunction;
-import org.hibernate.dialect.function.OrdinalFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -105,7 +71,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
@@ -123,17 +88,17 @@ import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.Query;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
@@ -164,7 +129,7 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.internal.StandardUserDefinedTypeExporter;
-import org.hibernate.tool.schema.internal.TableMigrator;
+import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -194,58 +159,58 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.lang.invoke.MethodHandles;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
+import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.type.SqlTypes.ARRAY;
-import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.DATE;
-import static org.hibernate.type.SqlTypes.DECIMAL;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
-import static org.hibernate.type.SqlTypes.INTEGER;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NUMERIC;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.REAL;
-import static org.hibernate.type.SqlTypes.ROWID;
-import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.TIME;
-import static org.hibernate.type.SqlTypes.TIMESTAMP;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_UTC;
-import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.isCharacterType;
-import static org.hibernate.type.SqlTypes.isEnumType;
-import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
-import static org.hibernate.type.SqlTypes.isIntegral;
-import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
-import static org.hibernate.type.SqlTypes.isVarbinaryType;
-import static org.hibernate.type.SqlTypes.isVarcharType;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -313,6 +278,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
+	private static final Pattern QUERY_PATTERN = Pattern.compile( "^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(where|join)\\b.+?)$" );
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() );
 
@@ -614,6 +580,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect strip trailing spaces from values stored
+	 * in columns of type {@code char(n)}?
+	 * MySQL and Sybase are the main offenders here.
+	 */
+	public boolean stripsTrailingSpacesFromChar() {
+		return false;
+	}
+
+	/**
 	 * The SQL type to use in {@code cast( ... as ... )} expressions when
 	 * casting to the target type represented by the given JDBC type code.
 	 *
@@ -630,11 +605,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see AnsiSqlKeywords
 	 */
 	protected void registerDefaultKeywords() {
-		AnsiSqlKeywords keywords = new AnsiSqlKeywords();
-		//Not using #registerKeyword as:
-		// # these are already lowercase
-		// # better efficiency of addAll as it can pre-size the collections
-		sqlKeywords.addAll( keywords.sql2003() );
+		// Not using #registerKeyword() since these are already lowercase,
+		// better efficiency with addAll() as it can pre-size the collection
+		sqlKeywords.addAll( new AnsiSqlKeywords().sql2003() );
 	}
 
 	/**
@@ -671,13 +644,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		final int parenthesisIndex = columnTypeName.lastIndexOf( '(' );
-		final String baseTypeName;
-		if ( parenthesisIndex == -1 ) {
-			baseTypeName = columnTypeName;
-		}
-		else {
-			baseTypeName = columnTypeName.substring( 0, parenthesisIndex ).trim();
-		}
+		final String baseTypeName =
+				parenthesisIndex == -1
+						? columnTypeName
+						: columnTypeName.substring( 0, parenthesisIndex ).trim();
 		return resolveSqlTypeCode( columnTypeName, baseTypeName, typeConfiguration );
 	}
 
@@ -791,7 +761,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, String[] values) {
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -833,7 +803,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated(since="6.5", forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
-		Long[] boxedValues = new Long[values.length];
+		final Long[] boxedValues = new Long[values.length];
 		for ( int i = 0; i<values.length; i++ ) {
 			boxedValues[i] = values[i];
 		}
@@ -848,7 +818,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, Long[] values) {
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -876,7 +846,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
 		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
 
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -1677,18 +1647,24 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * for the trim character if {@code isWhitespace}
 	 * was false.
 	 *
-	 * @param specification {@linkplain TrimSpec#LEADING leading}, {@linkplain TrimSpec#TRAILING trailing}
+	 * @param specification
+	 * {@linkplain TrimSpec#LEADING leading},
+	 * {@linkplain TrimSpec#TRAILING trailing},
 	 * or {@linkplain TrimSpec#BOTH both}
-	 * @param isWhitespace {@code true} if the trim character is a whitespace and can be omitted,
-	 * {@code false} if it must be explicit and a ?2 placeholder should be included in the pattern
+	 *
+	 * @param isWhitespace
+	 * {@code true} if trimming whitespace, and the ?2
+	 * placeholder for the trim character should be omitted,
+	 * {@code false} if the trim character is explicit and
+	 * the ?2 placeholder must be included in the pattern
 	 */
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return "trim(" + specification + ( isWhitespace ? "" : " ?2" ) + " from ?1)";
 	}
 
 	/**
-	 * Whether the database supports adding a fractional interval to a timestamp,
-	 * for example {@code timestamp + 0.5 second}.
+	 * Whether the database supports adding a fractional interval
+	 * to a timestamp, for example {@code timestamp + 0.5 second}.
 	 */
 	public boolean supportsFractionalTimestampArithmetic() {
 		return true;
@@ -1871,7 +1847,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 
 		if ( supportsStandardArrays() ) {
-			jdbcTypeRegistry.addTypeConstructor( ArrayJdbcTypeConstructor.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( ArrayJdbcTypeConstructor.INSTANCE );
 		}
 		if ( supportsMaterializedLobAccess() ) {
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
@@ -2054,6 +2030,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The name identifying the native generator strategy.
 	 *
 	 * @deprecated Use {@linkplain #getNativeValueGenerationStrategy()} instead
+	 *
+	 * @implNote Only used with {@code hbm.xml} and {@linkplain org.hibernate.annotations.GenericGenerator},
+	 * both of which have been deprecated
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	public String getNativeIdentifierGeneratorStrategy() {
@@ -2062,7 +2041,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * The native type of generation supported by this Dialect.
+	 *
+	 * @see org.hibernate.annotations.NativeGenerator
+	 * @since 7.0
 	 */
+	@Incubating
 	public GenerationType getNativeValueGenerationStrategy() {
 		return getIdentityColumnSupport().supportsIdentityColumns()
 				? GenerationType.IDENTITY
@@ -3794,12 +3777,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Should BLOB, CLOB, and NCLOB be created solely using respectively
-	 * {@link Connection#createBlob()}, {@link Connection#createClob()},
-	 * and {@link Connection#createNClob()}.
+	 * Should {@link Blob}, {@link Clob}, and {@link NClob} be created solely
+	 * using {@link Connection#createBlob()}, {@link Connection#createClob()},
+	 * and {@link Connection#createNClob()}, instead of allowing the use of
+	 * our own implementations.
 	 *
-	 * @return True if BLOB, CLOB, and NCLOB should be created using JDBC
-	 * {@link Connection}.
+	 * @return True if these types should be instantiated using {@link Connection}.
 	 *
 	 * @since 6.6
 	 */
@@ -4259,8 +4242,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <p>
 	 * Support for identity columns is insufficient here, we require something like:
 	 * <ol>
-	 * <li>{@code insert ... returning ...}
-	 * <li>{@code select from final table (insert ... )}
+	 * <li>{@code insert ... returning ...}, or
+	 * <li>{@code select from final table (insert ... )}.
 	 * </ol>
 	 *
 	 * @return {@code true} if {@link org.hibernate.id.insert.InsertReturningDelegate}
@@ -4411,21 +4394,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return getMultiKeyLoadSizingStrategy();
 	}
 
-	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = (numberOfColumns, numberOfKeys, pad) -> {
-		numberOfKeys = pad ? MathHelper.ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
+	private int calculateBatchSize(int numberOfColumns, int numberOfKeys, boolean padToPowerOfTwo) {
+		final int batchSize = padToPowerOfTwo ? ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
+		final int maxBatchSize = getParameterCountLimit() / numberOfColumns;
+		return maxBatchSize > 0 && batchSize > maxBatchSize ? maxBatchSize : batchSize;
+	}
 
-		final long parameterCount = (long) numberOfColumns * numberOfKeys;
-		final int limit = getParameterCountLimit();
-
-		if ( limit > 0 ) {
-			// the Dialect reported a limit -  see if the parameter count exceeds the limit
-			if ( parameterCount >= limit ) {
-				return limit / numberOfColumns;
-			}
-		}
-
-		return numberOfKeys;
-	};
+	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = this::calculateBatchSize;
 
 	/**
 	 * Is JDBC statement warning logging enabled by default?
@@ -4788,6 +4763,33 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			sql = prependComment( sql, queryOptions.getComment() );
 		}
 		return sql;
+	}
+
+	/**
+	 * Adds an INDEX query hint as follows:
+	 *
+	 * <pre>
+	 * SELECT *
+	 * FROM TEST
+	 * USE INDEX (hint1, hint2)
+	 * WHERE X=1
+	 * </pre>
+	 */
+	public static String addQueryHints(String query, String hints) {
+		Matcher matcher = QUERY_PATTERN.matcher( query );
+		if ( matcher.matches() && matcher.groupCount() > 1 ) {
+			String startToken = matcher.group( 1 );
+			String endToken = matcher.group( 2 );
+
+			return startToken +
+					" use index (" +
+					hints +
+					") " +
+					endToken;
+		}
+		else {
+			return query;
+		}
 	}
 
 	/**
@@ -5291,6 +5293,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Returns the default name of the ordinality column for a set-returning function
+	 * if it supports that, otherwise returns {@code null}.
+	 */
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return null;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>
@@ -5612,11 +5622,102 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link Duration}.
 	 */
 	public void appendIntervalLiteral(SqlAppender appender, Duration literal) {
+		final int nano = literal.getNano();
+		final int secondsPart = literal.toSecondsPart();
+		final int minutesPart = literal.toMinutesPart();
+		final int hoursPart = literal.toHoursPart();
+		final long daysPart = literal.toDaysPart();
+		enum Unit { day, hour, minute }
+		final Unit unit;
+		if ( daysPart != 0 ) {
+			unit = hoursPart == 0 && minutesPart == 0 && secondsPart == 0 && nano == 0
+					? Unit.day
+					: null;
+		}
+		else if ( hoursPart != 0 ) {
+			unit = minutesPart == 0 && secondsPart == 0 && nano == 0
+					? Unit.hour
+					: null;
+		}
+		else if ( minutesPart != 0 ) {
+			unit = secondsPart == 0 && nano == 0
+					? Unit.minute
+					: null;
+		}
+		else {
+			unit = null;
+		}
 		appender.appendSql( "interval '" );
-		appender.appendSql( literal.getSeconds() );
-		appender.appendSql( '.' );
-		appender.appendSql( literal.getNano() );
-		appender.appendSql( "' second" );
+		if ( unit != null ) {
+			appender.appendSql( switch( unit ) {
+				case day -> daysPart;
+				case hour -> hoursPart;
+				case minute -> minutesPart;
+			});
+			appender.appendSql( "' " );
+			appender.appendSql( unit.toString() );
+		}
+		else {
+			appender.appendSql( "interval '" );
+			appender.appendSql( literal.getSeconds() );
+			if ( nano > 0 ) {
+				appender.appendSql( '.' );
+				appender.appendSql( nano );
+			}
+			appender.appendSql( "' second" );
+		}
+	}
+
+	/**
+	 * Append a literal SQL {@code interval} representing the given Java
+	 * {@link TemporalAmount}.
+	 */
+	public void appendIntervalLiteral(SqlAppender appender, TemporalAmount literal) {
+		if ( literal instanceof Duration duration ) {
+			appendIntervalLiteral( appender, duration );
+		}
+		else if ( literal instanceof Period period ) {
+			final int years = period.getYears();
+			final int months = period.getMonths();
+			final int days = period.getDays();
+			final boolean parenthesis = years != 0 && months != 0
+					|| years != 0 && days != 0
+					|| months != 0 && days != 0;
+			if ( parenthesis ) {
+				appender.appendSql( '(' );
+			}
+			boolean first = true;
+			for ( java.time.temporal.TemporalUnit unit : literal.getUnits() ) {
+				final long value = literal.get( unit );
+				if ( value != 0 ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						appender.appendSql( "+" );
+					}
+					appender.appendSql( "interval '" );
+					appender.appendSql( value );
+					appender.appendSql( "' " );
+					if ( unit == ChronoUnit.YEARS ) {
+						appender.appendSql( "year" );
+					}
+					else if ( unit == ChronoUnit.MONTHS ) {
+						appender.appendSql( "month" );
+					}
+					else {
+						assert unit == ChronoUnit.DAYS;
+						appender.appendSql( "day" );
+					}
+				}
+			}
+			if ( parenthesis ) {
+				appender.appendSql( ')' );
+			}
+		}
+		else {
+			throw new IllegalArgumentException( "Unsupported temporal amount type: " + literal );
+		}
 	}
 
 	/**

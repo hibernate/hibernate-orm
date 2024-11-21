@@ -12,6 +12,8 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class AggregateSupportImpl implements AggregateSupport {
@@ -19,13 +21,7 @@ public class AggregateSupportImpl implements AggregateSupport {
 	public static final AggregateSupport INSTANCE = new AggregateSupportImpl();
 
 	@Override
-	public String aggregateComponentCustomReadExpression(
-			String template,
-			String placeholder,
-			String aggregateParentReadExpression,
-			String columnExpression,
-			AggregateColumn aggregateColumn,
-			Column column) {
+	public String aggregateComponentCustomReadExpression(String template, String placeholder, String aggregateParentReadExpression, String columnExpression, int aggregateColumnTypeCode, SqlTypedMapping column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
 	}
 
@@ -33,7 +29,7 @@ public class AggregateSupportImpl implements AggregateSupport {
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
+			int aggregateColumnTypeCode,
 			Column column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentAssignmentExpression: " + getClass().getName() );
 	}
@@ -81,7 +77,10 @@ public class AggregateSupportImpl implements AggregateSupport {
 
 	@Override
 	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		return columnSqlTypeCode;
+		return switch (aggregateColumnSqlTypeCode) {
+			case SqlTypes.JSON -> columnSqlTypeCode == SqlTypes.ARRAY ? SqlTypes.JSON_ARRAY : columnSqlTypeCode;
+			default -> columnSqlTypeCode;
+		};
 	}
 
 	@Override

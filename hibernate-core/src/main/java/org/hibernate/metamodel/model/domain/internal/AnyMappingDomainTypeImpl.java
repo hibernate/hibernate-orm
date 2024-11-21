@@ -6,8 +6,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Column;
-import org.hibernate.metamodel.mapping.DefaultDiscriminatorConverter;
-import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -15,11 +13,12 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.MetaType;
-import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import java.util.List;
+
+import static org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart.determineDiscriminatorConverter;
 
 /**
  * @author Steve Ebersole
@@ -42,21 +41,14 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 		final BasicType discriminatorBaseType = (BasicType) discriminatorType.getBaseType();
 		final NavigableRole navigableRole = resolveNavigableRole( bootAnyMapping );
 
-		anyDiscriminatorType = new ConvertedBasicTypeImpl<>(
+		anyDiscriminatorType = new ConvertedBasicTypeImpl(
 				navigableRole.getFullPath(),
 				discriminatorBaseType.getJdbcType(),
-				bootAnyMapping.getMetaValues().isEmpty()
-				? DefaultDiscriminatorConverter.fromMappingMetamodel(
+				determineDiscriminatorConverter(
 						navigableRole,
-						ClassJavaType.INSTANCE,
-						discriminatorBaseType,
-						mappingMetamodel
-				)
-				: MappedDiscriminatorConverter.fromValueMappings(
-						navigableRole,
-						ClassJavaType.INSTANCE,
 						discriminatorBaseType,
 						bootAnyMapping.getMetaValues(),
+						discriminatorType.getImplicitValueStrategy(),
 						mappingMetamodel
 				)
 		);

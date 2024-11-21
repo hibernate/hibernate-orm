@@ -37,7 +37,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -58,6 +58,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -213,10 +214,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
 			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
-
-			// The jTDS driver doesn't support nationalized types
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.CLOB_BINDING );
-			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, ClobJdbcType.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.NCLOB, NClobJdbcType.NCLOB_BINDING );
 		}
 		else {
 			// jConnect driver only conditionally supports getClob/getNClob depending on a server setting. See
@@ -254,7 +252,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
-		return driverKind == SybaseDriverKind.JTDS ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+		return super.getNationalizationSupport();
+	}
+
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
 	}
 
 	@Override

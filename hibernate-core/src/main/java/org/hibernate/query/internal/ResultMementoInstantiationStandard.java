@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.named.ResultMementoInstantiation;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.complete.CompleteResultBuilderInstantiation;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderInstantiation;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

@@ -108,18 +108,17 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Boolean) {
-			return (Boolean) value;
+		if (value instanceof Boolean booleanValue) {
+			return booleanValue;
 		}
-		if (value instanceof Number) {
-			final int intValue = ( (Number) value ).intValue();
-			return intValue != 0;
+		if (value instanceof Number number) {
+			return number.intValue() != 0;
 		}
-		if (value instanceof Character) {
-			return isTrue( (Character) value );
+		if (value instanceof Character character) {
+			return isTrue( character );
 		}
-		if (value instanceof String) {
-			return isTrue( (String) value );
+		if (value instanceof String string) {
+			return isTrue( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -188,24 +187,21 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<Boolean, ?> converter, Dialect dialect) {
 		if ( converter != null ) {
 			if ( jdbcType.isString() ) {
-				@SuppressWarnings("unchecked")
-				BasicValueConverter<Boolean, ?> stringConverter =
-						(BasicValueConverter<Boolean, ?>) converter;
-				final Object falseValue = stringConverter.toRelationalValue( false );
-				final Object trueValue = stringConverter.toRelationalValue( true );
-				final String[] values = getPossibleStringValues( stringConverter, falseValue, trueValue );
+				final Object falseValue = converter.toRelationalValue( false );
+				final Object trueValue = converter.toRelationalValue( true );
+				final String[] values = getPossibleStringValues( converter, falseValue, trueValue );
 				return dialect.getCheckCondition( columnName, values );
 			}
 			else if ( jdbcType.isInteger() ) {
 				@SuppressWarnings("unchecked")
-				BasicValueConverter<Boolean, ? extends Number> numericConverter =
+				final BasicValueConverter<Boolean, ? extends Number> numericConverter =
 						(BasicValueConverter<Boolean, ? extends Number>) converter;
 				final Number falseValue = numericConverter.toRelationalValue( false );
 				final Number trueValue = numericConverter.toRelationalValue( true );
-				Long[] values = getPossibleNumericValues( numericConverter, falseValue, trueValue );
+				final Long[] values = getPossibleNumericValues( numericConverter, falseValue, trueValue );
 				return dialect.getCheckCondition( columnName, values );
 			}
 		}
@@ -222,7 +218,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		}
 		catch ( NullPointerException ignored ) {
 		}
-		Long[] values = new Long[nullValue != null ? 3 : 2];
+		final Long[] values = new Long[nullValue != null ? 3 : 2];
 		values[0] = falseValue != null ? falseValue.longValue() : null;
 		values[1] = trueValue != null ? trueValue.longValue() : null;
 		if ( nullValue != null ) {

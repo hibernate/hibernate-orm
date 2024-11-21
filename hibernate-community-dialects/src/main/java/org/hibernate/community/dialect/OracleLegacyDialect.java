@@ -62,9 +62,9 @@ import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -91,7 +91,6 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.OracleJsonArrayBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -105,12 +104,12 @@ import jakarta.persistence.TemporalType;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.HOUR;
-import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
-import static org.hibernate.query.sqm.TemporalUnit.MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.SECOND;
-import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.HOUR;
+import static org.hibernate.query.common.TemporalUnit.MINUTE;
+import static org.hibernate.query.common.TemporalUnit.MONTH;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
+import static org.hibernate.query.common.TemporalUnit.YEAR;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -123,7 +122,6 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
@@ -314,7 +312,7 @@ public class OracleLegacyDialect extends Dialect {
 			functionFactory.jsonValue_oracle();
 			functionFactory.jsonQuery_oracle();
 			functionFactory.jsonExists_oracle();
-			functionFactory.jsonObject_oracle();
+			functionFactory.jsonObject_oracle( getVersion().isSameOrAfter( 19 ) );
 			functionFactory.jsonArray_oracle();
 			functionFactory.jsonArrayAgg_oracle();
 			functionFactory.jsonObjectAgg_oracle();
@@ -325,6 +323,7 @@ public class OracleLegacyDialect extends Dialect {
 			functionFactory.jsonMergepatch_oracle();
 			functionFactory.jsonArrayAppend_oracle();
 			functionFactory.jsonArrayInsert_oracle();
+			functionFactory.jsonTable_oracle();
 		}
 
 		functionFactory.xmlelement();
@@ -335,6 +334,19 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.xmlquery_oracle();
 		functionFactory.xmlexists();
 		functionFactory.xmlagg();
+		functionFactory.xmltable_oracle();
+
+		functionFactory.unnest_oracle();
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
+	}
+
+	/**
+	 * Oracle doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override
@@ -745,11 +757,9 @@ public class OracleLegacyDialect extends Dialect {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
 			if ( getVersion().isSameOrAfter( 21 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 			}
 			else if ( getVersion().isSameOrAfter( 12 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "blob", this ) );
 			}
 		}
 
@@ -919,11 +929,11 @@ public class OracleLegacyDialect extends Dialect {
 
 			if ( getVersion().isSameOrAfter( 21 ) ) {
 				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
-				typeContributions.contributeJdbcType( OracleJsonArrayJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
 			}
 			else {
 				typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
-				typeContributions.contributeJdbcType( OracleJsonArrayBlobJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.BLOB_INSTANCE );
 			}
 		}
 

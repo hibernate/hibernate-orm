@@ -191,11 +191,18 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmPath<?> get(String attributeName) {
-		final SqmPathSource<?> subNavigable =
-				getResolvedModel().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+	public <Y> SqmPath<Y> get(String attributeName) {
+		//noinspection unchecked
+		final SqmPathSource<Y> subNavigable = (SqmPathSource<Y>) getResolvedModel().getSubPathSource( attributeName );
 		return resolvePath( attributeName, subNavigable );
+	}
+
+	@Override
+	public <Y> SqmPath<Y> get(String attributeName, boolean includeSubtypes) {
+		//noinspection unchecked
+		final SqmPathSource<Y> subPathSource = (SqmPathSource<Y>)
+				getResolvedModel().getSubPathSource( attributeName, includeSubtypes );
+		return resolvePath( attributeName, subPathSource );
 	}
 
 	protected <X> SqmPath<X> resolvePath(PersistentAttribute<?, X> attribute) {

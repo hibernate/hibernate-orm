@@ -104,7 +104,6 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				true,
 				globalRegistrations,
-				null,
 				modelBuildingContext
 		);
 

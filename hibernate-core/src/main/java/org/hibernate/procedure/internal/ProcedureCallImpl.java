@@ -413,7 +413,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public Query<R> setOrder(List<Order<? super R>> orderList) {
+	public Query<R> setOrder(List<? extends Order<? super R>> orderList) {
 		throw new UnsupportedOperationException("Ordering not supported for stored procedure calls");
 	}
 

@@ -15,7 +15,8 @@ import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**
- * Factory for various
+ * Factory for various {@link SqmTranslator}s
+ *
  * @author Steve Ebersole
  */
 public interface SqmTranslatorFactory {
@@ -29,7 +30,7 @@ public interface SqmTranslatorFactory {
 			boolean deduplicateSelectionItems);
 
 	SqmTranslator<? extends MutationStatement> createMutationTranslator(
-			SqmDmlStatement<?> sqmDeleteStatement,
+			SqmDmlStatement<?> sqmDmlStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,

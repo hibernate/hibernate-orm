@@ -6,7 +6,6 @@ package org.hibernate.orm.test.mapping.mutability.attribute;
 
 import java.util.Map;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.orm.test.mapping.mutability.converted.MapConverter;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -86,7 +85,7 @@ public class MutableMapAsBasicTests {
 		scope.inTransaction( (session) -> {
 			session.persist( new TestEntity(
 					1,
-					CollectionHelper.toMap(
+					Map.of(
 							"abc", "123",
 							"def", "456"
 					)

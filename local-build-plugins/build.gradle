@@ -4,11 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+plugins {
+	id "java-gradle-plugin"
+	id "groovy"
+}
+
 repositories {
 	mavenCentral()
 }
-
-apply plugin: 'java-gradle-plugin'
 
 group = 'org.hibernate.build'
 version = '1.0.0-SNAPSHOT'
@@ -16,12 +19,21 @@ buildDir = "target"
 
 dependencies {
 	implementation gradleApi()
+
+	implementation "jakarta.inject:jakarta.inject-api:2.0.0"
+
 	implementation 'io.smallrye:jandex:3.1.2'
 	implementation 'org.apache.httpcomponents:httpclient:4.5.13'
 	implementation 'jakarta.json.bind:jakarta.json.bind-api:2.0.0'
 	implementation 'jakarta.json:jakarta.json-api:2.0.1'
 	implementation 'org.eclipse:yasson:2.0.4'
 	implementation 'org.jsoup:jsoup:1.15.3'
+
+	implementation "org.apache.maven:maven-embedder:3.9.9"
+	implementation "org.apache.maven:maven-compat:3.9.9"
+	implementation "org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18"
+	implementation "org.apache.maven.resolver:maven-resolver-transport-http:1.9.18"
+	implementation "org.slf4j:slf4j-simple:1.7.36"
 }
 
 tasks.compileJava {
@@ -79,6 +91,14 @@ gradlePlugin {
 		javaModulePlugin {
 			id = 'org.hibernate.orm.build.java-module'
 			implementationClass = 'org.hibernate.orm.toolchains.JavaModulePlugin'
+		}
+		register( "mavenEmbedder" ) {
+			id = "org.hibernate.build.maven-embedder"
+			implementationClass = "org.hibernate.build.maven.embedder.MavenEmbedderPlugin"
+		}
+		register( "xjc-plugin" ) {
+			id = "local-xjc-plugin"
+			implementationClass = "org.hibernate.build.xjc.XjcPlugin"
 		}
 	}
 }

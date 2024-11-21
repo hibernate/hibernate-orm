@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc;
 
+import org.hibernate.engine.jdbc.proxy.BlobProxy;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 

@@ -7,6 +7,8 @@ package org.hibernate.type.descriptor.java;
 import org.hibernate.HibernateException;
 
 /**
+ * A problem converting between JDBC types and Java types.
+ *
  * @author Steve Ebersole
  */
 public class CoercionException extends HibernateException {

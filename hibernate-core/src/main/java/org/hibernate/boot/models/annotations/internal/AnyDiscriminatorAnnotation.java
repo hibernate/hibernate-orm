@@ -4,11 +4,11 @@
  */
 package org.hibernate.boot.models.annotations.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.Map;
-
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.models.spi.SourceModelBuildingContext;
+
+import java.lang.annotation.Annotation;
+import java.util.Map;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -49,6 +49,4 @@ public class AnyDiscriminatorAnnotation implements AnyDiscriminator {
 	public void value(jakarta.persistence.DiscriminatorType value) {
 		this.value = value;
 	}
-
-
 }

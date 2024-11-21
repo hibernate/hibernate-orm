@@ -7,11 +7,14 @@ package org.hibernate;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.naming.Referenceable;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.SynchronizationType;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.graph.RootGraph;
@@ -157,6 +160,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @return The created session.
 	 *
+	 * @apiNote This operation is very similar to {@link #createEntityManager()}
+	 *
 	 * @throws HibernateException Indicates a problem opening the session; pretty rare here.
 	 */
 	Session openSession() throws HibernateException;
@@ -215,7 +220,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link Session} and use it to perform an action.
 	 */
-	default void inSession(Consumer<Session> action) {
+	default void inSession(Consumer<? super Session> action) {
 		try ( Session session = openSession() ) {
 			action.accept( session );
 		}
@@ -226,7 +231,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default void inStatelessSession(Consumer<StatelessSession> action) {
+	default void inStatelessSession(Consumer<? super StatelessSession> action) {
 		try ( StatelessSession session = openStatelessSession() ) {
 			action.accept( session );
 		}
@@ -235,8 +240,11 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link Session} and use it to perform an action
 	 * within the bounds of a transaction.
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link #runInTransaction}
 	 */
-	default void inTransaction(Consumer<Session> action) {
+	default void inTransaction(Consumer<? super Session> action) {
 		inSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
@@ -246,14 +254,14 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default void inStatelessTransaction(Consumer<StatelessSession> action) {
+	default void inStatelessTransaction(Consumer<? super StatelessSession> action) {
 		inStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
 	/**
 	 * Open a {@link Session} and use it to obtain a value.
 	 */
-	default <R> R fromSession(Function<Session,R> action) {
+	default <R> R fromSession(Function<? super Session,R> action) {
 		try ( Session session = openSession() ) {
 			return action.apply( session );
 		}
@@ -264,7 +272,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default <R> R fromStatelessSession(Function<StatelessSession,R> action) {
+	default <R> R fromStatelessSession(Function<? super StatelessSession,R> action) {
 		try ( StatelessSession session = openStatelessSession() ) {
 			return action.apply( session );
 		}
@@ -273,8 +281,11 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link Session} and use it to obtain a value
 	 * within the bounds of a transaction.
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link #callInTransaction}
 	 */
-	default <R> R fromTransaction(Function<Session,R> action) {
+	default <R> R fromTransaction(Function<? super Session,R> action) {
 		return fromSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
@@ -284,9 +295,45 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default <R> R fromStatelessTransaction(Function<StatelessSession,R> action) {
+	default <R> R fromStatelessTransaction(Function<? super StatelessSession,R> action) {
 		return fromStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
+
+	/**
+	 * Create a new {@link Session}.
+	 */
+	@Override
+	Session createEntityManager();
+
+	/**
+	 * Create a new {@link Session}, with the given
+	 * {@linkplain EntityManager#getProperties properties}.
+	 */
+	@Override
+	Session createEntityManager(Map<?, ?> map);
+
+	/**
+	 * Create a new {@link Session}, with the given
+	 * {@linkplain SynchronizationType synchronization type}.
+	 *
+	 * @throws IllegalStateException if the persistence unit has
+	 * {@linkplain jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 * resource-local} transaction management
+	 */
+	@Override
+	Session createEntityManager(SynchronizationType synchronizationType);
+
+	/**
+	 * Create a new {@link Session}, with the given
+	 * {@linkplain SynchronizationType synchronization type} and
+	 * {@linkplain EntityManager#getProperties properties}.
+	 *
+	 * @throws IllegalStateException if the persistence unit has
+	 * {@linkplain jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
+	 * resource-local} transaction management
+	 */
+	@Override
+	Session createEntityManager(SynchronizationType synchronizationType, Map<?, ?> map);
 
 	/**
 	 * Retrieve the {@linkplain Statistics statistics} for this factory.
@@ -302,6 +349,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	SchemaManager getSchemaManager();
 
 	/**
@@ -327,6 +375,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @throws HibernateException Indicates an issue closing the factory.
 	 */
+	@Override
 	void close() throws HibernateException;
 
 	/**

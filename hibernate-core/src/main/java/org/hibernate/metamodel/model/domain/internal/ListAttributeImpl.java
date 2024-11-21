@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -60,7 +59,7 @@ public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>,
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature != null ) {
 			switch ( nature ) {
@@ -70,7 +69,7 @@ public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>,
 					return getElementPathSource();
 			}
 		}
-		return getElementPathSource().findSubPathSource( name, metamodel );
+		return getElementPathSource().findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

@@ -348,22 +348,22 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public EntityManager createEntityManager() {
+	public Session createEntityManager() {
 		return delegate.createEntityManager();
 	}
 
 	@Override
-	public EntityManager createEntityManager(Map map) {
+	public Session createEntityManager(Map map) {
 		return delegate.createEntityManager( map );
 	}
 
 	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
+	public Session createEntityManager(SynchronizationType synchronizationType) {
 		return delegate.createEntityManager( synchronizationType );
 	}
 
 	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
+	public Session createEntityManager(SynchronizationType synchronizationType, Map map) {
 		return delegate.createEntityManager( synchronizationType, map );
 	}
 

@@ -5,7 +5,7 @@
 package org.hibernate.engine.jdbc;
 
 /**
- * Marker interface for non-contextually created {@link java.sql.Clob} instances..
+ * Marker interface for non-contextually created {@link java.sql.Clob} instances.
  *
  * @author Steve Ebersole
  */

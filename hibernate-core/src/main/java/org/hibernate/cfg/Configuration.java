@@ -26,7 +26,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -112,12 +112,17 @@ import jakarta.persistence.SharedCacheMode;
  * Programs may directly use the APIs defined under {@link org.hibernate.boot},
  * as an alternative to using an instance of this class.
  *
+ * @apiNote The {@link org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * is a new alternative to this venerable API, and extends the JPA-standard
+ * {@link jakarta.persistence.PersistenceConfiguration}.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
  * @see AvailableSettings
  * @see org.hibernate.boot
+ * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );

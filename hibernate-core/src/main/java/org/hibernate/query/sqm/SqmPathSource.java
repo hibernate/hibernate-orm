@@ -42,8 +42,8 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
 	 *
+	 * @param name the name of the path source to find
 	 * @return null if the subPathSource is not found
-	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
 	SqmPathSource<?> findSubPathSource(String name);
@@ -52,16 +52,31 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	 * Find a {@link SqmPathSource} by name relative to this source.
 	 *
 	 * @return null if the subPathSource is not found
+	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
+	 * @deprecated Use {@link #findSubPathSource(String, boolean)} instead
+	 */
+	@Deprecated(forRemoval = true, since = "7.0")
+	default SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+		return findSubPathSource( name, true );
+	}
+
+	/**
+	 * Find a {@link SqmPathSource} by name relative to this source. If {@code includeSubtypes} is set
+	 * to {@code true} and this path source is polymorphic, also try finding subtype attributes.
 	 *
+	 * @param name the name of the path source to find
+	 * @param includeSubtypes flag indicating whether to consider subtype attributes
+	 * @return null if the subPathSource is not found
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	default SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+	default SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		return findSubPathSource( name );
 	}
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
 	 *
+	 * @param name the name of the path source to find
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 * @throws IllegalArgumentException if the subPathSource is not found
 	 */
@@ -81,13 +96,39 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	}
 
 	/**
-	 * Find a {@link SqmPathSource} by name relative to this source.
+	 * Find a {@link SqmPathSource} by name relative to this source and all its subtypes.
 	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 * @throws IllegalArgumentException if the subPathSource is not found
+	 * @deprecated Use #{@link #getSubPathSource(String, boolean)} instead
 	 */
+	@Deprecated(forRemoval = true, since = "7.0")
 	default SqmPathSource<?> getSubPathSource(String name, JpaMetamodel metamodel) {
-		final SqmPathSource<?> subPathSource = findSubPathSource( name, metamodel );
+		final SqmPathSource<?> subPathSource = findSubPathSource( name, true );
+		if ( subPathSource == null ) {
+			throw new PathElementException(
+					String.format(
+							Locale.ROOT,
+							"Could not resolve attribute '%s' of '%s'",
+							name,
+							getExpressible().getTypeName()
+					)
+			);
+		}
+		return subPathSource;
+	}
+
+	/**
+	 * Find a {@link SqmPathSource} by name relative to this source. If {@code subtypes} is set
+	 * to {@code true} and this path source is polymorphic, also try finding subtype attributes.
+	 *
+	 * @param name the name of the path source to find
+	 * @param subtypes flag indicating whether to consider subtype attributes
+	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
+	 * @throws IllegalArgumentException if the subPathSource is not found
+	 */
+	default SqmPathSource<?> getSubPathSource(String name, boolean subtypes) {
+		final SqmPathSource<?> subPathSource = findSubPathSource( name, true );
 		if ( subPathSource == null ) {
 			throw new PathElementException(
 					String.format(

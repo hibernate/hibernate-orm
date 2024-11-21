@@ -245,16 +245,24 @@ public interface MappingSettings {
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
 
 	/**
-	 * Indicates whether to prefer using SQL enums and the respective special JDBC types for binding/extracting
-	 * of values.
-	 * <p/>
-	 * Used to set the value across the entire system as opposed to scattered, individual
-	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
-	 * naming specific {@linkplain org.hibernate.type.descriptor.jdbc.JdbcType} implementations.
+	 * Indicates that named SQL {@code enum} types should be used by default instead
+	 * of {@code varchar} on databases which support named enum types.
+	 * <p>
+	 * A named enum type is declared in DDL using {@code create type ... as enum} or
+	 * {@code create type ... as domain}.
+	 * <p>
+	 * This configuration property is used to specify a global preference, as an
+	 * alternative to the use of
+	 * {@link org.hibernate.annotations.JdbcTypeCode @JdbcTypeCode(SqlTypes.NAMED_ENUM)}
+	 * at the field or property level.
 	 *
 	 * @settingDefault false
 	 *
 	 * @since 6.5
+	 *
+	 * @see org.hibernate.type.SqlTypes#NAMED_ENUM
+	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.OracleEnumJdbcType
 	 */
 	@Incubating
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
@@ -270,6 +278,9 @@ public interface MappingSettings {
 	 * or {@code hibernate.type.preferred_array_jdbc_type=TABLE}.
 	 *
 	 * @settingDefault {@link Dialect#getPreferredSqlTypeCodeForArray()}.
+	 *
+	 * @see org.hibernate.type.SqlTypes#ARRAY
+	 * @see org.hibernate.type.SqlTypes#TABLE
 	 *
 	 * @since 6.6
 	 */

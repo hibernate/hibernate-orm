@@ -207,7 +207,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
-	private final boolean UnownedAssociationTransientCheck;
+	private final boolean unownedAssociationTransientCheck;
 	private final boolean passProcedureParameterNames;
 	private final boolean preferJdbcDatetimeTypes;
 
@@ -571,14 +571,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				JDBC_TIME_ZONE
 		);
 
-		if ( jdbcTimeZoneValue instanceof TimeZone ) {
-			this.jdbcTimeZone = (TimeZone) jdbcTimeZoneValue;
+		if ( jdbcTimeZoneValue instanceof TimeZone timeZone ) {
+			this.jdbcTimeZone = timeZone;
 		}
-		else if ( jdbcTimeZoneValue instanceof ZoneId ) {
-			this.jdbcTimeZone = TimeZone.getTimeZone( (ZoneId) jdbcTimeZoneValue );
+		else if ( jdbcTimeZoneValue instanceof ZoneId zoneId ) {
+			this.jdbcTimeZone = TimeZone.getTimeZone( zoneId );
 		}
-		else if ( jdbcTimeZoneValue instanceof String ) {
-			this.jdbcTimeZone = TimeZone.getTimeZone( ZoneId.of((String) jdbcTimeZoneValue) );
+		else if ( jdbcTimeZoneValue instanceof String string ) {
+			this.jdbcTimeZone = TimeZone.getTimeZone( ZoneId.of( string ) );
 		}
 		else if ( jdbcTimeZoneValue != null ) {
 			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE
@@ -639,7 +639,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
 		);
 
-		this.UnownedAssociationTransientCheck = getBoolean(
+		this.unownedAssociationTransientCheck = getBoolean(
 				UNOWNED_ASSOCIATION_TRANSIENT_CHECK,
 				configurationSettings,
 				isJpaBootstrap()
@@ -1279,7 +1279,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public boolean isUnownedAssociationTransientCheck() {
-		return UnownedAssociationTransientCheck;
+		return unownedAssociationTransientCheck;
 	}
 
 	@Override

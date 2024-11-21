@@ -13,7 +13,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -24,8 +23,6 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import org.jboss.jandex.IndexView;
 
 /**
  * Defines a context for things available during the process of bootstrapping
@@ -63,7 +60,7 @@ public interface BootstrapContext {
 	/**
 	 * The {@link BeanInstanceProducer} to use when creating custom type references.
 	 *
-	 * @implNote Usually a {@link org.hibernate.boot.model.TypeBeanInstanceProducer}.
+	 * @implNote Usually a {@link org.hibernate.boot.internal.TypeBeanInstanceProducer}.
 	 */
 	BeanInstanceProducer getCustomTypeProducer();
 
@@ -106,9 +103,8 @@ public interface BootstrapContext {
 	/**
 	 * Access to the shared {@link ClassmateContext} object used
 	 * throughout the bootstrap process.
-	 *
-	 * @return Access to the shared {@link ClassmateContext} delegates.
 	 */
+	@Incubating
 	ClassmateContext getClassmateContext();
 
 	/**
@@ -151,14 +147,14 @@ public interface BootstrapContext {
 
 	/**
 	 * Access to the Jandex index passed by call to
-	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(IndexView)}, if any.
+	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(Object)}, if any.
 	 *
 	 * @apiNote Jandex is currently not used, see
 	 *          <a href="https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0">the roadmap</a>
 	 *
 	 * @return The Jandex index
 	 */
-	IndexView getJandexView();
+	Object getJandexView();
 
 	/**
 	 * Access to any SQL functions explicitly registered with the

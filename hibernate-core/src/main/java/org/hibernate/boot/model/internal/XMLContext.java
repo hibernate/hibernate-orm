@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;

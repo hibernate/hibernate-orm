@@ -16,7 +16,6 @@ import java.util.function.Function;
  * @author Gavin King
  */
 public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
-
 	private final String discriminatorName;
 	private final JavaType<O> domainJavaType;
 	private final JavaType<R> relationalJavaType;
@@ -86,7 +85,7 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		return (R) discriminatorValueDetails.getValue();
 	}
 
-	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm);
+	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue);
 
 	public abstract DiscriminatorValueDetails getDetailsForEntityName(String entityName);
 
@@ -97,5 +96,8 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 
 	public abstract void forEachValueDetail(Consumer<DiscriminatorValueDetails> consumer);
 
+	/**
+	 * Find and return the first DiscriminatorValueDetails which matches the given {@code handler}
+	 */
 	public abstract <X> X fromValueDetails(Function<DiscriminatorValueDetails,X> handler);
 }

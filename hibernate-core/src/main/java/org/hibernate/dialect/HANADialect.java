@@ -13,6 +13,8 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.HANAAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
@@ -49,7 +51,7 @@ import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -66,6 +68,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHA
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -414,6 +417,12 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Prefer XML since JSON was only added later
+		return getVersion().isSameOrAfter( 2 ) ? SqlTypes.XML_ARRAY : super.getPreferredSqlTypeCodeForArray();
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
@@ -490,15 +499,32 @@ public class HANADialect extends Dialect {
 				typeConfiguration
 		);
 
-		// Introduced in 2.0 SPS 02
+		// Introduced in 2.0 SPS 00
 		functionFactory.jsonValue_no_passing();
 		functionFactory.jsonQuery_no_passing();
 		functionFactory.jsonExists_hana();
+
+		functionFactory.unnest_hana();
+		functionFactory.jsonTable_hana();
+
 		// Introduced in 2.0 SPS 04
 		functionFactory.jsonObject_hana();
 		functionFactory.jsonArray_hana();
 		functionFactory.jsonArrayAgg_hana();
 		functionFactory.jsonObjectAgg_hana();
+
+		functionFactory.xmltable_hana();
+
+//		functionFactory.xmlextract();
+		functionFactory.generateSeries_hana( getMaximumSeriesSize() );
+	}
+
+	/**
+	 * HANA doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with the {@code xmltable} and {@code lpad} functions.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
 	}
 
 	@Override
@@ -510,6 +536,11 @@ public class HANADialect extends Dialect {
 				return new HANASqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return HANAAggregateSupport.valueOf( this );
 	}
 
 	/**

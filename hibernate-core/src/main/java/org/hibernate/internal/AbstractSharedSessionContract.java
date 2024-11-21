@@ -25,6 +25,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
@@ -76,6 +77,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryImplementor;
@@ -85,7 +87,6 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
-import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -122,6 +123,7 @@ import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
+import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
 
 /**
  * Base class for implementations of {@link org.hibernate.SharedSessionContract} and
@@ -858,11 +860,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
-		if ( criteria instanceof CriteriaDefinition ) {
-			return ((CriteriaDefinition<R>) criteria).createSelectionQuery(this);
+		if ( criteria instanceof CriteriaDefinition<R> criteriaDefinition ) {
+			return criteriaDefinition.createSelectionQuery(this);
 		}
 		else {
-			SqmUtil.verifyIsSelectStatement( (SqmStatement<?>) criteria, null );
+			verifyIsSelectStatement( (SqmStatement<?>) criteria, null );
 			return new SqmSelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, criteria.getResultType(), this );
 		}
 	}
@@ -940,8 +942,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
 		final NamedResultSetMappingMemento resultSetMappingMemento =
-				getFactory().getQueryEngine().getNamedObjectRepository()
-						.getResultSetMappingMemento( resultSetMappingName );
+				namedObjectRepository().getResultSetMappingMemento( resultSetMappingName );
 		if ( resultSetMappingMemento == null ) {
 			throw new HibernateException( "Could not resolve specified result-set mapping name: "
 					+ resultSetMappingName );
@@ -1048,14 +1049,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
+	private NamedObjectRepository namedObjectRepository() {
+		return getFactory().getQueryEngine().getNamedObjectRepository();
+	}
+
 	private NamedSqmQueryMemento getSqmQueryMemento(String queryName) {
-		return getFactory().getQueryEngine().getNamedObjectRepository()
-				.getSqmQueryMemento( queryName );
+		return namedObjectRepository().getSqmQueryMemento( queryName );
 	}
 
 	private NamedNativeQueryMemento getNativeQueryMemento(String queryName) {
-		return getFactory().getQueryEngine().getNamedObjectRepository()
-				.getNativeQueryMemento( queryName );
+		return namedObjectRepository().getNativeQueryMemento( queryName );
 	}
 
 	private <R> SelectionQuery<R> createNamedNativeSelectionQuery(
@@ -1068,15 +1071,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			NamedSqmQueryMemento memento,
 			Class<R> expectedResultType) {
 		final SqmSelectionQuery<R> selectionQuery = memento.toSelectionQuery( expectedResultType, this );
-		if ( isEmpty( memento.getComment() ) ) {
-			selectionQuery.setComment( "Named query : " + memento.getRegistrationName() );
-		}
-		else {
-			selectionQuery.setComment( memento.getComment() );
-		}
+		final String comment = memento.getComment();
+		selectionQuery.setComment( isEmpty( comment ) ? "Named query : " + memento.getRegistrationName() : comment );
 		applyQuerySettingsAndHints( selectionQuery );
-		if ( memento.getLockOptions() != null ) {
-			selectionQuery.getLockOptions().overlay( memento.getLockOptions() );
+		final LockOptions lockOptions = memento.getLockOptions();
+		if ( lockOptions != null ) {
+			selectionQuery.getLockOptions().overlay( lockOptions );
 		}
 		return selectionQuery;
 	}
@@ -1402,18 +1402,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return exceptionConverter;
 	}
 
+	@Override
 	public Integer getJdbcBatchSize() {
 		return jdbcBatchSize;
 	}
 
 	@Override
-	public EventManager getEventManager() {
-		return fastSessionServices.getEventManager();
+	public void setJdbcBatchSize(Integer jdbcBatchSize) {
+		this.jdbcBatchSize = jdbcBatchSize;
 	}
 
 	@Override
-	public void setJdbcBatchSize(Integer jdbcBatchSize) {
-		this.jdbcBatchSize = jdbcBatchSize;
+	public EventManager getEventManager() {
+		return fastSessionServices.getEventManager();
 	}
 
 	@Override
@@ -1425,8 +1426,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		checkOpen();
-		if ( criteriaQuery instanceof CriteriaDefinition ) {
-			return (QueryImplementor<T>) ((CriteriaDefinition<T>) criteriaQuery).createSelectionQuery(this);
+		if ( criteriaQuery instanceof CriteriaDefinition<T> criteriaDefinition ) {
+			return (QueryImplementor<T>) criteriaDefinition.createSelectionQuery(this);
 		}
 		else {
 			try {

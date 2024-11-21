@@ -91,13 +91,10 @@ public interface Value extends Serializable {
 			final Type[] subtypes = compositeType.getSubtypes();
 			for ( int i = 0; i < subtypes.length; i++ ) {
 				final Type subtype = subtypes[i];
-				final int columnSpan;
-				if ( subtype instanceof EntityType entityType ) {
-					columnSpan = getIdType( entityType ).getColumnSpan( factory );
-				}
-				else {
-					columnSpan = subtype.getColumnSpan( factory );
-				}
+				final int columnSpan =
+						subtype instanceof EntityType entityType
+								? getIdType( entityType ).getColumnSpan( factory )
+								: subtype.getColumnSpan( factory );
 				if ( columnSpan < index ) {
 					index -= columnSpan;
 				}
@@ -114,20 +111,18 @@ public interface Value extends Serializable {
 		else if ( elementType instanceof MetaType metaType ) {
 			return (JdbcMapping) metaType.getBaseType();
 		}
-		return (JdbcMapping) elementType;
+		else {
+			return (JdbcMapping) elementType;
+		}
 	}
 
 	private Type getIdType(EntityType entityType) {
-		final PersistentClass entityBinding = getBuildingContext().getMetadataCollector()
-				.getEntityBinding( entityType.getAssociatedEntityName() );
-		final Type idType;
-		if ( entityType.isReferenceToPrimaryKey() ) {
-			idType = entityBinding.getIdentifier().getType();
-		}
-		else {
-			idType = entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
-		}
-		return idType;
+		final PersistentClass entityBinding =
+				getBuildingContext().getMetadataCollector()
+						.getEntityBinding( entityType.getAssociatedEntityName() );
+		return entityType.isReferenceToPrimaryKey()
+				? entityBinding.getIdentifier().getType()
+				: entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
 	}
 
 	FetchMode getFetchMode();

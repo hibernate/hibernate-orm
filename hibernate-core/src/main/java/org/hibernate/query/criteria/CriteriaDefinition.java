@@ -15,7 +15,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
@@ -467,6 +467,11 @@ public abstract class CriteriaDefinition<R>
 	@Override
 	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
 		return query.from(cte);
+	}
+
+	@Override
+	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
+		return query.from( function );
 	}
 
 	@Override

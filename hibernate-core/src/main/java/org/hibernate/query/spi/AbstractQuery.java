@@ -295,7 +295,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public Query<R> setOrder(List<Order<? super R>> orders) {
+	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
 		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 

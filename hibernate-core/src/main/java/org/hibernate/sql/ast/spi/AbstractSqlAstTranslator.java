@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
@@ -17,7 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -32,10 +32,8 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
+import org.hibernate.engine.spi.LazySessionWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.QuotingHelper;
@@ -45,6 +43,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -61,15 +60,17 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.FrameExclusion;
-import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.FrameMode;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.FrameExclusion;
+import org.hibernate.query.common.FrameKind;
+import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.FunctionRenderer;
@@ -231,7 +232,10 @@ import jakarta.persistence.criteria.Nulls;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.jdbcLiteral;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
-import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.MONTH;
+import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
 
@@ -242,7 +246,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * When emulating the recursive WITH clause subclauses SEARCH and CYCLE,
-	 * we need to build a string path and some database like MySQL require that
+	 * we need to build a string path and some databases like MySQL require that
 	 * we cast the expression to a char with certain size.
 	 * To estimate the size, we need to assume a certain max recursion depth.
 	 */
@@ -400,61 +404,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					.resolve( StandardBasicTypes.BOOLEAN );
 		}
 		return booleanType;
-	}
-
-	/**
-	 * A lazy session implementation that is needed for rendering literals.
-	 * Usually, only the {@link WrapperOptions} interface is needed,
-	 * but for creating LOBs, it might be to have a full-blown session.
-	 */
-	private static class LazySessionWrapperOptions extends AbstractDelegatingWrapperOptions {
-
-		private final SessionFactoryImplementor sessionFactory;
-		private SessionImplementor session;
-
-		public LazySessionWrapperOptions(SessionFactoryImplementor sessionFactory) {
-			this.sessionFactory = sessionFactory;
-		}
-
-		public void cleanup() {
-			if ( session != null ) {
-				session.close();
-				session = null;
-			}
-		}
-
-		@Override
-		protected SessionImplementor delegate() {
-			if ( session == null ) {
-				session = sessionFactory.openTemporarySession();
-			}
-			return session;
-		}
-
-		@Override
-		public SharedSessionContractImplementor getSession() {
-			return delegate();
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
-			return sessionFactory;
-		}
-
-		@Override
-		public boolean useStreamForLobBinding() {
-			return sessionFactory.getFastSessionServices().useStreamForLobBinding();
-		}
-
-		@Override
-		public int getPreferredSqlTypeCodeForBoolean() {
-			return sessionFactory.getFastSessionServices().getPreferredSqlTypeCodeForBoolean();
-		}
-
-		@Override
-		public TimeZone getJdbcTimeZone() {
-			return sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
-		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -5643,7 +5592,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitOverClause( Collections.emptyList(), getSortSpecificationsRowNumbering( selectClause, queryPart ) );
 	}
 
-	protected final boolean isParameter(Expression expression) {
+	public static final boolean isParameter(Expression expression) {
 		return expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation;
 	}
 
@@ -5797,11 +5746,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderCasted( expression );
 			}
 		}
-		else if ( expression instanceof CaseSimpleExpression ) {
-			visitCaseSimpleExpression( (CaseSimpleExpression) expression, true );
+		else if ( expression instanceof CaseSimpleExpression caseSimpleExpression ) {
+			visitCaseSimpleExpression( caseSimpleExpression, true );
 		}
-		else if ( expression instanceof CaseSearchedExpression ) {
-			visitCaseSearchedExpression( (CaseSearchedExpression) expression, true );
+		else if ( expression instanceof CaseSearchedExpression caseSearchedExpression ) {
+			visitCaseSearchedExpression( caseSearchedExpression, true );
 		}
 		else {
 			renderExpressionAsClauseItem( expression );
@@ -5809,8 +5758,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderCasted(Expression expression) {
-		if ( expression instanceof SqmParameterInterpretation ) {
-			expression = ( (SqmParameterInterpretation) expression ).getResolvedExpression();
+		if ( expression instanceof SqmParameterInterpretation parameterInterpretation ) {
+			expression = parameterInterpretation.getResolvedExpression();
 		}
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
@@ -5850,7 +5799,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderCasted( jdbcParameter );
 			}
 			else {
-				appendSql( PARAM_MARKER );
+				jdbcParameter.renderToSql( this, this, sessionFactory );
 			}
 		}
 		else {
@@ -5986,8 +5935,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		processNestedTableGroupJoins( tableGroup, null );
 		processTableGroupJoins( tableGroup );
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof EntityPersister ) {
-			String[] querySpaces = (String[]) ( (EntityPersister) modelPart ).getQuerySpaces();
+		if ( modelPart instanceof EntityPersister persister ) {
+			final String[] querySpaces = (String[]) persister.getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6164,7 +6113,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof EntityPersister persister ) {
-			String[] querySpaces = (String[]) persister.getQuerySpaces();
+			final String[] querySpaces = (String[]) persister.getQuerySpaces();
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
@@ -6219,10 +6168,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( tableReference instanceof NamedTableReference ) {
 			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
 		}
-		final DerivedTableReference derivedTableReference = (DerivedTableReference) tableReference;
-		if ( derivedTableReference.isLateral() ) {
+		renderDerivedTableReference( (DerivedTableReference) tableReference );
+		return false;
+	}
+
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference.isLateral() ) {
 			if ( dialect.supportsLateral() ) {
 				appendSql( "lateral " );
+				tableReference.accept( this );
 			}
 			else if ( tableReference instanceof QueryPartTableReference queryPartTableReference ) {
 				final SelectStatement emulationStatement = stripToSelectClause( queryPartTableReference.getStatement() );
@@ -6261,11 +6215,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						sessionFactory
 				);
 				emulationTableReference.accept( this );
-				return false;
+			}
+			else {
+				// Assume there is no need for a lateral keyword
+				tableReference.accept( this );
 			}
 		}
-		tableReference.accept( this );
-		return false;
+		else {
+			tableReference.accept( this );
+		}
 	}
 
 	protected void inlineCteTableGroup(TableGroup tableGroup, LockMode lockMode) {
@@ -6317,7 +6275,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		append( '(' );
 		visitValuesList( tableReference.getValuesList() );
 		append( ')' );
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
@@ -6330,13 +6288,40 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			tableReference.getStatement().accept( this );
 		}
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
 	public void visitFunctionTableReference(FunctionTableReference tableReference) {
 		tableReference.getFunctionExpression().accept( this );
-		renderDerivedTableReference( tableReference );
+		if ( !tableReference.rendersIdentifierVariable() ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+
+		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
+			if ( dialect.getDefaultOrdinalityColumnName() == null ) {
+				throw new UnsupportedOperationException( "Database does not support the 'with ordinality' syntax for custom set-returning functions" );
+			}
+			appendSql( " with ordinality" );
+		}
+	}
+
+	protected final void renderSimpleNamedFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, SqlAstNodeRenderingMode argumentRenderingMode) {
+		appendSql( functionName );
+		appendSql( '(' );
+		if ( !sqlAstArguments.isEmpty() ) {
+			render( sqlAstArguments.get( 0 ), argumentRenderingMode );
+			for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
+				appendSql( ',' );
+				render( sqlAstArguments.get( i ), argumentRenderingMode );
+			}
+		}
+		appendSql( ')' );
 	}
 
 	protected void emulateQueryPartTableReferenceColumnAliasing(QueryPartTableReference tableReference) {
@@ -6391,7 +6376,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
-	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
 			append( WHITESPACE );
@@ -7319,13 +7304,58 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitDuration(Duration duration) {
-		duration.getMagnitude().accept( this );
-		if ( !duration.getExpressionType().getJdbcMapping().getJdbcType().isInterval() ) {
+		if ( duration.getExpressionType().getJdbcMapping().getJdbcType().isInterval() ) {
+			if ( duration.getMagnitude() instanceof Literal literal ) {
+				renderIntervalLiteral( literal, duration.getUnit() );
+			}
+			else {
+				renderInterval( duration );
+			}
+		}
+		else {
+			duration.getMagnitude().accept( this );
 			// Convert to NANOSECOND because DurationJavaType requires values in that unit
 			appendSql(
 					duration.getUnit().conversionFactor( NANOSECOND, dialect )
 			);
 		}
+	}
+
+	protected void renderInterval(Duration duration) {
+		final TemporalUnit unit = duration.getUnit();
+		appendSql( "(interval '1' " );
+		final TemporalUnit targetResolution = switch ( unit ) {
+			case NANOSECOND -> SECOND;
+			case SECOND, MINUTE, HOUR, DAY, MONTH, YEAR -> unit;
+			case WEEK -> DAY;
+			case QUARTER -> MONTH;
+			case DATE, TIME, EPOCH, DAY_OF_MONTH, DAY_OF_WEEK, DAY_OF_YEAR, WEEK_OF_MONTH, WEEK_OF_YEAR, OFFSET,
+				TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
+					throw new IllegalArgumentException( "Invalid duration unit: " + unit );
+		};
+		appendSql( targetResolution.toString() );
+		appendSql( '*' );
+		duration.getMagnitude().accept( this );
+		appendSql( duration.getUnit().conversionFactor( targetResolution, dialect ) );
+		appendSql( ')' );
+	}
+
+	protected void renderIntervalLiteral(Literal literal, TemporalUnit unit) {
+		final Number value = (Number) literal.getLiteralValue();
+		dialect.appendIntervalLiteral( this, switch ( unit ) {
+			case NANOSECOND -> java.time.Duration.ofNanos( value.longValue() );
+			case SECOND -> java.time.Duration.ofSeconds( value.longValue() );
+			case MINUTE -> java.time.Duration.ofMinutes( value.longValue() );
+			case HOUR -> java.time.Duration.ofHours( value.longValue() );
+			case DAY -> Period.ofDays( value.intValue() );
+			case WEEK -> Period.ofWeeks( value.intValue() );
+			case MONTH -> Period.ofMonths( value.intValue() );
+			case YEAR -> Period.ofYears( value.intValue() );
+			case QUARTER -> Period.ofMonths( value.intValue() * 3 );
+			case DATE, TIME, EPOCH, DAY_OF_MONTH, DAY_OF_WEEK, DAY_OF_YEAR, WEEK_OF_MONTH, WEEK_OF_YEAR, OFFSET,
+				TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
+					throw new IllegalArgumentException( "Invalid duration unit: " + unit );
+		} );
 	}
 
 	@Override

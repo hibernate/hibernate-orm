@@ -250,7 +250,7 @@ public class ManyToOneType extends EntityType {
 		}
 		Object oldid = getIdentifier( old, session );
 		Object newid = getIdentifier( current, session );
-		return getIdentifierType( session ).isDirty( oldid, newid, session );
+		return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, session );
 	}
 
 	@Override
@@ -268,7 +268,7 @@ public class ManyToOneType extends EntityType {
 			}
 			Object oldid = getIdentifier( old, session );
 			Object newid = getIdentifier( current, session );
-			return getIdentifierType( session ).isDirty( oldid, newid, checkable, session );
+			return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, checkable, session );
 		}
 
 	}

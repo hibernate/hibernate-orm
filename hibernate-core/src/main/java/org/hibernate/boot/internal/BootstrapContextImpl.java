@@ -17,7 +17,6 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.model.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -25,6 +24,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -38,7 +38,6 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 /**
@@ -66,7 +65,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private IndexView jandexView;
+	private Object jandexView;
 
 	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
@@ -182,7 +181,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public IndexView getJandexView() {
+	public Object getJandexView() {
 		return jandexView;
 	}
 
@@ -300,7 +299,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.archiveDescriptorFactory = factory;
 	}
 
-	void injectJandexView(IndexView jandexView) {
+	void injectJandexView(Object jandexView) {
 		log.debugf( "Injecting Jandex IndexView [%s] into BootstrapContext; was [%s]", jandexView, this.jandexView );
 		this.jandexView = jandexView;
 	}

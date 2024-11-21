@@ -17,7 +17,7 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.TableMapping;
 
 /**
- * Describes a particular PreparedStatement within a {@linkplain PreparedStatementGroup group}
+ * Describes a particular {@link PreparedStatement} within a {@linkplain PreparedStatementGroup group}
  *
  * @author Steve Ebersole
  */

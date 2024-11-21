@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ImplicitAttributeFetchBuilder;
+import org.hibernate.query.results.internal.implicit.ImplicitAttributeFetchBuilder;
 
 /**
  * @author Steve Ebersole

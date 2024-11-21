@@ -83,7 +83,7 @@ import org.hibernate.type.internal.BasicTypeImpl;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class CustomPersister implements EntityPersister {
+public 	class CustomPersister implements EntityPersister {
 
 	private static final Hashtable<Object,Object> INSTANCES = new Hashtable<>();
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
@@ -132,6 +132,11 @@ public class CustomPersister implements EntityPersister {
 
 	public String getEntityName() {
 		return Custom.class.getName();
+	}
+
+	@Override
+	public @Nullable String getJpaEntityName() {
+		return Custom.class.getSimpleName();
 	}
 
 	@Override
@@ -1175,5 +1180,10 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public String getAttributeMutationTableName(int i) {
 		return "";
+	}
+
+	@Override
+	public boolean managesColumns(String[] columnNames) {
+		return false;
 	}
 }

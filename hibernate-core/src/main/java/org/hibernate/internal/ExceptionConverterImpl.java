@@ -22,6 +22,7 @@ import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.SemanticException;
@@ -62,7 +63,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			catch (Exception re) {
 				//swallow
 			}
-			return new RollbackException( "Error while committing the transaction",
+			return new RollbackException( "Error while committing the transaction [" + exception.getMessage() + "]",
 					exception instanceof HibernateException hibernateException
 							? convert( hibernateException )
 							: exception );
@@ -138,6 +139,11 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			}
 			//Spec 3.2.3 Synchronization rules
 			return new IllegalStateException( exception );
+		}
+		else if ( exception instanceof TransactionSerializationException ) {
+			final PersistenceException converted = new RollbackException( exception.getMessage(), exception );
+			rollbackIfNecessary( converted );
+			return converted;
 		}
 		else {
 			rollbackIfNecessary( exception );

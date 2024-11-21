@@ -9,7 +9,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.17') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
@@ -147,7 +147,12 @@ pipeline {
 
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
-					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
+
+					def matchingFiles = findFiles(glob: "/release_notes.md")
+					env.SCRIPT_OPTIONS = " --notes=${matchingFiles[0]}"
+					if ( params.RELEASE_DRY_RUN ) {
+					    env.SCRIPT_OPTIONS += " -d"
+					}
 
 					// Determine version id to check if Jira version exists
 					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"
@@ -176,6 +181,7 @@ pipeline {
 								// changes the version to the provided development version
 								withEnv([
 										"BRANCH=${env.GIT_BRANCH}",
+										"DISABLE_REMOTE_GRADLE_CACHE=true",
 										// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
 										"GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
 								]) {
@@ -206,7 +212,11 @@ pipeline {
 							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
 								// performs documentation upload and Sonatype release
 								// push to github
-								sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
+								withEnv([
+										"DISABLE_REMOTE_GRADLE_CACHE=true"
+								]) {
+									sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
+								}
 							}
 						}
 					}

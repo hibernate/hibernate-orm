@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -34,7 +33,6 @@ public interface JpaCteContainer extends JpaCriteriaNode {
 	 * which can be used for querying.
 	 *
 	 * @see JpaCriteriaQuery#from(JpaCteCriteria)
-	 * @see JpaFrom#join(JpaCteCriteria, SqmJoinType)
 	 */
 	<T> JpaCteCriteria<T> with(AbstractQuery<T> criteria);
 
@@ -44,7 +42,6 @@ public interface JpaCteContainer extends JpaCriteriaNode {
 	 * so that the recursive {@link CriteriaQuery} is able to refer to the CTE again.
 	 *
 	 * @see JpaCriteriaQuery#from(JpaCteCriteria)
-	 * @see JpaFrom#join(JpaCteCriteria, SqmJoinType)
 	 */
 	<T> JpaCteCriteria<T> withRecursiveUnionAll(AbstractQuery<T> baseCriteria, Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer);
 
@@ -54,7 +51,6 @@ public interface JpaCteContainer extends JpaCriteriaNode {
 	 * so that the recursive {@link CriteriaQuery} is able to refer to the CTE again.
 	 *
 	 * @see JpaCriteriaQuery#from(JpaCteCriteria)
-	 * @see JpaFrom#join(JpaCteCriteria, SqmJoinType)
 	 */
 	<T> JpaCteCriteria<T> withRecursiveUnionDistinct(AbstractQuery<T> baseCriteria, Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer);
 

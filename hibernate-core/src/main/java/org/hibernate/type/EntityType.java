@@ -349,7 +349,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			}
 			else {
 				final Class<?> mappedClass = persister.getMappedClass();
-				if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
+				if ( mappedClass.isInstance( x ) ) {
 					id = persister.getIdentifier( x );
 				}
 				else {
@@ -360,8 +360,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			assert uniqueKeyPropertyName != null;
+			final Object uniqueKey;
 			final Type keyType = persister.getPropertyType( uniqueKeyPropertyName );
-			return keyType.getHashCode( x, factory );
+			if ( keyType.getReturnedClass().isInstance( x ) ) {
+				uniqueKey = x;
+			}
+			else {
+				uniqueKey = persister.getPropertyValue( x, uniqueKeyPropertyName );
+			}
+			return keyType.getHashCode( uniqueKey, factory );
 		}
 	}
 
@@ -376,39 +383,62 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		final EntityPersister persister = getAssociatedEntityPersister( factory );
-		final Class<?> mappedClass = persister.getMappedClass();
-		Object xid;
-		final LazyInitializer lazyInitializerX = extractLazyInitializer( x );
-		if ( lazyInitializerX != null ) {
-			xid = lazyInitializerX.getInternalIdentifier();
-		}
-		else {
-			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				xid = persister.getIdentifier( x );
+		if ( isReferenceToPrimaryKey() ) {
+			final Class<?> mappedClass = persister.getMappedClass();
+			Object xid;
+			final LazyInitializer lazyInitializerX = extractLazyInitializer( x );
+			if ( lazyInitializerX != null ) {
+				xid = lazyInitializerX.getInternalIdentifier();
 			}
 			else {
-				//JPA 2 case where @IdClass contains the id and not the associated entity
-				xid = x;
+				if ( mappedClass.isInstance( x ) ) {
+					xid = persister.getIdentifier( x );
+				}
+				else {
+					//JPA 2 case where @IdClass contains the id and not the associated entity
+					xid = x;
+				}
 			}
-		}
 
-		Object yid;
-		final LazyInitializer lazyInitializerY = extractLazyInitializer( y );
-		if ( lazyInitializerY != null ) {
-			yid = lazyInitializerY.getInternalIdentifier();
-		}
-		else {
-			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
-				yid = persister.getIdentifier( y );
+			Object yid;
+			final LazyInitializer lazyInitializerY = extractLazyInitializer( y );
+			if ( lazyInitializerY != null ) {
+				yid = lazyInitializerY.getInternalIdentifier();
 			}
 			else {
-				//JPA 2 case where @IdClass contains the id and not the associated entity
-				yid = y;
+				if ( mappedClass.isInstance( y ) ) {
+					yid = persister.getIdentifier( y );
+				}
+				else {
+					//JPA 2 case where @IdClass contains the id and not the associated entity
+					yid = y;
+				}
 			}
-		}
 
-		// Check for reference equality first as the type-specific checks by IdentifierType are sometimes non-trivial
-		return ( xid == yid ) || persister.getIdentifierType().isEqual( xid, yid, factory );
+			// Check for reference equality first as the type-specific checks by IdentifierType are sometimes non-trivial
+			return (xid == yid) || persister.getIdentifierType().isEqual( xid, yid, factory );
+		}
+		else {
+			assert uniqueKeyPropertyName != null;
+			final Object xUniqueKey;
+			final Type keyType = persister.getPropertyType( uniqueKeyPropertyName );
+			if ( keyType.getReturnedClass().isInstance( x ) ) {
+				xUniqueKey = x;
+			}
+			else {
+				xUniqueKey = persister.getPropertyValue( x, uniqueKeyPropertyName );
+			}
+
+			final Object yUniqueKey;
+			if ( keyType.getReturnedClass().isInstance( y ) ) {
+				yUniqueKey = y;
+			}
+			else {
+				yUniqueKey = persister.getPropertyValue( y, uniqueKeyPropertyName );
+			}
+			return (xUniqueKey == yUniqueKey)
+					|| keyType.isEqual( xUniqueKey, yUniqueKey, factory );
+		}
 	}
 
 	/**

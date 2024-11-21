@@ -4,30 +4,7 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -101,8 +78,8 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -120,6 +97,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
+import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
@@ -165,7 +143,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -181,7 +158,6 @@ import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
@@ -192,6 +168,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SimpleAttributeMetadata;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
+import org.hibernate.metamodel.mapping.internal.UnifiedAnyDiscriminatorConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -284,7 +261,29 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -300,6 +299,7 @@ import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
+import static org.hibernate.internal.util.collections.ArrayHelper.isAllTrue;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toObjectArray;
@@ -337,6 +337,7 @@ public abstract class AbstractEntityPersister
 	private final EntityEntryFactory entityEntryFactory;
 
 	private final String sqlAliasStem;
+	private final String jpaEntityName;
 
 	private SingleIdEntityLoader<?> singleIdLoader;
 	private MultiIdEntityLoader<?> multiIdLoader;
@@ -473,6 +474,7 @@ public abstract class AbstractEntityPersister
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
+		this.jpaEntityName = persistentClass.getJpaEntityName();
 
 		//set it here, but don't call it, since it's still uninitialized!
 		factory = creationContext.getSessionFactory();
@@ -853,13 +855,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected MultiIdEntityLoader<Object> buildMultiIdLoader() {
-		if ( getIdentifierType() instanceof BasicType
-				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
-			return new MultiIdEntityLoaderArrayParam<>( this, factory );
-		}
-		else {
-			return new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
-		}
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		return getIdentifierType() instanceof BasicType && supportsSqlArrayType( dialect )
+				? new MultiIdEntityLoaderArrayParam<>( this, factory )
+				: new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
@@ -2279,11 +2278,12 @@ public abstract class AbstractEntityPersister
 		}
 
 		//noinspection rawtypes
-		final DiscriminatorConverter converter = MappedDiscriminatorConverter.fromValueMappings(
+		final DiscriminatorConverter converter = new UnifiedAnyDiscriminatorConverter<>(
 				getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 				domainJavaType,
-				underlingJdbcMapping,
+				underlingJdbcMapping.getRelationalJavaType(),
 				getSubclassByDiscriminatorValue(),
+				null,
 				factory.getMappingMetamodel()
 		);
 
@@ -3777,6 +3777,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public @Nullable String getJpaEntityName() {
+		return jpaEntityName;
+	}
+
+	@Override
 	public boolean isInherited() {
 		return entityMetamodel.isInherited();
 	}
@@ -4355,14 +4360,11 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().getGenerator().allowAssignedIdentifiers() ) {
-			return;
+		if ( !getGenerator().allowAssignedIdentifiers() ) {
+			// reset the identifier
+			final Object defaultIdentifier = identifierMapping.getUnsavedStrategy().getDefaultValue( currentId );
+			setIdentifier( entity, defaultIdentifier, session );
 		}
-
-		// reset the identifier
-		final Object defaultIdentifier = identifierMapping.getUnsavedStrategy().getDefaultValue( currentId );
-		setIdentifier( entity, defaultIdentifier, session );
-
 		// reset the version
 		if ( versionMapping != null ) {
 			final Object defaultVersion = versionMapping.getUnsavedStrategy().getDefaultValue( currentVersion );
@@ -4618,8 +4620,20 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String determineTableName(Table table) {
-		return MappingModelCreationHelper.getTableIdentifierExpression( table, factory );
+		if ( table.getSubselect() != null ) {
+			final SQLQueryParser sqlQueryParser = new SQLQueryParser(
+					table.getSubselect(),
+					null,
+					// NOTE : this allows finer control over catalog and schema used for placeholder
+					// handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
+					new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
+			);
+			return "( " + sqlQueryParser.process() + " )";
+		}
+
+		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
+
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
@@ -6191,5 +6205,29 @@ public abstract class AbstractEntityPersister
 
 	protected String getSqlWhereStringTableExpression(){
 		return sqlWhereStringTableExpression;
+	}
+
+	@Override
+	public boolean managesColumns(String[] columnNames) {
+		for (String columnName : columnNames) {
+			if ( !writesToColumn( columnName ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean writesToColumn(String columnName) {
+		if ( contains( rootTableKeyColumnNames, columnName ) ) {
+			return true;
+		}
+		for ( int i = 0; i < propertyColumnNames.length; i++ ) {
+			if ( contains( propertyColumnNames[i], columnName )
+					&& isAllTrue( propertyColumnInsertable[i] )
+					&& isAllTrue( propertyColumnUpdateable[i] ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

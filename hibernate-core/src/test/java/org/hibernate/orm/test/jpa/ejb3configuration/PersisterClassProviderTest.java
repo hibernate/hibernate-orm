@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -169,6 +170,11 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public String getEntityName() {
+			return null;
+		}
+
+		@Override
+		public @Nullable String getJpaEntityName() {
 			return null;
 		}
 
@@ -1067,6 +1073,11 @@ public class PersisterClassProviderTest {
 		@Override
 		public String getAttributeMutationTableName(int i) {
 			return "";
+		}
+
+		@Override
+		public boolean managesColumns(String[] columnNames) {
+			return false;
 		}
 	}
 

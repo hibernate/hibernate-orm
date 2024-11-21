@@ -25,6 +25,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
@@ -58,9 +60,9 @@ import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.SQLServerCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -82,7 +84,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
-import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -94,7 +95,7 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CLOB;
@@ -116,6 +117,7 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -268,6 +270,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return XML_ARRAY;
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -329,8 +336,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				Types.TINYINT,
 				TinyIntAsSmallIntJdbcType.INSTANCE
 		);
-		typeContributions.contributeJdbcType( XmlJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( SQLServerCastingXmlJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( UUIDJdbcType.INSTANCE );
+		typeContributions.contributeJdbcTypeConstructor( SQLServerCastingXmlArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override
@@ -430,6 +438,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
 			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
 			functionFactory.jsonArrayInsert_sqlserver();
+			functionFactory.jsonTable_sqlserver();
 		}
 		functionFactory.xmlelement_sqlserver();
 		functionFactory.xmlcomment_sqlserver();
@@ -439,6 +448,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.xmlquery_sqlserver();
 		functionFactory.xmlexists_sqlserver();
 		functionFactory.xmlagg_sqlserver();
+		functionFactory.xmltable_sqlserver();
+
+		functionFactory.unnest_sqlserver();
+
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
 			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
@@ -448,6 +461,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			functionFactory.leastGreatest();
 			functionFactory.dateTrunc_datetrunc();
 			functionFactory.trunc_round_datetrunc();
+			functionFactory.generateSeries_sqlserver( getMaximumSeriesSize() );
 		}
 		else {
 			functionContributions.getFunctionRegistry().register(
@@ -455,6 +469,24 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					new SqlServerConvertTruncFunction( functionContributions.getTypeConfiguration() )
 			);
 			functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+			if ( supportsRecursiveCTE() ) {
+				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+			}
+		}
+	}
+
+	/**
+	 * SQL Server doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
+			return 10000;
+		}
+		else {
+			// The maximum recursion depth of SQL Server
+			return 100;
 		}
 	}
 
@@ -479,6 +511,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return new SQLServerSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SQLServerAggregateSupport.valueOf( this );
 	}
 
 	@Override

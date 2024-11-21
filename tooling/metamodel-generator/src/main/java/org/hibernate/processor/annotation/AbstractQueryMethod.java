@@ -109,7 +109,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		String type = fullType;
 		// strip off type annotations
 		while ( type.charAt(0) == '@' ) {
-			int startIndex = type.indexOf( ' ' );
+			int startIndex = type.lastIndexOf( ' ' );
 			if ( startIndex > 0 ) {
 				type = type.substring(startIndex+1);
 			}
@@ -500,16 +500,18 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 					declaration
 							.append("\t_orders.add(")
-							.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+							.append(annotationMetaEntity.staticImport(HIB_ORDER, orderBy.descending  ? "desc" : "asc"))
 							.append('(')
 							.append(annotationMetaEntity.importType(returnTypeName))
 							.append(".class, \"")
 							.append(orderBy.fieldName)
-							.append("\", ")
-							.append(orderBy.descending ? "DESCENDING" : "ASCENDING")
-							.append(", ")
-							.append(orderBy.ignoreCase)
-							.append("));\n");
+							.append("\")");
+					if ( orderBy.ignoreCase ) {
+						declaration
+								.append("\n\t.ignoringCase()");
+					}
+					declaration
+							.append(");\n");
 
 				}
 				for (int i = 0; i < paramTypes.size(); i++) {
@@ -542,14 +544,14 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append(name)
 								.append(".sorts()) {\n")
 								.append("\t\t_orders.add(")
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
-								.append(".class, _sort.property(),")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.ignoreCase()));\n")
+								.append(".class, _sort.property())")
+								.append("\n\t\t\t\t\t")
+								.append(".reversedIf(_sort.isDescending())")
+								.append("\n\t\t\t\t\t")
+								.append(".ignoringCaseIf(_sort.ignoreCase()));\n")
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(JD_SORT) && type.endsWith("...") ) {
@@ -560,30 +562,32 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append(name)
 								.append(") {\n")
 								.append("\t\t_orders.add(")
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
-								.append(".class, _sort.property(),")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.ignoreCase()));\n")
+								.append(".class, _sort.property())")
+								.append("\n\t\t\t\t\t")
+								.append(".reversedIf(_sort.isDescending())")
+								.append("\n\t\t\t\t\t")
+								.append(".ignoringCaseIf(_sort.ignoreCase()));\n")
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(JD_SORT) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
 								.append("\t_orders.add(")
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
 								.append(".class, ")
 								.append(name)
-								.append(".property(),")
-								.append("\n\t\t\t\t\t\t")
+								.append(".property())")
+								.append("\n\t\t\t\t\t")
+								.append(".reversedIf(")
 								.append(name)
-								.append(".isAscending() ? ASCENDING : DESCENDING,")
-								.append("\n\t\t\t\t\t\t")
+								.append(".isDescending())")
+								.append("\n\t\t\t\t\t")
+								.append(".ignoringCaseIf(")
 								.append(name)
 								.append(".ignoreCase()));\n");
 					}

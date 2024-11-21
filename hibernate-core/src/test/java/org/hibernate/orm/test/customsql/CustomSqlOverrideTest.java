@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
@@ -82,7 +83,7 @@ public class CustomSqlOverrideTest {
 	static class Custom {
 		@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
-		@Generated
+		@Generated @Immutable
 		String uid;
 		String whatever;
 	}

@@ -67,7 +67,7 @@ public enum CollectionClassification {
 	 * as {@link java.util.Set}.
 	 *
 	 * @see jakarta.persistence.OrderBy
-	 * @see org.hibernate.annotations.OrderBy
+	 * @see org.hibernate.annotations.SQLOrder
 	 */
 	ORDERED_SET( PluralAttribute.CollectionType.SET, false ),
 
@@ -93,7 +93,7 @@ public enum CollectionClassification {
 	 * as {@link java.util.Map}.
 	 *
 	 * @see jakarta.persistence.OrderBy
-	 * @see org.hibernate.annotations.OrderBy
+	 * @see org.hibernate.annotations.SQLOrder
 	 */
 	ORDERED_MAP( PluralAttribute.CollectionType.MAP, true );
 

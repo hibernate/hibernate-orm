@@ -1,0 +1,143 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.results.internal.complete;
+
+import jakarta.persistence.AttributeConverter;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
+import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.internal.ResultsHelper;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.Objects;
+
+import static org.hibernate.query.results.internal.ResultsHelper.impl;
+
+/**
+ * ResultBuilder for scalar results defined via:<ul>
+ *     <li>JPA {@link jakarta.persistence.ColumnResult}</li>
+ *     <li>`&lt;return-scalar/&gt;` as part of a `&lt;resultset/&gt;` stanza in `hbm.xml`</li>
+ * </ul>
+ *
+ * @author Steve Ebersole
+ */
+public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteResultBuilderBasicValued {
+	private final String explicitColumnName;
+	private final BasicValuedMapping underlyingMapping;
+	private final JpaAttributeConverterImpl<O, R> valueConverter;
+
+	public CompleteResultBuilderBasicValuedConverted(
+			String explicitColumnName,
+			ManagedBean<? extends AttributeConverter<O, R>> converterBean,
+			JavaType<? extends AttributeConverter<O, R>> converterJtd,
+			BasicJavaType<O> domainJavaType,
+			BasicValuedMapping underlyingMapping) {
+		this.explicitColumnName = explicitColumnName;
+		this.underlyingMapping = underlyingMapping;
+		//noinspection unchecked,rawtypes
+		this.valueConverter = new JpaAttributeConverterImpl<>(
+				converterBean,
+				converterJtd,
+				domainJavaType,
+				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor()
+		);
+	}
+
+	@Override
+	public Class<?> getJavaType() {
+		return valueConverter.getDomainJavaType().getJavaTypeClass();
+	}
+
+	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
+	public BasicResult<?> buildResult(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			int resultPosition,
+			DomainResultCreationState domainResultCreationState) {
+		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
+
+		final String columnName;
+		if ( explicitColumnName != null ) {
+			columnName = explicitColumnName;
+		}
+		else {
+			columnName = jdbcResultsMetadata.resolveColumnName( creationStateImpl.getNumberOfProcessedSelections() + 1 );
+		}
+
+		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
+				creationStateImpl.resolveSqlExpression(
+						SqlExpressionResolver.createColumnReferenceKey( columnName ),
+						processingState -> {
+							final int jdbcPosition;
+							if ( explicitColumnName != null ) {
+								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
+							}
+							else {
+								jdbcPosition = resultPosition + 1;
+							}
+
+							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+							return new ResultSetMappingSqlSelection( valuesArrayPosition, underlyingMapping );
+						}
+				),
+				valueConverter.getRelationalJavaType(),
+				null,
+				sessionFactory.getTypeConfiguration()
+		);
+
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				columnName,
+				valueConverter.getDomainJavaType(),
+				valueConverter,
+				null,
+				false,
+				false
+		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		CompleteResultBuilderBasicValuedConverted<?, ?> that = (CompleteResultBuilderBasicValuedConverted<?, ?>) o;
+
+		if ( !Objects.equals( explicitColumnName, that.explicitColumnName ) ) {
+			return false;
+		}
+		if ( !underlyingMapping.equals( that.underlyingMapping ) ) {
+			return false;
+		}
+		return valueConverter.equals( that.valueConverter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = explicitColumnName != null ? explicitColumnName.hashCode() : 0;
+		result = 31 * result + underlyingMapping.hashCode();
+		result = 31 * result + valueConverter.hashCode();
+		return result;
+	}
+}

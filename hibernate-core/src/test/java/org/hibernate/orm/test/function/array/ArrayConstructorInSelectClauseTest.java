@@ -33,6 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		})
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayConstructor.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayConstructorInSelectClauseTest {

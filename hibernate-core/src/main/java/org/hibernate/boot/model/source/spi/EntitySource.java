@@ -10,7 +10,6 @@ import java.util.Map;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.model.CustomSql;
-import org.hibernate.boot.model.TruthValue;
 
 /**
  * Contract describing source of information related to mapping an entity.
@@ -146,7 +145,4 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	List<JaxbHbmNamedQueryType> getNamedQueries();
 
 	List<JaxbHbmNamedNativeQueryType> getNamedNativeQueries();
-
-	TruthValue quoteIdentifiersLocalToEntity();
-
 }

@@ -14,6 +14,7 @@ import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
@@ -28,9 +29,9 @@ import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 
 /**
- * Represents a LogicalConnection where we manage obtaining and releasing the Connection as needed.
+ * Represents a {@link LogicalConnection} where we manage obtaining and releasing the {@link Connection} as needed.
  * This implementation does not claim to be thread-safe and is not designed to be used by multiple
- * threads, yet we do apply a limited amount of care to be able to void obscure exceptions when
+ * threads, yet we do apply a limited amount of care to be able to avoid obscure exceptions when
  * this class is used in the wrong way.
  *
  * @author Steve Ebersole

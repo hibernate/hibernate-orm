@@ -235,9 +235,9 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateableNaturalIdProperty = false;
 		BeforeExecutionGenerator tempVersionGenerator = null;
 
-		List<Property> props = persistentClass.getPropertyClosure();
+		final List<Property> props = persistentClass.getPropertyClosure();
 		for ( int i=0; i<props.size(); i++ ) {
-			Property property = props.get(i);
+			final Property property = props.get(i);
 			final NonIdentifierAttribute attribute;
 			if ( property == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
@@ -310,9 +310,11 @@ public class EntityMetamodel implements Serializable {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 			final Generator generator = buildGenerator( name, property, creationContext );
 			if ( generator != null ) {
-				if ( i == tempVersionProperty && !generator.generatedOnExecution() ) {
+				final boolean generatedOnExecution = generator.generatedOnExecution();
+				if ( i == tempVersionProperty && !generatedOnExecution ) {
 					// when we have an in-memory generator for the version, we
 					// want to plug it in to the older infrastructure specific
 					// to version generation, instead of treating it like a
@@ -321,31 +323,33 @@ public class EntityMetamodel implements Serializable {
 				}
 				else {
 					generators[i] = generator;
-					if ( generatedWithNoParameter( generator ) ) {
-						propertyInsertability[i] = false;
-						propertyUpdateability[i] = false;
+					final boolean allowMutation = generator.allowMutation();
+					if ( !allowMutation ) {
+						propertyCheckability[i] = false;
 					}
 					if ( generator.generatesOnInsert() ) {
-						if ( generator.generatedOnExecution() ) {
-							foundPostInsertGeneratedValues = true;
-							if ( generator instanceof BeforeExecutionGenerator ) {
-								foundPreInsertGeneratedValues = true;
-							}
+						if ( generatedOnExecution ) {
+							propertyInsertability[i] = writePropertyValue( (OnExecutionGenerator) generator );
 						}
-						else {
-							foundPreInsertGeneratedValues = true;
-						}
+						foundPostInsertGeneratedValues = foundPostInsertGeneratedValues
+								|| generator instanceof OnExecutionGenerator;
+						foundPreInsertGeneratedValues = foundPreInsertGeneratedValues
+								|| generator instanceof BeforeExecutionGenerator;
+					}
+					else if ( !allowMutation ) {
+						propertyInsertability[i] = false;
 					}
 					if ( generator.generatesOnUpdate() ) {
-						if ( generator.generatedOnExecution() ) {
-							foundPostUpdateGeneratedValues = true;
-							if ( generator instanceof BeforeExecutionGenerator ) {
-								foundPreUpdateGeneratedValues = true;
-							}
+						if ( generatedOnExecution ) {
+							propertyUpdateability[i] = writePropertyValue( (OnExecutionGenerator) generator );
 						}
-						else {
-							foundPreUpdateGeneratedValues = true;
-						}
+						foundPostUpdateGeneratedValues = foundPostUpdateGeneratedValues
+								|| generator instanceof OnExecutionGenerator;
+						foundPreUpdateGeneratedValues = foundPreUpdateGeneratedValues
+								|| generator instanceof BeforeExecutionGenerator;
+					}
+					else if ( !allowMutation ) {
+						propertyUpdateability[i] = false;
 					}
 				}
 			}
@@ -470,6 +474,15 @@ public class EntityMetamodel implements Serializable {
 //		entityNameByInheritanceClassMap = toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
+	private static boolean writePropertyValue(OnExecutionGenerator generator) {
+		final boolean writePropertyValue = generator.writePropertyValue();
+		// TODO: move this validation somewhere else!
+//		if ( !writePropertyValue && generator instanceof BeforeExecutionGenerator ) {
+//			throw new HibernateException( "BeforeExecutionGenerator returned false from OnExecutionGenerator.writePropertyValue()" );
+//		}
+		return writePropertyValue;
+	}
+
 	private Generator buildIdGenerator(PersistentClass persistentClass, RuntimeModelCreationContext creationContext) {
 		final Generator existing = creationContext.getGenerators().get( rootName );
 		if ( existing != null ) {
@@ -509,11 +522,6 @@ public class EntityMetamodel implements Serializable {
 
 	private String propertyName(Property property) {
 		return getName() + "." + property.getName();
-	}
-
-	private static boolean generatedWithNoParameter(Generator generator) {
-		return generator.generatedOnExecution()
-			&& !((OnExecutionGenerator) generator).writePropertyValue();
 	}
 
 	private static Generator buildGenerator(

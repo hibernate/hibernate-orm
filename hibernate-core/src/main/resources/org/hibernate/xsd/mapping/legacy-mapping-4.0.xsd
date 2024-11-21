@@ -9,7 +9,7 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns="http://www.hibernate.org/xsd/orm/hbm"
            xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
-           xmlns:simplify="http://jaxb2-commons.dev.java.net/basic/simplify"
+           xmlns:simplify="http://jvnet.org/basicjaxb/xjc/simplify"
            targetNamespace="http://www.hibernate.org/xsd/orm/hbm"
            elementFormDefault="qualified"
            jaxb:extensionBindingPrefixes="simplify"

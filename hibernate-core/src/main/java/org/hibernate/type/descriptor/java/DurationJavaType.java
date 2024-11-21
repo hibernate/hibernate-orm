@@ -112,12 +112,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 			return null;
 		}
 
-		if (value instanceof Duration) {
-			return (Duration) value;
+		if (value instanceof Duration duration) {
+			return duration;
 		}
 
-		if (value instanceof BigDecimal) {
-			final BigDecimal decimal = (BigDecimal) value;
+		if ( value instanceof BigDecimal decimal ) {
 			final BigDecimal[] secondsAndNanos = decimal.divideAndRemainder( BILLION );
 			return Duration.ofSeconds(
 					secondsAndNanos[0].longValueExact(),
@@ -129,17 +128,17 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 			);
 		}
 
-		if (value instanceof Double) {
+		if (value instanceof Double doubleValue) {
 			// PostgreSQL returns a Double for datediff(epoch)
-			return Duration.ofNanos( ( (Double) value ).longValue() );
+			return Duration.ofNanos( doubleValue.longValue() );
 		}
 
-		if (value instanceof Long) {
-			return Duration.ofNanos( (Long) value );
+		if (value instanceof Long longValue) {
+			return Duration.ofNanos( longValue );
 		}
 
-		if (value instanceof String) {
-			return Duration.parse( (String) value );
+		if (value instanceof String string) {
+			return Duration.parse( string );
 		}
 
 		throw unknownWrap( value.getClass() );

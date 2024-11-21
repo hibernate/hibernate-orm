@@ -21,8 +21,6 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.UnknownEntityTypeException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -60,6 +58,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.derived.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.derived.AnonymousTupleSqmPathSource;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -103,8 +102,6 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	//NOTE: we suppress deprecation warnings because at the moment we
 	//implement a deprecated API so have to override deprecated things
 
-	private static final String[] EMPTY_IMPLEMENTORS = EMPTY_STRING_ARRAY;
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JpaMetamodel
 
@@ -144,22 +141,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	//
 	// To account for this, we track both paradigms here...
 
-	/*
-	 * There can be multiple instances of an Embeddable type, each one being relative to its parent entity.
-	 */
+	// There can be multiple instances of an Embeddable type, each one being relative to its parent entity.
 
-	/**
-	 * That's not strictly correct in the JPA standard since for a given Java type we could have
-	 * multiple instances of an embeddable type. Some embeddable might override attributes, but we
-	 * can only return a single EmbeddableTypeImpl for a given Java object class.
-	 * <p>
-	 * A better approach would be if the parent class and attribute name would be included as well
-	 * when trying to locate the embeddable type.
-	 */
-//	private final Map<Class<?>, EmbeddableDomainType<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 	private final Map<TupleType<?>, MappingModelExpressible<?>> tupleTypeCache = new ConcurrentHashMap<>();
 
 	public MappingMetamodelImpl(TypeConfiguration typeConfiguration, ServiceRegistry serviceRegistry) {
@@ -195,7 +178,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// after *all* persisters and named queries are registered
 
-		MappingModelCreationProcess.process( entityPersisterMap, context );
+		MappingModelCreationProcess.process( entityPersisterMap, collectionPersisterMap, context );
 
 		for ( EntityPersister persister : entityPersisterMap.values() ) {
 			persister.postInstantiate();
@@ -369,7 +352,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		}
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval=true) @SuppressWarnings( "removal" )
 	public Stream<EntityPersister> streamEntityDescriptors() {
 		return Arrays.stream( entityPersisterMap.values() );
 	}
@@ -429,7 +412,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		return entityPersister;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true) @SuppressWarnings( "removal" )
 	public EntityPersister locateEntityDescriptor(Class<?> byClass) {
 		EntityPersister entityPersister = entityPersisterMap.get( byClass.getName() );
 		if ( entityPersister == null ) {
@@ -541,43 +524,6 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		return jpaMetamodel.enumValue( enumType, enumValueName );
 	}
 
-	public String[] getImplementors(String className) throws MappingException {
-		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so
-		// let's do an optimistic check first
-		String[] implementors = implementorsCache.get( className );
-		if ( implementors != null ) {
-			return Arrays.copyOf( implementors, implementors.length );
-		}
-
-		try {
-			final Class<?> clazz =
-					jpaMetamodel.getServiceRegistry().requireService( ClassLoaderService.class )
-							.classForName( className );
-			implementors = doGetImplementors( clazz );
-			if ( implementors.length > 0 ) {
-				implementorsCache.putIfAbsent( className, implementors );
-				return Arrays.copyOf( implementors, implementors.length );
-			}
-			else {
-				return EMPTY_IMPLEMENTORS;
-			}
-		}
-		catch (ClassLoadingException e) {
-			return new String[] { className }; // we don't cache anything for dynamic classes
-		}
-	}
-
-
-
-	@Override
-	public EntityPersister locateEntityPersister(String byName) {
-		final EntityPersister entityPersister = entityPersisterMap.get( byName );
-		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate persister: " + byName );
-		}
-		return entityPersister;
-	}
-
 	@Override
 	public String getImportedName(String name) {
 		final String qualifiedName = jpaMetamodel.qualifyImportableName( name );
@@ -589,7 +535,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		collectionPersisterMap.values().forEach( action );
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval=true) @SuppressWarnings( "removal" )
 	public Stream<CollectionPersister> streamCollectionDescriptors() {
 		return collectionPersisterMap.values().stream();
 	}
@@ -742,7 +688,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
 		}
 
-		if ( sqmExpressible instanceof BasicSqmPathSource<?> ) {
+		if ( sqmExpressible instanceof BasicSqmPathSource<?>
+				|| sqmExpressible instanceof AnonymousTupleSimpleSqmPathSource<?> ) {
 			return resolveMappingExpressible( sqmExpressible.getSqmType(), tableGroupLocator );
 		}
 
@@ -844,10 +791,5 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	@Override
 	public String[] getAllCollectionRoles() {
 		return ArrayHelper.toStringArray( collectionPersisterMap.keySet() );
-	}
-
-	@Override
-	public void close() {
-		// anything to do ?
 	}
 }

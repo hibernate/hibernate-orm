@@ -15,7 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.orm.junit.JiraKey;

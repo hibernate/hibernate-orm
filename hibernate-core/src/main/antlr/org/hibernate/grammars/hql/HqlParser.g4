@@ -14,12 +14,6 @@ options {
 package org.hibernate.grammars.hql;
 }
 
-@members {
-	protected void logUseOfReservedWordAsIdentifier(Token token) {
-	}
-}
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Statements
 
@@ -225,6 +219,7 @@ entityWithJoins
 fromRoot
 	: entityName variable?							# RootEntity
 	| LEFT_PAREN subquery RIGHT_PAREN variable?		# RootSubquery
+	| setReturningFunction variable?				# RootFunction
 	;
 
 /**
@@ -275,8 +270,9 @@ joinType
  * The joined path, with an optional identification variable
  */
 joinTarget
-	: path variable?										#JoinPath
-	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	#JoinSubquery
+	: path variable?										# JoinPath
+	| LATERAL? LEFT_PAREN subquery RIGHT_PAREN variable?	# JoinSubquery
+	| LATERAL? setReturningFunction variable?				# JoinFunction
 	;
 
 /**
@@ -1114,6 +1110,19 @@ function
 	| genericFunction
 	;
 
+setReturningFunction
+	: simpleSetReturningFunction
+	| jsonTableFunction
+	| xmltableFunction
+	;
+
+/**
+ * A simple set returning function invocation without special syntax.
+ */
+simpleSetReturningFunction
+	: identifier LEFT_PAREN genericFunctionArguments? RIGHT_PAREN
+	;
+
 /**
  * A syntax for calling user-defined or native database functions, required by JPQL
  */
@@ -1648,7 +1657,7 @@ jsonValueReturningClause
 	;
 
 jsonValueOnErrorOrEmptyClause
-	: ( ERROR | NULL | ( DEFAULT expression ) ) ON (ERROR|EMPTY)
+	: (ERROR | NULL | DEFAULT expression) ON (ERROR | EMPTY)
 	;
 
 /**
@@ -1659,12 +1668,13 @@ jsonQueryFunction
 	;
 
 jsonQueryWrapperClause
-	: WITH (CONDITIONAL|UNCONDITIONAL)? ARRAY? WRAPPER
+	: WITH (CONDITIONAL | UNCONDITIONAL)? ARRAY? WRAPPER
 	| WITHOUT ARRAY? WRAPPER
 	;
 
 jsonQueryOnErrorOrEmptyClause
-	: ( ERROR | NULL | ( EMPTY ( ARRAY | OBJECT )? ) ) ON (ERROR|EMPTY);
+	: (ERROR | NULL | EMPTY (ARRAY | OBJECT)?) ON (ERROR | EMPTY)
+	;
 
 /**
  * The 'json_exists()' function
@@ -1674,7 +1684,8 @@ jsonExistsFunction
 	;
 
 jsonExistsOnErrorClause
-	: ( ERROR | TRUE | FALSE ) ON ERROR;
+	: (ERROR | TRUE | FALSE) ON ERROR
+	;
 
 /**
  * The 'json_array()' function
@@ -1692,11 +1703,12 @@ jsonObjectFunction
 
 jsonObjectFunctionEntries
 	: expressionOrPredicate COMMA expressionOrPredicate (COMMA expressionOrPredicate COMMA expressionOrPredicate)*
-	| (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate) (COMMA (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate))*
+	| (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate)
+	  (COMMA (KEY? expressionOrPredicate VALUE expressionOrPredicate | expressionOrPredicate COLON expressionOrPredicate))*
 	;
 
 jsonNullClause
-	: (ABSENT|NULL) ON NULL
+	: (ABSENT | NULL) ON NULL
 	;
 
 /**
@@ -1710,12 +1722,36 @@ jsonArrayAggFunction
  * The 'json_objectagg()' function
  */
 jsonObjectAggFunction
-	: JSON_OBJECTAGG LEFT_PAREN KEY? expressionOrPredicate (VALUE|COLON) expressionOrPredicate jsonNullClause? jsonUniqueKeysClause? RIGHT_PAREN filterClause?
+	: JSON_OBJECTAGG LEFT_PAREN KEY? expressionOrPredicate (VALUE | COLON) expressionOrPredicate jsonNullClause? jsonUniqueKeysClause? RIGHT_PAREN filterClause?
 	;
 
 jsonUniqueKeysClause
-	: (WITH|WITHOUT) UNIQUE KEYS
+	: (WITH | WITHOUT) UNIQUE KEYS
 	;
+
+jsonTableFunction
+	: JSON_TABLE LEFT_PAREN expression (COMMA expression)? jsonPassingClause? jsonTableColumnsClause jsonTableErrorClause? RIGHT_PAREN
+	;
+
+jsonTableErrorClause
+	: (ERROR | NULL) ON ERROR
+	;
+
+jsonTableColumnsClause
+    : COLUMNS LEFT_PAREN jsonTableColumns RIGHT_PAREN
+    ;
+
+jsonTableColumns
+    : jsonTableColumn (COMMA jsonTableColumn)*
+    ;
+
+jsonTableColumn
+    : NESTED PATH? STRING_LITERAL jsonTableColumnsClause                                                                            # JsonTableNestedColumn
+    | identifier JSON jsonQueryWrapperClause? (PATH STRING_LITERAL)? jsonQueryOnErrorOrEmptyClause? jsonQueryOnErrorOrEmptyClause?  # JsonTableQueryColumn
+    | identifier FOR ORDINALITY                                                                                                     # JsonTableOrdinalityColumn
+    | identifier EXISTS (PATH STRING_LITERAL)? jsonExistsOnErrorClause?                                                             # JsonTableExistsColumn
+    | identifier castTarget (PATH STRING_LITERAL)? jsonValueOnErrorOrEmptyClause? jsonValueOnErrorOrEmptyClause?                    # JsonTableValueColumn
+    ;
 
 xmlFunction
 	: xmlelementFunction
@@ -1775,6 +1811,24 @@ xmlaggFunction
 	: XMLAGG LEFT_PAREN expression orderByClause? RIGHT_PAREN filterClause? overClause?
 	;
 
+xmltableFunction
+	: XMLTABLE LEFT_PAREN expression PASSING expression xmltableColumnsClause RIGHT_PAREN
+	;
+
+xmltableColumnsClause
+    : COLUMNS xmltableColumn (COMMA xmltableColumn)*
+    ;
+
+xmltableColumn
+    : identifier XML (PATH STRING_LITERAL)? xmltableDefaultClause?          # XmlTableQueryColumn
+    | identifier FOR ORDINALITY                                             # XmlTableOrdinalityColumn
+    | identifier castTarget (PATH STRING_LITERAL)? xmltableDefaultClause?   # XmlTableValueColumn
+    ;
+
+xmltableDefaultClause
+    : DEFAULT expression
+    ;
+
 /**
  * Support for "soft" keywords which may be used as identifiers
  *
@@ -1791,7 +1845,7 @@ xmlaggFunction
  nakedIdentifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
-	| (ABSENT
+	| ABSENT
 	| ALL
 	| AND
 	| ANY
@@ -1807,6 +1861,7 @@ xmlaggFunction
 	| CAST
 	| COLLATE
 	| COLUMN
+	| COLUMNS
 	| CONDITIONAL
 	| CONFLICT
 	| CONSTRAINT
@@ -1872,12 +1927,14 @@ xmlaggFunction
 	| INTO
 	| IS
 	| JOIN
+	| JSON
 	| JSON_ARRAY
 	| JSON_ARRAYAGG
 	| JSON_EXISTS
 	| JSON_OBJECT
 	| JSON_OBJECTAGG
 	| JSON_QUERY
+	| JSON_TABLE
 	| JSON_VALUE
 	| KEY
 	| KEYS
@@ -1908,6 +1965,7 @@ xmlaggFunction
 	| MONTH
 	| NAME
 	| NANOSECOND
+	| NESTED
 	| NATURALID
 	| NEW
 	| NEXT
@@ -1923,6 +1981,7 @@ xmlaggFunction
 	| ONLY
 	| OR
 	| ORDER
+	| ORDINALITY
 	| OTHERS
 //	| OUTER
 	| OVER
@@ -1931,6 +1990,7 @@ xmlaggFunction
 	| PAD
 	| PARTITION
 	| PASSING
+	| PATH
 	| PERCENT
 	| PLACING
 	| POSITION
@@ -1981,6 +2041,7 @@ xmlaggFunction
 	| WITHIN
 	| WITHOUT
 	| WRAPPER
+	| XML
 	| XMLAGG
 	| XMLATTRIBUTES
 	| XMLELEMENT
@@ -1988,18 +2049,16 @@ xmlaggFunction
 	| XMLFOREST
 	| XMLPI
 	| XMLQUERY
+	| XMLTABLE
 	| YEAR
-	| ZONED) {
-		logUseOfReservedWordAsIdentifier( getCurrentToken() );
-	}
+	| ZONED
 	;
+
 identifier
 	: nakedIdentifier
-	| (FULL
+	| FULL
 	| INNER
 	| LEFT
 	| OUTER
-	| RIGHT) {
-		logUseOfReservedWordAsIdentifier( getCurrentToken() );
-	}
+	| RIGHT
 	;

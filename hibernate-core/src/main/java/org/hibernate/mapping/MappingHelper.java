@@ -18,6 +18,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -123,15 +124,29 @@ public final class MappingHelper {
 	}
 
 	public static AnyType anyMapping(
-			Type metaType,
+			Type discriminatorType,
 			Type identifierType,
-			Map<Object, String> metaValueToEntityNameMap,
+			Map<Object, String> explicitValeMappings,
 			boolean lazy,
 			MetadataBuildingContext buildingContext) {
-		if ( metaValueToEntityNameMap != null ) {
-			metaType = new MetaType( metaValueToEntityNameMap, metaType );
-		}
+		return anyMapping(
+				discriminatorType,
+				identifierType,
+				explicitValeMappings,
+				null,
+				lazy,
+				buildingContext
+		);
+	}
 
+	public static AnyType anyMapping(
+			Type discriminatorType,
+			Type identifierType,
+			Map<Object, String> explicitValeMappings,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			boolean lazy,
+			MetadataBuildingContext buildingContext) {
+		final MetaType metaType = new MetaType( discriminatorType, implicitValueStrategy, explicitValeMappings );
 		return new AnyType( buildingContext.getBootstrapContext().getTypeConfiguration(), metaType, identifierType, lazy );
 	}
 

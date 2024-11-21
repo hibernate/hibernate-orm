@@ -71,10 +71,8 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
-import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -85,9 +83,14 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.UuidAsBinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -96,9 +99,6 @@ import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
-import org.jboss.jandex.CompositeIndex;
-import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -399,10 +399,6 @@ public class MetadataBuildingProcess {
 		} );
 		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> allKnownClassNames.add( clazz.getName() ) );
 
-		// At this point we know all managed class names across all sources.
-		// Resolve the Jandex Index and build the SourceModelBuildingContext.
-		final IndexView jandexIndex = resolveJandexIndex( allKnownClassNames, bootstrapContext.getJandexView(), sourceModelBuildingContext.getClassLoading() );
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- process metadata-complete XML
 		//	- collect overlay XML
@@ -425,7 +421,6 @@ public class MetadataBuildingProcess {
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				metadataCollector.getGlobalRegistrations(),
-				jandexIndex,
 				sourceModelBuildingContext
 		);
 
@@ -459,7 +454,6 @@ public class MetadataBuildingProcess {
 
 		return new DomainModelSource(
 				classDetailsRegistry,
-				jandexIndex,
 				allKnownClassNames,
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
@@ -490,31 +484,6 @@ public class MetadataBuildingProcess {
 				applyKnownClass( classDetails.getSuperClass(), categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		}
-	}
-
-	public static IndexView resolveJandexIndex(
-			List<String> allKnownClassNames,
-			IndexView suppliedJandexIndex,
-			ClassLoading classLoading) {
-		// todo : we could build a new Jandex (Composite)Index that includes the `managedResources#getAnnotatedClassNames`
-		// 		and all classes from `managedResources#getXmlMappingBindings`.  Only really worth it in the case
-		//		of runtime enhancement.  This would definitely need to be toggle-able.
-		//		+
-		//		For now, let's not as it does not matter for this PoC
-		if ( 1 == 1 ) {
-			return suppliedJandexIndex;
-		}
-
-		final Indexer jandexIndexer = new Indexer();
-		for ( String knownClassName : allKnownClassNames ) {
-			JandexIndexerHelper.apply( knownClassName, jandexIndexer, classLoading );
-		}
-
-		if ( suppliedJandexIndex == null ) {
-			return jandexIndexer.complete();
-		}
-
-		return CompositeIndex.create( suppliedJandexIndex, jandexIndexer.complete() );
 	}
 
 	private static void processAdditionalMappingContributions(
@@ -763,9 +732,6 @@ public class MetadataBuildingProcess {
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
-		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
-		// which has precedence over the fallback and preferred type registrations
-		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
 
 		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
@@ -787,20 +753,34 @@ public class MetadataBuildingProcess {
 			);
 		}
 		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
+			jdbcTypeRegistry.addDescriptorIfAbsent( UuidAsBinaryJdbcType.INSTANCE );
 		}
 
-		final int preferredSqlTypeCodeForArray = getPreferredSqlTypeCodeForArray( serviceRegistry );
-		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
-			adaptToPreferredSqlTypeCode(
-					jdbcTypeRegistry,
-					dialectArrayDescriptor,
-					SqlTypes.ARRAY,
-					preferredSqlTypeCodeForArray
-			);
+		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.JSON_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.JSON ).getDdlTypeCode() == SqlTypes.JSON ) {
+				jdbcTypeRegistry.addTypeConstructor( JsonArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( JsonAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
 		}
-		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.ARRAY, SqlTypes.VARBINARY );
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.XML_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML ).getDdlTypeCode() == SqlTypes.SQLXML ) {
+				jdbcTypeRegistry.addTypeConstructor( XmlArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( XmlAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
+		}
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY ) == null ) {
+			// Default the array constructor to e.g. JSON_ARRAY/XML_ARRAY if needed
+			final JdbcTypeConstructor constructor =
+					jdbcTypeRegistry.getConstructor( getPreferredSqlTypeCodeForArray( serviceRegistry ) );
+			if ( constructor != null ) {
+				jdbcTypeRegistry.addTypeConstructor( SqlTypes.ARRAY, constructor );
+			}
 		}
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
@@ -822,10 +802,6 @@ public class MetadataBuildingProcess {
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOMETRY, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOGRAPHY, SqlTypes.GEOMETRY );
-
-		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( JsonArrayAsStringJdbcType.VARCHAR_INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
 
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_BLOB, SqlTypes.BLOB );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_CLOB, SqlTypes.CLOB );

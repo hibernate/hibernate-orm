@@ -10,7 +10,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 
 /**
- * The standard DialectResolver implementation
+ * The standard {@link DialectResolver} implementation
  *
  * @author Steve Ebersole
  */

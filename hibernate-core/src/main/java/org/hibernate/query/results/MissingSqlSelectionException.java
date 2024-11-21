@@ -7,10 +7,8 @@ package org.hibernate.query.results;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates that a column defined as part of a SQL ResultSet mapping was not part
- * of the query's ResultSet
- *
- * @see ResultSetMapping
+ * Indicates that a column defined as part of a {@linkplain ResultSetMapping SQL ResultSet mapping} was not part
+ * of the query's {@linkplain java.sql.ResultSet}
  *
  * @author Steve Ebersole
  */

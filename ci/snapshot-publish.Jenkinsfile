@@ -1,7 +1,7 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.13') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
@@ -37,15 +37,20 @@ pipeline {
 					string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_PASS'),
 					file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_KEYRING')
 				]) {
-					sh '''./gradlew clean publish \
-						-PhibernatePublishUsername=$hibernatePublishUsername \
-						-PhibernatePublishPassword=$hibernatePublishPassword \
-						-Pgradle.publish.key=$hibernatePluginPortalUsername \
-						-Pgradle.publish.secret=$hibernatePluginPortalPassword \
-						--no-scan \
-						-DsigningPassword=$SIGNING_PASS \
-						-DsigningKeyFile=$SIGNING_KEYRING \
-					'''
+					withEnv([
+							"DISABLE_REMOTE_GRADLE_CACHE=true"
+					]) {
+						sh '''./gradlew clean publish \
+							-PhibernatePublishUsername=$hibernatePublishUsername \
+							-PhibernatePublishPassword=$hibernatePublishPassword \
+							-Pgradle.publish.key=$hibernatePluginPortalUsername \
+							-Pgradle.publish.secret=$hibernatePluginPortalPassword \
+							--no-scan \
+							--no-build-cache \
+							-DsigningPassword=$SIGNING_PASS \
+							-DsigningKeyFile=$SIGNING_KEYRING \
+						'''
+					}
 				}
 			}
         }

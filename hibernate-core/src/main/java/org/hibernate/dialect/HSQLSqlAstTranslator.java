@@ -22,10 +22,13 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
@@ -69,6 +72,17 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		super.renderDmlTargetTableExpression( tableReference );
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
 		}
 	}
 
@@ -275,6 +289,22 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
+	@Override
+	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+		if ( isParameter( comparisonPredicate.getLeftHandExpression() )
+				&& isParameter( comparisonPredicate.getRightHandExpression() ) ) {
+			// HSQLDB doesn't like comparing two parameters with each other
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+					() -> super.visitRelationalPredicate( comparisonPredicate )
+			);
+		}
+		else {
+			super.visitRelationalPredicate( comparisonPredicate );
+		}
+	}
+
+	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType == null || lhsExpressionType.getJdbcTypeCount() != 1 ) {

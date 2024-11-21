@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
+import org.hibernate.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;

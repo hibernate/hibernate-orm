@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.persistence.Entity;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -37,6 +40,7 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -177,6 +181,16 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return The name of the entity which this persister maps.
 	 */
 	String getEntityName();
+
+	/**
+	 * The {@linkplain Entity#name() JPA entity name}, if one, associated with the entity.
+	 */
+	@Nullable
+	String getJpaEntityName();
+
+	default String getImportedName() {
+		return getJpaEntityName() != null ? getJpaEntityName() : StringHelper.unqualifyEntityName( getEntityName() );
+	}
 
 	/**
 	 * The strategy to use for SQM mutation statements where the target entity
@@ -1182,6 +1196,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Set the identifier and version of the given instance back to its "unsaved"
 	 * value, that is, the value it had before it was made persistent.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#isIdentifierRollbackEnabled
 	 */
 	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
 
@@ -1469,4 +1486,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean isSharedColumn(String columnExpression);
 
 	String[][] getConstraintOrderedTableKeyColumnClosure();
+
+	@Internal
+	boolean managesColumns(String[] columnNames);
 }

@@ -90,6 +90,16 @@ public class SchemaManagerImpl implements SchemaManager {
 	}
 
 	@Override
+	public void create(boolean createSchemas) {
+		exportMappedObjects( createSchemas );
+	}
+
+	@Override
+	public void drop(boolean dropSchemas) {
+		dropMappedObjects( dropSchemas );
+	}
+
+	@Override
 	public void validate() throws SchemaValidationException {
 		try {
 			validateMappedObjects();

@@ -5,14 +5,14 @@ include::{shared-attributes-dir}/url-attributes.adoc[]
 [[preface]]
 == Preface
 
-Hibernate 6 is a major redesign of the world's most popular and feature-rich ORM solution.
-The redesign has touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and, above all else, the query language.
+Hibernate 6 was a major redesign of the world's most popular and feature-rich ORM solution.
+The redesign touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and, above all else, the query language.
+This was the second time Hibernate Query Language had been completely reimplemented from scratch, but the first time in more than fifteen years.
+Hibernate 7 rests on this foundation.
 
-This is the second time Hibernate Query Language has been completely reimplemented from scratch, but the first time in more than fifteen years.
 In this new incarnation, HQL is far more powerful, and the HQL compiler much more robust.
+Today, HQL has a feature set to match that of modern dialects of SQL, and is able to take full advantage of the power of modern SQL databases.
 
-At long last, HQL has a feature set to match that of modern dialects of SQL, and is able to take full advantage of the power of modern SQL databases.
+This document is a reference guide to the full feature set of the language, and is the only up-to-date source for those who wish to learn how to write HQL effectively in Hibernate 6 and Hibernate 7.
 
-This document is a reference guide to the full feature set of the language, and is the only up-to-date source for those who wish to learn how to write HQL effectively in Hibernate 6.
-
-If you are unfamiliar with Hibernate, be sure to first read  link:{doc-introduction-url}[Introduction to Hibernate] or check out the link:{doc-quick-start-url}[Quick Start].
+If you are unfamiliar with Hibernate, be sure to first read the link:{doc-introduction-url}[Short Guide to Hibernate].

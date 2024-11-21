@@ -10,7 +10,7 @@ import org.hibernate.query.BindingContext;
 
 /**
  * The "context" in which creation of SQL AST occurs.  Provides
- * access to generally needed when creating SQL AST nodes
+ * access to stuff generally needed when creating SQL AST nodes
  *
  * @author Steve Ebersole
  */

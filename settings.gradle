@@ -73,6 +73,8 @@ dependencyResolutionManagement {
         }
         libs {
             def antlrVersion = version "antlr", "4.13.0"
+            // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
+            // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.14.18"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.9.1"

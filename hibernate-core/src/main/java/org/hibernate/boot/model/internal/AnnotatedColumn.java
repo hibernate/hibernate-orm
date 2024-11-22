@@ -450,10 +450,10 @@ public class AnnotatedColumn {
 		}
 		else {
 			final Table table = value.getTable();
-			getParent().setTable( table );
-			getMappingColumn().setValue( value );
-			value.addColumn( getMappingColumn(), insertable, updatable );
-			table.addColumn( getMappingColumn() );
+			parent.setTable( table );
+			mappingColumn.setValue( value );
+			value.addColumn( mappingColumn, insertable, updatable );
+			table.addColumn( mappingColumn );
 			addColumnBinding( value );
 		}
 	}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.spi;
 
+import org.hibernate.service.ServiceRegistry;
+
 import java.util.Map;
 
 /**
@@ -18,6 +20,6 @@ import java.util.Map;
  * @since 5.4
  */
 public interface TypeBootstrapContext {
-	@SuppressWarnings("unused")
 	Map<String, Object> getConfigurationSettings();
+	ServiceRegistry getServiceRegistry();
 }

@@ -106,7 +106,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
 		this.typeConfiguration = new TypeConfiguration();
-		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService );
+		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 	}
 

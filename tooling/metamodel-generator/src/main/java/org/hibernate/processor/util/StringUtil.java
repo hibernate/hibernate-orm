@@ -98,6 +98,9 @@ public final class StringUtil {
 	}
 
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString) {
+		if ( lowerCamelCaseString.length() == 1 && isUpperCase( lowerCamelCaseString.charAt( 0 ) ) ) {
+			return "_" + lowerCamelCaseString;
+		}
 		final StringBuilder result = new StringBuilder();
 		int position = 0;
 		while ( position < lowerCamelCaseString.length() ) {
@@ -115,5 +118,17 @@ public final class StringUtil {
 		return string.length() > 1
 			&& isUpperCase( string.charAt( 0 ) )
 			&& isUpperCase( string.charAt( 1 ) );
+	}
+
+	/**
+	 * If this is an "intermediate" class providing {@code @Query}
+	 * annotations for the query by magical method name crap, then
+	 * by convention it will be named with a trailing $ sign. Strip
+	 * that off, so we get the standard constructor.
+	 */
+	public static String removeDollar(String simpleName) {
+		return simpleName.endsWith("$")
+				? simpleName.substring(0, simpleName.length()-1)
+				: simpleName;
 	}
 }

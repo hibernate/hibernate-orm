@@ -477,7 +477,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			&& findPropertyByPath(entityClass, fieldName, getDefaultAccessType(entityClass)) != null;
 	}
 
-	private TypeElement findEntityClass(String entityName) {
+	@Override
+	public TypeElement findEntityClass(String entityName) {
 		if (entityName == null) {
 			return null;
 		}

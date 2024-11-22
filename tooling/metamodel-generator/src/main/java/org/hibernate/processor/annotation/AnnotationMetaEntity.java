@@ -80,11 +80,12 @@ import static org.hibernate.processor.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.processor.annotation.QueryMethod.isPageParam;
 import static org.hibernate.processor.util.Constants.*;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
+import static org.hibernate.processor.util.StringUtil.removeDollar;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.determineAccessTypeForHierarchy;
 import static org.hibernate.processor.util.TypeUtils.determineAnnotationSpecifiedAccessType;
 import static org.hibernate.processor.util.TypeUtils.extendsClass;
-import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
+import static org.hibernate.processor.util.TypeUtils.findMappedSuperElement;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
@@ -110,6 +111,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final ImportContext importContext;
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
+	private TypeElement parentElement;
 	private final Context context;
 	private final boolean managed;
 	private boolean jakartaDataRepository;
@@ -163,26 +165,32 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	public AnnotationMetaEntity(
 			TypeElement element, Context context, boolean managed,
-			boolean jakartaDataStaticMetamodel) {
+			boolean jakartaDataStaticMetamodel,
+			@Nullable AnnotationMeta parent) {
 		this.element = element;
 		this.context = context;
 		this.managed = managed;
 		this.members = new HashMap<>();
 		this.quarkusInjection = context.isQuarkusInjection();
-		this.importContext = new ImportContextImpl( getPackageName( context, element ) );
+		this.importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
 		jakartaDataStaticModel = jakartaDataStaticMetamodel;
 	}
 
 	public static AnnotationMetaEntity create(TypeElement element, Context context) {
-		return create( element,context, false, false, false );
+		return create( element,context, false, false, false, null );
 	}
 
 	public static AnnotationMetaEntity create(
 			TypeElement element, Context context,
 			boolean lazilyInitialised, boolean managed,
-			boolean jakartaData) {
+			boolean jakartaData,
+			@Nullable AnnotationMetaEntity parent) {
 		final AnnotationMetaEntity annotationMetaEntity =
-				new AnnotationMetaEntity( element, context, managed, jakartaData );
+				new AnnotationMetaEntity( element, context, managed, jakartaData, parent );
+		if ( parent != null ) {
+			annotationMetaEntity.setParentElement( parent.element );
+			parent.addInnerClass( annotationMetaEntity );
+		}
 		if ( !lazilyInitialised ) {
 			annotationMetaEntity.init();
 		}
@@ -225,18 +233,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return getSimpleName() + '_';
 	}
 
-	/**
-	 * If this is an "intermediate" class providing {@code @Query}
-	 * annotations for the query by magical method name crap, then
-	 * by convention it will be named with a trailing $ sign. Strip
-	 * that off, so we get the standard constructor.
-	 */
-	private static String removeDollar(String simpleName) {
-		return simpleName.endsWith("$")
-				? simpleName.substring(0, simpleName.length()-1)
-				: simpleName;
-	}
-
 	@Override
 	public final String getQualifiedName() {
 		if ( qualifiedName == null ) {
@@ -246,8 +242,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	@Override
-	public @Nullable String getSupertypeName() {
-		return repository ? null : findMappedSuperClass( this, context );
+	public @Nullable Element getSuperTypeElement() {
+		return repository ? null : findMappedSuperElement( this, context );
 	}
 
 	@Override
@@ -268,6 +264,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		return new ArrayList<>( members.values() );
+	}
+
+	public void addInnerClass(AnnotationMetaEntity metaEntity) {
+		putMember( "INNER_" + metaEntity.getQualifiedName(), new InnerClassMetaAttribute( metaEntity ) );
+	}
+
+	public void setParentElement(TypeElement parentElement) {
+		this.parentElement = parentElement;
 	}
 
 	@Override
@@ -363,7 +367,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				.toString();
 	}
 
-	protected final void init() {
+	protected void init() {
 		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type '" + getQualifiedName() + "'" );
 
 		setupSession();

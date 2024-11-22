@@ -67,7 +67,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		final StringBuilder declaration = new StringBuilder();
 		declaration
 				.append('\n');
-		if ( annotationMetaEntity.getSupertypeName() == null ) {
+		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
 			declaration
 					.append("protected ");
 			if ( !dataRepository ) {
@@ -96,7 +96,7 @@ public class RepositoryConstructor implements MetaAttribute {
 				.append(" ")
 				.append(sessionVariableName)
 				.append(") {\n");
-		if ( annotationMetaEntity.getSupertypeName() != null ) {
+		if ( annotationMetaEntity.getSuperTypeElement() != null ) {
 			declaration
 					.append("\tsuper(")
 					.append(sessionVariableName)
@@ -112,7 +112,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		}
 		declaration
 				.append("}");
-		if ( annotationMetaEntity.getSupertypeName() == null ) {
+		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
 			declaration
 					.append("\n\n");
 			if (addOverrideAnnotation) {

@@ -113,6 +113,8 @@ import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
@@ -120,6 +122,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import javax.lang.model.element.TypeElement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -280,7 +283,7 @@ public abstract class MockSessionFactory
 
 	abstract boolean isEntityDefined(String entityName);
 
-	abstract String findEntityName(String typeName);
+	abstract TypeElement findEntityClass(String entityName);
 
 	abstract String qualifyName(String entityName);
 
@@ -681,6 +684,39 @@ public abstract class MockSessionFactory
 		return SqlTypes.ARRAY;
 	}
 
+	private static class MockJavaType<X> implements BasicJavaType<X> {
+		private final String typeName;
+
+		public MockJavaType(String typeName) {
+			this.typeName = typeName;
+		}
+
+		@Override
+		public <X1> X1 unwrap(X value, Class<X1> type, WrapperOptions options) {
+			return null;
+		}
+
+		@Override
+		public <X1> X wrap(X1 value, WrapperOptions options) {
+			return null;
+		}
+
+		@Override
+		public String getTypeName() {
+			return typeName;
+		}
+
+		@Override
+		public Class<X> getJavaTypeClass() {
+			try {
+				return (Class<X>) Class.forName( typeName );
+			}
+			catch (ClassNotFoundException e) {
+				return null;
+			}
+		}
+	}
+
 	private class MockMappingMetamodelImpl extends MappingMetamodelImpl {
 		public MockMappingMetamodelImpl() {
 			super(typeConfiguration, serviceRegistry);
@@ -774,19 +810,19 @@ public abstract class MockSessionFactory
 
 		@Override
 		public EntityDomainType<?> entity(String entityName) {
-			return isEntityDefined( entityName )
-					? new MockEntityDomainType<>( entityName )
-					: null;
-		}
-
-		@Override
-		public @Nullable EntityDomainType<?> findEntityType(@Nullable String entityName) {
 			if ( isEntityDefined(entityName) ) {
-				return new MockEntityDomainType<>(entityName);
+				final TypeElement entityClass = findEntityClass( entityName );
+				final String entityTypeName = entityClass == null ? entityName : entityClass.getQualifiedName().toString();
+				return new MockEntityDomainType<>(entityName, new MockJavaType<>( entityTypeName ));
 			}
 			else {
 				return null;
 			}
+		}
+
+		@Override
+		public @Nullable EntityDomainType<?> findEntityType(@Nullable String entityName) {
+			return entity( entityName );
 		}
 
 		@Override
@@ -825,9 +861,12 @@ public abstract class MockSessionFactory
 
 		@Override
 		public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
-			return isEntityDefined( cls.getName() )
-					? new MockEntityDomainType<X>( cls.getName() )
-					: null;
+			if ( isEntityDefined( cls.getName() ) ) {
+				return new MockEntityDomainType<>( cls.getName(), new MockJavaType<X>( cls.getName() ));
+			}
+			else {
+				return null;
+			}
 		}
 
 		@Override
@@ -906,8 +945,8 @@ public abstract class MockSessionFactory
 
 	class MockEntityDomainType<X> extends EntityTypeImpl<X> {
 
-		public MockEntityDomainType(String entityName) {
-			super(entityName, entityName, false, true, false, null, null,
+		public MockEntityDomainType(String entityName, JavaType<X> javaType) {
+			super(entityName, entityName, false, true, false, javaType, null,
 					metamodel.getJpaMetamodel());
 		}
 
@@ -991,7 +1030,7 @@ public abstract class MockSessionFactory
 				if (!entry.getValue().getEntityName().equals(getHibernateEntityName())
 						&& isSubtype(entry.getValue().getEntityName(), getHibernateEntityName())) {
 					final PersistentAttribute<? super Object, ?> subattribute
-							= new MockEntityDomainType<>(entry.getValue().getEntityName()).findAttribute(name);
+							= new MockEntityDomainType<>(entry.getValue().getEntityName(), new MockJavaType<>(entry.getValue().getEntityName()) ).findAttribute(name);
 					if (subattribute != null) {
 						return (SqmPathSource<?>) subattribute;
 					}
@@ -1037,7 +1076,7 @@ public abstract class MockSessionFactory
 					owner,
 					name,
 					AttributeClassification.MANY_TO_ONE,
-					new MockEntityDomainType<>(type.getName()),
+					new MockEntityDomainType<>(type.getName(), new MockJavaType<>(type.getName())),
 					null,
 					null,
 					false,
@@ -1095,7 +1134,9 @@ public abstract class MockSessionFactory
 	private DomainType<?> getDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner, Type elementType) {
 		if ( elementType.isEntityType() ) {
 			final String associatedEntityName = collectionType.getAssociatedEntityName(MockSessionFactory.this);
-			return new MockEntityDomainType<>(associatedEntityName);
+			final TypeElement associatedEntityEntityClass = findEntityClass( associatedEntityName );
+			final String associatedEntityTypeName = associatedEntityEntityClass == null ? associatedEntityName : associatedEntityEntityClass.getQualifiedName().toString();
+			return new MockEntityDomainType<>(associatedEntityName, new MockJavaType<>(associatedEntityTypeName));
 		}
 		else if ( elementType.isComponentType() ) {
 			final CompositeType compositeType = (CompositeType) elementType;

@@ -44,6 +44,13 @@ public interface DialectSpecificSettings {
 	String SYBASE_ANSI_NULL = "hibernate.dialect.sybase.extended_string_size";
 
 	/**
+	 * Specifies the maximum page size on Sybase.
+	 *
+	 * @settingDefault {@value org.hibernate.dialect.SybaseASEDialect#MAX_PAGE_SIZE}
+	 */
+	String SYBASE_PAGE_SIZE = "hibernate.dialect.sybase.page_size";
+
+	/**
 	 * Specifies the bytes per character to use based on the database's configured
 	 * <a href="https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html">charset</a>.
 	 *

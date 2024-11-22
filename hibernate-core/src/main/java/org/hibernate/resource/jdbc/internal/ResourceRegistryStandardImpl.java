@@ -180,7 +180,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	public static void close(Statement statement) {
+	private static void close(Statement statement) {
 		log.tracef( "Closing prepared statement [%s]", statement );
 
 		try {

@@ -33,7 +33,7 @@ And we'll need to pick a JDBC driver:
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client`
 | DB2                       | `com.ibm.db2:jcc`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc`
-| Oracle                    | `com.oracle.database.jdbc:ojdbc11`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc17`
 | H2                        | `com.h2database:h2`
 | HSQLDB                    | `org.hsqldb:hsqldb`
 |===

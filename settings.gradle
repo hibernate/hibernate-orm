@@ -121,7 +121,7 @@ dependencyResolutionManagement {
             library( "hikaricp", "com.zaxxer", "HikariCP" ).versionRef( hikaricpVersion )
             library( "ucp", "com.oracle.database.jdbc", "ucp11" ).versionRef( ucpVersion )
 
-            library( "ojdbc11", "com.oracle.database.jdbc", "ojdbc11" ).versionRef( ucpVersion )
+            library( "ojdbc17", "com.oracle.database.jdbc", "ojdbc17" ).versionRef( ucpVersion )
 
             library( "geolatte", "org.geolatte", "geolatte-geom" ).versionRef( geolatteVersion )
 
@@ -231,7 +231,7 @@ dependencyResolutionManagement {
             def mariadbVersion = version "mariadb", "3.5.1"
             def mssqlVersion = version "mssql", "12.8.1.jre11"
             def mysqlVersion = version "mysql", "9.1.0"
-            def oracleVersion = version "oracle", "23.4.0.24.05"
+            def oracleVersion = version "oracle", "23.6.0.24.10"
             def pgsqlVersion = version "pgsql", "42.7.4"
             def sybaseVersion = version "sybase", "1.3.1"
             def tidbVersion = version "tidb", mysqlVersion
@@ -247,7 +247,7 @@ dependencyResolutionManagement {
             library( "mysql", "com.mysql", "mysql-connector-j" ).versionRef( mysqlVersion )
             library( "tidb", "com.mysql", "mysql-connector-j" ).versionRef( tidbVersion )
             library( "mariadb", "org.mariadb.jdbc", "mariadb-java-client" ).versionRef( mariadbVersion )
-            library( "oracle", "com.oracle.database.jdbc", "ojdbc11" ).versionRef( oracleVersion )
+            library( "oracle", "com.oracle.database.jdbc", "ojdbc17" ).versionRef( oracleVersion )
             library( "oracleXml", "com.oracle.database.xml", "xdb" ).versionRef( oracleVersion )
             library( "oracleXmlParser", "com.oracle.database.xml", "xmlparserv2" ).versionRef( oracleVersion )
             library( "mssql", "com.microsoft.sqlserver", "mssql-jdbc" ).versionRef( mssqlVersion )

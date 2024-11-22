@@ -15,7 +15,7 @@ description = 'Integration for Oracle UCP into Hibernate O/RM'
 dependencies {
     implementation project( ':hibernate-core' )
     implementation libs.ucp
-    implementation libs.ojdbc11
+    implementation libs.ojdbc17
 
     testImplementation project( ':hibernate-testing' )
 }

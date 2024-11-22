@@ -13,6 +13,7 @@ import org.hibernate.processor.model.ImportContext;
 import org.hibernate.processor.model.MetaAttribute;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
@@ -71,7 +72,7 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
-	public @Nullable String getSupertypeName() {
+	public @Nullable Element getSuperTypeElement() {
 		return null;
 	}
 

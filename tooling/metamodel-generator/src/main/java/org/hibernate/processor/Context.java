@@ -304,6 +304,15 @@ public final class Context {
 		return dataMetaEmbeddables.values();
 	}
 
+	public @Nullable Metamodel getMetamodel(String qualifiedName) {
+		if ( metaEntities.containsKey( qualifiedName ) ) {
+			return metaEntities.get( qualifiedName );
+		}
+		else {
+			return metaEmbeddables.get( qualifiedName );
+		}
+	}
+
 	public @Nullable Metamodel getMetaAuxiliary(String qualifiedName) {
 		return metaAuxiliaries.get( qualifiedName );
 	}

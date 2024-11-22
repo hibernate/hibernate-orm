@@ -50,7 +50,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.util.Collections.emptyList;
 import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedClassName;
 import static org.hibernate.processor.util.TypeUtils.extractClosestRealTypeAsString;
-import static org.hibernate.processor.util.TypeUtils.findMappedSuperClass;
+import static org.hibernate.processor.util.TypeUtils.findMappedSuperElement;
 import static org.hibernate.processor.util.TypeUtils.getElementKindForAccessType;
 import static org.hibernate.processor.xml.jaxb.AccessType.*;
 
@@ -163,8 +163,8 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	@Override
-	public @Nullable String getSupertypeName() {
-		return findMappedSuperClass( this, context );
+	public @Nullable Element getSuperTypeElement() {
+		return findMappedSuperElement( this, context );
 	}
 
 	public List<MetaAttribute> getMembers() {

@@ -610,7 +610,7 @@ public final class TypeUtils {
 		}
 	}
 
-	public static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
+	public static @Nullable Element findMappedSuperElement(Metamodel entity, Context context) {
 		final Element element = entity.getElement();
 		if ( element instanceof TypeElement ) {
 			final TypeElement typeElement = (TypeElement) element;
@@ -620,7 +620,7 @@ public final class TypeUtils {
 				final DeclaredType declaredType = (DeclaredType) superClass;
 				final TypeElement superClassElement = (TypeElement) declaredType.asElement();
 				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-					return superClassElement.getQualifiedName().toString();
+					return superClassElement;
 				}
 				superClass = superClassElement.getSuperclass();
 			}
@@ -678,6 +678,10 @@ public final class TypeUtils {
 			superclass = typeElement.getSuperclass();
 		}
 		return false;
+	}
+
+	public static boolean isMemberType(Element element) {
+		return element.getEnclosingElement() instanceof TypeElement;
 	}
 
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable TypeElement, Element> {

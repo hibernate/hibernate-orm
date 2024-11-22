@@ -21,7 +21,7 @@ public interface Metamodel extends ImportContext {
 
 	String getQualifiedName();
 
-	@Nullable String getSupertypeName();
+	@Nullable Element getSuperTypeElement();
 
 	String getPackageName();
 

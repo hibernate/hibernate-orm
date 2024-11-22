@@ -10,6 +10,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.spi.TypeBootstrapContext;
+import org.hibernate.service.ServiceRegistry;
 
 import java.lang.reflect.Constructor;
 import java.util.Map;
@@ -22,9 +23,11 @@ import java.util.Map;
 @Internal
 public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBootstrapContext {
 	private final ConfigurationService configurationService;
+	private final ServiceRegistry serviceRegistry;
 
-	public TypeBeanInstanceProducer(ConfigurationService configurationService) {
+	public TypeBeanInstanceProducer(ConfigurationService configurationService, ServiceRegistry serviceRegistry) {
 		this.configurationService = configurationService;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
@@ -63,5 +66,10 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 	@Override
 	public Map<String, Object> getConfigurationSettings() {
 		return configurationService.getSettings();
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
 }

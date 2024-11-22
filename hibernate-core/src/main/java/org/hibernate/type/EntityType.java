@@ -731,8 +731,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
 
-		final Object proxyOrEntity =
-				session.internalLoad( getAssociatedEntityName(), id, isEager( overridingEager ), isNullable() );
+		final boolean isEager = isEager( overridingEager );
+		// If the association is lazy, retrieve the concrete type if required
+		final String entityName = isEager ? getAssociatedEntityName()
+				: getAssociatedEntityPersister( session.getFactory() ).resolveConcreteProxyTypeForId( id, session )
+						.getEntityName();
+
+		final Object proxyOrEntity = session.internalLoad( entityName, id, isEager, isNullable() );
 
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxyOrEntity );
 		if ( lazyInitializer != null ) {

@@ -21,10 +21,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
-import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static java.sql.Connection.TRANSACTION_NONE;
@@ -108,7 +105,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
-		final BeanContainer beanContainer = Helper.allowExtensionsInCdi( registry ) ? registry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
+		final BeanContainer beanContainer = Helper.getBeanContainer( registry );
 		final StrategySelector strategySelector = registry.requireService( StrategySelector.class );
 		final Object explicitSetting = configurationValues.get( CONNECTION_PROVIDER );
 		if ( explicitSetting != null ) {
@@ -185,33 +182,13 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		else {
 			if (beanContainer != null) {
-				return beanContainer.getBean(
-						ConnectionProvider.class,
-						new BeanContainer.LifecycleOptions() {
-							@Override
-							public boolean canUseCachedReferences() {
-								return true;
-							}
-
-							@Override
-							public boolean useJpaCompliantCreation() {
-								return true;
-							}
-						},
-						new BeanInstanceProducer() {
-
-							@Override
-							public <B> B produceBeanInstance(Class<B> beanType) {
-								return (B) noAppropriateConnectionProvider();
-							}
-
-							@Override
-							public <B> B produceBeanInstance(String name, Class<B> beanType) {
-								return (B) noAppropriateConnectionProvider();
-							}
-
-						}
-				).getBeanInstance();
+				return Helper.getBean(
+					beanContainer,
+					ConnectionProvider.class,
+					true,
+					true,
+					this::noAppropriateConnectionProvider
+				);
 			}
 			else {
 				return noAppropriateConnectionProvider();
@@ -236,21 +213,20 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private ConnectionProvider instantiateExplicitConnectionProvider(Class<?> providerClass, BeanContainer beanContainer) {
 		try {
 			if ( beanContainer != null ) {
-				return (ConnectionProvider) beanContainer.getBean(
-						providerClass,
-						new BeanContainer.LifecycleOptions() {
-							@Override
-							public boolean canUseCachedReferences() {
-								return true;
-							}
-
-							@Override
-							public boolean useJpaCompliantCreation() {
-								return true;
-							}
-						},
-						FallbackBeanInstanceProducer.INSTANCE
-				).getBeanInstance();
+				return Helper.getBean(
+					beanContainer,
+					providerClass,
+					true,
+					true,
+					() -> {
+						try {
+							return (ConnectionProvider) providerClass.getConstructor().newInstance();
+						}
+						catch (Exception e) {
+							throw new HibernateException( "Could not instantiate connection provider [" + providerClass.getName() + "]", e );
+						}
+					}
+				);
 			}
 			else {
 				return (ConnectionProvider) providerClass.getConstructor().newInstance();

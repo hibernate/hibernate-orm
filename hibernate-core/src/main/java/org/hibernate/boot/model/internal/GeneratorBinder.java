@@ -51,9 +51,7 @@ import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.resource.beans.internal.Helper;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -498,35 +496,19 @@ public class GeneratorBinder {
 			Class<? extends Generator> generatorClass,
 			MemberDetails memberDetails,
 			Class<? extends Annotation> annotationType) {
-		return beanContainer.getBean( generatorClass,
-				new BeanContainer.LifecycleOptions() {
-					@Override
-					public boolean canUseCachedReferences() {
-						return false;
-					}
-					@Override
-					public boolean useJpaCompliantCreation() {
-						return true;
-					}
-				},
-				new BeanInstanceProducer() {
-					@SuppressWarnings( "unchecked" )
-					@Override
-					public <B> B produceBeanInstance(Class<B> beanType) {
-						return (B) instantiateGenerator(
-								annotation,
-								memberDetails,
-								annotationType,
-								creationContext,
-								generatorClass
-						);
-					}
-					@Override
-					public <B> B produceBeanInstance(String name, Class<B> beanType) {
-						return produceBeanInstance( beanType );
-					}
-				} )
-				.getBeanInstance();
+		return Helper.getBean(
+			beanContainer,
+			generatorClass,
+			false,
+			true,
+			() -> instantiateGenerator(
+				annotation,
+				memberDetails,
+				annotationType,
+				creationContext,
+				generatorClass
+			)
+		);
 	}
 
 	/**
@@ -539,29 +521,13 @@ public class GeneratorBinder {
 	private static <T extends Generator> T instantiateGeneratorAsBean(
 			BeanContainer beanContainer,
 			Class<T> generatorClass) {
-		return beanContainer.getBean( generatorClass,
-				new BeanContainer.LifecycleOptions() {
-					@Override
-					public boolean canUseCachedReferences() {
-						return false;
-					}
-					@Override
-					public boolean useJpaCompliantCreation() {
-						return true;
-					}
-				},
-				new BeanInstanceProducer() {
-					@SuppressWarnings( "unchecked" )
-					@Override
-					public <B> B produceBeanInstance(Class<B> beanType) {
-						return (B) instantiateGeneratorViaDefaultConstructor( generatorClass );
-					}
-					@Override
-					public <B> B produceBeanInstance(String name, Class<B> beanType) {
-						return produceBeanInstance( beanType );
-					}
-				} )
-				.getBeanInstance();
+		return Helper.getBean(
+			beanContainer,
+			generatorClass,
+			false,
+			true,
+			() -> instantiateGeneratorViaDefaultConstructor( generatorClass )
+		);
 	}
 
 	/**
@@ -819,10 +785,7 @@ public class GeneratorBinder {
 	 * Obtain a {@link BeanContainer} to be used for instantiating generators.
 	 */
 	public static BeanContainer beanContainer(MetadataBuildingContext buildingContext) {
-		final ServiceRegistry serviceRegistry = buildingContext.getBootstrapContext().getServiceRegistry();
-		return allowExtensionsInCdi( serviceRegistry )
-				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
-				: null;
+		return Helper.getBeanContainer( buildingContext.getBootstrapContext().getServiceRegistry() );
 	}
 
 	/**

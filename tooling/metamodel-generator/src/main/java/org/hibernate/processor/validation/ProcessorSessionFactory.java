@@ -269,11 +269,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 			while (type!=null) {
 				if (isMappedClass(type)) { //ignore unmapped intervening classes
-					AccessType accessType = getAccessType(type, defaultAccessType);
+					final AccessType accessType = getAccessType(type, defaultAccessType);
 					for (Element member: type.getEnclosedElements()) {
 						if (isPersistable(member, accessType)) {
-							String name = propertyName(member);
-							Type propertyType =
+							final String name = propertyName(member);
+							final Type propertyType =
 									factory.propertyType(member, entityName,
 											qualify(path, name), defaultAccessType);
 							if (propertyType != null) {
@@ -292,7 +292,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		public int getPropertyIndex(String name) {
-			String[] names = getPropertyNames();
+			final String[] names = getPropertyNames();
 			for ( int i = 0, max = names.length; i < max; i++ ) {
 				if ( names[i].equals( name ) ) {
 					return i;
@@ -504,14 +504,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 		final String qualifiedName = entityNameMappings.get(entityName);
 		if ( qualifiedName != null ) {
-			TypeElement result = elementUtil.getTypeElement(qualifiedName);
+			final TypeElement result = elementUtil.getTypeElement(qualifiedName);
 			entityCache.put(entityName, result);
 			return result;
 		}
-		final StandardLocation location = StandardLocation.SOURCE_OUTPUT;
-		try (Reader reader = filer.getResource(location, ENTITY_INDEX, entityName)
+		try (Reader reader = filer.getResource( StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, entityName)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
+			final TypeElement result = elementUtil.getTypeElement(buffered.readLine());
 			entityCache.put(entityName, result);
 			return result;
 		}
@@ -519,7 +518,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
+			final TypeElement result = elementUtil.getTypeElement(buffered.readLine());
 			entityCache.put(entityName, result);
 			return result;
 		}
@@ -546,7 +545,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	public static TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
 		for (Element element: module.getEnclosedElements()) {
 			if (element.getKind() == ElementKind.PACKAGE) {
-				PackageElement pack = (PackageElement) element;
+				final PackageElement pack = (PackageElement) element;
 				try {
 					for (Element member : pack.getEnclosedElements()) {
 						if (isMatchingEntity(member, entityName)) {
@@ -1085,8 +1084,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static TypeMirror memberType(Element member) {
-		if (member instanceof ExecutableElement) {
-			return ((ExecutableElement) member).getReturnType();
+		if (member instanceof ExecutableElement executableElement) {
+			return executableElement.getReturnType();
 		}
 		else if (member instanceof VariableElement) {
 			return member.asType();

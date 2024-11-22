@@ -149,7 +149,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable, 
 
 	@Override
 	public Set<String> getSubclassEntityNames() {
-		Set<String> names = new HashSet<>();
+		final Set<String> names = new HashSet<>();
 		names.add( entityName );
 		for (MockEntityPersister persister : factory.getMockEntityPersisters()) {
 			if (persister.isSubclassPersister(this)) {

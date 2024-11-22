@@ -146,7 +146,7 @@ public class StandardStackTest {
 	// utility functions
 
 	private Stack<Integer> allocateStack(int size) {
-		final Stack<Integer> stack = new StandardStack<>( Integer.class );
+		final Stack<Integer> stack = new StandardStack<>();
 		for ( int i = 0; i < size; i++ ) {
 			stack.push( i );
 		}

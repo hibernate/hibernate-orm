@@ -304,9 +304,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private final ParameterMarkerStrategy parameterMarkerStrategy;
 
 
-	private final Stack<Clause> clauseStack = new StandardStack<>( Clause.class );
-	private final Stack<QueryPart> queryPartStack = new StandardStack<>( QueryPart.class );
-	private final Stack<Statement> statementStack = new StandardStack<>( Statement.class );
+	private final Stack<Clause> clauseStack = new StandardStack<>();
+	private final Stack<QueryPart> queryPartStack = new StandardStack<>();
+	private final Stack<Statement> statementStack = new StandardStack<>();
 
 	private final Dialect dialect;
 	private final Set<String> affectedTableNames = new HashSet<>();

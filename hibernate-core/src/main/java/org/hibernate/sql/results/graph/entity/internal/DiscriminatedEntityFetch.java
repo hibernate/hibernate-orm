@@ -61,7 +61,7 @@ public class DiscriminatedEntityFetch extends AbstractDiscriminatedEntityResultG
 	public DomainResultAssembler<?> createAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return new EntityAssembler(
+		return new EntityAssembler<>(
 				getReferencedMappingContainer().getJavaType(),
 				creationState.resolveInitializer( this, parent, this ).asEntityInitializer()
 		);

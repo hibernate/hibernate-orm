@@ -58,7 +58,7 @@ public class ImplicitFetchBuilderEntityPart implements ImplicitFetchBuilder {
 
 		final ImplicitFetchBuilderEntityPart that = (ImplicitFetchBuilderEntityPart) o;
 		return fetchPath.equals( that.fetchPath )
-				&& fetchable.equals( that.fetchable );
+			&& fetchable.equals( that.fetchable );
 	}
 
 	@Override

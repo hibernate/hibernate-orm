@@ -24,18 +24,14 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 
 	protected AbstractFetchBuilderContainer(AbstractFetchBuilderContainer<T> original) {
 		if ( original.fetchBuilderMap != null ) {
-			final Map<String, FetchBuilder> fetchBuilderMap = new HashMap<>( original.fetchBuilderMap.size() );
+			fetchBuilderMap = new HashMap<>( original.fetchBuilderMap.size() );
 			for ( Map.Entry<String, FetchBuilder> entry : original.fetchBuilderMap.entrySet() ) {
-				final FetchBuilder fetchBuilder;
-				if ( entry.getValue() instanceof DynamicFetchBuilderStandard ) {
-					fetchBuilder = ( (DynamicFetchBuilderStandard) entry.getValue() ).cacheKeyInstance( this );
-				}
-				else {
-					fetchBuilder = entry.getValue().cacheKeyInstance();
-				}
+				final FetchBuilder fetchBuilder =
+						entry.getValue() instanceof DynamicFetchBuilderStandard dynamicFetchBuilderStandard
+								? dynamicFetchBuilderStandard.cacheKeyInstance( this )
+								: entry.getValue().cacheKeyInstance();
 				fetchBuilderMap.put( entry.getKey(), fetchBuilder );
 			}
-			this.fetchBuilderMap = fetchBuilderMap;
 		}
 	}
 
@@ -50,7 +46,6 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	public T addProperty(String propertyName, String columnAlias) {
 		final DynamicFetchBuilder fetchBuilder = addProperty( propertyName );
 		fetchBuilder.addColumnAlias( columnAlias );
-
 		return (T) this;
 	}
 
@@ -58,7 +53,6 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	public T addProperty(String propertyName, String... columnAliases) {
 		final DynamicFetchBuilder fetchBuilder = addProperty( propertyName );
 		ArrayHelper.forEach( columnAliases, fetchBuilder::addColumnAlias );
-
 		return (T) this;
 	}
 
@@ -82,12 +76,8 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 			}
 		}
 
-		final DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard(
-				propertyName
-		);
-
+		final DynamicFetchBuilderStandard fetchBuilder = new DynamicFetchBuilderStandard( propertyName );
 		fetchBuilderMap.put( propertyName, fetchBuilder );
-
 		return fetchBuilder;
 	}
 

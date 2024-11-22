@@ -64,11 +64,23 @@ public class CompleteResultBuilderBasicModelPart
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final TableReference tableReference = tableReference( creationStateImpl );
+		final SqlSelection sqlSelection = sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				columnAlias,
+				modelPart.getJdbcMapping(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
+		);
+	}
 
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, modelPart, modelPart.getContainingTableExpression() );
-
-		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
+	private SqlSelection sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationStateImpl creationStateImpl,
+			TableReference tableReference) {
+		return creationStateImpl.resolveSqlSelection(
 				ResultsHelper.resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
@@ -80,15 +92,12 @@ public class CompleteResultBuilderBasicModelPart
 				null,
 				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
+	}
 
-		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
-				columnAlias,
-				modelPart.getJdbcMapping(),
-				navigablePath,
-				false,
-				!sqlSelection.isVirtual()
-		);
+	private TableReference tableReference(DomainResultCreationStateImpl creationStateImpl) {
+		return creationStateImpl.getFromClauseAccess()
+				.getTableGroup( navigablePath.getParent() )
+				.resolveTableReference( navigablePath, modelPart, modelPart.getContainingTableExpression() );
 	}
 
 	@Override
@@ -100,15 +109,10 @@ public class CompleteResultBuilderBasicModelPart
 			return false;
 		}
 
-		CompleteResultBuilderBasicModelPart that = (CompleteResultBuilderBasicModelPart) o;
-
-		if ( !navigablePath.equals( that.navigablePath ) ) {
-			return false;
-		}
-		if ( !modelPart.equals( that.modelPart ) ) {
-			return false;
-		}
-		return columnAlias.equals( that.columnAlias );
+		final CompleteResultBuilderBasicModelPart that = (CompleteResultBuilderBasicModelPart) o;
+		return navigablePath.equals( that.navigablePath )
+				&& modelPart.equals( that.modelPart )
+				&& columnAlias.equals( that.columnAlias );
 	}
 
 	@Override

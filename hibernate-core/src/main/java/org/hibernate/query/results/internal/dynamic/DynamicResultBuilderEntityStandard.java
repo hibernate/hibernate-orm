@@ -84,6 +84,18 @@ public class DynamicResultBuilderEntityStandard
 		this.discriminatorColumnName = original.discriminatorColumnName;
 	}
 
+	static String prefix(DomainResultCreationStateImpl creationState, String elementPrefix, String indexPrefix) {
+		final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
+		if ( currentRelativePath == null ) {
+			return "";
+		}
+		else {
+			return currentRelativePath.getKey()
+					.replace( elementPrefix, "" )
+					.replace( indexPrefix, "" ) + ".";
+		}
+	}
+
 	@Override
 	public Class<?> getJavaType() {
 		return entityMapping.getJavaType().getJavaTypeClass();
@@ -275,16 +287,7 @@ public class DynamicResultBuilderEntityStandard
 		}
 
 		try {
-			final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
-			final String prefix;
-			if ( currentRelativePath == null ) {
-				prefix = "";
-			}
-			else {
-				prefix = currentRelativePath.getKey()
-						.replace( ELEMENT_PREFIX, "" )
-						.replace( INDEX_PREFIX, "" ) + ".";
-			}
+			final String prefix = prefix( creationState, ELEMENT_PREFIX, INDEX_PREFIX );
 			creationState.pushExplicitFetchMementoResolver(
 					relativePath -> {
 						if ( relativePath.startsWith( prefix ) ) {

@@ -40,8 +40,7 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState creationState) {
-
-		final Fetch fetch = parent.generateFetchableFetch(
+		return parent.generateFetchableFetch(
 				fetchable,
 				fetchPath,
 				fetchable.getMappedFetchOptions().getTiming(),
@@ -49,8 +48,6 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 				null,
 				creationState
 		);
-
-		return fetch;
 	}
 
 	@Override
@@ -64,7 +61,7 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 
 		final ImplicitFetchBuilderPlural that = (ImplicitFetchBuilderPlural) o;
 		return fetchPath.equals( that.fetchPath )
-				&& fetchable.equals( that.fetchable );
+			&& fetchable.equals( that.fetchable );
 	}
 
 	@Override

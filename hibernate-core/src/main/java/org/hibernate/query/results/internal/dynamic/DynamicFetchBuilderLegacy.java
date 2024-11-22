@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -43,7 +44,8 @@ import static org.hibernate.query.results.internal.ResultsHelper.impl;
  * @author Christian Beikov
  */
 public class DynamicFetchBuilderLegacy
-		implements LegacyFetchBuilder, DynamicFetchBuilder, NativeQuery.FetchReturn, NativeQuery.ReturnableResultNode, DynamicFetchBuilderContainer {
+		implements LegacyFetchBuilder, DynamicFetchBuilder,
+				NativeQuery.FetchReturn, NativeQuery.ReturnableResultNode, DynamicFetchBuilderContainer {
 
 	private static final String ELEMENT_PREFIX = CollectionPart.Nature.ELEMENT.getName() + ".";
 	private static final String INDEX_PREFIX = CollectionPart.Nature.INDEX.getName() + ".";
@@ -100,24 +102,27 @@ public class DynamicFetchBuilderLegacy
 
 	@Override
 	public DynamicFetchBuilderLegacy cacheKeyInstance() {
-		final Map<String, FetchBuilder> fetchBuilderMap;
-		if ( this.fetchBuilderMap == null ) {
-			fetchBuilderMap = null;
-		}
-		else {
-			fetchBuilderMap = new HashMap<>( this.fetchBuilderMap.size() );
-			for ( Map.Entry<String, FetchBuilder> entry : this.fetchBuilderMap.entrySet() ) {
-				fetchBuilderMap.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
-			}
-		}
 		return new DynamicFetchBuilderLegacy(
 				tableAlias,
 				ownerTableAlias,
 				fetchableName,
 				columnNames == null ? null : List.copyOf( columnNames ),
-				fetchBuilderMap,
+				fetchBuilderMap(),
 				resultBuilderEntity == null ? null : resultBuilderEntity.cacheKeyInstance()
 		);
+	}
+
+	private Map<String, FetchBuilder> fetchBuilderMap() {
+		if ( this.fetchBuilderMap == null ) {
+			return null;
+		}
+		else {
+			final Map<String, FetchBuilder> fetchBuilderMap = new HashMap<>( this.fetchBuilderMap.size() );
+			for ( Map.Entry<String, FetchBuilder> entry : this.fetchBuilderMap.entrySet() ) {
+				fetchBuilderMap.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
+			}
+			return fetchBuilderMap;
+		}
 	}
 
 	@Override
@@ -128,42 +133,13 @@ public class DynamicFetchBuilderLegacy
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationState = impl( domainResultCreationState );
 		final TableGroup ownerTableGroup = creationState.getFromClauseAccess().findByAlias( ownerTableAlias );
-		final AttributeMapping attributeMapping = parent.getReferencedMappingContainer()
-				.findContainingEntityMapping()
-				.findDeclaredAttributeMapping( fetchableName );
-		final TableGroup tableGroup;
-		if ( attributeMapping instanceof TableGroupJoinProducer ) {
-			final SqlAliasBase sqlAliasBase = new SqlAliasBaseConstant( tableAlias );
-			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) attributeMapping ).createTableGroupJoin(
-					fetchPath,
-					ownerTableGroup,
-					tableAlias,
-					sqlAliasBase,
-					SqlAstJoinType.INNER,
-					true,
-					false,
-					creationState
-			);
-			ownerTableGroup.addTableGroupJoin( tableGroupJoin );
-			creationState.getFromClauseAccess().registerTableGroup( fetchPath, tableGroup = tableGroupJoin.getJoinedGroup() );
-		}
-		else {
-			tableGroup = ownerTableGroup;
-		}
+		final AttributeMapping attributeMapping =
+				parent.getReferencedMappingContainer().findContainingEntityMapping()
+						.findDeclaredAttributeMapping( fetchableName );
+		final TableGroup tableGroup = tableGroup( fetchPath, attributeMapping, ownerTableGroup, creationState );
 
 		if ( columnNames != null ) {
-			final ForeignKeyDescriptor keyDescriptor;
-			if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
-				keyDescriptor = pluralAttributeMapping.getKeyDescriptor();
-			}
-			else {
-				// Not sure if this fetch builder can also be used with other attribute mappings
-				assert attributeMapping instanceof ToOneAttributeMapping;
-
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-				keyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
-			}
-
+			final ForeignKeyDescriptor keyDescriptor = getForeignKeyDescriptor( attributeMapping );
 			if ( !columnNames.isEmpty() ) {
 				keyDescriptor.forEachSelectable( (selectionIndex, selectableMapping) -> {
 					resolveSqlSelection(
@@ -191,16 +167,7 @@ public class DynamicFetchBuilderLegacy
 			}
 		}
 		try {
-			final Map.Entry<String, NavigablePath> currentRelativePath = creationState.getCurrentRelativePath();
-			final String prefix;
-			if ( currentRelativePath == null ) {
-				prefix = "";
-			}
-			else {
-				prefix = currentRelativePath.getKey()
-						.replace( ELEMENT_PREFIX, "" )
-						.replace( INDEX_PREFIX, "" ) + ".";
-			}
+			final String prefix = DynamicResultBuilderEntityStandard.prefix( creationState, ELEMENT_PREFIX, INDEX_PREFIX );
 			creationState.pushExplicitFetchMementoResolver(
 					relativePath -> {
 						if ( relativePath.startsWith( prefix ) ) {
@@ -223,6 +190,45 @@ public class DynamicFetchBuilderLegacy
 		}
 	}
 
+	private TableGroup tableGroup(
+			NavigablePath fetchPath,
+			AttributeMapping attributeMapping,
+			TableGroup ownerTableGroup,
+			DomainResultCreationStateImpl creationState) {
+		if ( attributeMapping instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
+					fetchPath,
+					ownerTableGroup,
+					tableAlias,
+					new SqlAliasBaseConstant( tableAlias ),
+					SqlAstJoinType.INNER,
+					true,
+					false,
+					creationState
+			);
+			ownerTableGroup.addTableGroupJoin( tableGroupJoin );
+			final TableGroup tableGroup = tableGroupJoin.getJoinedGroup();
+			creationState.getFromClauseAccess().registerTableGroup( fetchPath, tableGroup );
+			return tableGroup;
+		}
+		else {
+			return ownerTableGroup;
+		}
+	}
+
+	private static ForeignKeyDescriptor getForeignKeyDescriptor(AttributeMapping attributeMapping) {
+		if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			return pluralAttributeMapping.getKeyDescriptor();
+		}
+		else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+			return toOneAttributeMapping.getForeignKeyDescriptor();
+		}
+		else {
+			// Not sure if this fetch builder can also be used with other attribute mappings
+			throw new AssertionFailure( "Unrecognized AttributeMapping" );
+		}
+	}
+
 	private void resolveSqlSelection(
 			String columnAlias,
 			TableReference tableReference,
@@ -240,10 +246,8 @@ public class DynamicFetchBuilderLegacy
 				),
 				selectableMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
-						.getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState().getCreationContext()
+						.getSessionFactory().getTypeConfiguration()
 		);
 	}
 
@@ -312,11 +316,11 @@ public class DynamicFetchBuilderLegacy
 
 		final DynamicFetchBuilderLegacy that = (DynamicFetchBuilderLegacy) o;
 		return tableAlias.equals( that.tableAlias )
-				&& ownerTableAlias.equals( that.ownerTableAlias )
-				&& fetchableName.equals( that.fetchableName )
-				&& Objects.equals( columnNames, that.columnNames )
-				&& Objects.equals( fetchBuilderMap, that.fetchBuilderMap )
-				&& Objects.equals( resultBuilderEntity, that.resultBuilderEntity );
+			&& ownerTableAlias.equals( that.ownerTableAlias )
+			&& fetchableName.equals( that.fetchableName )
+			&& Objects.equals( columnNames, that.columnNames )
+			&& Objects.equals( fetchBuilderMap, that.fetchBuilderMap )
+			&& Objects.equals( resultBuilderEntity, that.resultBuilderEntity );
 	}
 
 	@Override

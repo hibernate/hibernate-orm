@@ -43,11 +43,9 @@ public class ImplicitModelPartResultBuilderBasic
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
-
-		final TableGroup tableGroup = creationStateImpl
-				.getFromClauseAccess()
-				.getTableGroup( navigablePath.getParent() );
+		final TableGroup tableGroup =
+				ResultsHelper.impl( domainResultCreationState ).getFromClauseAccess()
+						.getTableGroup( navigablePath.getParent() );
 		return (BasicResult<?>) modelPart.createDomainResult( navigablePath, tableGroup, null, domainResultCreationState );
 	}
 
@@ -60,12 +58,9 @@ public class ImplicitModelPartResultBuilderBasic
 			return false;
 		}
 
-		ImplicitModelPartResultBuilderBasic that = (ImplicitModelPartResultBuilderBasic) o;
-
-		if ( !navigablePath.equals( that.navigablePath ) ) {
-			return false;
-		}
-		return modelPart.equals( that.modelPart );
+		final ImplicitModelPartResultBuilderBasic that = (ImplicitModelPartResultBuilderBasic) o;
+		return navigablePath.equals( that.navigablePath )
+			&& modelPart.equals( that.modelPart );
 	}
 
 	@Override

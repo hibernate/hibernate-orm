@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.internal.ResultsHelper;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -118,43 +119,18 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final SessionFactoryImplementor sessionFactory = domainResultCreationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory();
+		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
+		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey( columnName ),
-				state -> {
-					final int jdbcPosition;
-					if ( columnPosition > 0 ) {
-						jdbcPosition = columnPosition;
-					}
-					else {
-						jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
-					}
-					final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-
-					final BasicType<?> basicType;
-
-					if ( explicitType != null ) {
-						basicType = explicitType;
-					}
-					else {
-						basicType = jdbcResultsMetadata.resolveType(
-								jdbcPosition,
-								explicitJavaType,
-								sessionFactory
-						);
-					}
-					return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
-				}
+				state -> resultSetMappingSqlSelection( jdbcResultsMetadata, sessionFactory )
 		);
 
 		final JavaType<?> javaType;
 		final JavaType<?> jdbcJavaType;
 		final BasicValueConverter<?, ?> converter;
-
 		if ( explicitJavaType != null ) {
 			javaType = explicitJavaType;
 			jdbcJavaType = explicitJavaType;
@@ -187,6 +163,20 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		);
 	}
 
+	private ResultSetMappingSqlSelection resultSetMappingSqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
+		final int jdbcPosition =
+				columnPosition > 0
+						? columnPosition
+						: jdbcResultsMetadata.resolveColumnPosition( columnName );
+		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+		final BasicType<?> basicType =
+				explicitType != null
+						? explicitType
+						: jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaType, sessionFactory );
+		return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -196,21 +186,12 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			return false;
 		}
 
-		DynamicResultBuilderBasicStandard that = (DynamicResultBuilderBasicStandard) o;
-
-		if ( columnPosition != that.columnPosition ) {
-			return false;
-		}
-		if ( !columnName.equals( that.columnName ) ) {
-			return false;
-		}
-		if ( !resultAlias.equals( that.resultAlias ) ) {
-			return false;
-		}
-		if ( !Objects.equals( explicitType, that.explicitType ) ) {
-			return false;
-		}
-		return Objects.equals( explicitJavaType, that.explicitJavaType );
+		final DynamicResultBuilderBasicStandard that = (DynamicResultBuilderBasicStandard) o;
+		return columnPosition == that.columnPosition
+			&& columnName.equals( that.columnName )
+			&& resultAlias.equals( that.resultAlias )
+			&& Objects.equals( explicitType, that.explicitType )
+			&& Objects.equals( explicitJavaType, that.explicitJavaType );
 	}
 
 	@Override

@@ -129,11 +129,9 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	public DomainResultAssembler<?> createAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		return buildEntityAssembler( creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
-	}
-
-	protected EntityAssembler buildEntityAssembler(EntityInitializer<?> entityInitializer) {
-		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
+		return new EntityAssembler<>( getFetchedMapping().getJavaType(),
+				creationState.resolveInitializer( this, parent, this )
+						.asEntityInitializer() );
 	}
 
 	@Override

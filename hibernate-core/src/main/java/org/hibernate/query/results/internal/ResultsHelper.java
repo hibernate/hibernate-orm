@@ -37,13 +37,14 @@ public class ResultsHelper {
 	}
 
 	private static DomainResultCreationStateImpl unwrap(DomainResultCreationState creationState) {
-		if ( creationState instanceof DomainResultCreationStateImpl ) {
-			return ( (DomainResultCreationStateImpl) creationState );
+		if ( creationState instanceof DomainResultCreationStateImpl domainResultCreationState ) {
+			return domainResultCreationState;
 		}
-
-		throw new IllegalArgumentException(
-				"Passed DomainResultCreationState not an instance of org.hibernate.query.results.internal.DomainResultCreationStateImpl"
-		);
+		else {
+			throw new IllegalArgumentException(
+					"Passed DomainResultCreationState not an instance of org.hibernate.query.results.internal.DomainResultCreationStateImpl"
+			);
+		}
 	}
 
 	public static Expression resolveSqlExpression(
@@ -86,65 +87,15 @@ public class ResultsHelper {
 	private ResultsHelper() {
 	}
 
-	public static boolean isIdentifier(EntityIdentifierMapping identifierDescriptor, String... names) {
-		final String identifierAttributeName = identifierDescriptor instanceof SingleAttributeIdentifierMapping
-				? ( (SingleAttributeIdentifierMapping) identifierDescriptor ).getAttributeName()
-				: EntityIdentifierMapping.ID_ROLE_NAME;
-
-		for ( int i = 0; i < names.length; i++ ) {
-			final String name = names[ i ];
-			if ( EntityIdentifierMapping.ID_ROLE_NAME.equals( name ) ) {
-				return true;
-			}
-
-			if ( identifierAttributeName.equals( name ) ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-//	public static ResultMemento implicitIdentifierResult(
-//			EntityIdentifierMapping identifierMapping,
-//			EntityIdentifierNavigablePath idPath,
-//			ResultSetMappingResolutionContext resolutionContext) {
-//		return new ImplicitModelPartResultMemento( idPath, identifierMapping );
-//	}
-
-	public static DomainResult implicitIdentifierResult(
-			EntityIdentifierMapping identifierMapping,
-			EntityIdentifierNavigablePath idPath,
-			DomainResultCreationState creationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( idPath.getParent() );
-
-		return identifierMapping.createDomainResult(
-				idPath,
-				tableGroup,
-				null,
-				creationState
-		);
-	}
-
 	public static String attributeName(ModelPart identifierMapping) {
 		if ( identifierMapping.isEntityIdentifierMapping() ) {
-			return identifierMapping instanceof SingleAttributeIdentifierMapping
-					? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()
+			return identifierMapping instanceof SingleAttributeIdentifierMapping singleAttributeIdentifierMapping
+					? singleAttributeIdentifierMapping.getAttributeName()
 					: null;
 		}
 		else {
 			return identifierMapping.getPartName();
 		}
 
-	}
-
-	public static DomainResult convertIdFetchToResult(Fetch fetch, DomainResultCreationState creationState) {
-		final EntityIdentifierMapping idMapping = (EntityIdentifierMapping) fetch.getFetchedMapping();
-		if ( fetch instanceof BasicFetch ) {
-			final BasicFetch<?> basicFetch = (BasicFetch<?>) fetch;
-
-		}
-		return null;
 	}
 }

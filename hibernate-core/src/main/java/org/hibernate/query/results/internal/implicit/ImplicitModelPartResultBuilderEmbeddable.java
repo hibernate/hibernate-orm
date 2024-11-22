@@ -50,8 +50,17 @@ public class ImplicitModelPartResultBuilderEmbeddable
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 		creationStateImpl.disallowPositionalSelections();
+		return (EmbeddableResult<?>) modelPart.createDomainResult(
+				navigablePath,
+				tableGroup( creationStateImpl ),
+				null,
+				domainResultCreationState
+		);
 
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().resolveTableGroup(
+	}
+
+	private TableGroup tableGroup(DomainResultCreationStateImpl creationStateImpl) {
+		return creationStateImpl.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
 				np -> {
 					if ( navigablePath.getParent() == null ) {
@@ -60,9 +69,9 @@ public class ImplicitModelPartResultBuilderEmbeddable
 						);
 					}
 
-					final TableGroup parentTableGroup = creationStateImpl
-							.getFromClauseAccess()
-							.getTableGroup( navigablePath.getParent() );
+					final TableGroup parentTableGroup =
+							creationStateImpl.getFromClauseAccess()
+									.getTableGroup( navigablePath.getParent() );
 
 					final TableGroupJoin tableGroupJoin = modelPart.createTableGroupJoin(
 							navigablePath,
@@ -80,14 +89,6 @@ public class ImplicitModelPartResultBuilderEmbeddable
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
-
-		return (EmbeddableResult<?>) modelPart.createDomainResult(
-				navigablePath,
-				tableGroup,
-				null,
-				domainResultCreationState
-		);
-
 	}
 
 	@Override

@@ -144,18 +144,14 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 					entityDescriptor,
 					tableAlias,
 					lockMode,
-					(entityResult) -> {
-						if ( discriminatorFetchBuilder == null ) {
-							return null;
-						}
-
-						return discriminatorFetchBuilder.buildFetch(
-								entityResult,
-								navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
-								jdbcResultsMetadata,
-								domainResultCreationState
-						);
-					},
+					entityResult -> discriminatorFetchBuilder == null
+							? null
+							: discriminatorFetchBuilder.buildFetch(
+									entityResult,
+									navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+									jdbcResultsMetadata,
+									domainResultCreationState
+							),
 					domainResultCreationState
 			);
 		}
@@ -190,9 +186,9 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 
 		final CompleteResultBuilderEntityStandard that = (CompleteResultBuilderEntityStandard) o;
 		return navigablePath.equals( that.navigablePath )
-				&& entityDescriptor.equals( that.entityDescriptor )
-				&& lockMode == that.lockMode
-				&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
-				&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
+			&& entityDescriptor.equals( that.entityDescriptor )
+			&& lockMode == that.lockMode
+			&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
+			&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
 	}
 }

@@ -87,7 +87,8 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final String implicitAlias = entityDescriptor.getSqlAliasStem() + resultPosition;
-		final SqlAliasBase sqlAliasBase = domainResultCreationState.getSqlAliasBaseManager().createSqlAliasBase( implicitAlias );
+		final SqlAliasBase sqlAliasBase =
+				domainResultCreationState.getSqlAliasBaseManager().createSqlAliasBase( implicitAlias );
 
 		final DomainResultCreationStateImpl impl = ResultsHelper.impl( domainResultCreationState );
 		impl.disallowPositionalSelections();
@@ -114,18 +115,14 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 					entityDescriptor,
 					implicitAlias,
 					lockMode,
-					(entityResult) -> {
-						if ( discriminatorFetchBuilder == null ) {
-							return null;
-						}
-
-						return discriminatorFetchBuilder.buildFetch(
-								entityResult,
-								navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
-								jdbcResultsMetadata,
-								domainResultCreationState
-						);
-					},
+					entityResult -> discriminatorFetchBuilder == null
+							? null
+							: discriminatorFetchBuilder.buildFetch(
+									entityResult,
+									navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+									jdbcResultsMetadata,
+									domainResultCreationState
+							),
 					domainResultCreationState
 			);
 		}
@@ -160,9 +157,9 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 
 		final CompleteResultBuilderEntityJpa that = (CompleteResultBuilderEntityJpa) o;
 		return navigablePath.equals( that.navigablePath )
-				&& entityDescriptor.equals( that.entityDescriptor )
-				&& lockMode == that.lockMode
-				&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
-				&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
+			&& entityDescriptor.equals( that.entityDescriptor )
+			&& lockMode == that.lockMode
+			&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
+			&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
 	}
 }

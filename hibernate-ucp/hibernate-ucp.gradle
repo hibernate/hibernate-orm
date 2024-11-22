@@ -12,7 +12,7 @@ apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 dependencies {
     implementation project( ':hibernate-core' )
     implementation libs.ucp
-    implementation libs.ojdbc11
+    implementation libs.ojdbc17
 
     testImplementation project( ':hibernate-testing' )
 }

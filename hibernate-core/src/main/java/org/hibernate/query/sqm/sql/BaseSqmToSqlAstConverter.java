@@ -488,7 +488,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmStatement<?> currentSqmStatement;
-	private Stack<SqmQueryPart> sqmQueryPartStack = new StandardStack<>( SqmQueryPart.class );
+	private Stack<SqmQueryPart> sqmQueryPartStack = new StandardStack<>();
 	private CteContainer cteContainer;
 	/**
 	 * A map from {@link SqmCteTable#getCteName()} to the final SQL name.
@@ -506,8 +506,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
-	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>( SqlAstProcessingState.class );
-	private final Stack<FromClauseIndex> fromClauseIndexStack = new StandardStack<>( FromClauseIndex.class );
+	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
+	private final Stack<FromClauseIndex> fromClauseIndexStack = new StandardStack<>();
 
 	// Captures all entity name uses under which a table group is being used within the current conjunct.
 	// Outside a top level conjunct, it represents the "global uses" i.e. select, from, group and order by clauses.
@@ -521,9 +521,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private SqmJoin<?, ?> currentlyProcessingJoin;
 	protected Predicate additionalRestrictions;
 
-	private final Stack<Clause> currentClauseStack = new StandardStack<>( Clause.class );
-	private final Stack<Supplier> inferrableTypeAccessStack = new StandardStack<>( Supplier.class );
-	private final Stack<List> queryTransformers = new StandardStack<>( List.class );
+	private final Stack<Clause> currentClauseStack = new StandardStack<>();
+	private final Stack<Supplier> inferrableTypeAccessStack = new StandardStack<>();
+	private final Stack<List> queryTransformers = new StandardStack<>();
 	private boolean inTypeInference;
 	private boolean inImpliedResultTypeInference;
 	private boolean inNestedContext;

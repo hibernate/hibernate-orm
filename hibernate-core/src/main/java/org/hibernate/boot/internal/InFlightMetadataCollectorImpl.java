@@ -85,7 +85,6 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -126,6 +125,7 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
@@ -409,7 +409,7 @@ public class InFlightMetadataCollectorImpl
 			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
 		}
 
-		PersistentClass matchingPersistentClass = entityBindingMap.values()
+		final PersistentClass matchingPersistentClass = entityBindingMap.values()
 				.stream()
 				.filter( existingPersistentClass -> existingPersistentClass.getJpaEntityName().equals( jpaEntityName ) )
 				.findFirst()
@@ -503,11 +503,8 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableType) {
-		if ( registeredInstantiators == null ) {
-			return null;
-		}
+		return registeredInstantiators == null ? null : registeredInstantiators.get( embeddableType );
 
-		return registeredInstantiators.get( embeddableType );
 	}
 
 	private Map<Class<?>, Class<? extends CompositeUserType<?>>> registeredCompositeUserTypes;
@@ -522,11 +519,8 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableType) {
-		if ( registeredCompositeUserTypes == null ) {
-			return null;
-		}
+		return registeredCompositeUserTypes == null ? null : registeredCompositeUserTypes.get( embeddableType );
 
-		return registeredCompositeUserTypes.get( embeddableType );
 	}
 
 	private Map<Class<?>, Class<? extends UserType<?>>> registeredUserTypes;
@@ -540,11 +534,8 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType) {
-		if ( registeredUserTypes == null ) {
-			return null;
-		}
+		return registeredUserTypes == null ? null : registeredUserTypes.get( basicType );
 
-		return registeredUserTypes.get( basicType );
 	}
 
 	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
@@ -582,15 +573,16 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private Map<String,String> extractParameters(Parameter[] annotationUsages) {
-		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
+		if ( isEmpty( annotationUsages ) ) {
 			return null;
 		}
-
-		final Map<String,String> result = mapOfSize( annotationUsages.length );
-		for ( Parameter parameter : annotationUsages ) {
-			result.put( parameter.name(), parameter.value() );
+		else {
+			final Map<String, String> result = mapOfSize( annotationUsages.length );
+			for ( Parameter parameter : annotationUsages ) {
+				result.put( parameter.name(), parameter.value() );
+			}
+			return result;
 		}
-		return result;
 	}
 
 
@@ -703,7 +695,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public java.util.Collection<Table> collectTableMappings() {
-		ArrayList<Table> tables = new ArrayList<>();
+		final ArrayList<Table> tables = new ArrayList<>();
 		for ( Namespace namespace : getDatabase().getNamespaces() ) {
 			tables.addAll( namespace.getTables() );
 		}
@@ -715,29 +707,27 @@ public class InFlightMetadataCollectorImpl
 		if ( generator == null || generator.getName() == null ) {
 			throw new IllegalArgumentException( "ID generator object or name is null." );
 		}
-
-		if ( generator.getName().isEmpty() ) {
-			return;
-		}
-
-		if ( defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
-			return;
-		}
-
-		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
-		if ( old != null && !old.equals( generator ) ) {
-			if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() + "; you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
-			}
-			else {
-				log.duplicateGeneratorName( old.getName() );
+		else if ( !generator.getName().isEmpty()
+			&& !defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
+			final IdentifierGeneratorDefinition old =
+					idGeneratorDefinitionMap.put( generator.getName(), generator );
+			if ( old != null && !old.equals( generator ) ) {
+				if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+					throw new IllegalArgumentException( "Duplicate generator name " + old.getName()
+							+ "; you will likely want to set the property "
+							+ AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
+				}
+				else {
+					log.duplicateGeneratorName( old.getName() );
+				}
 			}
 		}
+
 	}
 
 	@Override
 	public void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generator) {
-		this.addIdentifierGenerator( generator );
+		addIdentifierGenerator( generator );
 		defaultIdentifierGeneratorNames.add( generator.getName() );
 	}
 
@@ -761,8 +751,7 @@ public class InFlightMetadataCollectorImpl
 		final String name = definition.getRegisteredName();
 		final NamedEntityGraphDefinition previous = namedEntityGraphMap.put( name, definition );
 		if ( previous != null ) {
-			throw new DuplicateMappingException(
-					DuplicateMappingException.Type.NAMED_ENTITY_GRAPH, name );
+			throw new DuplicateMappingException( DuplicateMappingException.Type.NAMED_ENTITY_GRAPH, name );
 		}
 	}
 
@@ -790,12 +779,9 @@ public class InFlightMetadataCollectorImpl
 		else if ( def.getRegistrationName() == null ) {
 			throw new IllegalArgumentException( "Named query definition name is null: " + def.getHqlString() );
 		}
-
-		if ( defaultNamedQueryNames.contains( def.getRegistrationName() ) ) {
-			return;
+		else if ( !defaultNamedQueryNames.contains( def.getRegistrationName() ) ) {
+			applyNamedQuery( def.getRegistrationName(), def );
 		}
-
-		applyNamedQuery( def.getRegistrationName(), def );
 	}
 
 	private void applyNamedQuery(String name, NamedHqlQueryDefinition<?> query) {
@@ -833,15 +819,12 @@ public class InFlightMetadataCollectorImpl
 		if ( def == null ) {
 			throw new IllegalArgumentException( "Named native query definition object is null" );
 		}
-		if ( def.getRegistrationName() == null ) {
+		else if ( def.getRegistrationName() == null ) {
 			throw new IllegalArgumentException( "Named native query definition name is null: " + def.getSqlQueryString() );
 		}
-
-		if ( defaultNamedNativeQueryNames.contains( def.getRegistrationName() ) ) {
-			return;
+		else if ( !defaultNamedNativeQueryNames.contains( def.getRegistrationName() ) ) {
+			applyNamedNativeQuery( def.getRegistrationName(), def );
 		}
-
-		applyNamedNativeQuery( def.getRegistrationName(), def );
 	}
 
 	private void applyNamedNativeQuery(String name, NamedNativeQueryDefinition<?> query) {
@@ -877,14 +860,11 @@ public class InFlightMetadataCollectorImpl
 		}
 
 		final String name = definition.getRegistrationName();
-
-		if ( defaultNamedProcedureNames.contains( name ) ) {
-			return;
-		}
-
-		final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
-		if ( previous != null ) {
-			throw new DuplicateMappingException( DuplicateMappingException.Type.PROCEDURE, name );
+		if ( !defaultNamedProcedureNames.contains( name ) ) {
+			final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
+			if ( previous != null ) {
+				throw new DuplicateMappingException( DuplicateMappingException.Type.PROCEDURE, name );
+			}
 		}
 	}
 
@@ -918,12 +898,9 @@ public class InFlightMetadataCollectorImpl
 		if ( name == null ) {
 			throw new IllegalArgumentException( "Result-set mapping name is null: " + resultSetMappingDescriptor );
 		}
-
-		if ( defaultSqlResultSetMappingNames.contains( name ) ) {
-			return;
+		else if ( !defaultSqlResultSetMappingNames.contains( name ) ) {
+			applyResultSetMapping( resultSetMappingDescriptor );
 		}
-
-		applyResultSetMapping( resultSetMappingDescriptor );
 	}
 
 	public void applyResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor) {
@@ -1879,32 +1856,26 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private void processValueResolvers(MetadataBuildingContext buildingContext) {
-		if ( valueResolvers == null ) {
-			return;
-		}
+		if ( valueResolvers != null ) {
+			while ( !valueResolvers.isEmpty() ) {
+				final boolean anyRemoved = valueResolvers.removeIf(
+						resolver -> resolver.apply( buildingContext )
+				);
 
-
-		while ( ! valueResolvers.isEmpty() ) {
-			final boolean anyRemoved = valueResolvers.removeIf(
-					resolver -> resolver.apply( buildingContext )
-			);
-
-			if ( ! anyRemoved ) {
-				throw new MappingException( "Unable to complete initialization of boot meta-model" );
+				if ( !anyRemoved ) {
+					throw new MappingException( "Unable to complete initialization of boot meta-model" );
+				}
 			}
 		}
 	}
 
 	private void processSecondPasses(ArrayList<? extends SecondPass> secondPasses) {
-		if ( secondPasses == null ) {
-			return;
+		if ( secondPasses != null ) {
+			for ( SecondPass secondPass : secondPasses ) {
+				secondPass.doSecondPass( getEntityBindingMap() );
+			}
+			secondPasses.clear();
 		}
-
-		for ( SecondPass secondPass : secondPasses ) {
-			secondPass.doSecondPass( getEntityBindingMap() );
-		}
-
-		secondPasses.clear();
 	}
 
 	private void processFkSecondPassesInOrder() {
@@ -1915,8 +1886,8 @@ public class InFlightMetadataCollectorImpl
 
 		// split FkSecondPass instances into primary key and non primary key FKs.
 		// While doing so build a map of class names to FkSecondPass instances depending on this class.
-		Map<String, Set<FkSecondPass>> isADependencyOf = new HashMap<>();
-		List<FkSecondPass> endOfQueueFkSecondPasses = new ArrayList<>( fkSecondPassList.size() );
+		final Map<String, Set<FkSecondPass>> isADependencyOf = new HashMap<>();
+		final List<FkSecondPass> endOfQueueFkSecondPasses = new ArrayList<>( fkSecondPassList.size() );
 		for ( FkSecondPass sp : fkSecondPassList ) {
 			if ( sp.isInPrimaryKey() ) {
 				final String referenceEntityName = sp.getReferencedEntityName();
@@ -1933,7 +1904,7 @@ public class InFlightMetadataCollectorImpl
 		}
 
 		// using the isADependencyOf map we order the FkSecondPass recursively instances into the right order for processing
-		List<FkSecondPass> orderedFkSecondPasses = new ArrayList<>( fkSecondPassList.size() );
+		final List<FkSecondPass> orderedFkSecondPasses = new ArrayList<>( fkSecondPassList.size() );
 		for ( String tableName : isADependencyOf.keySet() ) {
 			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, tableName, tableName );
 		}
@@ -1968,7 +1939,7 @@ public class InFlightMetadataCollectorImpl
 			Map<String, Set<FkSecondPass>> isADependencyOf,
 			String startTable,
 			String currentTable) {
-		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
+		final Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
 		if ( dependencies != null ) {
 			for ( FkSecondPass pass : dependencies ) {
 				String dependentTable = pass.getValue().getTable().getQualifiedTableName().render();
@@ -2016,7 +1987,7 @@ public class InFlightMetadataCollectorImpl
 
 	private void secondPassCompileForeignKeys(MetadataBuildingContext buildingContext) {
 		int uniqueInteger = 0;
-		Set<ForeignKey> done = new HashSet<>();
+		final Set<ForeignKey> done = new HashSet<>();
 		for ( Table table : collectTableMappings() ) {
 			table.setUniqueInteger( uniqueInteger++ );
 			secondPassCompileForeignKeys( table, done, buildingContext );
@@ -2052,26 +2023,22 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private void processPropertyReferences() {
-		if ( delayedPropertyReferenceHandlers == null ) {
-			return;
-		}
-		log.debug( "Processing association property references" );
+		if ( delayedPropertyReferenceHandlers != null ) {
+			log.debug( "Processing association property references" );
 
-		for ( DelayedPropertyReferenceHandler delayedPropertyReferenceHandler : delayedPropertyReferenceHandlers ) {
-			delayedPropertyReferenceHandler.process( this );
-		}
+			for ( DelayedPropertyReferenceHandler delayedPropertyReferenceHandler : delayedPropertyReferenceHandlers ) {
+				delayedPropertyReferenceHandler.process( this );
+			}
 
-		delayedPropertyReferenceHandlers.clear();
+			delayedPropertyReferenceHandlers.clear();
+		}
 	}
 
 	private Map<String,NaturalIdUniqueKeyBinder> naturalIdUniqueKeyBinderMap;
 
 	@Override
 	public NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName) {
-		if ( naturalIdUniqueKeyBinderMap == null ) {
-			return null;
-		}
-		return naturalIdUniqueKeyBinderMap.get( entityName );
+		return naturalIdUniqueKeyBinderMap == null ? null : naturalIdUniqueKeyBinderMap.get( entityName );
 	}
 
 	@Override
@@ -2086,15 +2053,12 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private void processNaturalIdUniqueKeyBinders() {
-		if ( naturalIdUniqueKeyBinderMap == null ) {
-			return;
+		if ( naturalIdUniqueKeyBinderMap != null ) {
+			for ( NaturalIdUniqueKeyBinder naturalIdUniqueKeyBinder : naturalIdUniqueKeyBinderMap.values() ) {
+				naturalIdUniqueKeyBinder.process();
+			}
+			naturalIdUniqueKeyBinderMap.clear();
 		}
-
-		for ( NaturalIdUniqueKeyBinder naturalIdUniqueKeyBinder : naturalIdUniqueKeyBinderMap.values() ) {
-			naturalIdUniqueKeyBinder.process();
-		}
-
-		naturalIdUniqueKeyBinderMap.clear();
 	}
 
 	private void processCachingOverrides() {

@@ -230,7 +230,8 @@ public class MetadataBuildingProcess {
 		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
 
-	private static void coordinateProcessors(
+	@Internal
+	public static void coordinateProcessors(
 			ManagedResources managedResources,
 			MetadataBuildingOptions options,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,

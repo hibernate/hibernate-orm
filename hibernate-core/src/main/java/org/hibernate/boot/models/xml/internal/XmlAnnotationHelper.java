@@ -118,7 +118,7 @@ import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotat
 import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
-import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.JpaEventListener;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;

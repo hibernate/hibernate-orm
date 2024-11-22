@@ -59,7 +59,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
+import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.models.spi.GlobalRegistrations;

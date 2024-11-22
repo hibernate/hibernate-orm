@@ -6,7 +6,7 @@ package org.hibernate.boot.models.spi;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
-import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;

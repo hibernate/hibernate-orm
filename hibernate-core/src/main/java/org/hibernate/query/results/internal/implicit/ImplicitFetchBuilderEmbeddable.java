@@ -5,8 +5,6 @@
 package org.hibernate.query.results.internal.implicit;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.spi.NavigablePath;
@@ -20,12 +18,14 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import static java.util.Collections.emptyMap;
+import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
+import static org.hibernate.query.results.internal.Builders.implicitFetchBuilder;
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
 /**
@@ -42,34 +42,35 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
+		this.fetchBuilders = fetchBuilderMap( fetchPath, fetchable, impl( creationState ) );
+	}
+
+	private static Map<NavigablePath, FetchBuilder> fetchBuilderMap(
+			NavigablePath fetchPath,
+			EmbeddableValuedFetchable fetchable,
+			DomainResultCreationStateImpl creationStateImpl) {
+		final Function<String, FetchBuilder> fetchBuilderResolver =
+				creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		final Map.Entry<String, NavigablePath> relativePath = creationStateImpl.getCurrentRelativePath();
-		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
 		final int size = fetchable.getNumberOfFetchables();
-		final Map<NavigablePath, FetchBuilder> fetchBuilders = CollectionHelper.linkedMapOfSize( size );
+		final Map<NavigablePath, FetchBuilder> fetchBuilders = linkedMapOfSize( size );
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable subFetchable = fetchable.getFetchable( i );
 			final NavigablePath subFetchPath = relativePath.getValue().append( subFetchable.getFetchableName() );
 			final FetchBuilder explicitFetchBuilder = fetchBuilderResolver.apply( subFetchPath.getFullPath() );
-			if ( explicitFetchBuilder == null ) {
-				fetchBuilders.put(
-						subFetchPath,
-						Builders.implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
-				);
-			}
-			else {
-				fetchBuilders.put( subFetchPath, explicitFetchBuilder );
-			}
+			fetchBuilders.put( subFetchPath,
+					explicitFetchBuilder == null
+							? implicitFetchBuilder( fetchPath, subFetchable, creationStateImpl )
+							: explicitFetchBuilder );
 		}
-		this.fetchBuilders = fetchBuilders;
+		return fetchBuilders;
 	}
 
 	private ImplicitFetchBuilderEmbeddable(ImplicitFetchBuilderEmbeddable original) {
 		this.fetchPath = original.fetchPath;
 		this.fetchable = original.fetchable;
-		final Map<NavigablePath, FetchBuilder> fetchBuilders;
 		if ( original.fetchBuilders.isEmpty() ) {
-			fetchBuilders = Collections.emptyMap();
+			fetchBuilders = emptyMap();
 		}
 		else {
 			fetchBuilders = new HashMap<>( original.fetchBuilders.size() );
@@ -77,7 +78,6 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 				fetchBuilders.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
 			}
 		}
-		this.fetchBuilders = fetchBuilders;
 	}
 
 	@Override
@@ -94,26 +94,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
 
 		// make sure the TableGroup is available
-		creationStateImpl.getFromClauseAccess().resolveTableGroup(
-				fetchPath,
-				navigablePath -> {
-					final TableGroup parentTableGroup = creationStateImpl
-							.getFromClauseAccess()
-							.getTableGroup( parent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
-							fetchPath,
-							parentTableGroup,
-							null,
-							null,
-							SqlAstJoinType.INNER,
-							true,
-							false,
-							creationStateImpl
-					);
-					parentTableGroup.addTableGroupJoin( tableGroupJoin );
-					return tableGroupJoin.getJoinedGroup();
-				}
-		);
+		tableGroup( parent, fetchPath, creationStateImpl );
 
 		//		final FetchParent fetchParent = (FetchParent) fetch;
 //		fetchBuilders.forEach(
@@ -136,6 +117,29 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		);
 	}
 
+	private void tableGroup(FetchParent parent, NavigablePath fetchPath, DomainResultCreationStateImpl creationStateImpl) {
+		creationStateImpl.getFromClauseAccess().resolveTableGroup(
+				fetchPath,
+				navigablePath -> {
+					final TableGroup parentTableGroup =
+							creationStateImpl.getFromClauseAccess()
+									.getTableGroup( parent.getNavigablePath() );
+					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
+							fetchPath,
+							parentTableGroup,
+							null,
+							null,
+							SqlAstJoinType.INNER,
+							true,
+							false,
+							creationStateImpl
+					);
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -147,8 +151,8 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 
 		final ImplicitFetchBuilderEmbeddable that = (ImplicitFetchBuilderEmbeddable) o;
 		return fetchPath.equals( that.fetchPath )
-				&& fetchable.equals( that.fetchable )
-				&& fetchBuilders.equals( that.fetchBuilders );
+			&& fetchable.equals( that.fetchable )
+			&& fetchBuilders.equals( that.fetchBuilders );
 	}
 
 	@Override

@@ -86,8 +86,8 @@ public class DelayedFetchBuilderBasicPart
 
 		final DelayedFetchBuilderBasicPart that = (DelayedFetchBuilderBasicPart) o;
 		return isEnhancedForLazyLoading == that.isEnhancedForLazyLoading
-				&& navigablePath.equals( that.navigablePath )
-				&& referencedModelPart.equals( that.referencedModelPart );
+			&& navigablePath.equals( that.navigablePath )
+			&& referencedModelPart.equals( that.referencedModelPart );
 	}
 
 	@Override

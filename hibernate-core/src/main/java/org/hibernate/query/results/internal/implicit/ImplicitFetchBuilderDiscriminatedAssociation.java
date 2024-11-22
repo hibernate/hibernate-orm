@@ -42,14 +42,24 @@ public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFet
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState creationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
+		tableGroup( parent, fetchPath, impl( creationState ) );
+		return parent.generateFetchableFetch(
+				fetchable,
+				fetchPath,
+				fetchable.getTiming(),
+				false,
+				null,
+				creationState
+		);
+	}
 
+	private void tableGroup(FetchParent parent, NavigablePath fetchPath, DomainResultCreationStateImpl creationStateImpl) {
 		creationStateImpl.getFromClauseAccess().resolveTableGroup(
 				fetchPath,
 				navigablePath -> {
-					final TableGroup parentTableGroup = creationStateImpl
-							.getFromClauseAccess()
-							.getTableGroup( parent.getNavigablePath() );
+					final TableGroup parentTableGroup =
+							creationStateImpl.getFromClauseAccess()
+									.getTableGroup( parent.getNavigablePath() );
 					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
 							fetchPath,
 							parentTableGroup,
@@ -64,14 +74,6 @@ public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFet
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
-		return parent.generateFetchableFetch(
-				fetchable,
-				fetchPath,
-				fetchable.getTiming(),
-				false,
-				null,
-				creationState
-		);
 	}
 
 	@Override
@@ -85,7 +87,7 @@ public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFet
 
 		final ImplicitFetchBuilderDiscriminatedAssociation that = (ImplicitFetchBuilderDiscriminatedAssociation) o;
 		return fetchPath.equals( that.fetchPath )
-				&& fetchable.equals( that.fetchable );
+			&& fetchable.equals( that.fetchable );
 	}
 
 	@Override

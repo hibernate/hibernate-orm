@@ -53,31 +53,30 @@ public class ImplicitModelPartResultBuilderEntity
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 		creationStateImpl.disallowPositionalSelections();
-
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().resolveTableGroup(
-				navigablePath,
-				np -> {
-					if ( navigablePath.getParent() != null ) {
-						return creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-					}
-
-					return modelPart.getEntityMappingType().createRootTableGroup(
-							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
-							true,
-							navigablePath,
-							null,
-							null,
-							null,
-							creationStateImpl
-					);
-				}
-		);
-
 		return (EntityResult) modelPart.createDomainResult(
 				navigablePath,
-				tableGroup,
+				tableGroup( creationStateImpl ),
 				null,
 				domainResultCreationState
+		);
+	}
+
+	private TableGroup tableGroup(DomainResultCreationStateImpl creationStateImpl) {
+		return creationStateImpl.getFromClauseAccess().resolveTableGroup(
+				navigablePath,
+				np ->
+						navigablePath.getParent() != null
+								? creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() )
+								: modelPart.getEntityMappingType().createRootTableGroup(
+										// since this is only used for result set mappings,
+										// the canUseInnerJoins value is irrelevant.
+										true,
+										navigablePath,
+										null,
+										null,
+										null,
+										creationStateImpl
+								)
 		);
 	}
 
@@ -90,12 +89,9 @@ public class ImplicitModelPartResultBuilderEntity
 			return false;
 		}
 
-		ImplicitModelPartResultBuilderEntity that = (ImplicitModelPartResultBuilderEntity) o;
-
-		if ( !navigablePath.equals( that.navigablePath ) ) {
-			return false;
-		}
-		return modelPart.equals( that.modelPart );
+		final ImplicitModelPartResultBuilderEntity that = (ImplicitModelPartResultBuilderEntity) o;
+		return navigablePath.equals( that.navigablePath )
+			&& modelPart.equals( that.modelPart );
 	}
 
 	@Override

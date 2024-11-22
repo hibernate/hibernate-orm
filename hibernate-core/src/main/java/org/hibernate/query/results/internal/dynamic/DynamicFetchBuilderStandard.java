@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -70,11 +71,13 @@ public class DynamicFetchBuilderStandard
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
+		final TableGroup ownerTableGroup =
+				creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
 
-		final TableGroup ownerTableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
-
-		final Fetchable attributeMapping = (Fetchable) parent.getReferencedMappingContainer().findSubPart( fetchableName, null );
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final Fetchable attributeMapping =
+				(Fetchable) parent.getReferencedMappingContainer().findSubPart( fetchableName, null );
+		final SqlExpressionResolver sqlExpressionResolver =
+				domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
 		final BasicValuedModelPart basicPart = attributeMapping.asBasicValuedModelPart();
 		if ( basicPart != null ) {
@@ -120,18 +123,19 @@ public class DynamicFetchBuilderStandard
 			);
 		}
 		else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
-			toOneAttributeMapping.getForeignKeyDescriptor().getPart( toOneAttributeMapping.getSideNature() )
-							.forEachSelectable(
-									getSelectableConsumer(
-											fetchPath,
-											jdbcResultsMetadata,
-											domainResultCreationState,
-											creationStateImpl,
-											ownerTableGroup,
-											sqlExpressionResolver,
-											toOneAttributeMapping.getForeignKeyDescriptor()
-									)
-							);
+			toOneAttributeMapping.getForeignKeyDescriptor()
+					.getPart( toOneAttributeMapping.getSideNature() )
+					.forEachSelectable(
+							getSelectableConsumer(
+									fetchPath,
+									jdbcResultsMetadata,
+									domainResultCreationState,
+									creationStateImpl,
+									ownerTableGroup,
+									sqlExpressionResolver,
+									toOneAttributeMapping.getForeignKeyDescriptor()
+							)
+					);
 			return parent.generateFetchableFetch(
 					attributeMapping,
 					fetchPath,
@@ -141,9 +145,7 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else {
-			assert attributeMapping instanceof PluralAttributeMapping;
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+		else if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			pluralAttributeMapping.getKeyDescriptor().visitTargetSelectables(
 					getSelectableConsumer(
 							fetchPath,
@@ -163,6 +165,9 @@ public class DynamicFetchBuilderStandard
 					null,
 					creationStateImpl
 			);
+		}
+		else {
+			throw new AssertionFailure( "Unexpected attribute mapping" );
 		}
 	}
 
@@ -191,10 +196,8 @@ public class DynamicFetchBuilderStandard
 					),
 					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,
-					domainResultCreationState.getSqlAstCreationState()
-							.getCreationContext()
-							.getSessionFactory()
-							.getTypeConfiguration()
+					domainResultCreationState.getSqlAstCreationState().getCreationContext()
+							.getSessionFactory().getTypeConfiguration()
 			);
 		};
 	}
@@ -228,6 +231,6 @@ public class DynamicFetchBuilderStandard
 
 		final DynamicFetchBuilderStandard that = (DynamicFetchBuilderStandard) o;
 		return fetchableName.equals( that.fetchableName )
-				&& columnNames.equals( that.columnNames );
+			&& columnNames.equals( that.columnNames );
 	}
 }

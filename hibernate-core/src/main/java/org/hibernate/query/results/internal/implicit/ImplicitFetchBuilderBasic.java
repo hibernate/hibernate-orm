@@ -44,9 +44,9 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
-		this.fetchBuilder = fetchBuilderResolver.apply( fetchable.getFetchableName() );
+		this.fetchBuilder =
+				impl( creationState ).getCurrentExplicitFetchMementoResolver()
+						.apply( fetchable.getFetchableName() );
 	}
 
 	@Override
@@ -68,41 +68,9 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 					domainResultCreationState
 			);
 		}
-		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
-		final TableGroup parentTableGroup = creationStateImpl
-				.getFromClauseAccess()
-				.getTableGroup( parent.getNavigablePath() );
-
-		final String table = fetchable.getContainingTableExpression();
-		final String column;
-
-		// In case of a formula we look for a result set position with the fetchable name
-		if ( fetchable.isFormula() ) {
-			column = fetchable.getFetchableName();
-		}
-		else {
-			column = fetchable.getSelectionExpression();
-		}
-
-		final Expression expression = ResultsHelper.resolveSqlExpression(
-				creationStateImpl,
-				jdbcResultsMetadata,
-				parentTableGroup.resolveTableReference( fetchPath, fetchable, table ),
-				fetchable,
-				column
-		);
-
-		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-				expression,
-				fetchable.getJdbcMapping().getJdbcJavaType(),
-				parent,
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
-						.getTypeConfiguration()
-		);
-
+		final SqlSelection sqlSelection =
+				sqlSelection( parent, fetchPath, jdbcResultsMetadata, domainResultCreationState );
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				parent,
@@ -111,6 +79,34 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 				FetchTiming.IMMEDIATE,
 				domainResultCreationState,
 				!sqlSelection.isVirtual()
+		);
+	}
+
+	private SqlSelection sqlSelection(
+			FetchParent parent,
+			NavigablePath fetchPath,
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationState domainResultCreationState) {
+		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
+		final TableGroup parentTableGroup =
+				creationStateImpl.getFromClauseAccess()
+						.getTableGroup( parent.getNavigablePath() );
+		return creationStateImpl.resolveSqlSelection(
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						jdbcResultsMetadata,
+						parentTableGroup.resolveTableReference( fetchPath, fetchable,
+								fetchable.getContainingTableExpression() ),
+						fetchable,
+						fetchable.isFormula()
+								// In case of a formula we look for a result set position with the fetchable name
+								? fetchable.getFetchableName()
+								: fetchable.getSelectionExpression()
+				),
+				fetchable.getJdbcMapping().getJdbcJavaType(),
+				parent,
+				domainResultCreationState.getSqlAstCreationState().getCreationContext()
+						.getSessionFactory().getTypeConfiguration()
 		);
 	}
 
@@ -130,7 +126,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 
 		final ImplicitFetchBuilderBasic that = (ImplicitFetchBuilderBasic) o;
 		return fetchPath.equals( that.fetchPath )
-				&& fetchable.equals( that.fetchable );
+			&& fetchable.equals( that.fetchable );
 	}
 
 	@Override

@@ -61,7 +61,7 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 
 		final ImplicitAttributeFetchBuilder that = (ImplicitAttributeFetchBuilder) o;
 		return navigablePath.equals( that.navigablePath )
-				&& attributeMapping.equals( that.attributeMapping );
+			&& attributeMapping.equals( that.attributeMapping );
 	}
 
 	@Override

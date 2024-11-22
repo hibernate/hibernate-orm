@@ -59,18 +59,16 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 		}
 		sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
-				np -> {
-					return entityValuedModelPart.getEntityMappingType()
-							.getEntityPersister()
-							.createRootTableGroup(
-									true,
-									navigablePath,
-									null,
-									null,
-									() -> p -> {},
-									sqlAstCreationState
-							);
-				}
+				np ->
+						entityValuedModelPart.getEntityMappingType().getEntityPersister()
+								.createRootTableGroup(
+										true,
+										navigablePath,
+										null,
+										null,
+										() -> p -> {},
+										sqlAstCreationState
+								)
 		);
 
 		this.identifierFetch = creationState.visitIdentifierFetch( this );
@@ -137,10 +135,10 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 	}
 
 	@Override
-	public DomainResultAssembler<?> createResultAssembler(
-			InitializerParent parent,
-			AssemblerCreationState creationState) {
-		return new EntityAssembler( getResultJavaType(), creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
+	public EntityAssembler createResultAssembler(InitializerParent parent, AssemblerCreationState creationState) {
+		return new EntityAssembler<>( getResultJavaType(),
+				creationState.resolveInitializer( this, parent, this )
+						.asEntityInitializer() );
 	}
 
 	@Override

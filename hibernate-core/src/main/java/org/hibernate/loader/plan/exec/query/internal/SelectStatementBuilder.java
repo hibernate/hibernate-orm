@@ -187,7 +187,7 @@ public class SelectStatementBuilder {
 		StringBuilder buf = new StringBuilder( guesstimatedBufferSize );
 
 		if ( StringHelper.isNotEmpty( comment ) ) {
-			buf.append( "/* " ).append( comment ).append( " */ " );
+			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
 		}
 
 		buf.append( "select " )

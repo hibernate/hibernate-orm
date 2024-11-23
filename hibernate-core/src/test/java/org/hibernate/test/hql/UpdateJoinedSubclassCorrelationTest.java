@@ -19,14 +19,14 @@ public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFuncti
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Master.class, SubMaster.class, Detail.class };
+		return new Class<?>[] { Root.class, SubRoot.class, Detail.class };
 	}
 
 	@Test
 	public void testJoinedSubclassUpdateWithCorrelation() {
 		// prepare
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Master m1 = new SubMaster( 1, null );
+			Root m1 = new SubRoot( 1, null );
 			entityManager.persist( m1 );
 			Detail d11 = new Detail( 10, m1 );
 			entityManager.persist( d11 );
@@ -35,40 +35,40 @@ public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFuncti
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			// DO NOT CHANGE this query: it used to trigger a very specific bug caused
 			// by the root table alias being added to the generated subquery instead of the table name
-			String u = "update SubMaster m set name = (select 'test' from Detail d where d.master = m)";
+			String u = "update SubRoot m set name = (select 'test' from Detail d where d.root = m)";
 			Query updateQuery = entityManager.createQuery( u );
 			updateQuery.executeUpdate();
 
-			// so check if the name of the SubMaster has been correctly updated
+			// so check if the name of the SubRoot has been correctly updated
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Master> query = builder.createQuery( Master.class );
-			query.select( query.from( Master.class ) );
-			List<Master> masters = entityManager.createQuery( query ).getResultList();
-			Assert.assertEquals( 1, masters.size() );
-			Assert.assertEquals( "test", ((SubMaster) masters.get(0)).name );
+			CriteriaQuery<Root> query = builder.createQuery( Root.class );
+			query.select( query.from( Root.class ) );
+			List<Root> roots = entityManager.createQuery( query ).getResultList();
+			Assert.assertEquals( 1, roots.size() );
+			Assert.assertEquals( "test", ((SubRoot) roots.get(0)).name );
 		} );
 	}
 
 	@Inheritance(strategy = JOINED)
-	@Entity(name = "Master")
-	public static abstract class Master {
+	@Entity(name = "Root")
+	public static abstract class Root {
 		@Id
 		private Integer id;
 
-		public Master() { }
+		public Root() { }
 
-		public Master( Integer id ) {
+		public Root(Integer id ) {
 			this.id = id;
 		}
 	}
 
-	@Entity(name = "SubMaster")
-	public static class SubMaster extends Master {
+	@Entity(name = "SubRoot")
+	public static class SubRoot extends Root {
 		private String name;
 
-		public SubMaster() { }
+		public SubRoot() { }
 
-		public SubMaster( Integer id, String name ) {
+		public SubRoot(Integer id, String name ) {
 			super(id);
 			this.name = name;
 		}
@@ -80,11 +80,11 @@ public class UpdateJoinedSubclassCorrelationTest extends BaseEntityManagerFuncti
 		private Integer id;
 
 		@ManyToOne(optional = false)
-		private Master master;
+		private Root root;
 
-		public Detail( Integer id, Master master ) {
+		public Detail( Integer id, Root root) {
 			this.id = id;
-			this.master = master;
+			this.root = root;
 		}
 	}
 }

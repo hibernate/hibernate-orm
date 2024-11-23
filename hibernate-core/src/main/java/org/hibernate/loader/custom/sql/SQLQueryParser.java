@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.hibernate.QueryException;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.query.spi.ParameterParser;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.param.ParameterBinder;
@@ -74,8 +76,8 @@ public class SQLQueryParser {
 		return processedSql;
 	}
 
-	// TODO: should "record" how many properties we have reffered to - and if we
-	//       don't get'em'all we throw an exception! Way better than trial and error ;)
+	// TODO: should "record" how many properties we have referred to - and if we
+	//       don't get them all we throw an exception! Way better than trial and error ;)
 	protected String substituteBrackets(String sqlQuery) throws QueryException {
 
 		if ( PREPARED_STATEMENT_PATTERN.matcher( sqlQuery.trim() ).matches() ) {
@@ -84,6 +86,8 @@ public class SQLQueryParser {
 
 		StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
 		int left, right;
+
+		SqlStringGenerationContext sqlStringGenerationContext = factory.getSqlStringGenerationContext();
 
 		// replace {....} with corresponding column aliases
 		for ( int curr = 0; curr < sqlQuery.length(); curr = right + 1 ) {
@@ -94,7 +98,7 @@ public class SQLQueryParser {
 				break;
 			}
 
-			// apend everything up until the next encountered open brace
+			// append everything up until the next encountered open brace
 			result.append( sqlQuery.substring( curr, left ) );
 
 			if ( ( right = sqlQuery.indexOf( '}', left + 1 ) ) < 0 ) {
@@ -107,30 +111,30 @@ public class SQLQueryParser {
 			if ( isPlaceholder ) {
 				// Domain replacement
 				if ( DOMAIN_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
+					final Identifier catalogName = sqlStringGenerationContext.getDefaultCatalog();
 					if ( catalogName != null ) {
-						result.append( catalogName );
+						result.append( catalogName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append( "." );
 					}
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					final Identifier schemaName = sqlStringGenerationContext.getDefaultSchema();
 					if ( schemaName != null ) {
-						result.append( schemaName );
+						result.append( schemaName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append( "." );
 					}
 				}
 				// Schema replacement
 				else if ( SCHEMA_PLACEHOLDER.equals( aliasPath ) ) {
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					final Identifier schemaName = sqlStringGenerationContext.getDefaultSchema();
 					if ( schemaName != null ) {
-						result.append(schemaName);
+						result.append( schemaName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append(".");
 					}
 				}
 				// Catalog replacement
 				else if ( CATALOG_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
+					final Identifier catalogName = sqlStringGenerationContext.getDefaultCatalog();
 					if ( catalogName != null ) {
-						result.append( catalogName );
+						result.append( catalogName.render( sqlStringGenerationContext.getDialect() ) );
 						result.append( "." );
 					}
 				}
@@ -206,7 +210,7 @@ public class SQLQueryParser {
 		else {
 			String[] columnAliases;
 
-			// Let return-propertys override whatever the persister has for aliases.
+			// Let return-properties override whatever the persister has for aliases.
 			columnAliases = ( String[] ) fieldResults.get(propertyName);
 			if ( columnAliases==null ) {
 				columnAliases = collectionPersister.getCollectionPropertyColumnAliases( propertyName, collectionSuffix );
@@ -247,7 +251,7 @@ public class SQLQueryParser {
 
 			String[] columnAliases;
 
-			// Let return-propertys override whatever the persister has for aliases.
+			// Let return-propertiess override whatever the persister has for aliases.
 			columnAliases = (String[]) fieldResults.get( propertyName );
 			if ( columnAliases == null ) {
 				columnAliases = persister.getSubclassPropertyColumnAliases( propertyName, suffix );

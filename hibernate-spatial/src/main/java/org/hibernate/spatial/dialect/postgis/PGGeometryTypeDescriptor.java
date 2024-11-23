@@ -17,7 +17,6 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -39,25 +38,31 @@ import org.postgresql.util.PGobject;
 public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 
-	/**
-	 * An instance of this class
-	 */
-	public static final PGGeometryTypeDescriptor INSTANCE = new PGGeometryTypeDescriptor();
+	private final Wkb.Dialect wkbDialect;
 
-	public static Geometry<?> toGeometry(Object object) {
+	// Type descriptor instance using EWKB v1 (postgis versions < 2.2.2)
+	public static final PGGeometryTypeDescriptor INSTANCE_WKB_1 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_1 );
+	// Type descriptor instance using EWKB v2 (postgis versions >= 2.2.2, see: https://trac.osgeo.org/postgis/ticket/3181)
+	public static final PGGeometryTypeDescriptor INSTANCE_WKB_2 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_2 );
+
+	private PGGeometryTypeDescriptor(Wkb.Dialect dialect) {
+		wkbDialect = dialect;
+	}
+
+	public Geometry<?> toGeometry(Object object) {
 		if ( object == null ) {
 			return null;
 		}
-		ByteBuffer buffer = null;
+		ByteBuffer buffer;
 		if ( object instanceof PGobject ) {
 			String pgValue = ( (PGobject) object ).getValue();
 
+			assert pgValue != null;
 			if ( pgValue.startsWith( "00" ) || pgValue.startsWith( "01" ) ) {
 				//we have a WKB because this pgValue starts with the bit-order byte
 				buffer = ByteBuffer.from( pgValue );
-				final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+				final WkbDecoder decoder = Wkb.newDecoder( wkbDialect );
 				return decoder.decode( buffer );
-
 			}
 			else {
 				return parseWkt( pgValue );
@@ -74,7 +79,7 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public int getSqlType() {
-		return Types.OTHER;
+		return 5432;
 	}
 
 	@Override
@@ -84,24 +89,45 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		return new ValueBinder<X>() {
+
 			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+			public void bind(PreparedStatement st, X value, int index, WrapperOptions options)
+					throws SQLException {
+				if ( value == null ) {
+					st.setNull( index, Types.OTHER );
+				}
+				else {
+					doBind( st, value, index, options );
+				}
+			}
+
+			@Override
+			public void bind(CallableStatement st, X value, String name, WrapperOptions options)
+					throws SQLException {
+				if ( value == null ) {
+					st.setNull( name, Types.OTHER );
+				}
+				else {
+					doBind( st, value, name, options );
+				}
+			}
+
+			private void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				final PGobject obj = toPGobject( value, options );
 				st.setObject( index, obj );
 			}
 
-			@Override
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+			private void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final PGobject obj = toPGobject( value, options );
 				st.setObject( name, obj );
 			}
 
 			private PGobject toPGobject(X value, WrapperOptions options) throws SQLException {
-				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final WkbEncoder encoder = Wkb.newEncoder( wkbDialect );
+				final Geometry<?> geometry = javaTypeDescriptor.unwrap( value, Geometry.class, options );
 				final String hexString = encoder.encode( geometry, ByteOrder.NDR ).toString();
 				final PGobject obj = new PGobject();
 				obj.setType( "geometry" );

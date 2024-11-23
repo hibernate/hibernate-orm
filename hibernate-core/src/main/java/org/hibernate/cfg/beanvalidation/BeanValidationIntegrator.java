@@ -32,9 +32,11 @@ public class BeanValidationIntegrator implements Integrator {
 
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 
-	public static final String BV_CHECK_CLASS = "jakarta.validation.Validation";
+	public static final String BV_CHECK_CLASS = "javax.validation.ConstraintViolation";
+	public static final String JAKARTA_BV_CHECK_CLASS = "jakarta.validation.ConstraintViolation";
 
 	public static final String MODE_PROPERTY = "javax.persistence.validation.mode";
+	public static final String JAKARTA_MODE_PROPERTY = "jakarta.persistence.validation.mode";
 
 	private static final String ACTIVATOR_CLASS_NAME = "org.hibernate.cfg.beanvalidation.TypeSafeActivator";
 	private static final String VALIDATE_SUPPLIED_FACTORY_METHOD_NAME = "validateSuppliedFactory";
@@ -87,7 +89,11 @@ public class BeanValidationIntegrator implements Integrator {
 			final SessionFactoryServiceRegistry serviceRegistry) {
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
-		final Set<ValidationMode> modes = ValidationMode.getModes( cfgService.getSettings().get( MODE_PROPERTY ) );
+		Object modeSetting = cfgService.getSettings().get( MODE_PROPERTY );
+		if ( modeSetting == null ) {
+			modeSetting = cfgService.getSettings().get( JAKARTA_MODE_PROPERTY );
+		}
+		final Set<ValidationMode> modes = ValidationMode.getModes( modeSetting );
 		if ( modes.size() > 1 ) {
 			LOG.multipleValidationModes( ValidationMode.loggable( modes ) );
 		}
@@ -146,7 +152,7 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 		else {
 			// otherwise check the validation modes
-			// todo : in many ways this duplicates thew checks done on the TypeSafeActivator when a ValidatorFactory could not be obtained
+			// todo : in many ways this duplicates the checks done on the TypeSafeActivator when a ValidatorFactory could not be obtained
 			validateMissingBeanValidationApi( modes );
 		}
 	}
@@ -157,7 +163,13 @@ public class BeanValidationIntegrator implements Integrator {
 			return true;
 		}
 		catch (Exception e) {
-			return false;
+			try {
+				classLoaderService.classForName( JAKARTA_BV_CHECK_CLASS );
+				return true;
+			}
+			catch (Exception e2) {
+				return false;
+			}
 		}
 	}
 

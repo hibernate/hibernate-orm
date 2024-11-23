@@ -103,8 +103,7 @@ public class HQLQueryPlan implements Serializable {
 		final Set<Serializable> combinedQuerySpaces = new HashSet<>();
 
 		final Map querySubstitutions = factory.getSessionFactoryOptions().getQuerySubstitutions();
-		final QueryTranslatorFactory queryTranslatorFactory = factory.getServiceRegistry().getService( QueryTranslatorFactory.class );
-
+		final QueryTranslatorFactory queryTranslatorFactory = factory.getFastSessionServices().queryTranslatorFactory;
 
 		for ( int i=0; i<length; i++ ) {
 			if ( collectionRole == null ) {
@@ -274,7 +273,7 @@ public class HQLQueryPlan implements Serializable {
 	 * @return a reasonable size to use for allocation
 	 */
 	@SuppressWarnings("UnnecessaryUnboxing")
-	private int guessResultSize(RowSelection rowSelection) {
+	protected int guessResultSize(RowSelection rowSelection) {
 		if ( rowSelection != null ) {
 			final int maxReasonableAllocation = rowSelection.getFetchSize() != null ? rowSelection.getFetchSize().intValue() : 100;
 			if ( rowSelection.getMaxRows() != null && rowSelection.getMaxRows().intValue() > 0 ) {

@@ -51,12 +51,11 @@ public class BasicTypeCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration configuration = super.constructAndConfigureConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
 			typeContributions.contributeType( new CommaDelimitedStringsType() );
 		} );
-		return configuration;
 	}
 
 	//tag::collections-comma-delimited-collection-example[]

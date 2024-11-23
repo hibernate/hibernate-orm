@@ -13,6 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
@@ -38,8 +39,11 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	protected boolean supportsLockingNullableSideOfJoin(Dialect dialect) {
-		// db2 and pgsql do *NOT*
-		return ! ( DB2Dialect.class.isInstance( dialect ) || PostgreSQL81Dialect.class.isInstance( dialect ) || PostgreSQLDialect.class.isInstance( dialect ));
+		// db2. pgsql, and cockroachdb do *NOT*
+		return ! ( DB2Dialect.class.isInstance( dialect ) ||
+				PostgreSQL81Dialect.class.isInstance( dialect ) ||
+				PostgreSQLDialect.class.isInstance( dialect ) ||
+				CockroachDB192Dialect.class.isInstance( dialect ));
 	}
 
 	protected static String extractFromSystem(String systemPropertyName) {

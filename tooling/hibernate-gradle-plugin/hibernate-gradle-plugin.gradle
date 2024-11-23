@@ -16,8 +16,29 @@ apply plugin: 'maven'
 dependencies {
 	compile( project( ':hibernate-core' ) )
 	compile( libraries.jpa )
-	compile( libraries.javassist )
 	compile( libraries.byteBuddy )
 	compile gradleApi()
 	compile localGroovy()
+}
+
+tasks.withType( GroovyCompile ) {
+	options.encoding = 'UTF-8'
+}
+
+if ( !gradle.ext.javaToolchainEnabled ) {
+	tasks.withType( GroovyCompile ) {
+		sourceCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+		targetCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+	}
+}
+else {
+	logger.warn( "[WARN] Toolchains are not yet supported for Groovy compilation." +
+			" Using the JDK that runs Gradle for Groovy compilation." )
+}
+
+tasks.test {
+	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+		// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
+		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
 }

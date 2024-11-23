@@ -18,6 +18,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -169,7 +170,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 		Oracle8iDialect.class,
 		AbstractHANADialect.class,
 		PostgreSQL81Dialect.class,
-		MySQLDialect.class
+		MySQLDialect.class,
+		CockroachDB192Dialect.class
 	} )
 
     public void testRowValueConstructorSyntaxInInListBeingTranslated() {
@@ -406,6 +408,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 			// parser does not; so the outputs do not match here...
 			return;
 		}
+		if ( getDialect() instanceof CockroachDB192Dialect ) {
+			// CockroachDB turns "float" into "float4" so the outputs won't match.
+			return;
+		}
 		assertTranslation( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" );
 	}
 
@@ -439,8 +445,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testKeyManyToOneJoin() {
 		//TODO: new parser generates unnecessary joins (though the query results are correct)
 		assertTranslation( "from Order o left join fetch o.lineItems li left join fetch li.product p" );
-		assertTranslation( "from Outer o where o.id.master.id.sup.dudu is not null" );
-		assertTranslation( "from Outer o where o.id.master.id.sup.dudu is not null" );
+		assertTranslation( "from Outer o where o.id.root.id.sup.dudu is not null" );
+		assertTranslation( "from Outer o where o.id.root.id.sup.dudu is not null" );
 	}
 
 	@Test
@@ -664,7 +670,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testCollectionFetchWithExplicitThetaJoin() {
-		assertTranslation( "select m from Master m1, Master m left join fetch m.details where m.name=m1.name" );
+		assertTranslation( "select m from Root m1, Root m left join fetch m.details where m.name=m1.name" );
 	}
 
 	@Test
@@ -890,6 +896,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect ) return;
+		if ( getDialect() instanceof CockroachDB192Dialect ) return;
 		if ( getDialect() instanceof TeradataDialect) return;
 		if ( ! H2Dialect.class.isInstance( getDialect() ) ) {
 			// H2 has no year function
@@ -1070,6 +1077,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@SkipForDialect(CockroachDB192Dialect.class)
 	public void testSelectStandardFunctionsNoParens() throws Exception {
 		assertTranslation( "select current_date, current_time, current_timestamp from Animal" );
 	}

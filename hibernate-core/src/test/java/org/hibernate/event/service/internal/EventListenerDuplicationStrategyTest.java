@@ -2,7 +2,6 @@ package org.hibernate.event.service.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -32,7 +31,7 @@ public class EventListenerDuplicationStrategyTest {
 
 	Tracker tracker = new Tracker();
 	ClearEvent event = new ClearEvent( null );
-	EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, null );
+	EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, null, false );
 
 	@Test
 	public void testListenersIterator() {
@@ -183,6 +182,22 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.addDuplicationStrategy( ErrorStrategy.INSTANCE );
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+	}
+
+	@Test
+	public void testDuplicationStrategyRemovedOnClear() {
+		listenerGroup.clear();
+		//As side-effect, it's now allowed to register the same event twice:
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+	}
+
+	@Test
+	public void testDefaultDuplicationStrategy() {
+		thrown.expect( EventListenerRegistrationException.class );
+		//By default, it's not allowed to register the same type of listener twice:
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
 	}
 
 	/**

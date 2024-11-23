@@ -29,8 +29,11 @@ import javax.persistence.Lob;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.dialect.SybaseASE15Dialect;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -40,6 +43,7 @@ import org.junit.runner.RunWith;
 @TestForIssue(jiraKey = "HHH-12555")
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
 @RunWith(BytecodeEnhancerRunner.class)
+@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement binary stream handling")
 public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 
 	@Override

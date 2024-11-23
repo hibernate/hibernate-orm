@@ -157,7 +157,7 @@ public class StandardAnsiSqlAggregationFunctions {
 		public Type getReturnType(Type firstArgumentType, Mapping mapping) {
 			final int jdbcType = determineJdbcTypeCode( firstArgumentType, mapping );
 
-			// First allow the actual type to control the return value; the underlying sqltype could
+			// First allow the actual type to control the return value; the underlying sql type could
 			// actually be different
 			if ( firstArgumentType == StandardBasicTypes.BIG_INTEGER ) {
 				return StandardBasicTypes.BIG_INTEGER;

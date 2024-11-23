@@ -40,29 +40,24 @@ public abstract class AbstractKey extends ModelEntity
 	String name;
 
 	@OneToMany(targetEntity = RoleEntity.class, mappedBy = "key", fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("R")
 	protected Set<RoleEntity> roles = new LinkedHashSet<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("PR")
 	@JoinColumn
 	protected AbstractKey register;
 
 	@OneToMany(targetEntity = AbstractKey.class, mappedBy = "register", fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("RK")
 	protected Set<AbstractKey> keys = new LinkedHashSet();
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("PP")
 	@JoinColumn
 	protected AbstractKey parent;
 
 	@OneToMany(targetEntity = AbstractKey.class, mappedBy = "parent", fetch = FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("PK")
 	protected Set<AbstractKey> otherKeys = new LinkedHashSet();
 

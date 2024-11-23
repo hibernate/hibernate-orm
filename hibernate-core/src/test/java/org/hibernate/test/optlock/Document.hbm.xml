@@ -27,7 +27,7 @@
 		<property name="author"/>
 		<component name="pubDate">
 			<property name="year" not-null="true" column="pubDate_year"/>
-			<property name="month"/>
+			<property name="month" column="pubDate_month"/>
 		</component>
 		<property name="summary"/>
 		<property name="totalSales" optimistic-lock="false"/>
@@ -42,7 +42,7 @@
 		<property name="author"/>
 		<component name="pubDate">
 			<property name="year" not-null="true" column="pubDate_year" />
-			<property name="month"/>
+			<property name="month" column="pubDate_month"/>
 		</component>
 		<property name="summary"/>
 		<property name="totalSales" optimistic-lock="false"/>

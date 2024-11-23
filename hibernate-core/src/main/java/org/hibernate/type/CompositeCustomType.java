@@ -250,7 +250,7 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 
 	@Override
 	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		final Size[] sizes = new Size[getColumnSpan( mapping )];
 		int soFar = 0;
 		for ( Type propertyType : userType.getPropertyTypes() ) {
@@ -263,7 +263,7 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 
 	@Override
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		final Size[] sizes = new Size[getColumnSpan( mapping )];
 		int soFar = 0;
 		for ( Type propertyType : userType.getPropertyTypes() ) {

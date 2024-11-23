@@ -19,7 +19,7 @@ public enum GraphSemantic {
 	 * subsequent select). Attributes that are not specified are treated as
 	 * FetchType.LAZY invariably.
 	 */
-	FETCH( "javax.persistence.fetchgraph" ),
+	FETCH( "javax.persistence.fetchgraph", "jakarta.persistence.fetchgraph" ),
 
 	/**
 	 * Indicates a "load graph" EntityGraph.  Attributes explicitly specified
@@ -28,26 +28,32 @@ public enum GraphSemantic {
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition
 	 * in metadata.
 	 */
-	LOAD( "javax.persistence.loadgraph" );
+	LOAD( "javax.persistence.loadgraph", "jakarta.persistence.loadgraph" );
 
 	private final String jpaHintName;
+	private final String jakartaJpaHintName;
 
-	GraphSemantic(String jpaHintName) {
+	GraphSemantic(String jpaHintName, String jakartaJpaHintName) {
 		this.jpaHintName = jpaHintName;
+		this.jakartaJpaHintName = jakartaJpaHintName;
 	}
 
 	public String getJpaHintName() {
 		return jpaHintName;
 	}
 
+	public String getJakartaJpaHintName() {
+		return jakartaJpaHintName;
+	}
+
 	public static GraphSemantic fromJpaHintName(String hintName) {
 		assert hintName != null;
 
-		if ( FETCH.getJpaHintName().equals( hintName ) ) {
+		if ( FETCH.getJpaHintName().equals( hintName ) || FETCH.getJakartaJpaHintName().equals( hintName ) ) {
 			return FETCH;
 		}
 
-		if ( LOAD.getJpaHintName().equalsIgnoreCase( hintName ) ) {
+		if ( LOAD.getJpaHintName().equalsIgnoreCase( hintName ) || LOAD.getJakartaJpaHintName().equalsIgnoreCase( hintName ) ) {
 			return LOAD;
 		}
 

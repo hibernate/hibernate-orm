@@ -39,6 +39,26 @@ public enum OptimisticLockStyle {
 		return oldCode;
 	}
 
+	public boolean isAllOrDirty() {
+		return isAll() || isDirty();
+	}
+
+	public boolean isAll() {
+		return this == ALL;
+	}
+
+	public boolean isDirty() {
+		return this == DIRTY;
+	}
+
+	public boolean isVersion() {
+		return this == VERSION;
+	}
+
+	public boolean isNone() {
+		return this == NONE;
+	}
+
 	/**
 	 * Given an old code (one of the int constants from Cascade), interpret it as one of the new enums.
 	 *

@@ -42,11 +42,10 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 			OracleSpatial10gDialect.class.getName()
 	);
 
-	private final boolean isOgcStrict;
+
 	private final SpatialFunctionsRegistry sdoFunctions;
 
 	OracleSDOSupport(boolean isOgcStrict) {
-		this.isOgcStrict = isOgcStrict;
 		this.sdoFunctions = new OracleSpatialFunctions( isOgcStrict, this );
 	}
 
@@ -106,7 +105,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	}
 
 	public String getOGCSpatialRelateSQL(String arg1, String arg2, int spatialRelation) {
-		final StringBuffer ogcFunction = new StringBuffer( "MDSYS." );
+		final StringBuilder ogcFunction = new StringBuilder( "MDSYS." );
 		switch ( spatialRelation ) {
 			case SpatialRelation.INTERSECTS:
 				ogcFunction.append( "OGC_INTERSECTS" );
@@ -229,7 +228,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getSpatialFilterExpression(String columnName) {
-		final StringBuffer buffer = new StringBuffer( "SDO_FILTER(" );
+		final StringBuilder buffer = new StringBuilder( "SDO_FILTER(" );
 		buffer.append( columnName );
 		buffer.append( ",?) = 'TRUE' " );
 		return buffer.toString();
@@ -245,7 +244,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
-		final StringBuffer aggregateFunction = new StringBuffer();
+		final StringBuilder aggregateFunction = new StringBuilder();
 		final SpatialAggregate sa = new SpatialAggregate( aggregation );
 
 		if ( sa.getAggregateSyntax() == null ) {
@@ -262,7 +261,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 			aggregateFunction.append( "SDOAGGRTYPE(" );
 		}
 		aggregateFunction.append( columnName );
-		// TODO tolerance must by configurable
+		// Can we make tolerance configurable
 		if ( sa.isAggregateType() ) {
 			aggregateFunction.append( ", " ).append( .001 ).append( ")" );
 		}
@@ -292,7 +291,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getHavingSridSQL(String columnName) {
-		return String.format( " (MDSYS.ST_GEOMETRY(%s).ST_SRID() = ?)", columnName , Locale.US);
+		return String.format( Locale.ENGLISH, " (MDSYS.ST_GEOMETRY(%s).ST_SRID() = ?)", columnName );
 	}
 
 	/**
@@ -306,7 +305,12 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		return String.format( "( MDSYS.ST_GEOMETRY(%s).ST_ISEMPTY() = %d )", columnName, isEmpty ? 1 : 0 , Locale.US);
+		return String.format(
+				Locale.ENGLISH,
+				"( MDSYS.ST_GEOMETRY(%s).ST_ISEMPTY() = %d )",
+				columnName,
+				isEmpty ? 1 : 0
+		);
 	}
 
 	/**

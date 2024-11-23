@@ -25,10 +25,11 @@ import javax.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
@@ -43,6 +44,7 @@ import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -431,8 +433,10 @@ public class AuditedPropertiesReader {
 			// Marking component properties as placed directly in class (not inside another component).
 			componentData.setBeanName( null );
 
+			final ClassLoaderService classLoaderService = globalCfg.getEnversService().getClassLoaderService();
+
 			final PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-					reflectionManager,
+					classLoaderService, reflectionManager,
 					propertyValue
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
@@ -458,7 +462,10 @@ public class AuditedPropertiesReader {
 			componentPropertiesSource = new DynamicComponentSource( reflectionManager, propertyValue, property );
 		}
 		else {
-			componentPropertiesSource = new ComponentPropertiesSource( reflectionManager, propertyValue );
+			final ClassLoaderService classLoaderService = this.globalCfg.getEnversService().getClassLoaderService();
+			componentPropertiesSource = new ComponentPropertiesSource(
+					classLoaderService,
+					reflectionManager, propertyValue );
 		}
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
@@ -617,7 +624,7 @@ public class AuditedPropertiesReader {
 
 	private void setPropertyRelationMappedBy(XProperty property, PropertyAuditingData propertyData) {
 		final OneToMany oneToMany = property.getAnnotation( OneToMany.class );
-		if ( oneToMany != null && !"".equals( oneToMany.mappedBy() ) ) {
+		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			propertyData.setRelationMappedBy( oneToMany.mappedBy() );
 		}
 	}
@@ -626,7 +633,7 @@ public class AuditedPropertiesReader {
 		final AuditMappedBy auditMappedBy = property.getAnnotation( AuditMappedBy.class );
 		if ( auditMappedBy != null ) {
 			propertyData.setAuditMappedBy( auditMappedBy.mappedBy() );
-			if ( !"".equals( auditMappedBy.positionMappedBy() ) ) {
+			if ( StringHelper.isNotEmpty( auditMappedBy.positionMappedBy() ) ) {
 				propertyData.setPositionMappedBy( auditMappedBy.positionMappedBy() );
 			}
 		}
@@ -785,14 +792,17 @@ public class AuditedPropertiesReader {
 			this.component = component;
 		}
 
-		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
+		public ComponentPropertiesSource(
+				ClassLoaderService classLoaderService,
+				ReflectionManager reflectionManager,
+				Component component) {
 			try {
-				this.xclass = reflectionManager.classForName( component.getComponentClassName() );
+				Class<Object> objectClass = classLoaderService.classForName( component.getComponentClassName() );
+				this.xclass = reflectionManager.toXClass( objectClass );
 			}
 			catch ( ClassLoadingException e ) {
 				throw new MappingException( e );
 			}
-
 			this.component = component;
 		}
 

@@ -18,13 +18,10 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class ScanResultCollector {
-	private static final Logger log = Logger.getLogger( ScanResultCollector.class );
 
 	private final ScanEnvironment environment;
 	private final ScanOptions options;

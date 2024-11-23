@@ -8,6 +8,7 @@ package org.hibernate.test.queryplan;
 
 import org.junit.Test;
 
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
@@ -29,7 +30,7 @@ public class NativeSQLQueryPlanEqualsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNativeSQLQuerySpecEquals() {
-		QueryPlanCache cache = new QueryPlanCache( sessionFactory() );
+		QueryPlanCache cache = new QueryPlanCache( sessionFactory(), HQLQueryPlan::new );
 		NativeSQLQuerySpecification firstSpec = createSpec();
 
 		NativeSQLQuerySpecification secondSpec = createSpec();

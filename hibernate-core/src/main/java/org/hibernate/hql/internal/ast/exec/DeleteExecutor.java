@@ -17,12 +17,13 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
-import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.param.ParameterSpecification;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
 import org.hibernate.type.CollectionType;
@@ -36,23 +37,52 @@ import antlr.collections.AST;
 
 
 /**
- * Provides deletions in addition to the basic SQL delete statement being executed.  Ex: cascading the delete into a
- * many-to-many join table.
+ * Executes HQL bulk deletes against a single table.
+ *
+ * Provides deletions in addition to the basic SQL delete statement being executed.
+ * Ex: cascading the delete into a many-to-many join table.
  * 
  * @author Brett Meyer
  */
 public class DeleteExecutor extends BasicExecutor {
 	private static final Logger LOG = Logger.getLogger( DeleteExecutor.class );
 
-	private final List<String> deletes = new ArrayList<>();
-	private List<ParameterSpecification> parameterSpecifications;
+	private final String sql;
+	private final List<ParameterSpecification> parameterSpecifications;
+	private final Queryable persister;
 
-	public DeleteExecutor(HqlSqlWalker walker, Queryable persister) {
-		super( walker, persister );
-		
+	private final List<String> deletes = new ArrayList<>();
+
+	@Override
+	Queryable getPersister() {
+		return persister;
+	}
+
+	@Override
+	public String getSql() {
+		return sql;
+	}
+
+	@Override
+	public List<ParameterSpecification> getParameterSpecifications() {
+		return parameterSpecifications;
+	}
+
+	public DeleteExecutor(HqlSqlWalker walker) {
+		persister = walker.getFinalFromClause().getFromElement().getQueryable();
+
 		final SessionFactoryImplementor factory = walker.getSessionFactoryHelper().getFactory();
-		final Dialect dialect = factory.getJdbcServices().getJdbcEnvironment().getDialect();
-		
+
+		try {
+			SqlGenerator gen = new SqlGenerator( factory );
+			gen.statement( walker.getAST() );
+			sql = gen.getSQL();
+			gen.getParseErrorHandler().throwQueryException();
+		}
+		catch ( RecognitionException e ) {
+			throw QuerySyntaxException.convert( e );
+		}
+
 		try {
 			final DeleteStatement deleteStatement = (DeleteStatement) walker.getAST();
 			
@@ -72,12 +102,12 @@ public class DeleteExecutor extends BasicExecutor {
 
 			final boolean commentsEnabled = factory.getSessionFactoryOptions().isCommentsEnabled();
 			final MetamodelImplementor metamodel = factory.getMetamodel();
-			final boolean notSupportingTuplesInSubqueries = !dialect.supportsTuplesInSubqueries();
+			final boolean notSupportingTuplesInSubqueries = !walker.getDialect().supportsTuplesInSubqueries();
 			// If many-to-many, delete the FK row in the collection table.
 			for ( Type type : persister.getPropertyTypes() ) {
 				if ( type.isCollectionType() ) {
 					final CollectionType cType = (CollectionType) type;
-					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) metamodel.collectionPersister( cType.getRole() );
+					final CollectionPersister cPersister = metamodel.collectionPersister( cType.getRole() );
 					if ( cPersister.isManyToMany() ) {
 						Type keyType = cPersister.getKeyType();
 						String[] columnNames;
@@ -106,14 +136,15 @@ public class DeleteExecutor extends BasicExecutor {
 							);
 						}
 						else {
+							Joinable joinable = (Joinable) cPersister;
 							StringBuilder whereBuilder = new StringBuilder();
 							whereBuilder.append( '(' );
-							append( ", ", cPersister.getKeyColumnNames(), whereBuilder );
+							append( ", ", joinable.getKeyColumnNames(), whereBuilder );
 							whereBuilder.append( ") in (select " );
 							append( ", ", columnNames, whereBuilder );
 							final String where = whereBuilder.append(" from ")
 								.append( persister.getTableName() ).append( idSubselectWhere ).append( ")" ).toString();
-							final Delete delete = new Delete().setTableName( cPersister.getTableName() ).setWhere( where );
+							final Delete delete = new Delete().setTableName( joinable.getTableName() ).setWhere( where );
 							if ( commentsEnabled ) {
 								delete.setComment( "delete FKs in join table" );
 							}
@@ -139,7 +170,7 @@ public class DeleteExecutor extends BasicExecutor {
 	@Override
 	public int execute(QueryParameters parameters, SharedSessionContractImplementor session) throws HibernateException {
 		for (String delete : deletes) {
-			doExecute( parameters, session, delete, parameterSpecifications );
+			doExecute( delete, parameters, parameterSpecifications, session );
 		}
 		
 		// finally, execute the original sql statement

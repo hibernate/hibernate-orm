@@ -18,6 +18,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -42,6 +43,18 @@ public class StringHelperTest extends BaseUnitTestCase {
 		assertNull( StringHelper.partiallyUnqualify( null, BASE_PACKAGE ) );
 		assertEquals( STRING_HELPER_NAME, StringHelper.partiallyUnqualify( STRING_HELPER_NAME, BASE_PACKAGE ) );
 		assertEquals( "internal.util.StringHelper", StringHelper.partiallyUnqualify( STRING_HELPER_FQN, BASE_PACKAGE ) );
+	}
+
+	@Test
+	public void testIsBlank() {
+		assertFalse( StringHelper.isBlank( "A" ) );
+		assertFalse( StringHelper.isBlank( " a" ) );
+		assertFalse( StringHelper.isBlank( "a " ) );
+		assertFalse( StringHelper.isBlank( "a\t" ) );
+		assertTrue( StringHelper.isBlank( "\t\n" ) );
+		assertTrue( StringHelper.isBlank( null ) );
+		assertTrue( StringHelper.isBlank( "" ) );
+		assertTrue( StringHelper.isBlank( "     " ) );
 	}
 
 	@Test

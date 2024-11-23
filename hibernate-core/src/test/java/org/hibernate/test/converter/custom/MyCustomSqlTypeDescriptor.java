@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -55,7 +56,7 @@ public class MyCustomSqlTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final String valueStr = javaTypeDescriptor.unwrap( value, String.class, options );
-				if ( valueStr == null || valueStr.trim().isEmpty() ) {
+				if ( StringHelper.isBlank( valueStr ) ) {
 					st.setNull( index, getSqlType() );
 				}
 				else {
@@ -66,7 +67,7 @@ public class MyCustomSqlTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
 				final String valueStr = javaTypeDescriptor.unwrap( value, String.class, options );
-				if ( valueStr == null || valueStr.trim().isEmpty() ) {
+				if ( StringHelper.isBlank( valueStr ) ) {
 					st.setNull( name, getSqlType() );
 				}
 				else {

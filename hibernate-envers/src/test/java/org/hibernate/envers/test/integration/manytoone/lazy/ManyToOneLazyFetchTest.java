@@ -32,7 +32,7 @@ public class ManyToOneLazyFetchTest extends BaseEnversFunctionalTestCase {
 
     @Override
     protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] { Shipment.class, Address.class, AddressVersion.class };
+        return new Class<?>[] { Shipment.class, Address.class, AddressVersion.class, User.class, ChildUser.class };
     }
 
     @Test

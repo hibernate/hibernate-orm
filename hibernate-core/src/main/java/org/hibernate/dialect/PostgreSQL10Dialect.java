@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.util.List;
+
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQL10IdentityColumnSupport;
 
@@ -17,5 +19,16 @@ public class PostgreSQL10Dialect extends PostgreSQL95Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new PostgreSQL10IdentityColumnSupport();
+	}
+
+	/**
+	 * An SQL Dialect for PostgreSQL 10 and later. Adds support for Partition table.
+	 *
+	 * @param tableTypesList
+	 */
+	@Override
+	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
+		super.augmentRecognizedTableTypes( tableTypesList );
+		tableTypesList.add( "PARTITIONED TABLE" );
 	}
 }

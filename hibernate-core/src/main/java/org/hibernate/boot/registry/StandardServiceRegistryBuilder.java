@@ -117,7 +117,9 @@ public class StandardServiceRegistryBuilder {
 	 * Intended for use exclusively from Quarkus boot-strapping, or extensions of
 	 * this class which need to override the standard ServiceInitiator list.
 	 * Consider this an SPI.
+	 * @deprecated Quarkus will switch to use {@link #StandardServiceRegistryBuilder(BootstrapServiceRegistry, Map, ConfigLoader, LoadedConfig, List)}
 	 */
+	@Deprecated
 	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			Map settings,
@@ -125,6 +127,24 @@ public class StandardServiceRegistryBuilder {
 			List<StandardServiceInitiator> initiators) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.settings = settings;
+		this.aggregatedCfgXml = loadedConfig;
+		this.initiators = initiators;
+	}
+
+	/**
+	 * Intended for use exclusively from Quarkus boot-strapping, or extensions of
+	 * this class which need to override the standard ServiceInitiator list.
+	 * Consider this an SPI.
+	 */
+	protected StandardServiceRegistryBuilder(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map settings,
+			ConfigLoader loader,
+			LoadedConfig loadedConfig,
+			List<StandardServiceInitiator> initiators) {
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = loader;
 		this.settings = settings;
 		this.aggregatedCfgXml = loadedConfig;
 		this.initiators = initiators;

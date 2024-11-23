@@ -106,7 +106,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			);
 
 			// if can replicate, will result in a SQL UPDATE
-			// else do nothing (don't even reassociate object!)
+			// else do nothing (don't even re-associate object!)
 			if ( canReplicate ) {
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
 			}

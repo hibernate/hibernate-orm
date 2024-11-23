@@ -20,7 +20,7 @@
     <property name="dirty" type="boolean" />
     <property name="decodeAttempts" type="java.lang.Integer" column="decode_attempts"/>
 	
-    <property name="year" type="java.lang.Integer" column="year" />
+    <property name="year" type="java.lang.Integer" column="year_value" />
     <property name="msrp" type="java.lang.Double" column="msrp_value" /> 
     <property name="residualValue" type="java.lang.Double" column="residual_value" /> 
     <property name="invoicePrice" type="java.lang.Double" column="invoice_price" /> 

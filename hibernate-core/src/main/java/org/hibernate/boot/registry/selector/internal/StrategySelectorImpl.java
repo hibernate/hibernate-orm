@@ -13,7 +13,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategyCreator;
@@ -28,10 +30,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class StrategySelectorImpl implements StrategySelector {
+
 	private static final Logger log = Logger.getLogger( StrategySelectorImpl.class );
 
-
-	public static final StrategyCreator STANDARD_STRATEGY_CREATOR = strategyClass -> {
+	private static final StrategyCreator STANDARD_STRATEGY_CREATOR = strategyClass -> {
 		try {
 			return strategyClass.newInstance();
 		}
@@ -43,7 +45,13 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 	};
 
+	//Map based approach: most suited for explicit registrations from integrators
 	private final Map<Class,Map<String,Class>> namedStrategyImplementorByStrategyMap = new ConcurrentHashMap<>();
+
+	//"Lazy" approach: more efficient as we aim to not initialize all implementation classes;
+	//this is preferable for internal services such as Dialect, as we have a significant amount of them, making
+	//it worthwhile to try be a bit more efficient about them.
+	private final Map<Class, LazyServiceResolver> lazyStrategyImplementorByStrategyMap = new ConcurrentHashMap<>();
 
 	private final ClassLoaderService classLoaderService;
 
@@ -54,6 +62,13 @@ public class StrategySelectorImpl implements StrategySelector {
 	 */
 	public StrategySelectorImpl(ClassLoaderService classLoaderService) {
 		this.classLoaderService = classLoaderService;
+	}
+
+	public <T> void registerStrategyLazily(Class<T> strategy, LazyServiceResolver<T> resolver) {
+		LazyServiceResolver previous = lazyStrategyImplementorByStrategyMap.put( strategy, resolver );
+		if ( previous != null ) {
+			throw new HibernateException( "Detected a second LazyServiceResolver replacing an existing LazyServiceResolver implementation for strategy " + strategy.getName() );
+		}
 	}
 
 	@Override
@@ -125,6 +140,14 @@ public class StrategySelectorImpl implements StrategySelector {
 			}
 		}
 
+		LazyServiceResolver lazyServiceResolver = lazyStrategyImplementorByStrategyMap.get( strategy );
+		if ( lazyServiceResolver != null ) {
+			Class resolve = lazyServiceResolver.resolve( name );
+			if ( resolve != null ) {
+				return resolve;
+			}
+		}
+
 		try {
 			return classLoaderService.classForName( name );
 		}
@@ -177,6 +200,10 @@ public class StrategySelectorImpl implements StrategySelector {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Collection getRegisteredStrategyImplementors(Class strategy) {
+		LazyServiceResolver lazyServiceResolver = lazyStrategyImplementorByStrategyMap.get( strategy );
+		if ( lazyServiceResolver != null ) {
+			throw new StrategySelectionException( "Can't use this method on for strategy types which are embedded in the core library" );
+		}
 		final Map<String, Class> registrations = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( registrations == null ) {
 			return Collections.emptySet();

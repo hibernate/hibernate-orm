@@ -113,7 +113,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 
 			try {
-				this.injectionTarget = beanManager.createInjectionTarget( annotatedType );
+				this.injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( (Bean) null );
 				this.creationalContext = beanManager.createCreationalContext( null );
 
 				this.beanInstance = this.injectionTarget.produce( creationalContext );
@@ -125,7 +125,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				throw e;
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback" );
+				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanType );
 				this.beanInstance = fallbackProducer.produceBeanInstance( beanType );
 
 				try {

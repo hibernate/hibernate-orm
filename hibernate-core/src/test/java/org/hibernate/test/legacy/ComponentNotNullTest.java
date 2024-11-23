@@ -26,7 +26,7 @@ public class ComponentNotNullTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] {
-			"legacy/ComponentNotNullMaster.hbm.xml",
+			"legacy/ComponentNotNullRoot.hbm.xml",
 			"legacy/One.hbm.xml",
 			"legacy/Many.hbm.xml",
 			"legacy/Simple.hbm.xml" };
@@ -45,16 +45,16 @@ public class ComponentNotNullTest extends LegacyTestCase {
 		//
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		ComponentNotNullMaster master = new ComponentNotNullMaster();
+		ComponentNotNullRoot root = new ComponentNotNullRoot();
 		ComponentNotNull nullable = new ComponentNotNull();
 		ComponentNotNull supercomp = new ComponentNotNull();
 		ComponentNotNull subcomp = new ComponentNotNull();
 
-		master.setNullable(nullable);
+		root.setNullable(nullable);
 		subcomp.setProp1Subcomp("test");
 		supercomp.setSubcomp(subcomp);
-		master.setSupercomp(supercomp);
-		s.save(master);
+		root.setSupercomp(supercomp);
+		s.save(root);
 		t.commit();
 		s.close();
 
@@ -63,20 +63,20 @@ public class ComponentNotNullTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 
-		master = new ComponentNotNullMaster();
+		root = new ComponentNotNullRoot();
 		nullable = new ComponentNotNull();
 		supercomp = new ComponentNotNull();
 		subcomp = new ComponentNotNull();
 
-		master.setNullable(nullable);
+		root.setNullable(nullable);
 		// do not set property
 		//subcomp.setProp1Subcomp("test");
 		supercomp.setSubcomp(subcomp);
-		master.setSupercomp(supercomp);
+		root.setSupercomp(supercomp);
 
 
 		try {
-			s.save(master);
+			s.save(root);
 			t.commit();
 			fail("Inserting not-null null property should fail");
 		} catch (PropertyValueException e) {
@@ -90,20 +90,20 @@ public class ComponentNotNullTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 
-		master = new ComponentNotNullMaster();
+		root = new ComponentNotNullRoot();
 		nullable = new ComponentNotNull();
 		supercomp = new ComponentNotNull();
 		subcomp = new ComponentNotNull();
 
-		master.setNullable(nullable);
-		// do not set supercomp for master
+		root.setNullable(nullable);
+		// do not set supercomp for root
 		//subcomp.setProp1Subcomp("test");
 		//supercomp.setSubcomp(subcomp);
-		//master.setSupercomp(supercomp);
+		//root.setSupercomp(supercomp);
 
 
 		try {
-			s.save(master);
+			s.save(root);
 			t.commit();
 			fail("Inserting not-null null property should fail");
 		} catch (PropertyValueException e) {
@@ -118,23 +118,23 @@ public class ComponentNotNullTest extends LegacyTestCase {
 		//composite-element nullable
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		ComponentNotNullMaster master = new ComponentNotNullMaster();
+		ComponentNotNullRoot root = new ComponentNotNullRoot();
 		ComponentNotNull nullable = new ComponentNotNull();
 		ComponentNotNull supercomp = new ComponentNotNull();
 		ComponentNotNull subcomp = new ComponentNotNull();
 
-		master.setNullable(nullable);
+		root.setNullable(nullable);
 		subcomp.setProp1Subcomp("test");
 		supercomp.setSubcomp(subcomp);
-		master.setSupercomp(supercomp);
+		root.setSupercomp(supercomp);
 
-		master.setComponents(new ArrayList());
-		ComponentNotNullMaster.ContainerInnerClass cc =
-			new ComponentNotNullMaster.ContainerInnerClass();
-		master.getComponents().add(cc);
+		root.setComponents(new ArrayList());
+		ComponentNotNullRoot.ContainerInnerClass cc =
+			new ComponentNotNullRoot.ContainerInnerClass();
+		root.getComponents().add(cc);
 
 		try {
-			s.save(master);
+			s.save(root);
 			t.commit();
 			fail("Inserting not-null many-to-one should fail");
 		} catch (PropertyValueException e) {
@@ -148,26 +148,26 @@ public class ComponentNotNullTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 
-		master = new ComponentNotNullMaster();
+		root = new ComponentNotNullRoot();
 		nullable = new ComponentNotNull();
 		supercomp = new ComponentNotNull();
 		subcomp = new ComponentNotNull();
 
-		master.setNullable(nullable);
+		root.setNullable(nullable);
 		subcomp.setProp1Subcomp("test");
 		supercomp.setSubcomp(subcomp);
-		master.setSupercomp(supercomp);
+		root.setSupercomp(supercomp);
 
-		master.setComponentsImplicit(new ArrayList());
-		ComponentNotNullMaster.ContainerInnerClass nestedCc =
-			new ComponentNotNullMaster.ContainerInnerClass();
+		root.setComponentsImplicit(new ArrayList());
+		ComponentNotNullRoot.ContainerInnerClass nestedCc =
+			new ComponentNotNullRoot.ContainerInnerClass();
 		cc =
-			new ComponentNotNullMaster.ContainerInnerClass();
+			new ComponentNotNullRoot.ContainerInnerClass();
 		cc.setNested(nestedCc);
-		master.getComponentsImplicit().add(cc);
+		root.getComponentsImplicit().add(cc);
 
 		try {
-			s.save(master);
+			s.save(root);
 			t.commit();
 			fail("Inserting not-null null property should fail");
 		} catch (PropertyValueException e) {
@@ -181,26 +181,26 @@ public class ComponentNotNullTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 
-		master = new ComponentNotNullMaster();
+		root = new ComponentNotNullRoot();
 		nullable = new ComponentNotNull();
 		supercomp = new ComponentNotNull();
 		subcomp = new ComponentNotNull();
 
-		master.setNullable(nullable);
+		root.setNullable(nullable);
 		subcomp.setProp1Subcomp("test");
 		supercomp.setSubcomp(subcomp);
-		master.setSupercomp(supercomp);
+		root.setSupercomp(supercomp);
 
-		master.setComponentsImplicit(new ArrayList());
+		root.setComponentsImplicit(new ArrayList());
 		nestedCc =
-			new ComponentNotNullMaster.ContainerInnerClass();
+			new ComponentNotNullRoot.ContainerInnerClass();
 		cc =
-			new ComponentNotNullMaster.ContainerInnerClass();
+			new ComponentNotNullRoot.ContainerInnerClass();
 		cc.setNested(nestedCc);
 		nestedCc.setNestedproperty("test");
-		master.getComponentsImplicit().add(cc);
+		root.getComponentsImplicit().add(cc);
 
-		s.save(master);
+		s.save(root);
 		t.commit();
 		s.close();
 	}

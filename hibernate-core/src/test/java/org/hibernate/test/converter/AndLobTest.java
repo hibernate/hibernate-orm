@@ -18,10 +18,13 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +62,8 @@ public class AndLobTest extends BaseUnitTestCase {
 
 		final Type type = metadata.getEntityBinding( EntityImpl.class.getName() ).getProperty( "status" ).getType();
 		final AttributeConverterTypeAdapter concreteType = assertTyping( AttributeConverterTypeAdapter.class, type );
-		assertEquals( Types.BLOB, concreteType.getSqlTypeDescriptor().getSqlType() );
+		SqlTypeDescriptor sqlTypeDescriptor = concreteType.getSqlTypeDescriptor();
+		assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(BlobTypeDescriptor.BLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
 	}
 
 	@Converter

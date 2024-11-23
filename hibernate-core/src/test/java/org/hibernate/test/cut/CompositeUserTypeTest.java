@@ -6,18 +6,24 @@
  */
 package org.hibernate.test.cut;
 
+import java.lang.reflect.Member;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
 
+import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
@@ -25,13 +31,20 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
+
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Gavin King
  */
 public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
+
 	@Override
 	public String[] getMappings() {
 		return new String[] { "cut/types.hbm.xml", "cut/Transaction.hbm.xml" };
@@ -66,6 +79,21 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 		s.delete(tran);
 		t.commit();
 		s.close();
+	}
+
+	@Test
+	public void testMetamodel() {
+		MetamodelImplementor metamodel = sessionFactory().getMetamodel();
+		PersistentAttributeDescriptor<? super Transaction, ?> value = metamodel.managedType(Transaction.class).getAttribute("value");
+		assertEquals(Attribute.PersistentAttributeType.EMBEDDED, value.getPersistentAttributeType());
+
+		SingularPersistentAttribute<?, ?> singularPersistentAttribute = (SingularPersistentAttribute<?, ?>) value;
+		ManagedType<?> attribute = (ManagedType<?>) singularPersistentAttribute.getType();
+		SingularAttribute<?, ?> amount = attribute.getSingularAttribute("amount");
+		assertNotNull(amount);
+
+		Member javaMember = amount.getJavaMember();
+		assertNull(javaMember);
 	}
 	
 	@Test

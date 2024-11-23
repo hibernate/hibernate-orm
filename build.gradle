@@ -15,16 +15,49 @@ buildscript {
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-		classpath 'de.thetaphi:forbiddenapis:2.5'
-		classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:4.2.0'
+		classpath 'de.thetaphi:forbiddenapis:3.0.1'
 	}
 }
 
 plugins {
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
+	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+	id 'nu.studer.credentials' version '2.1'
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
-	id 'org.hibernate.build.maven-repo-auth' version '3.0.2' apply false
+	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
+	id 'biz.aQute.bnd' version '5.1.1' apply false
+}
+
+ext {
+	sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
+	sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
+}
+
+File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
+
+ext {
+	ormVersionFile = versionFile
+	ormVersion = HibernateVersion.fromFile( versionFile, project )
+	// Override during releases
+	if ( project.hasProperty( 'releaseVersion' ) ) {
+		ormVersion = new HibernateVersion( project.releaseVersion, project )
+	}
+	jpaVersion = new JpaVersion('2.2')
+	jakartaJpaVersion = new JpaVersion('3.0.0')
+}
+
+// The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version
+
+group = 'org.hibernate'
+version = project.ormVersion.fullName
+
+nexusPublishing {
+	repositories {
+		sonatype {
+			username = project.sonatypeOssrhUser
+			password = project.sonatypeOssrhPassword
+		}
+	}
 }
 
 allprojects {
@@ -43,7 +76,8 @@ allprojects {
 	// minimize changes, at least for now (gradle uses 'build' by default)..
 	buildDir = "target"
 
-	apply from: rootProject.file( 'gradle/base-information.gradle' )
+	group = 'org.hibernate'
+	version = project.ormVersion.fullName
 }
 
 
@@ -55,11 +89,14 @@ task release {
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
 
-	// Force to release with JDK 8. It used to not work on JDK11 because of the hibernate-orm-modules module,
-	// but this limitation might be resolved now that this module has been deleted?
 	doFirst {
-		if ( !JavaVersion.current().isJava8() || !gradle.ext.testedJavaVersionAsEnum.isJava8() ) {
-			throw new IllegalStateException( "Please use JDK 8 to perform the release." )
+		def javaVersionsInUse = [gradle.ext.javaVersions.main.compiler, gradle.ext.javaVersions.main.release,
+								 gradle.ext.javaVersions.test.compiler, gradle.ext.javaVersions.test.release,
+								 gradle.ext.javaVersions.test.launcher].toSet()
+		// Force to release with JDK 8. It used to not work on JDK11 because of the hibernate-orm-modules module,
+		// but this limitation might be resolved now that this module has been deleted?
+		if ( javaVersionsInUse != [JavaLanguageVersion.of( 8 )].toSet() ) {
+			throw new IllegalStateException( "Please use JDK 8 to perform the release. Currently using: ${javaVersionsInUse}" )
 		}
 	}
 }
@@ -99,10 +136,70 @@ buildScanRecipes {
 	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
 }
 
+class JpaVersion {
+	/** The *normal* name (1.0, 2.0, ..) */
+	final String name;
+
+	final String osgiName
+
+	JpaVersion(String version){
+		this.name = version
+		this.osgiName = version + ".0"
+	}
+
+	@Override
+	String toString() {
+		return name
+	}
+}
+
+class HibernateVersion {
+	final String fullName
+	final String majorVersion
+	final String family
+
+	final String osgiVersion
+
+	final boolean isSnapshot
+
+	HibernateVersion(String fullName, Project project) {
+		this.fullName = fullName
+
+		final String[] hibernateVersionComponents = fullName.split( '\\.' )
+		this.majorVersion = hibernateVersionComponents[0]
+		this.family = hibernateVersionComponents[0] + '.' + hibernateVersionComponents[1]
+
+		this.isSnapshot = fullName.endsWith( '-SNAPSHOT' )
+
+		this.osgiVersion = isSnapshot ? family + '.' + hibernateVersionComponents[2] + '.SNAPSHOT' : fullName
+	}
+
+	static HibernateVersion fromFile(File file, Project project){
+		def fullName = readVersionProperties(file)
+		return new HibernateVersion(fullName, project)
+	}
+
+	private static String readVersionProperties(File file) {
+		if ( !file.exists() ) {
+			throw new GradleException( "Version file $file.canonicalPath does not exists" )
+		}
+		Properties versionProperties = new Properties()
+		file.withInputStream {
+			stream -> versionProperties.load( stream )
+		}
+		return versionProperties.hibernateVersion
+	}
+
+	@Override
+	String toString() {
+		return this.fullName
+	}
+}
+
 //idea {
 //    project {
-//		jdkName = baselineJavaVersion
-//		languageLevel = baselineJavaVersion
+//		jdkName = gradle.ext.baselineJavaVersion
+//		languageLevel = gradle.ext.baselineJavaVersion
 //
 //		vcs = 'Git'
 //    }

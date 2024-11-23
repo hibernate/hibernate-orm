@@ -177,10 +177,11 @@ public class IdBagElementNullBasicTest extends BaseCoreFunctionalTestCase {
 		@ElementCollection
 		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn( name = "AnEntity_id" ) })
 		@CollectionId(
-				columns = { @Column },
+				//columns = { @Column },
+				column = @Column( name = "collection_id" ),
 				type = @Type(type = "long"),
 				generator = "increment"
 		)
-		private List<String> aCollection = new ArrayList<String>();
+		private List<String> aCollection = new ArrayList<>();
 	}
 }

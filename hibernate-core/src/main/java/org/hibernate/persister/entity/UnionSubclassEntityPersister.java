@@ -20,11 +20,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -85,11 +85,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 		final Database database = creationContext.getMetadata().getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		// TABLE
 
-		tableName = determineTableName( persistentClass.getTable(), jdbcEnvironment );
+		tableName = determineTableName( persistentClass.getTable() );
 
 		//Custom SQL
 
@@ -144,32 +143,31 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				persistentClass.getEntityName()
 		);
 		if ( persistentClass.isPolymorphic() ) {
-			Iterator iter = persistentClass.getSubclassIterator();
+			Iterator<Subclass> subclassIter = persistentClass.getSubclassIterator();
 			int k = 1;
-			while ( iter.hasNext() ) {
-				Subclass sc = (Subclass) iter.next();
-				subclassClosure[k++] = sc.getEntityName();
-				subclassByDiscriminatorValue.put( sc.getSubclassId(), sc.getEntityName() );
+			while ( subclassIter.hasNext() ) {
+				Subclass subclass = subclassIter.next();
+				subclassClosure[k++] = subclass.getEntityName();
+				subclassByDiscriminatorValue.put( subclass.getSubclassId(), subclass.getEntityName() );
 			}
 		}
 
 		//SPACES
-		//TODO: i'm not sure, but perhaps we should exclude
+		//TODO: I'm not sure, but perhaps we should exclude
 		//      abstract denormalized tables?
 
 		int spacesSize = 1 + persistentClass.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
 		spaces[0] = tableName;
-		Iterator iter = persistentClass.getSynchronizedTables().iterator();
+		Iterator<String> iter = persistentClass.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
-			spaces[i] = (String) iter.next();
+			spaces[i] = iter.next();
 		}
 
-		HashSet subclassTables = new HashSet();
-		iter = persistentClass.getSubclassTableClosureIterator();
-		while ( iter.hasNext() ) {
-			final Table table = (Table) iter.next();
-			subclassTables.add( determineTableName( table, jdbcEnvironment ) );
+		HashSet<String> subclassTables = new HashSet();
+		Iterator<Table> subclassTableIter = persistentClass.getSubclassTableClosureIterator();
+		while ( subclassTableIter.hasNext() ) {
+			subclassTables.add( determineTableName( subclassTableIter.next() ) );
 		}
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
 
@@ -177,22 +175,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( isMultiTable() ) {
 			int idColumnSpan = getIdentifierColumnSpan();
-			ArrayList tableNames = new ArrayList();
-			ArrayList keyColumns = new ArrayList();
-			if ( !isAbstract() ) {
-				tableNames.add( tableName );
-				keyColumns.add( getIdentifierColumnNames() );
-			}
-			iter = persistentClass.getSubclassTableClosureIterator();
-			while ( iter.hasNext() ) {
-				Table tab = (Table) iter.next();
+			ArrayList<String> tableNames = new ArrayList<>();
+			ArrayList<String[]> keyColumns = new ArrayList<>();
+			Iterator<Table> tableIter = persistentClass.getSubclassTableClosureIterator();
+			while ( tableIter.hasNext() ) {
+				Table tab = tableIter.next();
 				if ( !tab.isAbstractUnionTable() ) {
-					final String tableName = determineTableName( tab, jdbcEnvironment );
+					final String tableName = determineTableName( tab );
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
-					Iterator citer = tab.getPrimaryKey().getColumnIterator();
+					Iterator<Column> citer = tab.getPrimaryKey().getColumnIterator();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
-						key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
+						key[k] = citer.next().getQuotedName( factory.getDialect() );
 					}
 					keyColumns.add( key );
 				}
@@ -205,8 +199,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			constraintOrderedTableNames = new String[] {tableName};
 			constraintOrderedKeyColumnNames = new String[][] {getIdentifierColumnNames()};
 		}
-
-		initLockers();
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
@@ -268,7 +260,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						getSubclassFormulaAliasClosure(),
 						getSubclassFormulaLazyiness()
 				);
-		//TODO: include the rowids!!!!
+		//TODO: include the row ids!!!!
 		if ( hasSubclasses() ) {
 			if ( isDiscriminatorFormula() ) {
 				select.addColumn( getDiscriminatorFormula(), getDiscriminatorAlias() );
@@ -370,12 +362,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		Dialect dialect = getFactory().getDialect();
 		Settings settings = getFactory().getSettings();
+		SqlStringGenerationContext sqlStringGenerationContext = getFactory().getSqlStringGenerationContext();
 
 		if ( !model.hasSubclasses() ) {
 			return model.getTable().getQualifiedName(
-					dialect,
-					settings.getDefaultCatalogName(),
-					settings.getDefaultSchemaName()
+					sqlStringGenerationContext
 			);
 		}
 
@@ -421,9 +412,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				buf.append( " from " )
 						.append(
 								table.getQualifiedName(
-										dialect,
-										settings.getDefaultCatalogName(),
-										settings.getDefaultSchemaName()
+										sqlStringGenerationContext
 								)
 						);
 				buf.append( " union " );

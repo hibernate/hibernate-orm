@@ -18,7 +18,6 @@ import javax.persistence.Subgraph;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
@@ -26,6 +25,8 @@ import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FromElementFactory;
 import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
@@ -42,6 +43,8 @@ import antlr.SemanticException;
  * @author Brett Meyer
  */
 public class EntityGraphQueryHint implements AppliedGraph {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityGraphQueryHint.class );
+
 	private final RootGraphImplementor<?> graph;
 	private final GraphSemantic semantic;
 
@@ -77,9 +80,17 @@ public class EntityGraphQueryHint implements AppliedGraph {
 			}
 		}
 
+		boolean applyEntityGraph = false;
+		if ( fromClause.getLevel() == FromClause.ROOT_LEVEL ) {
+			final String fromElementEntityName = fromClause.getFromElement().getEntityPersister().getEntityName();
+			applyEntityGraph = graph.appliesTo( fromElementEntityName );
+			if ( !applyEntityGraph ) {
+				LOG.warnf( "Entity graph is not applicable to the root entity [%s]; Ignored.", fromElementEntityName );
+			}
+		}
+
 		return getFromElements(
-				fromClause.getLevel() == FromClause.ROOT_LEVEL ? graph.getAttributeNodes():
-					Collections.emptyList(),
+				applyEntityGraph ? graph.getAttributeNodes() : Collections.emptyList(),
 				fromClause.getFromElement(),
 				fromClause,
 				walker,

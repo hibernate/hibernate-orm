@@ -29,8 +29,8 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 
 	private final JdbcContext jdbcContext;
 
-	private Transaction suspendedTransaction;
-	private Connection jdbcConnection;
+	private final Transaction suspendedTransaction;
+	private final Connection jdbcConnection;
 
 	public DdlTransactionIsolatorJtaImpl(JdbcContext jdbcContext) {
 		this.jdbcContext = jdbcContext;

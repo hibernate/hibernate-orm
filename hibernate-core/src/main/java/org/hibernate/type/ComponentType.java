@@ -115,7 +115,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		int[] sqlTypes = new int[getColumnSpan( mapping )];
 		int n = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -129,7 +129,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	@Override
 	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		final Size[] sizes = new Size[getColumnSpan( mapping )];
 		int soFar = 0;
 		for ( Type propertyType : propertyTypes ) {
@@ -142,7 +142,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 	@Override
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
+		//Not called at runtime so doesn't matter if it's slow :)
 		final Size[] sizes = new Size[getColumnSpan( mapping )];
 		int soFar = 0;
 		for ( Type propertyType : propertyTypes ) {
@@ -690,7 +690,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( value != null ) {
 			Object result = instantiate( owner, session );
 			Object[] values = (Object[]) value;
-			Object[] resolvedValues = new Object[values.length]; //only really need new array during semiresolve!
+			Object[] resolvedValues = new Object[values.length]; //only really need new array during semi-resolve!
 			for ( int i = 0; i < values.length; i++ ) {
 				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
 			}

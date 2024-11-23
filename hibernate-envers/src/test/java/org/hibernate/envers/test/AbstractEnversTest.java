@@ -9,6 +9,8 @@ package org.hibernate.envers.test;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.testing.cleaner.DatabaseCleaner;
+
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -21,6 +23,10 @@ import org.jboss.logging.Logger;
  */
 @RunWith(EnversRunner.class)
 public abstract class AbstractEnversTest {
+
+	static {
+		DatabaseCleaner.clearSchemas();
+	}
 
 	protected final Logger log = Logger.getLogger( getClass() );
 

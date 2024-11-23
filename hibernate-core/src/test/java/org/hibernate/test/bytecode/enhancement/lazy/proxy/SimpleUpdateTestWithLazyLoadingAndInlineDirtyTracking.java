@@ -55,7 +55,6 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking extends BaseN
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 		ssrb.applySetting( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
@@ -235,7 +234,6 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking extends BaseN
 		Long id;
 
 		@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		Parent parent;
 
 		@OneToMany

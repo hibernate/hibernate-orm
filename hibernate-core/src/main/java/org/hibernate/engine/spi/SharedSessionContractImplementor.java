@@ -30,7 +30,6 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.custom.CustomQuery;
@@ -168,7 +167,10 @@ public interface SharedSessionContractImplementor
 	 * @apiNote This "timestamp" need not be related to timestamp in the Java Date/millisecond
 	 * sense.  It just needs to be an incrementing value.  See
 	 * {@link CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()}
+	 *
+	 * @deprecated no longer supported, when the Second Level Cache is enabled {{@link CacheTransactionSynchronization#getCachingTimestamp()}} can be used.
 	 */
+	@Deprecated
 	long getTransactionStartTimestamp();
 
 	/**
@@ -333,6 +335,13 @@ public interface SharedSessionContractImplementor
 	 * Instantiate the entity class, initializing with the given identifier
 	 */
 	Object instantiate(String entityName, Serializable id) throws HibernateException;
+
+	/**
+	 * Instantiate the entity class of an EntityPersister, initializing with the given identifier.
+	 * This is more efficient than {@link #instantiate(String, Serializable)} but not always
+	 * interchangeable: a single persister might be responsible for multiple types.
+	 */
+	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
 
 	/**
 	 * Execute an SQL Query
@@ -523,31 +532,11 @@ public interface SharedSessionContractImplementor
 	 */
 	PersistenceContext getPersistenceContextInternal();
 
-	/**
-	 * Get the current fetch graph context (either {@link org.hibernate.graph.spi.RootGraphImplementor} or {@link org.hibernate.graph.spi.SubGraphImplementor}. 
-	 * Suppose fetch graph is "a(b(c))", then during {@link org.hibernate.engine.internal.TwoPhaseLoad}:
-	 * <ul>
-	 *     <li>when loading root</li>: {@link org.hibernate.graph.spi.RootGraphImplementor root} will be returned
-	 *     <li>when internally loading 'a'</li>: {@link org.hibernate.graph.spi.SubGraphImplementor subgraph} of 'a' will be returned
-	 *     <li>when internally loading 'b'</li>: {@link org.hibernate.graph.spi.SubGraphImplementor subgraph} of 'a(b)' will be returned
-	 *     <li>when internally loading 'c'</li>: {@link org.hibernate.graph.spi.SubGraphImplementor subgraph} of 'a(b(c))' will be returned
-	 * </ul>
-	 * 
-	 * @return current fetch graph context; can be null if fetch graph is not effective or the graph eager loading is done.
-	 * @see #setFetchGraphLoadContext(GraphImplementor) 
-	 * @see org.hibernate.engine.internal.TwoPhaseLoad
-	 */
-	default GraphImplementor getFetchGraphLoadContext() {
-		return null;
+	default boolean isEnforcingFetchGraph() {
+		return false;
 	}
 
-	/**
-	 * Set the current fetch graph context (either {@link org.hibernate.graph.spi.RootGraphImplementor} or {@link org.hibernate.graph.spi.SubGraphImplementor}.
-	 * 
-	 * @param fetchGraphLoadContext new fetch graph context; can be null (this field will be set to null after root entity loading is done).
-	 * @see #getFetchGraphLoadContext()                                 
-	 */
-	default void setFetchGraphLoadContext(GraphImplementor fetchGraphLoadContext) {
+	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
 	}
 
 }

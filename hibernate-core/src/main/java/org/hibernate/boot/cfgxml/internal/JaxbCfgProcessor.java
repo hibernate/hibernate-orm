@@ -11,6 +11,7 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.xml.XsdException;
 import org.jboss.logging.Logger;
@@ -136,7 +137,7 @@ public class JaxbCfgProcessor {
 	}
 
 	private boolean isNamespaced(StartElement startElement) {
-		return ! "".equals( startElement.getName().getNamespaceURI() );
+		return StringHelper.isNotEmpty( startElement.getName().getNamespaceURI() );
 	}
 
 	private Schema schema;

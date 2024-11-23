@@ -15,7 +15,7 @@ public class DetailSuperclass {
 
 	private long id;
 
-	private List<Master> masters;
+	private List<Root> roots;
 
 	public DetailSuperclass() {
 
@@ -29,12 +29,12 @@ public class DetailSuperclass {
 		this.id = id;
 	}
 
-	public List<Master> getMasters() {
-		return masters;
+	public List<Root> getRoots() {
+		return roots;
 	}
 
-	public void setMasters(List<Master> masters) {
-		this.masters = masters;
+	public void setRoots(List<Root> roots) {
+		this.roots = roots;
 	}
 
 }

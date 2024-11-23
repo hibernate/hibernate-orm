@@ -6,16 +6,15 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.embeddedid;
 
-import javax.persistence.EntityManagerFactory;
 import java.util.Arrays;
+import javax.persistence.EntityManagerFactory;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
-import org.hibernate.jpa.AvailableSettings;
-
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 

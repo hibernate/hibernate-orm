@@ -23,6 +23,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Order;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -56,6 +57,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
 			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
 	}

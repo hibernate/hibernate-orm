@@ -13,6 +13,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.naming.Identifier;
@@ -69,6 +70,8 @@ public class Ejb3Column {
 	private String writeExpression;
 
 	private String defaultValue;
+
+	private String comment;
 
 	public void setTable(Table table) {
 		this.table = table;
@@ -193,6 +196,14 @@ public class Ejb3Column {
 		this.defaultValue = defaultValue;
 	}
 
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
 	public Ejb3Column() {
 	}
 
@@ -208,6 +219,9 @@ public class Ejb3Column {
 			);
 			if ( defaultValue != null ) {
 				mappingColumn.setDefaultValue( defaultValue );
+			}
+			if ( StringHelper.isNotEmpty( comment ) ) {
+				mappingColumn.setComment (comment );
 			}
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Binding column: %s", toString() );
@@ -471,6 +485,7 @@ public class Ejb3Column {
 	public static Ejb3Column[] buildColumnFromAnnotation(
 			javax.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
+			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -479,6 +494,7 @@ public class Ejb3Column {
 		return buildColumnFromAnnotation(
 				anns,
 				formulaAnn,
+				commentAnn,
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -490,6 +506,7 @@ public class Ejb3Column {
 	public static Ejb3Column[] buildColumnFromAnnotation(
 			javax.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
+			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -525,6 +542,7 @@ public class Ejb3Column {
 						suffixForDefaultColumnName,
 						secondaryTables,
 						propertyHolder,
+						commentAnn,
 						nullability,
 						context
 				);
@@ -566,7 +584,7 @@ public class Ejb3Column {
 					}
 
 					final String columnName;
-					if ( "".equals( col.name() ) ) {
+					if ( col.name() != null && col.name().isEmpty() ) {
 						columnName = null;
 					}
 					else {
@@ -601,6 +619,9 @@ public class Ejb3Column {
 					column.setNullable(
 						col.nullable()
 					); //TODO force to not null if available? This is a (bad) user choice.
+					if ( commentAnn != null ) {
+						column.setComment( commentAnn.value() );
+					}
 					column.setUnique( col.unique() );
 					column.setInsertable( col.insertable() );
 					column.setUpdatable( col.updatable() );
@@ -632,7 +653,7 @@ public class Ejb3Column {
 		}
 	}
 
-	//must only be called after all setters are defined and before bind
+	//must only be called after all setters are defined and before binding
 	private void extractDataFromPropertyData(PropertyData inferredData) {
 		if ( inferredData != null ) {
 			XProperty property = inferredData.getProperty();
@@ -676,11 +697,16 @@ public class Ejb3Column {
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
+			Comment comment,
 			Nullability nullability,
 			MetadataBuildingContext context) {
 		Ejb3Column column = new Ejb3Column();
 		Ejb3Column[] columns = new Ejb3Column[1];
 		columns[0] = column;
+
+		if ( comment != null ) {
+			column.setComment( comment.value() );
+		}
 
 		//not following the spec but more clean
 		if ( nullability != Nullability.FORCED_NULL

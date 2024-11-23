@@ -30,6 +30,8 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
+import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
+import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
@@ -44,6 +46,9 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
@@ -56,6 +61,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -154,7 +161,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderImpl defaultBuilder = new SessionFactoryBuilderImpl( this, bootstrapContext );
+		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().getService( SessionFactoryBuilderService.class );
+		final SessionFactoryBuilderImplementor defaultBuilder = factoryBuilderService.createSessionFactoryBuilder( this, bootstrapContext );
 
 		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
 		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
@@ -373,23 +381,32 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
 		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
 
-		eventListenerRegistry.prepare( this );
-
-		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+		for ( Map.Entry<?,?> entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
 			if ( !String.class.isInstance( entry.getKey() ) ) {
 				continue;
 			}
 			final String propertyName = (String) entry.getKey();
-			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
-				continue;
-			}
-			final String eventTypeName = propertyName.substring(
-					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
+			final String listenerPrefix = NullnessHelper.coalesceSuppliedValues(
+					() -> propertyName.startsWith( EVENT_LISTENER_PREFIX ) ? EVENT_LISTENER_PREFIX : null,
+					() -> {
+						if ( propertyName.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+									AvailableSettings.EVENT_LISTENER_PREFIX,
+									EVENT_LISTENER_PREFIX
+							);
+							return AvailableSettings.EVENT_LISTENER_PREFIX;
+						}
+						return null;
+					},
+					() -> null
 			);
-			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
-			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
-				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+			if ( listenerPrefix != null ) {
+				final String eventTypeName = propertyName.substring( listenerPrefix.length() + 1 );
+				final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+				final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+				for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
+					eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+				}
 			}
 		}
 	}

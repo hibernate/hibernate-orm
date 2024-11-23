@@ -132,7 +132,6 @@ public class MapsIdProxyBidirectionalTest extends BaseNonConfigCoreFunctionalTes
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 		ssrb.applySetting( AvailableSettings.SHOW_SQL, true );
@@ -153,7 +152,6 @@ public class MapsIdProxyBidirectionalTest extends BaseNonConfigCoreFunctionalTes
 
 		@MapsId
 		@OneToOne(optional = false, fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Employer employer;
 
 		private String info;
@@ -165,7 +163,6 @@ public class MapsIdProxyBidirectionalTest extends BaseNonConfigCoreFunctionalTes
 		private int id;
 
 		@OneToOne(optional = false, fetch = FetchType.LAZY, mappedBy = "employer", cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private EmployerInfo employerInfo;
 
 		private String name;

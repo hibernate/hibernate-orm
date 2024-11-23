@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 
 /**
- * Duplicates the jakarta.validation enum (because jakarta validation might not be on the runtime classpath)
+ * Duplicates the javax.validation enum (because javax validation might not be on the runtime classpath)
  *
  * @author Steve Ebersole
  */

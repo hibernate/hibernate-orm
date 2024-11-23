@@ -13,11 +13,9 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.OuterJoinLoader;
-import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
@@ -61,6 +59,11 @@ public abstract class AbstractEntityLoader
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions, Boolean readOnly) {
 		return load( session, id, optionalObject, id, lockOptions, readOnly );
+	}
+
+	@Override
+	public Object load(Object id, SharedSessionContractImplementor session, LockOptions lockOptions) {
+		return load( session, id, null, null, lockOptions, null );
 	}
 
 	protected Object load(

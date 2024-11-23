@@ -51,7 +51,7 @@ public class PropertyPreloadedData implements PropertyData {
 	}
 
 	public XClass getDeclaringClass() {
-		//Preloaded properties are artificial wrapper for colleciton element accesses
+		//Preloaded properties are artificial wrapper for collection element accesses
 		//and idClass creation, ignore.
 		return null;
 	}

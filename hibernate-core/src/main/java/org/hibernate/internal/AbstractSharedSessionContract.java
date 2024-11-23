@@ -86,6 +86,7 @@ import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -134,6 +135,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private FlushMode flushMode;
 	private boolean autoJoinTransactions;
+	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 
 	private CacheMode cacheMode;
 
@@ -181,11 +183,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			sessionEventsManager = new SessionEventListenerManagerImpl( customSessionEventListener.toArray( new SessionEventListener[0] ) );
 		}
 
-		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
-		this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector, fastSessionServices );
-
 		this.entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
+		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 		if ( options instanceof SharedSessionCreationOptions && ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared() ) {
 			if ( options.getConnection() != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
@@ -197,7 +197,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			this.transactionCoordinator = sharedOptions.getTransactionCoordinator();
 			this.jdbcCoordinator = sharedOptions.getJdbcCoordinator();
 
-			// todo : "wrap" the transaction to no-op comit/rollback attempts?
+			// todo : "wrap" the transaction to no-op commit/rollback attempts?
 			this.currentHibernateTransaction = sharedOptions.getTransaction();
 
 			if ( sharedOptions.shouldAutoJoinTransactions() ) {
@@ -207,21 +207,44 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				);
 				autoJoinTransactions = false;
 			}
-			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode() ) {
+			this.connectionHandlingMode = this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode();
+			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.connectionHandlingMode ) {
 				log.debug(
 						"Session creation specified 'PhysicalConnectionHandlingMode which is invalid in conjunction " +
 								"with sharing JDBC connection between sessions; ignoring"
 				);
 			}
 
+			this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector,
+					connectionHandlingMode, fastSessionServices );
+
 			addSharedSessionTransactionObserver( transactionCoordinator );
 		}
 		else {
 			this.isTransactionCoordinatorShared = false;
 			this.autoJoinTransactions = options.shouldAutoJoinTransactions();
+			this.connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
+			this.jdbcSessionContext = new JdbcSessionContextImpl( this, statementInspector,
+					connectionHandlingMode, fastSessionServices );
+			// This must happen *after* the JdbcSessionContext was initialized,
+			// because some of the calls below retrieve this context indirectly through Session getters.
 			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this, fastSessionServices.jdbcServices );
 			this.transactionCoordinator = fastSessionServices.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
+	}
+
+	/**
+	 * Override the implementation provided on SharedSessionContractImplementor
+	 * which is not very efficient: this method is hot in Hibernate Reactive, and could
+	 * be hot in some ORM contexts as well.
+	 * @return
+	 */
+	@Override
+	public Integer getConfiguredJdbcBatchSize() {
+		final Integer sessionJdbcBatchSize = this.jdbcBatchSize;
+		return sessionJdbcBatchSize == null ?
+				fastSessionServices.defaultJdbcBatchSize :
+				sessionJdbcBatchSize;
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
@@ -229,6 +252,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		transactionCoordinator.invalidate();
+	}
+
+	protected void prepareForAutoClose() {
+		waitingForAutoClose = true;
+		closed = true;
+		// For non-shared transaction coordinators, we have to add the observer
+		if ( !isTransactionCoordinatorShared ) {
+			addSharedSessionTransactionObserver( transactionCoordinator );
+		}
 	}
 
 	@Override
@@ -243,7 +275,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private StatementInspector interpret(StatementInspector statementInspector) {
 		if ( statementInspector == null ) {
 			// If there is no StatementInspector specified, map to the call
-			//		to the (deprecated) Interceptor #onPrepareStatement method
+			//		to the (deprecated) Interceptor#onPrepareStatement method
 			return (StatementInspector) interceptor::onPrepareStatement;
 		}
 		return statementInspector;
@@ -286,7 +318,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public UUID getSessionIdentifier() {
 		if ( this.sessionIdentifier == null ) {
-			//Lazily initialized: otherwise all the UUID generations will cause of significant amount of contention.
+			//Lazily initialized: otherwise all the UUID generations will cause significant amount of contention.
 			this.sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
 		}
 		return sessionIdentifier;
@@ -629,11 +661,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
-	protected QueryImplementor createQuery(NamedQueryDefinition queryDefinition) {
+	protected QueryImpl createQuery(NamedQueryDefinition queryDefinition) {
 		String queryString = queryDefinition.getQueryString();
 		final QueryImpl query = new QueryImpl(
 				this,
-				getQueryPlan( queryString, false ).getParameterMetadata(),
+				getQueryPlan( queryString, false ),
 				queryString
 		);
 		applyQuerySettingsAndHints( query );
@@ -705,7 +737,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public QueryImplementor createQuery(String queryString) {
+	public QueryImpl createQuery(String queryString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -713,7 +745,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			final QueryImpl query = new QueryImpl(
 					this,
-					getQueryPlan( queryString, false ).getParameterMetadata(),
+					getQueryPlan( queryString, false ),
 					queryString
 			);
 			applyQuerySettingsAndHints( query );
@@ -813,7 +845,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			// do the translation
-			final QueryImplementor<T> query = createQuery( queryString );
+			final QueryImpl<T> query = createQuery( queryString );
 			resultClassChecking( resultClass, query );
 			return query;
 		}
@@ -823,13 +855,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess", "StatementWithEmptyBody"})
-	protected void resultClassChecking(Class resultClass, org.hibernate.Query hqlQuery) {
+	protected void resultClassChecking(Class resultClass, QueryImpl hqlQuery) {
 		// make sure the query is a select -> HHH-7192
-		final HQLQueryPlan queryPlan = getFactory().getQueryPlanCache().getHQLQueryPlan(
-				hqlQuery.getQueryString(),
-				false,
-				getLoadQueryInfluencers().getEnabledFilters()
-		);
+		HQLQueryPlan queryPlan = hqlQuery.getQueryPlan();
+
 		if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
 			throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
 		}
@@ -853,15 +882,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			}
 			else if ( queryPlan.getTranslators()[0].getReturnTypes().length == 1 ) {
-				// if we have only a single return expression, its java type should match with the requested type
+				// if we have only a single return expression, its java type should match the requested type
 				final Type queryResultType = queryPlan.getTranslators()[0].getReturnTypes()[0];
 				if ( !resultClass.isAssignableFrom( queryResultType.getReturnedClass() ) ) {
-					throw new IllegalArgumentException(
-							"Type specified for TypedQuery [" +
-									resultClass.getName() +
-									"] is incompatible with query return type [" +
-									queryResultType.getReturnedClass() + "]"
-					);
+					throw buildIncompatibleException( resultClass, queryResultType.getReturnedClass() );
 				}
 			}
 			else {
@@ -905,7 +929,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> QueryImplementor<T> createQuery(NamedQueryDefinition namedQueryDefinition, Class<T> resultType) {
-		final QueryImplementor query = createQuery( namedQueryDefinition );
+		final QueryImpl query = createQuery( namedQueryDefinition );
 		if ( resultType != null ) {
 			resultClassChecking( resultType, query );
 		}
@@ -949,11 +973,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			queryReturns = rsMapping.getQueryReturns();
 		}
 		else {
-			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
+			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager" );
 		}
 
 		if ( queryReturns.length > 1 ) {
 			throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+		}
+
+		if ( queryReturns.length == 0 ) {
+			throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );
 		}
 
 		final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
@@ -986,10 +1014,23 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
-		return new IllegalArgumentException(
-				"Type specified for TypedQuery [" + resultClass.getName() +
-						"] is incompatible with query return type [" + actualResultClass + "]"
-		);
+		final String resultClassName = resultClass.getName();
+		final String actualResultClassName = actualResultClass.getName();
+		if ( resultClassName.equals( actualResultClassName ) ) {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with the query return type of the same name." +
+							" Both classes have the same name but are different as they have been loaded respectively by Classloaders " +
+							resultClass.getClassLoader().toString() + ", " + actualResultClass.getClassLoader().toString() +
+							". This suggests a classloader bug in the Runtime executing Hibernate ORM, or in the integration code."
+			);
+		}
+		else {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with query return type [" + actualResultClass + "]"
+			);
+		}
 	}
 
 	@Override
@@ -1236,7 +1277,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		factory = SessionFactoryImpl.deserialize( ois );
 		fastSessionServices = factory.getFastSessionServices();
 		sessionEventsManager = new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() );
-		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject(), fastSessionServices );
+		jdbcSessionContext = new JdbcSessionContextImpl( this, (StatementInspector) ois.readObject(),
+				connectionHandlingMode, fastSessionServices );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );

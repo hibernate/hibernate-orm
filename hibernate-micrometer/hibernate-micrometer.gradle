@@ -1,0 +1,24 @@
+description = 'Integration for Micrometer metrics into Hibernate as a metrics collection package'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+
+dependencies {
+    compile project( ':hibernate-core' )
+    compile( libraries.jpa )
+    compile( libraries.micrometer )
+
+    testCompile project( ':hibernate-testing' )
+    testCompile( libraries.mockito )
+    testCompile( libraries.mockito_inline )
+    testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
+}
+
+sourceSets {
+    // resources inherently exclude sources
+    test {
+        resources {
+            setSrcDirs( ['src/test/java','src/test/resources'] )
+        }
+    }
+}

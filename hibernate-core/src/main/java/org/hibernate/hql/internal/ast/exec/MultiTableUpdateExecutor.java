@@ -30,6 +30,10 @@ public class MultiTableUpdateExecutor implements StatementExecutor {
 		this.updateHandler = strategy.buildUpdateHandler( walker.getSessionFactoryHelper().getFactory(), walker );
 	}
 
+	public MultiTableBulkIdStrategy.UpdateHandler getUpdateHandler() {
+		return updateHandler;
+	}
+
 	public String[] getSqlStatements() {
 		return updateHandler.getSqlStatements();
 	}

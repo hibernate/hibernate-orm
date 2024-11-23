@@ -8,8 +8,6 @@ package org.hibernate.internal.util.xml;
 
 import java.io.Serializable;
 
-import org.dom4j.Document;
-
 /**
  * Describes a parsed xml document.
  *

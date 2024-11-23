@@ -40,8 +40,10 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -428,7 +430,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	// stream passed in via
 	// PreparedStatement.setCharacterStream(int,Reader,long)
 	// after the stream has been processed. this causes problems later if we are
-	// using non-contexual lob creation and HANA then closes our StringReader.
+	// using non-contextual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
 	private static class HANAClobTypeDescriptor extends ClobTypeDescriptor {
@@ -728,14 +730,16 @@ public abstract class AbstractHANADialect extends Dialect {
 	private final StandardTableExporter hanaTableExporter = new StandardTableExporter( this ) {
 
 		@Override
-		public String[] getSqlCreateStrings(org.hibernate.mapping.Table table, org.hibernate.boot.Metadata metadata) {
-			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata );
+		public String[] getSqlCreateStrings(Table table, Metadata metadata,
+				SqlStringGenerationContext context) {
+			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata, context );
 			return quoteTypeIfNecessary( table, sqlCreateStrings, getCreateTableString() );
 		}
 
 		@Override
-		public String[] getSqlDropStrings(Table table, org.hibernate.boot.Metadata metadata) {
-			String[] sqlDropStrings = super.getSqlDropStrings( table, metadata );
+		public String[] getSqlDropStrings(Table table, Metadata metadata,
+				SqlStringGenerationContext context) {
+			String[] sqlDropStrings = super.getSqlDropStrings( table, metadata, context );
 			return quoteTypeIfNecessary( table, sqlDropStrings, "drop table" );
 		}
 
@@ -932,8 +936,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		registerHanaKeywords();
 
-		// createBlob() and createClob() are not supported by the HANA JDBC
-		// driver
+		// createBlob() and createClob() are not supported by the HANA JDBC driver
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
 		// getGeneratedKeys() is not supported by the HANA JDBC driver

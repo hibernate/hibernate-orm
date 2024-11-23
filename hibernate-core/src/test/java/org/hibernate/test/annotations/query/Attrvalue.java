@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.annotations.query;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -15,7 +16,7 @@ public class Attrvalue {
     @Id
     @GeneratedValue
     private Long id;
-    
+	@Column(name = "val")
     private String value;
 
 	public Long getId() {

@@ -97,6 +97,11 @@ public class QueryHints {
 	public static final String TIMEOUT_JPA = "javax.persistence.query.timeout";
 
 	/**
+	 * Apply a JPA query timeout, which is defined in <b>milliseconds</b>.
+	 */
+	public static final String TIMEOUT_JAKARTA_JPA = "jakarta.persistence.query.timeout";
+
+	/**
 	 * Available to apply lock mode to a native SQL query since JPA requires that
 	 * {@link javax.persistence.Query#setLockMode} throw an IllegalStateException if called for a native query.
 	 * <p/>
@@ -143,5 +148,18 @@ public class QueryHints {
 	 * @since 5.2
 	 */
 	public static final String PASS_DISTINCT_THROUGH = "hibernate.query.passDistinctThrough";
+
+	/**
+	 * Hint for specifying query spaces to be applied to a native (SQL) query.
+	 *
+	 * Passed value can be any of:<ul>
+	 *     <li>List of the spaces</li>
+	 *     <li>array of the spaces</li>
+	 *     <li>String "whitespace"-separated list of the spaces</li>
+	 * </ul>
+	 *
+	 * @see org.hibernate.SynchronizeableQuery
+	 */
+	public static final String NATIVE_SPACES = "org.hibernate.query.native.spaces";
 
 }

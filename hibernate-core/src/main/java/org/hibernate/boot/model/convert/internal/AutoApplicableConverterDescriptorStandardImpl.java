@@ -20,6 +20,7 @@ import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.HCANNHelper;
+import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
@@ -147,7 +148,11 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 	}
 
 	private boolean typesMatch(ResolvedType converterDefinedType, ResolvedType checkType) {
-		if ( !converterDefinedType.getErasedType().isAssignableFrom( checkType.getErasedType() ) ) {
+		Class<?> erasedCheckType = checkType.getErasedType();
+		if ( erasedCheckType.isPrimitive() ) {
+			erasedCheckType = PrimitiveWrapperHelper.getDescriptorByPrimitiveType( erasedCheckType ).getWrapperClass();
+		}
+		if ( !converterDefinedType.getErasedType().isAssignableFrom( erasedCheckType ) ) {
 			return false;
 		}
 
@@ -180,4 +185,5 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 
 		return true;
 	}
+
 }

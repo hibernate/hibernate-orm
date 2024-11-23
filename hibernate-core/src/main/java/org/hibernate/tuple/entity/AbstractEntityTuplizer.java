@@ -16,18 +16,23 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.Assigned;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Getter;
@@ -37,6 +42,7 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -168,11 +174,13 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 		else {
 			identifierMapperType = (CompositeType) mapper.getType();
+			KeyValue identifier = mappingInfo.getIdentifier();
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
 					getEntityName(),
 					getFactory(),
 					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
-					(ComponentType) identifierMapperType
+					(ComponentType) identifierMapperType,
+					identifier
 			);
 		}
 	}
@@ -208,7 +216,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			id = entity;
 		}
 		else if ( HibernateProxy.class.isInstance( entity ) ) {
-			id = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+			id = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
 			if ( idGetter == null ) {
@@ -241,7 +249,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public void setIdentifier(Object entity, Serializable id) throws HibernateException {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		setIdentifier( entity, id, null );
 	}
@@ -265,7 +273,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	private static interface MappedIdentifierValueMarshaller {
 		public Object getIdentifier(Object entity, EntityMode entityMode, SharedSessionContractImplementor session);
 
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session);
+		public void setIdentifier(
+				Object entity,
+				Serializable id,
+				EntityMode entityMode,
+				SharedSessionContractImplementor session);
 	}
 
 	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
@@ -274,7 +286,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			String entityName,
 			SessionFactoryImplementor sessionFactory,
 			ComponentType mappedIdClassComponentType,
-			ComponentType virtualIdComponent) {
+			ComponentType virtualIdComponent,
+			KeyValue identifier) {
 		// so basically at this point we know we have a "mapped" composite identifier
 		// which is an awful way to say that the identifier is represented differently
 		// in the entity and in the identifier value.  The incoming value should
@@ -302,8 +315,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 						entityName,
 						sessionFactory,
 						virtualIdComponent,
-						mappedIdClassComponentType
-		);
+						mappedIdClassComponentType,
+						identifier
+				);
 	}
 
 	private static class NormalMappedIdentifierValueMarshaller implements MappedIdentifierValueMarshaller {
@@ -326,7 +340,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session) {
+		public void setIdentifier(
+				Object entity,
+				Serializable id,
+				EntityMode entityMode,
+				SharedSessionContractImplementor session) {
 			virtualIdComponent.setPropertyValues(
 					entity,
 					mappedIdentifierType.getPropertyValues( id, session ),
@@ -341,16 +359,19 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		private final SessionFactoryImplementor sessionFactory;
 		private final ComponentType virtualIdComponent;
 		private final ComponentType mappedIdentifierType;
+		private final KeyValue identifier;
 
 		private IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller(
 				String entityName,
 				SessionFactoryImplementor sessionFactory,
 				ComponentType virtualIdComponent,
-				ComponentType mappedIdentifierType) {
+				ComponentType mappedIdentifierType,
+				KeyValue identifier) {
 			this.sessionFactory = sessionFactory;
 			this.entityName = entityName;
 			this.virtualIdComponent = virtualIdComponent;
 			this.mappedIdentifierType = mappedIdentifierType;
+			this.identifier = identifier;
 		}
 
 		@Override
@@ -361,14 +382,22 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
 			final int length = subTypes.length;
 			for ( int i = 0; i < length; i++ ) {
+				final Type subType = subTypes[i];
 				if ( propertyValues[i] == null ) {
-					throw new HibernateException( "No part of a composite identifier may be null" );
+					if ( subType.isAssociationType() ) {
+						throw new HibernateException( "No part of a composite identifier may be null" );
+					}
+					final Property p = ( (Component) identifier ).getProperty( i );
+					final SimpleValue v = (SimpleValue) p.getValue();
+					if ( v.getIdentifierGenerator() == null ) {
+						throw new HibernateException( "No part of a composite identifier may be null" );
+					}
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
-				if ( subTypes[i].isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {
+				if ( subType.isAssociationType() && !copierSubTypes[i].isAssociationType() ) {
 					propertyValues[i] = determineEntityId(
 							propertyValues[i],
-							(AssociationType) subTypes[i],
+							(AssociationType) subType,
 							session,
 							sessionFactory
 					);
@@ -379,7 +408,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SharedSessionContractImplementor session) {
+		public void setIdentifier(
+				Object entity,
+				Serializable id,
+				EntityMode entityMode,
+				SharedSessionContractImplementor session) {
 			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
 			final Object[] injectionValues = new Object[extractedValues.length];
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -432,7 +465,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		if ( HibernateProxy.class.isInstance( entity ) ) {
 			// entity is a proxy, so we know it is not transient; just return ID from proxy
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 
 		if ( session != null ) {
@@ -485,7 +518,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		resetIdentifier( entity, currentId, currentVersion, null );
 	}
@@ -549,8 +582,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			// if the attribute is not lazy (bytecode sense), we can just use the value from the instance
 			// if the attribute is lazy but has been initialized we can just use the value from the instance
 			// todo : there should be a third case here when we merge transient instances
-			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
-					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
+			if ( !lazyAttributesMetadata.isLazyAttribute( propertyName )
+					|| enhancementMetadata.isAttributeLoaded( entity, propertyName ) ) {
 				result[j] = getters[j].get( entity );
 			}
 			else {
@@ -675,7 +708,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public final Object instantiate(Serializable id) throws HibernateException {
-		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
 		// interpretations of JPA 2 "derived identity" support
 		return instantiate( id, null );
 	}
@@ -683,10 +716,26 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	@Override
 	public final Object instantiate(Serializable id, SharedSessionContractImplementor session) {
 		Object result = getInstantiator().instantiate( id );
+		linkToSession( result, session );
 		if ( id != null ) {
 			setIdentifier( result, id, session );
 		}
 		return result;
+	}
+
+	protected void linkToSession(Object entity, SharedSessionContractImplementor session) {
+		if ( session == null ) {
+			return;
+		}
+		ManagedTypeHelper.processIfPersistentAttributeInterceptable( entity, this::setSession, session );
+	}
+
+	private void setSession(PersistentAttributeInterceptable entity, SharedSessionContractImplementor session) {
+		final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
+				.extractLazyInterceptor( entity );
+		if ( interceptor != null ) {
+			interceptor.setSession( session );
+		}
 	}
 
 	@Override

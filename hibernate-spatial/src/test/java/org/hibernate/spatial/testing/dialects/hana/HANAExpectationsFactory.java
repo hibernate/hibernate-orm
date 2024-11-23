@@ -38,7 +38,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, t.geom.ST_Buffer(?) from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
-				new Object[]{ distance } );
+				new Object[] { distance }
+		);
 	}
 
 	@Override
@@ -46,7 +47,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, " + getTestSrid() + ")).ST_ConvexHull().ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -54,7 +56,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Intersection(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -62,7 +65,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Difference(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -70,14 +74,16 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_SymDifference(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -138,7 +144,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Within(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Within(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -146,7 +153,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Equals(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Equals(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -154,7 +162,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Crosses(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Crosses(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -162,7 +171,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Contains(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Contains(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -170,7 +180,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Disjoint(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Disjoint(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -189,7 +200,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Intersects(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Intersects(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -198,7 +210,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_IntersectsFilter(ST_GeomFromText(?, " + getTestSrid()
 						+ ")) from GeomTest t where t.geom.ST_IntersectsFilter(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = "
 						+ getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -206,7 +219,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Touches(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Touches(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -214,7 +228,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Overlaps(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Overlaps(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -231,14 +246,16 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid() + "), "
 						+ distance + ") from GeomTest t where t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid() + "), " + distance
 						+ ") = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
 	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Distance(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	@Override
@@ -263,6 +280,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected alpha shapes of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, alpha shape
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getAlphaShape(double radius) throws SQLException {
@@ -272,13 +290,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	private NativeSQLStatement createNativeAlphaShapeStatement(double radius) {
 		return createNativeSQLStatement(
 				"select t.id, t.geom.ST_AlphaShape(?).ST_AsEWKB() from GeomTest t where t.geom.ST_GeometryType() in ('ST_Point', 'ST_MultiPoint')",
-				new Object[]{ radius } );
+				new Object[] { radius }
+		);
 	}
 
 	/**
 	 * Returns the expected area of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, area
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getArea() throws SQLException {
@@ -286,13 +306,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeAreaStatement() {
-		return createNativeSQLStatement( "select t.id, t.geom.ST_Area() from GeomTest t where t.geom.ST_GeometryType() in ('ST_Polygon', 'ST_MultiPolygon')" );
+		return createNativeSQLStatement(
+				"select t.id, t.geom.ST_Area() from GeomTest t where t.geom.ST_GeometryType() in ('ST_Polygon', 'ST_MultiPolygon')" );
 	}
 
 	/**
 	 * Returns the expected EWKB representation of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, EWKB
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, byte[]> getAsEWKB() throws SQLException {
@@ -307,6 +329,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected EWKT representation of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, EWKT
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsEWKT() throws SQLException {
@@ -321,6 +344,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected GeoJSON representation of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, GeoJSON
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsGeoJSON() throws SQLException {
@@ -335,6 +359,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected SVG representation of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, SVG
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsSVG() throws SQLException {
@@ -349,6 +374,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected aggregated SVG representation of all testsuite-suite geometries.
 	 *
 	 * @return map of count, SVG
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsSVGAggr() throws SQLException {
@@ -363,6 +389,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected WKB representation of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, WKB
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, byte[]> getAsWKB() throws SQLException {
@@ -377,6 +404,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected WKT representation of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, WKT
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsWKT() throws SQLException {
@@ -391,6 +419,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected centroid of all testsuite-suite geometries.
 	 *
 	 * @return map of id, centroid
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getCentroid() throws SQLException {
@@ -398,13 +427,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeCentroidStatement() {
-		return createNativeSQLStatement( "select id, t.geom.ST_Centroid() from GeomTest t where t.geom.ST_GeometryType() = 'ST_Polygon'" );
+		return createNativeSQLStatement(
+				"select id, t.geom.ST_Centroid() from GeomTest t where t.geom.ST_GeometryType() = 'ST_Polygon'" );
 	}
 
 	/**
 	 * Returns the expected aggregated convex hull representation of all testsuite-suite geometries.
 	 *
 	 * @return map of count, convex hull
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getConvexHullAggr() throws SQLException {
@@ -419,6 +450,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected number of coordinate dimensions of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, coordinate dimension
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getCoordDim() throws SQLException {
@@ -433,6 +465,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the testsuite-suite geometries that are covered by the given geometry.
 	 *
 	 * @return map of identifier, whether the geometry is covered
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getCoveredBy(Geometry geom) throws SQLException {
@@ -443,13 +476,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_CoveredBy(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_CoveredBy(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	/**
 	 * Returns the testsuite-suite geometries that are cover the given geometry.
 	 *
 	 * @return map of identifier, whether the geometry covers the given geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getCovers(Geometry geom) throws SQLException {
@@ -460,13 +495,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Covers(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Covers(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	/**
 	 * Returns the expected endpoint of all testsuite-suite geometries.
 	 *
 	 * @return map of id, endpoint
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getEndPoint() throws SQLException {
@@ -474,13 +511,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeEndPointStatement() {
-		return createNativeSQLStatement( "select id, t.geom.ST_EndPoint() from GeomTest t where t.geom.ST_GeometryType() = 'ST_LineString'" );
+		return createNativeSQLStatement(
+				"select id, t.geom.ST_EndPoint() from GeomTest t where t.geom.ST_GeometryType() = 'ST_LineString'" );
 	}
 
 	/**
 	 * Returns the expected aggregated bounding rectangle of all testsuite-suite geometries.
 	 *
 	 * @return map of count, bounding rectangle
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getEnvelopeAggr() throws SQLException {
@@ -495,6 +534,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected exterior ring of all testsuite-suite geometries.
 	 *
 	 * @return map of id, exterior ring
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getExteriorRing() throws SQLException {
@@ -502,13 +542,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeExteriorRingStatement() {
-		return createNativeSQLStatement( "select id, t.geom.ST_ExteriorRing() from GeomTest t where t.geom.ST_GeometryType() = 'ST_Polygon'" );
+		return createNativeSQLStatement(
+				"select id, t.geom.ST_ExteriorRing() from GeomTest t where t.geom.ST_GeometryType() = 'ST_Polygon'" );
 	}
 
 	/**
 	 * Returns the geometry from an EWKB representation.
 	 *
 	 * @return map of id, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromEWKB(byte[] ewkb) throws SQLException {
@@ -516,13 +558,14 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeGeomFromEWKBStatement(byte[] ewkb) {
-		return createNativeSQLStatement( "select 1, ST_GeomFromEWKB(?) from GeomTest t", new Object[]{ ewkb } );
+		return createNativeSQLStatement( "select 1, ST_GeomFromEWKB(?) from GeomTest t", new Object[] { ewkb } );
 	}
 
 	/**
 	 * Returns the geometry from an EWKT representation.
 	 *
 	 * @return map of id, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromEWKT(String ewkt) throws SQLException {
@@ -530,13 +573,14 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeGeomFromEWKTStatement(String ewkt) {
-		return createNativeSQLStatement( "select 1, ST_GeomFromEWKT(?) from GeomTest t", new Object[]{ ewkt } );
+		return createNativeSQLStatement( "select 1, ST_GeomFromEWKT(?) from GeomTest t", new Object[] { ewkt } );
 	}
 
 	/**
 	 * Returns the geometry from a text representation.
 	 *
 	 * @return map of id, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromText(String text) throws SQLException {
@@ -544,13 +588,14 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeGeomFromTextStatement(String text) {
-		return createNativeSQLStatement( "select 1, ST_GeomFromText(?) from GeomTest t", new Object[]{ text } );
+		return createNativeSQLStatement( "select 1, ST_GeomFromText(?) from GeomTest t", new Object[] { text } );
 	}
 
 	/**
 	 * Returns the geometry from a WKB representation.
 	 *
 	 * @return map of id, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromWKB(byte[] wkb) throws SQLException {
@@ -558,13 +603,14 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeGeomFromWKBStatement(byte[] wkb) {
-		return createNativeSQLStatement( "select 1, ST_GeomFromWKB(?) from GeomTest t", new Object[]{ wkb } );
+		return createNativeSQLStatement( "select 1, ST_GeomFromWKB(?) from GeomTest t", new Object[] { wkb } );
 	}
 
 	/**
 	 * Returns the geometry from a WKT representation.
 	 *
 	 * @return map of id, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromWKT(String wkt) throws SQLException {
@@ -572,13 +618,14 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeGeomFromWKTStatement(String wkt) {
-		return createNativeSQLStatement( "select 1, ST_GeomFromWKT(?) from GeomTest t", new Object[]{ wkt } );
+		return createNativeSQLStatement( "select 1, ST_GeomFromWKT(?) from GeomTest t", new Object[] { wkt } );
 	}
 
 	/**
 	 * Returns the expected nth geometry of all testsuite-suite geometries.
 	 *
 	 * @return map of id, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeometryN(int n) throws SQLException {
@@ -586,14 +633,17 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeGeometryNStatement(int n) {
-		return createNativeSQLStatement( "select id, t.geom.ST_GeometryN(?) from GeomTest t where t.geom.ST_GeometryType() = 'ST_GeometryCollection'",
-				new Object[]{ n } );
+		return createNativeSQLStatement(
+				"select id, t.geom.ST_GeometryN(?) from GeomTest t where t.geom.ST_GeometryType() = 'ST_GeometryCollection'",
+				new Object[] { n }
+		);
 	}
 
 	/**
 	 * Returns the expected nth interior ring of all testsuite-suite geometries.
 	 *
 	 * @return map of id, interior ring
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getInteriorRingN(int n) throws SQLException {
@@ -601,14 +651,17 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeInteriorRingNStatement(int n) {
-		return createNativeSQLStatement( "select id, t.geom.ST_InteriorRingN(?) from GeomTest t where t.geom.ST_GeometryType() = 'ST_Polygon'",
-				new Object[]{ n } );
+		return createNativeSQLStatement(
+				"select id, t.geom.ST_InteriorRingN(?) from GeomTest t where t.geom.ST_GeometryType() = 'ST_Polygon'",
+				new Object[] { n }
+		);
 	}
 
 	/**
 	 * Returns the expected aggregated intersection of all testsuite-suite geometries.
 	 *
 	 * @return map of count, intersection
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getIntersectionAggr() throws SQLException {
@@ -623,6 +676,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the testsuite-suite geometries that intersect the given rectangle.
 	 *
 	 * @return map of identifier, whether the geometry intersects the given rectangle
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIntersectsRect(Point pmin, Point pmax) throws SQLException {
@@ -634,13 +688,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 				"select t.id, t.geom.ST_IntersectsRect(ST_GeomFromText(?, " + getTestSrid() + "), ST_GeomFromText(?, " + getTestSrid()
 						+ ")) from GeomTest t where t.geom.ST_IntersectsRect(ST_GeomFromText(?, "
 						+ getTestSrid() + "), ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
-				new Object[]{ pmin.toText(), pmax.toText(), pmin.toText(), pmax.toText() } );
+				new Object[] { pmin.toText(), pmax.toText(), pmin.toText(), pmax.toText() }
+		);
 	}
 
 	/**
 	 * Returns the testsuite-suite geometries that are 3D geometries.
 	 *
 	 * @return map of identifier, whether the geometry is 3D
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIs3D() throws SQLException {
@@ -656,6 +712,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the testsuite-suite geometries that are closed.
 	 *
 	 * @return map of identifier, whether the geometry is closed
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsClosed() throws SQLException {
@@ -672,6 +729,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the testsuite-suite geometries that are measured.
 	 *
 	 * @return map of identifier, whether the geometry is measured
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsMeasured() throws SQLException {
@@ -688,6 +746,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the testsuite-suite geometries that are rings.
 	 *
 	 * @return map of identifier, whether the geometry is a ring
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsRing() throws SQLException {
@@ -704,6 +763,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the testsuite-suite geometries that are valid.
 	 *
 	 * @return map of identifier, whether the geometry is valid
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsValid() throws SQLException {
@@ -720,6 +780,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the length of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, length
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getLength() throws SQLException {
@@ -736,6 +797,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the measure value of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, measure value
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getM() throws SQLException {
@@ -752,6 +814,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the maximum measure value of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, maximum measure value
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getMMax() throws SQLException {
@@ -768,6 +831,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the minimum measure value of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, minimum measure value
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getMMin() throws SQLException {
@@ -784,6 +848,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the number of geometries of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, number of geometries
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumGeometries() throws SQLException {
@@ -800,6 +865,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the number of interior rings of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, number of interior rings
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumInteriorRing() throws SQLException {
@@ -816,6 +882,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the number of interior rings of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, number of interior rings
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumInteriorRings() throws SQLException {
@@ -832,6 +899,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the number of points of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, number of points
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumPoints() throws SQLException {
@@ -848,6 +916,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the testsuite-suite geometries that are equal.
 	 *
 	 * @return map of identifier, whether the geometry is equal
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getOrderingEquals(Geometry geom) throws SQLException {
@@ -858,13 +927,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_OrderingEquals(ST_GeomFromText(?)) from GeomTest t where t.geom.ST_OrderingEquals(ST_GeomFromText(?)) = 1 and t.geom.ST_SRID() = "
 						+ getTestSrid(),
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	/**
 	 * Returns the perimeter of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, perimeter
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getPerimeter() throws SQLException {
@@ -881,6 +952,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns a point on the surface of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, point on surface
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getPointOnSurface() throws SQLException {
@@ -897,6 +969,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the nth point of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, point
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getPointN(int n) throws SQLException {
@@ -907,13 +980,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatement(
 				"select t.id, t.geom.ST_PointN(?) from GeomTest t where t.geom.ST_GeometryType() in ('ST_LineString') and t.geom.ST_SRID() = "
 						+ getTestSrid(),
-				new Object[]{ n } );
+				new Object[] { n }
+		);
 	}
 
 	/**
 	 * Returns a copy of all testsuite-suite geometries with all points snapped to the grid.
 	 *
 	 * @return map of identifier, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getSnapToGrid() throws SQLException {
@@ -930,6 +1005,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the expected startpoint of all testsuite-suite geometries.
 	 *
 	 * @return map of id, startpoint
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getStartPoint() throws SQLException {
@@ -937,13 +1013,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	private NativeSQLStatement createNativeStartPointStatement() {
-		return createNativeSQLStatement( "select id, t.geom.ST_StartPoint() from GeomTest t where t.geom.ST_GeometryType() = 'ST_LineString'" );
+		return createNativeSQLStatement(
+				"select id, t.geom.ST_StartPoint() from GeomTest t where t.geom.ST_GeometryType() = 'ST_LineString'" );
 	}
 
 	/**
 	 * Returns the expected aggregated union of all testsuite-suite geometries.
 	 *
 	 * @return map of count, union
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getUnionAggr() throws SQLException {
@@ -958,6 +1036,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the x coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, x coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getX() throws SQLException {
@@ -974,6 +1053,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the maximum x coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, maximum x coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getXMax() throws SQLException {
@@ -990,6 +1070,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the minimum x coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, minumum x coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getXMin() throws SQLException {
@@ -1006,6 +1087,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the y coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, y coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getY() throws SQLException {
@@ -1022,6 +1104,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the maximum y coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, maximum y coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getYMax() throws SQLException {
@@ -1038,6 +1121,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the minimum y coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, minumum y coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getYMin() throws SQLException {
@@ -1054,6 +1138,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the z coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, z coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZ() throws SQLException {
@@ -1070,6 +1155,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the maximum z coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, maximum z coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZMax() throws SQLException {
@@ -1086,6 +1172,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the minimum z coordinate of all testsuite-suite geometries.
 	 *
 	 * @return map of identifier, minumum z coordinate
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZMin() throws SQLException {
@@ -1102,6 +1189,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * Returns the result of a nested function call with a parameter inside the inner function
 	 *
 	 * @return map of identifier, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getNestedFunctionInner(Geometry geom) throws SQLException {
@@ -1112,13 +1200,15 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom from GeomTest t where t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid()
 						+ ").ST_SRID(0), 1) = 1",
-				geom.toText() );
+				geom.toText()
+		);
 	}
 
 	/**
 	 * Returns the result of a nested function call with a parameter inside the outer function
 	 *
 	 * @return map of identifier, geometry
+	 *
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getNestedFunctionOuter(Geometry geom) throws SQLException {
@@ -1128,6 +1218,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	private NativeSQLStatement createNativeNestedFunctionOuterStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom from GeomTest t where ST_GeomFromText(?, " + getTestSrid() + ").ST_WithinDistance(geom.ST_SRID(0), 1) = 1",
-				geom.toText() );
+				geom.toText()
+		);
 	}
 }

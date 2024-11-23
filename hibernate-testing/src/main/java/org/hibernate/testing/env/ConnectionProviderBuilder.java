@@ -44,6 +44,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 		props.put( Environment.URL, String.format( URL_FORMAT, dbName ) );
 		props.put( Environment.USER, USER );
 		props.put( Environment.PASS, PASS );
+		props.put( "hibernate.connection.init_sql", "" );
 		return props;
 	}
 
@@ -53,6 +54,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 		props.put( Environment.JPA_JDBC_URL, String.format( URL_FORMAT, dbName ) );
 		props.put( Environment.JPA_JDBC_USER, USER );
 		props.put( Environment.JPA_JDBC_PASSWORD, PASS );
+		props.put( "hibernate.connection.init_sql", "" );
 		return props;
 	}
 

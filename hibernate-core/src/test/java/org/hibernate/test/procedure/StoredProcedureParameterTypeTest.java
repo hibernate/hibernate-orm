@@ -29,6 +29,7 @@ import javax.persistence.ParameterMode;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
+import org.hibernate.jpa.TypedParameterValue;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
@@ -71,6 +72,7 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
+ * @author Yanming Zhou
  */
 public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 
@@ -418,6 +420,51 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 					}
 					catch (IllegalArgumentException e) {
 						assertTrue( e.getMessage().endsWith( "You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters." ) );
+					}
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15618")
+	public void testTypedParameterValueInParameter() {
+		inTransaction(
+				session -> {
+					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
+					procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN );
+					procedureCall.setParameter( 1, new TypedParameterValue( StringType.INSTANCE, "test" ) );
+
+					procedureCall = session.createStoredProcedureCall( "test" );
+					procedureCall.registerParameter( "test", StringType.class, ParameterMode.IN );
+					procedureCall.setParameter( "test", new TypedParameterValue( StringType.INSTANCE, "test" ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15618")
+	public void testTypedParameterValueInParameterWithEnablePassingNulls() {
+		inTransaction(
+				session -> {
+					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
+					procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
+					procedureCall.setParameter( 1, new TypedParameterValue( StringType.INSTANCE, null ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15618")
+	public void testTypedParameterValueInParameterWithNotSpecifiedType() {
+		inTransaction(
+				session -> {
+					try {
+						ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
+						procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN );
+						procedureCall.setParameter( 1, new TypedParameterValue( IntegerType.INSTANCE, 1 ) );
+					}
+					catch (IllegalArgumentException e) {
+						assertTrue( e.getMessage().contains( "was not of specified type" ) );
 					}
 				}
 		);

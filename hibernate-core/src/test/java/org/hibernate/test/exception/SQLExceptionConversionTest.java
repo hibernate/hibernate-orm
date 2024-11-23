@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQLMyISAMDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
@@ -44,6 +45,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 			value = { MySQLMyISAMDialect.class, AbstractHANADialect.class },
 			comment = "MySQL (MyISAM) / Hana do not support FK violation checking"
 	)
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
 	public void testIntegrityViolation() throws Exception {
 		final Session session = openSession();
 		session.beginTransaction();
@@ -110,6 +112,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-7357")
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
 	public void testNotNullConstraint() {
 		final Session session = openSession();
 		session.beginTransaction();

@@ -180,10 +180,12 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		AttributeNodeImplementor attributeNode = attributeStack.getCurrent();
 		GraphImplementor subGraphNode = null;
 
-		Map<Class, Subgraph> subGraphs = attributeNode.getKeySubgraphs();
-		Class javaType = indexDefinition.getType().getReturnedClass();
-		if ( !subGraphs.isEmpty() && subGraphs.containsKey( javaType ) ) {
-			subGraphNode = (GraphImplementor) subGraphs.get( javaType );
+		if ( attributeNode != null ) {
+			Map<Class, Subgraph> subGraphs = attributeNode.getKeySubgraphs();
+			Class javaType = indexDefinition.getType().getReturnedClass();
+			if (!subGraphs.isEmpty() && subGraphs.containsKey(javaType)) {
+				subGraphNode = (GraphImplementor) subGraphs.get(javaType);
+			}
 		}
 
 		graphStack.push( subGraphNode );

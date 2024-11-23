@@ -18,12 +18,13 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class IdentifierProperty extends AbstractAttribute implements IdentifierAttribute {
-	private boolean virtual;
-	private boolean embedded;
-	private IdentifierValue unsavedValue;
-	private IdentifierGenerator identifierGenerator;
-	private boolean identifierAssignedByInsert;
-	private boolean hasIdentifierMapper;
+
+	private final boolean virtual;
+	private final boolean embedded;
+	private final IdentifierValue unsavedValue;
+	private final IdentifierGenerator identifierGenerator;
+	private final boolean identifierAssignedByInsert;
+	private final boolean hasIdentifierMapper;
 
 	/**
 	 * Construct a non-virtual identifier property.

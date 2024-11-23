@@ -49,7 +49,7 @@ public class WidgetId implements Serializable {
 	
 	@Override
 	public String toString( ) {
-		StringBuffer buf = new StringBuffer( "[id:" );
+		StringBuilder buf = new StringBuilder( "[id:" );
 		buf.append( ( this.getCode( ) == null ) ? "null" : this.getCode( ).toString( ) );
 		buf.append( ";code:" );
 		buf.append( ( this.getDivision( ) == null ) ? "null" : this.getDivision( ) );

@@ -8,12 +8,15 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -23,9 +26,8 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.tool.hbm2ddl.ColumnMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -39,9 +41,10 @@ import org.jboss.logging.Logger;
  *
  * @author Gavin King
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("deprecation")
 public class Table implements RelationalModel, Serializable, Exportable {
 	private static final Logger log = Logger.getLogger( Table.class );
+	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
 
 	private Identifier catalog;
 	private Identifier schema;
@@ -50,21 +53,21 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	/**
 	 * contains all columns, including the primary key
 	 */
-	private Map columns = new LinkedHashMap();
+	private Map<String, Column> columns = new LinkedHashMap<>();
 	private KeyValue idValue;
 	private PrimaryKey primaryKey;
-	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<ForeignKeyKey, ForeignKey>();
-	private Map<String, Index> indexes = new LinkedHashMap<String, Index>();
-	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
+	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
+	private Map<String, Index> indexes = new LinkedHashMap<>();
+	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
-	private List<String> checkConstraints = new ArrayList<String>();
+	private List<String> checkConstraints = new ArrayList<>();
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables;
 	private String comment;
 
-	private List<InitCommand> initCommands;
+	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
 	public Table() {
 	}
@@ -109,28 +112,16 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		this.isAbstract = isAbstract;
 	}
 
-	/**
-	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
-	 */
-	@Deprecated
-	public String getQualifiedName(Dialect dialect, String defaultCatalog, String defaultSchema) {
+	public String getQualifiedName(SqlStringGenerationContext context) {
 		if ( subselect != null ) {
 			return "( " + subselect + " )";
 		}
-		String quotedName = getQuotedName( dialect );
-		String usedSchema = schema == null ?
-				defaultSchema :
-				getQuotedSchema( dialect );
-		String usedCatalog = catalog == null ?
-				defaultCatalog :
-				getQuotedCatalog( dialect );
-		return qualify( usedCatalog, usedSchema, quotedName );
+		return context.format( new QualifiedTableName( catalog, schema, name ) );
 	}
 
 	/**
-	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 * @deprecated Should build a {@link QualifiedTableName}
+	 * then use {@link SqlStringGenerationContext#format(QualifiedTableName)}.
 	 */
 	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
@@ -246,7 +237,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public Column getColumn(int n) {
-		Iterator iter = columns.values().iterator();
+		Iterator<Column> iter = columns.values().iterator();
 		for ( int i = 0; i < n - 1; i++ ) {
 			iter.next();
 		}
@@ -280,7 +271,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return columns.size();
 	}
 
-	public Iterator getColumnIterator() {
+	public Iterator<Column> getColumnIterator() {
 		return columns.values().iterator();
 	}
 
@@ -288,7 +279,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return indexes.values().iterator();
 	}
 
-	public Iterator getForeignKeyIterator() {
+	public Iterator<ForeignKey> getForeignKeyIterator() {
 		return foreignKeys.values().iterator();
 	}
 
@@ -410,7 +401,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
-		Iterator iter = getColumnIterator();
+		Iterator<Column> iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -420,9 +411,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				throw new HibernateException( "Missing column: " + col.getName() + " in " + Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()));
 			}
 			else {
-				final boolean typesMatch = col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
-						.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) )
-						|| columnInfo.getTypeCode() == col.getSqlTypeCode( mapping );
+				final boolean typesMatch =
+						dialect.equivalentTypes( columnInfo.getTypeCode(), col.getSqlTypeCode( mapping ) )
+						|| col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
+								.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) );
 				if ( !typesMatch ) {
 					throw new HibernateException(
 							"Wrong column type in " +
@@ -437,30 +429,19 @@ public class Table implements RelationalModel, Serializable, Exportable {
 
 	}
 
-	public Iterator sqlAlterStrings(
+	public Iterator<String> sqlAlterStrings(
 			Dialect dialect,
 			Metadata metadata,
 			TableInformation tableInfo,
-			Identifier defaultCatalog,
-			Identifier defaultSchema) throws HibernateException {
-
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				new QualifiedTableName(
-					catalog != null ? catalog : defaultCatalog,
-					schema != null ? schema : defaultSchema,
-					name
-				),
-				dialect
-		);
+			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
+		final String tableName = sqlStringGenerationContext.format( new QualifiedTableName( catalog, schema, name ) );
 
 		StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
 				.append( ' ' )
 				.append( dialect.getAddColumnString() );
 
-		Iterator iter = getColumnIterator();
-		List results = new ArrayList();
+		Iterator<Column> iter = getColumnIterator();
+		List<String> results = new ArrayList<>();
 
 		while ( iter.hasNext() ) {
 			final Column column = (Column) iter.next();
@@ -491,7 +472,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 					UniqueKey uk = getOrCreateUniqueKey( keyName );
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
-							.getColumnDefinitionUniquenessFragment( column ) );
+							.getColumnDefinitionUniquenessFragment( column, sqlStringGenerationContext ) );
 				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -523,10 +504,13 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return getPrimaryKey() != null;
 	}
 
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+	@Override
+	public String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog,
+			String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 				.append( ' ' )
-				.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+				.append( getQualifiedName( context ) )
 				.append( " (" );
 
 		boolean identityColumn = idValue != null && idValue.isIdentityColumn( p.getIdentifierGeneratorFactory(), dialect );
@@ -537,7 +521,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 			pkname = ( (Column) getPrimaryKey().getColumnIterator().next() ).getQuotedName( dialect );
 		}
 
-		Iterator iter = getColumnIterator();
+		Iterator<Column> iter = getColumnIterator();
 		while ( iter.hasNext() ) {
 			Column col = (Column) iter.next();
 
@@ -575,7 +559,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				UniqueKey uk = getOrCreateUniqueKey( keyName );
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
-						.getColumnDefinitionUniquenessFragment( col ) );
+						.getColumnDefinitionUniquenessFragment( col, context ) );
 			}
 
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -599,7 +583,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this ) );
+		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this, context ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			for ( String checkConstraint : checkConstraints ) {
@@ -618,8 +602,10 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return buf.append( dialect.getTableTypeString() ).toString();
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+	@Override
+	public String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
+		Dialect dialect = context.getDialect();
+		return dialect.getDropTableString( getQualifiedName( context ) );
 	}
 
 	public PrimaryKey getPrimaryKey() {
@@ -666,7 +652,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return uniqueKey;
 	}
 
-	public UniqueKey createUniqueKey(List keyColumns) {
+	public UniqueKey createUniqueKey(List<Column> keyColumns) {
 		String keyName = Constraint.generateName( "UK_", this, keyColumns );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns.iterator() );
@@ -692,16 +678,16 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	public void createForeignKeys() {
 	}
 
-	public ForeignKey createForeignKey(String keyName, List keyColumns, String referencedEntityName, String keyDefinition) {
+	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition) {
 		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null );
 	}
 
 	public ForeignKey createForeignKey(
 			String keyName,
-			List keyColumns,
+			List<Column> keyColumns,
 			String referencedEntityName,
 			String keyDefinition,
-			List referencedColumns) {
+			List<Column> referencedColumns) {
 		final ForeignKeyKey key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
 
 		ForeignKey fk = foreignKeys.get( key );
@@ -825,25 +811,6 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return checkConstraints.iterator();
 	}
 
-	public Iterator sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		List comments = new ArrayList();
-		if ( dialect.supportsCommentOn() ) {
-			String tableName = getQualifiedName( dialect, defaultCatalog, defaultSchema );
-			if ( comment != null ) {
-				comments.add( "comment on table " + tableName + " is '" + comment + "'" );
-			}
-			Iterator iter = getColumnIterator();
-			while ( iter.hasNext() ) {
-				Column column = (Column) iter.next();
-				String columnComment = column.getComment();
-				if ( columnComment != null ) {
-					comments.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
-				}
-			}
-		}
-		return comments.iterator();
-	}
-
 	@Override
 	public String getExportIdentifier() {
 		return Table.qualify(
@@ -857,56 +824,66 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		return identifier == null ? null : identifier.render();
 	}
 
-
 	public static class ForeignKeyKey implements Serializable {
-		String referencedClassName;
-		List columns;
-		List referencedColumns;
+		private final String referencedClassName;
+		private final Column[] columns;
+		private final Column[] referencedColumns;
 
-		ForeignKeyKey(List columns, String referencedClassName, List referencedColumns) {
+		ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
+			Objects.requireNonNull( columns );
+			Objects.requireNonNull( referencedClassName );
 			this.referencedClassName = referencedClassName;
-			this.columns = new ArrayList();
-			this.columns.addAll( columns );
+			this.columns = columns.toArray( EMPTY_COLUMN_ARRAY );
 			if ( referencedColumns != null ) {
-				this.referencedColumns = new ArrayList();
-				this.referencedColumns.addAll( referencedColumns );
+				this.referencedColumns = referencedColumns.toArray( EMPTY_COLUMN_ARRAY );
 			}
 			else {
-				this.referencedColumns = Collections.EMPTY_LIST;
+				this.referencedColumns = EMPTY_COLUMN_ARRAY;
 			}
 		}
 
 		public int hashCode() {
-			return columns.hashCode() + referencedColumns.hashCode();
+			return Arrays.hashCode( columns ) + Arrays.hashCode( referencedColumns );
 		}
 
 		public boolean equals(Object other) {
 			ForeignKeyKey fkk = (ForeignKeyKey) other;
-			return fkk != null && fkk.columns.equals( columns ) && fkk.referencedColumns.equals( referencedColumns );
+			return fkk != null && Arrays.equals( fkk.columns, columns ) && Arrays.equals( fkk.referencedColumns, referencedColumns );
 		}
 
 		@Override
 		public String toString() {
-			return "ForeignKeyKey{" +
-					"columns=" + String.join( ",", columns ) +
-					", referencedClassName='" + referencedClassName + '\'' +
-					", referencedColumns=" + String.join( ",", referencedColumns ) +
+			return "ForeignKeyKey{columns=" + Arrays.toString( columns ) +
+					", referencedClassName='" + referencedClassName +
+					"', referencedColumns=" + Arrays.toString( referencedColumns ) +
 					'}';
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #addInitCommand(Function)} instead.
+	 */
+	@Deprecated
 	public void addInitCommand(InitCommand command) {
-		if ( initCommands == null ) {
-			initCommands = new ArrayList<InitCommand>();
-		}
-		initCommands.add( command );
+		addInitCommand( ignored -> command );
 	}
 
-	public List<InitCommand> getInitCommands() {
-		if ( initCommands == null ) {
+	public void addInitCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+		if ( initCommandProducers == null ) {
+			initCommandProducers = new ArrayList<>();
+		}
+		initCommandProducers.add( commandProducer );
+	}
+
+	public List<InitCommand> getInitCommands(SqlStringGenerationContext context) {
+		if ( initCommandProducers == null ) {
 			return Collections.emptyList();
 		}
 		else {
+			List<InitCommand> initCommands = new ArrayList<>();
+			for ( Function<SqlStringGenerationContext, InitCommand> producer : initCommandProducers ) {
+				initCommands.add( producer.apply( context ) );
+			}
 			return Collections.unmodifiableList( initCommands );
 		}
 	}

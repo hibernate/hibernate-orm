@@ -68,6 +68,7 @@ tokens
 	private boolean inFrom = false;
 	private boolean inCount = false;
 	private boolean inCountDistinct = false;
+	private boolean inSize = false;
 
 	private int statementType;
 	private String statementTypeName;
@@ -107,6 +108,10 @@ tokens
     public final boolean isInCountDistinct() {
         return inCountDistinct;
     }
+
+    public final boolean isInSize() {
+            return inSize;
+        }
 
 	public final int getStatementType() {
 		return statementType;
@@ -254,6 +259,15 @@ tokens
 
 	protected AST lookupProperty(AST dot,boolean root,boolean inSelect) throws SemanticException {
 		return dot;
+	}
+
+	protected AST lookupFkRefSource(AST path) throws SemanticException {
+		if ( path.getType() == DOT ) {
+			return lookupProperty( path, true, isInSelect() );
+		}
+		else {
+			return lookupNonQualifiedProperty( path );
+		}
 	}
 
 	protected boolean isNonQualifiedPropertyRef(AST ident) { return false; }
@@ -470,7 +484,7 @@ aggregateExpr
 // Establishes the list of aliases being used by this query.
 fromClause {
 		// NOTE: This references the INPUT AST! (see http://www.antlr.org/doc/trees.html#Action%20Translation)
-		// the ouput AST (#fromClause) has not been built yet.
+		// the output AST (#fromClause) has not been built yet.
 		prepareFromClauseInputTree(#fromClause_in);
 	}
 	: #(f:FROM { pushFromClause(#fromClause,f); handleClauseStart( FROM ); } fromElementList ) {
@@ -691,8 +705,9 @@ collectionFunction
 	;
 
 functionCall
-	: #( COLL_SIZE path:collectionPath ) {
+	: #( COLL_SIZE {inSize=true;} path:collectionPath ) {
 		#functionCall = createCollectionSizeFunction( #path, inSelect );
+		inSize=false;
 	}
 	| #(METHOD_CALL  {inFunctionCall=true;} pathAsIdent ( #(EXPR_LIST (exprOrSubquery [ null ])* ) )? ) {
         processFunction( #functionCall, inSelect );
@@ -740,11 +755,14 @@ identifier
 	;
 
 addrExpr! [ boolean root ]
-	: #(d:DOT lhs:addrExprLhs rhs:propertyName )	{
+	: #(d:DOT lhs:addrExprLhs rhs:propertyName ) {
 		// This gives lookupProperty() a chance to transform the tree 
 		// to process collection properties (.elements, etc).
 		#addrExpr = #(#d, #lhs, #rhs);
 		#addrExpr = lookupProperty(#addrExpr,root,false);
+	}
+	| fk_ref:fkRef {
+		#addrExpr = #fk_ref;
 	}
 	| #(i:INDEX_OP lhs2:addrExprLhs rhs2:expr [ null ])	{
 		#addrExpr = #(#i, #lhs2, #rhs2);
@@ -770,6 +788,12 @@ addrExpr! [ boolean root ]
 	}
 	;
 
+fkRef
+	: #( r:FK_REF p:propertyRef ) {
+		#p = lookupProperty( #p, false, isInSelect() );
+	}
+	;
+
 addrExprLhs
 	: addrExpr [ false ]
 	;
@@ -791,8 +815,7 @@ propertyRef!
 		#propertyRef = #(#d, #lhs, #rhs);
 		#propertyRef = lookupProperty(#propertyRef,false,true);
 	}
-	|
-	p:identifier {
+	| p:identifier {
 		// In many cases, things other than property-refs are recognized
 		// by this propertyRef rule.  Some of those I have seen:
 		//  1) select-clause from-aliases

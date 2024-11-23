@@ -8,7 +8,10 @@ package org.hibernate.test.bytecode.enhancement.lazy;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.SybaseASE15Dialect;
+
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -38,6 +41,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 @TestForIssue( jiraKey = "HHH-10747" )
 @RunWith( BytecodeEnhancerRunner.class )
+@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement binary stream handling")
 public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase {
 
     private Item item, mergedItem;
@@ -123,7 +127,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
         @ElementCollection( fetch = FetchType.EAGER )
         @MapKeyColumn( name = "NAME" )
         @Lob
-        @Column( name = "VALUE", length = 65535 )
+        @Column( name = "PARAM_VAL", length = 65535 )
         private Map<String, String> parameters = new HashMap<>();
 
         @Override
@@ -153,7 +157,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
         @ElementCollection( fetch = FetchType.EAGER )
         @MapKeyColumn( name = "NAME" )
         @Lob
-        @Column( name = "VALUE", length = 65535 )
+        @Column( name = "PARAM_VAL", length = 65535 )
         @Override
         public Map<String, String> getParameters() {
             return parameterMap;

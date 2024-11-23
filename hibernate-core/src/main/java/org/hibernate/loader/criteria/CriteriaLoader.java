@@ -49,7 +49,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 	//      interface
 
 	//NOTE: unlike all other Loaders, this one is NOT
-	//      multithreaded, or cacheable!!
+	//      multi-threaded, or cacheable!!
 
 	private final CriteriaQueryTranslator translator;
 	private final Set<Serializable> querySpaces;

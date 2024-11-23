@@ -420,7 +420,7 @@ public class Oracle8iDialect extends Dialect {
 		else {
 			return
 				String.format(
-						"%s start with %d increment by %d",
+						"%s start with %d increment by  %d",
 						getCreateSequenceString( sequenceName ),
 						initialValue,
 						incrementSize
@@ -490,7 +490,7 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from user_sequences";
+		return "select * from all_sequences";
 	}
 
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
@@ -745,7 +745,7 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
+		return "select sys_context('USERENV', 'CURRENT_SCHEMA') from dual";
 	}
 
 	@Override

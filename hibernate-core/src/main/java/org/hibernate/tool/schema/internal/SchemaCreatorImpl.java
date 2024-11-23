@@ -23,6 +23,8 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -60,6 +62,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE;
 import static org.hibernate.tool.schema.internal.Helper.interpretScriptSourceSetting;
 
 /**
@@ -215,6 +218,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		final Database database = metadata.getDatabase();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+				jdbcEnvironment, database, options.getConfigurationValues() );
 
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
@@ -227,10 +233,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					continue;
 				}
 
-				if ( tryToCreateCatalogs ) {
-					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+				Namespace.Name logicalName = namespace.getName();
+				Namespace.Name physicalName = namespace.getPhysicalName();
 
+				if ( tryToCreateCatalogs ) {
+					final Identifier catalogLogicalName = logicalName.getCatalog();
+					final Identifier catalogPhysicalName = sqlStringGenerationContext.catalogWithDefault( physicalName.getCatalog() );
 					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 						applySqlStrings(
 								dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
@@ -242,13 +250,16 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					}
 				}
 
-				if ( tryToCreateSchemas && namespace.getPhysicalName().getSchema() != null ) {
-					applySqlStrings(
-							dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
-							formatter,
-							options,
-							targets
-					);
+				if ( tryToCreateSchemas ) {
+					final Identifier schemaPhysicalName = sqlStringGenerationContext.schemaWithDefault( physicalName.getSchema() );
+					if ( schemaPhysicalName != null ) {
+						applySqlStrings(
+								dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+								formatter,
+								options,
+								targets
+						);
+					}
 				}
 			}
 		}
@@ -264,7 +275,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				applySqlStrings(
 						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
 								auxiliaryDatabaseObject,
-								metadata
+								metadata,
+								sqlStringGenerationContext
 						),
 						formatter,
 						options,
@@ -289,7 +301,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				applySqlStrings(
 						dialect.getSequenceExporter().getSqlCreateStrings(
 								sequence,
-								metadata
+								metadata,
+								sqlStringGenerationContext
 						),
 //						dialect.getCreateSequenceStrings(
 //								jdbcEnvironment.getQualifiedObjectNameFormatter().format( sequence.getName(), dialect ),
@@ -312,7 +325,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				}
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings(
-						dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
+						dialect.getTableExporter().getSqlCreateStrings( table, metadata, sqlStringGenerationContext ),
 						formatter,
 						options,
 						targets
@@ -333,7 +346,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					final Index index = (Index) indexItr.next();
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
-							dialect.getIndexExporter().getSqlCreateStrings( index, metadata ),
+							dialect.getIndexExporter().getSqlCreateStrings( index, metadata,
+									sqlStringGenerationContext
+							),
 							formatter,
 							options,
 							targets
@@ -346,7 +361,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					final UniqueKey uniqueKey = (UniqueKey) ukItr.next();
 					checkExportIdentifier( uniqueKey, exportIdentifiers );
 					applySqlStrings(
-							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata ),
+							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata,
+									sqlStringGenerationContext
+							),
 							formatter,
 							options,
 							targets
@@ -372,7 +389,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				while ( fkItr.hasNext() ) {
 					final ForeignKey foreignKey = (ForeignKey) fkItr.next();
 					applySqlStrings(
-							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata ),
+							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata,
+									sqlStringGenerationContext
+							),
 							formatter,
 							options,
 							targets
@@ -387,7 +406,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, metadata ),
+						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, metadata,
+								sqlStringGenerationContext
+						),
 						formatter,
 						options,
 						targets
@@ -457,7 +478,10 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		//final Formatter formatter = format ? DDLFormatterImpl.INSTANCE : FormatStyle.NONE.getFormatter();
 		final Formatter formatter = FormatStyle.NONE.getFormatter();
 
-		final Object importScriptSetting = options.getConfigurationValues().get( HBM2DDL_LOAD_SCRIPT_SOURCE );
+		Object importScriptSetting = options.getConfigurationValues().get( HBM2DDL_LOAD_SCRIPT_SOURCE );
+		if ( importScriptSetting == null ) {
+			importScriptSetting = options.getConfigurationValues().get( JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE );
+		}
 		String charsetName = (String) options.getConfigurationValues().get( HBM2DDL_CHARSET_NAME );
 
 		if ( importScriptSetting != null ) {
@@ -481,7 +505,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		for ( String currentFile : importFiles.split( "," ) ) {
 			final String resourceName = currentFile.trim();
-			if ( "".equals( resourceName ) ) {
+			if ( resourceName != null && resourceName.isEmpty() ) {
 				//skip empty resource names
 				continue;
 			}

@@ -44,13 +44,13 @@ class HqlLexer extends HqlBaseLexer {
 
 	@Override
 	public void panic() {
-		//overriden to avoid System.exit
+		//overridden to avoid System.exit
 		panic( "CharScanner: panic" );
 	}
 
 	@Override
 	public void panic(String s) {
-		//overriden to avoid System.exit
+		//overridden to avoid System.exit
 		throw new QueryException( s );
 	}
 }

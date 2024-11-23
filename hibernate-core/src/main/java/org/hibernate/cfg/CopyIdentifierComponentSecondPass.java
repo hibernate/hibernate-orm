@@ -15,6 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -28,7 +31,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Emmanuel Bernard
  */
-public class CopyIdentifierComponentSecondPass implements SecondPass {
+public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	private static final Logger log = Logger.getLogger( CopyIdentifierComponentSecondPass.class );
 
 	private final String referencedEntityName;
@@ -41,12 +44,25 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			String referencedEntityName,
 			Ejb3JoinColumn[] joinColumns,
 			MetadataBuildingContext buildingContext) {
+		super( comp, joinColumns );
 		this.component = comp;
 		this.referencedEntityName = referencedEntityName;
 		this.buildingContext = buildingContext;
 		this.joinColumns = joinColumns;
 	}
 
+	@Override
+	public String getReferencedEntityName() {
+		return referencedEntityName;
+	}
+
+	@Override
+	public boolean isInPrimaryKey() {
+		// This second pass is apparently only ever used to initialize composite identifiers
+		return true;
+	}
+
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		PersistentClass referencedPersistentClass = (PersistentClass) persistentClasses.get( referencedEntityName );
@@ -175,11 +191,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				final Ejb3JoinColumn joinColumn;
 				String logicalColumnName = null;
 				if ( isExplicitReference ) {
-					final String columnName = column.getName();
-					logicalColumnName = buildingContext.getMetadataCollector().getLogicalColumnName(
-							referencedPersistentClass.getTable(),
-							columnName
-					);
+					logicalColumnName = column.getName();
 					//JPA 2 requires referencedColumnNames to be case insensitive
 					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
 				}
@@ -196,7 +208,12 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				}
 				final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
 						.getName();
-				value.addColumn( new Column( columnName ) );
+
+				final Database database = buildingContext.getMetadataCollector().getDatabase();
+				final PhysicalNamingStrategy physicalNamingStrategy = buildingContext.getBuildingOptions().getPhysicalNamingStrategy();
+				final Identifier explicitName = database.toIdentifier( columnName );
+				final Identifier physicalName =  physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
+				value.addColumn( new Column( physicalName.render( database.getDialect() ) ) );
 				if ( joinColumn != null ) {
 					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
 					joinColumn.linkWithValue( value );
@@ -212,9 +229,5 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		mappingColumn.setLength( column.getLength() );
 		mappingColumn.setPrecision( column.getPrecision() );
 		mappingColumn.setScale( column.getScale() );
-	}
-
-	public boolean dependentUpon( CopyIdentifierComponentSecondPass other ) {
-		return this.referencedEntityName.equals( other.component.getOwner().getEntityName() );
 	}
 }

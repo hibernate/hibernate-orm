@@ -9,6 +9,7 @@ package org.hibernate.test.multitenancy.discriminator;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import org.hibernate.MultiTenancyStrategy;
@@ -67,47 +68,54 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 				.applySettings(settings)
 				.build();
 
-		MetadataSources ms = new MetadataSources(serviceRegistry);
-		ms.addAnnotatedClass(Customer.class);
+		try {
+			MetadataSources ms = new MetadataSources( serviceRegistry );
+			ms.addAnnotatedClass( Customer.class );
 
-		Metadata metadata = ms.buildMetadata();
-		final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
-		customerMapping.setCached( true );
-		((RootClass) customerMapping ).setCacheConcurrencyStrategy( "read-write");
+			Metadata metadata = ms.buildMetadata();
+			final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
+			customerMapping.setCached( true );
+			( (RootClass) customerMapping ).setCacheConcurrencyStrategy( "read-write" );
 
-		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
-		tool.injectServices(serviceRegistry);
+			HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
+			tool.injectServices( serviceRegistry );
 
-		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
+			connectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
 
-		final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-				new DdlTransactionIsolatorTestingImpl(
-						serviceRegistry,
-						connectionProvider
-				)
-		);
+			final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
+					new DdlTransactionIsolatorTestingImpl(
+							serviceRegistry,
+							connectionProvider
+					)
+			);
 
 
-		new SchemaDropperImpl(serviceRegistry).doDrop(
-				metadata,
-				serviceRegistry,
-				settings,
-				true,
-				target
-		);
+			new SchemaDropperImpl( serviceRegistry ).doDrop(
+					metadata,
+					serviceRegistry,
+					settings,
+					true,
+					target
+			);
 
-		new SchemaCreatorImpl(serviceRegistry).doCreation(
-				metadata,
-				serviceRegistry,
-				settings,
-				true,
-				target
-		);
+			new SchemaCreatorImpl( serviceRegistry ).doCreation(
+					metadata,
+					serviceRegistry,
+					settings,
+					true,
+					target
+			);
 
-		target.release();
+			target.release();
 
-		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-		sessionFactory = (SessionFactoryImplementor) sfb.build();
+			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
+			sessionFactory = (SessionFactoryImplementor) sfb.build();
+			currentTenantResolver.setHibernateBooted();
+		}
+		catch (Throwable t) {
+			serviceRegistry.close();
+			throw t;
+		}
 	}
 
 	@After
@@ -181,9 +189,19 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
 		private String currentTenantIdentifier;
+		private final AtomicBoolean postBoot = new AtomicBoolean(false);
+
+		public void setHibernateBooted() {
+			postBoot.set( true );
+		}
 
 		@Override
 		public String resolveCurrentTenantIdentifier() {
+			if ( postBoot.get() == false ) {
+				//Check to prevent any optimisation which might want to cache the tenantId too early during bootstrap:
+				//it's a common use case to want to provide the tenantId, for example, via a ThreadLocal.
+				throw new IllegalStateException( "Not booted yet: illegal to try reading the tenant Id at this point!" );
+			}
 			return currentTenantIdentifier;
 		}
 

@@ -8,6 +8,7 @@ package org.hibernate.test.hbm.uk;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -103,29 +104,33 @@ public class UniqueDelegateTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String getColumnDefinitionUniquenessFragment(Column column) {
+		public String getColumnDefinitionUniquenessFragment(Column column,
+				SqlStringGenerationContext context) {
 			getColumnDefinitionUniquenessFragmentCallCount++;
-			return super.getColumnDefinitionUniquenessFragment( column );
+			return super.getColumnDefinitionUniquenessFragment( column, context );
 		}
 
 		@Override
-		public String getTableCreationUniqueConstraintsFragment(Table table) {
+		public String getTableCreationUniqueConstraintsFragment(Table table,
+				SqlStringGenerationContext context) {
 			getTableCreationUniqueConstraintsFragmentCallCount++;
-			return super.getTableCreationUniqueConstraintsFragment( table );
+			return super.getTableCreationUniqueConstraintsFragment( table, context );
 		}
 
 		@Override
 		public String getAlterTableToAddUniqueKeyCommand(
-				UniqueKey uniqueKey, Metadata metadata) {
+				UniqueKey uniqueKey, Metadata metadata,
+				SqlStringGenerationContext context) {
 			getAlterTableToAddUniqueKeyCommandCallCount++;
-			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToAddUniqueKeyCommand( uniqueKey, metadata, context );
 		}
 
 		@Override
 		public String getAlterTableToDropUniqueKeyCommand(
-				UniqueKey uniqueKey, Metadata metadata) {
+				UniqueKey uniqueKey, Metadata metadata,
+				SqlStringGenerationContext context) {
 			getAlterTableToDropUniqueKeyCommandCallCount++;
-			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata );
+			return super.getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context );
 		}
 	}
 }

@@ -62,7 +62,6 @@ public final class Bootstrap {
 			String persistenceUnitName,
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
-		;
 		return new EntityManagerFactoryBuilderImpl(
 				PersistenceXmlParser.parse( persistenceXmlUrl, transactionType, integration ).get( persistenceUnitName ),
 				integration

@@ -80,7 +80,10 @@ public class CompoundPredicate
 
 	private void applyExpressions(List<Expression<Boolean>> expressions) {
 		this.expressions.clear();
-		this.expressions.addAll( expressions );
+		final CriteriaBuilderImpl criteriaBuilder = criteriaBuilder();
+		for ( Expression<Boolean> expression : expressions ) {
+			this.expressions.add( criteriaBuilder.wrap( expression ) );
+		}
 	}
 
 	@Override

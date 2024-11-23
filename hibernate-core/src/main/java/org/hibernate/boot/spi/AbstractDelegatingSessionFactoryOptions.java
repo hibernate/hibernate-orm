@@ -424,6 +424,16 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public String getDefaultCatalog() {
+		return delegate.getDefaultCatalog();
+	}
+
+	@Override
+	public String getDefaultSchema() {
+		return delegate.getDefaultSchema();
+	}
+
+	@Override
 	public boolean inClauseParameterPaddingEnabled() {
 		return delegate.inClauseParameterPaddingEnabled();
 	}
@@ -446,6 +456,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isEnhancementAsProxyEnabled() {
 		return delegate.isEnhancementAsProxyEnabled();
+	}
+
+	@Override
+	public boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return delegate.isCollectionsInDefaultFetchGroupEnabled();
 	}
 
 	@Override

@@ -16,15 +16,12 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.SqlGeneratorBase;
-import org.hibernate.hql.internal.antlr.SqlTokenTypes;
-import org.hibernate.hql.internal.ast.tree.CollectionPathNode;
 import org.hibernate.hql.internal.ast.tree.CollectionSizeNode;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FunctionNode;
 import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.ParameterNode;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -34,7 +31,6 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
 
 import antlr.RecognitionException;
-import antlr.SemanticException;
 import antlr.collections.AST;
 
 /**
@@ -192,13 +188,16 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		// 		METHOD_NAME
 		FunctionNode functionNode = (FunctionNode) node;
 		SQLFunction sqlFunction = functionNode.getSQLFunction();
+
+		outputStack.addFirst( writer );
+
 		if ( sqlFunction == null ) {
 			// if SQLFunction is null we just write the function out as it appears in the hql statement
+			writer = new StandardFunctionArguments();
 			super.beginFunctionTemplate( node, nameNode );
 		}
 		else {
 			// this function has a registered SQLFunction -> redirect output and catch the arguments
-			outputStack.addFirst( writer );
 			if ( node.getType() == CAST ) {
 				writer = new CastFunctionArguments();
 			}
@@ -212,13 +211,17 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	protected void endFunctionTemplate(AST node) {
 		FunctionNode functionNode = (FunctionNode) node;
 		SQLFunction sqlFunction = functionNode.getSQLFunction();
+
+		final FunctionArgumentsCollectingWriter functionArguments = (FunctionArgumentsCollectingWriter) writer;
+
 		if ( sqlFunction == null ) {
 			super.endFunctionTemplate( node );
+			writer = outputStack.removeFirst();
+			out( StringHelper.join( ",", functionArguments.getArgs().iterator() ) );
 		}
 		else {
 			final Type functionType = functionNode.getFirstArgumentType();
 			// this function has a registered SQLFunction -> redirect output and catch the arguments
-			FunctionArgumentsCollectingWriter functionArguments = (FunctionArgumentsCollectingWriter) writer;
 			writer = outputStack.removeFirst();
 			out( sqlFunction.render( functionType, functionArguments.getArgs(), sessionFactory ) );
 		}
@@ -236,7 +239,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	}
 
 	interface FunctionArgumentsCollectingWriter extends SqlWriter {
-		public List getArgs();
+		List<String> getArgs();
 	}
 
 	/**
@@ -262,7 +265,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			++argInd;
 		}
 
-		public List getArgs() {
+		public List<String> getArgs() {
 			return args;
 		}
 	}
@@ -305,7 +308,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			startedType = true;
 		}
 
-		public List getArgs() {
+		public List<String> getArgs() {
 			List<String> rtn = CollectionHelper.arrayList( 2 );
 			rtn.add( castExpression );
 			rtn.add( castTargetType );
@@ -334,7 +337,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	@Override
 	protected void fromFragmentSeparator(AST a) {
-		// check two "adjecent" nodes at the top of the from-clause tree
+		// check two "adjacent" nodes at the top of the from-clause tree
 		AST next = a.getNextSibling();
 		if ( next == null || !hasText( a ) ) {
 			return;
@@ -370,7 +373,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		else if ( right.getRealOrigin() == left ||
 				( right.getRealOrigin() != null && right.getRealOrigin() == left.getRealOrigin() ) ) {
 			// right represents a joins originating from left; or
-			// both right and left reprersent joins originating from the same FromElement
+			// both right and left represent joins originating from the same FromElement
 			if ( right.getJoinSequence() != null && right.getJoinSequence().isThetaStyle() ) {
 				writeCrossJoinSeparator();
 			}

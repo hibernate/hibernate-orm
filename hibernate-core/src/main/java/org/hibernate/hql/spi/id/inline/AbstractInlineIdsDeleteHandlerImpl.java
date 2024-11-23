@@ -8,6 +8,7 @@ package org.hibernate.hql.spi.id.inline;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
@@ -32,7 +34,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 		extends AbstractInlineIdsBulkIdHandler
 		implements MultiTableBulkIdStrategy.DeleteHandler {
 
-	private final List<String> deletes = new ArrayList<>();
+	private List<String> deletes ;
 
 	public AbstractInlineIdsDeleteHandlerImpl(
 			SessionFactoryImplementor factory,
@@ -42,6 +44,9 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 
 	@Override
 	public String[] getSqlStatements() {
+		if ( deletes == null || deletes.isEmpty() ) {
+			return ArrayHelper.EMPTY_STRING_ARRAY;
+		}
 		return deletes.toArray( new String[deletes.size()] );
 	}
 
@@ -51,6 +56,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 			QueryParameters queryParameters) {
 
 		IdsClauseBuilder values = prepareInlineStatement( session, queryParameters );
+		deletes = new ArrayList<>();
 
 		if ( !values.getIds().isEmpty() ) {
 			final String idSubselect = values.toStatement();

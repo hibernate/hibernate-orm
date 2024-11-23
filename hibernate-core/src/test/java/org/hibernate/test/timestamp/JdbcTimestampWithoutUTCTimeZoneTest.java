@@ -16,9 +16,12 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.util.jdbc.TimeZoneConnectionProvider;
 import org.junit.Test;
@@ -45,6 +48,7 @@ public class JdbcTimestampWithoutUTCTimeZoneTest
 
 	@Override
 	protected void addSettings(Map settings) {
+		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
 		settings.put(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
@@ -58,6 +62,7 @@ public class JdbcTimestampWithoutUTCTimeZoneTest
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/3781")
 	public void testTimeZone() {
 		doInHibernate( this::sessionFactory, session -> {
 			Person person = new Person();

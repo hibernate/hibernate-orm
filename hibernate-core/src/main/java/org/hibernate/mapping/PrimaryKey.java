@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 import java.util.Iterator;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -69,7 +70,9 @@ public class PrimaryKey extends Constraint {
 		return buf.append(')').toString();
 	}
 
-	public String sqlConstraintString(Dialect dialect, String constraintName, String defaultCatalog, String defaultSchema) {
+	@Override
+	public String sqlConstraintString(SqlStringGenerationContext context, String constraintName, String defaultCatalog, String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		StringBuilder buf = new StringBuilder(
 			dialect.getAddPrimaryKeyConstraintString(constraintName)
 		).append('(');

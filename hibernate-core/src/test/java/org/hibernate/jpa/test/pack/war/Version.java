@@ -44,6 +44,6 @@ public class Version {
 	}
 
 	public String toString() {
-		return new StringBuffer( major ).append( DOT ).append( minor ).append( DOT ).append( micro ).toString();
+		return new StringBuilder( major ).append( DOT ).append( minor ).append( DOT ).append( micro ).toString();
 	}
 }

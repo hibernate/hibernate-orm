@@ -42,7 +42,7 @@ public class InterbaseDialect extends Dialect {
 	};
 
 	/**
-	 * Constructs a InterbaseDialect
+	 * Constructs an InterbaseDialect
 	 */
 	public InterbaseDialect() {
 		super();
@@ -77,7 +77,7 @@ public class InterbaseDialect extends Dialect {
 
 	@Override
 	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from RDB$DATABASE";
+		return "select " + getSelectSequenceNextValString( sequenceName ) + " from rdb$database";
 	}
 
 	@Override
@@ -92,12 +92,12 @@ public class InterbaseDialect extends Dialect {
 
 	@Override
 	public String getDropSequenceString(String sequenceName) {
-		return "delete from RDB$GENERATORS where RDB$GENERATOR_NAME = '" + sequenceName.toUpperCase(Locale.ROOT) + "'";
+		return "delete from rdb$generators where rdb$generator_name = '" + sequenceName.toUpperCase(Locale.ROOT) + "'";
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select RDB$GENERATOR_NAME from RDB$GENERATORS";
+		return "select rdb$generator_name from rdb$generators";
 	}
 
 	@Override
@@ -150,7 +150,7 @@ public class InterbaseDialect extends Dialect {
 		// TODO : not sure which (either?) is correct, could not find docs on how to do this.
 		// did find various blogs and forums mentioning that select CURRENT_TIMESTAMP
 		// does not work...
-		return "{?= call CURRENT_TIMESTAMP }";
+		return "{?= call current_timestamp }";
 //		return "select CURRENT_TIMESTAMP from RDB$DATABASE";
 	}
 

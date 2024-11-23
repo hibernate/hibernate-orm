@@ -159,7 +159,6 @@ public class LoadANonExistingEntityTest extends BaseNonConfigCoreFunctionalTestC
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
@@ -180,7 +179,6 @@ public class LoadANonExistingEntityTest extends BaseNonConfigCoreFunctionalTestC
 		private String name;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Employer employer;
 	}
 

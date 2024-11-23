@@ -39,9 +39,9 @@ public class QueryByExampleTest extends LegacyTestCase {
         Session s = openSession();
 
         Transaction t = s.beginTransaction();
-        Componentizable master = getMaster("hibernate", "open sourc%", "open source1");
+        Componentizable componentizable = getComponentizeable("hibernate", "open sourc%", "open source1");
         Criteria crit = s.createCriteria(Componentizable.class);
-        Example ex = Example.create(master).enableLike();
+        Example ex = Example.create(componentizable).enableLike();
         crit.add(ex);
         List result = crit.list();
         assertNotNull(result);
@@ -58,9 +58,9 @@ public class QueryByExampleTest extends LegacyTestCase {
         initData();
         Session s = openSession();
         Transaction t = s.beginTransaction();
-        Componentizable master = getMaster("hibernate", null, "ope%");
+        Componentizable componentizeable = getComponentizeable("hibernate", null, "ope%");
         Criteria crit = s.createCriteria(Componentizable.class);
-        Example ex = Example.create(master).enableLike();
+        Example ex = Example.create(componentizeable).enableLike();
 
         crit.add(Restrictions.or(Restrictions.not(ex), ex));
 
@@ -78,18 +78,18 @@ public class QueryByExampleTest extends LegacyTestCase {
         initData();
         Session s = openSession();
         Transaction t = s.beginTransaction();
-        Componentizable master = getMaster("hibernate", null, "ope%");
+        Componentizable componentizeable = getComponentizeable("hibernate", null, "ope%");
         Criteria crit = s.createCriteria(Componentizable.class);
-        Example ex = Example.create(master).enableLike()
+        Example ex = Example.create(componentizeable).enableLike()
             .excludeProperty("component.subComponent");
         crit.add(ex);
         List result = crit.list();
         assertNotNull(result);
         assertEquals(3, result.size());
 
-        master = getMaster("hibernate", "ORM tool", "fake stuff");
+        componentizeable = getComponentizeable("hibernate", "ORM tool", "fake stuff");
         crit = s.createCriteria(Componentizable.class);
-        ex = Example.create(master).enableLike()
+        ex = Example.create(componentizeable).enableLike()
             .excludeProperty("component.subComponent.subName1");
         crit.add(ex);
         result = crit.list();
@@ -104,12 +104,12 @@ public class QueryByExampleTest extends LegacyTestCase {
     private void initData() throws Exception {
         Session s = openSession();
         Transaction t = s.beginTransaction();
-        Componentizable master = getMaster("hibernate", "ORM tool", "ORM tool1");
-        s.saveOrUpdate(master);
-        master = getMaster("hibernate", "open source", "open source1");
-        s.saveOrUpdate(master);
-        master = getMaster("hibernate", null, null);
-        s.saveOrUpdate(master);
+        Componentizable componentizeable = getComponentizeable("hibernate", "ORM tool", "ORM tool1");
+        s.saveOrUpdate(componentizeable);
+        componentizeable = getComponentizeable("hibernate", "open source", "open source1");
+        s.saveOrUpdate(componentizeable);
+        componentizeable = getComponentizeable("hibernate", null, null);
+        s.saveOrUpdate(componentizeable);
         t.commit();
         s.close();
     }
@@ -124,19 +124,19 @@ public class QueryByExampleTest extends LegacyTestCase {
         s.close();
     }
 
-    private Componentizable getMaster(String name, String subname, String subname1) {
-        Componentizable master = new Componentizable();
+    private Componentizable getComponentizeable(String name, String subname, String subname1) {
+        Componentizable componentizable = new Componentizable();
         if (name != null) {
-            Component masterComp = new Component();
-            masterComp.setName(name);
+            Component component = new Component();
+            component.setName(name);
             if (subname != null || subname1 != null) {
                 SubComponent subComponent = new SubComponent();
                 subComponent.setSubName(subname);
                 subComponent.setSubName1(subname1);
-                masterComp.setSubComponent(subComponent);
+                component.setSubComponent(subComponent);
             }
-            master.setComponent(masterComp);
+            componentizable.setComponent(component);
         }
-        return master;
+        return componentizable;
     }
 }

@@ -117,8 +117,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 		if ( lastLetter == -1 ) {
 			alias = "column";
 		}
-		else if ( name.length() > lastLetter + 1 ) {
-			alias = name.substring( 0, lastLetter + 1 );
+		else if ( alias.length() > lastLetter + 1 ) {
+			alias = alias.substring( 0, lastLetter + 1 );
 		}
 
 		boolean useRawName = name.length() + suffix.length() <= dialect.getMaxAliasLength()
@@ -217,10 +217,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	/**
-	 * Returns the underlying columns sqltypecode.
-	 * If null, it is because the sqltype code is unknown.
+	 * Returns the underlying columns SqlTypeCode.
+	 * If null, it is because the SqlTypeCode is unknown.
 	 * <p/>
-	 * Use #getSqlTypeCode(Mapping) to retrieve the sqltypecode used
+	 * Use #getSqlTypeCode(Mapping) to retrieve the SqlTypeCode used
 	 * for the columns associated Value/Type.
 	 *
 	 * @return sqlTypeCode if it is set, otherwise null.

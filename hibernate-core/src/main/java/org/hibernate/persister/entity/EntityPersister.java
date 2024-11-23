@@ -17,7 +17,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -25,6 +24,7 @@ import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
@@ -365,7 +365,10 @@ public interface EntityPersister extends EntityDefinition {
 
 	/**
 	 * Load the id for the entity based on the natural id.
+	 * 
+	 * @deprecated use {@link UniqueKeyLoadable#loadByNaturalId(Object[], LockOptions, SharedSessionContractImplementor)}
 	 */
+	@Deprecated
 	Serializable loadEntityIdByNaturalId(
 			Object[] naturalIdValues, LockOptions lockOptions,
 			SharedSessionContractImplementor session);
@@ -839,6 +842,25 @@ public interface EntityPersister extends EntityDefinition {
 	 * @return A set of unique indexes of the attribute names found in the metamodel
 	 */
 	int[] resolveAttributeIndexes(String[] attributeNames);
+
+	/**
+	 * Like {@link #resolveAttributeIndexes(String[])} but also always returns mutable attributes
+	 *
+	 *
+	 * @param values
+	 * @param loadedState
+	 * @param attributeNames Array of names to be resolved
+	 *
+	 * @param session
+	 * @return A set of unique indexes of the attribute names found in the metamodel
+	 */
+	default int[] resolveDirtyAttributeIndexes(
+			Object[] values,
+			Object[] loadedState,
+			String[] attributeNames,
+			SessionImplementor session) {
+		return resolveAttributeIndexes( attributeNames );
+	}
 
 	boolean canUseReferenceCacheEntries();
 

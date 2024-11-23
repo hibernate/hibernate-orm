@@ -12,6 +12,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Reads the audited properties for components.
@@ -45,7 +46,7 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
 			propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
-			if( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {
+			if ( StringHelper.isNotEmpty( aud.modifiedColumnName() ) ) {
 				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
 			}
 		}

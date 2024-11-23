@@ -251,7 +251,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				( (Session) session ).beginTransaction();
+				session.beginTransaction();
 			}
 
 			session.getPersistenceContextInternal().addUninitializedDetachedCollection(
@@ -265,18 +265,24 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		}
 		finally {
 			if ( tempSession != null ) {
+
 				// make sure the just opened temp session gets closed!
 				isTempSession = false;
 				session = originalSession;
 
 				try {
 					if ( !isJTA ) {
-						( (Session) tempSession ).getTransaction().commit();
+						tempSession.getTransaction().commit();
 					}
-					( (Session) tempSession ).close();
+					tempSession.close();
 				}
 				catch (Exception e) {
 					LOG.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
+				}
+			}
+			else {
+				if ( !session.isTransactionInProgress() ) {
+					session.getJdbcCoordinator().afterTransaction();
 				}
 			}
 		}
@@ -656,6 +662,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 						LOG.queuedOperationWhenDetachFromSession( collectionInfoString );
 					}
 				}
+				if ( allowLoadOutsideTransaction && !initialized && session.getLoadQueryInfluencers().hasEnabledFilters() ) {
+					final String collectionInfoString = MessageHelper.collectionInfoString( getRole(), getKey() );
+					LOG.enabledFiltersWhenDetachFromSession( collectionInfoString );
+				}
 				this.session = null;
 			}
 			return true;
@@ -752,7 +762,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		// AST in ORM 5+, handling this type of condition is either extremely difficult or impossible.  Forcing
 		// recreation isn't ideal, but not really any other option in ORM 4.
 		// Selecting a type used in where part of update statement
-		// (must match condidion in org.hibernate.persister.collection.BasicCollectionPersister.doUpdateRows).
+		// (must match condition in org.hibernate.persister.collection.BasicCollectionPersister#doUpdateRows).
 		// See HHH-9474
 		Type whereType;
 		if ( persister.hasIndex() ) {

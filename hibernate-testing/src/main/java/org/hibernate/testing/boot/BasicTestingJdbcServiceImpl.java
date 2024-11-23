@@ -57,11 +57,12 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 	public void prepare(boolean allowAggressiveRelease) throws SQLException {
 		dialect = ConnectionProviderBuilder.getCorrespondingDialect();
 		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
-		sqlStatementLogger = new SqlStatementLogger( true, false );
+		sqlStatementLogger = new SqlStatementLogger( true, false, false );
+		this.jdbcConnectionAccess = new JdbcConnectionAccessImpl( connectionProvider );
 
 		Connection jdbcConnection = connectionProvider.getConnection();
 		try {
-			jdbcEnvironment = new JdbcEnvironmentImpl( jdbcConnection.getMetaData(), dialect );
+			jdbcEnvironment = new JdbcEnvironmentImpl( jdbcConnection.getMetaData(), dialect, jdbcConnectionAccess );
 		}
 		finally {
 			try {
@@ -71,7 +72,6 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 			}
 		}
 
-		this.jdbcConnectionAccess = new JdbcConnectionAccessImpl( connectionProvider );
 	}
 
 	public void release() {

@@ -35,7 +35,7 @@ public class Database {
 	private final ServiceRegistry serviceRegistry;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
 
-	private Namespace implicitNamespace;
+	private Namespace.Name physicalImplicitNamespaceName;
 	private List<InitCommand> initCommands;
 
 	public Database(MetadataBuildingOptions buildingOptions) {
@@ -48,11 +48,16 @@ public class Database {
 		this.physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		this.dialect = determineDialect( buildingOptions );
 
-		this.implicitNamespace = makeNamespace(
-				new Namespace.Name(
-						toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
-						toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
-				)
+		setImplicitNamespaceName(
+				toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
+				toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
+		);
+	}
+
+	private void setImplicitNamespaceName(Identifier catalogName, Identifier schemaName) {
+		this.physicalImplicitNamespaceName = new Namespace.Name(
+				physicalNamingStrategy.toPhysicalCatalogName( catalogName, jdbcEnvironment ),
+				physicalNamingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment )
 		);
 	}
 
@@ -108,15 +113,25 @@ public class Database {
 		return namespaceMap.values();
 	}
 
+	/**
+	 * @return The default namespace, with a {@code null} catalog and schema
+	 * which will have to be interpreted with defaults at runtime.
+	 * @see SqlStringGenerationContext
+	 */
 	public Namespace getDefaultNamespace() {
-		return implicitNamespace;
+		return locateNamespace( null, null );
+	}
+
+	/**
+	 * @return The implicit name of the default namespace, with a {@code null} catalog and schema
+	 * which will have to be interpreted with defaults at runtime.
+	 * @see SqlStringGenerationContext
+	 */
+	public Namespace.Name getPhysicalImplicitNamespaceName() {
+		return physicalImplicitNamespaceName;
 	}
 
 	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
-		if ( catalogName == null && schemaName == null ) {
-			return getDefaultNamespace();
-		}
-
 		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
 		Namespace namespace = namespaceMap.get( name );
 		if ( namespace == null ) {
@@ -126,17 +141,8 @@ public class Database {
 	}
 
 	public Namespace adjustDefaultNamespace(Identifier catalogName, Identifier schemaName) {
-		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
-		if ( implicitNamespace.getName().equals( name ) ) {
-			return implicitNamespace;
-		}
-
-		Namespace namespace = namespaceMap.get( name );
-		if ( namespace == null ) {
-			namespace = makeNamespace( name );
-		}
-		implicitNamespace = namespace;
-		return implicitNamespace;
+		setImplicitNamespaceName( catalogName, schemaName );
+		return locateNamespace( catalogName, schemaName );
 	}
 
 	public Namespace adjustDefaultNamespace(String implicitCatalogName, String implicitSchemaName) {

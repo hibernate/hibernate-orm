@@ -16,6 +16,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.NotInstrumentedException;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -25,6 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -38,11 +40,12 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			PersistentClass persistentClass,
 			Set<String> identifierAttributeNames,
 			CompositeType nonAggregatedCidMapper,
-			boolean allowEnhancementAsProxy) {
+			boolean collectionsInDefaultFetchGroupEnabled,
+			PersisterCreationContext creationContext) {
 		final Class mappedClass = persistentClass.getMappedClass();
 		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( mappedClass );
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancedForLazyLoading
-				? LazyAttributesMetadata.from( persistentClass, true, allowEnhancementAsProxy )
+				? LazyAttributesMetadata.from( persistentClass, true, collectionsInDefaultFetchGroupEnabled, creationContext )
 				: LazyAttributesMetadata.nonEnhanced( persistentClass.getEntityName() );
 
 		return new BytecodeEnhancementMetadataPojoImpl(
@@ -145,10 +148,9 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) entityTuplizer
 				.instantiate( identifier, session );
 
-		// clear the fields that are marked as dirty in the dirtyness tracker
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
+		// clear the fields that are marked as dirty in the dirtiness tracker
+		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
+
 		// add the entity (proxy) instance to the PC
 		persistenceContext.addEnhancedProxy( entityKey, entity );
 
@@ -266,7 +268,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			);
 		}
 
-		final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		final PersistentAttributeInterceptor interceptor = ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 		if ( interceptor == null ) {
 			return null;
 		}

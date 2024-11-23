@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.insert;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.Insert;
 
 /**
  * Specialized IdentifierGeneratingInsert which appends the database
@@ -15,11 +16,18 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
+	protected String identityColumnName;
+
+	public Insert addIdentityColumn(String columnName) {
+		identityColumnName = columnName;
+		return super.addIdentityColumn( columnName );
+	}
+
 	public InsertSelectIdentityInsert(Dialect dialect) {
 		super( dialect );
 	}
 
 	public String toStatementString() {
-		return getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( super.toStatementString() );
+		return getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( identityColumnName, super.toStatementString() );
 	}
 }

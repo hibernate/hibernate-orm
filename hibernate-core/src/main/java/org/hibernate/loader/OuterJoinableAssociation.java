@@ -13,6 +13,7 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
@@ -77,7 +78,7 @@ public final class OuterJoinableAssociation {
 		this.joinable = joinableType.getAssociatedJoinable( factory );
 		this.rhsColumns = JoinHelper.getRHSColumnNames( joinableType, factory );
 		this.on = joinableType.getOnCondition( rhsAlias, factory, enabledFilters )
-				+ ( withClause == null || withClause.trim().length() == 0 ? "" : " and ( " + withClause + " )" );
+				+ ( StringHelper.isBlank( withClause ) ? "" : " and ( " + withClause + " )" );
 		this.hasRestriction = hasRestriction;
 		this.enabledFilters = enabledFilters; // needed later for many-to-many/filter application
 	}
@@ -193,9 +194,9 @@ public final class OuterJoinableAssociation {
 
 	public void addManyToManyJoin(JoinFragment outerjoin, QueryableCollection collection) throws MappingException {
 		String manyToManyFilter = collection.getManyToManyFilterFragment( rhsAlias, enabledFilters );
-		String condition = "".equals( manyToManyFilter )
+		String condition = (manyToManyFilter != null && manyToManyFilter.isEmpty())
 				? on
-				: "".equals( on )
+				: (on != null && on.isEmpty())
 				? manyToManyFilter
 				: on + " and " + manyToManyFilter;
 		outerjoin.addJoin(

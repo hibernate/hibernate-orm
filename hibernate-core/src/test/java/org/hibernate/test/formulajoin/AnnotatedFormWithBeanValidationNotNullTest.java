@@ -21,7 +21,7 @@ public class AnnotatedFormWithBeanValidationNotNullTest extends BaseUnitTestCase
 	@TestForIssue( jiraKey = "HHH-8167" )
 	public void testAnnotatedFormWithBeanValidationNotNull() {
 		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass( AnnotatedMaster.class ).addAnnotatedClass( AnnotatedDetail.class );
+		cfg.addAnnotatedClass( AnnotatedRoot.class ).addAnnotatedClass( AnnotatedDetail.class );
 		cfg.buildSessionFactory().close();
 	}
 }

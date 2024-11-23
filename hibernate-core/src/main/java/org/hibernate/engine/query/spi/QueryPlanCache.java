@@ -42,6 +42,11 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 public class QueryPlanCache implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueryPlanCache.class );
 
+	@FunctionalInterface
+	public interface QueryPlanCreator {
+		HQLQueryPlan createQueryPlan(String queryString, boolean shallow, Map<String, Filter> enabledFilters, SessionFactoryImplementor factory);
+	}
+
 	/**
 	 * The default strong reference count.
 	 */
@@ -52,6 +57,7 @@ public class QueryPlanCache implements Serializable {
 	public static final int DEFAULT_QUERY_PLAN_MAX_COUNT = 2048;
 
 	private final SessionFactoryImplementor factory;
+	private QueryPlanCreator queryPlanCreator;
 
 	/**
 	 * the cache of the actual plans...
@@ -77,8 +83,9 @@ public class QueryPlanCache implements Serializable {
 	 * @param factory The SessionFactory
 	 */
 	@SuppressWarnings("deprecation")
-	public QueryPlanCache(final SessionFactoryImplementor factory) {
+	public QueryPlanCache(final SessionFactoryImplementor factory, QueryPlanCreator queryPlanCreator) {
 		this.factory = factory;
+		this.queryPlanCreator = queryPlanCreator;
 
 		Integer maxParameterMetadataCount = ConfigurationHelper.getInteger(
 				Environment.QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE,
@@ -152,7 +159,7 @@ public class QueryPlanCache implements Serializable {
 			final long startTime = ( stats ) ? System.nanoTime() : 0L;
 
 			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
-			value = new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
+			value = queryPlanCreator.createQueryPlan( queryString, shallow, enabledFilters, factory );
 
 			if ( stats ) {
 				final long endTime = System.nanoTime();
@@ -193,6 +200,8 @@ public class QueryPlanCache implements Serializable {
 			Map<String,Filter> enabledFilters) throws QueryException, MappingException {
 		final FilterQueryPlanKey key =  new FilterQueryPlanKey( filterString, collectionRole, shallow, enabledFilters );
 		FilterQueryPlan value = (FilterQueryPlan) queryPlanCache.get( key );
+		final StatisticsImplementor statistics = factory.getStatistics();
+		boolean stats = statistics.isStatisticsEnabled();
 		if ( value == null ) {
 			LOG.tracev(
 					"Unable to locate collection-filter query plan in cache; generating ({0} : {1} )",
@@ -200,10 +209,17 @@ public class QueryPlanCache implements Serializable {
 					filterString
 			);
 			value = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters,factory );
+			if ( stats ) {
+				statistics.queryPlanCacheMiss( key.query  );
+			}
 			queryPlanCache.putIfAbsent( key, value );
 		}
 		else {
 			LOG.tracev( "Located collection-filter query plan in cache ({0} : {1})", collectionRole, filterString );
+
+			if ( stats ) {
+				statistics.queryPlanCacheHit( key.query );
+			}
 		}
 		return value;
 	}
@@ -221,13 +237,22 @@ public class QueryPlanCache implements Serializable {
 	@SuppressWarnings("unchecked")
 	public NativeSQLQueryPlan getNativeSQLQueryPlan(final NativeSQLQuerySpecification spec) {
 		NativeSQLQueryPlan value = (NativeSQLQueryPlan) queryPlanCache.get( spec );
+		final StatisticsImplementor statistics = factory.getStatistics();
+		boolean stats = statistics.isStatisticsEnabled();
 		if ( value == null ) {
 			LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
 			value = nativeQueryInterpreter.createQueryPlan( spec, factory );
+			if ( stats ) {
+				statistics.queryPlanCacheMiss( spec.getQueryString() );
+			}
 			queryPlanCache.putIfAbsent( spec, value );
 		}
 		else {
 			LOG.tracev( "Located native-sql query plan in cache ({0})", spec.getQueryString() );
+
+			if ( stats ) {
+				statistics.queryPlanCacheHit( spec.getQueryString() );
+			}
 		}
 		return value;
 	}

@@ -6,10 +6,14 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
@@ -72,17 +76,58 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 		Optional<JaxbHbmManyToOneType> jaxbHbmManyToOneTypeOptional = Optional.empty();
 
-		if ( pluralAttributeJaxbMapping.isInverse() && pluralAttributeJaxbMapping.getOneToMany() != null ) {
+		// Our goal here is to find the inverse side of a one to many to figure out against what to join
+		if ( pluralAttributeJaxbMapping.isInverse() && pluralAttributeJaxbMapping.getOneToMany() != null && pluralAttributeJaxbMapping.getKey().getPropertyRef() == null ) {
 			String childClass = pluralAttributeJaxbMapping.getOneToMany().getClazz();
 
 			if ( childClass != null ) {
+				// We match by columns as defined in the key
+				final List<String> keyColumnNames;
+				if ( pluralAttributeJaxbMapping.getKey().getColumnAttribute() == null ) {
+					keyColumnNames = new ArrayList<>( pluralAttributeJaxbMapping.getKey().getColumn().size() );
+					for ( JaxbHbmColumnType jaxbHbmColumnType : pluralAttributeJaxbMapping.getKey().getColumn() ) {
+						keyColumnNames.add( jaxbHbmColumnType.getName() );
+					}
+				}
+				else {
+					keyColumnNames = new ArrayList<>( 1 );
+					keyColumnNames.add( pluralAttributeJaxbMapping.getKey().getColumnAttribute() );
+				}
 				jaxbHbmManyToOneTypeOptional = mappingDocument.getDocumentRoot().getClazz()
 						.stream()
 						.filter( (JaxbHbmRootEntityType entityType) -> childClass.equals( entityType.getName() ) )
 						.flatMap( jaxbHbmRootEntityType -> jaxbHbmRootEntityType.getAttributes().stream() )
-						.filter(
-								attribute -> attribute instanceof JaxbHbmManyToOneType &&
-										( (JaxbHbmManyToOneType) attribute ).getPropertyRef() != null )
+						.filter( attribute -> {
+							if ( attribute instanceof JaxbHbmManyToOneType ) {
+								JaxbHbmManyToOneType manyToOneType = (JaxbHbmManyToOneType) attribute;
+								String manyToOneTypeClass = manyToOneType.getClazz();
+								String containerClass = container.getAttributeRoleBase().getFullPath();
+								// Consider many to ones that have no class defined or equal the owner class of the one to many
+								if ( manyToOneTypeClass == null || manyToOneTypeClass.equals( containerClass ) ) {
+									if ( manyToOneType.getColumnAttribute() == null ) {
+										List<Serializable> columns = manyToOneType.getColumnOrFormula();
+										if ( columns.size() != keyColumnNames.size() ) {
+											return false;
+										}
+										for ( int i = 0; i < columns.size(); i++ ) {
+											Serializable column = columns.get( i );
+											String keyColumn = keyColumnNames.get( i );
+											if ( !( column instanceof JaxbHbmColumnType ) || !( (JaxbHbmColumnType) column )
+													.getName()
+													.equals( keyColumn ) ) {
+												return false;
+											}
+										}
+									}
+									else {
+										return keyColumnNames.size() == 1 && keyColumnNames.get( 0 )
+												.equals( manyToOneType.getColumnAttribute() );
+									}
+									return true;
+								}
+							}
+							return false;
+						})
 						.map( JaxbHbmManyToOneType.class::cast )
 						.findFirst();
 			}
@@ -91,13 +136,12 @@ public abstract class AbstractPluralAttributeSourceImpl
 		this.keySource = jaxbHbmManyToOneTypeOptional
 				.map( jaxbHbmManyToOneType -> new PluralAttributeKeySourceImpl(
 						sourceMappingDocument(),
+						pluralAttributeJaxbMapping.getKey(),
 						jaxbHbmManyToOneType,
 						container
 				) ).orElseGet( () -> new PluralAttributeKeySourceImpl(
 						sourceMappingDocument(),
-						pluralAttributeJaxbMapping.isInverse() ?
-								pluralAttributeJaxbMapping.getKey() :
-								pluralAttributeJaxbMapping.getKey(),
+						pluralAttributeJaxbMapping.getKey(),
 						container
 				) );
 

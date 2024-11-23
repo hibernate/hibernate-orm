@@ -7,7 +7,6 @@
 package org.hibernate.test.insertordering;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -28,47 +27,24 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
 @TestForIssue(jiraKey = "HHH-9864")
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-public class InsertOrderingWithSingleTableInheritance
-		extends BaseNonConfigCoreFunctionalTestCase {
-
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( false, false );
+public class InsertOrderingWithSingleTableInheritance extends BaseInsertOrderingTest {
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Address.class, Person.class, SpecialPerson.class };
-	}
-
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( Environment.ORDER_INSERTS, "true" );
-		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		settings.put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				connectionProvider
-		);
-	}
-
-	@Override
-	public void releaseResources() {
-		super.releaseResources();
-		connectionProvider.stop();
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Address.class, Person.class, SpecialPerson.class };
 	}
 
 	@Test
@@ -99,10 +75,10 @@ public class InsertOrderingWithSingleTableInheritance
 				specialPerson.addAddress( new Address() );
 				session.persist( specialPerson );
 			}
-			connectionProvider.clear();
+			clearBatches();
 		} );
 
-		assertEquals( 3, connectionProvider.getPreparedStatements().size() );
+		verifyPreparedStatementCount( 3 );
 	}
 
 	@Override

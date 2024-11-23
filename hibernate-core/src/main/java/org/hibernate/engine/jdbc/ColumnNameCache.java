@@ -13,8 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Cache of column-name -> column-index resolutions
  *
+ * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
+ *
  * @author Steve Ebersole
  */
+@Deprecated
 public final class ColumnNameCache {
 	private static final float LOAD_FACTOR = .75f;
 

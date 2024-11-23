@@ -31,7 +31,6 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -46,7 +45,6 @@ import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
@@ -58,12 +56,10 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
 import org.hibernate.cfg.CreateKeySecondPass;
 import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.IdGeneratorResolverSecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
-import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.cfg.RecoverableException;
@@ -86,6 +82,7 @@ import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -1504,9 +1501,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
-	private ArrayList<PkDrivenByDefaultMapsIdSecondPass> pkDrivenByDefaultMapsIdSecondPassList;
 	private ArrayList<SetSimpleValueTypeSecondPass> setSimpleValueTypeSecondPassList;
-	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
@@ -1525,14 +1520,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if ( secondPass instanceof IdGeneratorResolverSecondPass ) {
 			addIdGeneratorResolverSecondPass( (IdGeneratorResolverSecondPass) secondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof PkDrivenByDefaultMapsIdSecondPass ) {
-			addPkDrivenByDefaultMapsIdSecondPass( (PkDrivenByDefaultMapsIdSecondPass) secondPass, onTopOfTheQueue );
-		}
 		else if ( secondPass instanceof SetSimpleValueTypeSecondPass ) {
 			addSetSimpleValueTypeSecondPass( (SetSimpleValueTypeSecondPass) secondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof CopyIdentifierComponentSecondPass ) {
-			addCopyIdentifierComponentSecondPass( (CopyIdentifierComponentSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof FkSecondPass ) {
 			addFkSecondPass( (FkSecondPass) secondPass, onTopOfTheQueue );
@@ -1558,15 +1547,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private void addPkDrivenByDefaultMapsIdSecondPass(
-			PkDrivenByDefaultMapsIdSecondPass secondPass,
-			boolean onTopOfTheQueue) {
-		if ( pkDrivenByDefaultMapsIdSecondPassList == null ) {
-			pkDrivenByDefaultMapsIdSecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, pkDrivenByDefaultMapsIdSecondPassList, onTopOfTheQueue );
-	}
-
 	private <T extends SecondPass> void addSecondPass(T secondPass, ArrayList<T> secondPassList, boolean onTopOfTheQueue) {
 		if ( onTopOfTheQueue ) {
 			secondPassList.add( 0, secondPass );
@@ -1588,15 +1568,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			idGeneratorResolverSecondPassList = new ArrayList<>();
 		}
 		addSecondPass( secondPass, idGeneratorResolverSecondPassList, onTopOfTheQueue );
-	}
-
-	private void addCopyIdentifierComponentSecondPass(
-			CopyIdentifierComponentSecondPass secondPass,
-			boolean onTopOfTheQueue) {
-		if ( copyIdentifierComponentSecondPasList == null ) {
-			copyIdentifierComponentSecondPasList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, copyIdentifierComponentSecondPasList, onTopOfTheQueue );
 	}
 
 	private void addFkSecondPass(FkSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1647,10 +1618,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		try {
 			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
-			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
 			processSecondPasses( setSimpleValueTypeSecondPassList );
-
-			processCopyIdentifierSecondPassesInOrder();
 
 			processFkSecondPassesInOrder();
 
@@ -1676,14 +1644,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private void processCopyIdentifierSecondPassesInOrder() {
-		if ( copyIdentifierComponentSecondPasList == null ) {
-			return;
-		}
-		sortCopyIdentifierComponentSecondPasses();
-		processSecondPasses( copyIdentifierComponentSecondPasList );
-	}
-
 	private void processSecondPasses(ArrayList<? extends SecondPass> secondPasses) {
 		if ( secondPasses == null ) {
 			return;
@@ -1695,39 +1655,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		secondPasses.clear();
 	}
-
-	private void sortCopyIdentifierComponentSecondPasses() {
-
-		ArrayList<CopyIdentifierComponentSecondPass> sorted =
-				new ArrayList<>( copyIdentifierComponentSecondPasList.size() );
-		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>( copyIdentifierComponentSecondPasList );
-		topologicalSort( sorted, toSort );
-		copyIdentifierComponentSecondPasList = sorted;
-	}
-
-	/* naive O(n^3) topological sort */
-	private void topologicalSort( List<CopyIdentifierComponentSecondPass> sorted, Set<CopyIdentifierComponentSecondPass> toSort ) {
-		while (!toSort.isEmpty()) {
-			CopyIdentifierComponentSecondPass independent = null;
-
-			searchForIndependent:
-			for ( CopyIdentifierComponentSecondPass secondPass : toSort ) {
-				for ( CopyIdentifierComponentSecondPass other : toSort ) {
-					if (secondPass.dependentUpon( other )) {
-						continue searchForIndependent;
-					}
-				}
-				independent = secondPass;
-				break;
-			}
-			if (independent == null) {
-				throw new MappingException( "cyclic dependency in derived identities" );
-			}
-			toSort.remove( independent );
-			sorted.add( independent );
-		}
-	}
-
 
 	private void processFkSecondPassesInOrder() {
 		if ( fkSecondPassList == null || fkSecondPassList.isEmpty() ) {
@@ -2270,8 +2197,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		// for now we only handle id generators as ExportableProducers
 
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
-		final String defaultCatalog = extractName( getDatabase().getDefaultNamespace().getName().getCatalog(), dialect );
-		final String defaultSchema = extractName( getDatabase().getDefaultNamespace().getName().getSchema(), dialect );
 
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
 			if ( entityBinding.isInherited() ) {
@@ -2281,8 +2206,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			handleIdentifierValueBinding(
 					entityBinding.getIdentifier(),
 					dialect,
-					defaultCatalog,
-					defaultSchema,
 					(RootClass) entityBinding
 			);
 		}
@@ -2295,8 +2218,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			handleIdentifierValueBinding(
 					( (IdentifierCollection) collection ).getIdentifier(),
 					dialect,
-					defaultCatalog,
-					defaultSchema,
 					null
 			);
 		}
@@ -2305,8 +2226,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private void handleIdentifierValueBinding(
 			KeyValue identifierValueBinding,
 			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
 			RootClass entityBinding) {
 		// todo : store this result (back into the entity or into the KeyValue, maybe?)
 		// 		This process of instantiating the id-generator is called multiple times.
@@ -2316,14 +2235,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final IdentifierGenerator ig = identifierValueBinding.createIdentifierGenerator(
 					getIdentifierGeneratorFactory(),
 					dialect,
-					defaultCatalog,
-					defaultSchema,
 					entityBinding
 			);
 
-			if ( ig instanceof ExportableProducer ) {
-				( (ExportableProducer) ig ).registerExportables( getDatabase() );
-			}
+			ig.registerExportables( getDatabase() );
 		}
 		catch (MappingException e) {
 			// ignore this for now.  The reasoning being "non-reflective" binding as needed

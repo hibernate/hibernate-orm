@@ -72,7 +72,7 @@ public class MapKeyEntityFromElement extends FromElement {
 				rhsAlias
 		);
 
-//		String[] joinColumns = determineJoinColuns( collectionPersister, joinTableAlias );
+//		String[] joinColumns = determineJoinColumns( collectionPersister, joinTableAlias );
 		// todo : assumes columns, no formulas
 		String[] joinColumns = collectionPersister.getIndexColumnNames( collectionFromElement.getCollectionTableAlias() );
 

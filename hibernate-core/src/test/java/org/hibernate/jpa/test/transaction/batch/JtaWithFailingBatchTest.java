@@ -75,8 +75,10 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 			}
 			catch (Exception expected) {
 				//expected
-				if ( transactionManager.getStatus() == Status.STATUS_ACTIVE ) {
-					transactionManager.rollback();
+				switch ( transactionManager.getStatus() ) {
+					case Status.STATUS_ACTIVE:
+					case Status.STATUS_MARKED_ROLLBACK:
+						transactionManager.rollback();
 				}
 			}
 
@@ -89,7 +91,6 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 			assertStatementsListIsCleared();
 		}
 		finally {
-
 			em.close();
 		}
 
@@ -150,16 +151,10 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 	}
 
 	public static class TestBatchBuilder extends BatchBuilderImpl {
-		private int jdbcBatchSize;
-
-		@Override
-		public void setJdbcBatchSize(int jdbcBatchSize) {
-			this.jdbcBatchSize = jdbcBatchSize;
-		}
 
 		@Override
 		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return buildBatchTest( key, jdbcCoordinator, jdbcBatchSize );
+			return buildBatchTest( key, jdbcCoordinator, getJdbcBatchSize() );
 		}
 
 		protected BatchingBatch buildBatchTest(BatchKey key, JdbcCoordinator jdbcCoordinator, int jdbcBatchSize) {

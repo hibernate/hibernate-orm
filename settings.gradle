@@ -13,39 +13,88 @@ if ( !JavaVersion.current().java8Compatible ) {
     throw new GradleException( "Gradle must be run with Java 8 or later" )
 }
 
-// Consume the property 'testedJavaVersion' here and
-// set it on gradle.ext so that we can inspect the result in build.gradle.
-// We wouldn't be able to do that if we consumed
-// the property in base-information.gradle and set it on project.ext.
+gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 8 )
 
-if ( hasProperty( 'testedJavaVersion' ) ) {
-    logger.warn( "[WARN] Targeting Java version '$testedJavaVersion' in tests." )
-    gradle.ext.testedJavaVersion = testedJavaVersion
-    gradle.ext.testedJavaVersionAsEnum = JavaVersion.toVersion( testedJavaVersion )
-}
-else {
-    // We will simply use Gradle's JDK for compilation, tests and javadoc generation.
-    def major
-    if ( JavaVersion.current() == JavaVersion.VERSION_HIGHER) {
-        logger.warn( "Gradle does not support this JDK, because it is too recent; build is likely to fail." +
-                " To avoid failures, you should specify an older Java version in the 'testedJavaVersion' parameter." +
-                " Just append the following to your gradle command:" +
-                " '-PtestedJavaVersion=<major version of your newer JDK, e.g. 14>'" )
-        // Use a hack to retrieve the major as a string.
-        // This only works for Java 9+ (we're at least on Java 18 here).
-        gradle.ext.testedJavaVersion = System.getProperty( 'java.specification.version' )
+// Gradle does bytecode transformation on tests.
+// You can't use bytecode higher than what Gradle supports, even with toolchains.
+def GRADLE_MAX_SUPPORTED_BYTECODE_VERSION = 15
+
+// If either 'main.jdk.version' or 'test.jdk.version' is set, enable the toolchain and use the selected jdk.
+// If only one property is set, the other defaults to the baseline Java version (8).
+// Note that when toolchain is enabled, you also need to specify
+// the location of the selected jdks
+// (auto-download and auto-detect are disabled in gradle.properties).
+//
+// Example (with SDKMAN):
+// ./gradlew build -Ptest.jdk.version=15 \
+// -Porg.gradle.java.installations.paths=$SDKMAN_CANDIDATES_DIR/java/15.0.1-open,$SDKMAN_CANDIDATES_DIR/java/8
+if ( hasProperty( 'main.jdk.version' ) || hasProperty( 'test.jdk.version' ) ) {
+    // Testing a particular JDK version
+    // Gradle doesn't support all JDK versions unless we use toolchains
+    gradle.ext.javaToolchainEnabled = true
+    gradle.ext.javaVersions = [
+            main: [
+                    compiler: JavaLanguageVersion.of( hasProperty( 'main.jdk.version' )
+                            ? getProperty( 'main.jdk.version' ) : gradle.ext.baselineJavaVersion.asInt() ),
+                    release: gradle.ext.baselineJavaVersion
+            ],
+            test: [
+                    compiler: JavaLanguageVersion.of( hasProperty( 'test.jdk.version' )
+                            ? getProperty( 'test.jdk.version' ) : gradle.ext.baselineJavaVersion.asInt() )
+            ]
+    ]
+    def testCompilerVersion = gradle.ext.javaVersions.test.compiler
+    if ( testCompilerVersion.asInt() > GRADLE_MAX_SUPPORTED_BYTECODE_VERSION ) {
+        logger.warn( "[WARN] Gradle does not support bytecode version '${testCompilerVersion}'." +
+                 " Forcing test bytecode to version ${GRADLE_MAX_SUPPORTED_BYTECODE_VERSION}." )
+        gradle.ext.javaVersions.test.release = JavaLanguageVersion.of( GRADLE_MAX_SUPPORTED_BYTECODE_VERSION )
     }
     else {
-        gradle.ext.testedJavaVersion = JavaVersion.current().getMajorVersion()
+        gradle.ext.javaVersions.test.release = testCompilerVersion
+    }
+    gradle.ext.javaVersions.test.launcher = testCompilerVersion
+}
+else {
+    // Not testing a particular JDK version: we will use the same JDK used to run Gradle.
+    // We disable toolchains for convenience, so that anyone can just run the build with their own JDK
+    // without any additional options and without downloading the whole JDK.
+    gradle.ext.javaToolchainEnabled = false
+    def gradleJdkVersion = JavaLanguageVersion.of( JavaVersion.current().getMajorVersion() )
+    if ( gradleJdkVersion.asInt() > GRADLE_MAX_SUPPORTED_BYTECODE_VERSION ) {
+        logger.warn( "[WARN] Gradle does not support this JDK, because it is too recent; build is likely to fail." +
+                " To avoid failures, you should use an older Java version when running Gradle, and rely on toolchains." +
+                " To that end, specify the version of Java you want to run tests with using property 'test.jdk.version'," +
+                " and specify the path to JDK8 *and* a JDK of the test version using property 'org.gradle.java.installations.paths'." +
+                " Example:" +
+                "./gradlew build -Ptest.jdk.version=15 -Porg.gradle.java.installations.paths=\$SDKMAN_CANDIDATES_DIR/java/15.0.1-open,\$SDKMAN_CANDIDATES_DIR/java/8" )
     }
 
-    gradle.ext.testedJavaVersionAsEnum = JavaVersion.current()
+    gradle.ext.javaVersions = [
+            main: [
+                    compiler: gradleJdkVersion,
+                    release: gradle.ext.baselineJavaVersion
+            ],
+            test: [
+                    compiler: gradleJdkVersion,
+                    release: JavaLanguageVersion.of(
+                            Math.min( GRADLE_MAX_SUPPORTED_BYTECODE_VERSION, gradleJdkVersion.asInt() ) ),
+                    launcher: gradleJdkVersion
+            ]
+    ]
 }
 
+logger.lifecycle "Java versions for main code: " + gradle.ext.javaVersions.main
+logger.lifecycle "Java versions for tests: " + gradle.ext.javaVersions.test
+
 include 'hibernate-core'
+include 'hibernate-core-jakarta'
 include 'hibernate-entitymanager'
 include 'hibernate-testing'
+include 'hibernate-testing-jakarta'
+include 'hibernate-transaction-client'
+
 include 'hibernate-envers'
+include 'hibernate-envers-jakarta'
 include 'hibernate-spatial'
 
 include 'hibernate-java8'
@@ -61,11 +110,15 @@ include 'hibernate-agroal'
 include 'hibernate-jcache'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
-include 'hibernate-jipijapa'
-
+include 'hibernate-micrometer'
 include 'hibernate-graalvm'
 
-if ( JavaVersion.current().isJava11Compatible() ) {
+// The plugin used to generate Java modules was compiled using JDK11.
+// This means even with toolchains, Gradle needs to be run with Java 11+ in order to run Java modules ITs.
+// We might be able to get rid of that limitation by relying on Gradle's built-in support for Java modules,
+// but I (Yoann) tried and failed to make it work.
+// See https://docs.gradle.org/current/samples/sample_java_modules_multi_project.html
+if ( JavaVersion.current().isJava11Compatible() && gradle.ext.javaVersions.test.release.asInt() >= 9 ) {
     include 'hibernate-integrationtest-java-modules'
 }
 else {
@@ -78,6 +131,10 @@ include 'release'
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-jpamodelgen'
+
+include 'metamodel-generator-jakarta'
+project(':metamodel-generator-jakarta').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator-jakarta")
+project(':metamodel-generator-jakarta').name = 'hibernate-jpamodelgen-jakarta'
 
 include 'hibernate-gradle-plugin'
 project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")

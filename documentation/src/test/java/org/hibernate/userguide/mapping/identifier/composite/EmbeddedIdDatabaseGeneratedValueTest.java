@@ -11,7 +11,9 @@ import java.sql.Timestamp;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -22,6 +24,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
+@RequiresDialectFeature(value = DialectChecks.NotH2Version2.class, comment = "CURRENT_TIMESTAMP now returns a TIMESTAMP_WITH_TIME_ZONE")
 public class EmbeddedIdDatabaseGeneratedValueTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

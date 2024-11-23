@@ -21,6 +21,10 @@ public enum FormatStyle {
 	 */
 	DDL( "ddl", DDLFormatterImpl.INSTANCE ),
 	/**
+	 * Syntax highlighting via ANSI escape codes
+	 */
+	HIGHLIGHT( "highlight", HighlightingFormatter.INSTANCE ),
+	/**
 	 * No formatting
 	 */
 	NONE( "none", NoFormatImpl.INSTANCE );

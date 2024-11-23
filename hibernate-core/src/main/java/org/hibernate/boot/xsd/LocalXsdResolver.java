@@ -43,6 +43,7 @@ public class LocalXsdResolver {
 			case "2.0":
 			case "2.1":
 			case "2.2":
+			case "3.0":
 				return true;
 			default:
 				return false;

@@ -31,8 +31,8 @@ public interface QualifiedName {
 	 * Returns a String-form of the qualified name.
 	 * <p/>
 	 * Depending on intention, may not be appropriate.  May want
-	 * {@link org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter#format}
-	 * instead.  See {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment#getQualifiedObjectNameFormatter}
+	 * {@link SqlStringGenerationContext#format}
+	 * instead.
 	 *
 	 * @return The string form
 	 */

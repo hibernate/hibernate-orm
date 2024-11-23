@@ -31,6 +31,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -48,6 +50,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
 public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 
 	private File output;
@@ -82,7 +85,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 				);
 				try(Statement statement = ddlTransactionIsolator1.getIsolatedConnection().createStatement()) {
 					statement.execute( String.format( "DROP SCHEMA IF EXISTS %s CASCADE", extraSchemaName ) );
-					statement.execute( String.format( "CREATE SCHEMA %s", extraSchemaName ) );
+					statement.execute( String.format( "CREATE SCHEMA %s;", extraSchemaName ) );
 
 					try(ResultSet resultSet = statement.executeQuery( "SELECT NEXTVAL('SEQ_TEST')" )) {
 						while ( resultSet.next() ) {
@@ -95,8 +98,15 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 					fail(e.getMessage());
 				}
 
+				String existingUrl = (String) Environment.getProperties().get( AvailableSettings.URL );
+				if ( existingUrl.indexOf( '?' ) == -1 ) {
+					existingUrl += "?";
+				}
+				else {
+					existingUrl += "&";
+				}
 				StandardServiceRegistry ssr2 = new StandardServiceRegistryBuilder()
-						.applySetting( AvailableSettings.URL, Environment.getProperties().get(AvailableSettings.URL) + "?currentSchema=" + extraSchemaName )
+						.applySetting( AvailableSettings.URL, existingUrl + "currentSchema=" + extraSchemaName )
 						.build();
 
 				try {
@@ -146,7 +156,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 			assertEquals( 2 ,
 						  sqlLines
 						  .stream()
-						  .filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start 1 increment 1" ) )
+						  .filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start 1 increment 1;" ) )
 						  .count()
 			);
 		}

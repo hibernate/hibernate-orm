@@ -349,7 +349,7 @@ public class Example implements Criterion {
 		}
 
 		final String conditionFragment = condition.toSqlString( criteria, cq );
-		if ( conditionFragment.trim().length() > 0 ) {
+		if ( !StringHelper.isBlank( conditionFragment ) ) {
 			if ( buf.length() > 1 ) {
 				buf.append( " and " );
 			}

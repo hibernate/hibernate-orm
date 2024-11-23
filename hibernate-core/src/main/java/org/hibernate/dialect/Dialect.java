@@ -28,7 +28,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -153,6 +152,10 @@ public abstract class Dialect implements ConversionContext {
 			"'",
 			Pattern.LITERAL
 	);
+
+	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
+	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
+
 	public static final String TWO_SINGLE_QUOTES_REPLACEMENT = Matcher.quoteReplacement( "''" );
 
 	private final TypeNames typeNames = new TypeNames();
@@ -207,6 +210,7 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.FLOAT, "float($p)" );
 		registerColumnType( Types.DOUBLE, "double precision" );
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.REAL, "real" );
 
 		registerColumnType( Types.DATE, "date" );
@@ -259,6 +263,37 @@ public abstract class Dialect implements ConversionContext {
 		}
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
+	}
+
+	/**
+	 * Do the given JDBC type codes, as defined in {@link Types} represent
+	 * essentially the same type in this dialect of SQL? The default
+	 * implementation treats {@link Types#NUMERIC NUMERIC} and
+	 * {@link Types#DECIMAL DECIMAL} as the same type, and
+	 * {@link Types#FLOAT FLOAT}, {@link Types#REAL REAL}, and
+	 * {@link Types#DOUBLE DOUBLE} as essentially the same type, since the
+	 * ANSI SQL specification fails to meaningfully distinguish them.
+	 *
+	 * @param typeCode1 the first JDBC type code
+	 * @param typeCode2 the second JDBC type code
+	 *
+	 * @return {@code true} if the two type codes are equivalent
+	 */
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return typeCode1==typeCode2
+			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
+			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2);
+	}
+
+	private static boolean isNumericOrDecimal(int typeCode) {
+		return typeCode == Types.NUMERIC
+			|| typeCode == Types.DECIMAL;
+	}
+
+	private static boolean isFloatOrRealOrDouble(int typeCode) {
+		return typeCode == Types.FLOAT
+			|| typeCode == Types.REAL
+			|| typeCode == Types.DOUBLE;
 	}
 
 	/**
@@ -2417,6 +2452,19 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax, 
+	 * sometimes called tuple syntax, in the SET clause;
+	 * <p/>
+	 * Basically, does it support syntax like
+	 * "... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
+	 *
+	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInSet() {
+		return supportsRowValueConstructorSyntax();
+	}
+
+	/**
 	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN lists as well?
 	 * <p/>
@@ -2905,6 +2953,10 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		// nothing to do
+	}
+
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		// noihing to do
 	}
@@ -3046,11 +3098,28 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	protected String prependComment(String sql, String comment) {
-		return  "/* " + comment + " */ " + sql;
+		return "/* " + escapeComment( comment ) + " */ " + sql;
+	}
+
+	public static String escapeComment(String comment) {
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			final String escaped = ESCAPE_CLOSING_COMMENT_PATTERN.matcher( comment ).replaceAll( "*\\\\/" );
+			return ESCAPE_OPENING_COMMENT_PATTERN.matcher( escaped ).replaceAll( "/\\\\*" );
+		}
+		return comment;
 	}
 
 	public boolean supportsSelectAliasInGroupByClause() {
 		return false;
 	}
 
+	/**
+	 * Annotation to be appended to the end of each COLUMN clause for temporary tables.
+	 *
+	 * @param sqlTypeCode The SQL type code
+	 * @return The annotation to be appended (e.g. "COLLATE DATABASE_DEFAULT" in SQLServer SQL)
+	 */
+	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
+		return "";
+	}
 }

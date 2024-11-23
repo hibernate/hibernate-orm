@@ -61,6 +61,10 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
 	}
 
+	protected QueryStructure<T> getQueryStructure() {
+		return queryStructure;
+	}
+
 	@Override
 	public Class<T> getResultType() {
 		return returnType;
@@ -170,7 +174,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 	@Override
 	public CriteriaQuery<T> where(Predicate... predicates) {
-		// TODO : assuming this should be a conjuntion, but the spec does not say specifically...
+		// TODO : assuming this should be a conjunction, but the spec does not say specifically...
 		queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
 		return this;
 	}
@@ -391,6 +395,17 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 				jpaqlBuffer.append( sep )
 						.append( ( (Renderable) orderSpec.getExpression() ).render( renderingContext ) )
 						.append( orderSpec.isAscending() ? " asc" : " desc" );
+				if ( orderSpec instanceof OrderImpl ) {
+					Boolean nullsFirst = ( (OrderImpl) orderSpec ).getNullsFirst();
+					if ( nullsFirst != null ) {
+						if ( nullsFirst ) {
+							jpaqlBuffer.append( " nulls first" );
+						}
+						else {
+							jpaqlBuffer.append( " nulls last" );
+						}
+					}
+				}
 				sep = ", ";
 			}
 		}

@@ -7,6 +7,7 @@
 package org.hibernate.test.cfg;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
@@ -76,6 +77,7 @@ public class WrongCircularityDetectionTest extends BaseUnitTestCase {
 	@Entity
 	@Table(schema = "schema2", name = "entity")
 	public static class Entity2 extends Entity1 {
+		@Column(name = "val")
 		private String value;
 
 		@Basic

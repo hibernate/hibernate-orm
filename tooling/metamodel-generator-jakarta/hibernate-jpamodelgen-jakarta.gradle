@@ -1,0 +1,298 @@
+import javax.inject.Inject
+
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = 'Annotation Processor to generate JPA 3 static metamodel classes'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+configurations {
+	jakartaeeTransformTool
+}
+
+// we do not want the much of the normal java plugin's behavior
+compileJava.enabled false
+processResources.enabled false
+jar.enabled false
+javadocJar.enabled false
+sourcesJar.enabled false
+
+ext {
+	transformedJarName = project(':hibernate-jpamodelgen').tasks.jar.archiveFileName.get().
+			replaceAll( 'hibernate-jpamodelgen', 'hibernate-jpamodelgen-jakarta' )
+
+	originalTestSrcDir = "${project(':hibernate-jpamodelgen').projectDir}/src/test"
+	transformedTestSrcDirRelative = 'generated-src/test'
+	transformedTestSrcDir = "${buildDir}/${transformedTestSrcDirRelative}"
+}
+
+dependencies {
+	// JAXB
+	compile( libraries.jakarta_jaxb_api )
+	compile( libraries.jakarta_jaxb_runtime )
+
+	jakartaeeTransformTool 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+			'commons-cli:commons-cli:1.4',
+			'org.slf4j:slf4j-simple:1.7.30',
+			'org.slf4j:slf4j-api:1.7.26',
+			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+
+	testCompile project(':hibernate-testing-jakarta')
+	testCompile fileTree(dir: 'libs', include: '*.jar')
+	testCompile libraries.junit
+	testCompile libraries.jakarta_jpa
+	testCompile libraries.jakarta_validation
+}
+
+//
+sourceSets.test {
+	java.srcDir "${project.transformedTestSrcDir}/java"
+	resources.srcDir "${project.transformedTestSrcDir}/resources"
+}
+
+jar {
+	mustRunAfter project(':hibernate-jpamodelgen').tasks.jar
+	dependsOn project(':hibernate-jpamodelgen').tasks.jar
+	def baseDir = project(':hibernate-jpamodelgen').buildDir
+	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
+	inputs.files(baseJars).skipWhenEmpty()
+	outputs.dir project.buildDir
+	doLast {
+		new File(project.buildDir, "libs").mkdirs()
+		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
+
+		baseJars.each { bundleJar ->
+			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
+			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+
+			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-jpamodelgen', 'hibernate-jpamodelgen-jakarta' )
+			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
+
+			def transformerArgs = [
+					sourceJarPath, finalBundleJarName,
+					'-q', // quiet output
+					'-tr', new File(getProjectDir().getParentFile().getParentFile(), 'rules/jakarta-renames.properties').path,
+					'-tv', new File(getProjectDir().getParentFile().getParentFile(), 'rules/jakarta-versions.properties').path,
+					'-td', new File(getProjectDir().getParentFile().getParentFile(), 'rules/jakarta-direct-modelgen.properties').path,
+			]
+
+			println 'Transformer options:'
+			transformerArgs.each {
+				println '  [ ' + it + ' ]'
+			}
+
+			javaexec {
+				classpath configurations.jakartaeeTransformTool
+				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+				args = transformerArgs
+			}
+		}
+	}
+}
+
+task transformJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-jpamodelgen jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-jpamodelgen').tasks.jar
+	mustRunAfter project(':hibernate-jpamodelgen').tasks.jar
+
+	sourceJar project(':hibernate-jpamodelgen').tasks.jar.archiveFile
+	targetJar tasks.jar.archiveFile.get().asFile
+}
+
+task transformSourcesJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-jpamodelgen sources jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-jpamodelgen').tasks.sourcesJar
+	mustRunAfter project(':hibernate-jpamodelgen').tasks.sourcesJar
+
+	sourceJar project(':hibernate-jpamodelgen').tasks.sourcesJar.archiveFile
+	targetJar tasks.sourcesJar.archiveFile.get().asFile
+}
+
+task transformJavadocJar(type: JakartaJarTransformation) {
+	description 'Transforms the hibernate-jpamodelgen javadoc jar using the JakartaTransformer tool'
+
+	dependsOn project(':hibernate-jpamodelgen').tasks.javadocJar
+	mustRunAfter project(':hibernate-jpamodelgen').tasks.javadocJar
+
+	sourceJar project(':hibernate-jpamodelgen').tasks.javadocJar.archiveFile
+	targetJar tasks.javadocJar.archiveFile.get().asFile
+}
+
+// jpamodelgen tests need access to test sources, so we transform test sources instead of the test JAR.
+task transformTestSources(type: JakartaSourcesTransformation) {
+	description 'Transforms the hibernate-jpamodelgen test sources using the JakartaTransformer tool'
+
+	// Only run this if JavaEE tests compile
+	dependsOn project(':hibernate-jpamodelgen').tasks.compileTestJava
+	mustRunAfter project(':hibernate-jpamodelgen').tasks.compileTestJava
+
+	sourceDir project.originalTestSrcDir
+	targetDir project.transformedTestSrcDir
+}
+
+configurations {
+	[apiElements, runtimeElements].each {
+		it.outgoing.artifacts.removeIf {
+			it.buildDependencies.getDependencies(null).contains(jar)
+		}
+		it.outgoing.artifact(tasks.transformJar.targetJar) {
+			builtBy tasks.transformJar
+		}
+		it.outgoing.artifact(tasks.transformSourcesJar.targetJar) {
+			builtBy tasks.transformSourcesJar
+		}
+		it.outgoing.artifact(tasks.transformJavadocJar.targetJar) {
+			builtBy tasks.transformJavadocJar
+		}
+	}
+}
+
+compileTestJava {
+	dependsOn tasks.transformJar
+	dependsOn tasks.transformTestSources
+
+	mustRunAfter tasks.transformJar
+	mustRunAfter tasks.transformTestSources
+
+	classpath += files(
+			"${buildDir}/libs/${project.transformedJarName}"
+	)
+
+	options.compilerArgs += [
+			"-proc:none"
+	]
+}
+
+test {
+	classpath += files(
+			"${buildDir}/libs/${project.transformedJarName}"
+	)
+
+	systemProperty 'file.encoding', 'utf-8'
+	systemProperty 'sourceBaseDir', "${project.transformedTestSrcDir}/java"
+
+	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+		// Weld needs this to generate proxies
+		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
+
+	maxHeapSize = '3G'
+	// Allow to exclude specific tests
+	if (project.hasProperty('excludeTests')) {
+		filter {
+			excludeTestsMatching project.property('excludeTests').toString()
+		}
+	}
+}
+
+@CacheableTask
+abstract class JakartaJarTransformation extends DefaultTask {
+	private final RegularFileProperty sourceJar;
+	private final RegularFileProperty targetJar;
+
+	@Inject
+	JakartaJarTransformation(ObjectFactory objectFactory) {
+		sourceJar = objectFactory.fileProperty();
+		targetJar = objectFactory.fileProperty();
+	}
+
+	@InputFile
+	@PathSensitive( PathSensitivity.RELATIVE )
+	RegularFileProperty getSourceJar() {
+		return sourceJar;
+	}
+
+	void sourceJar(Object fileReference) {
+		sourceJar.set( project.file( fileReference ) )
+	}
+
+	@OutputFile
+	RegularFileProperty getTargetJar() {
+		return targetJar;
+	}
+
+	void targetJar(Object fileReference) {
+		targetJar.set( project.file( fileReference ) )
+	}
+
+	@TaskAction
+	void transform() {
+		project.javaexec( new Action<JavaExecSpec>() {
+			@Override
+			void execute(JavaExecSpec javaExecSpec) {
+				javaExecSpec.classpath( getProject().getConfigurations().getByName( "jakartaeeTransformTool" ) );
+				javaExecSpec.setMain( "org.eclipse.transformer.jakarta.JakartaTransformer" );
+				javaExecSpec.args(
+						sourceJar.get().getAsFile().getAbsolutePath(),
+						targetJar.get().getAsFile().getAbsolutePath(),
+						"-q",
+						"-tr", getProject().getRootProject().file( "rules/jakarta-renames.properties" ).getAbsolutePath(),
+						"-tv", getProject().getRootProject().file( "rules/jakarta-versions.properties" ).getAbsolutePath(),
+						"-td", getProject().getRootProject().file( "rules/jakarta-direct-modelgen.properties" ).getAbsolutePath()
+				);
+			}
+		});
+	}
+}
+
+@CacheableTask
+abstract class JakartaSourcesTransformation extends DefaultTask {
+	private final DirectoryProperty sourceDir;
+	private final DirectoryProperty targetDir;
+
+	@Inject
+	JakartaSourcesTransformation(ObjectFactory objectFactory) {
+		sourceDir = objectFactory.directoryProperty();
+		targetDir = objectFactory.directoryProperty();
+	}
+
+	@InputDirectory
+	@PathSensitive( PathSensitivity.RELATIVE )
+	DirectoryProperty getSourceDir() {
+		return sourceDir;
+	}
+
+	void sourceDir(Object directoryReference) {
+		sourceDir.set( project.file( directoryReference ) )
+	}
+
+	@OutputDirectory
+	DirectoryProperty getTargetDir() {
+		return targetDir;
+	}
+
+	void targetDir(Object directoryReference) {
+		targetDir.set( project.file( directoryReference ) )
+	}
+
+	@TaskAction
+	void transform() {
+		project.javaexec( new Action<JavaExecSpec>() {
+			@Override
+			void execute(JavaExecSpec javaExecSpec) {
+				javaExecSpec.classpath( getProject().getConfigurations().getByName( "jakartaeeTransformTool" ) );
+				javaExecSpec.setMain( "org.eclipse.transformer.jakarta.JakartaTransformer" );
+				javaExecSpec.args(
+						sourceDir.get().getAsFile().getAbsolutePath(),
+						targetDir.get().getAsFile().getAbsolutePath(),
+						// The transformer won't run if the target directory exist,
+						// except if we allow it to overwrite the target directory through this option.
+						'-o',
+						"-q",
+						"-tr", getProject().getRootProject().file( "rules/jakarta-renames.properties" ).getAbsolutePath(),
+						"-tv", getProject().getRootProject().file( "rules/jakarta-versions.properties" ).getAbsolutePath(),
+						"-td", getProject().getRootProject().file( "rules/jakarta-direct-modelgen.properties" ).getAbsolutePath()
+				);
+			}
+		});
+	}
+}

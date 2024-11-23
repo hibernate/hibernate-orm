@@ -7,37 +7,22 @@
 
 description = 'Integration tests for running Hibernate ORM in the Java module path'
 
-buildscript {
-	repositories {
-		maven {
-			url "https://plugins.gradle.org/m2/"
-		}
-	}
-	dependencies {
-		classpath "org.javamodularity:moduleplugin:1.5.0"
-	}
-}
-
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 
-// No first-class, built-in support for Java modules in Gradle yet,
-// so we have to use https://github.com/java9-modularity/gradle-modules-plugin
-apply plugin: "org.javamodularity.moduleplugin"
-
-// Override -source and -target to the version being tested (11+, since this module is enabled)
-ext.baselineJavaVersion = gradle.ext.testedJavaVersion
-tasks.withType( JavaCompile ) {
-	sourceCompatibility = project.baselineJavaVersion
-	targetCompatibility = project.baselineJavaVersion
+// See https://docs.gradle.org/6.7.1/userguide/java_testing.html#blackbox_integration_testing
+// See https://docs.gradle.org/6.7.1/samples/sample_java_modules_multi_project_with_integration_tests.html
+java {
+	modularity.inferModulePath = true
 }
 
 // Checkstyle fails for module-info
 checkstyleMain.exclude '**/module-info.java'
 
 dependencies {
-	compile( project( ':hibernate-core' ) )
-	compile( project( ':hibernate-envers' ) )
-	compile( libraries.jpa )
+	testCompile( project( ':hibernate-core' ) )
+	testCompile( project( ':hibernate-envers' ) )
+	testCompile( libraries.jpa )
+	testCompile( libraries.junit )
 }
 
 test {

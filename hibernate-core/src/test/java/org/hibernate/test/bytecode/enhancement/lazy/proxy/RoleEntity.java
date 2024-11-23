@@ -16,6 +16,7 @@ package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Inheritance;
@@ -34,6 +35,7 @@ import org.hibernate.annotations.LazyToOneOption;
 public class RoleEntity extends ModelEntity implements Serializable {
 
 	@Basic
+	@Column(name = "val")
 	Short value;
 
 	@ManyToOne(fetch = FetchType.LAZY)

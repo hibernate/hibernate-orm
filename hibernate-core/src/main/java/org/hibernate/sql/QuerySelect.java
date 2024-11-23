@@ -126,7 +126,7 @@ public class QuerySelect {
 	public String toQueryString() {
 		StringBuilder buf = new StringBuilder( 50 );
 		if ( comment != null ) {
-			buf.append( "/* " ).append( comment ).append( " */ " );
+			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
 		}
 		buf.append( "select " );
 		if ( distinct ) {

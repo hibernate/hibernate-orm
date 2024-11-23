@@ -16,6 +16,7 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.Mapping;
@@ -369,7 +370,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 		final Serializable id;
 		if ( x instanceof HibernateProxy ) {
-			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
+			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
 			final Class mappedClass = persister.getMappedClass();
@@ -399,7 +400,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		Serializable xid;
 		if ( x instanceof HibernateProxy ) {
 			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer()
-					.getIdentifier();
+					.getInternalIdentifier();
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
@@ -414,7 +415,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		Serializable yid;
 		if ( y instanceof HibernateProxy ) {
 			yid = ( (HibernateProxy) y ).getHibernateLazyInitializer()
-					.getIdentifier();
+					.getInternalIdentifier();
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
@@ -471,12 +472,24 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return null;
 	}
 
+	/**
+	 * Would an entity be eagerly loaded given the value provided for {@code overridingEager}?
+	 *
+	 * @param overridingEager can override eager from the mapping.
+	 *
+	 * @return If {@code overridingEager} is null, then it does not override.
+	 *         If true or false then it overrides the mapping value.
+	 */
+	public boolean isEager(Boolean overridingEager) {
+		return overridingEager != null ? overridingEager : this.eager;
+	}
+
 	@Override
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
 		return getAssociatedEntityPersister( factory ).getIdentifierType();
 	}
 
-	protected EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
+	public EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
 		final EntityPersister persister = associatedEntityPersister;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
@@ -491,7 +504,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected final Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
+		if ( isReferenceToIdentifierProperty() ) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
 					getAssociatedEntityName(),
 					value,
@@ -506,7 +519,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
 			// We now have the value of the property-ref we reference.  However,
 			// we need to dig a little deeper, as that property might also be
-			// an entity type, in which case we need to resolve its identitifier
+			// an entity type, in which case we need to resolve its identifier
 			Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
 			if ( type.isEntityType() ) {
 				propertyValue = ( (EntityType) type ).getIdentifier( propertyValue, session );
@@ -546,7 +559,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			final Serializable id;
 			if ( value instanceof HibernateProxy ) {
 				HibernateProxy proxy = (HibernateProxy) value;
-				id = proxy.getHibernateLazyInitializer().getIdentifier();
+				id = proxy.getHibernateLazyInitializer().getInternalIdentifier();
 			}
 			else {
 				id = persister.getIdentifier( value );
@@ -627,7 +640,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * or unique key property name.
 	 */
 	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
+		if ( isReferenceToIdentifierProperty() ) {
 			return getIdentifierType( factory );
 		}
 		else {
@@ -651,12 +664,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
 			throws MappingException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
-			return factory.getIdentifierPropertyName( getAssociatedEntityName() );
-		}
-		else {
-			return uniqueKeyPropertyName;
-		}
+		return isReferenceToIdentifierProperty()
+				? factory.getIdentifierPropertyName( getAssociatedEntityName() )
+				: uniqueKeyPropertyName;
+	}
+
+	public boolean isReferenceToIdentifierProperty() {
+		return isReferenceToPrimaryKey()
+			|| uniqueKeyPropertyName == null;
 	}
 
 	/**
@@ -665,6 +680,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The nullability of the property.
 	 */
 	public abstract boolean isNullable();
+
+	public abstract NotFoundAction getNotFoundAction();
+
+	public boolean hasNotFoundAction() {
+		return getNotFoundAction() != null;
+	}
 
 	/**
 	 * Resolve an identifier via a load.
@@ -682,12 +703,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
 
-		boolean eager = overridingEager != null ? overridingEager : this.eager;
-
 		Object proxyOrEntity = session.internalLoad(
 				getAssociatedEntityName(),
 				id,
-				eager,
+				isEager( overridingEager ),
 				isNullable()
 		);
 

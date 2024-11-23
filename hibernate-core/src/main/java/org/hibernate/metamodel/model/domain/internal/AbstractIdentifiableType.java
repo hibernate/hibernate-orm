@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -207,6 +208,11 @@ public abstract class AbstractIdentifiableType<J>
 	@SuppressWarnings("unchecked")
 	public void collectIdClassAttributes(Set<SingularPersistentAttribute<? super J,?>> attributes) {
 		if ( idClassAttributes != null ) {
+			//Make it writeable, if it was using the EMPTY_SET marker.
+			// This is because there's a semantic difference in this class between a null and an empty Set.
+			if ( idClassAttributes == Collections.EMPTY_SET ) {
+				idClassAttributes = new HashSet<>();
+			}
 			attributes.addAll( idClassAttributes );
 		}
 		else if ( getSuperType() != null ) {
@@ -305,14 +311,19 @@ public abstract class AbstractIdentifiableType<J>
 
 		@Override
 		public void applyIdClassAttributes(Set<SingularPersistentAttribute<? super J,?>> idClassAttributes) {
-			for ( SingularAttribute<? super J,?> idClassAttribute : idClassAttributes ) {
-				if ( AbstractIdentifiableType.this == idClassAttribute.getDeclaringType() ) {
-					@SuppressWarnings({ "unchecked" })
-					SingularPersistentAttribute<J,?> declaredAttribute = (SingularPersistentAttribute) idClassAttribute;
-					addAttribute( declaredAttribute );
-				}
+			if ( idClassAttributes.isEmpty() ) {
+				AbstractIdentifiableType.this.idClassAttributes = Collections.EMPTY_SET;
 			}
-			AbstractIdentifiableType.this.idClassAttributes = idClassAttributes;
+			else {
+				for ( SingularAttribute<? super J,?> idClassAttribute : idClassAttributes ) {
+					if ( AbstractIdentifiableType.this == idClassAttribute.getDeclaringType() ) {
+						@SuppressWarnings({ "unchecked" })
+						SingularPersistentAttribute<J,?> declaredAttribute = (SingularPersistentAttribute) idClassAttribute;
+						addAttribute( declaredAttribute );
+					}
+				}
+				AbstractIdentifiableType.this.idClassAttributes = idClassAttributes;
+			}
 		}
 
 		@Override

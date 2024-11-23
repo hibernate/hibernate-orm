@@ -6,8 +6,11 @@
  */
 package org.hibernate.hql.spi.id.persistent;
 
+import java.sql.Types;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -111,6 +114,7 @@ public class PersistentTableBulkIdStrategy
 	protected void augmentIdTableDefinition(Table idTable) {
 		Column sessionIdColumn = new Column( Helper.SESSION_ID_COLUMN_NAME );
 		sessionIdColumn.setSqlType( "CHAR(36)" );
+		sessionIdColumn.setSqlTypeCode( Types.VARCHAR );
 		sessionIdColumn.setComment( "Used to hold the Hibernate Session identifier" );
 		idTable.addColumn( sessionIdColumn );
 	}
@@ -121,15 +125,15 @@ public class PersistentTableBulkIdStrategy
 			Table idTable,
 			JdbcServices jdbcServices,
 			MetadataImplementor metadata,
-			PreparationContextImpl context) {
-		final String renderedName = jdbcServices.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				idTable.getQualifiedTableName(),
-				jdbcServices.getJdbcEnvironment().getDialect()
-		);
+			PreparationContextImpl context,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		final String renderedName = sqlStringGenerationContext.formatWithoutDefaults( idTable.getQualifiedTableName() );
 
-		context.creationStatements.add( buildIdTableCreateStatement( idTable, jdbcServices, metadata ) );
+		context.creationStatements.add( buildIdTableCreateStatement( idTable, metadata,
+				sqlStringGenerationContext
+		) );
 		if ( dropIdTables ) {
-			context.dropStatements.add( buildIdTableDropStatement( idTable, jdbcServices ) );
+			context.dropStatements.add( buildIdTableDropStatement( idTable, sqlStringGenerationContext ) );
 		}
 
 		return new IdTableInfoImpl( renderedName );

@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -37,7 +38,7 @@ public class GetGeneratedKeysDelegate
 	}
 
 	@Override
-	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
+	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
 		insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
 		return insert;

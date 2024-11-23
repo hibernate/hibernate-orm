@@ -19,7 +19,7 @@ public class Chache71IdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public boolean hasDataTypeInIdentityColumn() {
-		// Whether this dialect has an Identity clause added to the data type or a completely seperate identity
+		// Whether this dialect has an Identity clause added to the data type or a completely separate identity
 		// data type
 		return true;
 	}

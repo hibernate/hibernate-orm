@@ -9,15 +9,12 @@ package org.hibernate.userguide.locking;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.Version;
-
 import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -34,6 +31,7 @@ public class OptimisticLockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "Fails at SERIALIZABLE isolation")
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Phone phone = new Phone();

@@ -43,7 +43,7 @@ Besides provider specific configuration, there are a number of configurations op
 `hibernate.cache.query_cache_factory`::
 	Query result caching is handled by a special contract that deals with staleness-based invalidation of the results.
 	The default implementation does not allow stale results at all. Use this for applications that would like to relax that.
-	Names an implementation of `org.hibernate.cache.spi.QueryCacheFactory`.
+	Names an implementation of `org.hibernate.cache.spi.TimestampsCacheFactory`.
 `hibernate.cache.use_minimal_puts`::
 	Optimizes second-level cache operations to minimize writes, at the cost of more frequent reads. Providers typically set this appropriately.
 `hibernate.cache.region_prefix`::
@@ -612,7 +612,7 @@ and also log a warning about the missing cache.
 ====
 Note that caches created this way may not be suitable for production usage (unlimited size and no eviction in particular) unless the cache provider explicitly provides a specific configuration for default caches.
 
-Ehcache, in particular, allows to set such default configuration using cache templates. See the http://www.ehcache.org/documentation/3.0/107.html#supplement-jsr-107-configurations[Ehcache documentation] for more details.
+Ehcache, in particular, allows to set such default configuration using cache templates. See the https://www.ehcache.org/documentation/3.0/107.html#supplement-jsr-107-configurations[Ehcache documentation] for more details.
 ====
 
 [[caching-provider-ehcache]]
@@ -622,7 +622,7 @@ This integration covers Ehcache 2.x, in order to use Ehcache 3.x as second level
 
 [NOTE]
 ====
-Use of the built-in integration for http://www.ehcache.org/[Ehcache] requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
+Use of the built-in integration for https://www.ehcache.org/[Ehcache] requires that the `hibernate-ehcache` module jar (and all of its dependencies) are on the classpath.
 ====
 
 [[caching-provider-ehcache-region-factory]]
@@ -665,12 +665,12 @@ To use the `SingletonEhCacheRegionFactory`, you need to specify the following co
 ----
 ====
 
-The `SingletonEhCacheRegionFactory` configures a singleton `net.sf.ehcache.CacheManager` (see http://www.ehcache.org/apidocs/2.8.4/net/sf/ehcache/CacheManager.html#create%28%29[CacheManager#create()]),
+The `SingletonEhCacheRegionFactory` configures a singleton `net.sf.ehcache.CacheManager` (see https://www.ehcache.org/apidocs/2.8.4/net/sf/ehcache/CacheManager.html#create%28%29[CacheManager#create()]),
 shared among multiple `SessionFactory` instances in the same JVM.
 
 [NOTE]
 ====
-The http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton ``CacheManager``s when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
+The https://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton ``CacheManager``s when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
 ====
 
 [[caching-provider-ehcache-missing-cache-strategy]]
@@ -707,4 +707,4 @@ Infinispan is a distributed in-memory key/value data store, available as a cache
 It supports advanced functionality such as transactions, events, querying, distributed processing, off-heap and geographical failover.
 
 For more details, check out the
-http://infinispan.org/docs/stable/user_guide/user_guide.html#integrations_jpa_hibernate[Infinispan User Guide].
+https://infinispan.org/docs/stable/titles/integrating/integrating.html#integrating_jpa_hibernate[Infinispan User Guide].

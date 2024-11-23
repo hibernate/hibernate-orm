@@ -12,14 +12,16 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 
@@ -36,6 +38,7 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 //@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "Postgres does not support ")
+@SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
 public class AndNationalizedTests extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9599")
@@ -46,9 +49,11 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 			( (MetadataImpl) metadata ).validate();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect
-					|| metadata.getDatabase().getDialect() instanceof DB2Dialect){
-				// See issue HHH-10693 for PostgreSQL, HHH-12753 for DB2
+			final Dialect dialect = metadata.getDatabase().getDialect();
+			if ( dialect instanceof PostgreSQL81Dialect
+					|| dialect instanceof DB2Dialect && !( dialect instanceof DerbyDialect )
+					|| dialect instanceof CockroachDB192Dialect){
+				// See issue HHH-10693 for PostgreSQL and CockroachDB, HHH-12753 for DB2
 				assertEquals(
 						Types.VARCHAR,
 						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]

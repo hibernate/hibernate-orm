@@ -49,6 +49,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -65,7 +66,6 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
-import static org.hibernate.cfg.AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
@@ -82,7 +82,9 @@ import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_SCHEMA;
 import static org.hibernate.cfg.AvailableSettings.DELAY_ENTITY_LOADER_CREATIONS;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
@@ -94,6 +96,7 @@ import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE;
+import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
@@ -101,12 +104,12 @@ import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLV
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
-import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
+import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
 import static org.hibernate.cfg.AvailableSettings.RELEASE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
@@ -115,7 +118,6 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
-import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
@@ -127,9 +129,9 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
+import static org.hibernate.cfg.AvailableSettings.DISCARD_PC_ON_CLOSE;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 
 /**
  * In-flight state of {@link org.hibernate.boot.spi.SessionFactoryOptions}
@@ -197,7 +199,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean postInsertIdentifierDelayed;
-	private boolean enhancementAsProxyEnabled;
+	private boolean collectionsInDefaultFetchGroupEnabled;
 
 	// JPA callbacks
 	private boolean callbacksEnabled;
@@ -242,6 +244,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
+	// These two settings cannot be modified from the builder,
+	// in order to maintain consistency.
+	// Indeed, other components (the schema tools) also make use of these settings,
+	// and THOSE do not have access to session factory options.
+	private final String defaultCatalog;
+	private final String defaultSchema;
 
 	private Map<String, SQLFunction> sqlFunctions;
 
@@ -273,8 +281,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			( (ConfigurationServiceImpl) cfgService ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 		}
 
-		this.beanManagerReference = configurationSettings.get( "javax.persistence.bean.manager" );
-		this.validatorFactoryReference = configurationSettings.get( "javax.persistence.validation.factory" );
+		this.beanManagerReference = configurationSettings.getOrDefault(
+				AvailableSettings.CDI_BEAN_MANAGER,
+				configurationSettings.get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER )
+		);
+		this.validatorFactoryReference = configurationSettings.getOrDefault(
+				AvailableSettings.JPA_VALIDATION_FACTORY,
+				configurationSettings.get( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY )
+		);
 
 		this.sessionFactoryName = (String) configurationSettings.get( SESSION_FACTORY_NAME );
 		this.sessionFactoryNameAlsoJndiName = cfgService.getSetting(
@@ -350,7 +364,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.defaultNullPrecedence = NullPrecedence.parse( defaultNullPrecedence );
 		this.orderUpdatesEnabled = ConfigurationHelper.getBoolean( ORDER_UPDATES, configurationSettings );
 		this.orderInsertsEnabled = ConfigurationHelper.getBoolean( ORDER_INSERTS, configurationSettings );
-		this.enhancementAsProxyEnabled = ConfigurationHelper.getBoolean( ALLOW_ENHANCEMENT_AS_PROXY, configurationSettings );
 
 		this.callbacksEnabled = ConfigurationHelper.getBoolean( JPA_CALLBACKS_ENABLED, configurationSettings, true );
 
@@ -421,7 +434,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			}
 		}
 
-		this.jdbcBatchSize = ConfigurationHelper.getInt( STATEMENT_BATCH_SIZE, configurationSettings, 0 );
+		this.jdbcBatchSize = ConfigurationHelper.getInt( STATEMENT_BATCH_SIZE, configurationSettings, 1 );
 		if ( !meta.supportsBatchUpdates() ) {
 			this.jdbcBatchSize = 0;
 		}
@@ -461,11 +474,25 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				false
 		);
 
-		this.releaseResourcesOnCloseEnabled = ConfigurationHelper.getBoolean(
-				DISCARD_PC_ON_CLOSE,
-				configurationSettings,
-				false
+		this.releaseResourcesOnCloseEnabled = NullnessHelper.coalesceSuppliedValues(
+				() -> ConfigurationHelper.getBooleanWrapper( DISCARD_PC_ON_CLOSE, configurationSettings, null ),
+				() -> {
+					final Boolean oldSetting = ConfigurationHelper.getBooleanWrapper(
+							org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE,
+							configurationSettings,
+							null
+					);
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE,
+								DISCARD_PC_ON_CLOSE
+						);
+					}
+					return oldSetting;
+				},
+				() -> false
 		);
+
 		Object jdbcTimeZoneValue = configurationSettings.get(
 				JDBC_TIME_ZONE
 		);
@@ -512,6 +539,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 		);
 
+		this.defaultCatalog = ConfigurationHelper.getString( DEFAULT_CATALOG, configurationSettings );
+		this.defaultSchema = ConfigurationHelper.getString( DEFAULT_SCHEMA, configurationSettings );
+
 		this.inClauseParameterPaddingEnabled =  ConfigurationHelper.getBoolean(
 				IN_CLAUSE_PARAMETER_PADDING,
 				configurationSettings,
@@ -538,39 +568,40 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@SuppressWarnings("deprecation")
 	private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
-		Object setting = configurationSettings.get( INTERCEPTOR );
-		if ( setting == null ) {
-			// try the legacy (deprecated) JPA name
-			setting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.INTERCEPTOR );
-			if ( setting != null ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-						org.hibernate.jpa.AvailableSettings.INTERCEPTOR,
-						INTERCEPTOR
-				);
-			}
-		}
-
-		return strategySelector.resolveStrategy(
-				Interceptor.class,
-				setting
+		final Object setting = NullnessHelper.coalesceSuppliedValues(
+				() -> configurationSettings.get( INTERCEPTOR ),
+				() -> {
+					final Object oldSetting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.INTERCEPTOR );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.INTERCEPTOR,
+								INTERCEPTOR
+						);
+					}
+					return oldSetting;
+				}
 		);
+
+		return strategySelector.resolveStrategy( Interceptor.class, setting );
 	}
 
 	@SuppressWarnings({"unchecked", "deprecation"})
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
 			Map configurationSettings,
 			StrategySelector strategySelector) {
-		Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
-		if ( setting == null ) {
-			// try the legacy (deprecated) JPA name
-			setting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR );
-			if ( setting != null ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-						org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR,
-						SESSION_SCOPED_INTERCEPTOR
-				);
-			}
-		}
+		Object setting = NullnessHelper.coalesceSuppliedValues(
+				() -> configurationSettings.get( SESSION_SCOPED_INTERCEPTOR ),
+				() -> {
+					final Object oldSetting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR,
+								SESSION_SCOPED_INTERCEPTOR
+						);
+					}
+					return oldSetting;
+				}
+		);
 
 		if ( setting == null ) {
 			return null;
@@ -1028,6 +1059,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public String getDefaultCatalog() {
+		return defaultCatalog;
+	}
+
+	@Override
+	public String getDefaultSchema() {
+		return defaultSchema;
+	}
+
+	@Override
 	public boolean jdbcStyleParamsZeroBased() {
 		return this.jdbcStyleParamsZeroBased;
 	}
@@ -1063,15 +1104,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isEnhancementAsProxyEnabled() {
-		return enhancementAsProxyEnabled;
+	public boolean isCollectionsInDefaultFetchGroupEnabled() {
+		return collectionsInDefaultFetchGroupEnabled;
 	}
 
 	@Override
 	public boolean isOmitJoinOfSuperclassTablesEnabled() {
 		return omitJoinOfSuperclassTablesEnabled;
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access
@@ -1269,6 +1309,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.scrollableResultSetsEnabled = enabled;
 	}
 
+	@Deprecated
 	public void enableResultSetWrappingSupport(boolean enabled) {
 		this.wrapResultSetsEnabled = enabled;
 	}
@@ -1357,6 +1398,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableJpaCachingCompliance(boolean enabled) {
 		mutableJpaCompliance().setCachingCompliance( enabled );
+	}
+
+	public void enableCollectionInDefaultFetchGroup(boolean enabled) {
+		this.collectionsInDefaultFetchGroupEnabled = enabled;
 	}
 
 	public void disableRefreshDetachedEntity() {

@@ -6,21 +6,19 @@
  */
 package org.hibernate.jpa.test.transaction;
 
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Ignore;
-import org.junit.Test;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
@@ -35,7 +33,7 @@ public class TransactionRolledBackInDifferentThreadTest extends BaseEntityManage
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
+		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
 	}
 
 	@Test

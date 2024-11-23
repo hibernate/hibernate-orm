@@ -27,4 +27,10 @@ public class DerbyTenSixDialect extends DerbyTenFiveDialect {
 	public boolean supportsSequences() {
 		return true;
 	}
+
+	@Override
+	public String getCrossJoinSeparator() {
+		// 10.6 introduced support for the cross join syntax: http://db.apache.org/derby/docs/10.6/ref/rrefsqljcrossjoin.html
+		return " cross join ";
+	}
 }

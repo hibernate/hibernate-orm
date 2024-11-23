@@ -26,7 +26,6 @@ import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.TypeDefinition;
@@ -384,7 +383,7 @@ public class SimpleValueBinder {
 		this.explicitType = explicitType;
 	}
 
-	//FIXME raise an assertion failure  if setResolvedTypeMapping(String) and setResolvedTypeMapping(Type) are use at the same time
+	//FIXME raise an assertion failure  if setResolvedTypeMapping(String) and setResolvedTypeMapping(Type) are used at the same time
 
 	public void setExplicitType(Type typeAnn) {
 		if ( typeAnn != null ) {
@@ -500,7 +499,7 @@ public class SimpleValueBinder {
 				simpleValue.setTypeParameters( typeDef.getParametersAsProperties() );
 			}
 			if ( typeParameters != null && typeParameters.size() != 0 ) {
-				//explicit type params takes precedence over type def params
+				//explicit type params take precedence over type def params
 				simpleValue.setTypeParameters( typeParameters );
 			}
 			simpleValue.setTypeName( type );
@@ -534,27 +533,22 @@ public class SimpleValueBinder {
 
 		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0
 				&& simpleValue.getMetadata().getTypeResolver().basic( simpleValue.getTypeName() ) == null ) {
-			try {
-				Class typeClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( simpleValue.getTypeName() );
+			Class typeClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( simpleValue.getTypeName() );
 
-				if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
-					Properties parameters = simpleValue.getTypeParameters();
-					if ( parameters == null ) {
-						parameters = new Properties();
-					}
-					parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
-					parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
-					parameters.put( DynamicParameterizedType.IS_PRIMARY_KEY, Boolean.toString( key ) );
-
-					parameters.put( DynamicParameterizedType.ENTITY, persistentClassName );
-					parameters.put( DynamicParameterizedType.XPROPERTY, xproperty );
-					parameters.put( DynamicParameterizedType.PROPERTY, xproperty.getName() );
-					parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
-					simpleValue.setTypeParameters( parameters );
+			if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
+				Properties parameters = simpleValue.getTypeParameters();
+				if ( parameters == null ) {
+					parameters = new Properties();
 				}
-			}
-			catch (ClassLoadingException e) {
-				throw new MappingException( "Could not determine type for: " + simpleValue.getTypeName(), e );
+				parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
+				parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
+				parameters.put( DynamicParameterizedType.IS_PRIMARY_KEY, Boolean.toString( key ) );
+
+				parameters.put( DynamicParameterizedType.ENTITY, persistentClassName );
+				parameters.put( DynamicParameterizedType.XPROPERTY, xproperty );
+				parameters.put( DynamicParameterizedType.PROPERTY, xproperty.getName() );
+				parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
+				simpleValue.setTypeParameters( parameters );
 			}
 		}
 

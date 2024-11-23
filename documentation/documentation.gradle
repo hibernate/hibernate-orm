@@ -16,6 +16,10 @@ ext {
 			'hibernate-ehcache',
 			'hibernate-java8',
 			'hibernate-integrationtest-java-modules',
+			'hibernate-core-jakarta',
+			'hibernate-envers-jakarta',
+			'hibernate-testing-jakarta',
+			'hibernate-jpamodelgen-jakarta',
 			'release'
 	]
 }
@@ -63,6 +67,7 @@ dependencies {
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.hana )
+	testRuntime( libraries.cockroachdb )
 
 	testCompile( project( ':hibernate-jcache' ) )
 	testRuntime( libraries.ehcache3 )
@@ -118,28 +123,40 @@ task aggregateJavadocs(type: Javadoc) {
 		overview = project.file( 'src/main/javadoc/overview.html' )
 		windowTitle = 'Hibernate JavaDocs'
 		docTitle = "Hibernate JavaDoc ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 		use = true
 		options.encoding = 'UTF-8'
 
 		links = [
 				'https://docs.oracle.com/javase/8/docs/api/',
-				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-				'http://docs.jboss.org/cdi/api/2.0/',
+				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'https://docs.jboss.org/cdi/api/2.0/',
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
 		
-		if ( JavaVersion.current().isJava11Compatible() ) {
+		if ( gradle.ext.javaVersions.main.compiler.asInt() >= 11 ) {
 			//The need to set `--source 1.8` applies to all JVMs after 11, and also to 11
 			// but after excluding the first two builds; see also specific comments on
 			// https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
 			// For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
 			// complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
-			System.out.println("Forcing Javadoc in Java 8 compatible mode");
-			options.source = project.baselineJavaVersion
+			logger.lifecycle "Forcing Javadoc in Java 8 compatible mode"
+			options.source = gradle.ext.baselineJavaVersion
 		}
 
 		options.addStringOption( 'Xdoclint:none', '-quiet' )
+
+		if ( gradle.ext.javaToolchainEnabled ) {
+			options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+							split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
+		}
+	}
+
+	if ( gradle.ext.javaToolchainEnabled ) {
+		// Display version of Java tools
+		doFirst {
+			logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+		}
 	}
 
     // process each project, building up:
@@ -203,10 +220,10 @@ task buildTutorialZip(type: Zip) {
 	from 'src/main/asciidoc/quickstart/tutorials'
 	destinationDir = tasks.renderGettingStartedGuides.outputDir
 	archiveName = 'hibernate-tutorials.zip'
-	expand(
+ 	expand(
 			version: project.version,
 			slf4j: "1.7.5",
-			junit: project.junitVersion,
+			junit: project.junit4Version,
 			h2: project.h2Version
 	)
 }

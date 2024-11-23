@@ -230,4 +230,15 @@ public class ReflectHelperTest {
 	public void test_setMethod_nestedInterfaces_on_superclasses() {
 		assertNotNull( ReflectHelper.findSetterMethod( E.class, "id", String.class ) );
 	}
+
+	@TestForIssue(jiraKey = "HHH-14059")
+	@Test
+	public void test_getConstantValue_UpperCaseEnum() {
+		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
+
+		when( classLoaderServiceMock.classForName( "com.example.UStatus" ) ).thenReturn( (Class) Status.class );
+		Object value = ReflectHelper.getConstantValue( "com.example.UStatus.OFF", sessionFactoryImplementorMock);
+		assertEquals( OFF, value );
+		verify(classLoaderServiceMock, times(1)).classForName( eq("com.example.UStatus") );
+	}
 }

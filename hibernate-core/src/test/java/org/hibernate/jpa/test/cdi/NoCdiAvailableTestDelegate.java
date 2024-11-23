@@ -10,7 +10,7 @@ import java.util.Collections;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 
@@ -29,6 +29,6 @@ public class NoCdiAvailableTestDelegate {
 		new HibernatePersistenceProvider().createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
 				Collections.singletonMap( AvailableSettings.CDI_BEAN_MANAGER, new Object() )
-		);
+		).close();
 	}
 }

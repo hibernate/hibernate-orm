@@ -214,6 +214,12 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 							? LockMode.READ
 							: requestedLockMode;
 
+					final EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
+					if ( enhancementAsProxyLazinessInterceptor.isInitializing() ) {
+						return;
+					}
+
+					enhancementAsProxyLazinessInterceptor.setInitializing();
 					loadFromResultSet(
 							resultSet,
 							context,
@@ -232,9 +238,9 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 
 		// determine which entity instance to use.  Either the supplied one, or instantiate one
 		Object entityInstance = null;
-		if ( isReturn &&
-				context.shouldUseOptionalEntityInformation() &&
-				context.getQueryParameters().getOptionalObject() != null ) {
+		// If an "optional" instance with an EntityKey equal to entityKey is available
+		// in the context, then use that instance.
+		if ( isReturn && context.getQueryParameters().getOptionalObject() != null ) {
 			final EntityKey optionalEntityKey = ResultSetProcessorHelper.getOptionalObjectKey(
 					context.getQueryParameters(),
 					context.getSession()

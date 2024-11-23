@@ -347,7 +347,7 @@ public final class MessageHelper {
 			SessionFactoryImplementor factory,
 			StringBuilder s ) {
 		// Need to use the identifier type of the collection owner
-		// since the incoming is value is actually the owner's id.
+		// since the incoming value is actually the owner's id.
 		// Using the collection's key type causes problems with
 		// property-ref keys.
 		// Also need to check that the expected identifier type matches

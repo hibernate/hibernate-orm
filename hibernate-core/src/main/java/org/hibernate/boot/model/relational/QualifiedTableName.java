@@ -23,4 +23,20 @@ public class QualifiedTableName extends QualifiedNameImpl {
 	public Identifier getTableName() {
 		return getObjectName();
 	}
+
+	public QualifiedTableName quote() {
+		Identifier catalogName = getCatalogName();
+		if ( catalogName != null ) {
+			catalogName = new Identifier( catalogName.getText(), true );
+		}
+		Identifier schemaName = getSchemaName();
+		if ( schemaName != null ) {
+			schemaName = new Identifier( schemaName.getText(), true );
+		}
+		Identifier tableName = getTableName();
+		if ( tableName != null ) {
+			tableName = new Identifier( tableName.getText(), true );
+		}
+		return new QualifiedTableName( catalogName, schemaName, tableName );
+	}
 }

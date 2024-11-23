@@ -11,7 +11,6 @@ import java.util.Set;
 import javax.persistence.Column;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -55,6 +54,8 @@ public class RevisionInfoConfiguration {
 	private Type revisionInfoTimestampType;
 	private GlobalConfiguration globalCfg;
 
+	private XMLHelper xmlHelper;
+
 	private String revisionPropType;
 	private String revisionPropSqlType;
 
@@ -75,7 +76,7 @@ public class RevisionInfoConfiguration {
 	}
 
 	private Document generateDefaultRevisionInfoXmlMapping() {
-		final Document document = globalCfg.getEnversService().getXmlHelper().getDocumentFactory().createDocument();
+		final Document document = getXmlHelper().getDocumentFactory().createDocument();
 
 		final Element classMapping = MetadataTools.createEntity(
 				document,
@@ -120,6 +121,13 @@ public class RevisionInfoConfiguration {
 		return document;
 	}
 
+	private XMLHelper getXmlHelper() {
+		if ( this.xmlHelper == null ) {
+			this.xmlHelper = new XMLHelper();
+		}
+		return this.xmlHelper;
+	}
+
 	/**
 	 * Generates mapping that represents a set of primitive types.<br />
 	 * <code>
@@ -158,7 +166,7 @@ public class RevisionInfoConfiguration {
 	}
 
 	private Element generateRevisionInfoRelationMapping() {
-		final Document document = globalCfg.getEnversService().getXmlHelper().getDocumentFactory().createDocument();
+		final Document document = getXmlHelper().getDocumentFactory().createDocument();
 		final Element revRelMapping = document.addElement( "key-many-to-one" );
 		revRelMapping.addAttribute( "type", revisionPropType );
 		revRelMapping.addAttribute( "class", revisionInfoEntityName );
@@ -301,14 +309,7 @@ public class RevisionInfoConfiguration {
 		for ( PersistentClass persistentClass : metadata.getEntityBindings() ) {
 			// Ensure we're in POJO, not dynamic model, mapping.
 			if (persistentClass.getClassName() != null) {
-				XClass clazz;
-				try {
-					clazz = reflectionManager.classForName( persistentClass.getClassName() );
-				}
-				catch (ClassLoadingException e) {
-					throw new MappingException( e );
-				}
-
+				XClass clazz = reflectionManager.toXClass( persistentClass.getMappedClass() );
 				final RevisionEntity revisionEntity = clazz.getAnnotation( RevisionEntity.class );
 				if ( revisionEntity != null ) {
 					if (revisionEntityFound) {

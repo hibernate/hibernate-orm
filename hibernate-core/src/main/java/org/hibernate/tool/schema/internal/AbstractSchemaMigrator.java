@@ -22,10 +22,13 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
@@ -89,6 +92,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 	@Override
 	public void doMigration(Metadata metadata, ExecutionOptions options, TargetDescriptor targetDescriptor) {
+		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
+				metadata.getDatabase(),
+				options.getConfigurationValues()
+		);
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 			final DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext );
@@ -96,7 +104,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 						tool.getServiceRegistry(),
 						ddlTransactionIsolator,
-						metadata.getDatabase().getDefaultNamespace().getName()
+						sqlStringGenerationContext,
+						tool
 				);
 
 				final GenerationTarget[] targets = tool.buildGenerationTargets(
@@ -111,7 +120,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					}
 
 					try {
-						performMigration( metadata, databaseInformation, options, jdbcContext.getDialect(), targets );
+						performMigration( metadata, databaseInformation, options, jdbcContext.getDialect(),
+								sqlStringGenerationContext, targets );
 					}
 					finally {
 						for ( GenerationTarget target : targets ) {
@@ -149,13 +159,16 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
-			Namespace namespace, GenerationTarget[] targets);
+			Namespace namespace,
+			SqlStringGenerationContext sqlStringGenerationContext,
+			GenerationTarget[] targets);
 
 	private void performMigration(
 			Metadata metadata,
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
 			Dialect dialect,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
@@ -170,7 +183,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				applySqlStrings(
 						true,
 						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
+								.getSqlDropStrings( auxiliaryDatabaseObject, metadata, sqlStringGenerationContext ),
 						formatter,
 						options,
 						targets
@@ -183,7 +196,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				applySqlStrings(
 						true,
-						auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
+						auxiliaryDatabaseObject.sqlCreateStrings( sqlStringGenerationContext ),
 						formatter,
 						options,
 						targets
@@ -215,7 +228,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					tryToCreateSchemas,
 					exportedCatalogs,
 					namespace,
-					targets
+					sqlStringGenerationContext, targets
 			);
 			tablesInformation.put( namespace, nameSpaceTablesInformation );
 			if ( schemaFilter.includeNamespace( namespace ) ) {
@@ -227,7 +240,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 								false,
 								dialect.getSequenceExporter().getSqlCreateStrings(
 										sequence,
-										metadata
+										metadata,
+										sqlStringGenerationContext
 								),
 								formatter,
 								options,
@@ -246,7 +260,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					if ( schemaFilter.includeTable( table ) ) {
 						final TableInformation tableInformation = nameSpaceTablesInformation.getTableInformation( table );
 						if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
-							applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
+							applyForeignKeys( table, tableInformation, dialect, metadata, formatter, options,
+									sqlStringGenerationContext, targets );
 						}
 					}
 				}
@@ -258,7 +273,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation() && auxiliaryDatabaseObject.appliesToDialect( dialect )) {
 				applySqlStrings(
 						true,
-						auxiliaryDatabaseObject.sqlCreateStrings( dialect ),
+						auxiliaryDatabaseObject.sqlCreateStrings( sqlStringGenerationContext ),
 						formatter,
 						options,
 						targets
@@ -273,10 +288,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		applySqlStrings(
 				false,
-				dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
+				dialect.getTableExporter().getSqlCreateStrings( table, metadata, sqlStringGenerationContext ),
 				formatter,
 				options,
 				targets
@@ -290,6 +306,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		final Database database = metadata.getDatabase();
 
@@ -300,8 +317,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						dialect,
 						metadata,
 						tableInformation,
-						database.getDefaultNamespace().getPhysicalName().getCatalog(),
-						database.getDefaultNamespace().getPhysicalName().getSchema()
+						sqlStringGenerationContext
 				),
 				formatter,
 				options,
@@ -316,6 +332,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		final Exporter<Index> exporter = dialect.getIndexExporter();
 
@@ -330,7 +347,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				if ( existingIndex == null ) {
 					applySqlStrings(
 							false,
-							exporter.getSqlCreateStrings( index, metadata ),
+							exporter.getSqlCreateStrings( index, metadata, sqlStringGenerationContext ),
 							formatter,
 							options,
 							targets
@@ -351,6 +368,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		if ( uniqueConstraintStrategy == null ) {
 			uniqueConstraintStrategy = determineUniqueConstraintSchemaUpdateStrategy( metadata );
@@ -373,7 +391,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					if ( uniqueConstraintStrategy == UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY ) {
 						applySqlStrings(
 								true,
-								exporter.getSqlDropStrings( uniqueKey, metadata ),
+								exporter.getSqlDropStrings( uniqueKey, metadata, sqlStringGenerationContext ),
 								formatter,
 								options,
 								targets
@@ -382,7 +400,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 					applySqlStrings(
 							true,
-							exporter.getSqlCreateStrings( uniqueKey, metadata ),
+							exporter.getSqlCreateStrings( uniqueKey, metadata, sqlStringGenerationContext ),
 							formatter,
 							options,
 							targets
@@ -409,6 +427,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		if ( dialect.hasAlterTable() ) {
 			final Exporter<ForeignKey> exporter = dialect.getForeignKeyExporter();
@@ -432,7 +451,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						// in old SchemaUpdate code, this was the trigger to "create"
 						applySqlStrings(
 								false,
-								exporter.getSqlCreateStrings( foreignKey, metadata ),
+								exporter.getSqlCreateStrings( foreignKey, metadata, sqlStringGenerationContext ),
 								formatter,
 								options,
 								targets
@@ -463,21 +482,24 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		 * Find existing keys based on referencing column and referencedTable. "referencedColumnName" is not checked
 		 * because that always is the primary key of the "referencedTable".
 		 */
-		Predicate<ColumnReferenceMapping> mappingPredicate = m -> {
-			String existingReferencingColumn = m.getReferencingColumnMetadata().getColumnIdentifier().getText();
-			String existingReferencedTable = m.getReferencedColumnMetadata().getContainingTableInformation().getName().getTableName().getCanonicalName();
-			return referencingColumn.equals( existingReferencingColumn ) && referencedTable.equals( existingReferencedTable );
-		};
-		Stream<ForeignKeyInformation> keyStream = StreamSupport.stream( tableInformation.getForeignKeys().spliterator(), false );
-		Stream<ColumnReferenceMapping> mappingStream = keyStream.flatMap( k -> StreamSupport.stream( k.getColumnReferenceMappings().spliterator(), false ) );
-		boolean found = mappingStream.anyMatch( mappingPredicate );
-		if ( found ) {
+		if (equivalentForeignKeyExistsInDatabase(tableInformation, referencingColumn, referencedTable)) {
 			return true;
 		}
 
 		// And at the end just compare the name of the key. If a key with the same name exists we assume the function is
 		// also the same...
 		return tableInformation.getForeignKey( Identifier.toIdentifier( foreignKey.getName() ) ) != null;
+	}
+
+	boolean equivalentForeignKeyExistsInDatabase(TableInformation tableInformation, String referencingColumn, String referencedTable) {
+		Predicate<ColumnReferenceMapping> mappingPredicate = m -> {
+			String existingReferencingColumn = m.getReferencingColumnMetadata().getColumnIdentifier().getText();
+			String existingReferencedTable = m.getReferencedColumnMetadata().getContainingTableInformation().getName().getTableName().getCanonicalName();
+			return referencingColumn.equalsIgnoreCase( existingReferencingColumn ) && referencedTable.equalsIgnoreCase( existingReferencedTable );
+		};
+		Stream<ForeignKeyInformation> keyStream = StreamSupport.stream( tableInformation.getForeignKeys().spliterator(), false );
+		Stream<ColumnReferenceMapping> mappingStream = keyStream.flatMap( k -> StreamSupport.stream( k.getColumnReferenceMappings().spliterator(), false ) );
+		return mappingStream.anyMatch( mappingPredicate );
 	}
 
 	protected void checkExportIdentifier(Exportable exportable, Set<String> exportIdentifiers) {
@@ -513,14 +535,18 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Formatter formatter,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
-			Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
+			Set<Identifier> exportedCatalogs, Namespace namespace,
+			SqlStringGenerationContext context,
+			GenerationTarget[] targets) {
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
-			if ( tryToCreateCatalogs ) {
-				final Identifier catalogLogicalName = namespace.getName().getCatalog();
-				final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+			Namespace.Name logicalName = namespace.getName();
+			Namespace.Name physicalName = namespace.getPhysicalName();
 
+			if ( tryToCreateCatalogs ) {
+				final Identifier catalogLogicalName = logicalName.getCatalog();
+				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
 				if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
-						&& !existingDatabase.catalogExists( catalogLogicalName ) ) {
+						&& !existingDatabase.catalogExists( catalogPhysicalName ) ) {
 					applySqlStrings(
 							false,
 							dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
@@ -532,16 +558,17 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				}
 			}
 
-			if ( tryToCreateSchemas
-					&& namespace.getPhysicalName().getSchema() != null
-					&& !existingDatabase.schemaExists( namespace.getName() ) ) {
-				applySqlStrings(
-						false,
-						dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
-						formatter,
-						options,
-						targets
-				);
+			if ( tryToCreateSchemas ) {
+				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+				if ( schemaPhysicalName != null && !existingDatabase.schemaExists( physicalName ) ) {
+					applySqlStrings(
+							false,
+							dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+							formatter,
+							options,
+							targets
+					);
+				}
 			}
 		}
 	}

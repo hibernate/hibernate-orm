@@ -10,14 +10,16 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 
-import org.dom4j.Document;
-import org.dom4j.io.SAXReader;
-
-import org.hibernate.cfg.annotations.reflection.JPAOverriddenAnnotationReader;
-import org.hibernate.cfg.annotations.reflection.XMLContext;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappings;
+import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenAnnotationReader;
+import org.hibernate.cfg.annotations.reflection.internal.XMLContext;
+import org.hibernate.internal.util.xml.XMLMappingHelper;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import org.junit.After;
+import org.junit.Before;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -28,8 +30,24 @@ import static org.junit.Assert.assertTrue;
  * XML to JPA annotations.  The configuration is built within each test, and no
  * database is used.  Thus, no schema generation or cleanup will be performed.
  */
-abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
-	protected JPAOverriddenAnnotationReader reader;
+public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
+
+	protected JPAXMLOverriddenAnnotationReader reader;
+
+	private BootstrapContextImpl bootstrapContext;
+
+	protected Ejb3XmlTestCase() {
+	}
+
+	@Before
+	public void init() {
+		bootstrapContext = new BootstrapContextImpl();
+	}
+
+	@After
+	public void destroy() {
+		bootstrapContext.close();
+	}
 
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
 		assertTrue(
@@ -45,11 +63,11 @@ abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		);
 	}
 
-	protected JPAOverriddenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName)
+	protected JPAXMLOverriddenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName)
 			throws Exception {
 		AnnotatedElement el = getAnnotatedElement( entityClass, fieldName );
 		XMLContext xmlContext = getContext( ormResourceName );
-		return new JPAOverriddenAnnotationReader( el, xmlContext, BootstrapContextImpl.INSTANCE );
+		return new JPAXMLOverriddenAnnotationReader( el, xmlContext, bootstrapContext );
 	}
 
 	protected AnnotatedElement getAnnotatedElement(Class<?> entityClass, String fieldName) throws Exception {
@@ -59,13 +77,14 @@ abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	protected XMLContext getContext(String resourceName) throws Exception {
 		InputStream is = getClass().getResourceAsStream( resourceName );
 		assertNotNull( "Could not load resource " + resourceName, is );
-		return getContext( is );
+		return getContext( is, resourceName );
 	}
 
-	protected XMLContext getContext(InputStream is) throws Exception {
-		XMLContext xmlContext = new XMLContext( BootstrapContextImpl.INSTANCE );
-		Document doc = new SAXReader().read( is );
-		xmlContext.addDocument( doc );
-		return xmlContext;
+	protected XMLContext getContext(InputStream is, String resourceName) throws Exception {
+		XMLMappingHelper xmlHelper = new XMLMappingHelper();
+		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( is, resourceName );
+		XMLContext context = new XMLContext( bootstrapContext );
+		context.addDocument( mappings );
+		return context;
 	}
 }

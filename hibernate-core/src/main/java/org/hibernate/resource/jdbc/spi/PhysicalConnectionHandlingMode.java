@@ -16,6 +16,7 @@ import static org.hibernate.ConnectionAcquisitionMode.AS_NEEDED;
 import static org.hibernate.ConnectionAcquisitionMode.IMMEDIATELY;
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
 import static org.hibernate.ConnectionReleaseMode.AFTER_TRANSACTION;
+import static org.hibernate.ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION;
 import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
 
 /**
@@ -40,6 +41,11 @@ public enum PhysicalConnectionHandlingMode {
 	 * after each statement is executed.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT( AS_NEEDED, AFTER_STATEMENT ),
+	/**
+	 * The Connection will be acquired as soon as it is needed; it will be released
+	 * before commit/rollback.
+	 */
+	DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION( AS_NEEDED, BEFORE_TRANSACTION_COMPLETION ),
 	/**
 	 * The Connection will be acquired as soon as it is needed; it will be released
 	 * after each transaction is completed.
@@ -99,6 +105,9 @@ public enum PhysicalConnectionHandlingMode {
 			switch ( releaseMode ) {
 				case AFTER_STATEMENT: {
 					return DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
+				}
+				case BEFORE_TRANSACTION_COMPLETION: {
+					return DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION;
 				}
 				case AFTER_TRANSACTION: {
 					return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;

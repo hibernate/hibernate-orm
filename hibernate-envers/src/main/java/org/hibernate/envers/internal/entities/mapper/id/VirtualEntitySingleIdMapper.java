@@ -155,7 +155,7 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 		else {
 			if ( obj instanceof HibernateProxy ) {
 				final HibernateProxy proxy = (HibernateProxy) obj;
-				data.put( propertyData.getName(), proxy.getHibernateLazyInitializer().getIdentifier() );
+				data.put( propertyData.getName(), proxy.getHibernateLazyInitializer().getInternalIdentifier() );
 			}
 			else {
 				final Object value = AccessController.doPrivileged(

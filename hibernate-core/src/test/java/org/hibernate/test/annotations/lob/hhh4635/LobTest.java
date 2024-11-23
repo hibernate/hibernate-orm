@@ -36,6 +36,7 @@ public class LobTest extends BaseCoreFunctionalTestCase {
 		entity.setQwerty(randomString(4000));
 		session.save(entity);
 		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Override
@@ -60,5 +61,7 @@ public class LobTest extends BaseCoreFunctionalTestCase {
 		
 		String s = (String) query.uniqueResult();
 		log.debug( "Using Oracle charset " + s );
+		session.getTransaction().commit();
+		session.close();
 	}
 }

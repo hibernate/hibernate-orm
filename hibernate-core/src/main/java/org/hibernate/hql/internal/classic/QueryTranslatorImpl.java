@@ -771,7 +771,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	/*private String renderOrderByPropertiesSelect() {
-		StringBuffer buf = new StringBuffer(10);
+		StringBuilder buf = new StringBuilder(10);
 
 		//add the columns we are ordering by to the select ID select clause
 		Iterator iter = orderByTokens.iterator();
@@ -834,7 +834,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			//there _was_ a select clause
 			Iterator iter = scalarSelectTokens.iterator();
 			int c = 0;
-			boolean nolast = false; //real hacky...
+			boolean nolast = false; //really hacky...
 			int parenCount = 0; // used to count the nesting of parentheses
 			while ( iter.hasNext() ) {
 				Object next = iter.next();

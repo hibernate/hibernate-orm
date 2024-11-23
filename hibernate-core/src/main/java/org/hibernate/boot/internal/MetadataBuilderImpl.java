@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
+import javax.persistence.ConstraintMode;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
@@ -121,7 +122,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this.sources = sources;
 		this.options = new MetadataBuildingOptionsImpl( serviceRegistry );
 		this.bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
-		//this is needed only fro implementig deprecated method
+		//this is needed only for implementing deprecated method
 		options.setBootstrapContext( bootstrapContext );
 
 		for ( MetadataSourcesContributor contributor :
@@ -330,6 +331,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
+	public MetadataBuilder noConstraintByDefault() {
+		this.options.noConstraintByDefault = true;
+		return this;
+	}
+
 	@Override
 	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
 		this.bootstrapContext.addSqlFunction( functionName, function );
@@ -493,17 +499,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
-			this.implicitSchemaName = configService.getSetting(
-					AvailableSettings.DEFAULT_SCHEMA,
-					StandardConverters.STRING,
-					null
-			);
-
-			this.implicitCatalogName = configService.getSetting(
-					AvailableSettings.DEFAULT_CATALOG,
-					StandardConverters.STRING,
-					null
-			);
+			// AvailableSettings.DEFAULT_SCHEMA and AvailableSettings.DEFAULT_CATALOG
+			// are taken into account later, at runtime, when rendering table/sequence names.
+			// These fields are exclusively about mapping defaults,
+			// overridden in XML mappings or through setters in MetadataBuilder.
+			this.implicitSchemaName = null;
+			this.implicitCatalogName = null;
 
 			this.implicitlyQuoteIdentifiers = configService.getSetting(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
@@ -610,12 +611,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
+		private boolean noConstraintByDefault;
 		private ArrayList<MetadataSourceType> sourceProcessOrdering;
 
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private String schemaCharset;
-		private boolean xmlMappingEnabled;
+		private final boolean xmlMappingEnabled;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -652,7 +654,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.sharedCacheMode = configService.getSetting(
-					"javax.persistence.sharedCache.mode",
+					AvailableSettings.JPA_SHARED_CACHE_MODE,
 					new ConfigurationService.Converter<SharedCacheMode>() {
 						@Override
 						public SharedCacheMode convert(Object value) {
@@ -667,7 +669,24 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 							return SharedCacheMode.valueOf( value.toString() );
 						}
 					},
-					SharedCacheMode.UNSPECIFIED
+					configService.getSetting(
+							AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE,
+							new ConfigurationService.Converter<SharedCacheMode>() {
+								@Override
+								public SharedCacheMode convert(Object value) {
+									if ( value == null ) {
+										return null;
+									}
+
+									if ( SharedCacheMode.class.isInstance( value ) ) {
+										return (SharedCacheMode) value;
+									}
+
+									return SharedCacheMode.valueOf( value.toString() );
+								}
+							},
+							SharedCacheMode.UNSPECIFIED
+					)
 			);
 
 			this.defaultCacheAccessType = configService.getSetting(
@@ -701,6 +720,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					StandardConverters.BOOLEAN,
 					false
 			);
+
+			this.noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
+					AvailableSettings.HBM2DDL_DEFAULT_CONSTRAINT_MODE,
+					String.class,
+					null
+			) );
 
 			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
@@ -880,6 +905,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isSpecjProprietarySyntaxEnabled() {
 			return specjProprietarySyntaxEnabled;
+		}
+
+		@Override
+		public boolean isNoConstraintByDefault() {
+			return noConstraintByDefault;
 		}
 
 		@Override

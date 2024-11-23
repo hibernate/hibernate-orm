@@ -62,6 +62,11 @@ public class Shipment extends BaseDomainEntity {
     @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private AddressVersion destination;
 
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true)
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+    private User user;
+
     Shipment() {
     }
 
@@ -103,5 +108,9 @@ public class Shipment extends BaseDomainEntity {
 
     public void setDestination(AddressVersion destination) {
         this.destination = destination;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

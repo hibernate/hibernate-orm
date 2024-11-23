@@ -8,6 +8,7 @@ package org.hibernate.id.insert;
 
 import java.io.Serializable;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -26,8 +27,23 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * of handling generated key values.
 	 *
 	 * @return The insert object.
+	 * @deprecated Implement {@link #prepareIdentifierGeneratingInsert(SqlStringGenerationContext)} instead.
 	 */
-	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert();
+	@Deprecated
+	default IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
+		throw new IllegalStateException("prepareIdentifierGeneratingInsert(...) was not implemented!");
+	}
+
+	/**
+	 * Build a {@link org.hibernate.sql.Insert} specific to the delegate's mode
+	 * of handling generated key values.
+	 *
+	 * @param context A context to help generate SQL strings
+	 * @return The insert object.
+	 */
+	default IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
+		return prepareIdentifierGeneratingInsert();
+	}
 
 	/**
 	 * Perform the indicated insert SQL statement and determine the identifier value

@@ -23,10 +23,14 @@ INSERT INTO test_data VALUES (2, 'Multi-line comment line 1
 -- INSERT INTO test_data VALUES (1, NULL);
 
 INSERT INTO test_data VALUES (3 /* 'third record' */, NULL /* value */); -- with NULL value
-INSERT INTO test_data (id, text)
-     VALUES
-          (
-            4 -- another record
-          , NULL
-          );
+INSERT INTO test_data
+VALUES
+	(
+    	4 -- another record
+     	, NULL
+    );
+-- comment;
+-- comment;
+
+
 

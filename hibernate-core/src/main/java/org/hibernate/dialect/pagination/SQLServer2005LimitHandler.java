@@ -60,7 +60,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * Constructs a SQLServer2005LimitHandler
 	 */
 	public SQLServer2005LimitHandler() {
-		// NOP
+		// NOOP
 	}
 
 	@Override
@@ -97,10 +97,10 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * <pre>
 	 * WITH query AS (
 	 *   SELECT inner_query.*
-	 *        , ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__
+	 *        , ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __row__
 	 *     FROM ( original_query_with_top_if_order_by_present_and_all_aliased_columns ) inner_query
 	 * )
-	 * SELECT alias_list FROM query WHERE __hibernate_row_nr__ >= offset AND __hibernate_row_nr__ < offset + last
+	 * SELECT alias_list FROM query WHERE __row__ >= offset AND __row__ < offset + last
 	 * </pre>
 	 *
 	 * When offset equals {@literal 0}, only <code>TOP(?)</code> expression is added to the original query.
@@ -131,9 +131,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 			encloseWithOuterQuery( sb, offset );
 
-			sb.insert( offset, !isCTE ? "WITH query AS (" : ", query AS (" );
-			sb.append( ") SELECT " ).append( selectClause ).append( " FROM query " );
-			sb.append( "WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?" );
+			sb.insert( offset, !isCTE ? "with query as (" : ", query as (" );
+			sb.append( ") select " ).append( selectClause ).append( " from query " );
+			sb.append( "where __row__ >= ? and __row__ < ?" );
 		}
 
 		return sb.toString();
@@ -298,13 +298,13 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	/**
-	 * Encloses original SQL statement with outer query that provides {@literal __hibernate_row_nr__} column.
+	 * Encloses original SQL statement with outer query that provides {@literal __row__} column.
 	 *
 	 * @param sql SQL query.
 	 * @param offset SQL query offset.
 	 */
 	protected void encloseWithOuterQuery(StringBuilder sql, int offset) {
-		sql.insert( offset, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " );
+		sql.insert( offset, "select inner_query.*, row_number() over (order by current_timestamp) as __row__ from ( " );
 		sql.append( " ) inner_query " );
 	}
 
@@ -321,11 +321,11 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		final int selectDistinctPos = shallowIndexOfPattern( sql, SELECT_DISTINCT_PATTERN, offset );
 		if ( selectPos == selectDistinctPos ) {
 			// Place TOP after SELECT DISTINCT
-			sql.insert( selectDistinctPos + SELECT_DISTINCT.length(), " TOP(?)" );
+			sql.insert( selectDistinctPos + SELECT_DISTINCT.length(), " top(?)" );
 		}
 		else {
 			// Place TOP after SELECT
-			sql.insert( selectPos + SELECT.length(), " TOP(?)" );
+			sql.insert( selectPos + SELECT.length(), " top(?)" );
 		}
 		topAdded = true;
 	}
@@ -363,7 +363,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		}
 		else {
 			// rather than taking the first match, we now iterate all matches
-			// until we determine a match that isn't considered "ignorable'.
+			// until we determine a match that isn't considered "ignorable".
 			while ( matcher.find() && matcher.groupCount() > 0 ) {
 				final int position = matcher.start();
 				if ( !isPositionIgnorable( ignoreRangeList, position ) ) {

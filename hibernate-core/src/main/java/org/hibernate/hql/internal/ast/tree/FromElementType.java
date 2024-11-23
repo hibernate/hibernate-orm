@@ -364,7 +364,7 @@ class FromElementType {
 		}
 		this.queryableCollection = queryableCollection;
 		if ( !queryableCollection.isOneToMany() ) {
-			// For many-to-many joins, use the tablename from the queryable collection for the default text.
+			// For many-to-many joins, use the table name from the queryable collection for the default text.
 			fromElement.setText( queryableCollection.getTableName() + " " + getTableAlias() );
 		}
 	}
@@ -553,7 +553,7 @@ class FromElementType {
 
 		// indexed, many-to-many collections must be treated specially here if the property to
 		// be mapped touches on the index as we must adjust the alias to use the alias from
-		// the association table (which i different than the one passed in)
+		// the association table (which is different than the one passed in)
 		if ( queryableCollection.isManyToMany()
 				&& queryableCollection.hasIndex()
 				&& SPECIAL_MANY2MANY_TREATMENT_FUNCTION_NAMES.contains( propertyName ) ) {
@@ -658,6 +658,27 @@ class FromElementType {
 				return new String[] {"(" + subquery + ")"};
 			}
 		};
+	}
+
+	/**
+	 * Does the incoming identifier represent a non-qualified attribute reference.
+	 *
+	 * E.g. `... from Order where total > :discountThreshold`.  We are checking
+	 * the identifier `total` and see it is an attribute of `Order`, so it is in fact
+	 * an unqualified reference to that attribute
+	 */
+	public boolean isNonQualifiedPropertyRef(String identifier) {
+		if ( queryableCollection == null ) {
+			assert persister != null;
+			try {
+				return persister.getPropertyType( identifier ) != null;
+			}
+			catch (QueryException qe) {
+				return false;
+			}
+		}
+
+		return false;
 	}
 
 	private class SpecialManyToManyCollectionPropertyMapping implements PropertyMapping {

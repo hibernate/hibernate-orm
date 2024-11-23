@@ -6,10 +6,12 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
+import static org.hibernate.internal.CoreLogging.messageLogger;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -27,11 +29,13 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.TypeCache;
 import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.description.type.TypeDefinition;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.SuperMethodCall;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import net.bytebuddy.pool.TypePool;
 
 public class ByteBuddyProxyHelper implements Serializable {
 
@@ -52,30 +56,42 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
 
-		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey( key ), proxyBuilder( persistentClass, interfaces ) );
+		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey( key ),
+				proxyBuilder( TypeDescription.ForLoadedType.of( persistentClass ), new TypeList.Generic.ForLoadedTypes( interfaces ) ) );
+	}
+
+	/**
+	 * @deprecated Use {@link #buildUnloadedProxy(TypePool, TypeDefinition, Collection)} instead.
+	 */
+	@Deprecated
+	public DynamicType.Unloaded<?> buildUnloadedProxy(final Class<?> persistentClass, final Class<?>[] interfaces) {
+		return byteBuddyState.make( proxyBuilder( TypeDescription.ForLoadedType.of( persistentClass ),
+				new TypeList.Generic.ForLoadedTypes( interfaces ) ) );
 	}
 
 	/**
 	 * Do not remove: used by Quarkus
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public DynamicType.Unloaded<?> buildUnloadedProxy(final Class persistentClass, final Class[] interfaces) {
-		return byteBuddyState.make( proxyBuilder( persistentClass, interfaces ) );
+	public DynamicType.Unloaded<?> buildUnloadedProxy(TypePool typePool, TypeDefinition persistentClass,
+			Collection<? extends TypeDefinition> interfaces) {
+		return byteBuddyState.make( typePool, proxyBuilder( persistentClass, interfaces ) );
 	}
 
-	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(Class persistentClass, Class[] interfaces) {
+	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(TypeDefinition persistentClass,
+			Collection<? extends TypeDefinition> interfaces) {
+		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
 		return byteBuddy -> byteBuddy
-				.ignore( byteBuddyState.getProxyDefinitionHelpers().getGroovyGetMetaClassFilter() )
-				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
-				.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
-				.implement( (Type[]) interfaces )
-				.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
-						.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
-				.method( byteBuddyState.getProxyDefinitionHelpers().getHibernateGeneratedMethodFilter() )
+				.ignore( helpers.getGroovyGetMetaClassFilter() )
+				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getTypeName() ) ) )
+				.subclass( interfaces.size() == 1 ? persistentClass : TypeDescription.OBJECT, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
+				.implement( interfaces )
+				.method( helpers.getVirtualNotFinalizerFilter() )
+						.intercept( helpers.getDelegateToInterceptorDispatcherMethodDelegation() )
+				.method( helpers.getProxyNonInterceptedMethodFilter() )
 						.intercept( SuperMethodCall.INSTANCE )
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 				.implement( ProxyConfiguration.class )
-						.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() );
+						.intercept( helpers.getInterceptorFieldAccessor() );
 	}
 
 	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {

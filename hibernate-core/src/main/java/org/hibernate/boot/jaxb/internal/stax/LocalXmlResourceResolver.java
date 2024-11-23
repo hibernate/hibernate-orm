@@ -42,6 +42,12 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			else if ( JPA_XSD_MAPPING.matches( namespace ) ) {
 				return openUrlStream( JPA_XSD_MAPPING.getMappedLocalUrl() );
 			}
+			else if ( PERSISTENCE_ORM_XSD_MAPPING.matches( namespace ) ) {
+				return openUrlStream( PERSISTENCE_ORM_XSD_MAPPING.getMappedLocalUrl() );
+			}
+			else if ( PERSISTENCE_ORM_XSD_MAPPING2.matches( namespace ) ) {
+				return openUrlStream( PERSISTENCE_ORM_XSD_MAPPING2.getMappedLocalUrl() );
+			}
 			else if ( HBM_XSD_MAPPING.matches( namespace ) ) {
 				return openUrlStream( HBM_XSD_MAPPING.getMappedLocalUrl() );
 			}
@@ -61,19 +67,15 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 				);
 				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
 			}
+			else if ( ALTERNATE_MAPPING_DTD.matches( publicID, systemID ) ) {
+				log.debug(
+						"Recognized alternate hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
+				);
+				return openUrlStream( ALTERNATE_MAPPING_DTD.getMappedLocalUrl() );
+			}
 			else if ( LEGACY_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
 				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
 						LEGACY_HBM_DTD_MAPPING.getIdentifierBase(),
-						HBM_DTD_MAPPING.getIdentifierBase()
-				);
-				log.debug(
-						"Recognized legacy hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
-				);
-				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
-			}
-			else if ( LEGACY2_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
-				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
-						LEGACY2_HBM_DTD_MAPPING.getIdentifierBase(),
 						HBM_DTD_MAPPING.getIdentifierBase()
 				);
 				log.debug(
@@ -86,6 +88,12 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 						"Recognized hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
 				);
 				return openUrlStream( CFG_DTD_MAPPING.getMappedLocalUrl() );
+			}
+			else if ( ALTERNATE_CFG_DTD.matches( publicID, systemID ) ) {
+				log.debug(
+						"Recognized alternate hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
+				);
+				return openUrlStream( ALTERNATE_CFG_DTD.getMappedLocalUrl() );
 			}
 			else if ( LEGACY_CFG_DTD_MAPPING.matches( publicID, systemID ) ) {
 				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
@@ -153,6 +161,22 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			"org/hibernate/jpa/orm_2_1.xsd"
 	);
 
+	/**
+	 * Maps the namespace for the orm.xml xsd for Jakarta Persistence 2.2
+	 */
+	public static final NamespaceSchemaMapping PERSISTENCE_ORM_XSD_MAPPING = new NamespaceSchemaMapping(
+			"http://xmlns.jcp.org/xml/ns/persistence/orm",
+			"org/hibernate/jpa/orm_2_2.xsd"
+	);
+
+	/**
+	 * Maps the namespace for the orm.xml xsd for Jakarta Persistence 3.0
+	 */
+	public static final NamespaceSchemaMapping PERSISTENCE_ORM_XSD_MAPPING2 = new NamespaceSchemaMapping(
+			"https://jakarta.ee/xml/ns/persistence/orm",
+			"org/hibernate/jpa/orm_3_0.xsd"
+	);
+
 	public static final NamespaceSchemaMapping HBM_XSD_MAPPING = new NamespaceSchemaMapping(
 			"http://www.hibernate.org/xsd/orm/hbm",
 			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd"
@@ -169,27 +193,32 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 	);
 
 	public static final DtdMapping HBM_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-mapping",
+			"www.hibernate.org/dtd/hibernate-mapping",
+			"org/hibernate/hibernate-mapping-3.0.dtd"
+	);
+
+	public static final DtdMapping ALTERNATE_MAPPING_DTD = new DtdMapping(
+			"hibernate.org/dtd/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
 	public static final DtdMapping LEGACY_HBM_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-mapping",
-			"org/hibernate/hibernate-mapping-3.0.dtd"
-	);
-
-	public static final DtdMapping LEGACY2_HBM_DTD_MAPPING = new DtdMapping(
-			"http://hibernate.sourceforge.net/hibernate-mapping",
+			"hibernate.sourceforge.net/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
 	public static final DtdMapping CFG_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-configuration",
+			"www.hibernate.org/dtd/hibernate-configuration",
+			"org/hibernate/hibernate-configuration-3.0.dtd"
+	);
+
+	public static final DtdMapping ALTERNATE_CFG_DTD = new DtdMapping(
+			"hibernate.org/dtd/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 
 	public static final DtdMapping LEGACY_CFG_DTD_MAPPING = new DtdMapping(
-			"http://hibernate.sourceforge.net/hibernate-configuration",
+			"hibernate.sourceforge.net/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 
@@ -213,27 +242,31 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 	}
 
 	public static class DtdMapping {
-		private final String identifierBase;
+		private final String httpBase;
+		private final String httpsBase;
 		private final URL localSchemaUrl;
 
 		public DtdMapping(String identifierBase, String resourceName) {
-			this.identifierBase = identifierBase;
+			this.httpBase = "http://" + identifierBase;
+			this.httpsBase = "https://" + identifierBase;
 			this.localSchemaUrl = LocalSchemaLocator.resolveLocalSchemaUrl( resourceName );
 		}
 
 		public String getIdentifierBase() {
-			return identifierBase;
+			return httpBase;
 		}
 
 		public boolean matches(String publicId, String systemId) {
 			if ( publicId != null ) {
-				if ( publicId.startsWith( identifierBase ) ) {
+				if ( publicId.startsWith( httpBase )
+						|| publicId.startsWith( httpsBase ) ) {
 					return true;
 				}
 			}
 
 			if ( systemId != null ) {
-				if ( systemId.startsWith( identifierBase ) ) {
+				if ( systemId.startsWith( httpBase )
+						|| systemId.startsWith( httpsBase ) ) {
 					return true;
 				}
 			}

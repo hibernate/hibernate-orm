@@ -30,9 +30,9 @@ import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.service.ServiceRegistry;
@@ -112,7 +112,7 @@ public class ScanningCoordinator {
 				return (Scanner) scannerSetting;
 			}
 
-			final Class<? extends  Scanner> scannerImplClass;
+			final Class<? extends Scanner> scannerImplClass;
 			if ( Class.class.isInstance( scannerSetting ) ) {
 				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
 			}
@@ -203,23 +203,24 @@ public class ScanningCoordinator {
 			nonLocatedMappingFileNames.addAll( explicitMappingFileNames );
 		}
 
-		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
-			managedResources.addXmlBinding( xmlMappingBinderAccess.bind( mappingFileDescriptor.getStreamAccess() ) );
-			nonLocatedMappingFileNames.remove( mappingFileDescriptor.getName() );
-		}
-
-		for ( String name : nonLocatedMappingFileNames ) {
-			final URL url = classLoaderService.locateResource( name );
-			if ( url == null ) {
-				throw new MappingException(
-						"Unable to resolve explicitly named mapping-file : " + name,
-						new Origin( SourceType.RESOURCE, name )
-				);
+		if ( xmlMappingBinderAccess != null ) { // xml mapping is not disabled
+			for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
+				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( mappingFileDescriptor.getStreamAccess() ) );
+				nonLocatedMappingFileNames.remove( mappingFileDescriptor.getName() );
 			}
-			final UrlInputStreamAccess inputStreamAccess = new UrlInputStreamAccess( url );
-			managedResources.addXmlBinding( xmlMappingBinderAccess.bind( inputStreamAccess ) );
-		}
 
+			for ( String name : nonLocatedMappingFileNames ) {
+				final URL url = classLoaderService.locateResource( name );
+				if ( url == null ) {
+					throw new MappingException(
+							"Unable to resolve explicitly named mapping-file : " + name,
+							new Origin( SourceType.RESOURCE, name )
+					);
+				}
+				final UrlInputStreamAccess inputStreamAccess = new UrlInputStreamAccess( url );
+				managedResources.addXmlBinding( xmlMappingBinderAccess.bind( inputStreamAccess ) );
+			}
+		}
 
 		// classes and packages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -267,6 +268,16 @@ public class ScanningCoordinator {
 			if ( packageInfoFileUrl != null ) {
 				managedResources.addAnnotatedPackageName( unresolvedListedClassName );
 				continue;
+			}
+
+			// Last, try it by loading the class
+			try {
+				Class<?> clazz = classLoaderService.classForName( unresolvedListedClassName );
+				managedResources.addAnnotatedClassReference( clazz );
+				continue;
+			}
+			catch (ClassLoadingException ignore) {
+				// ignore this error
 			}
 
 			log.debugf(

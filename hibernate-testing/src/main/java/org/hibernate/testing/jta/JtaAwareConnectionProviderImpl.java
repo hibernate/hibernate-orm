@@ -93,9 +93,14 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 			if ( connection == null ) {
 				connection = delegate.getConnection();
 				TestingJtaPlatformImpl.synchronizationRegistry().putResource( CONNECTION_KEY, connection );
-
-				XAResourceWrapper xaResourceWrapper = new XAResourceWrapper( this, connection );
-				currentTransaction.enlistResource( xaResourceWrapper );
+				try {
+					XAResourceWrapper xaResourceWrapper = new XAResourceWrapper( this, connection );
+					currentTransaction.enlistResource( xaResourceWrapper );
+				}
+				catch (Exception e) {
+					delist( connection );
+					throw e;
+				}
 			}
 			return connection;
 		}

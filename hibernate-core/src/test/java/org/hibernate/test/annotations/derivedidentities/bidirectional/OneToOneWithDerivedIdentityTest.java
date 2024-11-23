@@ -11,6 +11,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -18,7 +19,6 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -43,6 +43,86 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 		Bar newBar = ( Bar ) s.createQuery( "SELECT b FROM Bar b WHERE b.foo.id = :id" )
 				.setParameter( "id", foo.getId() )
 				.uniqueResult();
+		assertNotNull( newBar );
+		assertNotNull( newBar.getFoo() );
+		assertEquals( foo.getId(), newBar.getFoo().getId() );
+		assertEquals( "Some details", newBar.getDetails() );
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14389")
+	public void testQueryById() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		Bar newBar = ( Bar ) s.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo" )
+				.setParameter( "foo", foo )
+				.uniqueResult();
+		assertNotNull( newBar );
+		assertNotNull( newBar.getFoo() );
+		assertEquals( foo.getId(), newBar.getFoo().getId() );
+		assertEquals( "Some details", newBar.getDetails() );
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14389")
+	public void testFindById() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		try {
+			s.find( Bar.class, foo );
+			fail( "Should have thrown IllegalArgumentException" );
+		}
+		catch(IllegalArgumentException expected) {
+		}
+		finally {
+			s.getTransaction().rollback();
+		}
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14389")
+	public void testFindByPrimaryKey() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		Bar newBar = s.find( Bar.class, foo.getId() );
 		assertNotNull( newBar );
 		assertNotNull( newBar.getFoo() );
 		assertEquals( foo.getId(), newBar.getFoo().getId() );

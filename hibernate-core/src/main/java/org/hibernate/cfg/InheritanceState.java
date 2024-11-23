@@ -302,7 +302,7 @@ public class InheritanceState {
 			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;
 			final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager()
 					.toClass( classesToProcessForMappedSuperclass.get( index ) );
-			//add MAppedSuperclass if not already there
+			//add MappedSuperclass if not already there
 			mappedSuperclass = buildingContext.getMetadataCollector().getMappedSuperclass( type );
 			if ( mappedSuperclass == null ) {
 				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity );

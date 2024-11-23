@@ -139,6 +139,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public void stop() {
-		agroalDataSource.close();
+		if ( agroalDataSource != null ) {
+			agroalDataSource.close();
+		}
 	}
 }

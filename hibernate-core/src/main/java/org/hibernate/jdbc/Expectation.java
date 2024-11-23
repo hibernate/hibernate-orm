@@ -23,10 +23,11 @@ public interface Expectation {
 	 * @param rowCount The RDBMS reported "number of rows affected".
 	 * @param statement The statement representing the operation
 	 * @param batchPosition The position in the batch (if batching)
+	 * @param statementSQL The SQL backing the prepared statement, for logging purposes
 	 * @throws SQLException Exception from the JDBC driver
 	 * @throws HibernateException Problem processing the outcome.
 	 */
-	public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) throws SQLException, HibernateException;
+	public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String statementSQL) throws SQLException, HibernateException;
 
 	/**
 	 * Perform any special statement preparation.

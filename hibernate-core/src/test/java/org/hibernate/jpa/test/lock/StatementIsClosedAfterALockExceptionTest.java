@@ -11,14 +11,16 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.LockModeType;
-
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDB192Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Before;
@@ -32,7 +34,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@RequiresDialectFeature({DialectChecks.SupportsJdbcDriverProxying.class, DialectChecks.SupportsLockTimeouts.class})
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( false, false );
@@ -42,6 +44,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 	@Override
 	protected Map getConfig() {
 		Map config = super.getConfig();
+		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 		config.put(
 			org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
 			CONNECTION_PROVIDER
@@ -67,6 +70,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 
 	@Test(timeout = 1000 * 30) //30 seconds
 	@TestForIssue(jiraKey = "HHH-11617")
+	@SkipForDialect( value = CockroachDB192Dialect.class )
 	public void testStatementIsClosed() {
 
 		TransactionUtil.doInJPA( this::entityManagerFactory, em1 -> {

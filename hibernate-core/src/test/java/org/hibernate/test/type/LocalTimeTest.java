@@ -23,6 +23,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -35,6 +36,7 @@ import org.junit.runners.Parameterized;
 /**
  * Tests for storage of LocalTime properties.
  */
+@SkipForDialect(value = H2Dialect.class, comment = "H2 1.4.200 DST bug. See org.hibernate.dialect.H2Dialect.hasDstBug")
 public class LocalTimeTest extends AbstractJavaTimeTypeTest<LocalTime, LocalTimeTest.EntityWithLocalTime> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {

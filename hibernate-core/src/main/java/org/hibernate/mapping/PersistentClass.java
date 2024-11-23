@@ -17,6 +17,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -26,6 +27,7 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -72,6 +74,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
 	private Component identifierMapper;
+	private java.util.List<CallbackDefinition> callbackDefinitions;
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -744,6 +747,16 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return properties.iterator();
 	}
 
+	public void setCustomSqlInsert(CustomSql customSql) {
+		if ( customSql != null ) {
+			setCustomSQLInsert(
+					customSql.getSql(),
+					customSql.isCallable(),
+					customSql.getCheckStyle()
+			);
+		}
+	}
+
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
@@ -762,6 +775,16 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return insertCheckStyle;
 	}
 
+	public void setCustomSqlUpdate(CustomSql customSql) {
+		if ( customSql != null ) {
+			setCustomSQLUpdate(
+					customSql.getSql(),
+					customSql.isCallable(),
+					customSql.getCheckStyle()
+			);
+		}
+	}
+
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
@@ -778,6 +801,16 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public ExecuteUpdateResultCheckStyle getCustomSQLUpdateCheckStyle() {
 		return updateCheckStyle;
+	}
+
+	public void setCustomSqlDelete(CustomSql customSql) {
+		if ( customSql != null ) {
+			setCustomSQLDelete(
+					customSql.getSql(),
+					customSql.isCallable(),
+					customSql.getCheckStyle()
+			);
+		}
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
@@ -947,6 +980,23 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		return identifierMapper != null;
 	}
 
+	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
+		if ( callbackDefinitions == null || callbackDefinitions.isEmpty() ) {
+			return;
+		}
+		if ( this.callbackDefinitions == null ) {
+			this.callbackDefinitions = new ArrayList<>();
+		}
+		this.callbackDefinitions.addAll( callbackDefinitions );
+	}
+
+	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
+		if ( callbackDefinitions == null ) {
+			return Collections.emptyList();
+		}
+		return Collections.unmodifiableList( callbackDefinitions );
+	}
+
 	public void setIdentifierMapper(Component handle) {
 		this.identifierMapper = handle;
 	}
@@ -1006,6 +1056,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.superMappedSuperclass = superMappedSuperclass;
 	}
 
-	// End of @Mappedsuperclass support
+	// End of @MappedSuperclass support
 
 }

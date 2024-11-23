@@ -87,7 +87,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 [cols="<.^,<.^,<.^,<.^",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.spatial package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, and the class names of Geometry and its subclasses
+|JTSGeometryType |depends on the dialect | org.locationtech.jts.geom.Geometry |jts_geometry, and the class names of Geometry and its subclasses
 |GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, and the class names of Geometry and its subclasses
 |=================================================================================================
 
@@ -187,7 +187,7 @@ The `@Column` annotation defines other mapping information as well. See its Java
 
 We said before that a Hibernate type is not a Java type, nor an SQL type, but that it understands both and performs the marshalling between them.
 But looking at the basic type mappings from the previous examples,
-how did Hibernate know to use its `org.hibernate.type.StringType` for mapping for `java.lang.String` attributes,
+how did Hibernate know to use its `org.hibernate.type.StringType` for mapping `java.lang.String` attributes,
 or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attributes?
 
 The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (an `org.hibernate.type.Type` specialization) instances keyed by a name.
@@ -199,7 +199,7 @@ But first, let's explore how implicit resolution works and how applications can 
 ====
 A thorough discussion of `BasicTypeRegistry` and all the different ways to contribute types is beyond the scope of this documentation.
 
-Please see the http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] for complete details.
+Please see the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] for complete details.
 ====
 
 As an example, take a String attribute such as we saw before with Product#sku.
@@ -1136,7 +1136,7 @@ Programmatically::
 TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
 ----
 
-However, as explained in http://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
+However, as explained in https://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
 For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration property which can be configured:
 
 Declaratively, at the `SessionFactory` level::
@@ -1448,7 +1448,7 @@ include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-Gen
 When the `Person` entity is persisted, Hibernate is going to populate the `createdBy` column with the currently logged user.
 
 [[mapping-generated-GeneratorType-persist-example]]
-.`@Generated` persist example
+.`@GeneratorType` persist example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1465,7 +1465,7 @@ The same goes when the `Person` entity is updated.
 Hibernate is going to populate the `updatedBy` column with the currently logged user.
 
 [[mapping-generated-GeneratorType-update-example]]
-.`@Generated` update example
+.`@GeneratorType` update example
 ====
 [source, JAVA, indent=0]
 ----

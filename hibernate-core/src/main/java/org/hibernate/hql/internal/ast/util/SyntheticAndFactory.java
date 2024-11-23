@@ -147,7 +147,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			Map enabledFilters,
 			String alias) {
 		String whereFragment = persister.filterFragment( alias, enabledFilters ).trim();
-		if ( "".equals( whereFragment ) ) {
+		if ( whereFragment != null && whereFragment.isEmpty() ) {
 			return;
 		}
 		if ( whereFragment.startsWith( "and" ) ) {

@@ -16,8 +16,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.ConstraintViolationException;
+import javax.validation.constraints.NotNull;
 
 import org.junit.Test;
 

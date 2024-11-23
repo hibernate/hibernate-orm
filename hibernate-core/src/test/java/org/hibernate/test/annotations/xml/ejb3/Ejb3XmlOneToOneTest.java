@@ -20,12 +20,14 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@TestForIssue(jiraKey = "HHH-14529")
 public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 	@Test
 	public void testNoChildren() throws Exception {

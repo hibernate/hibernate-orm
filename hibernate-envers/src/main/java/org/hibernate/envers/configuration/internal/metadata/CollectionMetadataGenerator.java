@@ -22,6 +22,7 @@ import javax.persistence.JoinColumn;
 import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesReader;
@@ -553,7 +554,7 @@ public final class CollectionMetadataGenerator {
 				final IdMappingData referencedIdMapping = mainGenerator.getEntitiesConfigurations()
 						.get( referencedEntityName ).getIdMappingData();
 				final int currentIndex = queryGeneratorBuilder == null ? 0 : queryGeneratorBuilder.getCurrentIndex();
-				if ( "".equals( mapKey ) ) {
+				if ( mapKey != null && mapKey.isEmpty() ) {
 					// The key of the map is the id of the entity.
 					return new MiddleComponentData(
 							new MiddleMapKeyIdComponentMapper(
@@ -658,9 +659,12 @@ public final class CollectionMetadataGenerator {
 					.getMetadataBuildingOptions()
 					.getReflectionManager();
 
+			final ClassLoaderService classLoaderService = mainGenerator.getGlobalCfg()
+					.getEnversService()
+					.getClassLoaderService();
 			new ComponentAuditedPropertiesReader(
 					ModificationStore.FULL,
-					new AuditedPropertiesReader.ComponentPropertiesSource( reflectionManager, component ),
+					new AuditedPropertiesReader.ComponentPropertiesSource( classLoaderService, reflectionManager, component ),
 					auditData, mainGenerator.getGlobalCfg(), reflectionManager, ""
 			).read();
 

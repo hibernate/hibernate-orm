@@ -20,7 +20,7 @@ public class UnknownProfileException extends HibernateException {
 	 * @param name The profile name that was unknown.
 	 */
 	public UnknownProfileException(String name) {
-		super( "Unknow fetch profile [" + name + "]" );
+		super( "Unknown fetch profile [" + name + "]" );
 		this.name = name;
 	}
 

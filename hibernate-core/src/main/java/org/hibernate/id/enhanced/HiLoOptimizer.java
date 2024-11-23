@@ -89,7 +89,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 			}
 			// upperLimit defines the upper end of the bucket values
 			generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
-			// initialize value to the low end of the bucket
+			// initialize value to the lower end of the bucket
 			generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
 		}
 		else if ( ! generationState.upperLimit.gt( generationState.value ) ) {

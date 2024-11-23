@@ -32,7 +32,9 @@ import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -45,6 +47,7 @@ import static org.junit.Assert.assertEquals;
  */
 @TestForIssue( jiraKey = "HHH-12292")
 @RequiresDialect(H2Dialect.class)
+@RequiresDialectFeature(value = DialectChecks.NotH2Version2.class, comment = "Array support was changed to now be typed")
 public class QueryParametersValidationArrayTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

@@ -16,6 +16,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -51,7 +52,8 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Metadata metadata = ms.buildMetadata();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
 			final Property nameAttribute = pc.getProperty( "name" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+					metadata.getDatabase().getDialect() instanceof CockroachDB192Dialect){
 				// See issue HHH-10693
 				assertSame( StringType.INSTANCE, nameAttribute.getType() );
 			}else {
@@ -78,7 +80,8 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Metadata metadata = ms.buildMetadata();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
 			final Property nameAttribute = pc.getProperty( "flag" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ){
+			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
+					metadata.getDatabase().getDialect() instanceof CockroachDB192Dialect ){
 				assertSame( CharacterType.INSTANCE, nameAttribute.getType() );
 			}else {
 				assertSame( CharacterNCharType.INSTANCE, nameAttribute.getType() );

@@ -674,7 +674,7 @@ See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 [[annotations-hibernate-cascade]]
 ==== `@Cascade`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
 
 For JPA cascading, prefer using the {jpaJavadocUrlPrefix}CascadeType.html[`javax.persistence.CascadeType`] instead.
 
@@ -731,7 +731,7 @@ See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-example
 [[annotations-hibernate-columntransformers]]
 ==== `@ColumnTransformers`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformers.html[`@ColumnTransformers`] annotation iis used to group multiple <<annotations-hibernate-columntransformer>> annotations.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformers.html[`@ColumnTransformers`] annotation is used to group multiple <<annotations-hibernate-columntransformer>> annotations.
 
 [[annotations-hibernate-creationtimestamp]]
 ==== `@CreationTimestamp`

@@ -12,6 +12,7 @@ import java.util.EnumSet;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.MetadataSources;
@@ -155,13 +156,14 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 		);
 	}
 
-@Entity(name = "Translation")
-public static class Translation {
-	@Id
-	public Integer id;
-	@Type(type = "text")
-	String text;
-}
+	@Entity(name = "Translation")
+	@Table(name = "translation_tbl")
+	public static class Translation {
+		@Id
+		public Integer id;
+		@Type(type = "text")
+		String text;
+	}
 
 	@Override
 	public Map getConfigurationValues() {

@@ -42,15 +42,13 @@ import org.hibernate.Incubating;
 public class LongStreamDecorator implements LongStream {
 
 	private final LongStream delegate;
-
-	private Runnable closeHandler;
+	private final Runnable closeHandler;
 
 	public LongStreamDecorator(
 			LongStream delegate,
 			Runnable closeHandler) {
-		this.delegate = delegate;
 		this.closeHandler = closeHandler;
-		this.delegate.onClose( closeHandler );
+		this.delegate = delegate.onClose( closeHandler );
 	}
 
 	@Override
@@ -226,21 +224,21 @@ public class LongStreamDecorator implements LongStream {
 
 	@Override
 	public boolean anyMatch(LongPredicate predicate) {
-		boolean result = delegate.anyMatch(predicate);
+		boolean result = delegate.anyMatch( predicate );
 		close();
 		return result;
 	}
 
 	@Override
 	public boolean allMatch(LongPredicate predicate) {
-		boolean result = delegate.allMatch(predicate);
+		boolean result = delegate.allMatch( predicate );
 		close();
 		return result;
 	}
 
 	@Override
 	public boolean noneMatch(LongPredicate predicate) {
-		boolean result = delegate.noneMatch(predicate);
+		boolean result = delegate.noneMatch( predicate );
 		close();
 		return result;
 	}
@@ -300,7 +298,7 @@ public class LongStreamDecorator implements LongStream {
 
 	@Override
 	public LongStream onClose(Runnable closeHandler) {
-		this.closeHandler = closeHandler;
+		this.delegate.onClose( closeHandler );
 		return this;
 	}
 

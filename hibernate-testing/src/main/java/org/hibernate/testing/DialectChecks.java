@@ -6,11 +6,14 @@
  */
 package org.hibernate.testing;
 
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -285,8 +288,20 @@ abstract public class DialectChecks {
 				dialect instanceof DB2Dialect ||
 				dialect instanceof PostgreSQL81Dialect ||
 				dialect instanceof SybaseDialect ||
-				dialect instanceof MySQLDialect
+				dialect instanceof MySQLDialect ||
+				dialect instanceof CockroachDB192Dialect
 			);
+		}
+	}
+
+	public static class SupportsGlobalTemporaryTables implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.getDefaultMultiTableBulkIdStrategy() instanceof GlobalTemporaryTableBulkIdStrategy;
+		}
+	}
+	public static class NotH2Version2 implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return !( dialect instanceof H2Dialect ) || !( (H2Dialect) dialect ).isVersion2();
 		}
 	}
 }

@@ -207,22 +207,22 @@ The number of seconds between two consecutive pool validations. During validatio
 === c3p0 properties
 
 `*hibernate.c3p0.min_size*` (e.g. 1)::
- Minimum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
+ Minimum size of C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
 
 `*hibernate.c3p0.max_size*` (e.g. 5)::
- Maximum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
+ Maximum size of C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
 
 `*hibernate.c3p0.timeout*` (e.g. 30)::
- Maximum idle time for C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
+ Maximum idle time for C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
 
 `*hibernate.c3p0.max_statements*` (e.g. 5)::
- Maximum size of C3P0 statement cache. Refers to http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
+ Maximum size of C3P0 statement cache. Refers to https://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
 
 `*hibernate.c3p0.acquire_increment*` (e.g. 2)::
- The number of connections acquired at a time when there's no connection available in the pool. Refers to http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
+ The number of connections acquired at a time when there's no connection available in the pool. Refers to https://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
 
 `*hibernate.c3p0.idle_test_period*` (e.g. 5)::
- Idle time before a C3P0 pooled connection is validated. Refers to http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
+ Idle time before a C3P0 pooled connection is validated. Refers to https://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
 
 `*hibernate.c3p0*`::
  A setting prefix used to indicate additional c3p0 properties that need to be passed to the underlying c3p0 connection pool.
@@ -274,6 +274,14 @@ This should be used if you run into any errors with `DelayedPostInsertIdentifier
 Please report your mapping that causes the problem to us so we can examine the default algorithm to see if your use case should be included.
 +
 The default value is `false` which means Hibernate will use an algorithm to determine if the insert can be delayed or if the insert should be performed immediately.
+
+`*hibernate.id.sequence.increment_size_mismatch_strategy*` (e.g. `LOG`, `FIX`, `NONE` or `EXCEPTION` (default value))::
+This setting defines the `org.hibernate.id.SequenceMismatchStrategy` used when
+Hibernate detects a mismatch between a sequence configuration in an entity mapping
+and its database sequence object counterpart.
++
+The default value is given by the `org.hibernate.id.SequenceMismatchStrategy#EXCEPTION`,
+meaning that an Exception is thrown when detecting such a conflict.
 
 ==== Quoting options
 
@@ -385,8 +393,8 @@ Unless specified, the JDBC Driver uses the default JVM time zone. If a different
 This setting applies to Oracle Dialect only, and it specifies whether `byte[]` or `Byte[]` arrays should be mapped to the deprecated `LONG RAW` (when this configuration property value is `true`) or to a `BLOB` column type (when this configuration property value is `false`).
 
 ==== Bean Validation options
-`*javax.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
-Specify the  `jakarta.validation.ValidationFactory` implementation to use for Bean Validation.
+`*javax.persistence.validation.factory*` (e.g. `javax.validation.ValidationFactory` implementation)::
+Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.
 
 `*hibernate.check_nullability*` (e.g. `true` or `false`)::
 Enable nullability checking. Raises an exception if a property marked as not-null is null.
@@ -426,7 +434,7 @@ Enable lazy loading feature in runtime bytecode enhancement. This way, even basi
 Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
 
 `*hibernate.bytecode.provider*` (e.g. `bytebuddy` (default value))::
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` and `javassist` are valid values.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` is a valid value, as older deprecated options have been removed.
 
 `*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
 Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
@@ -511,6 +519,30 @@ Raises an exception when in-memory pagination over collection fetch is about to 
 +
 Disabled by default. Set to true to enable.
 
+`*hibernate.query.immutable_entity_update_query_handling_mode*` (e.g. `EXCEPTION` or `WARNING` (default value))::
+Defines how `Immutable` entities are handled when executing a bulk update query.
++
+By default, the (`ImmutableEntityUpdateQueryHandlingMode#WARNING`) mode is used, meaning that
+a warning log message is issued when an `@Immutable` entity is to be updated via a bulk update statement.
++
+If the (`ImmutableEntityUpdateQueryHandlingMode#EXCEPTION`) mode is used, then a `HibernateException` is thrown instead.
+
+`*hibernate.query.in_clause_parameter_padding*` (e.g. `true` or `false` (default value))::
+By default, the IN clause expands to include all bind parameter values.
++
+However, for database systems supporting execution plan caching,
+there's a better chance of hitting the cache if the number of possible IN clause parameters lowers.
++
+For this reason, we can expand the bind parameters to power-of-two: 4, 8, 16, 32, 64.
+This way, an IN clause with 5, 6, or 7 bind parameters will use the 8 IN clause,
+therefore reusing its execution plan.
+
+`*hibernate.query.omit_join_of_superclass_tables*` (e.g. `false` or `true` (default value))::
+When you use `javax.persistence.InheritanceType#JOINED` strategy for inheritance mapping and query
+a value from an entity, all superclass tables are joined in the query regardless you need them.
++
+With this setting set to true only superclass tables which are really needed are joined.
+
 ==== Multi-table bulk HQL operations
 
 `*hibernate.hql.bulk_id_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
@@ -518,6 +550,9 @@ Provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javado
 
 `*hibernate.hql.bulk_id_strategy.global_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
  For databases that don't support local tables, but just global ones, this configuration property allows you to DROP the global tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed.
+
+`*hibernate.hql.bulk_id_strategy.local_temporary.drop_tables*` (e.g. `true` or `false` (default value))::
+This configuration property allows you to DROP the local temporary tables used for multi-table bulk HQL operations when the `SessionFactory` or the `EntityManagerFactory` is closed. This is useful when testing with a single connection pool against different schemas.
 
 `*hibernate.hql.bulk_id_strategy.persistent.drop_tables*` (e.g. `true` or `false` (default value))::
 This configuration property is used by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/hql/spi/id/persistent/PersistentTableBulkIdStrategy.html[`PersistentTableBulkIdStrategy`], that mimics temporary tables for databases which do not support temporary tables.
@@ -621,6 +656,9 @@ Write all SQL statements to the console. This is an alternative to setting the l
 `*hibernate.format_sql*` (e.g. `true` or `false` (default value))::
 Pretty-print the SQL in the log and console.
 
+`*hibernate.highlight_sql*` (e.g. `true` or `false` (default value))::
+Colorize the SQL in the console using ANSI escape codes.
+
 `*hibernate.use_sql_comments*` (e.g. `true` or `false` (default value))::
 If true, Hibernate generates comments inside the SQL, for easier debugging.
 
@@ -657,7 +695,7 @@ Enables the query cache. You still need to set individual queries to be cachable
 Enable/disable the second-level cache, which is enabled by default, although the default `RegionFactor` is `NoCachingRegionFactory` (meaning there is no actual caching implementation).
 
 `*hibernate.cache.query_cache_factory*` (e.g. fully-qualified class name)::
-A custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/QueryCacheFactory.html[`QueryCacheFactory`] interface. The default is the built-in `StandardQueryCacheFactory`.
+A custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/TimestampsCacheFactory.html[`TimestampsCacheFactory`] interface. The default is the built-in `StandardTimestampsCacheFactory`.
 
 `*hibernate.cache.region_prefix*` (e.g. A string)::
 A prefix for second-level cache region names.
@@ -681,7 +719,7 @@ Sets the associated collection cache concurrency strategy for the designated reg
 === Infinispan properties
 
 For more details about how to customize the Infinispan second-level cache provider, check out the
-http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_properties[Infinispan User Guide].
+https://infinispan.org/docs/stable/titles/integrating/integrating.html#configuration_properties[Infinispan User Guide].
 
 [[configurations-transactions]]
 === Transactions properties
@@ -832,7 +870,7 @@ See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 +
 If no value is specified, a default is assumed as follows:
 +
-* if source scripts are specified (per `javax.persistence.schema-generation.create-script-source`), then the `script` option is assumed
+* if source scripts are specified (per `javax.persistence.schema-generation.drop-script-source`), then the `script` option is assumed
 * otherwise, `metadata` is assumed
 
 `*javax.persistence.schema-generation.create-script-source*`::
@@ -848,6 +886,10 @@ For cases where the `javax.persistence.schema-generation.scripts.action` value i
 
 `*javax.persistence.schema-generation.scripts.drop-target*`::
 For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema dropping commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.drop-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
+
+`*hibernate.hbm2ddl.schema-generation.script.append*` (e.g. `true` (default value) or `false`)::
+For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema commands should be written to DDL script file, `hibernate.hbm2ddl.schema-generation.script.append` specifies if schema commands should be appended to the end of the file rather than written at the beginning of the file.
+Values are `true` for appending schema commands to the end of the file, `false` for writing achema commands at the beginning of the file.
 
 `*javax.persistence.hibernate.hbm2ddl.import_files*` (e.g. `import.sql` (default value))::
 Comma-separated names of the optional files containing SQL DML statements executed during the `SessionFactory` creation.
@@ -891,6 +933,7 @@ Valid options are defined by the `strategy` value of the https://docs.jboss.org/
 
 `*hibernate.hbm2ddl.delimiter*` (e.g. `;`)::
 Identifies the delimiter to use to separate schema management statements in script outputs.
+The default value is `;`.
 
 `*hibernate.schema_management_tool*` (e.g. A schema name)::
 Used to specify the `SchemaManagementTool` to use for performing schema management. The default is to use `HibernateSchemaManagementTool`.
@@ -900,6 +943,9 @@ If enabled, allows schema update and validation to support synonyms. Due to the 
 
 `*hibernate.hbm2ddl.extra_physical_table_types*` (e.g. `BASE TABLE`)::
 Identifies a comma-separated list of values to specify extra table types, other than the default `TABLE` value, to recognize as defining a physical table by schema update, creation and validation.
+
+`*hibernate.hbm2ddl.default_constraint_mode*` (`CONSTRAINT` (default value) or `NO_CONSTRAINT`)::
+Default `javax.persistence.ConstraintMode` for foreign key mapping if `PROVIDER_DEFAULT` strategy used.
 
 `*hibernate.schema_update.unique_constraint_strategy*` (e.g. `DROP_RECREATE_QUIETLY`, `RECREATE_QUIETLY`, `SKIP`)::
 Unique columns and unique keys both use unique constraints in most dialects.
@@ -1055,8 +1101,8 @@ Like a `PersisterClassResolver`, the `PersisterFactory` can be used to customize
 `*hibernate.service.allow_crawling*` (e.g. `true` (default value) or `false`)::
 Crawl all available service bindings for an alternate registration of a given Hibernate `Service`.
 
-`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
-Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
+`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
+Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
 
 [[configurations-misc]]
 === Miscellaneous properties

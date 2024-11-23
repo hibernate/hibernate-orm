@@ -491,6 +491,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			return null;
 		}
 
+		if ( regionName == null || regionName.equals( getDefaultQueryResultsCache().getRegion().getName() ) ) {
+			return getDefaultQueryResultsCache();
+		}
+
 		return namedQueryResultsCacheMap.get( regionName );
 	}
 

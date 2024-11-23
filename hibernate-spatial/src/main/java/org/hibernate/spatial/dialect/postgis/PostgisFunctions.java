@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.postgis;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,9 +24,9 @@ import org.hibernate.type.Type;
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
-class PostgisFunctions extends SpatialFunctionsRegistry {
+public class PostgisFunctions extends SpatialFunctionsRegistry {
 
-	PostgisFunctions() {
+	public PostgisFunctions() {
 
 		put(
 				"dimension", new StandardSQLFunction(
@@ -226,7 +227,11 @@ class PostgisFunctions extends SpatialFunctionsRegistry {
 				Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
 			int argumentCount = arguments.size();
 			if ( argumentCount != 2 ) {
-				throw new QueryException( String.format( "2 arguments expected, received %d", argumentCount ) );
+				throw new QueryException( String.format(
+						Locale.ENGLISH,
+						"2 arguments expected, received %d",
+						argumentCount
+				) );
 			}
 
 			return Stream.of(

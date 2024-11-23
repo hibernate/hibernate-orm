@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.cfgxml.internal.CfgXmlAccessServiceInitiator;
+import org.hibernate.boot.internal.DefaultSessionFactoryBuilderInitiator;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.internal.ProxyFactoryFactoryInitiator;
@@ -53,6 +54,8 @@ public final class StandardServiceInitiators {
 
 	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
 		final ArrayList<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
+
+		serviceInitiators.add( DefaultSessionFactoryBuilderInitiator.INSTANCE );
 
 		serviceInitiators.add( BytecodeProviderInitiator.INSTANCE );
 		serviceInitiators.add( ProxyFactoryFactoryInitiator.INSTANCE );

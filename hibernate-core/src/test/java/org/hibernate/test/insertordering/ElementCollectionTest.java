@@ -7,7 +7,6 @@
 package org.hibernate.test.insertordering;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
@@ -21,10 +20,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.hibernate.cfg.Environment;
-
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -33,18 +31,13 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11216")
-public class ElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class ElementCollectionTest extends BaseInsertOrderingTest {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {Task.class};
 	}
-
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( Environment.ORDER_INSERTS, "true" );
-		settings.put( Environment.STATEMENT_BATCH_SIZE, "10" );
-		}
 
 	@Test
 	public void testBatchOrdering() {
@@ -56,7 +49,14 @@ public class ElementCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 			Task task1 = new Task();
 			task1.addCategory(Category.A);
 			session.persist( task1 );
+
+			clearBatches();
 		} );
+
+		verifyContainsBatches(
+				new Batch( "insert into TASK (id) values (?)", 2 ),
+				new Batch( "insert into TASK_CATEGORY (TASK_ID, categories) values (?, ?)", 2 )
+		);
 	}
 
 	@Entity

@@ -332,8 +332,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		int i = 0;
 		while ( iterator.hasNext() ) {
 			Selectable s = iterator.next();
-			// exclude formulas and coluns that are not insertable or updatable
-			// since these values can be be repeated (HHH-5393)
+			// exclude formulas and columns that are not insertable or updatable
+			// since these values can be repeated (HHH-5393)
 			if ( !s.isFormula() && ( insertability[i] || updatability[i] ) ) {
 				Column col = (Column) s;
 				if ( !distinctColumns.add( col.getName() ) ) {

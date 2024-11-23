@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -45,12 +46,14 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 			( (CompositeTracker) value ).$$_hibernate_setOwner( propertyName, (CompositeOwner) target );
 		}
 
-		// This marks the attribute as initialized, so it doesn't get lazy loaded afterwards
-		if ( target instanceof PersistentAttributeInterceptable ) {
-			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
-				( (BytecodeLazyAttributeInterceptor) interceptor ).attributeInitialized( propertyName );
-			}
+		// This marks the attribute as initialized, so it doesn't get lazily loaded afterwards
+		ManagedTypeHelper.processIfPersistentAttributeInterceptable( target, EnhancedSetterImpl::setAttributeInitialized, propertyName );
+	}
+
+	private static void setAttributeInitialized(PersistentAttributeInterceptable target, String propertyName) {
+		PersistentAttributeInterceptor interceptor = target.$$_hibernate_getInterceptor();
+		if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
+			( (BytecodeLazyAttributeInterceptor) interceptor ).attributeInitialized( propertyName );
 		}
 	}
 

@@ -19,15 +19,15 @@ import static org.hibernate.annotations.QueryHints.FETCH_SIZE;
 import static org.hibernate.annotations.QueryHints.FLUSH_MODE;
 import static org.hibernate.annotations.QueryHints.FOLLOW_ON_LOCKING;
 import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
+import static org.hibernate.annotations.QueryHints.NATIVE_SPACES;
 import static org.hibernate.annotations.QueryHints.PASS_DISTINCT_THROUGH;
 import static org.hibernate.annotations.QueryHints.READ_ONLY;
 import static org.hibernate.annotations.QueryHints.TIMEOUT_HIBERNATE;
+import static org.hibernate.annotations.QueryHints.TIMEOUT_JAKARTA_JPA;
 import static org.hibernate.annotations.QueryHints.TIMEOUT_JPA;
 
 /**
  * Defines the supported JPA query hints
- *
- * @author Steve Ebersole
  */
 public class QueryHints {
 	/**
@@ -42,6 +42,11 @@ public class QueryHints {
 	 * The hint key for specifying a query timeout per JPA, which defines the timeout in milliseconds
 	 */
 	public static final String SPEC_HINT_TIMEOUT = TIMEOUT_JPA;
+
+	/**
+	 * The hint key for specifying a query timeout per JPA, which defines the timeout in milliseconds
+	 */
+	public static final String JAKARTA_SPEC_HINT_TIMEOUT = TIMEOUT_JAKARTA_JPA;
 
 	/**
 	 * The hint key for specifying a comment which is to be embedded into the SQL sent to the database.
@@ -91,32 +96,46 @@ public class QueryHints {
 	 * 
 	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
 	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
-	 *
-	 * @deprecated (since 5.4) Use {@link GraphSemantic#FETCH}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	@Deprecated
 	public static final String HINT_FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
 	
 	/**
 	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
-	 *
-	 * @deprecated (since 5.4) Use {@link GraphSemantic#LOAD}'s {@link GraphSemantic#getJpaHintName()} instead
 	 */
-	@Deprecated
 	public static final String HINT_LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
+
+	/**
+	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
+	 * FetchType.EAGER (via join fetch or subsequent select).
+	 *
+	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
+	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
+	 */
+	public static final String JAKARTA_HINT_FETCHGRAPH = GraphSemantic.FETCH.getJakartaJpaHintName();
+
+	/**
+	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
+	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
+	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
+	 */
+	public static final String JAKARTA_HINT_LOADGRAPH = GraphSemantic.LOAD.getJakartaJpaHintName();
 
 	public static final String HINT_FOLLOW_ON_LOCKING = FOLLOW_ON_LOCKING;
 
 	public static final String HINT_PASS_DISTINCT_THROUGH = PASS_DISTINCT_THROUGH;
 
+	public static final String HINT_NATIVE_SPACES = NATIVE_SPACES;
+
+
 	private static final Set<String> HINTS = buildHintsSet();
 
 	private static Set<String> buildHintsSet() {
-		HashSet<String> hints = new HashSet<String>();
+		HashSet<String> hints = new HashSet<>();
 		hints.add( HINT_TIMEOUT );
 		hints.add( SPEC_HINT_TIMEOUT );
+		hints.add( JAKARTA_SPEC_HINT_TIMEOUT );
 		hints.add( HINT_COMMENT );
 		hints.add( HINT_FETCH_SIZE );
 		hints.add( HINT_CACHE_REGION );
@@ -127,6 +146,9 @@ public class QueryHints {
 		hints.add( HINT_NATIVE_LOCKMODE );
 		hints.add( HINT_FETCHGRAPH );
 		hints.add( HINT_LOADGRAPH );
+		hints.add( JAKARTA_HINT_FETCHGRAPH );
+		hints.add( JAKARTA_HINT_LOADGRAPH );
+		hints.add( HINT_NATIVE_SPACES );
 		return java.util.Collections.unmodifiableSet( hints );
 	}
 

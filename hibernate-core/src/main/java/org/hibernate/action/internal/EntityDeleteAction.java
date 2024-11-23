@@ -17,7 +17,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -154,7 +153,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	protected boolean preDelete() {
 		boolean veto = false;
-		final EventListenerGroup<PreDeleteEventListener> listenerGroup = listenerGroup( EventType.PRE_DELETE );
+		final EventListenerGroup<PreDeleteEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -166,47 +165,39 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	protected void postDelete() {
-		final EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_DELETE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostDeleteEvent event = new PostDeleteEvent(
+		getFastSessionServices()
+				.eventListenerGroup_POST_DELETE
+				.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
+	}
+
+	PostDeleteEvent newPostDeleteEvent() {
+		return new PostDeleteEvent(
 				getInstance(),
 				getId(),
 				state,
 				getPersister(),
 				eventSource()
 		);
-		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostDelete( event );
-		}
 	}
 
 	protected void postCommitDelete(boolean success) {
-		final EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_DELETE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
+		final EventListenerGroup<PostDeleteEventListener> eventListeners = getFastSessionServices()
+				.eventListenerGroup_POST_COMMIT_DELETE;
+		if (success) {
+			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 		}
-		final PostDeleteEvent event = new PostDeleteEvent(
-				getInstance(),
-				getId(),
-				state,
-				getPersister(),
-				eventSource()
-		);
-		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitDeleteEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostDelete( event );
-				}
-				else {
-					((PostCommitDeleteEventListener) listener).onPostDeleteCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostDelete( event );
-			}
+		else {
+			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, EntityDeleteAction::postCommitDeleteOnUnsuccessful );
+		}
+	}
+
+	private static void postCommitDeleteOnUnsuccessful(PostDeleteEventListener listener, PostDeleteEvent event) {
+		if ( listener instanceof PostCommitDeleteEventListener ) {
+			( (PostCommitDeleteEventListener) listener ).onPostDeleteCommitFailed( event );
+		}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostDelete( event );
 		}
 	}
 
@@ -228,7 +219,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostDeleteEventListener> group = listenerGroup( EventType.POST_COMMIT_DELETE );
+		final EventListenerGroup<PostDeleteEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_DELETE;
 		for ( PostDeleteEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;

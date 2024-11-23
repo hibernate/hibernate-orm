@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.RollbackException;
-import jakarta.validation.ConstraintViolationException;
+import javax.validation.ConstraintViolationException;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.beanvalidation.ValidationMode;
@@ -86,10 +86,10 @@ public class BeanValidationTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialect(H2Dialect.class)
 	public void testTitleColumnHasExpectedLength() {
 		EntityManager em = getOrCreateEntityManager();
-		int len = (Integer) em.createNativeQuery(
+		Number len = (Number) em.createNativeQuery(
 				"select CHARACTER_MAXIMUM_LENGTH from INFORMATION_SCHEMA.COLUMNS c where c.TABLE_NAME = 'CUPHOLDER' and c.COLUMN_NAME = 'TITLE'"
 		).getSingleResult();
-		assertEquals( 64, len );
+		assertEquals( 64, len.intValue() );
 	}
 
 	@Override

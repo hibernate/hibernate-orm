@@ -7,7 +7,7 @@
 
 package org.hibernate.test.annotations.beanvalidation;
 import javax.persistence.Entity;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Emmanuel Bernard

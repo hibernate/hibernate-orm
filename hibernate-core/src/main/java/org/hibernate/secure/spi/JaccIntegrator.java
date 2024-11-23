@@ -17,6 +17,7 @@ import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.secure.internal.DisabledJaccServiceImpl;
 import org.hibernate.secure.internal.JaccPreDeleteEventListener;
 import org.hibernate.secure.internal.JaccPreInsertEventListener;
@@ -32,7 +33,10 @@ import org.jboss.logging.Logger;
  * Integrator for setting up JACC integration
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public class JaccIntegrator implements ServiceContributingIntegrator {
 	private static final Logger log = Logger.getLogger( JaccIntegrator.class );
 
@@ -80,6 +84,12 @@ public class JaccIntegrator implements ServiceContributingIntegrator {
 			log.debug( "Skipping JACC integration as it was not enabled" );
 			return;
 		}
+
+		DeprecationLogger.DEPRECATION_LOGGER.deprecatedJaccUsage(
+				AvailableSettings.JACC_ENABLED,
+				AvailableSettings.JACC_CONTEXT_ID,
+				AvailableSettings.JACC_PREFIX
+		);
 
 		final String contextId = (String) properties.get( AvailableSettings.JACC_CONTEXT_ID );
 		if ( contextId == null ) {

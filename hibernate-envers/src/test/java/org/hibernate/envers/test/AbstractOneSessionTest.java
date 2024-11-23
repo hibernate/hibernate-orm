@@ -50,6 +50,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest {
 		}
 		config.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		config.setProperty( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
+		// These tests always use H2, so we reset the init_sql config here
+		config.setProperty( "hibernate.connection.init_sql", "" );
 		addProperties( config );
 
 		this.initMappings();

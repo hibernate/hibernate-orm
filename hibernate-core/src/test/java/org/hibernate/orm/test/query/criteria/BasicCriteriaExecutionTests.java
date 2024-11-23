@@ -14,6 +14,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.DerbyDialect;
+
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -92,6 +95,7 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support comparing parameters against each other")
 	public void testExecutingBasicCriteriaQueryParameterPredicate() {
 		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
 
@@ -111,6 +115,7 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support comparing parameters against each other")
 	public void testExecutingBasicCriteriaQueryParameterPredicateInStatelessSession() {
 		final CriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
 

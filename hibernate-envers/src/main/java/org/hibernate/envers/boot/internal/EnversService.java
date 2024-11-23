@@ -17,7 +17,6 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.synchronization.AuditProcessManager;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 
@@ -55,8 +54,6 @@ public interface EnversService extends Service {
 	boolean isInitialized();
 
 	void initialize(MetadataImplementor metadata, MappingCollector mappingCollector);
-
-	XMLHelper getXmlHelper();
 
 	GlobalConfiguration getGlobalConfiguration();
 

@@ -20,16 +20,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MariaDB10Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
@@ -144,19 +140,21 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 			} );
 			inTransaction( session -> {
 				session.doWork( connection -> {
-					final PreparedStatement statement = connection.prepareStatement(
+					try (PreparedStatement statement = connection.prepareStatement(
 							"SELECT " + PROPERTY_COLUMN_NAME + " FROM " + ENTITY_NAME + " WHERE " + ID_COLUMN_NAME + " = ?"
-					);
-					statement.setInt( 1, 1 );
-					statement.execute();
-					final ResultSet resultSet = statement.getResultSet();
-					resultSet.next();
-					Object nativeRead = getActualJdbcValue( resultSet, 1 );
-					assertEquals(
-							"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
-							getExpectedJdbcValueAfterHibernateWrite(),
-							nativeRead
-					);
+					)) {
+						statement.setInt( 1, 1 );
+						statement.execute();
+						try (ResultSet resultSet = statement.getResultSet()) {
+							resultSet.next();
+							Object nativeRead = getActualJdbcValue( resultSet, 1 );
+							assertEquals(
+									"Values written by Hibernate ORM should match the original value (same day, hour, ...)",
+									getExpectedJdbcValueAfterHibernateWrite(),
+									nativeRead
+							);
+						}
+					}
 				} );
 			} );
 		} );
@@ -170,13 +168,14 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
 				session.doWork( connection -> {
-					final PreparedStatement statement = connection.prepareStatement(
+					try (PreparedStatement statement = connection.prepareStatement(
 							"INSERT INTO " + ENTITY_NAME + " (" + ID_COLUMN_NAME + ", " + PROPERTY_COLUMN_NAME + ") "
 							+ " VALUES ( ? , ? )"
-					);
-					statement.setInt( 1, 1 );
-					setJdbcValueForNonHibernateWrite( statement, 2 );
-					statement.execute();
+					)) {
+						statement.setInt( 1, 1 );
+						setJdbcValueForNonHibernateWrite( statement, 2 );
+						statement.execute();
+					}
 				} );
 			} );
 			inTransaction( session -> {
@@ -269,6 +268,13 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 			remappingDialectClasses.add( null ); // Always test without remapping
 		}
 
+		public S skippedForDialects(Predicate<Dialect> skipPredicate, Consumer<S> skippedIfDialectMatchesClasses) {
+			if ( !skipPredicate.test( dialect ) ) {
+				skippedIfDialectMatchesClasses.accept( thisAsS() );
+			}
+			return thisAsS();
+		}
+
 		public S skippedForDialects(List<Class<?>> dialectClasses, Consumer<S> skippedIfDialectMatchesClasses) {
 			boolean skip = false;
 			for ( Class<?> dialectClass : dialectClasses ) {
@@ -304,8 +310,9 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 
 		protected final boolean isNanosecondPrecisionSupported() {
-			// Most databases apparently don't support nanosecond precision correctly
-			return dialect instanceof H2Dialect;
+			// This used to return true for H2Dialect, but as of 1.4.197 h2 does not use ns precision by default anymore.
+			// Bringing back ns precision would require timestamp(9) in the dialect class.
+			return false;
 		}
 
 		protected final S add(ZoneId defaultJvmTimeZone, Object ... subClassParameters) {

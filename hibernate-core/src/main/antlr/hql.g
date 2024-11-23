@@ -46,6 +46,7 @@ tokens
 	EXISTS="exists";
 	FALSE="false";
 	FETCH="fetch";
+	FK_REF;
 	FROM="from";
 	FULL="full";
 	GROUP="group";
@@ -162,7 +163,7 @@ tokens
 	}
 
 	/**
-	 * This method is overriden in the sub class in order to provide the
+	 * This method is overridden in the sub class in order to provide the
 	 * 'keyword as identifier' hack.
 	 * @param token The token to retry as an identifier.
 	 * @param ex The exception to throw if it cannot be retried as an identifier.
@@ -547,7 +548,7 @@ aliasedExpression
 //
 // Note that the above precedence levels map to the rules below...
 // Once you have a precedence chart, writing the appropriate rules as below
-// is usually very straightfoward
+// is usually very straightforward
 
 logicalExpression
 	: expression
@@ -596,8 +597,8 @@ equalityExpression
 // token type.  When traversing the AST, use the token type, and not the
 // token text to interpret the semantics of these nodes.
 relationalExpression
-	: concatenation (
-		( ( ( LT^ | GT^ | LE^ | GE^ ) additiveExpression )* )
+	: ( concatenation | quantifiedExpression ) (
+		( ( ( LT^ | GT^ | LE^ | GE^ ) ( additiveExpression | quantifiedExpression ) )* )
 		// Disable node production for the optional 'not'.
 		| (n:NOT!)? (
 			// Represent the optional NOT prefix using the token type by
@@ -668,7 +669,6 @@ unaryExpression
 	: MINUS^ {#MINUS.setType(UNARY_MINUS);} unaryExpression
 	| PLUS^ {#PLUS.setType(UNARY_PLUS);} unaryExpression
 	| caseExpression
-	| quantifiedExpression
 	| atom
 	;
 
@@ -723,13 +723,20 @@ atom
 
 // level 0 - the basic element of an expression
 primaryExpression
-    : { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
+    : { validateSoftKeyword("fk") && LA(2) == OPEN }? fkRefPath
+    | { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
     | { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
     | { validateSoftKeyword("size") && LA(2) == OPEN }? collectionSizeFunction
 	| identPrimary ( options {greedy=true;} : DOT^ "class" )?
 	| constant
 	| parameter
 	| OPEN! (expressionOrVector | subQuery) CLOSE!
+	;
+
+fkRefPath!
+	: "fk" OPEN p:identPrimary CLOSE {
+		#fkRefPath = #( [FK_REF], #p );
+	}
 	;
 
 jpaFunctionSyntax!
@@ -825,6 +832,7 @@ identPrimary
 				        #identPrimary = #( [ENTRY], path );
 				    }
 				}
+				| (DOT^ FK_REF)
 			)?
 	// Also allow special 'aggregate functions' such as count(), avg(), etc.
 	| aggregate
@@ -842,9 +850,9 @@ castedIdentPrimaryBase
     ;
 
 aggregate
-	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! ( additiveExpression | selectStatement ) CLOSE! { #aggregate.setType(AGGREGATE); }
+	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! ( concatenation ) CLOSE! { #aggregate.setType(AGGREGATE); }
 	// Special case for count - It's 'parameters' can be keywords.
-	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( path | collectionExpr | NUM_INT | caseExpression ) ) ) CLOSE!
+	|  COUNT^ OPEN! ( STAR { #STAR.setType(ROW_STAR); } | ( ( DISTINCT | ALL )? ( concatenation ) ) ) CLOSE!
 	|  collectionExpr
 	;
 
@@ -1032,7 +1040,7 @@ NUM_INT
 				(											// hex
 					// the 'e'|'E' and float suffix stuff look
 					// like hex digits, hence the (...)+ doesn't
-					// know when to stop: ambig.  ANTLR resolves
+					// know when to stop: ambiguous.  ANTLR resolves
 					// it correctly by matching immediately.  It
 					// is therefore ok to hush warning.
 					options { warnWhenFollowAmbig=false; }

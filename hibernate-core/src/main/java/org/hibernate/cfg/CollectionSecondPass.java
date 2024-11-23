@@ -16,6 +16,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 
@@ -68,8 +69,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 		}
 	}
 
-	abstract public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas)
-			throws MappingException;
+	abstract public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas);
 
 	private static String columns(Value val) {
 		StringBuilder columns = new StringBuilder();

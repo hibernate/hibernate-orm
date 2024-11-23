@@ -164,7 +164,7 @@ public abstract class ResultSetMappingBinder {
 			int queryReturnPosition) {
 		String alias = rtnSource.getAlias();
 		if ( StringHelper.isEmpty( alias ) ) {
-			// hack-around as sqlquery impl depend on having a key.
+			// hack-around as sqlquery impl depends on having a key.
 			alias = "alias_" + queryReturnPosition;
 		}
 		final String entityName = context.determineEntityName(

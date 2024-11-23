@@ -50,8 +50,8 @@ public final class Settings {
 	public Settings(SessionFactoryOptions sessionFactoryOptions, Metadata metadata) {
 		this(
 				sessionFactoryOptions,
-				extractName( metadata.getDatabase().getDefaultNamespace().getName().getCatalog() ),
-				extractName( metadata.getDatabase().getDefaultNamespace().getName().getSchema() )
+				extractName( metadata.getDatabase().getPhysicalImplicitNamespaceName().getCatalog() ),
+				extractName( metadata.getDatabase().getPhysicalImplicitNamespaceName().getSchema() )
 		);
 	}
 
@@ -61,8 +61,8 @@ public final class Settings {
 
 	public Settings(SessionFactoryOptions sessionFactoryOptions, String defaultCatalogName, String defaultSchemaName) {
 		this.sessionFactoryOptions = sessionFactoryOptions;
-		this.defaultCatalogName = defaultCatalogName;
-		this.defaultSchemaName = defaultSchemaName;
+		this.defaultCatalogName = sessionFactoryOptions.getDefaultCatalog() != null ? sessionFactoryOptions.getDefaultCatalog() : defaultCatalogName;
+		this.defaultSchemaName = sessionFactoryOptions.getDefaultSchema() != null ? sessionFactoryOptions.getDefaultSchema() : defaultSchemaName;
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "SessionFactory name : %s", sessionFactoryOptions.getSessionFactoryName() );

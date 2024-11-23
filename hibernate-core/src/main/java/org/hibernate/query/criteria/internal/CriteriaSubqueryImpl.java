@@ -155,7 +155,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 
 	@Override
 	public Subquery<T> where(Predicate... predicates) {
-		// TODO : assuming this should be a conjuntion, but the spec does not say specifically...
+		// TODO : assuming this should be a conjunction, but the spec does not say specifically...
 		queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
 		return this;
 	}

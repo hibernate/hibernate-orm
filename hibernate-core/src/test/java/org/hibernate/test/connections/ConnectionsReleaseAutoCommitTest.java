@@ -27,6 +27,9 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+import org.mockito.Mockito;
+import org.mockito.internal.util.MockUtil;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.spy;
@@ -92,6 +95,7 @@ public class ConnectionsReleaseAutoCommitTest extends BaseEntityManagerFunctiona
 
 		assertEquals( 1, connectionProvider.getConnectionCount() );
 		verify( connectionProvider.connection, times( 1 ) ).close();
+		Mockito.reset( connectionProvider.connection );
 	}
 
 	@Entity(name = "Thing")

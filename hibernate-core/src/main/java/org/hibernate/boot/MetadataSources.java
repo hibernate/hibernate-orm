@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -57,6 +58,7 @@ public class MetadataSources implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );
 
 	private final ServiceRegistry serviceRegistry;
+	private final boolean disableXmlMappingBinders;
 
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
@@ -86,6 +88,18 @@ public class MetadataSources implements Serializable {
 			}
 		}
 		this.serviceRegistry = serviceRegistry;
+		this.disableXmlMappingBinders = false;
+	}
+
+	/**
+	 * Consider this an SPI, used by Quarkus
+	 * @param serviceRegistry
+	 * @param disableXmlMappingBinders
+	 */
+	public MetadataSources(ServiceRegistry serviceRegistry, boolean disableXmlMappingBinders) {
+		Objects.requireNonNull( serviceRegistry );
+		this.serviceRegistry = serviceRegistry;
+		this.disableXmlMappingBinders = disableXmlMappingBinders;
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
@@ -94,6 +108,9 @@ public class MetadataSources implements Serializable {
 	}
 
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
+		if ( disableXmlMappingBinders ) {
+			return null;
+		}
 		if ( xmlMappingBinderAccess == null ) {
 			xmlMappingBinderAccess = new XmlMappingBinderAccess( serviceRegistry );
 		}
@@ -318,6 +335,18 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addFile(File file) {
 		getXmlBindingsForWrite().add( getXmlMappingBinderAccess().bind( file ) );
+		return this;
+	}
+
+	/**
+	 * Add XML mapping bindings created from an arbitrary source by the {@link #getXmlMappingBinderAccess() binder}.
+	 *
+	 * @param binding The binding.
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public MetadataSources addXmlBinding(Binding<?> binding) {
+		getXmlBindingsForWrite().add( binding );
 		return this;
 	}
 

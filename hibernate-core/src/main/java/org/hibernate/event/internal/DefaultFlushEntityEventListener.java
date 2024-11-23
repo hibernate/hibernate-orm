@@ -18,10 +18,12 @@ import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.Managed;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -92,8 +94,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			Object[] current,
 			Object[] loaded,
 			SessionImplementor session) {
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptable asPersistentAttributeInterceptable = ManagedTypeHelper.asPersistentAttributeInterceptable(
+					entity );
+			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// EARLY EXIT!!!
 				// nothing to check - the entity is an un-initialized enhancement-as-proxy reference
@@ -164,7 +168,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setPropertyValues( values );
 
 		//TODO: avoid this for non-new instances where mightBeDirty==false
-		boolean substitute = wrapCollections( session, persister, types, values );
+
+		boolean substitute = wrapCollections( session, persister, entity, entry.getId(), types, values );
 
 		if ( isUpdateNecessary( event, mightBeDirty ) ) {
 			substitute = scheduleUpdate( event ) || substitute;
@@ -212,6 +217,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private boolean wrapCollections(
 			EventSource session,
 			EntityPersister persister,
+			Object entity,
+			Serializable id,
 			Type[] types,
 			Object[] values
 	) {
@@ -225,7 +232,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// don't dirty the container. Also, for versioned data, we
 			// need to wrap before calling searchForDirtyCollections
 
-			WrapVisitor visitor = new WrapVisitor( session );
+			WrapVisitor visitor = new WrapVisitor( entity, id ,session );
 			// substitutes into values by side-effect
 			visitor.processEntityPropertyValues( values, types );
 			return visitor.isSubstitutionRequired();
@@ -244,9 +251,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				return true;
 			}
 			else {
-				if ( SelfDirtinessTracker.class.isInstance( event.getEntity() ) ) {
-					( (SelfDirtinessTracker) event.getEntity() ).$$_hibernate_clearDirtyAttributes();
-				}
+				ManagedTypeHelper.processIfSelfDirtinessTracker( event.getEntity(), SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 				event.getSession()
 						.getFactory()
 						.getCustomEntityDirtinessStrategy()
@@ -482,6 +487,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private boolean hasDirtyCollections(FlushEntityEvent event, EntityPersister persister, Status status) {
 		if ( isCollectionDirtyCheckNecessary( persister, status ) ) {
 			DirtyCollectionSearchVisitor visitor = new DirtyCollectionSearchVisitor(
+					event.getEntity(),
 					event.getSession(),
 					persister.getPropertyVersionability()
 			);
@@ -522,21 +528,16 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()
 		);
-
 		if ( dirtyProperties == null ) {
-			if ( entity instanceof SelfDirtinessTracker ) {
-				if ( ( (SelfDirtinessTracker) entity ).$$_hibernate_hasDirtyAttributes() ) {
-					int[] dirty = persister.resolveAttributeIndexes( ( (SelfDirtinessTracker) entity ).$$_hibernate_getDirtyAttributes() );
-
-					// HHH-12051 - filter non-updatable attributes
-					// TODO: add Updateability to EnhancementContext and skip dirty tracking of those attributes
-					int count = 0;
-					for ( int i : dirty ) {
-						if ( persister.getPropertyUpdateability()[i] ) {
-							dirty[count++] = i;
-						}
-					}
-					dirtyProperties = count == 0 ? ArrayHelper.EMPTY_INT_ARRAY : count == dirty.length ? dirty : Arrays.copyOf( dirty, count );
+			if ( ManagedTypeHelper.isSelfDirtinessTracker( entity ) ) {
+				final SelfDirtinessTracker asSelfDirtinessTracker = ManagedTypeHelper.asSelfDirtinessTracker( entity );
+				if ( asSelfDirtinessTracker.$$_hibernate_hasDirtyAttributes() || persister.hasMutableProperties() ) {
+					dirtyProperties = persister.resolveDirtyAttributeIndexes(
+							values,
+							loadedState,
+							asSelfDirtinessTracker.$$_hibernate_getDirtyAttributes(),
+							session
+					);
 				}
 				else {
 					dirtyProperties = ArrayHelper.EMPTY_INT_ARRAY;
@@ -573,7 +574,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		boolean dirtyCheckPossible = true;
 
 		if ( dirtyProperties == null ) {
-			// Interceptor returned null, so do the dirtycheck ourself, if possible
+			// Interceptor returned null, so do the dirty check ourself, if possible
 			try {
 				session.getEventListenerManager().dirtyCalculationStart();
 

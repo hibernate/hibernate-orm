@@ -103,6 +103,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( BigDecimal.class, Types.NUMERIC );
 		workMap.put( BigInteger.class, Types.NUMERIC );
 		workMap.put( Boolean.class, Types.BIT );
+		workMap.put( Byte.class, Types.TINYINT );
 		workMap.put( Short.class, Types.SMALLINT );
 		workMap.put( Integer.class, Types.INTEGER );
 		workMap.put( Long.class, Types.BIGINT );

@@ -14,6 +14,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.DialectChecks;
@@ -120,6 +121,7 @@ public class CreateTest extends AbstractOperationTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
 	public void testCreateException() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

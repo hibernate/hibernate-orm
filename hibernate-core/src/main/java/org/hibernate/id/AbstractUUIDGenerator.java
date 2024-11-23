@@ -40,7 +40,7 @@ public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
 
 	/**
 	 * Unique across JVMs on this machine (unless they load this class
-	 * in the same quater second - very unlikely)
+	 * in the same quarter second - very unlikely)
 	 */
 	protected int getJVM() {
 		return JVM;

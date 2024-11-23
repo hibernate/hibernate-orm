@@ -33,6 +33,7 @@ public class EmbeddableWithOneToMany_HHH_11302_xml_Test extends
 		};
 	}
 
+	@Override
 	public void buildEntityManagerFactory() {
 		try {
 			super.buildEntityManagerFactory();

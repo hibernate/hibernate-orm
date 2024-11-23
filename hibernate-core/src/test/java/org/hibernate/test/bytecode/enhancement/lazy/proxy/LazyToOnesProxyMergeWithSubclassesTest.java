@@ -48,12 +48,6 @@ import static org.junit.Assert.assertTrue;
 @EnhancementOptions(lazyLoading = true)
 public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
-
-	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
 		super.configureSessionFactoryBuilder( sfb );
 		sfb.applyStatisticsSupport( true );
@@ -831,15 +825,12 @@ public class LazyToOnesProxyMergeWithSubclassesTest extends BaseNonConfigCoreFun
 		private String id;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Animal animal = null;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Primate primate = null;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private Human human = null;
 
 		protected OtherEntity() {

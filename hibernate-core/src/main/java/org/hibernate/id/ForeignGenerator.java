@@ -34,7 +34,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  *
  * @author Gavin King
  */
-public class ForeignGenerator implements IdentifierGenerator, Configurable {
+public class ForeignGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = messageLogger( ForeignGenerator.class );
 
 	private String entityName;

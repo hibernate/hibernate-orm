@@ -10,6 +10,9 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.entity.plan.DynamicBatchingEntityLoaderBuilder;
+import org.hibernate.loader.entity.plan.LegacyBatchingEntityLoaderBuilder;
+import org.hibernate.loader.entity.plan.PaddedBatchingEntityLoaderBuilder;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
@@ -23,7 +26,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
  */
 public abstract class BatchingEntityLoaderBuilder {
 	public static BatchingEntityLoaderBuilder getBuilder(SessionFactoryImplementor factory) {
-		switch ( factory.getSettings().getBatchFetchStyle() ) {
+		switch ( factory.getSessionFactoryOptions().getBatchFetchStyle() ) {
 			case PADDED: {
 				return PaddedBatchingEntityLoaderBuilder.INSTANCE;
 			}
@@ -31,8 +34,7 @@ public abstract class BatchingEntityLoaderBuilder {
 				return DynamicBatchingEntityLoaderBuilder.INSTANCE;
 			}
 			default: {
-				return org.hibernate.loader.entity.plan.LegacyBatchingEntityLoaderBuilder.INSTANCE;
-//				return LegacyBatchingEntityLoaderBuilder.INSTANCE;
+				return LegacyBatchingEntityLoaderBuilder.INSTANCE;
 			}
 		}
 	}

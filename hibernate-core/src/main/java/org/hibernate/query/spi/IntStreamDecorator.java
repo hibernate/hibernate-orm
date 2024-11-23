@@ -42,15 +42,13 @@ import org.hibernate.Incubating;
 public class IntStreamDecorator implements IntStream {
 
 	private final IntStream delegate;
-
-	private Runnable closeHandler;
+	private final Runnable closeHandler;
 
 	public IntStreamDecorator(
 			IntStream delegate,
 			Runnable closeHandler) {
-		this.delegate = delegate;
 		this.closeHandler = closeHandler;
-		this.delegate.onClose( closeHandler );
+		this.delegate = delegate.onClose( closeHandler );
 	}
 
 	@Override
@@ -307,7 +305,7 @@ public class IntStreamDecorator implements IntStream {
 
 	@Override
 	public IntStream onClose(Runnable closeHandler) {
-		this.closeHandler = closeHandler;
+		this.delegate.onClose( closeHandler );
 		return this;
 	}
 

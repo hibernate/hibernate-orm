@@ -6,6 +6,7 @@
  */
 package org.hibernate.id;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -32,5 +33,18 @@ public interface BulkInsertionCapableIdentifierGenerator extends IdentifierGener
 	 *
 	 * @return The identifier value generation fragment (SQL).  {@code null} indicates that no fragment is needed.
 	 */
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect);
+	default String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
+		throw new IllegalStateException("determineBulkInsertionIdentifierGenerationSelectFragment(...) was not implemented!");
+	}
+
+	/**
+	 * Return the select expression fragment, if any, that generates the identifier values.
+	 *
+	 * @param context A context for SQL string generation.
+	 *
+	 * @return The identifier value generation fragment (SQL).  {@code null} indicates that no fragment is needed.
+	 */
+	default String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		return determineBulkInsertionIdentifierGenerationSelectFragment( context.getDialect() );
+	}
 }

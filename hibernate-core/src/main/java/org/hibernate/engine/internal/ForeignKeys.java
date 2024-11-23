@@ -258,7 +258,7 @@ public final class ForeignKeys {
 			return true;
 		}
 
-		// todo : shouldnt assumed be revered here?
+		// todo : shouldn't assumed be reversed here?
 
 		return !isTransient( entityName, entity, assumed, session );
 	}

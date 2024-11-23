@@ -9,6 +9,7 @@ package org.hibernate.action.internal;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -32,6 +33,7 @@ import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.TypeHelper;
 
 /**
@@ -171,7 +173,9 @@ public class EntityUpdateAction extends EntityAction {
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
-		final boolean veto = preUpdate();
+		if ( preUpdate() ) {
+			return;
+		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
 		Object previousVersion = this.previousVersion;
@@ -196,27 +200,24 @@ public class EntityUpdateAction extends EntityAction {
 		else {
 			ck = null;
 		}
-
-		if ( !veto ) {
-			persister.update(
-					id,
-					state,
-					dirtyFields,
-					hasDirtyCollection,
-					previousState,
-					previousVersion,
-					instance,
-					rowId,
-					session
-			);
-		}
+		persister.update(
+				id,
+				state,
+				dirtyFields,
+				hasDirtyCollection,
+				previousState,
+				previousVersion,
+				instance,
+				rowId,
+				session
+		);
 
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 		if ( entry == null ) {
-			throw new AssertionFailure( "possible nonthreadsafe access to session" );
+			throw new AssertionFailure( "possible non thread safe access to session" );
 		}
 
-		if ( entry.getStatus()==Status.MANAGED || persister.isVersionPropertyGenerated() ) {
+		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {
 			// get the updated snapshot of the entity state by cloning current state;
 			// it is safe to copy in place, since by this time no-one else (should have)
 			// has a reference  to the array
@@ -228,7 +229,7 @@ public class EntityUpdateAction extends EntityAction {
 					session
 			);
 			if ( persister.hasUpdateGeneratedProperties() ) {
-				// this entity defines proeprty generation, so process those generated
+				// this entity defines property generation, so process those generated
 				// values...
 				persister.processUpdateGeneratedProperties( id, instance, state, session );
 				if ( persister.isVersionPropertyGenerated() ) {
@@ -240,14 +241,26 @@ public class EntityUpdateAction extends EntityAction {
 			entry.postUpdate( instance, state, nextVersion );
 		}
 
+		if ( entry.getStatus() == Status.DELETED ) {
+			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()
+					&& entityMetamodel.getOptimisticLockStyle().isAllOrDirty();
+			if ( isImpliedOptimisticLocking && entry.getLoadedState() != null ) {
+				// The entity will be deleted and because we are going to create a delete statement that uses
+				// all the state values in the where clause, the entry state needs to be updated otherwise the statement execution will
+				// not delete any row (see HHH-15218).
+				entry.postUpdate( instance, state, nextVersion );
+			}
+		}
+
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( persister.canWriteToCache() ) {
-			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
-				persister.getCacheAccessStrategy().remove( session, ck);
+			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
+				persister.getCacheAccessStrategy().remove( session, ck );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				final CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
+				final CacheEntry ce = persister.buildCacheEntry( instance, state, nextVersion, getSession() );
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
 
 				final boolean put = cacheUpdate( persister, previousVersion, ck );
@@ -270,9 +283,17 @@ public class EntityUpdateAction extends EntityAction {
 
 		postUpdate();
 
-		if ( statistics.isStatisticsEnabled() && !veto ) {
+		if ( statistics.isStatisticsEnabled() ) {
 			statistics.updateEntity( getPersister().getEntityName() );
 		}
+
+	}
+
+	private static boolean isCacheInvalidationRequired(
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		// the cache has to be invalidated when CacheMode is equal to GET or IGNORE
+		return persister.isCacheInvalidationRequired() || session.getCacheMode() == CacheMode.GET || session.getCacheMode() == CacheMode.IGNORE;
 	}
 
 	protected boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
@@ -288,7 +309,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	protected boolean preUpdate() {
 		boolean veto = false;
-		final EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
+		final EventListenerGroup<PreUpdateEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_UPDATE;
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -307,11 +328,13 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	protected void postUpdate() {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostUpdateEvent event = new PostUpdateEvent(
+		getFastSessionServices()
+				.eventListenerGroup_POST_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent, PostUpdateEventListener::onPostUpdate );
+	}
+
+	private PostUpdateEvent newPostUpdateEvent() {
+		return new PostUpdateEvent(
 				getInstance(),
 				getId(),
 				state,
@@ -320,44 +343,27 @@ public class EntityUpdateAction extends EntityAction {
 				getPersister(),
 				eventSource()
 		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostUpdate( event );
-		}
 	}
 
 	protected void postCommitUpdate(boolean success) {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
+		getFastSessionServices()
+				.eventListenerGroup_POST_COMMIT_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent, success ? PostUpdateEventListener::onPostUpdate : this::onPostCommitFailure );
+	}
+
+	private void onPostCommitFailure(PostUpdateEventListener listener, PostUpdateEvent event) {
+		if ( listener instanceof PostCommitUpdateEventListener ) {
+			((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
 		}
-		final PostUpdateEvent event = new PostUpdateEvent(
-				getInstance(),
-				getId(),
-				state,
-				previousState,
-				dirtyFields,
-				getPersister(),
-				eventSource()
-		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitUpdateEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostUpdate( event );
-				}
-				else {
-					((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostUpdate( event );
-			}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostUpdate( event );
 		}
 	}
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostUpdateEventListener> group = listenerGroup( EventType.POST_COMMIT_UPDATE );
+		final EventListenerGroup<PostUpdateEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_UPDATE;
 		for ( PostUpdateEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;

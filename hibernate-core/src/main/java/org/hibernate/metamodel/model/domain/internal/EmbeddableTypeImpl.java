@@ -13,7 +13,7 @@ import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 
 /**
  * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
@@ -27,12 +27,12 @@ public class EmbeddableTypeImpl<J>
 		implements EmbeddedTypeDescriptor<J>, Serializable {
 
 	private final ManagedTypeDescriptor<?> parent;
-	private final ComponentType hibernateType;
+	private final CompositeType hibernateType;
 
 	public EmbeddableTypeImpl(
 			Class<J> javaType,
 			ManagedTypeDescriptor<?> parent,
-			ComponentType hibernateType,
+			CompositeType hibernateType,
 			SessionFactoryImplementor sessionFactory) {
 		super( javaType, null, null, sessionFactory );
 		this.parent = parent;
@@ -48,7 +48,7 @@ public class EmbeddableTypeImpl<J>
 		return parent;
 	}
 
-	public ComponentType getHibernateType() {
+	public CompositeType getHibernateType() {
 		return hibernateType;
 	}
 

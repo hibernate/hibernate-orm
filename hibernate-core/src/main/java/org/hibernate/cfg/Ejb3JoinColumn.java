@@ -17,6 +17,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -98,6 +99,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	private Ejb3JoinColumn(
 			String sqlType,
 			String name,
+			String comment,
 			boolean nullable,
 			boolean unique,
 			boolean insertable,
@@ -114,6 +116,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		setImplicit( isImplicit );
 		setSqlType( sqlType );
 		setLogicalColumnName( name );
+		setComment( comment );
 		setNullable( nullable );
 		setUnique( unique );
 		setInsertable( insertable );
@@ -150,7 +153,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 			else {
 				joinColumns[i] = buildJoinColumns(
-						new JoinColumn[] { join.column() }, mappedBy, joins, propertyHolder, propertyName, buildingContext
+						new JoinColumn[] { join.column() }, null, mappedBy, joins, propertyHolder, propertyName, buildingContext
 				)[0];
 			}
 		}
@@ -181,18 +184,20 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 	public static Ejb3JoinColumn[] buildJoinColumns(
 			JoinColumn[] anns,
+			Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
 		return buildJoinColumnsWithDefaultColumnSuffix(
-				anns, mappedBy, joins, propertyHolder, propertyName, "", buildingContext
+				anns, comment, mappedBy, joins, propertyHolder, propertyName, "", buildingContext
 		);
 	}
 
 	public static Ejb3JoinColumn[] buildJoinColumnsWithDefaultColumnSuffix(
 			JoinColumn[] anns,
+			Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
@@ -207,6 +212,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			return new Ejb3JoinColumn[] {
 					buildJoinColumn(
 							null,
+							comment,
 							mappedBy,
 							joins,
 							propertyHolder,
@@ -222,6 +228,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			for (int index = 0; index < size; index++) {
 				result[index] = buildJoinColumn(
 						actualColumns[index],
+						comment,
 						mappedBy,
 						joins,
 						propertyHolder,
@@ -239,19 +246,21 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	 */
 	private static Ejb3JoinColumn buildJoinColumn(
 			JoinColumn ann,
+			Comment comment,
 			String mappedBy, Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			String suffixForDefaultColumnName,
 			MetadataBuildingContext buildingContext) {
 		if ( ann != null ) {
-			if ( BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
+			if ( !BinderHelper.isEmptyOrNullAnnotationValue( mappedBy ) ) {
 				throw new AnnotationException(
 						"Illegal attempt to define a @JoinColumn with a mappedBy association: "
 								+ BinderHelper.getRelativePath( propertyHolder, propertyName )
 				);
 			}
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
+			joinColumn.setComment( comment != null ? comment.value() : null );
 			joinColumn.setBuildingContext( buildingContext );
 			joinColumn.setJoinAnnotation( ann, null );
 			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() )
@@ -367,7 +376,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 
 			final String name;
-			if ( "".equals( colName ) ) {
+			if ( colName != null && colName.isEmpty() ) {
 				name = normalizer.normalizeIdentifierQuotingAsString( defaultName );
 			}
 			else {
@@ -376,6 +385,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			return new Ejb3JoinColumn(
 					sqlType,
 					name,
+					null,
 					false,
 					false,
 					true,
@@ -395,6 +405,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			return new Ejb3JoinColumn(
 					null,
 					defaultName,
+					null,
 					false,
 					false,
 					true,
@@ -419,7 +430,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PersistentClass persistentClass,
 			Map<String, Join> joins,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		// TODO shouldn't we deduce the classname from the persistentclasS?
+		// TODO shouldn't we deduce the classname from the persistentClass?
 		this.propertyHolder = PropertyHolderBuilder.buildPropertyHolder(
 				persistentClass,
 				joins,

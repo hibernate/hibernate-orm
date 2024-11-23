@@ -182,4 +182,4 @@ The `QueryStatistics` instance, which you can get via the `getQueryStatistics(St
 
 `getPlanCacheHitCount`:: The number of query plans successfully fetched from the cache.
 `getQueryPlanCacheMissCount`:: The number of query plans *not* fetched from the cache.
-`getQueryPlanCacheMissCount`:: The overall time spent to compile the plan for this particular query.
+`getPlanCompilationTotalMicroseconds`:: The overall time spent to compile the plan for this particular query.

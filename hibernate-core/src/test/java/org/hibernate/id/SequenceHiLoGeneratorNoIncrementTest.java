@@ -8,7 +8,6 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
-import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -47,7 +46,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 
 	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
-	private SequenceStyleGenerator generator;
+	private SequenceGenerator generator;
 	private SessionImplementor sessionImpl;
 	private SequenceValueExtractor sequenceValueExtractor;
 
@@ -58,35 +57,33 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 
-		generator = new SequenceStyleGenerator();
 
+		MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 		// Build the properties used to configure the id generator
 		Properties properties = new Properties();
-		properties.setProperty( SequenceStyleGenerator.SEQUENCE_PARAM, TEST_SEQUENCE );
-		properties.setProperty( SequenceStyleGenerator.OPT_PARAM, "legacy-hilo" );
-		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "0" ); // JPA allocationSize of 1
+		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
+		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
+
 		properties.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				new ObjectNameNormalizer() {
-					@Override
-					protected MetadataBuildingContext getBuildingContext() {
-						return new MetadataBuildingContextTestingImpl( serviceRegistry );
-					}
-				}
+				buildingContext.getObjectNameNormalizer()
 		);
+
+		generator = new SequenceHiLoGenerator();
 		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		generator.registerExportables( metadata.getDatabase() );
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		generator.initialize( sessionFactory.getSqlStringGenerationContext() );
 		sequenceValueExtractor = new SequenceValueExtractor( sessionFactory.getDialect(), TEST_SEQUENCE );
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown() {
 		if ( sessionImpl != null && !sessionImpl.isClosed() ) {
-			((Session) sessionImpl).close();
+			sessionImpl.close();
 		}
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
@@ -100,31 +97,23 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	public void testHiLoAlgorithm() {
 		sessionImpl = (SessionImpl) sessionFactory.openSession();
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// historically the hilo generators skipped the initial block of values;
-		// 		so the first generated id value is maxlo + 1, here be 4
 		assertEquals( 1L, generateValue() );
 
-		// which should also perform the first read on the sequence which should set it to its "start with" value (1)
 		assertEquals( 1L, extractSequenceValue() );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 2L, generateValue() );
 		assertEquals( 2L, extractSequenceValue() );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 3L, generateValue() );
 		assertEquals( 3L, extractSequenceValue() );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 4L, generateValue() );
 		assertEquals( 4L, extractSequenceValue() );
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		assertEquals( 5L, generateValue() );
 		assertEquals( 5L, extractSequenceValue() );
 
-		((Session) sessionImpl).close();
+		sessionImpl.close();
 	}
 
 	private long extractSequenceValue() {
@@ -133,7 +122,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 
 	private long generateValue() {
 		Long generatedValue;
-		Transaction transaction = ((Session) sessionImpl).beginTransaction();
+		Transaction transaction = sessionImpl.beginTransaction();
 		generatedValue = (Long) generator.generate( sessionImpl, null );
 		transaction.commit();
 		return generatedValue.longValue();

@@ -7,9 +7,9 @@
 package org.hibernate.engine.jdbc.env.internal;
 
 import java.util.Locale;
-import java.util.Set;
 import java.util.TreeSet;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
@@ -31,7 +31,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final boolean globallyQuoteIdentifiers;
 	private final boolean globallyQuoteIdentifiersSkipColumnDefinitions;
 	private final boolean autoQuoteKeywords;
-	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+	private final TreeSet<String> reservedWords;
 	private final IdentifierCaseStrategy unquotedCaseStrategy;
 	private final IdentifierCaseStrategy quotedCaseStrategy;
 
@@ -41,7 +41,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			boolean globallyQuoteIdentifiers,
 			boolean globallyQuoteIdentifiersSkipColumnDefinitions,
 			boolean autoQuoteKeywords,
-			Set<String> reservedWords,
+			TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
 			IdentifierCaseStrategy unquotedCaseStrategy,
 			IdentifierCaseStrategy quotedCaseStrategy) {
 		this.jdbcEnvironment = jdbcEnvironment;
@@ -49,9 +49,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 		this.globallyQuoteIdentifiersSkipColumnDefinitions = globallyQuoteIdentifiersSkipColumnDefinitions;
 		this.autoQuoteKeywords = autoQuoteKeywords;
-		if ( reservedWords != null ) {
-			this.reservedWords.addAll( reservedWords );
-		}
+		this.reservedWords = reservedWords;
 		this.unquotedCaseStrategy = unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy;
 		this.quotedCaseStrategy = quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy;
 	}
@@ -98,6 +96,9 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public boolean isReservedWord(String word) {
+		if ( autoQuoteKeywords == false ) {
+			throw new AssertionFailure( "The reserved keywords map is only initialized if autoQuoteKeywords is true" );
+		}
 		return reservedWords.contains( word );
 	}
 

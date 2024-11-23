@@ -31,6 +31,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.MetamodelImpl;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -266,6 +267,14 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( 1, attributes.size() );
 		PluralAttribute<? super Garden, ?, ?> flowers = attributes.iterator().next();
 		assertTrue( flowers instanceof ListAttribute );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14346" )
+	public void testEmptyPluralAttributeSet() throws Exception {
+		final EntityType<Feline> entityType = entityManagerFactory().getMetamodel().entity( Feline.class );
+		final Set<PluralAttribute<? super Feline, ?, ?>> attributes = entityType.getPluralAttributes();
+		assertEquals( 0, attributes.size() );
 	}
 
 	@Test

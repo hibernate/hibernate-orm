@@ -47,7 +47,7 @@
 
     <class name="org.hibernate.test.legacy.Outer" table="CID_OUT">
         <composite-id name="id">
-            <key-many-to-one name="master">
+            <key-many-to-one name="root">
                 <column length="10" name="AKEY"/>
                 <column length="10" name="BKEY"/>
                 <column length="10" name="ONE"/>

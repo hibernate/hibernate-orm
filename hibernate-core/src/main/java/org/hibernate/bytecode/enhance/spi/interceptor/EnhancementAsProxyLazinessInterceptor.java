@@ -13,12 +13,11 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.BytecodeLogger;
+import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -36,10 +35,11 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	private final boolean inLineDirtyChecking;
 	private Set<String> writtenFieldNames;
+	private Set<String> collectionAttributeNames;
 
-	private boolean initialized;
+	private Status status;
 
-	private boolean initializeBeforeWrite;
+	private final boolean initializeBeforeWrite;
 
 	public EnhancementAsProxyLazinessInterceptor(
 			String entityName,
@@ -58,11 +58,24 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		this.entityKey = entityKey;
 
 		final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister( entityName );
+		if ( entityPersister.hasCollections() ) {
+			Type[] propertyTypes = entityPersister.getPropertyTypes();
+			collectionAttributeNames = new HashSet<>();
+			for ( int i = 0; i < propertyTypes.length; i++ ) {
+				Type propertyType = propertyTypes[i];
+				if ( propertyType.isCollectionType() ) {
+					collectionAttributeNames.add( entityPersister.getPropertyNames()[i] );
+				}
+			}
+		}
+
 		this.inLineDirtyChecking = entityPersister.getEntityMode() == EntityMode.POJO
 				&& SelfDirtinessTracker.class.isAssignableFrom( entityPersister.getMappedClass() );
 		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
-		// 	because the pre-computed update statement contains even not dirty properties and so we need all the values
-		initializeBeforeWrite = !inLineDirtyChecking || !entityPersister.getEntityMetamodel().isDynamicUpdate();
+		// because the pre-computed update statement contains even not dirty properties and so we need all the values
+		// we have to initialise it even if it's versioned to fetch the current version
+		initializeBeforeWrite = !( inLineDirtyChecking && entityPersister.getEntityMetamodel().isDynamicUpdate() ) || entityPersister.isVersioned();
+		status = Status.UNINITIALIZED;
 	}
 
 	public EntityKey getEntityKey() {
@@ -72,7 +85,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	@Override
 	protected Object handleRead(Object target, String attributeName, Object value) {
 		// it is illegal for this interceptor to still be attached to the entity after initialization
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new IllegalStateException( "EnhancementAsProxyLazinessInterceptor interception on an initialized instance" );
 		}
 
@@ -125,7 +138,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 							isTempSession
 					);
 
-					initialized = true;
+					setInitialized();
 
 					if ( writtenValues != null ) {
 						// here is the replaying of the explicitly set values we prepared above
@@ -158,7 +171,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),
@@ -174,7 +187,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName, SharedSessionContractImplementor session, boolean isTemporarySession) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),
@@ -189,7 +202,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			// Add an entry for this entity in the PC of the temp Session
 			session.getPersistenceContextInternal().addEntity(
 					target,
-					Status.READ_ONLY,
+					org.hibernate.engine.spi.Status.READ_ONLY,
 					// loaded state
 					ArrayHelper.filledArray(
 							LazyPropertyInitializer.UNFETCHED_PROPERTY,
@@ -215,7 +228,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	@Override
 	protected Object handleWrite(Object target, String attributeName, Object oldValue, Object newValue) {
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new IllegalStateException( "EnhancementAsProxyLazinessInterceptor interception on an initialized instance" );
 		}
 
@@ -245,13 +258,14 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			return newValue;
 		}
 
-		if ( initializeBeforeWrite ) {
+		if ( initializeBeforeWrite
+				|| ( collectionAttributeNames != null && collectionAttributeNames.contains( attributeName ) ) ) {
 			// we need to force-initialize the proxy - the fetch group to which the `attributeName` belongs
 			try {
 				forceInitialize( target, attributeName );
 			}
 			finally {
-				initialized = true;
+				setInitialized();
 			}
 
 			if ( inLineDirtyChecking ) {
@@ -267,6 +281,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 				writtenFieldNames = new HashSet<>();
 			}
 			writtenFieldNames.add( attributeName );
+
+			( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
 		}
 
 		return newValue;
@@ -279,14 +295,14 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	@Override
 	public void attributeInitialized(String name) {
-		if ( initialized ) {
+		if ( status == Status.INITIALIZED ) {
 			throw new UnsupportedOperationException( "Expected call to EnhancementAsProxyLazinessInterceptor#attributeInitialized" );
 		}
 	}
 
 	@Override
 	public boolean isAttributeLoaded(String fieldName) {
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new UnsupportedOperationException( "Call to EnhancementAsProxyLazinessInterceptor#isAttributeLoaded on an interceptor which is marked as initialized" );
 		}
 		// Only fields from the identifier are loaded (until it's initialized)
@@ -295,7 +311,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	@Override
 	public boolean hasAnyUninitializedAttributes() {
-		if ( initialized ) {
+		if ( isInitialized() ) {
 			throw new UnsupportedOperationException( "Call to EnhancementAsProxyLazinessInterceptor#hasAnyUninitializedAttributes on an interceptor which is marked as initialized" );
 		}
 		return true;
@@ -304,5 +320,32 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	@Override
 	public Object getIdentifier() {
 		return entityKey.getIdentifier();
+	}
+
+	public boolean isInitializing() {
+		return status == Status.INITIALIZING;
+	}
+
+	public void setInitializing() {
+		status = Status.INITIALIZING;
+	}
+
+	//Mostly useful for testing
+	public boolean isInitialized() {
+		return status == Status.INITIALIZED;
+	}
+
+	private void setInitialized() {
+		status = Status.INITIALIZED;
+	}
+
+	public boolean hasWrittenFieldNames() {
+		return writtenFieldNames != null && writtenFieldNames.size() != 0;
+	}
+
+	private enum Status {
+		UNINITIALIZED,
+		INITIALIZING,
+		INITIALIZED
 	}
 }

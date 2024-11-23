@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.HibernateException;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -28,6 +29,9 @@ import org.jboss.logging.Logger;
 
 /**
  * Represents a LogicalConnection where we manage obtaining and releasing the Connection as needed.
+ * This implementation does not claim to be threadsafe and is not designed to be used by multiple
+ * threads, yet we do apply a limited amount of care to be able to void obscure exceptions when
+ * this class is used in the wrong way.
  *
  * @author Steve Ebersole
  */
@@ -150,12 +154,23 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
+	public void beforeTransactionCompletion() {
+		super.beforeTransactionCompletion();
+		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION ) {
+			log.debug( "Initiating JDBC connection release from beforeTransactionCompletion" );
+			releaseConnection();
+		}
+	}
+
+	@Override
 	public void afterTransaction() {
 		super.afterTransaction();
 
 		if ( connectionHandlingMode.getReleaseMode() != ConnectionReleaseMode.ON_CLOSE ) {
-			// NOTE : we check for !ON_CLOSE here (rather than AFTER_TRANSACTION) to also catch AFTER_STATEMENT cases
-			// that were circumvented due to held resources
+			// NOTE : we check for !ON_CLOSE here (rather than AFTER_TRANSACTION) to also catch:
+			// - AFTER_STATEMENT cases that were circumvented due to held resources
+			// - BEFORE_TRANSACTION_COMPLETION cases that were circumvented because a rollback occurred
+			//   (we don't get a beforeTransactionCompletion event on rollback).
 			log.debug( "Initiating JDBC connection release from afterTransaction" );
 			releaseConnection();
 		}
@@ -181,23 +196,34 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	private void releaseConnection() {
-		if ( physicalConnection == null ) {
+		final Connection localVariableConnection = this.physicalConnection;
+		if ( localVariableConnection == null ) {
 			return;
 		}
 
+		// We need to set the connection to null before we release resources,
+		// in order to prevent recursion into this method.
+		// Recursion can happen when we release resources and when batch statements are in progress:
+		// when releasing resources, we'll abort the batch statement,
+		// which will trigger "logicalConnection.afterStatement()",
+		// which in some configurations will release the connection.
+		this.physicalConnection = null;
 		try {
-			if ( !physicalConnection.isClosed() ) {
-				sqlExceptionHelper.logAndClearWarnings( physicalConnection );
+			try {
+				getResourceRegistry().releaseResources();
+				if ( !localVariableConnection.isClosed() ) {
+					sqlExceptionHelper.logAndClearWarnings( localVariableConnection );
+				}
 			}
-			jdbcConnectionAccess.releaseConnection( physicalConnection );
+			finally {
+				jdbcConnectionAccess.releaseConnection( localVariableConnection );
+			}
 		}
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "Unable to release JDBC Connection" );
 		}
 		finally {
 			observer.jdbcConnectionReleaseEnd();
-			physicalConnection = null;
-			getResourceRegistry().releaseResources();
 		}
 	}
 

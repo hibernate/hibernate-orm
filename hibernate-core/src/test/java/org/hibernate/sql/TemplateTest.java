@@ -108,6 +108,12 @@ public class TemplateTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void testNullToFunction() {
+		//Apparently this may happen during HQL parsing given a wrong syntax
+		FUNCTION_REGISTRY.findSQLFunction( null );
+	}
+
+	@Test
 	public void testSqlExtractFunction() {
 		String fragment = "extract( year from col )";
 		String template = Template.renderWhereStringTemplate( fragment, Template.TEMPLATE, DIALECT, FUNCTION_REGISTRY );

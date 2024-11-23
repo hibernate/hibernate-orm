@@ -163,7 +163,7 @@ public class IngresDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
 		// There is no support for a native boolean type that accepts values
 		// of true, false or unknown. Using the tinyint type requires
-		// substitions of true and false.
+		// substitutions of true and false.
 		getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
 	}
 

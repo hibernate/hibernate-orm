@@ -191,9 +191,6 @@ public class LazyGroupWithInheritanceAllowProxyTest extends BaseNonConfigCoreFun
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
 
-		// todo : this is the only difference between this test and LazyGroupWithInheritanceTest
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 		ssrb.applySetting( AvailableSettings.USE_QUERY_CACHE, "false" );

@@ -18,7 +18,7 @@ public class LegacyFirstLimitHandler extends AbstractLimitHandler {
 	public static final LegacyFirstLimitHandler INSTANCE = new LegacyFirstLimitHandler();
 
 	LegacyFirstLimitHandler() {
-		// NOP
+		// NOOP
 	}
 
 	@Override

@@ -7,6 +7,8 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.PropertyPath;
 
 /**
  * An ImplicitNamingStrategy implementation which uses full composite paths
@@ -29,14 +31,17 @@ public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrat
 	}
 
 	public static void process(AttributePath attributePath, StringBuilder sb) {
-		if ( attributePath.getParent() != null ) {
-			process( attributePath.getParent(), sb );
-			if ( !"".equals( attributePath.getParent().getProperty() ) ) {
-				sb.append( '_' );
-			}
-		}
-
 		String property = attributePath.getProperty();
+		final AttributePath parent = attributePath.getParent();
+		if ( parent != null && StringHelper.isNotEmpty( parent.getProperty() ) ) {
+			process( parent, sb );
+			sb.append( '_' );
+		}
+		else if ( PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( property ) ) {
+			// skip it, do not pass go
+			sb.append( "id" );
+			return;
+		}
 		property = property.replace( "<", "" );
 		property = property.replace( ">", "" );
 

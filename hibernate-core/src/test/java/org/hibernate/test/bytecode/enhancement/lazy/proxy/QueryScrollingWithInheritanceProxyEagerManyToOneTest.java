@@ -49,11 +49,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @RunWith(BytecodeEnhancerRunner.class)
 public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
 
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
@@ -302,7 +297,6 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 		private String id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@LazyToOne(LazyToOneOption.NO_PROXY)
 		@JoinColumn(name = "Employee_Id")
 		protected Employee employee = null;
 

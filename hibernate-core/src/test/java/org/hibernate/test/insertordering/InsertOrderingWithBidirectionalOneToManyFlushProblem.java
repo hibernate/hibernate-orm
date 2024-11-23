@@ -8,7 +8,6 @@ package org.hibernate.test.insertordering;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,19 +16,18 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.GenerationType.SEQUENCE;
-import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
-import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 @TestForIssue(jiraKey = "HHH-12074")
-public class InsertOrderingWithBidirectionalOneToManyFlushProblem
-		extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseInsertOrderingTest {
 
 	@Test
 	public void testBatchingWithFlush() {
@@ -40,11 +38,15 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 
 				session.persist( top1 );
 
+				clearBatches();
+
 				// InsertActionSorter#sort is invoked during this flush.
 				//
 				// input: [top1]
 				// output: [top1]
 				session.flush();
+
+				verifyContainsBatches( new Batch( "insert into TopEntity (id) values (?)" ) );
 
 				MiddleEntity middle1 = new MiddleEntity();
 
@@ -71,7 +73,15 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 				// when the attempt to insert middle2 before top2 is made.
 				//
 				// correct ordering is: [top2,middle1,middle2,bottom1,bottom2]
+
+				clearBatches();
 			}
+		);
+
+		verifyContainsBatches(
+				new Batch( "insert into TopEntity (id) values (?)" ),
+				new Batch( "insert into MiddleEntity (top_id, id) values (?, ?)", 2 ),
+				new Batch( "insert into BottomEntity (middle_id, id) values (?, ?)", 2 )
 		);
 	}
 
@@ -89,7 +99,10 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 				//
 				// input: [top1]
 				// output: [top1]
+				clearBatches();
 				session.flush();
+
+				verifyContainsBatches( new Batch( "insert into TopEntity (id) values (?)" ) );
 
 				MiddleEntity middle1 = new MiddleEntity();
 
@@ -120,19 +133,21 @@ public class InsertOrderingWithBidirectionalOneToManyFlushProblem
 				// when the attempt to insert middle2 before top2 is made.
 				//
 				// correct ordering is: [top2,middle1,middle2,bottom1,bottom2]
+				clearBatches();
 			}
+		);
+
+		verifyContainsBatches(
+				new Batch( "insert into TopEntity (id) values (?)", 2 ),
+				new Batch( "insert into MiddleEntity (top_id, id) values (?, ?)", 2 ),
+				new Batch( "insert into BottomEntity (middle_id, id) values (?, ?)", 2 ),
+				new Batch( "insert into BottomEntity2 (middle_id, id) values (?, ?)", 2 )
 		);
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		settings.put( ORDER_INSERTS, "true" );
-		settings.put( STATEMENT_BATCH_SIZE, "10" );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { TopEntity.class, MiddleEntity.class, BottomEntity.class, BottomEntity2.class };
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { TopEntity.class, MiddleEntity.class, BottomEntity.class, BottomEntity2.class };
 	}
 
 	@Entity(name = "BottomEntity")

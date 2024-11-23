@@ -86,18 +86,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 	public ResultSet getResultSet(CallableStatement statement, int position) {
 		if ( jdbcServices.getExtractedMetaDataSupport().supportsRefCursors() ) {
 			try {
-				return (ResultSet) getResultSetByPositionMethod().invoke( statement, position, ResultSet.class );
-			}
-			catch (InvocationTargetException e) {
-				if ( e.getTargetException() instanceof SQLException ) {
-					throw jdbcServices.getSqlExceptionHelper().convert(
-							(SQLException) e.getTargetException(),
-							"Error extracting REF_CURSOR parameter [" + position + "]"
-					);
-				}
-				else {
-					throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + position + "]", e.getTargetException() );
-				}
+				return statement.getObject( position, ResultSet.class );
 			}
 			catch (Exception e) {
 				throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + position + "]", e );
@@ -120,18 +109,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 	public ResultSet getResultSet(CallableStatement statement, String name) {
 		if ( jdbcServices.getExtractedMetaDataSupport().supportsRefCursors() ) {
 			try {
-				return (ResultSet) getResultSetByNameMethod().invoke( statement, name, ResultSet.class );
-			}
-			catch (InvocationTargetException e) {
-				if ( e.getTargetException() instanceof SQLException ) {
-					throw jdbcServices.getSqlExceptionHelper().convert(
-							(SQLException) e.getTargetException(),
-							"Error extracting REF_CURSOR parameter [" + name + "]"
-					);
-				}
-				else {
-					throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + name + "]", e.getTargetException() );
-				}
+				return statement.getObject( name, ResultSet.class );
 			}
 			catch (Exception e) {
 				throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + name + "]", e );
@@ -158,58 +136,25 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 	 * @return {@code true} if the metadata indicates that the driver defines REF_CURSOR support
 	 */
 	public static boolean supportsRefCursors(DatabaseMetaData meta) {
-		// Standard JDBC REF_CURSOR support was not added until Java 8, so we need to use reflection to attempt to
-		// access these fields/methods...
 		try {
-			return (Boolean) meta.getClass().getMethod( "supportsRefCursors" ).invoke( meta );
+			final boolean mightSupportIt = meta.supportsRefCursors();
+			// Some databases cheat and don't actually support it correctly: add some additional checks.
+			if ( mightSupportIt ) {
+				if ( "Oracle JDBC driver".equals( meta.getDriverName() ) && meta.getDriverMajorVersion() < 19 ) {
+					return false;
+				}
+			}
+			return mightSupportIt;
 		}
-		catch (NoSuchMethodException e) {
-			log.trace( "JDBC DatabaseMetaData class does not define supportsRefCursors method..." );
+		catch (Exception throwable) {
+			//If the driver is not compatible with the Java 8 contract, the method might not exit.
+			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support : " + throwable.getMessage() );
+			return false;
 		}
-		catch (Exception e) {
-			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support : " + e.getMessage() );
-		}
-		return false;
 	}
-
 
 	private int refCursorTypeCode() {
 		return Types.REF_CURSOR;
 	}
 
-
-	private static Method getResultSetByPositionMethod;
-
-	private Method getResultSetByPositionMethod() {
-		if ( getResultSetByPositionMethod == null ) {
-			try {
-				getResultSetByPositionMethod = CallableStatement.class.getMethod( "getObject", int.class, Class.class );
-			}
-			catch (NoSuchMethodException e) {
-				throw new HibernateException( "CallableStatement class does not define getObject(int,Class) method" );
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Unexpected error trying to access CallableStatement#getObject(int,Class)" );
-			}
-		}
-		return getResultSetByPositionMethod;
-	}
-
-
-	private static Method getResultSetByNameMethod;
-
-	private Method getResultSetByNameMethod() {
-		if ( getResultSetByNameMethod == null ) {
-			try {
-				getResultSetByNameMethod = CallableStatement.class.getMethod( "getObject", String.class, Class.class );
-			}
-			catch (NoSuchMethodException e) {
-				throw new HibernateException( "CallableStatement class does not define getObject(String,Class) method" );
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Unexpected error trying to access CallableStatement#getObject(String,Class)" );
-			}
-		}
-		return getResultSetByNameMethod;
-	}
 }

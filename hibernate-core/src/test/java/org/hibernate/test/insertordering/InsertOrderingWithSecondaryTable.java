@@ -8,8 +8,6 @@ package org.hibernate.test.insertordering;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
@@ -30,25 +28,19 @@ import javax.persistence.SecondaryTable;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-11714")
-public class InsertOrderingWithSecondaryTable extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( AvailableSettings.ORDER_INSERTS, Boolean.TRUE );
-		options.put( AvailableSettings.ORDER_UPDATES, Boolean.TRUE );
-	}
+@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -63,7 +55,7 @@ public class InsertOrderingWithSecondaryTable extends BaseEntityManagerFunctiona
 
 	@Test
 	public void testInheritanceWithSecondaryTable() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInHibernate( this::sessionFactory, session -> {
 			final TopLevelEntity top = new TopLevelEntity();
 
 			final GeographicArea area1 = new GeographicArea();
@@ -79,9 +71,18 @@ public class InsertOrderingWithSecondaryTable extends BaseEntityManagerFunctiona
 			area2.setShape( circle );
 			top.getGeographicAreas().add( area2 );
 
-			entityManager.persist( top );
-			entityManager.flush();
+			session.save( top );
+
+			clearBatches();
 		} );
+
+		verifyContainsBatches(
+				new Batch( "insert into TOP_LEVEL (id) values (?)" ),
+				new Batch( "insert into SHAPE (SHAPE_TYPE, SHAPE_ID) values ('POLYGON', ?)" ),
+				new Batch( "insert into SHAPE (SHAPE_TYPE, SHAPE_ID) values ('CIRCLE', ?)" ),
+				new Batch( "insert into SHAPE_CIRCLE (centre, SHAPE_ID) values (?, ?)" ),
+				new Batch( "insert into GEOGRAPHIC_AREA (SHAPE_ID, TOP_LEVEL_ID, id) values (?, ?, ?)", 2 )
+		);
 	}
 
 	@Entity

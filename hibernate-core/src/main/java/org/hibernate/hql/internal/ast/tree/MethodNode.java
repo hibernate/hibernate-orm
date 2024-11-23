@@ -141,20 +141,25 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		String propertyName = CollectionProperties.getNormalizedPropertyName( methodName );
 		if ( expr instanceof FromReferenceNode ) {
 			FromReferenceNode collectionNode = (FromReferenceNode) expr;
+			fromElement = collectionNode.getFromElement();
 			// If this is 'elements' then create a new FROM element.
 			if ( CollectionPropertyNames.COLLECTION_ELEMENTS.equals( propertyName ) ) {
-				handleElements( collectionNode, propertyName );
+				QueryableCollection queryableCollection = fromElement.getQueryableCollection();
+
+				String path = collectionNode.getPath() + "[]." + propertyName;
+				LOG.debugf( "Creating elements for %s", path );
+
+				if ( !fromElement.isCollectionOfValuesOrComponents() ) {
+					getWalker().addQuerySpaces( queryableCollection.getElementPersister().getQuerySpaces() );
+				}
+
+				setDataType( queryableCollection.getElementType() );
+				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 			}
 			else {
 				// Not elements(x)
-				fromElement = collectionNode.getFromElement();
-
-				final CollectionPropertyReference cpr = fromElement.getCollectionPropertyReference( propertyName );
-				setDataType( cpr.getType() );
-				selectColumns = cpr.toColumns( fromElement.getTableAlias() );
-
-//				setDataType( fromElement.getPropertyType( propertyName, propertyName ) );
-//				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
+				setDataType( fromElement.getPropertyType( propertyName, propertyName ) );
+				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 			}
 
 			if ( collectionNode instanceof DotNode ) {
@@ -181,29 +186,13 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		if ( dotNode.getLhs() instanceof DotNode ) {
 			DotNode lhs = (DotNode) dotNode.getLhs();
 			FromElement lhsOrigin = lhs.getFromElement();
-			if ( lhsOrigin != null && "".equals( lhsOrigin.getText() ) ) {
+			if ( lhsOrigin != null && lhsOrigin.getText() != null && lhsOrigin.getText().isEmpty() ) {
 				String lhsOriginText = lhsOrigin.getQueryable().getTableName() +
 						" " + lhsOrigin.getTableAlias();
 				lhsOrigin.setText( lhsOriginText );
 			}
 			prepareAnyImplicitJoins( lhs );
 		}
-	}
-
-	private void handleElements(FromReferenceNode collectionNode, String propertyName) {
-		FromElement collectionFromElement = collectionNode.getFromElement();
-		QueryableCollection queryableCollection = collectionFromElement.getQueryableCollection();
-
-		String path = collectionNode.getPath() + "[]." + propertyName;
-		LOG.debugf( "Creating elements for %s", path );
-
-		fromElement = collectionFromElement;
-		if ( !collectionFromElement.isCollectionOfValuesOrComponents() ) {
-			getWalker().addQuerySpaces( queryableCollection.getElementPersister().getQuerySpaces() );
-		}
-
-		setDataType( queryableCollection.getElementType() );
-		selectColumns = collectionFromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 	}
 
 	@Override

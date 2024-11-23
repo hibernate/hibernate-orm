@@ -77,7 +77,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	@Override
 	public Serializable[] getDisassembledState() {
 		// todo: this was added to support initializing an entity's EntityEntry snapshot during reattach;
-		// this should be refactored to instead expose a method to assemble a EntityEntry based on this
+		// this should be refactored to instead expose a method to assemble an EntityEntry based on this
 		// state for return.
 		return disassembledState;
 	}

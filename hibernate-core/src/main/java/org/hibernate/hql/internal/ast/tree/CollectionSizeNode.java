@@ -12,6 +12,7 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -53,7 +54,7 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 		// where <owner-key-column> = alias_.<collection-key-column>
 
 		// Note that `collectionPropertyMapping.toColumns(.., COLLECTION_SIZE)` returns the complete `count(...)` SQL
-		// expression, hence he expectation for a single expression regardless of the number of columns in the key.
+		// expression, hence the expectation for a single expression regardless of the number of columns in the key.
 
 		final String collectionTableAlias = collectionOwnerFromElement.getFromClause()
 				.getAliasGenerator()
@@ -89,6 +90,8 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 			buffer.append( ownerKeyColumns[i] ).append( " = " ).append( collectionKeyColumns[i] );
 		}
 
+		buffer.append( collectionDescriptor.filterFragment( collectionTableAlias,
+				collectionOwnerFromElement.getWalker().getEnabledFilters() ) );
 		buffer.append( ")" );
 
 		if ( scalarName != null ) {
@@ -146,7 +149,7 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 
 	@Override
 	public boolean isScalar() {
-		return false;
+		return true;
 	}
 
 	@Override

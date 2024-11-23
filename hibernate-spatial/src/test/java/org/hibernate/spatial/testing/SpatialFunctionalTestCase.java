@@ -75,7 +75,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			String hql = String.format( "delete from %s", entityName(pckg) );
+			String hql = String.format( "delete from %s", entityName( pckg ) );
 			Query q = session.createQuery( hql );
 			q.executeUpdate();
 			tx.commit();
@@ -238,7 +238,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 						"Failure on testsuite-suite for case " + id,
 						geometryEquality.test(
 								(Geometry) expected,
-								(Geometry) org.geolatte.geom.jts.JTS.to( (org.geolatte.geom.Geometry) received )
+								org.geolatte.geom.jts.JTS.to( (org.geolatte.geom.Geometry) received )
 						)
 				);
 			}
@@ -255,9 +255,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	protected String entityName(String pckg) {
-		if (JTS.equalsIgnoreCase(  pckg )) {
+		if ( JTS.equalsIgnoreCase( pckg ) ) {
 			return "org.hibernate.spatial.integration.jts.JtsGeomEntity";
-		} else {
+		}
+		else {
 			return "org.hibernate.spatial.integration.geolatte.GeomEntity";
 		}
 	}

@@ -59,7 +59,6 @@ public class WebApplication extends BaseEntity {
 	}
 
 	@OneToMany(mappedBy="webApplication", fetch= FetchType.LAZY)
-	@LazyToOne(LazyToOneOption.NO_PROXY)
 	@LazyGroup("app_activity_group")
 //	@CollectionType(type="baseutil.technology.hibernate.IskvLinkedSetCollectionType")
 	public Set<Activity> getActivities() {

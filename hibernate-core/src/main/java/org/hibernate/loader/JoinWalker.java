@@ -1002,6 +1002,9 @@ public class JoinWalker {
 		}
 	}
 
+	protected StringBuilder whereString(String alias, String[] columnNames, boolean[] valueNullnes, int batchSize) {
+		return whereString( alias, columnNames, batchSize );
+	}
 
 	protected void initPersisters(final List associations, final LockMode lockMode) throws MappingException {
 		initPersisters( associations, new LockOptions( lockMode ) );
@@ -1112,7 +1115,7 @@ public class JoinWalker {
 						collectionSuffix,
 						join.getJoinType() == JoinType.LEFT_OUTER_JOIN
 				);
-				if ( selectFragment.trim().length() > 0 ) {
+				if ( !StringHelper.isBlank( selectFragment ) ) {
 					buf.append( ", " ).append( selectFragment );
 				}
 				if ( joinable.consumesEntityAlias() ) {

@@ -8,6 +8,8 @@
 //$Id$
 package org.hibernate.test.annotations.configuration;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 
 import org.junit.Assert;
@@ -19,8 +21,8 @@ import org.junit.Test;
 public class ConfigurationTest  {
     @Test
 	public void testMixPackageAndResourceOrdering() throws Exception {
-		try {
-			Configuration config = new Configuration();
+		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
+			Configuration config = new Configuration( serviceRegistry );
 			config.addResource( "org/hibernate/test/annotations/configuration/orm.xml" );
 			config.addPackage( "org.hibernate.test.annotations.configuration" );
 		}

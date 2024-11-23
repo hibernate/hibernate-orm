@@ -14,6 +14,9 @@ import javax.persistence.LockModeType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -50,6 +53,12 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return  new Class[] { A.class };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
+		configuration.getProperties().remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
 	@Override
@@ -201,6 +210,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12257")
+	@SkipForDialect( value = CockroachDB192Dialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
 						   A a = session.get( A.class, id );

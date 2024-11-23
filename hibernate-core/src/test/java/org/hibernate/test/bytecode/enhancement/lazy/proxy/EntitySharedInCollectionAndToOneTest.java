@@ -116,7 +116,6 @@ public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunct
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 	}
 
@@ -212,7 +211,6 @@ public class EntitySharedInCollectionAndToOneTest extends BaseNonConfigCoreFunct
 		private CodeTable codeTable;
 
 		@OneToOne( mappedBy = "defaultItem", fetch=FetchType.LAZY )
-		@LazyToOne( LazyToOneOption.NO_PROXY )
 		@LazyGroup( "defaultItemInverse" )
 		protected CodeTable defaultItemInverse;
 

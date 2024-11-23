@@ -23,7 +23,7 @@ public class EntityTypeExpression<T> extends ExpressionImpl<T> implements Serial
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
-		// nothign to do
+		// nothing to do
 	}
 
 	public String render(RenderingContext renderingContext) {

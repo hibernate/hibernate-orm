@@ -45,7 +45,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface PersistentCollection {
+public interface PersistentCollection extends LazyInitializable {
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection
@@ -272,11 +272,6 @@ public interface PersistentCollection {
 	Serializable getSnapshot(CollectionPersister persister);
 
 	/**
-	 * To be called internally by the session, forcing immediate initialization.
-	 */
-	void forceInitialization();
-
-	/**
 	 * Does the given element/entry exist in the collection?
 	 *
 	 * @param entry The object to check if it exists as a collection element
@@ -334,13 +329,6 @@ public interface PersistentCollection {
 	 * @return  {@code true} if this is a wrapper around that given collection instance.
 	 */
 	boolean isWrapper(Object collection);
-
-	/**
-	 * Is this instance initialized?
-	 *
-	 * @return Was this collection initialized?  Or is its data still not (fully) loaded?
-	 */
-	boolean wasInitialized();
 
 	/**
 	 * Does this instance have any "queued" operations?
@@ -460,4 +448,12 @@ public interface PersistentCollection {
 	 */
 	Collection getOrphans(Serializable snapshot, String entityName);
 
+	/**
+	 * Is the collection newly instantiated?
+	 *
+	 * @return {@code true} if the collection is newly instantiated
+	 */
+	default boolean isNewlyInstantiated() {
+		return getKey() == null && !isDirty();
+	}
 }

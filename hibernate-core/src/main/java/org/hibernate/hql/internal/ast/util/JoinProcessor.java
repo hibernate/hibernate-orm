@@ -142,6 +142,14 @@ public class JoinProcessor implements SqlTokenTypes {
 			if ( role != null ) {
 				result.add( fromElement.getOrigin().getPropertyTableName(role.substring(role.lastIndexOf('.') + 1)) );
 			}
+			final EntityPersister entityPersister = fromElement.getEntityPersister();
+			if ( entityPersister instanceof AbstractEntityPersister ) {
+				AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
+				while ( !aep.filterFragment( "", Collections.emptyMap() ).isEmpty() && aep.getMappedSuperclass() != null ) {
+					Collections.addAll( result, aep.getTableNames() );
+					aep = (AbstractEntityPersister) walker.getSessionFactoryHelper().findEntityPersisterByName( aep.getMappedSuperclass() );
+				}
+			}
 			AST withClauseAst = fromElement.getWithClauseAst();
 			if ( withClauseAst != null ) {
 				collectReferencedTables( new ASTIterator( withClauseAst ), result );
@@ -220,7 +228,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			while ( liter.hasNext() ) {
 				FromElement fromElement = liter.next();
 
-				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of it's join sequence
+				// We found an implied from element that is used in the WITH clause of another from element, so it need to become part of its join sequence
 				if ( fromElement instanceof ImpliedFromElement
 						&& fromElement.getOrigin().getWithClauseFragment() != null
 						&& fromElement.getOrigin().getWithClauseFragment().contains( fromElement.getTableAlias() ) ) {

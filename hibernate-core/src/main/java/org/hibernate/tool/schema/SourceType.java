@@ -34,7 +34,7 @@ public enum SourceType {
 	 */
 	SCRIPT( "script" ),
 	/**
-	 * "metadata-then-scripts" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
+	 * "metadata-then-script" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
 	 * with the O/RM metadata being applied first.
 	 *
 	 * @see #METADATA
@@ -42,7 +42,7 @@ public enum SourceType {
 	 */
 	METADATA_THEN_SCRIPT( "metadata-then-script" ),
 	/**
-	 * "scripts-then-metadata" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
+	 * "script-then-metadata" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
 	 * with the commands from the external DDL script(s) being applied first
 	 *
 	 * @see #SCRIPT

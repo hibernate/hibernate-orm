@@ -92,7 +92,7 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 
 		try {
 			if ( CharacterStream.class.isAssignableFrom( type ) ) {
-				if ( ClobImplementer.class.isInstance( value ) ) {
+				if (value instanceof ClobImplementer) {
 					// if the incoming Clob is a wrapper, just pass along its CharacterStream
 					return (X) ( (ClobImplementer) value ).getUnderlyingStream();
 				}
@@ -102,10 +102,20 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 				}
 			}
 			else if (Clob.class.isAssignableFrom( type )) {
-				final Clob clob =  WrappedClob.class.isInstance( value )
+				final Clob clob =  value instanceof WrappedClob
 						? ( (WrappedClob) value ).getWrappedClob()
 						: value;
 				return (X) clob;
+			}
+			else if ( String.class.isAssignableFrom( type ) ) {
+				if (value instanceof ClobImplementer) {
+					// if the incoming Clob is a wrapper, just get the underlying String.
+					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+				}
+				else {
+					// otherwise we need to extract the String.
+					return (X) DataHelper.extractString( value.getCharacterStream() );
+				}
 			}
 		}
 		catch ( SQLException e ) {
@@ -128,6 +138,9 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
 			Reader reader = (Reader) value;
 			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
+		}
+		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
+			return options.getLobCreator().createClob( (String) value );
 		}
 
 		throw unknownWrap( value.getClass() );

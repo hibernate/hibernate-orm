@@ -31,10 +31,11 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	public JdbcSessionContextImpl(
 			SharedSessionContractImplementor session,
 			StatementInspector statementInspector,
+			PhysicalConnectionHandlingMode connectionHandlingMode,
 			FastSessionServices fastSessionServices) {
 		this.sessionFactory = session.getFactory();
 		this.statementInspector = statementInspector;
-		this.connectionHandlingMode = settings().getPhysicalConnectionHandlingMode();
+		this.connectionHandlingMode = connectionHandlingMode;
 		this.serviceRegistry = sessionFactory.getServiceRegistry();
 		this.jdbcObserver = new JdbcObserverImpl( session, fastSessionServices );
 

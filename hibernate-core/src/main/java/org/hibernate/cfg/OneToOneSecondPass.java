@@ -8,14 +8,13 @@ package org.hibernate.cfg;
 
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.PropertyBinder;
@@ -41,7 +40,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private String ownerEntity;
 	private String ownerProperty;
 	private PropertyHolder propertyHolder;
-	private boolean ignoreNotFound;
+	private NotFoundAction notFoundAction;
 	private PropertyData inferredData;
 	private XClass targetEntity;
 	private boolean cascadeOnDelete;
@@ -49,7 +48,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private String cascadeStrategy;
 	private Ejb3JoinColumn[] joinColumns;
 
-	//that suck, we should read that from the property mainly
+	//that sucks, we should read that from the property mainly
 	public OneToOneSecondPass(
 			String mappedBy,
 			String ownerEntity,
@@ -57,7 +56,7 @@ public class OneToOneSecondPass implements SecondPass {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			XClass targetEntity,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean cascadeOnDelete,
 			boolean optional,
 			String cascadeStrategy,
@@ -68,7 +67,7 @@ public class OneToOneSecondPass implements SecondPass {
 		this.mappedBy = mappedBy;
 		this.propertyHolder = propertyHolder;
 		this.buildingContext = buildingContext;
-		this.ignoreNotFound = ignoreNotFound;
+		this.notFoundAction = notFoundAction;
 		this.inferredData = inferredData;
 		this.targetEntity = targetEntity;
 		this.cascadeOnDelete = cascadeOnDelete;
@@ -103,11 +102,13 @@ public class OneToOneSecondPass implements SecondPass {
 				inferredData.getProperty(),
 				inferredData.getProperty().getAnnotation( javax.persistence.ForeignKey.class ),
 				inferredData.getProperty().getAnnotation( JoinColumn.class ),
-				inferredData.getProperty().getAnnotation( JoinColumns.class )
+				inferredData.getProperty().getAnnotation( JoinColumns.class),
+				buildingContext
 		);
 
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
+		binder.setProperty( inferredData.getProperty() );
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
@@ -190,7 +191,7 @@ public class OneToOneSecondPass implements SecondPass {
 					);
 					ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 					//FIXME use ignore not found here
-					manyToOne.setIgnoreNotFound( ignoreNotFound );
+					manyToOne.setNotFoundAction( notFoundAction );
 					manyToOne.setCascadeDeleteEnabled( value.isCascadeDeleteEnabled() );
 					manyToOne.setFetchMode( value.getFetchMode() );
 					manyToOne.setLazy( value.isLazy() );
@@ -236,17 +237,6 @@ public class OneToOneSecondPass implements SecondPass {
 				boolean referenceToPrimaryKey  = referencesDerivedId || mappedBy == null;
 				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
-				// If the other side is a derived ID, and both sides are eager using FetchMode.JOIN,
-				// prevent an infinite loop of attempts to resolve identifiers by making
-				// this side use FetchMode.SELECT.
-				if ( referencesDerivedId &&
-						!value.isLazy() &&
-						value.getFetchMode() == FetchMode.JOIN &&
-						!otherSideProperty.isLazy() &&
-						otherSideProperty.getValue().getFetchMode() == FetchMode.JOIN ) {
-					value.setFetchMode( FetchMode.SELECT );
-				}
-
 				String propertyRef = value.getReferencedPropertyName();
 				if ( propertyRef != null ) {
 					buildingContext.getMetadataCollector().addUniquePropertyReference(
@@ -275,7 +265,8 @@ public class OneToOneSecondPass implements SecondPass {
 	 * Note:<br/>
 	 * <ul>
 	 * <li>From the mappedBy side we should not create the PK nor the FK, this is handled from the other side.</li>
-	 * <li>This method is a dirty dupe of EntityBinder.bindSecondaryTable</i>.
+	 * <li>This method is a dirty dupe of EntityBinder.bindSecondaryTable</li>.
+	 * </ul>
 	 * </p>
 	 */
 	private Join buildJoinFromMappedBySide(PersistentClass persistentClass, Property otherSideProperty, Join originalJoin) {

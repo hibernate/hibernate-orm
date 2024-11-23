@@ -16,7 +16,10 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -49,80 +52,94 @@ import static org.junit.Assert.assertTrue;
 public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void baseline() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ExplicitGeneratorEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitGeneratorEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ExplicitGeneratorEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitGeneratorEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping( SequenceStyleGenerator.class, generator );
+			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
+					SequenceStyleGenerator.class,
+					generator
+			);
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "my_real_db_sequence" ) );
 
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "my_real_db_sequence" ) );
-
-		// all the JPA defaults since they were not defined
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
+			// all the JPA defaults since they were not defined
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
+		}
 	}
 
 	@Test
 	public void testImplicitSequenceGenerator() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, "false" )
-				.build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+				.build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping( SequenceStyleGenerator.class, generator );
+			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
+					SequenceStyleGenerator.class,
+					generator
+			);
 
-		// PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME == false indicates that the legacy
-		// 		default (hibernate_sequence) should be used
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "hibernate_sequence" ) );
+			// PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME == false indicates that the legacy
+			// 		default (hibernate_sequence) should be used
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "hibernate_sequence" ) );
 
-		// the JPA defaults since they were not defined
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 50 ) );
+			// the JPA defaults since they were not defined
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 50 ) );
+		}
 	}
 
 	@Test
 	public void testImplicitSequenceGeneratorGeneratorName() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping( SequenceStyleGenerator.class, generator );
+			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
+					SequenceStyleGenerator.class,
+					generator
+			);
 
-		// PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME == true (the default) indicates that the generator-name
-		//		should be used as the default instead.
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "my_db_sequence" ) );
+			// PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME == true (the default) indicates that the generator-name
+			//		should be used as the default instead.
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "my_db_sequence" ) );
 
-		// the JPA defaults since they were not defined
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 50 ) );
+			// the JPA defaults since they were not defined
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 50 ) );
+		}
 	}
 
 	@Test
@@ -141,10 +158,11 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 				null,
 				(RootClass) entityMapping
 		);
+		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping( SequenceStyleGenerator.class, generator );
 		// all the JPA defaults since they were not defined
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( SequenceStyleGenerator.DEF_SEQUENCE_NAME ) );
+		assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( SequenceStyleGenerator.DEF_SEQUENCE_NAME ) );
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
 	}
@@ -152,146 +170,165 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testExplicitSequenceGeneratorImplicitNamePreferGeneratorName() {
 		// this should be the default behavior
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding(
+					ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			Database database = bootModel.getDatabase();
+			SqlStringGenerationContext sqlStringGenerationContext =
+					SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
+			generator.initialize( sqlStringGenerationContext );
 
-		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping( SequenceStyleGenerator.class, generator );
-		// all the JPA defaults since they were not defined
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "my_db_sequence" ) );
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
+			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
+					SequenceStyleGenerator.class,
+					generator
+			);
+			// all the JPA defaults since they were not defined
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "my_db_sequence" ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
 
-		final Sequence sequence = bootModel.getDatabase()
-				.getDefaultNamespace()
-				.locateSequence( Identifier.toIdentifier( "my_db_sequence" ) );
-		assertThat( sequence, notNullValue() );
-		final String[] sqlCreateStrings = new H2Dialect().getSequenceExporter().getSqlCreateStrings(
-				sequence,
-				bootModel
-		);
-		assertThat( sqlCreateStrings.length, is(1) );
-		final String cmd = sqlCreateStrings[0].toLowerCase();
-		assertTrue( cmd.startsWith( "create sequence my_db_sequence start with 100 increment by 500" ) );
+			final Sequence sequence = database.getDefaultNamespace()
+					.locateSequence( Identifier.toIdentifier( "my_db_sequence" ) );
+			assertThat( sequence, notNullValue() );
+			final String[] sqlCreateStrings = new H2Dialect().getSequenceExporter().getSqlCreateStrings(
+					sequence,
+					bootModel,
+					sqlStringGenerationContext
+			);
+			assertThat( sqlCreateStrings.length, is( 1 ) );
+			final String cmd = sqlCreateStrings[0].toLowerCase();
+			assertTrue( cmd.startsWith( "create sequence my_db_sequence start with 100 increment by 500" ) );
+		}
 	}
 
 	@Test
 	public void testImplicitTableGenerator() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ImplicitTableGeneratorEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitTableGeneratorEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ImplicitTableGeneratorEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitTableGeneratorEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
+			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
 
-		assertThat( tableGenerator.getTableName(), is( "my_id_table" ) );
+			assertThat( tableGenerator.getTableName(), is( "my_id_table" ) );
 
-		// all the JPA defaults since they were not defined
-		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
-		assertThat( tableGenerator.getIncrementSize(), is( 50 ) );
+			// all the JPA defaults since they were not defined
+			assertThat( tableGenerator.getInitialValue(), is( 1 ) );
+			assertThat( tableGenerator.getIncrementSize(), is( 50 ) );
+		}
 	}
 
 	@Test
 	public void testExplicitTableGeneratorImplicitName() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ExplicitTableGeneratorImplicitNameEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorImplicitNameEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ExplicitTableGeneratorImplicitNameEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorImplicitNameEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
+			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
 
-		assertThat( tableGenerator.getTableName(), is( "my_id_table" ) );
+			assertThat( tableGenerator.getTableName(), is( "my_id_table" ) );
 
-		//		- note : currently initialValue=1 in mapping is shows up here as 2
-		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
-		assertThat( tableGenerator.getIncrementSize(), is( 25 ) );
+			//		- note : currently initialValue=1 in mapping is shows up here as 2
+			assertThat( tableGenerator.getInitialValue(), is( 1 ) );
+			assertThat( tableGenerator.getIncrementSize(), is( 25 ) );
+		}
 	}
 
 	@Test
 	public void testExplicitTableGenerator() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ExplicitTableGeneratorEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ExplicitTableGeneratorEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
+			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
 
-		assertThat( tableGenerator.getTableName(), is( "my_real_id_table" ) );
+			assertThat( tableGenerator.getTableName(), is( "my_real_id_table" ) );
 
-		// all the JPA defaults since they were not defined
-		//		- note : currently initialValue=1 in mapping is shows up here
-		//			as 2
+			// all the JPA defaults since they were not defined
+			//		- note : currently initialValue=1 in mapping is shows up here
+			//			as 2
 //		assertThat( tableGenerator.getInitialValue(), is( 1 ) );
-		assertThat( tableGenerator.getIncrementSize(), is( 25 ) );
+			assertThat( tableGenerator.getIncrementSize(), is( 25 ) );
+		}
 	}
 
 	@Test
 	public void testExplicitIncrementGenerator() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ExplicitIncrementGeneratorEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ExplicitIncrementGeneratorEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		assertTyping( IncrementGenerator.class, generator );
+			assertTyping( IncrementGenerator.class, generator );
+		}
 	}
 
 	@Test
 	public void testImplicitIncrementGenerator() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final Metadata bootModel = new MetadataSources( ssr )
-				.addAnnotatedClass( ImplicitIncrementGeneratorEntity.class )
-				.buildMetadata();
-		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
-		final IdentifierGenerator generator  = entityMapping.getIdentifier().createIdentifierGenerator(
-				bootModel.getIdentifierGeneratorFactory(),
-				ssr.getService( JdbcEnvironment.class ).getDialect(),
-				null,
-				null,
-				(RootClass) entityMapping
-		);
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+			final Metadata bootModel = new MetadataSources( ssr )
+					.addAnnotatedClass( ImplicitIncrementGeneratorEntity.class )
+					.buildMetadata();
+			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
+			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
+					bootModel.getIdentifierGeneratorFactory(),
+					ssr.getService( JdbcEnvironment.class ).getDialect(),
+					null,
+					null,
+					(RootClass) entityMapping
+			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		assertTyping( IncrementGenerator.class, generator );
+			assertTyping( IncrementGenerator.class, generator );
+		}
 	}
 
 	@Entity
@@ -320,7 +357,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Entity
 	public static class ExplicitSequenceGeneratorImplicitNameEntity {
 		/**
-		 * This entity does not have explicit {@link SequenceGenerator} defined
+		 * This entity does have explicit {@link SequenceGenerator} defined
 		 */
 		@Id
 		@GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "my_db_sequence" )

@@ -32,9 +32,9 @@ import static org.junit.Assert.assertEquals;
  */
 public class PostgisUnmarshalTest {
 
-	private CoordinateReferenceSystem<G2D> crs = CoordinateReferenceSystems.WGS84;
-	private Geometry<G2D> geom = linestring( crs, g( 6.123, 53.234 ), g( 6.133, 53.244 ) );
-	private Geometry<C2D> geomNoSrid = linestring(
+	private final CoordinateReferenceSystem<G2D> crs = CoordinateReferenceSystems.WGS84;
+	private final Geometry<G2D> geom = linestring( crs, g( 6.123, 53.234 ), g( 6.133, 53.244 ) );
+	private final Geometry<C2D> geomNoSrid = linestring(
 			CoordinateReferenceSystems.PROJECTED_2D_METER,
 			c( 6.123, 53.234 ),
 			c( 6.133, 53.244 )
@@ -69,7 +69,7 @@ public class PostgisUnmarshalTest {
 	public void testCase(String pgValue, Geometry<?> expected) throws SQLException {
 		PGobject pgo = new PGobject();
 		pgo.setValue( pgValue );
-		Geometry<?> received = PGGeometryTypeDescriptor.toGeometry( pgo );
+		Geometry<?> received = PGGeometryTypeDescriptor.INSTANCE_WKB_1.toGeometry( pgo );
 		assertEquals( String.format( "Failure on %s", pgValue ), expected, received );
 	}
 

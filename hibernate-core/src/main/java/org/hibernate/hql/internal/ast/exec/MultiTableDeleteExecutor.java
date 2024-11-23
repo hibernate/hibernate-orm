@@ -28,6 +28,10 @@ public class MultiTableDeleteExecutor implements StatementExecutor {
 		this.deleteHandler = strategy.buildDeleteHandler( walker.getSessionFactoryHelper().getFactory(), walker );
 	}
 
+	public MultiTableBulkIdStrategy.DeleteHandler getDeleteHandler() {
+		return deleteHandler;
+	}
+
 	@Override
 	public String[] getSqlStatements() {
 		return deleteHandler.getSqlStatements();

@@ -6,6 +6,8 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import javax.persistence.Basic;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -106,7 +108,13 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	 */
 	@Override
 	public boolean isMappedCollection(UnloadedField field) {
-		return field.hasAnnotation( OneToMany.class ) || field.hasAnnotation( ManyToMany.class )  || field.hasAnnotation( ElementCollection.class );
+		// If the collection is definitely a plural attribute, we respect that
+		if (field.hasAnnotation( OneToMany.class ) || field.hasAnnotation( ManyToMany.class ) || field.hasAnnotation( ElementCollection.class )) {
+			return true;
+		}
+		// But a collection might be treated like a singular attribute if it is annotated with `@Basic`
+		// If no annotations are given though, a collection is treated like a OneToMany
+		return !field.hasAnnotation( Basic.class );
 	}
 
 	/**

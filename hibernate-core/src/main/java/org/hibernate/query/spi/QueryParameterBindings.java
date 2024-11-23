@@ -35,4 +35,12 @@ public interface QueryParameterBindings {
 	Type[] collectPositionalBindTypes();
 	Object[] collectPositionalBindValues();
 	Map<String,TypedValue> collectNamedParameterBindings();
+
+	/**
+	 * @deprecated expect a different approach to org.hibernate.engine.spi.QueryParameters in 6.0
+	 */
+	@Deprecated
+	default boolean isMultiValuedBinding(QueryParameter parameter) {
+		return false;
+	}
 }

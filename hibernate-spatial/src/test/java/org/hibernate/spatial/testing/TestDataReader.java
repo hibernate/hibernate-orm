@@ -26,10 +26,13 @@ public class TestDataReader {
 		List<TestDataElement> testDataElements = new ArrayList<TestDataElement>();
 		SAXReader reader = new SAXReader();
 		try {
+			reader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+			reader.setFeature( "http://xml.org/sax/features/external-general-entities", false );
+			reader.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
 			Document document = reader.read( getInputStream( fileName ) );
 			addDataElements( document, testDataElements );
 		}
-		catch (DocumentException e) {
+		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
 		return testDataElements;

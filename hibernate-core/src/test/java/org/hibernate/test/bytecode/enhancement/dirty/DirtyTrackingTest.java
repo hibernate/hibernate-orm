@@ -63,11 +63,20 @@ public class DirtyTrackingTest {
         EnhancerTestUtils.checkDirtyTracking( entity, "someStrings" );
         EnhancerTestUtils.clearDirtyTracking( entity );
 
-        // Association: this should not set the entity to dirty
-        Set<Integer> intSet = new HashSet<>();
-        intSet.add( 42 );
-        entity.someInts = intSet;
+        // Association, 1: creating the association will mark it dirty
+        Set<OtherEntity> associatedSet = new HashSet<>();
+        OtherEntity o = new OtherEntity();
+        o.id = 1l;
+        o.name = "other";
+        associatedSet.add( o );
+        entity.someAssociation = associatedSet;
+        EnhancerTestUtils.checkDirtyTracking( entity, "someAssociation" );
+        EnhancerTestUtils.clearDirtyTracking( entity );
+
+        // Association, 2: modifying a related entity should not
+        o.name = "newName";
         EnhancerTestUtils.checkDirtyTracking( entity );
+        EnhancerTestUtils.checkDirtyTracking( o, "name" );
 
         // testing composite object
         Address address = new Address();
@@ -125,7 +134,7 @@ public class DirtyTrackingTest {
         List<String> someStrings;
 
         @OneToMany
-        Set<Integer> someInts;
+        Set<OtherEntity> someAssociation;
 
         @Embedded
         Address address;
@@ -140,5 +149,12 @@ public class DirtyTrackingTest {
         public void setSomeNumber(Long someNumber) {
             this.someNumber = someNumber;
         }
+    }
+
+    @Entity
+    private static class OtherEntity {
+        @Id
+        Long id;
+        String name;
     }
 }

@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Date;
 import javax.persistence.EntityManager;
 
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -17,6 +18,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomDateRevEntity;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 /**
@@ -69,6 +71,7 @@ public class CustomDate extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "Fails because of int size")
 	public void testTimestamps() {
 		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp2 ) ).intValue() == 1;
 		assert getAuditReader().getRevisionNumberForDate( new Date( timestamp3 ) ).intValue() == 2;

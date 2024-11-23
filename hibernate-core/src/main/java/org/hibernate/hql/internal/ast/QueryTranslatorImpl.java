@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -29,18 +30,17 @@ import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
-import org.hibernate.hql.internal.ast.exec.BasicExecutor;
 import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
+import org.hibernate.hql.internal.ast.exec.InsertExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableDeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableUpdateExecutor;
+import org.hibernate.hql.internal.ast.exec.SimpleUpdateExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.internal.ast.exec.IdSubselectUpdateExecutor;
 import org.hibernate.hql.internal.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.internal.ast.tree.FromElement;
-import org.hibernate.hql.internal.ast.tree.InsertStatement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.Statement;
-import org.hibernate.hql.internal.ast.tree.UpdateStatement;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.NodeTraverser;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
@@ -198,7 +198,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			// command executions.
 			//
 			// Possible to just move the sql generation for dml stuff, but for
-			// consistency-sake probably best to just move responsiblity for
+			// consistency-sake probably best to just move responsibility for
 			// the generation phase completely into the delegates
 			// (QueryLoader/StatementExecutor) themselves.  Also, not sure why
 			// QueryLoader currently even has a dependency on this at all; does
@@ -210,7 +210,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			else {
 				// PHASE 3 : Generate the SQL.
 				generate( (QueryNode) sqlAst );
-				queryLoader = new QueryLoader( this, factory, w.getSelectClause() );
+				queryLoader = createQueryLoader( w, factory );
 			}
 
 			compiled = true;
@@ -243,6 +243,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		//only needed during compilation phase...
 		this.enabledFilters = null;
+	}
+
+	protected QueryLoader createQueryLoader(HqlSqlWalker w, SessionFactoryImplementor factory) {
+		return new QueryLoader( this, factory, w.getSelectClause() );
 	}
 
 	private void generate(AST sqlAst) throws QueryException, RecognitionException {
@@ -310,7 +314,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 	}
 
-	private void errorIfDML() throws HibernateException {
+	protected void errorIfDML() throws HibernateException {
 		if ( sqlAst.needsExecutor() ) {
 			throw new QueryExecutionRequestException( "Not supported for DML operations", hql );
 		}
@@ -455,6 +459,22 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	/**
+	 * The SQl statements used for an update query.
+	 * Throws exception if the query is a SELECT.
+	 * @see #getSQLString()
+	 * @throws QueryExecutionRequestException for select queries.
+	 * @return the sql queries used for the update
+	 */
+	protected String[] getSqlStatements() {
+		errorIfSelect();
+		return statementExecutor.getSqlStatements();
+	}
+
+	protected StatementExecutor getStatementExecutor() {
+		return statementExecutor;
+	}
+
+	/**
 	 * The SQL query string to be called; implemented by all subclasses
 	 */
 	@Override
@@ -518,7 +538,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	@Override
 	public void validateScrollability() throws HibernateException {
 		// Impl Note: allows multiple collection fetches as long as the
-		// entire fecthed graph still "points back" to a single
+		// entire fetched graph still "points back" to a single
 		// root entity for return
 
 		errorIfDML();
@@ -574,38 +594,45 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 	}
 
-	private StatementExecutor buildAppropriateStatementExecutor(HqlSqlWalker walker) {
-		final Statement statement = (Statement) walker.getAST();
+	protected StatementExecutor buildAppropriateStatementExecutor(HqlSqlWalker walker) {
 		if ( walker.getStatementType() == HqlSqlTokenTypes.DELETE ) {
-			final FromElement fromElement = walker.getFinalFromClause().getFromElement();
-			final Queryable persister = fromElement.getQueryable();
+			final Queryable persister = walker.getFinalFromClause().getFromElement().getQueryable();
 			if ( persister.isMultiTable() ) {
 				return new MultiTableDeleteExecutor( walker );
 			}
 			else {
-				return new DeleteExecutor( walker, persister );
+				return new DeleteExecutor( walker );
 			}
 		}
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.UPDATE ) {
-			final FromElement fromElement = walker.getFinalFromClause().getFromElement();
-			final Queryable persister = fromElement.getQueryable();
-			if ( persister.isMultiTable() ) {
-				// even here, if only properties mapped to the "base table" are referenced
-				// in the set and where clauses, this could be handled by the BasicDelegate.
-				// TODO : decide if it is better performance-wise to doAfterTransactionCompletion that check, or to simply use the MultiTableUpdateDelegate
+			final Queryable persister = walker.getFinalFromClause().getFromElement().getQueryable();
+			if ( persister.isMultiTable() && affectsExtraTables( walker, persister ) ) {
 				return new MultiTableUpdateExecutor( walker );
 			}
+			else if ( persister.isMultiTable() && walker.getQuerySpaces().size() > 1 ) {
+				return new IdSubselectUpdateExecutor( walker );
+			}
 			else {
-				return new BasicExecutor( walker, persister );
+				return new SimpleUpdateExecutor( walker );
 			}
 		}
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.INSERT ) {
-			return new BasicExecutor( walker, ( (InsertStatement) statement ).getIntoClause().getQueryable() );
+			return new InsertExecutor( walker );
 		}
 		else {
 			throw new QueryException( "Unexpected statement type" );
 		}
 	}
+
+	private static boolean affectsExtraTables(HqlSqlWalker walker, Queryable persister) {
+		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
+		return IntStream.range( 0, tableNames.length ).filter(
+				table -> walker.getAssignmentSpecifications().stream().anyMatch(
+						assign -> assign.affectsTable( tableNames[table] )
+				)
+		).count() > 1;
+	}
+
 	@Override
 	public ParameterTranslations getParameterTranslations() {
 		if ( paramTranslations == null ) {

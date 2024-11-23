@@ -9,12 +9,15 @@ package org.hibernate.tool.schema.internal;
 import java.sql.Connection;
 import java.util.Map;
 
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -27,12 +30,17 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
+import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToScript;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
+import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcConnectionAccessProvidedConnectionImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
+import org.hibernate.tool.schema.spi.ExtractionTool;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
 import org.hibernate.tool.schema.spi.SchemaFilterProvider;
@@ -46,6 +54,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
 
 /**
  * The standard Hibernate implementation for performing schema management.
@@ -56,6 +65,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	private static final Logger log = Logger.getLogger( HibernateSchemaManagementTool.class );
 
 	private ServiceRegistry serviceRegistry;
+	private GenerationTarget customTarget;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -91,7 +101,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			return new IndividuallySchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
 		}
 	}
-	
+
 	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
 		final Object configuredOption = (options == null)
 				? null
@@ -107,12 +117,26 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		return JdbcMetadaAccessStrategy.interpretSetting( options );
 	}
 
+	@Override
+	public void setCustomDatabaseGenerationTarget(GenerationTarget generationTarget) {
+		this.customTarget = generationTarget;
+	}
+
+	@Override
+	public ExtractionTool getExtractionTool() {
+		return HibernateExtractionTool.INSTANCE;
+	}
+
+	GenerationTarget getCustomDatabaseGenerationTarget() {
+		return customTarget;
+	}
+
 	GenerationTarget[] buildGenerationTargets(
 			TargetDescriptor targetDescriptor,
 			JdbcContext jdbcContext,
 			Map options,
 			boolean needsAutoCommit) {
-		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options );
+		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
 
 		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
@@ -132,7 +156,10 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true );
+			targets[index] = customTarget == null
+					? new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true )
+					: customTarget;
+			index++;
 		}
 
 		return targets;
@@ -142,7 +169,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			TargetDescriptor targetDescriptor,
 			DdlTransactionIsolator ddlTransactionIsolator,
 			Map options) {
-		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options );
+		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
 
 		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
@@ -162,7 +189,10 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( ddlTransactionIsolator, false );
+			targets[index] = customTarget == null
+					? new GenerationTargetToDatabase( ddlTransactionIsolator, false )
+					: customTarget;
+			index++;
 		}
 
 		return targets;
@@ -183,12 +213,30 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		if ( providedConnection != null ) {
 			jdbcContextBuilder.jdbcConnectionAccess = new JdbcConnectionAccessProvidedConnectionImpl( providedConnection );
 		}
+		else {
+			final Connection jakartaProvidedConnection = (Connection) configurationValues.get( JAKARTA_HBM2DDL_CONNECTION );
+			if ( jakartaProvidedConnection != null ) {
+				jdbcContextBuilder.jdbcConnectionAccess = new JdbcConnectionAccessProvidedConnectionImpl( jakartaProvidedConnection );
+			}
+		}
 
 		// see if a specific Dialect override has been provided...
-		final String explicitDbName = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_NAME );
+		String dbName = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_NAME );
+		if ( dbName == null ) {
+			dbName = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_NAME );
+		}
+		final String explicitDbName = dbName;
 		if ( StringHelper.isNotEmpty( explicitDbName ) ) {
-			final String explicitDbMajor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION );
-			final String explicitDbMinor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MINOR_VERSION );
+			String dbMajor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MAJOR_VERSION );
+			if ( dbMajor == null ) {
+				dbMajor = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
+			}
+			String dbMinor = (String) configurationValues.get( AvailableSettings.HBM2DDL_DB_MINOR_VERSION );
+			if ( dbMinor == null ) {
+				dbMinor = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION );
+			}
+			final String explicitDbMajor = dbMajor;
+			final String explicitDbMinor = dbMinor;
 
 			final Dialect indicatedDialect = serviceRegistry.getService( DialectResolver.class ).resolveDialect(
 					new DialectResolutionInfo() {
@@ -317,4 +365,32 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 	}
 
+	private static class HibernateExtractionTool implements ExtractionTool {
+
+		private static final HibernateExtractionTool INSTANCE = new HibernateExtractionTool();
+
+		private HibernateExtractionTool() {
+		}
+
+		@Override
+		public ExtractionContext createExtractionContext(
+				ServiceRegistry serviceRegistry,
+				JdbcEnvironment jdbcEnvironment,
+				SqlStringGenerationContext sqlStringGenerationContext,
+				DdlTransactionIsolator ddlTransactionIsolator,
+				ExtractionContext.DatabaseObjectAccess databaseObjectAccess) {
+			return new ImprovedExtractionContextImpl(
+					serviceRegistry,
+					jdbcEnvironment,
+					sqlStringGenerationContext,
+					ddlTransactionIsolator,
+					databaseObjectAccess
+			);
+		}
+
+		@Override
+		public InformationExtractor createInformationExtractor(ExtractionContext extractionContext) {
+			return new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
+		}
+	}
 }

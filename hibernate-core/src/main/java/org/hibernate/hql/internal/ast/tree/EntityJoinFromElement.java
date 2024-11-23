@@ -176,7 +176,7 @@ public class EntityJoinFromElement extends FromElement {
 			else {
 				// We know there is a fromFragment and that we shouldn't render a table group
 				// This means the entity is polymorphic and the entity join is an inner join
-				// We move the with clause stuff to the where clause but still need to have a valid on condition
+				// We move the with clause stuff to the where clause but still need to have a valid condition
 				buffer.append( "1=1" );
 				buffer.append( fromFragment );
 

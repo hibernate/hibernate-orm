@@ -75,6 +75,12 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends BaseEnversJPAFu
 		em.getTransaction().begin();
 		Session session = (Session) em.getDelegate();
 		session.createSQLQuery( "DROP TABLE children" ).executeUpdate();
+		session.createSQLQuery( "DROP TABLE children_AUD" ).executeUpdate();
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+		session = (Session) em.getDelegate();
 		session
 				.createSQLQuery(
 						"CREATE TABLE children ( parent_id " + getDialect().getTypeName( Types.INTEGER ) +
@@ -82,7 +88,6 @@ public class ValidityAuditStrategyRevEndTestCustomRevEnt extends BaseEnversJPAFu
 								", child2_id " + getDialect().getTypeName( Types.INTEGER ) + getDialect().getNullColumnString() + " )"
 				)
 				.executeUpdate();
-		session.createSQLQuery( "DROP TABLE children_AUD" ).executeUpdate();
 		session
 				.createSQLQuery(
 						"CREATE TABLE children_AUD ( REV " + getDialect().getTypeName( Types.INTEGER ) + " NOT NULL" +

@@ -11,8 +11,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
@@ -182,6 +185,11 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
+	public NotFoundAction getNotFoundAction() {
+		return null;
+	}
+
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return true;
 	}
@@ -193,20 +201,20 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		//this should be a call to resolve(), not resolveIdentifier(), 
-		//'cos it might be a property-ref, and we did not cache the
+		//this should be a call to resolve(), not resolveIdentifier(),
+		//because it might be a property-ref, and we did not cache the
 		//referenced value
 		return resolve( session.getContextEntityIdentifier(owner), session, owner );
 	}
 	
 	/**
-	 * We don't need to dirty check one-to-one because of how 
-	 * assemble/disassemble is implemented and because a one-to-one 
+	 * We don't need to dirty check one-to-one because of how
+	 * assemble/disassemble is implemented and because a one-to-one
 	 * association is never dirty
 	 */
 	@Override
 	public boolean isAlwaysDirtyChecked() {
 		//TODO: this is kinda inconsistent with CollectionType
-		return false; 
+		return false;
 	}
 }

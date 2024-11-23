@@ -19,7 +19,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.Collection;
@@ -36,6 +36,7 @@ import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
+import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor.InFlightAccess;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.EmbeddedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
@@ -46,6 +47,7 @@ import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 
@@ -95,11 +97,51 @@ public class AttributeFactory {
 			return buildPluralAttribute( (PluralAttributeMetadata) attributeMetadata );
 		}
 		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
-		final SimpleTypeDescriptor<Y> metaModelType = determineSimpleType( singularAttributeMetadata.getValueContext() );
+		SimpleTypeDescriptor<Y> metaModelType = determineSimpleType( singularAttributeMetadata.getValueContext() );
+		Attribute.PersistentAttributeType jpaAttributeNature = attributeMetadata.getJpaAttributeNature();
+
+		if ( attributeContext.getPropertyMapping().getType().isComponentType() && jpaAttributeNature.equals( Attribute.PersistentAttributeType.BASIC ) ) {
+			CompositeType compositeType = (CompositeType) attributeContext.getPropertyMapping().getType();
+			metaModelType = context.locateEmbeddable( attributeMetadata.getJavaType(), compositeType );
+			jpaAttributeNature = Attribute.PersistentAttributeType.EMBEDDED;
+			if ( metaModelType == null ) {
+				metaModelType = context.locateEmbeddable( attributeMetadata.getJavaType(), compositeType );
+				if ( metaModelType == null ) {
+					EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
+						attributeMetadata.getJavaType(),
+						ownerType,
+						compositeType,
+						context.getSessionFactory()
+					);
+					context.registerEmbeddableType( embeddableType, compositeType );
+
+					String[] propertyNames = compositeType.getPropertyNames();
+					org.hibernate.type.Type[] subtypes = compositeType.getSubtypes();
+					InFlightAccess<?> inFlightAccess = embeddableType.getInFlightAccess();
+
+					for (int i = 0; i < propertyNames.length; i++) {
+						SingularAttributeImpl nestedAttribute = new SingularAttributeImpl(
+							embeddableType,
+							propertyNames[i],
+							Attribute.PersistentAttributeType.BASIC,
+							new BasicTypeImpl<Object>( subtypes[i].getReturnedClass(), Type.PersistenceType.BASIC ),
+							null,
+							false,
+							false,
+							property.isOptional()
+						);
+						inFlightAccess.addAttribute( nestedAttribute );
+					}
+
+					metaModelType = embeddableType;
+				}
+			}
+		}
+
 		return new SingularAttributeImpl(
 				ownerType,
 				attributeMetadata.getName(),
-				attributeMetadata.getJpaAttributeNature(),
+				jpaAttributeNature,
 				metaModelType,
 				attributeMetadata.getMember(),
 				false,
@@ -213,13 +255,17 @@ public class AttributeFactory {
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getHibernateValue();
-
+				final CompositeType compositeType = (CompositeType) component.getType();
 				Class javaType;
 				if ( component.getComponentClassName() == null ) {
 					javaType = typeContext.getJpaBindableType();
 				}
 				else {
 					javaType = component.getComponentClass();
+					final EmbeddedTypeDescriptor<Y> cached = context.locateEmbeddable( javaType, compositeType );
+					if ( cached != null ) {
+						return cached;
+					}
 				}
 
 				final EmbeddedTypeDescriptor<Y> embeddableType = new EmbeddableTypeImpl<Y>(
@@ -228,9 +274,9 @@ public class AttributeFactory {
 						(ComponentType) typeContext.getHibernateValue().getType(),
 						context.getSessionFactory()
 				);
-				context.registerEmbeddedableType( embeddableType );
+				context.registerEmbeddableType( embeddableType, compositeType );
 
-				final ManagedTypeDescriptor.InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();
+				final InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();
 				final Iterator<Property> subProperties = component.getPropertyIterator();
 				while ( subProperties.hasNext() ) {
 					final Property property = subProperties.next();
@@ -481,7 +527,7 @@ public class AttributeFactory {
 				final org.hibernate.type.Type elementType = elementValue.getType();
 
 				// First, determine the type of the elements and use that to help determine the
-				// collection type)
+				// collection type
 				final Attribute.PersistentAttributeType elementPersistentAttributeType;
 				final Attribute.PersistentAttributeType persistentAttributeType;
 				if ( elementType.isAnyType() ) {
@@ -826,7 +872,7 @@ public class AttributeFactory {
 				}
 			};
 
-			// interpret the key, if one
+			// interpret the key, if one exists
 			if ( keyPersistentAttributeType != null ) {
 				this.keyValueContext = new ValueContext() {
 					public Value getHibernateValue() {
@@ -954,7 +1000,7 @@ public class AttributeFactory {
 			final EmbeddedTypeDescriptor embeddableType = (EmbeddedTypeDescriptor<?>) attributeContext.getOwnerType();
 			final String attributeName = attributeContext.getPropertyMapping().getName();
 
-			final Getter getter = embeddableType.getHibernateType()
+			final Getter getter = ( ( ComponentType ) embeddableType.getHibernateType() )
 					.getComponentTuplizer()
 					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
 			return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )

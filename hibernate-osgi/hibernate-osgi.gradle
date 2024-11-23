@@ -35,7 +35,7 @@ ext {
  * > A bit ironic since the problems we were trying to solve initially only affected JDK11.0.3,
  * > not JDK11.0.0.
  */
-if ( JavaVersion.current().isJava11Compatible() ) {
+if ( gradle.ext.javaVersions.test.launcher.asInt() >= 11 ) {
 	logger.warn( '[WARN] Skipping all tests for hibernate-osgi due to Karaf/Pax-Exam issues with latest JDK 11' )
 	test.enabled = false
 }
@@ -95,6 +95,7 @@ dependencies {
 	karafDistro "org.apache.karaf:apache-karaf:${project.karafVersion}@tar.gz"
 
 	hibernateEnvers( project( ':hibernate-envers' ) )
+	hibernateEnvers( libraries.dom4j )
 }
 
 jar {
@@ -160,6 +161,9 @@ karaf {
 			name = 'hibernate-envers'
 			description = 'Feature for easily adding Envers support to hibernate-orm'
 			includeProject = false
+			feature ('wrap') {
+				prerequisite = true
+			}
 			configurations 'hibernateEnvers'
 			feature('hibernate-orm') {
 				version = project.version

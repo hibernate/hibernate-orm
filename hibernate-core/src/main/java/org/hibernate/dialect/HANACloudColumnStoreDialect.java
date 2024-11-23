@@ -103,6 +103,11 @@ public class HANACloudColumnStoreDialect extends AbstractHANADialect {
 				return "truncate table";
 			}
 
+			@Override
+			public String getCreateIdTableStatementOptions() {
+				return "on commit delete rows";
+			}
+
 		}, AfterUseAction.CLEAN );
 	}
 

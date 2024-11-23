@@ -29,6 +29,7 @@ import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,6 +61,13 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		);
 	}
 
+	@After
+	public void destroy() {
+		if ( entityManagerFactoryBuilder != null ) {
+			entityManagerFactoryBuilder.cancel();
+		}
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-12192")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
@@ -83,7 +91,6 @@ public class SchemaDatabaseFileGenerationFailureTest {
 
 			SQLException root = (SQLException) e.getCause().getCause().getCause();
 			assertEquals( "Expected", root.getMessage() );
-
 		}
 	}
 
@@ -116,8 +123,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		ArrayList<Class> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );
-		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
+		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
-
 }

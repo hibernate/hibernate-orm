@@ -36,7 +36,7 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 			byte[] classfileBuffer) throws IllegalClassFormatException {
 
 		// The first design had the enhancer as a class variable. That approach had some goods and bads.
-		// We don't had to create an enhancer for each class, but on the other end it would stay in memory forever.
+		// We don't have to create an enhancer for each class, but on the other end it would stay in memory forever.
 		// It also assumed that all calls come from the same class loader, which is fair, but this makes it more robust.
 
 		try {

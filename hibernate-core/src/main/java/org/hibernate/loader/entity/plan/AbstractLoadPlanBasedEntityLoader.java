@@ -31,6 +31,7 @@ import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.internal.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -58,7 +59,8 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			SessionFactoryImplementor factory,
 			String[] uniqueKeyColumnNames,
 			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters) {
+			QueryBuildingParameters buildingParameters,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
 		super( factory );
 		this.entityPersister = entityPersister;
 		this.uniqueKeyType = uniqueKeyType;
@@ -96,7 +98,42 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 				plan,
 				uniqueKeyColumnNames,
 				buildingParameters,
-				factory
+				factory,
+				resultSetProcessorResolver
+		);
+	}
+
+	public AbstractLoadPlanBasedEntityLoader(
+			OuterJoinLoadable entityPersister,
+			SessionFactoryImplementor factory,
+			String[] uniqueKeyColumnNames,
+			Type uniqueKeyType,
+			QueryBuildingParameters buildingParameters) {
+		this(
+				entityPersister,
+				factory,
+				uniqueKeyColumnNames,
+				uniqueKeyType,
+				buildingParameters,ResultSetProcessorResolver.DEFAULT
+		);
+	}
+
+	protected AbstractLoadPlanBasedEntityLoader(
+			OuterJoinLoadable entityPersister,
+			SessionFactoryImplementor factory,
+			EntityLoadQueryDetails entityLoaderQueryDetailsTemplate,
+			Type uniqueKeyType,
+			QueryBuildingParameters buildingParameters,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
+		super( factory );
+		this.entityPersister = entityPersister;
+		this.uniqueKeyType = uniqueKeyType;
+		this.entityName = entityPersister.getEntityName();
+
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+				entityLoaderQueryDetailsTemplate,
+				buildingParameters,
+				resultSetProcessorResolver
 		);
 	}
 
@@ -106,15 +143,18 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			EntityLoadQueryDetails entityLoaderQueryDetailsTemplate,
 			Type uniqueKeyType,
 			QueryBuildingParameters buildingParameters) {
-		super( factory );
-		this.entityPersister = entityPersister;
-		this.uniqueKeyType = uniqueKeyType;
-		this.entityName = entityPersister.getEntityName();
-
-		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
+		this(
+				entityPersister,
+				factory,
 				entityLoaderQueryDetailsTemplate,
-				buildingParameters
+				uniqueKeyType,
+				buildingParameters,
+				ResultSetProcessorResolver.DEFAULT
 		);
+	}
+
+	public OuterJoinLoadable getEntityPersister() {
+		return entityPersister;
 	}
 
 	@Override
@@ -124,6 +164,25 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 
 	protected String getEntityName() {
 		return entityName;
+	}
+
+	public List<?> loadEntityBatch(
+			Serializable[] idsInBatch,
+			OuterJoinLoadable persister,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final Type idType = persister.getIdentifierType();
+
+		return loadEntityBatch(
+				session,
+				idsInBatch,
+				persister.getIdentifierType(),
+				null,
+				null,
+				null,
+				persister,
+				lockOptions
+		);
 	}
 
 	/**
@@ -164,6 +223,9 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			final QueryParameters qp = new QueryParameters();
 			qp.setPositionalParameterTypes( types );
 			qp.setPositionalParameterValues( ids );
+			qp.setOptionalObject( optionalObject );
+			qp.setOptionalEntityName( optionalEntityName );
+			qp.setOptionalId( optionalId );
 			qp.setLockOptions( lockOptions );
 			if ( readOnly != null ) {
 				qp.setReadOnly( readOnly );

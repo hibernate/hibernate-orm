@@ -23,6 +23,15 @@
             </element-collection>
         </attributes>
     </entity>
+    <entity class="ContactType">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <basic name="type"/>
+            <version name="version"/>
+        </attributes>
+    </entity>
     <embeddable class="ContactInformation">
         <attributes>
             <basic name="name"/>
@@ -34,13 +43,4 @@
             </one-to-many>
         </attributes>
     </embeddable>
-    <entity class="ContactType">
-        <attributes>
-            <id name="id">
-                <generated-value strategy="AUTO"/>
-            </id>
-            <version name="version"/>
-            <basic name="type"/>
-        </attributes>
-    </entity>
 </entity-mappings>

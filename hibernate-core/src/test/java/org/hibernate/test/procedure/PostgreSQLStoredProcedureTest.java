@@ -16,19 +16,15 @@ import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Properties;
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
-
 import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.type.StringType;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.type.StringType;
 import org.junit.Before;
 import org.junit.Test;
 

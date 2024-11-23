@@ -9,6 +9,7 @@ package org.hibernate.mapping;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
@@ -23,7 +24,7 @@ public class UniqueKey extends Constraint {
 
 	@Override
 	public String sqlConstraintString(
-			Dialect dialect,
+			SqlStringGenerationContext context,
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema) {
@@ -34,9 +35,8 @@ public class UniqueKey extends Constraint {
 
 	@Override
 	public String sqlCreateString(
-			Dialect dialect,
 			Mapping p,
-			String defaultCatalog,
+			SqlStringGenerationContext context, String defaultCatalog,
 			String defaultSchema) {
 		return null;
 //		return dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
@@ -46,8 +46,7 @@ public class UniqueKey extends Constraint {
 
 	@Override
 	public String sqlDropString(
-			Dialect dialect,
-			String defaultCatalog,
+			SqlStringGenerationContext context, String defaultCatalog,
 			String defaultSchema) {
 		return null;
 //		return dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(

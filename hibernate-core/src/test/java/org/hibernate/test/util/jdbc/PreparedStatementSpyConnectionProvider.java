@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -37,8 +39,11 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	private static final MockSettings MOCK_SETTINGS = Mockito.withSettings()
 			.stubOnly() //important optimisation: uses far less memory, at tradeoff of mocked methods no longer being verifiable but we often don't need that.
 			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
-	private static final MockSettings VERIFIEABLE_MOCK_SETTINGS = Mockito.withSettings()
+	private static final MockSettings VERIFIABLE_MOCK_SETTINGS = Mockito.withSettings()
 			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
+	// We must keep around the mocked connections, otherwise they are garbage collected and trigger finalizers
+	// Since we use CALLS_REAL_METHODS this might close underlying IO resources which makes other objects unusable
+	private static final Queue<Object> MOCKS = new LinkedBlockingQueue<>();
 
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
 
@@ -64,8 +69,8 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	 * When you really need to verify invocations, set the relevant constructor parameter to true.
 	 */
 	public PreparedStatementSpyConnectionProvider(boolean allowMockVerificationOnStatements, boolean allowMockVerificationOnConnections) {
-		this.settingsForStatements = allowMockVerificationOnStatements ? VERIFIEABLE_MOCK_SETTINGS : MOCK_SETTINGS;
-		this.settingsForConnections = allowMockVerificationOnConnections ? VERIFIEABLE_MOCK_SETTINGS : MOCK_SETTINGS;
+		this.settingsForStatements = allowMockVerificationOnStatements ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
+		this.settingsForConnections = allowMockVerificationOnConnections ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
 	}
 
 	protected Connection actualConnection() throws SQLException {
@@ -75,6 +80,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	@Override
 	public Connection getConnection() throws SQLException {
 		Connection connection = instrumentConnection( actualConnection() );
+		MOCKS.add( connection );
 		acquiredConnections.add( connection );
 		return connection;
 	}
@@ -83,7 +89,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	public void closeConnection(Connection conn) throws SQLException {
 		acquiredConnections.remove( conn );
 		releasedConnections.add( conn );
-		super.closeConnection( conn );
+		super.closeConnection( (Connection) MockUtil.getMockSettings( conn ).getSpiedInstance() );
 	}
 
 	@Override
@@ -157,11 +163,11 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 		List<PreparedStatement> preparedStatements = getPreparedStatements( sql );
 		if ( preparedStatements.isEmpty() ) {
 			throw new IllegalArgumentException(
-					"There is no PreparedStatement for this SQL statement " + sql );
+					"There is no PreparedStatement for this SQL statement: " + sql );
 		}
 		else if ( preparedStatements.size() > 1 ) {
 			throw new IllegalArgumentException( "There are " + preparedStatements
-					.size() + " PreparedStatements for this SQL statement " + sql );
+					.size() + " PreparedStatements for this SQL statement: " + sql );
 		}
 		return preparedStatements.get( 0 );
 	}

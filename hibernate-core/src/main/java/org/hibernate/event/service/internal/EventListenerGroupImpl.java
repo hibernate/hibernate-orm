@@ -11,8 +11,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
@@ -21,42 +25,37 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 import org.jboss.logging.Logger;
 
 /**
+ * Standard EventListenerGroup implementation
+ *
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
 class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
+
 	private static final Logger log = Logger.getLogger( EventListenerGroupImpl.class );
+	private static final Set<DuplicationStrategy> DEFAULT_DUPLICATION_STRATEGIES = Collections.unmodifiableSet( makeDefaultDuplicationStrategy() );
+	private static final CompletableFuture COMPLETED = CompletableFuture.completedFuture( null );
 
 	private final EventType<T> eventType;
-	private final EventListenerRegistryImpl listenerRegistry;
+	private final CallbackRegistry callbackRegistry;
+	private final boolean isJpaBootstrap;
 
-	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
-
+	private Set<DuplicationStrategy> duplicationStrategies = DEFAULT_DUPLICATION_STRATEGIES;
 	private T[] listeners = null;
 
-	public EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
+	public EventListenerGroupImpl(
+			EventType<T> eventType,
+			CallbackRegistry callbackRegistry,
+			boolean isJpaBootstrap) {
 		this.eventType = eventType;
-		this.listenerRegistry = listenerRegistry;
-
-		duplicationStrategies.add(
-				// At minimum make sure we do not register the same exact listener class multiple times.
-				new DuplicationStrategy() {
-					@Override
-					public boolean areMatch(Object listener, Object original) {
-						return listener.getClass().equals( original.getClass() );
-					}
-
-					@Override
-					public Action getAction() {
-						return Action.ERROR;
-					}
-				}
-		);
+		this.callbackRegistry = callbackRegistry;
+		this.isJpaBootstrap = isJpaBootstrap;
 	}
 
 	@Override
@@ -77,7 +76,13 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public void clear() {
-		duplicationStrategies.clear();
+		//Odd semantics: we're expected (for backwards compatibility) to also clear the default DuplicationStrategy.
+		duplicationStrategies = new LinkedHashSet<>();;
+		listeners = null;
+	}
+
+	@Override
+	public void clearListeners() {
 		listeners = null;
 	}
 
@@ -116,7 +121,58 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
+	public <R, U, RL> CompletionStage<R> fireEventOnEachListener(
+			final U event,
+			final Function<RL, Function<U, CompletionStage<R>>> fun) {
+		CompletionStage<R> ret = COMPLETED;
+		final T[] ls = listeners;
+		if ( ls != null && ls.length != 0 ) {
+			for ( T listener : ls ) {
+				//to preserve atomicity of the Session methods
+				//call apply() from within the arg of thenCompose()
+				ret = ret.thenCompose( v -> fun.apply( (RL) listener ).apply( event ) );
+			}
+		}
+		return ret;
+	}
+
+	@Override
+	public <R, U, RL, X> CompletionStage<R> fireEventOnEachListener(
+			U event, X param, Function<RL, BiFunction<U, X, CompletionStage<R>>> fun) {
+		CompletionStage<R> ret = COMPLETED;
+		final T[] ls = listeners;
+		if ( ls != null && ls.length != 0 ) {
+			for ( T listener : ls ) {
+				//to preserve atomicity of the Session methods
+				//call apply() from within the arg of thenCompose()
+				ret = ret.thenCompose( v -> fun.apply( (RL) listener ).apply( event, param ) );
+			}
+		}
+		return ret;
+	}
+
+	@Override
+	public <R, U, RL> CompletionStage<R> fireLazyEventOnEachListener(
+			final Supplier<U> eventSupplier,
+			final Function<RL, Function<U, CompletionStage<R>>> fun) {
+		CompletionStage<R> ret = COMPLETED;
+		final T[] ls = listeners;
+		if ( ls != null && ls.length != 0 ) {
+			final U event = eventSupplier.get();
+			for ( T listener : ls ) {
+				//to preserve atomicity of the Session methods
+				//call apply() from within the arg of thenCompose()
+				ret = ret.thenCompose( v -> fun.apply( (RL) listener ).apply( event ) );
+			}
+		}
+		return ret;
+	}
+
+	@Override
 	public void addDuplicationStrategy(DuplicationStrategy strategy) {
+		if ( duplicationStrategies == DEFAULT_DUPLICATION_STRATEGIES ) {
+			duplicationStrategies = makeDefaultDuplicationStrategy();
+		}
 		duplicationStrategies.add( strategy );
 	}
 
@@ -267,14 +323,12 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	private void performInjections(T listener) {
-		if ( CallbackRegistryConsumer.class.isInstance( listener ) ) {
-			( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( listenerRegistry.getCallbackRegistry() );
+		if ( listener instanceof CallbackRegistryConsumer ) {
+			( (CallbackRegistryConsumer) listener ).injectCallbackRegistry( callbackRegistry );
 		}
 
-		if ( JpaBootstrapSensitive.class.isInstance( listener ) ) {
-			( (JpaBootstrapSensitive) listener ).wasJpaBootstrap(
-					listenerRegistry.getSessionFactory().getSessionFactoryOptions().isJpaBootstrap()
-			);
+		if ( listener instanceof JpaBootstrapSensitive ) {
+			( (JpaBootstrapSensitive) listener ).wasJpaBootstrap( isJpaBootstrap );
 		}
 	}
 
@@ -302,4 +356,24 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 		return Arrays.asList( listeners );
 	}
+
+	private static Set<DuplicationStrategy> makeDefaultDuplicationStrategy() {
+		final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
+		duplicationStrategies.add(
+				// At minimum make sure we do not register the same exact listener class multiple times.
+				new DuplicationStrategy() {
+					@Override
+					public boolean areMatch(Object listener, Object original) {
+						return listener.getClass().equals( original.getClass() );
+					}
+
+					@Override
+					public Action getAction() {
+						return Action.ERROR;
+					}
+				}
+		);
+		return duplicationStrategies;
+	}
+
 }

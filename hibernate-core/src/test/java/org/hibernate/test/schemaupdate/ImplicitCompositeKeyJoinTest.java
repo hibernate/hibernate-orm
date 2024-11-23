@@ -24,7 +24,7 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import org.apache.log4j.Logger;
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;

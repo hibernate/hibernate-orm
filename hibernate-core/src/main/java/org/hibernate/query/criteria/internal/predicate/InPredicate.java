@@ -160,7 +160,7 @@ public class InPredicate<T>
 		final Expression exp = getExpression();
 		if ( ParameterExpressionImpl.class.isInstance( exp ) ) {
 			// technically we only need to CAST (afaik) if expression and all values are parameters.
-			// but checking for that condition could take long time on a lon value list
+			// but checking for that condition could take long time on a long value list
 			final ParameterExpressionImpl parameterExpression = (ParameterExpressionImpl) exp;
 			final SessionFactoryImplementor sfi = criteriaBuilder().getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 			final Type mappingType = sfi.getTypeResolver().heuristicType( parameterExpression.getParameterType().getName() );

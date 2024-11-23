@@ -23,5 +23,5 @@ public @interface TestForIssue {
 	 * The key of a JIRA issue tested.
 	 * @return The jira issue key
 	 */
-	String jiraKey();
+	String[] jiraKey();
 }

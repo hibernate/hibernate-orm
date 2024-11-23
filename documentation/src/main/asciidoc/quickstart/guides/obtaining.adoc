@@ -9,14 +9,14 @@ hibernate-core:: The main (core) Hibernate module.  Defines its ORM features and
 hibernate-envers:: Hibernate's historical entity versioning feature
 hibernate-spatial:: Hibernate's Spatial/GIS data-type support
 hibernate-osgi:: Hibernate support for running in OSGi containers.
-hibernate-agroal:: Integrates the http://agroal.github.io/[Agroal] connection pooling library into Hibernate
-hibernate-c3p0:: Integrates the http://www.mchange.com/projects/c3p0/[C3P0] connection pooling library into Hibernate
-hibernate-hikaricp:: Integrates the http://brettwooldridge.github.io/HikariCP/[HikariCP] connection pooling library into Hibernate
-hibernate-vibur:: Integrates the http://www.vibur.org/[Vibur DBCP] connection pooling library into Hibernate
-hibernate-proxool:: Integrates the http://proxool.sourceforge.net/[Proxool] connection pooling library into Hibernate
+hibernate-agroal:: Integrates the https://agroal.github.io/[Agroal] connection pooling library into Hibernate
+hibernate-c3p0:: Integrates the https://www.mchange.com/projects/c3p0/[C3P0] connection pooling library into Hibernate
+hibernate-hikaricp:: Integrates the https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pooling library into Hibernate
+hibernate-vibur:: Integrates the https://www.vibur.org/[Vibur DBCP] connection pooling library into Hibernate
+hibernate-proxool:: Integrates the https://proxool.sourceforge.net/[Proxool] connection pooling library into Hibernate
 hibernate-jcache:: Integrates the https://jcp.org/en/jsr/detail?id=107$$[JCache] caching specification into Hibernate,
 enabling any compliant implementation to become a second-level cache provider.
-hibernate-ehcache:: Integrates the http://ehcache.org/[Ehcache] caching library into Hibernate as a second-level cache provider.
+hibernate-ehcache:: Integrates the https://ehcache.org/[Ehcache] caching library into Hibernate as a second-level cache provider.
 
 === Release Bundle Downloads
 
@@ -43,10 +43,10 @@ synced to Maven Central as part of an automated job (some small delay may occur)
 
 The team responsible for the JBoss Maven repository maintains a number of Wiki pages that contain important information:
 
-* http://community.jboss.org/docs/DOC-14900 - General information about the repository.
-* http://community.jboss.org/docs/DOC-15170 - Information about setting up the JBoss repositories in order to do
+* https://community.jboss.org/docs/DOC-14900 - General information about the repository.
+* https://community.jboss.org/docs/DOC-15170 - Information about setting up the JBoss repositories in order to do
 development work on JBoss projects themselves.
-* http://community.jboss.org/docs/DOC-15169 - Information about setting up access to the repository to use JBoss
+* https://community.jboss.org/docs/DOC-15169 - Information about setting up access to the repository to use JBoss
 projects as part of your own software.
 
 The Hibernate ORM artifacts are published under the `org.hibernate` groupId.

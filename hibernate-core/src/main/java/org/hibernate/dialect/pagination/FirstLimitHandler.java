@@ -17,7 +17,7 @@ public class FirstLimitHandler extends LegacyFirstLimitHandler {
 	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler();
 
 	private FirstLimitHandler() {
-		// NOP
+		// NOOP
 	}
 	
 	@Override

@@ -8,7 +8,6 @@ package org.hibernate.engine.jdbc.env.spi;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -32,11 +31,14 @@ public class IdentifierHelperBuilder {
 
 	private NameQualifierSupport nameQualifierSupport = NameQualifierSupport.BOTH;
 
-	private Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+	//TODO interesting computer science puzzle: find a more compact representation?
+	// we only need "contains" on this set, and it has to be case sensitive and efficient.
+	private final TreeSet<String> reservedWords = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
-	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
 	public static IdentifierHelperBuilder from(JdbcEnvironment jdbcEnvironment) {
@@ -59,6 +61,10 @@ public class IdentifierHelperBuilder {
 			return;
 		}
 
+		//Important optimisation: skip loading all keywords from the DB when autoQuoteKeywords is disabled
+		if ( autoQuoteKeywords == false ) {
+			return;
+		}
 		this.reservedWords.addAll( parseKeywords( metaData.getSQLKeywords() ) );
 	}
 
@@ -174,6 +180,10 @@ public class IdentifierHelperBuilder {
 	}
 
 	public void applyReservedWords(Set<String> words) {
+		//No use when autoQuoteKeywords is disabled
+		if ( autoQuoteKeywords == false ) {
+			return;
+		}
 		this.reservedWords.addAll( words );
 	}
 

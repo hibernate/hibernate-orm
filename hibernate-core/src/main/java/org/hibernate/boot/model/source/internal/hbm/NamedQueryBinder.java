@@ -49,7 +49,7 @@ public class NamedQueryBinder {
 		for ( Object content : namedQueryBinding.getContent() ) {
 			if ( String.class.isInstance( content ) ) {
 				String trimmed = ((String)content).trim();
-				if (!"".equals(trimmed)) {
+				if ( StringHelper.isNotEmpty( trimmed ) ) {
 					query = trimmed;
 				}
 			}

@@ -37,7 +37,6 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
-import org.hibernate.type.internal.TypeConfigurationRegistry;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -88,8 +87,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		this.basicTypeRegistry = new BasicTypeRegistry();
 		this.typeFactory = new TypeFactory( this );
 		this.typeResolver = new TypeResolver( this, typeFactory );
-
-		TypeConfigurationRegistry.INSTANCE.registerTypeConfiguration( this );
 	}
 
 	public String getUuid() {
@@ -209,8 +206,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
 		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
-
-		TypeConfigurationRegistry.INSTANCE.deregisterTypeConfiguration( this );
 
 		scope.unsetSessionFactory( factory );
 
@@ -374,12 +369,4 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Custom serialization hook
-
-	private Object readResolve() throws InvalidObjectException {
-		log.trace( "Resolving serialized TypeConfiguration - readResolve" );
-		return TypeConfigurationRegistry.INSTANCE.findTypeConfiguration( getUuid() );
-	}
 }

@@ -16,6 +16,7 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.engine.internal.CacheHelper;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
@@ -27,13 +28,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.internal.AbstractLockUpgradeEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
@@ -245,7 +243,7 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 		// make it circular-reference safe
 		final StatefulPersistenceContext statefulPersistenceContext = (StatefulPersistenceContext) session.getPersistenceContext();
 
-		if ( ( entity instanceof ManagedEntity ) ) {
+		if ( ManagedTypeHelper.isManagedEntity( entity ) ) {
 			statefulPersistenceContext.addReferenceEntry(
 					entity,
 					Status.READ_ONLY
@@ -354,20 +352,11 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 				.setId( entityId )
 				.setPersister( persister );
 
-		for ( PostLoadEventListener listener : postLoadEventListeners( session ) ) {
-			listener.onPostLoad( postLoadEvent );
-		}
+		session.getSessionFactory()
+				.getFastSessionServices()
+				.firePostLoadEvent( postLoadEvent );
 
 		return entity;
-	}
-
-	private Iterable<PostLoadEventListener> postLoadEventListeners(EventSource session) {
-		return session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.POST_LOAD )
-				.listeners();
 	}
 
 	public static class PersistenceContextEntry {

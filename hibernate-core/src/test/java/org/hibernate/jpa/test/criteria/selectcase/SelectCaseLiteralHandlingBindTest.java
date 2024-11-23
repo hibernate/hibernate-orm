@@ -17,9 +17,12 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -101,6 +104,8 @@ public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunction
 	}
 
 	@Test
+	@SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby requires either casted parameters or literals in the result arms of CASE expressions")
 	public void whereCaseExpression() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

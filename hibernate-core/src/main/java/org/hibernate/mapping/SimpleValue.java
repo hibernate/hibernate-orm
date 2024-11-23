@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Objects;
 import javax.persistence.AttributeConverter;
@@ -51,13 +52,9 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -264,6 +261,25 @@ public class SimpleValue implements KeyValue {
 
 	private IdentifierGenerator identifierGenerator;
 
+	/**
+	 * Returns the cached identifierGenerator.
+	 *
+	 * @return IdentifierGenerator null if
+	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
+	 * completed.
+	 */
+	public IdentifierGenerator getIdentifierGenerator() {
+		return identifierGenerator;
+	}
+
+	@Override
+	public IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass) throws MappingException {
+		return createIdentifierGenerator( identifierGeneratorFactory, dialect, null, null, rootClass );
+	}
+
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
@@ -277,18 +293,17 @@ public class SimpleValue implements KeyValue {
 		}
 
 		Properties params = new Properties();
-		
-		//if the hibernate-mapping did not specify a schema/catalog, use the defaults
-		//specified by properties - but note that if the schema/catalog were specified
-		//in hibernate-mapping, or as params, they will already be initialized and
-		//will override the values set here (they are in identifierGeneratorProperties)
+
+		// This is for backwards compatibility only;
+		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
+		// null, and defaults are handled later.
 		if ( defaultSchema!=null ) {
 			params.setProperty(PersistentIdentifierGenerator.SCHEMA, defaultSchema);
 		}
 		if ( defaultCatalog!=null ) {
 			params.setProperty(PersistentIdentifierGenerator.CATALOG, defaultCatalog);
 		}
-		
+
 		//pass the entity-name, if not a collection-id
 		if (rootClass!=null) {
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
@@ -386,6 +401,18 @@ public class SimpleValue implements KeyValue {
 	 */
 	public void setIdentifierGeneratorProperties(Properties identifierGeneratorProperties) {
 		this.identifierGeneratorProperties = identifierGeneratorProperties;
+	}
+
+	/**
+	 * Sets the identifierGeneratorProperties.
+	 * @param identifierGeneratorProperties The identifierGeneratorProperties to set
+	 */
+	public void setIdentifierGeneratorProperties(Map identifierGeneratorProperties) {
+		if ( identifierGeneratorProperties != null ) {
+			Properties properties = new Properties();
+			properties.putAll( identifierGeneratorProperties );
+			setIdentifierGeneratorProperties( properties );
+		}
 	}
 
 	/**
@@ -488,7 +515,7 @@ public class SimpleValue implements KeyValue {
 			throw new MappingException( msg );
 		}
 
-		return result;
+		return type = result;
 	}
 
 	@Override
@@ -520,7 +547,7 @@ public class SimpleValue implements KeyValue {
 							.getServiceRegistry()
 							.getService( ClassLoaderService.class )
 			).getName();
-			// todo : to fully support isNationalized here we need do the process hinted at above
+			// todo : to fully support isNationalized here we need to do the process hinted at above
 			// 		essentially, much of the logic from #buildAttributeConverterTypeAdapter wrt resolving
 			//		a (1) SqlTypeDescriptor, a (2) JavaTypeDescriptor and dynamically building a BasicType
 			// 		combining them.
@@ -622,7 +649,7 @@ public class SimpleValue implements KeyValue {
 			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
 		}
 
-		// find the standard SqlTypeDescriptor for that JDBC type code (allow itr to be remapped if needed!)
+		// find the standard SqlTypeDescriptor for that JDBC type code (allow it to be remapped if needed!)
 		final SqlTypeDescriptor sqlTypeDescriptor = getMetadata()
 				.getMetadataBuildingOptions()
 				.getServiceRegistry()
@@ -667,6 +694,14 @@ public class SimpleValue implements KeyValue {
 
 	public void setTypeParameters(Properties parameterMap) {
 		this.typeParameters = parameterMap;
+	}
+
+	public void setTypeParameters(Map<String, String> parameters) {
+		if ( parameters != null ) {
+			Properties properties = new Properties();
+			properties.putAll( parameters );
+			setTypeParameters( properties );
+		}
 	}
 	
 	public Properties getTypeParameters() {

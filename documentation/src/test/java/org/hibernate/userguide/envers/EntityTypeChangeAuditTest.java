@@ -9,7 +9,6 @@ package org.hibernate.userguide.envers;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.Column;
@@ -83,7 +82,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
         try {
             Map settings = buildSettings();
             settings.put(
-                org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
+                AvailableSettings.LOADED_CLASSES,
                 Arrays.asList(
                     ApplicationCustomer.class,
                     CustomTrackingRevisionEntity.class

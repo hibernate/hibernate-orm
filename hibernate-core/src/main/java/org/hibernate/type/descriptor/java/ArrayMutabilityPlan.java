@@ -19,7 +19,7 @@ public class ArrayMutabilityPlan<T> extends MutableMutabilityPlan<T> {
 	@SuppressWarnings({ "unchecked", "SuspiciousSystemArraycopy" })
 	public T deepCopyNotNull(T value) {
 		if ( ! value.getClass().isArray() ) {
-			// ugh!  cannot find a way to properly define the type signature here to
+			// ugh!  cannot find a way to properly define the type signature here
 			throw new IllegalArgumentException( "Value was not an array [" + value.getClass().getName() + "]" );
 		}
 		final int length = Array.getLength( value );

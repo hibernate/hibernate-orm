@@ -67,7 +67,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@SuppressWarnings("UnusedDeclaration")
+@SuppressWarnings("UnusedDeclaratiqon")
 public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQueryContract {
 	/**
 	 * Get the QueryProducer this Query originates from.
@@ -79,8 +79,8 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	/**
 	 * Retrieve a Stream over the query results.
 	 * <p/>
-	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
-	 * is to return a a smarter stream in 6.x leveraging the SQM model.
+	 * In the initial implementation (5.2) this returns a simple sequential Stream. The plan
+	 * is to return a smarter stream in 6.x leveraging the SQM model.
 	 *
 	 * <p>
 	 *

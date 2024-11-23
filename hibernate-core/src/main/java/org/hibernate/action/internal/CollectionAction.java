@@ -20,6 +20,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -184,6 +185,11 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 	}
 
+	/**
+	 * @deprecated This will be removed as it's not very efficient. If you need access to EventListenerGroup(s),
+	 * use the direct references from {@link #getFastSessionServices()}.
+	 */
+	@Deprecated
 	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
 		return getSession()
 				.getFactory()
@@ -195,4 +201,13 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	protected EventSource eventSource() {
 		return (EventSource) getSession();
 	}
+
+	/**
+	 * Convenience method for all subclasses.
+	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 */
+	protected FastSessionServices getFastSessionServices() {
+		return session.getFactory().getFastSessionServices();
+	}
+
 }

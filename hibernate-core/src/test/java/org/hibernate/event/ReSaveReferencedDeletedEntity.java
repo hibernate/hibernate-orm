@@ -33,7 +33,7 @@ public class ReSaveReferencedDeletedEntity extends BaseCoreFunctionalTestCase {
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-14416")
+    @JiraKey("HHH-14416")
     public void testReSaveDeletedEntityWithReferences2() {
         doInHibernate( this::sessionFactory, session -> {
             Parent parent = new Parent();

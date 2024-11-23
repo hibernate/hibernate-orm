@@ -5,7 +5,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 public class ReSaveReferencedDeletedEntityJPA extends BaseEntityManagerFunctionalTestCase {
     @Override

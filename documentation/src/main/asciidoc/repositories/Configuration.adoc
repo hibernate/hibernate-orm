@@ -60,7 +60,7 @@ annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0.Final'
 
 === Excluding classes from processing
 
-There's three ways to limit the annotation processor to certain classes:
+There are three ways to limit the annotation processor to certain classes:
 
 1. A given repository may be excluded from processing simply by specifying `@Repository(provider="acme")` where `"acme"` is any string other than the empty string or a string equal, ignoring case, to `"Hibernate"`. This is the preferred solution when there are multiple Jakarta Data Providers available.
 2. A package or type may be excluded by annotating it with the link:{doc-javadoc-url}org/hibernate/annotations/processing/Exclude.html[`@Exclude`] annotation from `org.hibernate.annotations.processing`.

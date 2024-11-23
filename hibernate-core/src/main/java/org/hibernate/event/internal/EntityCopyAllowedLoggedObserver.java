@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -20,7 +18,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * An {@link org.hibernate.event.spi.EntityCopyObserver} implementation that allows multiple representations of
+ * An {@link EntityCopyObserver} implementation that allows multiple representations of
  * the same persistent entity to be merged and provides logging of the entity copies that
  * are detected.
  *
@@ -30,7 +28,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyAllowedLoggedObserver.class );
 
-	public static final EntityCopyObserverFactory FACTORY_OF_SELF = () -> new EntityCopyAllowedLoggedObserver();
+	public static final EntityCopyObserverFactory FACTORY_OF_SELF = EntityCopyAllowedLoggedObserver::new;
 
 	public static final String SHORT_NAME = "log";
 
@@ -68,7 +66,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		if ( managedToMergeEntitiesXref == null ) {
 			// This is the first time multiple representations have been found;
 			// instantiate managedToMergeEntitiesXref.
-			managedToMergeEntitiesXref = new IdentityHashMap<Object, Set<Object>>();
+			managedToMergeEntitiesXref = new IdentityHashMap<>();
 		}
 		else {
 			// Get any existing representations that have already been found.
@@ -76,7 +74,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		}
 		if ( detachedEntitiesForManaged == null ) {
 			// There were no existing representations for this particular managed entity;
-			detachedEntitiesForManaged = new IdentitySet();
+			detachedEntitiesForManaged = new IdentitySet<>();
 			managedToMergeEntitiesXref.put( managedEntity, detachedEntitiesForManaged );
 			incrementEntityNameCount( entityName );
 		}
@@ -89,7 +87,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		Integer countBeforeIncrement = 0;
 		if ( countsByEntityName == null ) {
 			// Use a TreeMap so counts can be logged by entity name in alphabetic order.
-			countsByEntityName = new TreeMap<String, Integer>();
+			countsByEntityName = new TreeMap<>();
 		}
 		else {
 			countBeforeIncrement = countsByEntityName.get( entityName );
@@ -117,13 +115,11 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		// Log the summary.
 		if ( countsByEntityName != null ) {
 			for ( Map.Entry<String, Integer> entry : countsByEntityName.entrySet() ) {
-				final String entityName = entry.getKey();
-				final int count = entry.getValue();
 				LOG.debug(
 						String.format(
 								"Summary: number of %s entities with multiple representations merged: %d",
-								entityName,
-								count
+								entry.getKey(),
+								entry.getValue()
 						)
 				);
 			}
@@ -135,7 +131,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		if ( managedToMergeEntitiesXref != null ) {
 			for ( Map.Entry<Object,Set<Object>> entry : managedToMergeEntitiesXref.entrySet() ) {
 				Object managedEntity = entry.getKey();
-				Set mergeEntities = entry.getValue();
+				Set<Object> mergeEntities = entry.getValue();
 				StringBuilder sb = new StringBuilder( "Details: merged ")
 						.append( mergeEntities.size() )
 						.append( " representations of the same entity " )
@@ -163,11 +159,8 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 	}
 
 	private String getManagedOrDetachedEntityString(Object managedEntity, Object mergeEntity ) {
-		if ( mergeEntity == managedEntity) {
-			return  "Managed: [" + mergeEntity + "]";
-		}
-		else {
-			return "Detached: [" + mergeEntity + "]";
-		}
+		return mergeEntity == managedEntity
+				? "Managed: [" + mergeEntity + "]"
+				: "Detached: [" + mergeEntity + "]";
 	}
 }

@@ -1,50 +1,64 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.spi;
 
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.Transaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.service.Service;
 
 /**
- * Defines how we interact with various JTA services on the given platform/environment.
+ * A {@link Service} that defines how Hibernate interacts with JTA on a certain
+ * platform. In particular, a {@code JtaPlatform} allows Hibernate to obtain
+ * the {@link TransactionManager} and {@link UserTransaction}, and register
+ * {@link Synchronization}s.
+ * <p>
+ * An implementation may be selected by specifying the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#JTA_PLATFORM}. Alternatively,
+ * a {@link JtaPlatformProvider} or even a custom {@link JtaPlatformResolver}
+ * may be used.
+ *
+ * @see JtaPlatformResolver
+ * @see JtaPlatformProvider
  *
  * @author Steve Ebersole
  */
 public interface JtaPlatform extends Service {
 
 	/**
-	 * Locate the {@link TransactionManager}
+	 * Locate the {@link TransactionManager}.
 	 *
 	 * @return The {@link TransactionManager}
 	 */
-	TransactionManager retrieveTransactionManager();
+	@Nullable TransactionManager retrieveTransactionManager();
 
 	/**
-	 * Locate the {@link UserTransaction}
+	 * Locate the {@link UserTransaction}.
+	 * <p>
+	 * If {@link org.hibernate.cfg.AvailableSettings#PREFER_USER_TRANSACTION} is enabled, Hibernate
+	 * will use the {@code UserTransaction} in preference to the {@link TransactionManager} where
+	 * possible.
 	 *
 	 * @return The {@link UserTransaction}
 	 */
-	UserTransaction retrieveUserTransaction();
+	@Nullable UserTransaction retrieveUserTransaction();
 
 	/**
 	 * Determine an identifier for the given transaction appropriate for use in caching/lookup usages.
-	 * <p/>
+	 * <p>
 	 * Generally speaking the transaction itself will be returned here.  This method was added specifically
 	 * for use in WebSphere and other unfriendly Java EE containers.
 	 *
 	 * @param transaction The transaction to be identified.
 	 * @return An appropriate identifier
 	 */
-	Object getTransactionIdentifier(Transaction transaction);
+	@Nullable Object getTransactionIdentifier(Transaction transaction);
 
 	/**
 	 * Can we currently register a {@link Synchronization}?

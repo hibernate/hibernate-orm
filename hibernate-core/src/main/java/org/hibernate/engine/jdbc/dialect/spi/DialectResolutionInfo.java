@@ -1,25 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.spi;
+
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.engine.config.spi.ConfigurationService;
+
+import java.sql.DatabaseMetaData;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Exposes information about the database and JDBC driver that can be used in resolving the appropriate Dialect
  * to use.
- * <p/>
+ * <p>
  * The information here mimics part of the JDBC {@link java.sql.DatabaseMetaData} contract, specifically the portions
  * about database and driver names and versions.
- *
- * @author Steve Ebersole
  */
-public interface DialectResolutionInfo {
-	/**
-	 * Constant used to indicate that no version is defined
-	 */
-	public static final int NO_VERSION = -9999;
+public interface DialectResolutionInfo extends DatabaseVersion {
 
 	/**
 	 * Obtain access to the database name, as returned from {@link java.sql.DatabaseMetaData#getDatabaseProductName()}
@@ -29,27 +28,17 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDatabaseProductName()
 	 */
-	public String getDatabaseName();
+	String getDatabaseName();
 
 	/**
-	 * Obtain access to the database major version, as returned from
-	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion()} for the target database.
+	 * Obtain access to the database version, as returned from {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()}
+	 * for the target database
 	 *
-	 * @return The database major version, or {@value #NO_VERSION} to indicate "no version information"
+	 * @return The database version
 	 *
-	 * @see java.sql.DatabaseMetaData#getDatabaseMajorVersion()
+	 * @see java.sql.DatabaseMetaData#getDatabaseProductVersion()
 	 */
-	public int getDatabaseMajorVersion();
-
-	/**
-	 * Obtain access to the database minor version, as returned from
-	 * {@link java.sql.DatabaseMetaData#getDatabaseMinorVersion()} for the target database.
-	 *
-	 * @return The database minor version, or {@value #NO_VERSION} to indicate "no version information"
-	 *
-	 * @see java.sql.DatabaseMetaData#getDatabaseMinorVersion()
-	 */
-	public int getDatabaseMinorVersion();
+	String getDatabaseVersion();
 
 	/**
 	 * Obtain access to the name of the JDBC driver, as returned from {@link java.sql.DatabaseMetaData#getDriverName()}
@@ -59,7 +48,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDriverName()
 	 */
-	public String getDriverName();
+	String getDriverName();
 
 	/**
 	 * Obtain access to the major version of the JDBC driver, as returned from
@@ -69,7 +58,7 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDriverMajorVersion()
 	 */
-	public int getDriverMajorVersion();
+	int getDriverMajorVersion();
 
 	/**
 	 * Obtain access to the minor version of the JDBC driver, as returned from
@@ -79,7 +68,33 @@ public interface DialectResolutionInfo {
 	 *
 	 * @see java.sql.DatabaseMetaData#getDriverMinorVersion()
 	 */
-	public int getDriverMinorVersion();
+	int getDriverMinorVersion();
 
+	/**
+	 * Obtain access to the SQL keywords of the JDBC driver, as returned from
+	 * {@link java.sql.DatabaseMetaData#getSQLKeywords()} for the target database.
+	 *
+	 * @return The JDBC driver keywords
+	 *
+	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
+	 */
+	String getSQLKeywords();
 
+	/**
+	 * Obtain access to the {@link DatabaseMetaData} if it is available.
+	 *
+	 * @return The {@link DatabaseMetaData} or <code>null</code> if not available
+	 */
+	default DatabaseMetaData getDatabaseMetadata() {
+		return null;
+	}
+
+	/**
+	 * Obtain access to the complete {@link ConfigurationService#getSettings() map of config settings}.
+	 *
+	 * @return The immutable map of config settings.
+	 */
+	default Map<String, Object> getConfigurationValues() {
+		return Collections.emptyMap();
+	}
 }

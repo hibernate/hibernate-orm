@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
 
@@ -15,17 +13,17 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.service.ServiceRegistry;
 
 /**
  * Helper class for helping deal with the reflection calls relating to CDI
- * in terms of building CDI-based {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+ * in terms of building CDI-based {@link BeanContainer}
  * instance
  *
- * We need to to avoid statically linking CDI classed into the ClassLoader which
+ * We need to avoid statically linking CDI classed into the ClassLoader which
  * would lead to errors if CDI is not available on the classpath.
  *
  * @author Steve Ebersole
@@ -37,16 +35,15 @@ public class CdiBeanContainerBuilder {
 
 	private static final String BEAN_MANAGER_EXTENSION_FQN = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
 
-	@SuppressWarnings("unchecked")
 	public static BeanContainer fromBeanManagerReference(
 			Object beanManagerRef,
 			ServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		final Class beanManagerClass = ManagedBeanRegistryInitiator.cdiBeanManagerClass( classLoaderService );
-		final Class extendedBeanManagerClass = getHibernateClass( BEAN_MANAGER_EXTENSION_FQN );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		final Class<?> beanManagerClass = ManagedBeanRegistryInitiator.cdiBeanManagerClass( classLoaderService );
+		final Class<?> extendedBeanManagerClass = getHibernateClass( BEAN_MANAGER_EXTENSION_FQN );
 
 		final Class<? extends BeanContainer> containerClass;
-		final Class ctorArgType;
+		final Class<?> ctorArgType;
 
 		if ( extendedBeanManagerClass.isInstance( beanManagerRef ) ) {
 			containerClass = getHibernateClass( CONTAINER_FQN_EXTENDED );
@@ -55,7 +52,7 @@ public class CdiBeanContainerBuilder {
 		else {
 			ctorArgType = beanManagerClass;
 
-			final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+			final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 			final boolean delayAccessToCdi = cfgService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false );
 			if ( delayAccessToCdi ) {
 				containerClass = getHibernateClass( CONTAINER_FQN_DELAYED );

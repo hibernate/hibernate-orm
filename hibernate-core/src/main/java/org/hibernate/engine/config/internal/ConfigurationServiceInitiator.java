@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.config.internal;
 
@@ -13,7 +11,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * The ServiceInitiator for the ConfigurationService
+ * The {@link org.hibernate.service.spi.ServiceInitiator} for the {@link ConfigurationService}.
  *
  * @author Steve Ebersole
  */
@@ -24,7 +22,7 @@ public class ConfigurationServiceInitiator implements StandardServiceInitiator<C
 	public static final ConfigurationServiceInitiator INSTANCE = new ConfigurationServiceInitiator();
 
 	@Override
-	public ConfigurationService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public ConfigurationService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new ConfigurationServiceImpl( configurationValues );
 	}
 

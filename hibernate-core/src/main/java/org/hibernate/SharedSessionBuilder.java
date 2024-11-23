@@ -1,128 +1,115 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
 import java.sql.Connection;
+import java.util.TimeZone;
 
 /**
  * Specialized {@link SessionBuilder} with access to stuff from another session.
  *
  * @author Steve Ebersole
+ *
+ * @see Session#sessionWithOptions()
  */
-public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends SessionBuilder<T> {
-
-	/**
-	 * Signifies that the transaction context from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use {@link #connection()} instead
-	 */
-	@Deprecated
-	default T transactionContext() {
-		return connection();
-	}
+public interface SharedSessionBuilder extends SessionBuilder {
 
 	/**
 	 * Signifies that the connection from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection();
+	SharedSessionBuilder connection();
 
 	/**
 	 * Signifies the interceptor from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T interceptor();
+	SharedSessionBuilder interceptor();
 
 	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated (snce 6.0) use {@link #connectionHandlingMode} instead.
+	 * @deprecated use {@link #connectionHandlingMode} instead.
 	 */
-	@Deprecated
-	T connectionReleaseMode();
+	@Deprecated(since = "6.0")
+	SharedSessionBuilder connectionReleaseMode();
 
 	/**
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connectionHandlingMode();
+	SharedSessionBuilder connectionHandlingMode();
 
 	/**
 	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoJoinTransactions();
+	SharedSessionBuilder autoJoinTransactions();
 
 	/**
 	 * Signifies that the FlushMode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T flushMode();
+	SharedSessionBuilder flushMode();
 
 	/**
 	 * Signifies that the autoClose flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoClose();
-
-	/**
-	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #flushMode()} instead.
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default T flushBeforeCompletion() {
-		flushMode();
-		return (T) this;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// overrides to maintain binary compatibility
+	SharedSessionBuilder autoClose();
 
 	@Override
-	T interceptor(Interceptor interceptor);
+	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
 
 	@Override
-	T noInterceptor();
+	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	@Override
-	T connection(Connection connection);
+	SharedSessionBuilder autoClear(boolean autoClear);
 
 	@Override
-	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
+	SharedSessionBuilder flushMode(FlushMode flushMode);
+
+	@Override @Deprecated(forRemoval = true)
+	SharedSessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	@Override
-	T autoJoinTransactions(boolean autoJoinTransactions);
+	SharedSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	@Override
-	T autoClose(boolean autoClose);
+	SharedSessionBuilder eventListeners(SessionEventListener... listeners);
 
 	@Override
-	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
-		return (T) this;
-	}
+	SharedSessionBuilder clearEventListeners();
+
+	@Override
+	SharedSessionBuilder jdbcTimeZone(TimeZone timeZone);
+
+	@Override
+	SharedSessionBuilder interceptor(Interceptor interceptor);
+
+	@Override
+	SharedSessionBuilder noInterceptor();
+
+	@Override
+	SharedSessionBuilder connection(Connection connection);
+
+	@Override
+	SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
+
+	@Override
+	SharedSessionBuilder autoClose(boolean autoClose);
 }

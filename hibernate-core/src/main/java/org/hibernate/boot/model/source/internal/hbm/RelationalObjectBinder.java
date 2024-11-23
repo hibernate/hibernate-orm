@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -19,6 +16,7 @@ import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.source.spi.RelationalValueSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.OneToOne;
@@ -82,7 +80,7 @@ public class RelationalObjectBinder {
 			boolean areColumnsNullableByDefault,
 			ColumnNamingDelegate columnNamingDelegate) {
 		for ( RelationalValueSource relationalValueSource : relationalValueSources ) {
-			if ( ColumnSource.class.isInstance( relationalValueSource ) ) {
+			if ( relationalValueSource instanceof ColumnSource ) {
 				final ColumnSource columnSource = (ColumnSource) relationalValueSource;
 				bindColumn(
 						sourceDocument,
@@ -105,7 +103,7 @@ public class RelationalObjectBinder {
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
 			ColumnNamingDelegate columnNamingDelegate) {
-		Table table = simpleValue.getTable();
+		final Table table = simpleValue.getTable();
 
 		final Column column = new Column();
 		column.setValue( simpleValue );
@@ -143,30 +141,26 @@ public class RelationalObjectBinder {
 			if ( columnSource.getSizeSource().getLength() != null ) {
 				column.setLength( columnSource.getSizeSource().getLength() );
 			}
-			else {
-				column.setLength( Column.DEFAULT_LENGTH );
-			}
+			final Integer precision = columnSource.getSizeSource().getPrecision();
 
-			if ( columnSource.getSizeSource().getScale() != null ) {
+			if ( precision != null && precision > 0 ) {
+				column.setPrecision( precision );
 				column.setScale( columnSource.getSizeSource().getScale() );
-			}
-			else {
-				column.setScale( Column.DEFAULT_SCALE );
-			}
-
-			if ( columnSource.getSizeSource().getPrecision() != null ) {
-				column.setPrecision( columnSource.getSizeSource().getPrecision() );
-			}
-			else {
-				column.setPrecision( Column.DEFAULT_PRECISION );
 			}
 		}
 
-		column.setNullable( interpretNullability( columnSource.isNullable(), areColumnsNullableByDefault ) );
+		final Boolean nullable = columnSource.isNullable();
+		column.setNullable( nullable == null ? areColumnsNullableByDefault : nullable );
 
 		column.setUnique( columnSource.isUnique() );
+		if ( columnSource.isUnique() && table != null ) {
+			table.createUniqueKey( column, simpleValue.getBuildingContext() );
+		}
 
-		column.setCheckConstraint( columnSource.getCheckCondition() );
+		String checkCondition = columnSource.getCheckCondition();
+		if ( checkCondition != null ) {
+			column.addCheckConstraint( new CheckConstraint(checkCondition) );
+		}
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
 
@@ -185,15 +179,6 @@ public class RelationalObjectBinder {
 			for ( String name : columnSource.getUniqueKeyConstraintNames() ) {
 				table.getOrCreateUniqueKey( name ).addColumn( column );
 			}
-		}
-	}
-
-	private static boolean interpretNullability(TruthValue nullable, boolean areColumnsNullableByDefault) {
-		if ( nullable == null || nullable == TruthValue.UNKNOWN ) {
-			return areColumnsNullableByDefault;
-		}
-		else {
-			return nullable == TruthValue.TRUE;
 		}
 	}
 

@@ -1,0 +1,28 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.jpa.emops;
+
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+
+/**
+ * Tests merging multiple detached representations of the same entity when it is explicitly allowed and logged.
+ *
+ * @author Gail Badner
+ */
+@JiraKey( value = "HHH-9106")
+@Jpa(
+		annotatedClasses = {
+				Category.class,
+				Hoarder.class,
+				Item.class
+		},
+		integrationSettings = { @Setting(name = AvailableSettings.MERGE_ENTITY_COPY_OBSERVER, value = "log") }
+)
+public class MergeMultipleEntityCopiesAllowedLoggedTest extends MergeMultipleEntityCopiesAllowedTest {
+}

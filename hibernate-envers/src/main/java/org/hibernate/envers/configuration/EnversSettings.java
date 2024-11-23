@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration;
+
+import org.hibernate.Internal;
 
 /**
  * Configuration property names.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public interface EnversSettings {
 	/**
@@ -110,6 +111,24 @@ public interface EnversSettings {
 	String AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME = "org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name";
 
 	/**
+	 * Determines whether the timestamp of the end revision is stored as a numeric data type.
+	 * Defaults to {@literal false}.
+	 *
+	 * @since 6.0
+	 */
+	String AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_NUMERIC = "org.hibernate.envers.audit_strategy_validity_revend_timestamp_numeric";
+
+	/**
+	 * Whether to use legacy validity audit strategy revision end timestamp behavior where the field is not
+	 * included as part of the joined entity inheritance subclass audit tables.
+	 *
+	 * Defaults to {@code true}.
+	 *
+	 * @since 6.0
+	 */
+	String AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_LEGACY_PLACEMENT = "org.hibernate.envers.audit_strategy_validity_revend_timestamp_legacy_placement";
+
+	/**
 	 * Name of column used for storing ordinal of the change in sets of embeddable elements. Defaults to {@literal SETORDINAL}.
 	 */
 	String EMBEDDABLE_SET_ORDINAL_FIELD_NAME = "org.hibernate.envers.embeddable_set_ordinal_field_name";
@@ -127,7 +146,7 @@ public interface EnversSettings {
 	 *
 	 * This option is meant to maintain backward compatibility while attempting to correct a bug in behavior without
 	 * impacting existing users who may use the current behavior.
-	 * 
+	 *
 	 * Defaults to {@literal false}.
 	 *
 	 * @since 5.4.4
@@ -142,4 +161,33 @@ public interface EnversSettings {
 	 * @since 5.4.7
 	 */
 	String MODIFIED_COLUMN_NAMING_STRATEGY = "org.hibernate.envers.modified_column_naming_strategy";
+
+	/**
+	 * Deletion of a revision entity will cause a foreign key constraint database error when at least one
+	 * audit record exists for that revision. By enabling this feature, deletion of the revision entity
+	 * will also force all audit records associated to that revision to be deleted via cascade.
+	 *
+	 * Defaults to {@literal false}.
+	 *
+	 * @since 4.3.0
+	 */
+	String CASCADE_DELETE_REVISION = "org.hibernate.envers.cascade_delete_revision";
+
+	/**
+	 * Globally defines whether legacy relation not-found behavior should be used or not.
+	 * Defaults to {@code true}.
+	 *
+	 * By specifying {@code true}, any {@code EntityNotFoundException} will be thrown unless the containing
+	 * class or property explicitly specifies that use case to be ignored.  Conversely, when specifying the
+	 * value {@code false}, the inverse applies and requires explicitly specifying the use case as error so
+	 * that the exception is thrown.
+	 */
+	String GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG = "org.hibernate.envers.global_relation_not_found_legacy_flag";
+
+	/**
+	 * Whether to apply a nocache configuration for the revision sequence.
+	 * This is mostly interesting for testing.
+	 */
+	@Internal
+	String REVISION_SEQUENCE_NOCACHE = "org.hibernate.envers.revision_sequence_nocache";
 }

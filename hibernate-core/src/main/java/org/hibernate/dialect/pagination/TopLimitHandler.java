@@ -1,75 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
-import java.util.Locale;
-
-import org.hibernate.engine.spi.RowSelection;
-
-
 /**
+ * A {@link LimitHandler} for Transact SQL and similar
+ * databases which support the syntax {@code SELECT TOP n}.
+ * Note that this syntax does not allow specification of
+ * an offset.
+ *
  * @author Brett Meyer
  */
-public class TopLimitHandler extends AbstractLimitHandler {
-	
-	private final boolean supportsVariableLimit;
-	
-	private final boolean bindLimitParametersFirst;
+public class TopLimitHandler extends AbstractNoOffsetLimitHandler {
 
-	public TopLimitHandler(boolean supportsVariableLimit, boolean bindLimitParametersFirst) {
-		this.supportsVariableLimit = supportsVariableLimit;
-		this.bindLimitParametersFirst = bindLimitParametersFirst;
+	public static TopLimitHandler INSTANCE = new TopLimitHandler(true);
+
+	public TopLimitHandler(boolean variableLimit) {
+		super(variableLimit);
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-	
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
+	protected String limitClause() {
+		return " top ? ";
 	}
 
 	@Override
-	public boolean supportsLimitOffset() {
-		return supportsVariableLimit;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return supportsVariableLimit;
+	protected String insert(String limitClause, String sql) {
+		return insertAfterDistinct( limitClause, sql );
 	}
 
 	@Override
 	public boolean bindLimitParametersFirst() {
-		return bindLimitParametersFirst;
+		return true;
 	}
 
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if (LimitHelper.hasFirstRow( selection )) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-
-		final int selectIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select" );
-		final int selectDistinctIndex = sql.toLowerCase(Locale.ROOT).indexOf( "select distinct" );
-		final int insertionPoint = selectIndex + (selectDistinctIndex == selectIndex ? 15 : 6);
-
-		StringBuilder sb = new StringBuilder( sql.length() + 8 )
-				.append( sql );
-
-		if ( supportsVariableLimit ) {
-			sb.insert( insertionPoint, " TOP ? " );
-		}
-		else {
-			sb.insert( insertionPoint, " TOP " + getMaxOrLimit( selection ) + " " );
-		}
-
-		return sb.toString();
-	}
 }

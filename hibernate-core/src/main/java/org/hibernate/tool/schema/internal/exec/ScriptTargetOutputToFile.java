@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -28,6 +26,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 
 	private final File file;
 	private final String charsetName;
+	private final boolean append;
 
 	private Writer writer;
 
@@ -36,10 +35,24 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	 *
 	 * @param file The file to read from
 	 * @param charsetName The charset name
+	 * @param append If true, then bytes will be written to the end of the file rather than the beginning
 	 */
-	public ScriptTargetOutputToFile(File file, String charsetName) {
+	public ScriptTargetOutputToFile(File file, String charsetName, boolean append) {
 		this.file = file;
 		this.charsetName = charsetName;
+		this.append = append;
+	}
+
+	/**
+	 * Constructs a ScriptTargetOutputToFile instance,
+	 * the bytes will be written to the end of the file rather than the beginning
+	 *
+	 * @param file The file to read from
+	 * @param charsetName The charset name
+	 *
+	 */
+	public ScriptTargetOutputToFile(File file, String charsetName ) {
+		this(file, charsetName, true);
 	}
 
 	@Override
@@ -53,7 +66,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	@Override
 	public void prepare() {
 		super.prepare();
-		this.writer = toFileWriter( this.file, this.charsetName );
+		this.writer = toFileWriter( this.file, this.charsetName, append );
 	}
 
 	@Override
@@ -63,7 +76,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 				writer.close();
 			}
 			catch (IOException e) {
-				throw new SchemaManagementException( "Unable to close file writer : " + e.toString() );
+				throw new SchemaManagementException( "Unable to close file writer : " + e );
 			}
 			finally {
 				writer = null;
@@ -72,7 +85,7 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
-	static Writer toFileWriter( File file, String charsetName ) {
+	static Writer toFileWriter(File file, String charsetName, boolean append) {
 		try {
 			if ( ! file.exists() ) {
 				// best effort, since this is very likely not allowed in EE environments
@@ -84,17 +97,17 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 			}
 		}
 		catch (Exception e) {
-			log.debug( "Exception calling File#createNewFile : " + e.toString() );
+			log.debug( "Exception calling File#createNewFile : " + e );
 		}
 		try {
 			return charsetName != null ?
 					new OutputStreamWriter(
-							new FileOutputStream( file, true ),
+							new FileOutputStream( file, append ),
 							charsetName
 					) :
 					new OutputStreamWriter( new FileOutputStream(
 							file,
-							true
+							append
 					) );
 		}
 		catch (IOException e) {

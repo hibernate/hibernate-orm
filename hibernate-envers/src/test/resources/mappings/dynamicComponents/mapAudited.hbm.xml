@@ -9,17 +9,17 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-lazy="false">
-    <class name="org.hibernate.envers.test.integration.components.dynamic.AuditedDynamicComponentEntity" table="Audited">
+    <class name="org.hibernate.orm.test.envers.integration.components.dynamic.AuditedDynamicComponentEntity" table="Audited">
         <id name="id" type="long" column="id"/>
         <property name="note" type="string"/>
         <dynamic-component name="customFields">
             <property name="prop1" type="integer"/>
             <property name="prop2" type="float"/>
             <property name="prop4" type="boolean"/>
-            <many-to-one name="prop3" class="org.hibernate.envers.test.integration.components.dynamic.SimpleEntity" column="SIMPLE_ID"/>
+            <many-to-one name="prop3" class="org.hibernate.orm.test.envers.integration.components.dynamic.SimpleEntity" column="SIMPLE_ID"/>
         </dynamic-component>
     </class>
-    <class name="org.hibernate.envers.test.integration.components.dynamic.SimpleEntity" table="simple_abc">
+    <class name="org.hibernate.orm.test.envers.integration.components.dynamic.SimpleEntity" table="simple_abc">
         <id name="id" type="long" column="id"/>
         <property name="simpleProperty" type="string"/>
     </class>

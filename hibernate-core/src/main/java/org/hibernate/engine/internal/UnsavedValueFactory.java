@@ -1,23 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
-import java.lang.reflect.Constructor;
+import java.util.function.Supplier;
 
-import org.hibernate.InstantiationException;
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.KeyValue.NullValueSemantic;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.type.IdentifierType;
-import org.hibernate.type.PrimitiveType;
-import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.VersionJavaType;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
+
+import static org.hibernate.engine.internal.Versioning.isNullInitialVersion;
 
 /**
  * Helper for dealing with unsaved value handling
@@ -27,124 +25,82 @@ import org.hibernate.type.VersionType;
 public class UnsavedValueFactory {
 
 	/**
-	 * Instantiate a class using the provided Constructor
-	 *
-	 * @param constructor The constructor
-	 *
-	 * @return The instantiated object
-	 *
-	 * @throws InstantiationException if something went wrong
-	 */
-	private static Object instantiate(Constructor constructor) {
-		try {
-			return constructor.newInstance();
-		}
-		catch (Exception e) {
-			throw new InstantiationException( "could not instantiate test object", constructor.getDeclaringClass(), e );
-		}
-	}
-	
-	/**
-	 * Return an IdentifierValue for the specified unsaved-value. If none is specified, 
-	 * guess the unsaved value by instantiating a test instance of the class and
-	 * reading it's id property, or if that is not possible, using the java default
-	 * value for the type
-	 *
-	 * @param unsavedValue The mapping defined unsaved value
-	 * @param identifierGetter The getter for the entity identifier attribute
-	 * @param identifierType The mapping type for the identifier
-	 * @param constructor The constructor for the entity
-	 *
-	 * @return The appropriate IdentifierValue
+	 * Return the UnsavedValueStrategy for determining whether an entity instance is
+	 * unsaved based on the identifier.  If an explicit strategy is not specified, determine
+	 * the unsaved value by instantiating an instance of the entity and reading the value of
+	 * its id property, or if that is not possible, using the java default value for the type
 	 */
 	public static IdentifierValue getUnsavedIdentifierValue(
-			String unsavedValue,
-			Getter identifierGetter,
-			Type identifierType,
-			Constructor constructor) {
-		if ( unsavedValue == null ) {
-			if ( identifierGetter != null && constructor != null ) {
-				// use the id value of a newly instantiated instance as the unsaved-value
-				final Serializable defaultValue = (Serializable) identifierGetter.get( instantiate( constructor ) );
-				return new IdentifierValue( defaultValue );
-			}
-			else if ( identifierGetter != null && (identifierType instanceof PrimitiveType) ) {
-				final Serializable defaultValue = ( (PrimitiveType) identifierType ).getDefaultValue();
-				return new IdentifierValue( defaultValue );
-			}
-			else {
-				return IdentifierValue.NULL;
-			}
+			KeyValue bootIdMapping,
+			JavaType<?> idJavaType,
+			Getter getter,
+			Supplier<?> templateInstanceAccess) {
+		final NullValueSemantic nullValueSemantic = bootIdMapping.getNullValueSemantic();
+		return nullValueSemantic == null
+				? inferUnsavedIdentifierValue( idJavaType, getter, templateInstanceAccess )
+				: switch ( nullValueSemantic ) {
+					case UNDEFINED -> IdentifierValue.UNDEFINED;
+					case NULL -> IdentifierValue.NULL;
+					case ANY -> IdentifierValue.ANY;
+					case NONE -> IdentifierValue.NONE;
+					case VALUE -> new IdentifierValue( idJavaType.fromString( bootIdMapping.getNullValue() ) );
+					default -> throw new IllegalArgumentException( "Illegal null-value semantic: " + nullValueSemantic );
+				};
+	}
+
+	private static IdentifierValue inferUnsavedIdentifierValue(
+			JavaType<?> idJavaType, Getter getter, Supplier<?> templateInstanceAccess) {
+		if ( getter != null && templateInstanceAccess != null ) {
+			// use the id value of a newly instantiated instance as the unsaved-value
+			final Object defaultValue = getter.get( templateInstanceAccess.get() );
+			return new IdentifierValue( defaultValue );
 		}
-		else if ( "null".equals( unsavedValue ) ) {
-			return IdentifierValue.NULL;
-		}
-		else if ( "undefined".equals( unsavedValue ) ) {
-			return IdentifierValue.UNDEFINED;
-		}
-		else if ( "none".equals( unsavedValue ) ) {
-			return IdentifierValue.NONE;
-		}
-		else if ( "any".equals( unsavedValue ) ) {
-			return IdentifierValue.ANY;
+		else if ( idJavaType instanceof PrimitiveJavaType<?> primitiveJavaType ) {
+			return new IdentifierValue( primitiveJavaType.getDefaultValue() );
 		}
 		else {
-			try {
-				return new IdentifierValue( (Serializable) ( (IdentifierType) identifierType ).stringToObject( unsavedValue ) );
-			}
-			catch ( ClassCastException cce ) {
-				throw new MappingException( "Bad identifier type: " + identifierType.getName() );
-			}
-			catch ( Exception e ) {
-				throw new MappingException( "Could not parse identifier unsaved-value: " + unsavedValue );
-			}
+			return IdentifierValue.NULL;
 		}
 	}
 
 	/**
-	 * Return an IdentifierValue for the specified unsaved-value. If none is specified,
-	 * guess the unsaved value by instantiating a test instance of the class and
-	 * reading it's version property value, or if that is not possible, using the java default
-	 * value for the type
-	 *
-	 * @param versionUnsavedValue The mapping defined unsaved value
-	 * @param versionGetter The version attribute getter
-	 * @param versionType The mapping type for the version
-	 * @param constructor The constructor for the entity
-	 *
-	 * @return The appropriate VersionValue
+	 * Return the {@link org.hibernate.engine.spi.UnsavedValueStrategy} for determining
+	 * whether an entity instance is unsaved based on the version.  If an explicit strategy
+	 * is not specified, determine the unsaved value by instantiating an instance of the
+	 * entity and reading the value of its version property, or if that is not possible,
+	 * using the java default value for the type.
 	 */
-	public static VersionValue getUnsavedVersionValue(
-			String versionUnsavedValue, 
-			Getter versionGetter,
-			VersionType versionType,
-			Constructor constructor) {
-		
-		if ( versionUnsavedValue == null ) {
-			if ( constructor!=null ) {
-				final Object defaultValue = versionGetter.get( instantiate( constructor ) );
-				// if the version of a newly instantiated object is not the same
-				// as the version seed value, use that as the unsaved-value
-				return versionType.isEqual( versionType.seed( null ), defaultValue )
-						? VersionValue.UNDEFINED
-						: new VersionValue( defaultValue );
-			}
-			else {
-				return VersionValue.UNDEFINED;
-			}
-		}
-		else if ( "undefined".equals( versionUnsavedValue ) ) {
-			return VersionValue.UNDEFINED;
-		}
-		else if ( "null".equals( versionUnsavedValue ) ) {
-			return VersionValue.NULL;
-		}
-		else if ( "negative".equals( versionUnsavedValue ) ) {
-			return VersionValue.NEGATIVE;
+	public static <T> VersionValue getUnsavedVersionValue(
+			KeyValue bootVersionMapping,
+			VersionJavaType<T> versionJavaType,
+			Getter getter,
+			Supplier<?> templateInstanceAccess) {
+		final NullValueSemantic nullValueSemantic = bootVersionMapping.getNullValueSemantic();
+		return nullValueSemantic == null
+				? inferUnsavedVersionValue( versionJavaType, getter, templateInstanceAccess )
+				: switch ( nullValueSemantic ) {
+					case UNDEFINED -> VersionValue.UNDEFINED;
+					case NULL -> VersionValue.NULL;
+					case NEGATIVE -> VersionValue.NEGATIVE;
+					// this should not happen since the DTD prevents it
+					case VALUE -> new VersionValue( versionJavaType.fromString( bootVersionMapping.getNullValue() ) );
+					default -> throw new IllegalArgumentException( "Illegal null-value semantic: " + nullValueSemantic );
+				};
+	}
+
+	private static VersionValue inferUnsavedVersionValue(
+			VersionJavaType<?> versionJavaType, Getter getter, Supplier<?> templateInstanceAccess) {
+		if ( getter != null && templateInstanceAccess != null ) {
+			final Object defaultValue = getter.get( templateInstanceAccess.get() );
+			// if the version of a newly instantiated object is null
+			// or a negative number, use that value as the unsaved-value,
+			// otherwise assume it's the initial version set by program
+			return isNullInitialVersion( defaultValue )
+					? new VersionValue( defaultValue )
+					: VersionValue.UNDEFINED;
 		}
 		else {
-			// this should not happen since the DTD prevents it
-			throw new MappingException( "Could not parse version unsaved-value: " + versionUnsavedValue );
+			return VersionValue.UNDEFINED;
 		}
 	}
 

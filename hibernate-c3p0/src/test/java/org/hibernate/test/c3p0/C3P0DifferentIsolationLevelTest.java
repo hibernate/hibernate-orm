@@ -1,17 +1,21 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.test.c3p0;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -19,14 +23,13 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12749")
+@JiraKey(value = "HHH-12749")
 @RequiresDialect(H2Dialect.class)
 public class C3P0DifferentIsolationLevelTest extends
 		BaseNonConfigCoreFunctionalTestCase {
@@ -47,7 +50,7 @@ public class C3P0DifferentIsolationLevelTest extends
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		connectionProvider = new C3P0ProxyConnectionProvider();
 		settings.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		settings.put( AvailableSettings.ISOLATION, "REPEATABLE_READ" );

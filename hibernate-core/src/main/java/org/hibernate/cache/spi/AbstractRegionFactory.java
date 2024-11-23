@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,6 +15,8 @@ import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.SimpleTimestamper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * @author Steve Ebersole
  */
@@ -29,20 +27,18 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	/**
 	 * Legacy names that used to be the default for the query results region.
 	 */
-	public static final List<String> LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES =
-			Collections.unmodifiableList( Arrays.asList(
-					"org.hibernate.cache.spi.QueryResultsRegion",
-					"org.hibernate.cache.internal.StandardQueryCache"
-			) );
+	public static final List<String> LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES = List.of(
+			"org.hibernate.cache.spi.QueryResultsRegion",
+			"org.hibernate.cache.internal.StandardQueryCache"
+	);
 
 	/**
 	 * Legacy names that used to be the default for the update timestamps region.
 	 */
-	public static final List<String> LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES =
-			Collections.unmodifiableList( Arrays.asList(
-					"org.hibernate.cache.spi.TimestampsRegion",
-					"org.hibernate.cache.spi.UpdateTimestampsCache"
-			) );
+	public static final List<String> LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES = List.of(
+			"org.hibernate.cache.spi.TimestampsRegion",
+			"org.hibernate.cache.spi.UpdateTimestampsCache"
+	);
 
 	private Exception startingException;
 
@@ -83,7 +79,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public final void start(SessionFactoryOptions settings, Map configValues) throws CacheException {
+	public final void start(SessionFactoryOptions settings, Map<String,Object> configValues) throws CacheException {
 		if ( started.compareAndSet( false, true ) ) {
 			synchronized (this) {
 				this.options = settings;
@@ -99,11 +95,11 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 			}
 		}
 		else {
-			SecondLevelCacheLogger.INSTANCE.attemptToStartAlreadyStartedCacheProvider();
+			L2CACHE_LOGGER.attemptToStartAlreadyStartedCacheProvider();
 		}
 	}
 
-	protected abstract void prepareForUse(SessionFactoryOptions settings, Map configValues);
+	protected abstract void prepareForUse(SessionFactoryOptions settings, Map<String,Object> configValues);
 
 	@Override
 	public final void stop() {
@@ -119,7 +115,7 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 			}
 		}
 		else {
-			SecondLevelCacheLogger.INSTANCE.attemptToStopAlreadyStoppedCacheProvider();
+			L2CACHE_LOGGER.attemptToStopAlreadyStoppedCacheProvider();
 		}
 	}
 

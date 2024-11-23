@@ -1,35 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
-
-import java.io.Serializable;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Basic implementation of the {@link PostInsertIdentifierGenerator} contract.
  *
+ * @deprecated Subclasses should now directly inherit {@link PostInsertIdentifierGenerator} and
+ *             {@link BulkInsertionCapableIdentifierGenerator}, or even better, simply implement
+ *             {@link org.hibernate.generator.OnExecutionGenerator} directly.
+ *
  * @author Gavin King
  */
+@Deprecated(forRemoval = true, since = "6.2")
 public abstract class AbstractPostInsertGenerator
-		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
-	@Override
-	public Serializable generate(SharedSessionContractImplementor s, Object obj) {
-		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
-	}
-
-	@Override
-	public boolean supportsBulkInsertionIdentifierGeneration() {
-		return true;
-	}
-
-	@Override
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return null;
-	}
-}
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {}

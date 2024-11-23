@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.spi;
 
@@ -14,14 +12,14 @@ import org.hibernate.service.Service;
 
 /**
  * Given an entity or collection mapping, resolve the appropriate persister class to use.
- * <p/>
+ * <p>
  * The persister class is chosen according to the following rules:<ol>
  *     <li>the persister class defined explicitly via annotation or XML</li>
  *     <li>the persister class returned by the installed {@link PersisterClassResolver}</li>
  *     <li>the default provider as chosen by Hibernate Core (best choice most of the time)</li>
  * </ol>
  *
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
 public interface PersisterClassResolver extends Service {

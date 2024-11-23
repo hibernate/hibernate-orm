@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -17,16 +13,18 @@ import org.hibernate.type.CollectionType;
 
 /**
  * When a transient entity is passed to lock(), we must inspect all its collections and
- * 1. associate any uninitialized PersistentCollections with this session
- * 2. associate any initialized PersistentCollections with this session, using the
- * existing snapshot
- * 3. throw an exception for each "new" collection
+ * <ol>
+ * <li> associate any uninitialized PersistentCollections with this session
+ * <li> associate any initialized PersistentCollections with this session, using the
+ *      existing snapshot
+ * <li> throw an exception for each "new" collection
+ * </ol>
  *
  * @author Gavin King
  */
 public class OnLockVisitor extends ReattachVisitor {
 
-	public OnLockVisitor(EventSource session, Serializable key, Object owner) {
+	public OnLockVisitor(EventSource session, Object key, Object owner) {
 		super( session, key, owner );
 	}
 
@@ -37,12 +35,12 @@ public class OnLockVisitor extends ReattachVisitor {
 		}
 
 		final SessionImplementor session = getSession();
-		final CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
-
-		if ( collection instanceof PersistentCollection ) {
-			final PersistentCollection persistentCollection = (PersistentCollection) collection;
+		final CollectionPersister persister =
+				session.getFactory().getMappingMetamodel()
+						.getCollectionDescriptor( type.getRole() );
+		if ( collection instanceof PersistentCollection<?> persistentCollection ) {
 			if ( persistentCollection.setCurrentSession( session ) ) {
-				if ( isOwnerUnchanged( persistentCollection, persister, extractCollectionKeyFromOwner( persister ) ) ) {
+				if ( isOwnerUnchanged( persister, extractCollectionKeyFromOwner( persister ), persistentCollection ) ) {
 					// a "detached" collection that originally belonged to the same entity
 					if ( persistentCollection.isDirty() ) {
 						throw new HibernateException( "re-associated object has dirty collection" );
@@ -66,7 +64,6 @@ public class OnLockVisitor extends ReattachVisitor {
 			//TODO: or an array!! we can't lock objects with arrays now??
 			throw new HibernateException( "re-associated object has dirty collection reference (or an array)" );
 		}
-
 		return null;
 	}
 

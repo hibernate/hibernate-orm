@@ -1,27 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
-import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 
+
 /**
+ * An implementation of an identifier mapper for a single basic attribute property.
+ *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
 	private PropertyData propertyData;
@@ -45,6 +43,11 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 	}
 
 	@Override
+	public void add(PropertyData propertyData, AbstractIdMapper idMapper) {
+		throw new AuditException( "This method is not allowed for a single identifier mapper" );
+	}
+
+	@Override
 	public boolean mapToEntityFromMap(final Object obj, Map data) {
 		if ( data == null || obj == null ) {
 			return false;
@@ -55,20 +58,8 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return false;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Boolean>() {
-					@Override
-					public Boolean run() {
-						final Setter setter = ReflectionTools.getSetter(
-								obj.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-						setter.set( obj, value, null );
-						return true;
-					}
-				}
-		);
+		setValueOnObject( propertyData, obj, value );
+		return true;
 	}
 
 	@Override
@@ -86,24 +77,12 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			return null;
 		}
 
-		if ( data instanceof HibernateProxy ) {
-			final HibernateProxy hibernateProxy = (HibernateProxy) data;
-			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( data );
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
-			return AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Getter getter = ReflectionTools.getGetter(
-									data.getClass(),
-									propertyData,
-									getServiceRegistry()
-							);
-							return getter.get( data );
-						}
-					}
-			);
+			return getValueFromObject( propertyData, data );
 		}
 	}
 
@@ -120,55 +99,23 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 			data.put( propertyData.getName(), null );
 		}
 		else {
-			if ( obj instanceof HibernateProxy ) {
-				final HibernateProxy hibernateProxy = (HibernateProxy) obj;
-				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getIdentifier() );
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+			if ( lazyInitializer != null ) {
+				data.put( propertyData.getName(), lazyInitializer.getInternalIdentifier() );
 			}
 			else {
-				final Object value = AccessController.doPrivileged(
-						new PrivilegedAction<Object>() {
-							@Override
-							public Object run() {
-								final Getter getter = ReflectionTools.getGetter(
-										obj.getClass(),
-										propertyData,
-										getServiceRegistry()
-								);
-								return getter.get( obj );
-							}
-						}
-				);
+				final Object value = getValueFromObject( propertyData, obj );
 				data.put( propertyData.getName(), value );
 			}
 		}
 	}
 
+	@Override
 	public void mapToEntityFromEntity(final Object objTo, final Object objFrom) {
 		if ( objTo == null || objFrom == null ) {
 			return;
 		}
-
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								objFrom.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-
-						final Setter setter = ReflectionTools.getSetter(
-								objTo.getClass(),
-								propertyData,
-								getServiceRegistry()
-						);
-
-						setter.set( objTo, getter.get( objFrom ), null );
-						return null;
-					}
-				}
-		);
+		getAndSetValue(propertyData, objFrom, objTo );
 	}
 
 	@Override

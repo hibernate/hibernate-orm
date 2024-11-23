@@ -1,27 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.EnumType;
+import jakarta.persistence.EnumType;
 
-import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.CollectionAuditTable;
 import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Value;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.Type;
 
 /**
+ * The boot-time representation of an audited property.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Chris Cranford
@@ -29,13 +31,14 @@ import org.hibernate.type.Type;
 public class PropertyAuditingData {
 	private String name;
 	private String beanName;
-	private ModificationStore store;
 	private String mapKey;
 	private EnumType mapKeyEnumType;
-	private AuditJoinTable joinTable;
+	private CollectionAuditTable collectionAuditTable;
+	private AuditJoinTableData joinTable;
 	private String accessType;
-	private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<>( 0 );
+	private final List<AuditOverrideData> auditJoinTableOverrides = new ArrayList<>( 0 );
 	private RelationTargetAuditMode relationTargetAuditMode;
+	private RelationTargetNotFoundAction relationTargetNotFoundAction;
 	private String auditMappedBy;
 	private String relationMappedBy;
 	private String positionMappedBy;
@@ -44,50 +47,89 @@ public class PropertyAuditingData {
 	private String modifiedFlagName;
 	private String explicitModifiedFlagName;
 	private Value value;
+	private Type propertyType;
+	private Type virtualPropertyType;
+	private PropertyAccessStrategy propertyAccessStrategy;
 	// Synthetic properties are ones which are not part of the actual java model.
 	// They're properties used for bookkeeping by Hibernate
-	private boolean syntheic;
+	private boolean synthetic;
 
 	public PropertyAuditingData() {
 	}
 
+	/**
+	 * Create a property with the default {@link RelationTargetAuditMode} mode of AUDITED.
+	 *
+	 * @param name the property name
+	 * @param accessType the access type
+	 * @param forceInsertable whether the property is forced insertable
+	 */
 	public PropertyAuditingData(
-			String name, String accessType, ModificationStore store,
-			RelationTargetAuditMode relationTargetAuditMode,
-			String auditMappedBy, String positionMappedBy,
+			String name,
+			String accessType,
 			boolean forceInsertable) {
 		this(
 				name,
 				accessType,
-				store,
-				relationTargetAuditMode,
-				auditMappedBy,
-				positionMappedBy,
+				RelationTargetAuditMode.AUDITED,
+				RelationTargetNotFoundAction.DEFAULT,
+				null,
+				null,
 				forceInsertable,
 				false,
 				null
 		);
 	}
 
+	/**
+	 * Create a property with the default {@link RelationTargetAuditMode} mode of AUDITED.
+	 *
+	 * @param name the property name
+	 * @param accessType the access type
+	 * @param relationTargetNotFoundAction the relation target not found action
+	 * @param forceInsertable whether the property is forced insertable
+	 * @param synthetic whether the property is a synthetic, non-logic column-based property
+	 * @param value the mapping model's value
+	 */
 	public PropertyAuditingData(
 			String name,
 			String accessType,
-			ModificationStore store,
+			RelationTargetNotFoundAction relationTargetNotFoundAction,
+			boolean forceInsertable,
+			boolean synthetic,
+			Value value) {
+		this(
+				name,
+				accessType,
+				RelationTargetAuditMode.AUDITED,
+				relationTargetNotFoundAction,
+				null,
+				null,
+				forceInsertable,
+				synthetic,
+				value
+		);
+	}
+
+	public PropertyAuditingData(
+			String name,
+			String accessType,
 			RelationTargetAuditMode relationTargetAuditMode,
+			RelationTargetNotFoundAction relationTargetNotFoundAction,
 			String auditMappedBy,
 			String positionMappedBy,
 			boolean forceInsertable,
-			boolean syntheic,
+			boolean synthetic,
 			Value value) {
 		this.name = name;
 		this.beanName = name;
 		this.accessType = accessType;
-		this.store = store;
 		this.relationTargetAuditMode = relationTargetAuditMode;
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
 		this.auditMappedBy = auditMappedBy;
 		this.positionMappedBy = positionMappedBy;
 		this.forceInsertable = forceInsertable;
-		this.syntheic = syntheic;
+		this.synthetic = synthetic;
 		this.value = value;
 	}
 
@@ -107,22 +149,6 @@ public class PropertyAuditingData {
 		this.beanName = beanName;
 	}
 
-	/**
-	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
-	 */
-	@Deprecated
-	public ModificationStore getStore() {
-		return store;
-	}
-
-	/**
-	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
-	 */
-	@Deprecated
-	public void setStore(ModificationStore store) {
-		this.store = store;
-	}
-
 	public String getMapKey() {
 		return mapKey;
 	}
@@ -139,11 +165,11 @@ public class PropertyAuditingData {
 		this.mapKeyEnumType = mapKeyEnumType;
 	}
 
-	public AuditJoinTable getJoinTable() {
+	public AuditJoinTableData getJoinTable() {
 		return joinTable;
 	}
 
-	public void setJoinTable(AuditJoinTable joinTable) {
+	public void setJoinTable(AuditJoinTableData joinTable) {
 		this.joinTable = joinTable;
 	}
 
@@ -155,44 +181,16 @@ public class PropertyAuditingData {
 		this.accessType = accessType;
 	}
 
-	// todo (6.0) - remove this and use #resolvePropertyData instead
-	public PropertyData getPropertyData() {
-		return resolvePropertyData( null );
-	}
-
-	public PropertyData resolvePropertyData(Type propertyType) {
-		return new PropertyData(
-				name,
-				beanName,
-				accessType,
-				store,
-				usingModifiedFlag,
-				modifiedFlagName,
-				syntheic,
-				propertyType
-		);
-	}
-
-	public PropertyData resolvePropertyData(Type propertyType, Type virtualType) {
-		return new PropertyData(
-				name,
-				beanName,
-				accessType,
-				store,
-				usingModifiedFlag,
-				modifiedFlagName,
-				syntheic,
-				propertyType,
-				virtualType.getReturnedClass()
-		);
-	}
-
-	public List<AuditOverride> getAuditingOverrides() {
-		return auditJoinTableOverrides;
+	public List<AuditOverrideData> getAuditingOverrides() {
+		return Collections.unmodifiableList( auditJoinTableOverrides );
 	}
 
 	public String getAuditMappedBy() {
 		return auditMappedBy;
+	}
+
+	public boolean hasAuditedMappedBy() {
+		return auditMappedBy != null;
 	}
 
 	public void setAuditMappedBy(String auditMappedBy) {
@@ -201,6 +199,10 @@ public class PropertyAuditingData {
 
 	public String getRelationMappedBy() {
 		return relationMappedBy;
+	}
+
+	public boolean hasRelationMappedBy() {
+		return relationMappedBy != null;
 	}
 
 	public void setRelationMappedBy(String relationMappedBy) {
@@ -255,14 +257,14 @@ public class PropertyAuditingData {
 		if ( annotation != null ) {
 			final String overrideName = annotation.name();
 			boolean present = false;
-			for ( AuditOverride current : auditJoinTableOverrides ) {
-				if ( current.name().equals( overrideName ) ) {
+			for ( AuditOverrideData current : auditJoinTableOverrides ) {
+				if ( current.getName().equals( overrideName ) ) {
 					present = true;
 					break;
 				}
 			}
 			if ( !present ) {
-				auditJoinTableOverrides.add( annotation );
+				auditJoinTableOverrides.add( new AuditOverrideData( annotation ) );
 			}
 		}
 	}
@@ -293,11 +295,93 @@ public class PropertyAuditingData {
 		this.relationTargetAuditMode = relationTargetAuditMode;
 	}
 
-	public boolean isSyntheic() {
-		return syntheic;
+	public RelationTargetNotFoundAction getRelationTargetNotFoundAction() {
+		return relationTargetNotFoundAction;
+	}
+
+	public void setRelationTargetNotFoundAction(RelationTargetNotFoundAction relationTargetNotFoundAction) {
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
+	}
+
+	public boolean isSynthetic() {
+		return synthetic;
 	}
 
 	public Value getValue() {
 		return value;
+	}
+
+	public void setValue(Value value) {
+		this.value = value;
+	}
+
+	public Type getPropertyType() {
+		return propertyType;
+	}
+
+	public void setPropertyType(Type propertyType) {
+		this.propertyType = propertyType;
+	}
+
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return propertyAccessStrategy;
+	}
+
+	public void setPropertyAccessStrategy(PropertyAccessStrategy propertyAccessStrategy) {
+		this.propertyAccessStrategy = propertyAccessStrategy;
+	}
+
+	public Type getVirtualPropertyType() {
+		return virtualPropertyType;
+	}
+
+	public void setVirtualPropertyType(Type virtualPropertyType) {
+		this.virtualPropertyType = virtualPropertyType;
+	}
+
+	public CollectionAuditTable getCollectionAuditTable() {
+		return collectionAuditTable;
+	}
+
+	public void setCollectionAuditTable(CollectionAuditTable collectionAuditTable) {
+		this.collectionAuditTable = collectionAuditTable;
+	}
+
+	public PropertyData resolvePropertyData() {
+		if ( propertyType != null && virtualPropertyType != null ) {
+			return new PropertyData(
+					name,
+					beanName,
+					accessType,
+					usingModifiedFlag,
+					modifiedFlagName,
+					synthetic,
+					propertyType,
+					virtualPropertyType.getReturnedClass(),
+					propertyAccessStrategy
+			);
+		}
+		else if ( propertyType != null ) {
+			return new PropertyData(
+					name,
+					beanName,
+					accessType,
+					usingModifiedFlag,
+					modifiedFlagName,
+					synthetic,
+					propertyType,
+					propertyAccessStrategy
+			);
+		}
+		return new PropertyData(
+				name,
+				beanName,
+				accessType,
+				usingModifiedFlag,
+				modifiedFlagName,
+				synthetic,
+				null,
+				propertyAccessStrategy
+		);
 	}
 }

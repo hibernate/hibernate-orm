@@ -1,93 +1,123 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.io.Serializable;
+import java.util.List;
 
+import jakarta.persistence.EntityGraph;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 /**
- * Contract methods shared between {@link Session} and {@link StatelessSession}.
- * <p/>
- * NOTE : Poorly named.  "shared" simply indicates that its a unified contract between {@link Session} and
- * {@link StatelessSession}.
- * 
+ * Declares operations that are common between {@link Session} and {@link StatelessSession}.
+ *
  * @author Steve Ebersole
  */
-public interface SharedSessionContract extends QueryProducer, Serializable {
+public interface SharedSessionContract extends QueryProducer, AutoCloseable, Serializable {
+	/**
+	 * Obtain the tenant identifier associated with this session, as a string.
+	 *
+	 * @return The tenant identifier associated with this session, or {@code null}
+	 *
+	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
+	 * @see SessionBuilder#tenantIdentifier(Object)
+	 */
+	String getTenantIdentifier();
+
 	/**
 	 * Obtain the tenant identifier associated with this session.
 	 *
 	 * @return The tenant identifier associated with this session, or {@code null}
+	 * @since 6.4
+	 *
+	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
+	 * @see SessionBuilder#tenantIdentifier(Object)
 	 */
-	String getTenantIdentifier();
+	Object getTenantIdentifierValue();
 
 	/**
 	 * End the session by releasing the JDBC connection and cleaning up.
 	 *
 	 * @throws HibernateException Indicates problems cleaning up.
 	 */
+	@Override
 	void close() throws HibernateException;
 
 	/**
 	 * Check if the session is still open.
 	 *
-	 * @return boolean
+	 * @return {@code true} if it is open
 	 */
 	boolean isOpen();
 
 	/**
 	 * Check if the session is currently connected.
 	 *
-	 * @return boolean
+	 * @return {@code true} if it is connected
 	 */
 	boolean isConnected();
 
 	/**
-	 * Begin a unit of work and return the associated {@link Transaction} object.  If a new underlying transaction is
-	 * required, begin the transaction.  Otherwise continue the new work in the context of the existing underlying
-	 * transaction.
+	 * Begin a unit of work and return the associated {@link Transaction} object.
+	 * If a new underlying transaction is required, begin the transaction. Otherwise,
+	 * continue the new work in the context of the existing underlying transaction.
 	 *
-	 * @return a Transaction instance
+	 * @return an instance of {@link Transaction} representing the new transaction
 	 *
-	 * @see #getTransaction
+	 * @see #getTransaction()
+	 * @see Transaction#begin()
 	 */
 	Transaction beginTransaction();
 
 	/**
-	 * Get the {@link Transaction} instance associated with this session.  The concrete type of the returned
-	 * {@link Transaction} object is determined by the {@code hibernate.transaction_factory} property.
+	 * Get the {@link Transaction} instance associated with this session.
 	 *
-	 * @return a Transaction instance
+	 * @return an instance of {@link Transaction} representing the transaction
+	 *         associated with this session
+	 *
+	 * @see jakarta.persistence.EntityManager#getTransaction()
 	 */
 	Transaction getTransaction();
 
-	@Override
-	org.hibernate.query.Query createQuery(String queryString);
-
-	@Override
-	org.hibernate.query.Query getNamedQuery(String queryName);
+	/**
+	 * Join the currently-active JTA transaction.
+	 *
+	 * @see jakarta.persistence.EntityManager#joinTransaction()
+	 *
+	 * @since 6.2
+	 */
+	void joinTransaction();
 
 	/**
-	 * Gets a ProcedureCall based on a named template
+	 * Check if the session is joined to the current transaction.
+	 *
+	 * @see #joinTransaction()
+	 * @see jakarta.persistence.EntityManager#isJoinedToTransaction()
+	 *
+	 * @since 6.2
+	 */
+	boolean isJoinedToTransaction();
+
+	/**
+	 * Obtain a {@link ProcedureCall} based on a named template
 	 *
 	 * @param name The name given to the template
 	 *
 	 * @return The ProcedureCall
 	 *
-	 * @see javax.persistence.NamedStoredProcedureQuery
+	 * @see jakarta.persistence.NamedStoredProcedureQuery
 	 */
 	ProcedureCall getNamedProcedureCall(String name);
 
 	/**
-	 * Creates a call to a stored procedure.
+	 * Create a {@link ProcedureCall} to a stored procedure.
 	 *
 	 * @param procedureName The name of the procedure.
 	 *
@@ -96,18 +126,19 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	ProcedureCall createStoredProcedureCall(String procedureName);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings.  Each class named
-	 * is considered a "root return".
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result
+	 * set entity mappings. Each given class is considered a "root return".
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultClasses The entity(s) to map the result on to.
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses);
+	ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings.
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result
+	 * set entity mappings.
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultSetMappings The explicit result set mapping(s) to use for mapping the results
@@ -117,61 +148,51 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
 
 	/**
-	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors).
+	 * Obtain a {@link ProcedureCall} based on a named template
 	 *
-	 * @param persistentClass The class, which is an entity, or has entity subclasses/implementors
+	 * @param name The name given to the template
 	 *
-	 * @return The criteria instance for manipulation and execution
+	 * @return The ProcedureCall
 	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
+	 * @see jakarta.persistence.NamedStoredProcedureQuery
 	 */
-	@Deprecated
-	Criteria createCriteria(Class persistentClass);
+	ProcedureCall createNamedStoredProcedureQuery(String name);
 
 	/**
-	 * Create {@link Criteria} instance for the given class (entity or subclasses/implementors), using a specific
-	 * alias.
+	 * Create a {@link ProcedureCall} to a stored procedure.
 	 *
-	 * @param persistentClass The class, which is an entity, or has entity subclasses/implementors
-	 * @param alias The alias to use
+	 * @param procedureName The name of the procedure.
 	 *
-	 * @return The criteria instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
+	 * @return The representation of the procedure call.
 	 */
-	@Deprecated
-	Criteria createCriteria(Class persistentClass, String alias);
+	ProcedureCall createStoredProcedureQuery(String procedureName);
 
 	/**
-	 * Create {@link Criteria} instance for the given entity name.
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result
+	 * set entity mappings. Each given class is considered a "root return".
 	 *
-	 * @param entityName The entity name
-
-	 * @return The criteria instance for manipulation and execution
+	 * @param procedureName The name of the procedure.
+	 * @param resultClasses The entity(s) to map the result on to.
 	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
+	 * @return The representation of the procedure call.
 	 */
-	@Deprecated
-	Criteria createCriteria(String entityName);
+	ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses);
 
 	/**
-	 * Create {@link Criteria} instance for the given entity name, using a specific alias.
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result set
+	 * entity mappings.
 	 *
-	 * @param entityName The entity name
-	 * @param alias The alias to use
+	 * @param procedureName The name of the procedure.
+	 * @param resultSetMappings The explicit result set mapping(s) to use for mapping the results
 	 *
-	 * @return The criteria instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.2) for Session, use the JPA Criteria
+	 * @return The representation of the procedure call.
 	 */
-	@Deprecated
-	Criteria createCriteria(String entityName, String alias);
+	ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings);
 
 	/**
-	 * Get the Session-level JDBC batch size for the current Session.
-	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 * Get the session-level JDBC batch size for the current session.
 	 *
-	 * @return Session-level JDBC batch size
+	 * @return the current session-level JDBC batch size
 	 *
 	 * @since 5.2
 	 *
@@ -181,41 +202,159 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	Integer getJdbcBatchSize();
 
 	/**
-	 * Set the Session-level JDBC batch size.
-	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 * Set the session-level JDBC batch size. Override the
+	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
+	 * factory-level} JDBC batch size controlled by the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
 	 *
-	 * @param jdbcBatchSize Session-level JDBC batch size
+	 * @param jdbcBatchSize the new session-level JDBC batch size
 	 *
 	 * @since 5.2
 	 *
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
 	void setJdbcBatchSize(Integer jdbcBatchSize);
 
 	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.
+	 * Obtain a {@link HibernateCriteriaBuilder} which may be used to
+	 * {@linkplain HibernateCriteriaBuilder#createQuery(Class) construct}
+	 * {@linkplain org.hibernate.query.criteria.JpaCriteriaQuery criteria
+	 * queries}.
 	 *
-	 * @param work The work to be performed.
-	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 * @return an instance of {@link HibernateCriteriaBuilder}
+	 *
+	 * @throws IllegalStateException if the session has been closed
+	 *
+	 * @see SessionFactory#getCriteriaBuilder()
 	 */
-	default void doWork(Work work) throws HibernateException {
-		throw new UnsupportedOperationException( "The doWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplemento" );
-	}
+	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.  After
-	 * execution returns the result of the {@link ReturningWork#execute} call.
+	 * Perform work using the {@link java.sql.Connection} underlying by this session.
+	 *
+	 * @param work The work to be performed.
+	 *
+	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link jakarta.persistence.EntityManager#runWithConnection}
+	 */
+	void doWork(Work work) throws HibernateException;
+
+	/**
+	 * Perform work using the {@link java.sql.Connection} underlying by this session,
+	 * and return a result.
 	 *
 	 * @param work The work to be performed.
 	 * @param <T> The type of the result returned from the work
 	 *
-	 * @return the result from calling {@link ReturningWork#execute}.
+	 * @return the result of calling {@link ReturningWork#execute}.
 	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link jakarta.persistence.EntityManager#callWithConnection}
 	 */
-	default <T> T doReturningWork(ReturningWork<T> work) throws HibernateException {
-		throw new UnsupportedOperationException( "The doReturningWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplemento" );
-	}
+	<T> T doReturningWork(ReturningWork<T> work);
 
+	/**
+	 * Create a new mutable {@link EntityGraph} with only a root node.
+	 *
+	 * @param rootType the root entity class of the graph
+	 *
+	 * @since 6.3
+	 */
+	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
+
+	/**
+	 * Create a new mutable copy of the named {@link EntityGraph},
+	 * or return {@code null} if there is no graph with the given
+	 * name.
+	 *
+	 * @param graphName the name of the graph
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 *
+	 * @since 6.3
+	 */
+	RootGraph<?> createEntityGraph(String graphName);
+
+	/**
+	 * Create a new mutable copy of the named {@link EntityGraph},
+	 * or return {@code null} if there is no graph with the given
+	 * name.
+	 *
+	 * @param rootType the root entity class of the graph
+	 * @param graphName the name of the graph
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 *
+	 * @throws IllegalArgumentException if the graph with the given
+	 *         name does not have the given entity type as its root
+	 *
+	 * @since 6.3
+	 */
+	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
+
+	/**
+	 * Retrieve the named {@link EntityGraph} as an immutable graph,
+	 * or return {@code null} if there is no graph with the given
+	 * name.
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 *
+	 * @param graphName the name of the graph
+	 *
+	 * @since 6.3
+	 */
+	RootGraph<?> getEntityGraph(String graphName);
+
+	/**
+	 * Retrieve all named {@link EntityGraph}s with the given type.
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 *
+	 * @since 6.3
+	 */
+	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
+
+	/**
+	 * Enable the named {@linkplain Filter filter} for this current session.
+	 * <p>
+	 * The returned {@link Filter} object must be used to bind arguments
+	 * to parameters of the filter, and every parameter must be set before
+	 * any other operation of this session is called.
+	 *
+	 * @param filterName the name of the filter to be enabled.
+	 *
+	 * @return the {@link Filter} instance representing the enabled filter.
+	 *
+	 * @throws UnknownFilterException if there is no such filter
+	 *
+	 * @see org.hibernate.annotations.FilterDef
+	 */
+	Filter enableFilter(String filterName);
+
+	/**
+	 * Retrieve a currently enabled {@linkplain Filter filter} by name.
+	 *
+	 * @param filterName the name of the filter to be retrieved.
+	 *
+	 * @return the {@link Filter} instance representing the enabled filter.
+	 */
+	Filter getEnabledFilter(String filterName);
+
+	/**
+	 * Disable the named {@linkplain Filter filter} for the current session.
+	 *
+	 * @param filterName the name of the filter to be disabled.
+	 */
+	void disableFilter(String filterName);
+
+	/**
+	 * The factory which created this session.
+	 */
+	SessionFactory getFactory();
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
@@ -25,7 +23,7 @@ import static java.lang.Boolean.TRUE;
 
 /**
  * Initiator for the {@link RegionFactory} service.
- * 
+ *
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */
@@ -43,17 +41,21 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 	@Override
-	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final RegionFactory regionFactory = resolveRegionFactory( configurationValues, registry );
 
-		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
+		if ( regionFactory instanceof NoCachingRegionFactory ) {
+			LOG.noRegionFactory();
+		}
+		else {
+			LOG.regionFactory( regionFactory.getClass().getTypeName() );
+		}
 
 		return regionFactory;
 	}
 
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected RegionFactory resolveRegionFactory(Map configurationValues, ServiceRegistryImplementor registry) {
+	protected RegionFactory resolveRegionFactory(Map<String,Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Properties p = new Properties();
 		p.putAll( configurationValues );
 
@@ -71,7 +73,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		// We should immediately return NoCachingRegionFactory if either:
 		//		1) both are explicitly FALSE
 		//		2) USE_SECOND_LEVEL_CACHE is FALSE and USE_QUERY_CACHE is null
-		if ( useSecondLevelCache != null && useSecondLevelCache == FALSE ) {
+		if ( useSecondLevelCache == FALSE ) {
 			if ( useQueryCache == null || useQueryCache == FALSE ) {
 				return NoCachingRegionFactory.INSTANCE;
 			}
@@ -79,18 +81,17 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 
 		final Object setting = configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY );
 
-		final StrategySelector selector = registry.getService( StrategySelector.class );
+		final StrategySelector selector = registry.requireService( StrategySelector.class );
 		final Collection<Class<? extends RegionFactory>> implementors = selector.getRegisteredStrategyImplementors( RegionFactory.class );
 
 		if ( setting == null && implementors.size() != 1 ) {
 			// if either is explicitly defined as TRUE we need a RegionFactory
-			if ( ( useSecondLevelCache != null && useSecondLevelCache == TRUE )
-					|| ( useQueryCache != null && useQueryCache == TRUE ) ) {
+			if ( useSecondLevelCache == TRUE || useQueryCache == TRUE ) {
 				throw new CacheException( "Caching was explicitly requested, but no RegionFactory was defined and there is not a single registered RegionFactory" );
 			}
 		}
 
-		final RegionFactory regionFactory = registry.getService( StrategySelector.class ).resolveStrategy(
+		final RegionFactory regionFactory = registry.requireService( StrategySelector.class ).resolveStrategy(
 				RegionFactory.class,
 				setting,
 				(RegionFactory) null,
@@ -115,17 +116,18 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			return registeredFactory;
 		}
 		else {
-			LOG.debugf(
-					"Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered",
-					implementors
-			);
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered",
+						implementors
+				);
+			}
 		}
 
 		return NoCachingRegionFactory.INSTANCE;
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unused"})
-	protected RegionFactory getFallback(Map configurationValues, ServiceRegistryImplementor registry) {
+	protected RegionFactory getFallback(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {
 		return null;
 	}
 }

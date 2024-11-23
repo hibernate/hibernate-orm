@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
@@ -25,14 +22,12 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 		super(session);
 	}
 
-	Object processEntity(Object value, EntityType entityType) throws HibernateException {
-
-		if (value!=null) {
-			getSession().getPersistenceContext().reassociateIfUninitializedProxy(value);
+	Object processEntity(Object value, EntityType entityType) {
+		if ( value != null ) {
+			getSession().getPersistenceContext().reassociateIfUninitializedProxy( value );
 			// if it is an initialized proxy, let cascade
 			// handle it later on
 		}
-
 		return null;
 	}
 
@@ -41,43 +36,37 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * was snapshotted and detached?
 	 */
 	protected static boolean isOwnerUnchanged(
-			final PersistentCollection snapshot, 
-			final CollectionPersister persister, 
-			final Serializable id
-	) {
-		return isCollectionSnapshotValid(snapshot) &&
-				persister.getRole().equals( snapshot.getRole() ) &&
-				id.equals( snapshot.getKey() );
+			CollectionPersister persister, Object id, PersistentCollection<?> snapshot) {
+		return isCollectionSnapshotValid( snapshot )
+			&& persister.getRole().equals( snapshot.getRole() )
+			&& id.equals( snapshot.getKey() );
 	}
 
-	private static boolean isCollectionSnapshotValid(PersistentCollection snapshot) {
-		return snapshot != null &&
-				snapshot.getRole() != null &&
-				snapshot.getKey() != null;
+	private static boolean isCollectionSnapshotValid(PersistentCollection<?> snapshot) {
+		return snapshot != null
+			&& snapshot.getRole() != null
+			&& snapshot.getKey() != null;
 	}
-	
+
 	/**
 	 * Reattach a detached (disassociated) initialized or uninitialized
 	 * collection wrapper, using a snapshot carried with the collection
 	 * wrapper
 	 */
-	protected void reattachCollection(PersistentCollection collection, CollectionType type)
-	throws HibernateException {
+	protected void reattachCollection(PersistentCollection<?> collection, CollectionType type)
+			throws HibernateException {
 		final EventSource session = getSession();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getMappingMetamodel();
 		if ( collection.wasInitialized() ) {
-			CollectionPersister collectionPersister = session.getFactory()
-			.getCollectionPersister( type.getRole() );
-			session.getPersistenceContext()
-				.addInitializedDetachedCollection( collectionPersister, collection );
+			final CollectionPersister persister = metamodel.getCollectionDescriptor( type.getRole() );
+			session.getPersistenceContext().addInitializedDetachedCollection( persister, collection );
 		}
 		else {
 			if ( !isCollectionSnapshotValid( collection ) ) {
 				throw new HibernateException( "could not re-associate uninitialized transient collection" );
 			}
-			CollectionPersister collectionPersister = session.getFactory()
-					.getCollectionPersister( collection.getRole() );
-			session.getPersistenceContext()
-				.addUninitializedDetachedCollection( collectionPersister, collection );
+			final CollectionPersister persister = metamodel.getCollectionDescriptor( collection.getRole() );
+			session.getPersistenceContext().addUninitializedDetachedCollection( persister, collection );
 		}
 	}
 

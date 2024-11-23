@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jndi.internal;
 
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.InvalidNameException;
@@ -24,6 +23,7 @@ import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullnessUtil;
 
 import org.jboss.logging.Logger;
 
@@ -32,20 +32,21 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class JndiServiceImpl implements JndiService {
+final class JndiServiceImpl implements JndiService {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JndiServiceImpl.class.getName()
 	);
 
-	private final Hashtable initialContextSettings;
+	private final Hashtable<String,Object> initialContextSettings;
 
 	/**
 	 * Constructs a JndiServiceImpl
 	 *
 	 * @param configurationValues Map of configuration settings, some of which apply to JNDI support.
 	 */
-	public JndiServiceImpl(Map configurationValues) {
+	public JndiServiceImpl(Map<?,?> configurationValues) {
 		this.initialContextSettings = extractJndiProperties( configurationValues );
 	}
 
@@ -56,18 +57,17 @@ public class JndiServiceImpl implements JndiService {
 	 *
 	 * @return The extracted JNDI specific properties.
 	 */
-	@SuppressWarnings({ "unchecked" })
-	public static Properties extractJndiProperties(Map configurationValues) {
-		final Properties jndiProperties = new Properties();
+	private static Hashtable<String,Object> extractJndiProperties(Map<?,?> configurationValues) {
+		final Hashtable<String,Object> jndiProperties = new Hashtable<>();
 
-		for ( Map.Entry entry : (Set<Map.Entry>) configurationValues.entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
+		for ( Map.Entry<?,?> entry : configurationValues.entrySet() ) {
+			if ( !(entry.getKey() instanceof String) ) {
 				continue;
 			}
 			final String propertyName = (String) entry.getKey();
 			final Object propertyValue = entry.getValue();
 			if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
-				// write the IntialContextFactory class and provider url to the result only if they are
+				// write the InitialContextFactory class and provider url to the result only if they are
 				// non-null; this allows the environmental defaults (if any) to remain in effect
 				if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
 					if ( propertyValue != null ) {
@@ -80,8 +80,8 @@ public class JndiServiceImpl implements JndiService {
 					}
 				}
 				else {
-					final String passThruPropertyname = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
-					jndiProperties.put( passThruPropertyname, propertyValue );
+					final String passThruPropertyName = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
+					jndiProperties.put( passThruPropertyName, NullnessUtil.castNonNull( propertyValue ) );
 				}
 			}
 		}
@@ -115,6 +115,16 @@ public class JndiServiceImpl implements JndiService {
 
 	private Name parseName(String jndiName, Context context) {
 		try {
+			final URI uri = new URI( jndiName );
+			final String scheme = uri.getScheme();
+			if ( scheme != null && (! allowedScheme( scheme ) ) ) {
+				throw new JndiException( "JNDI lookups for scheme '" + scheme + "' are not allowed" );
+			}
+		}
+		catch (URISyntaxException e) {
+			//Ok
+		}
+		try {
 			return context.getNameParser( "" ).parse( jndiName );
 		}
 		catch ( InvalidNameException e ) {
@@ -122,6 +132,16 @@ public class JndiServiceImpl implements JndiService {
 		}
 		catch ( NamingException e ) {
 			throw new JndiException( "Error parsing JNDI name [" + jndiName + "]", e );
+		}
+	}
+
+	private static boolean allowedScheme(final String scheme) {
+		switch ( scheme ) {
+			case "java" :
+			case "osgi" :
+				return true;
+			default:
+				return false;
 		}
 	}
 

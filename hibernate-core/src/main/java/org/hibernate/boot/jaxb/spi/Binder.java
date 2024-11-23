@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.spi;
 
@@ -16,24 +14,22 @@ import org.hibernate.boot.jaxb.Origin;
  *
  * @author Steve Ebersole
  */
-public interface Binder {
+public interface Binder<T> {
 	/**
 	 * Bind from an XML source.
 	 *
 	 * @param source The XML source.
 	 * @param origin The descriptor of the source origin
-	 *
 	 * @return The bound JAXB model
 	 */
-	public Binding bind(Source source, Origin origin);
+	<X extends T> Binding<X> bind(Source source, Origin origin);
 
 	/**
 	 * Bind from an InputStream
 	 *
 	 * @param stream The InputStream containing XML
 	 * @param origin The descriptor of the stream origin
-	 *
 	 * @return The bound JAXB model
 	 */
-	public Binding bind(InputStream stream, Origin origin);
+	<X extends T> Binding<X> bind(InputStream stream, Origin origin);
 }

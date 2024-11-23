@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.spi;
 
-import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jdbc.internal.DdlTransactionIsolatorNonJtaImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.DdlTransactionIsolatorJtaImpl;
@@ -15,13 +11,16 @@ import org.hibernate.service.Service;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
- * Builder for TransactionCoordinator instances
+ * Builder for {@link TransactionCoordinator} instances.
+ * <p>
+ * A {@code TransactionCoordinator} may be selected using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#TRANSACTION_COORDINATOR_STRATEGY}.
  *
  * @author Steve Ebersole
  */
 public interface TransactionCoordinatorBuilder extends Service {
 	/**
-	 * Access to options to are specific to each TransactionCoordinator instance
+	 * Access to options to are specific to each {@link TransactionCoordinator} instance.
 	 */
 	interface Options {
 		/**
@@ -40,23 +39,9 @@ public interface TransactionCoordinatorBuilder extends Service {
 
 	PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode();
 
-	/**
-	 * @deprecated (since 5.2) Use {@link #getDefaultConnectionHandlingMode} instead
-	 */
-	@Deprecated
-	default ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
-		return getDefaultConnectionHandlingMode().getAcquisitionMode();
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link #getDefaultConnectionHandlingMode} instead
-	 */
-	@Deprecated
-	default ConnectionReleaseMode getDefaultConnectionReleaseMode() {
-		return getDefaultConnectionHandlingMode().getReleaseMode();
-	}
-
 	default DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
-		return isJta() ? new DdlTransactionIsolatorJtaImpl( jdbcContext ) : new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
+		return isJta()
+				? new DdlTransactionIsolatorJtaImpl( jdbcContext )
+				: new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

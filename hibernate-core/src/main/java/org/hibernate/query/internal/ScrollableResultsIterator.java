@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
@@ -16,10 +14,10 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
  * @since 5.2
  */
 @Incubating
-class ScrollableResultsIterator<T> implements CloseableIterator {
-	private final ScrollableResultsImplementor scrollableResults;
+public class ScrollableResultsIterator<T> implements CloseableIterator<T> {
+	private final ScrollableResultsImplementor<T> scrollableResults;
 
-	ScrollableResultsIterator(ScrollableResultsImplementor scrollableResults) {
+	public ScrollableResultsIterator(ScrollableResultsImplementor<T> scrollableResults) {
 		this.scrollableResults = scrollableResults;
 	}
 
@@ -34,14 +32,7 @@ class ScrollableResultsIterator<T> implements CloseableIterator {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T next() {
-		Object[] next = scrollableResults.get();
-		if ( next.length == 1 ) {
-			return (T) next[0];
-		}
-		else {
-			return (T) next;
-		}
+		return (T) scrollableResults.get();
 	}
 }

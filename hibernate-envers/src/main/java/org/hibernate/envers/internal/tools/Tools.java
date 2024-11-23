@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools;
 
@@ -51,25 +49,8 @@ public abstract class Tools {
 			return (List<X>) collection;
 		}
 		else {
-			List<X> list = new ArrayList<>();
-			list.addAll( collection );
-			return list;
+			return new ArrayList<>( collection );
 		}
-	}
-
-	public static boolean iteratorsContentEqual(Iterator iter1, Iterator iter2) {
-		while ( iter1.hasNext() && iter2.hasNext() ) {
-			if ( !iter1.next().equals( iter2.next() ) ) {
-				return false;
-			}
-		}
-
-		//noinspection RedundantIfStatement
-		if ( iter1.hasNext() || iter2.hasNext() ) {
-			return false;
-		}
-
-		return true;
 	}
 
 	/**

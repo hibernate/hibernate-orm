@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.spi;
 
@@ -21,7 +19,7 @@ public interface ArchiveDescriptorFactory {
 	 *
 	 * @return The descriptor
 	 */
-	public ArchiveDescriptor buildArchiveDescriptor(URL url);
+	ArchiveDescriptor buildArchiveDescriptor(URL url);
 
 	/**
 	 * Build a descriptor of the archive indicated by the path relative to the given url
@@ -31,7 +29,7 @@ public interface ArchiveDescriptorFactory {
 	 *
 	 * @return The descriptor
 	 */
-	public ArchiveDescriptor buildArchiveDescriptor(URL url, String path);
+	ArchiveDescriptor buildArchiveDescriptor(URL url, String path);
 
 	/**
 	 * Given a URL which defines an entry within a JAR (really any "bundled archive" such as a jar file, zip, etc)
@@ -44,18 +42,6 @@ public interface ArchiveDescriptorFactory {
 	 *
 	 * @throws IllegalArgumentException Generally indicates a problem  with malformed urls.
 	 */
-	public URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException;
+	URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException;
 
-	/**
-	 * Not used!
-	 *
-	 * @param jarPath The jar path
-	 *
-	 * @return The url from the path?
-	 *
-	 * @deprecated Not used!
-	 */
-	@Deprecated
-	@SuppressWarnings("UnusedDeclaration")
-	public URL getURLFromPath(String jarPath);
 }

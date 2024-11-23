@@ -1,0 +1,18 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.sql.results.jdbc.spi;
+
+/**
+ * Essentially processing options only for entity loading
+ *
+ * @author Steve Ebersole
+ */
+public interface JdbcValuesSourceProcessingOptions {
+	Object getEffectiveOptionalObject();
+	String getEffectiveOptionalEntityName();
+	Object getEffectiveOptionalId();
+
+	boolean shouldReturnProxies();
+}

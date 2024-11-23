@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -12,14 +10,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityDiscriminatorType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmGeneratorSpecificationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMultiTenancyType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPolymorphismEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
-import org.hibernate.boot.model.Caching;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
+import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.source.spi.DiscriminatorSource;
@@ -42,6 +41,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class EntityHierarchySourceImpl implements EntityHierarchySource {
 	private final RootEntitySourceImpl rootEntitySource;
+	private final MappingDocument rootEntityMappingDocument;
 
 	private final IdentifierSource identifierSource;
 	private final VersionAttributeSource versionAttributeSource;
@@ -53,10 +53,13 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 
 	private InheritanceType hierarchyInheritanceType = InheritanceType.NO_INHERITANCE;
 
-	private Set<String> collectedEntityNames = new HashSet<String>();
+	private Set<String> collectedEntityNames = new HashSet<>();
 
-	public EntityHierarchySourceImpl(RootEntitySourceImpl rootEntitySource) {
+	public EntityHierarchySourceImpl(
+			RootEntitySourceImpl rootEntitySource,
+			MappingDocument rootEntityMappingDocument) {
 		this.rootEntitySource = rootEntitySource;
+		this.rootEntityMappingDocument = rootEntityMappingDocument;
 		this.rootEntitySource.injectHierarchy( this );
 
 		this.identifierSource = interpretIdentifierSource( rootEntitySource );
@@ -72,12 +75,18 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		collectedEntityNames.add( rootEntitySource.getEntityNamingSource().getEntityName() );
 	}
 
+	public MappingDocument getRootEntityMappingDocument() {
+		return rootEntityMappingDocument;
+	}
+
 	private static IdentifierSource interpretIdentifierSource(RootEntitySourceImpl rootEntitySource) {
-		if ( rootEntitySource.jaxbEntityMapping().getId() == null
-				&& rootEntitySource.jaxbEntityMapping().getCompositeId() == null ) {
+		final JaxbHbmSimpleIdType simpleId = rootEntitySource.jaxbEntityMapping().getId();
+		final JaxbHbmCompositeIdType compositeId = rootEntitySource.jaxbEntityMapping().getCompositeId();
+
+		if ( simpleId == null && compositeId == null ) {
 			throw new MappingException(
 					String.format(
-							Locale.ENGLISH,
+							Locale.ROOT,
 							"Entity [%s] did not define an identifier",
 							rootEntitySource.getEntityNamingSource().getEntityName()
 					),
@@ -85,15 +94,24 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 			);
 		}
 
-		if ( rootEntitySource.jaxbEntityMapping().getId() != null ) {
+		if ( simpleId != null ) {
 			return new IdentifierSourceSimpleImpl( rootEntitySource );
 		}
 		else {
 			// if we get here, we should have a composite identifier.  Just need
 			// to determine if it is aggregated, or non-aggregated...
-			if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getName() ) ) {
-				if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped()
-						&& StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getClazz() ) ) {
+
+			if ( compositeId.isMapped() ) {
+				if ( StringHelper.isEmpty( compositeId.getClazz() ) ) {
+					throw new MappingException(
+							"mapped composite identifier must name component class to use.",
+							rootEntitySource.origin()
+					);
+				}
+			}
+
+			if ( StringHelper.isEmpty( compositeId.getName() ) ) {
+				if ( compositeId.isMapped() && StringHelper.isEmpty( compositeId.getClazz() ) ) {
 					throw new MappingException(
 							"mapped composite identifier must name component class to use.",
 							rootEntitySource.origin()
@@ -102,7 +120,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 				return new IdentifierSourceNonAggregatedCompositeImpl( rootEntitySource );
 			}
 			else {
-				if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped() ) {
+				if ( compositeId.isMapped() ) {
 					throw new MappingException(
 							"cannot combine mapped=\"true\" with specified name",
 							rootEntitySource.origin()
@@ -364,11 +382,6 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 	@Override
 	public VersionAttributeSource getVersionAttributeSource() {
 		return versionAttributeSource;
-	}
-
-	@Override
-	public EntityMode getEntityMode() {
-		return rootEntitySource.determineEntityMode();
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -24,16 +22,16 @@ public enum ResultColumnReferenceStrategy {
 	 * For databases which do not support {@link #SOURCE}, ANSI SQL defines two allowable
 	 * approaches.  One is to reference the result column by the alias it is given in the
 	 * result source (if it is given an alias).  This strategy says to use this approach.
-	 * <p/>
-	 * The other ANSI SQL compliant approach is {@link #ORDINAL}.
+	 * <p>
+	 * The other QNSI SQL compliant approach is {@link #ORDINAL}.
 	 */
 	ALIAS,
 	/**
 	 * For databases which do not support {@link #SOURCE}, ANSI SQL defines two allowable
 	 * approaches.  One is to reference the result column by the ordinal position at which
 	 * it appears in the result source.  This strategy says to use this approach.
-	 * <p/>
-	 * The other ANSI SQL compliant approach is {@link #ALIAS}.
+	 * <p>
+	 * The other QNSI SQL compliant approach is {@link #ALIAS}.
 	 */
 	ORDINAL;
 

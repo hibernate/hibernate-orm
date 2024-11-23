@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -90,7 +88,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected EntityDataAccess generateReadOnlyEntityAccess(EntityDataCachingConfig accessConfig) {
 		return new EntityReadOnlyAccess(
 				this,
@@ -100,7 +97,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected EntityDataAccess generateReadWriteEntityAccess(EntityDataCachingConfig accessConfig) {
 		return new EntityReadWriteAccess(
 				this,
@@ -110,7 +106,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected EntityDataAccess generateNonStrictReadWriteEntityAccess(EntityDataCachingConfig accessConfig) {
 		return new EntityNonStrictReadWriteAccess(
 				this,
@@ -120,7 +115,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	@SuppressWarnings({"WeakerAccess"})
 	protected EntityDataAccess generateTransactionalEntityDataAccess(EntityDataCachingConfig entityAccessConfig) {
 		throw generateTransactionalNotSupportedException();
 	}
@@ -155,7 +149,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected NaturalIdDataAccess generateReadOnlyNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
 		return new NaturalIdReadOnlyAccess(
 				this,
@@ -165,7 +158,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected NaturalIdDataAccess generateReadWriteNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
 		return new NaturalIdReadWriteAccess(
 				this,
@@ -175,7 +167,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected NaturalIdDataAccess generateNonStrictReadWriteNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
 		return new NaturalIdNonStrictReadWriteAccess(
 				this,
@@ -185,7 +176,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	@SuppressWarnings({"WeakerAccess"})
 	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(NaturalIdDataCachingConfig accessConfig) {
 		throw generateTransactionalNotSupportedException();
 	}
@@ -242,7 +232,6 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unused"})
 	protected CollectionDataAccess generateTransactionalCollectionDataAccess(CollectionDataCachingConfig accessConfig) {
 		throw generateTransactionalNotSupportedException();
 	}

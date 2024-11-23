@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.internal;
 
@@ -23,8 +21,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryBuilder;
 public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryServiceRegistryBuilder {
 	private final ServiceRegistryImplementor parent;
 
-	private final List<SessionFactoryServiceInitiator> initiators = StandardSessionFactoryServiceInitiators.buildStandardServiceInitiatorList();
-	private final List<ProvidedService> providedServices = new ArrayList<>();
+	private final List<SessionFactoryServiceInitiator<?>> initiators = StandardSessionFactoryServiceInitiators.buildStandardServiceInitiatorList();
+	private final List<ProvidedService<?>> providedServices = new ArrayList<>();
 
 	public SessionFactoryServiceRegistryBuilderImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
@@ -38,8 +36,7 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	 * @return this, for method chaining
 	 */
 	@Override
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public SessionFactoryServiceRegistryBuilder addInitiator(SessionFactoryServiceInitiator initiator) {
+	public SessionFactoryServiceRegistryBuilder addInitiator(SessionFactoryServiceInitiator<?> initiator) {
 		initiators.add( initiator );
 		return this;
 	}
@@ -53,16 +50,15 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	 * @return this, for method chaining
 	 */
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public SessionFactoryServiceRegistryBuilder addService(final Class serviceRole, final Service service) {
-		providedServices.add( new ProvidedService( serviceRole, service ) );
+	public <R extends Service> SessionFactoryServiceRegistryBuilder addService(final Class<R> serviceRole, final R service) {
+		providedServices.add( new ProvidedService<>( serviceRole, service ) );
 		return this;
 	}
 
 	public SessionFactoryServiceRegistry buildSessionFactoryServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions options) {
-		return new SessionFactoryServiceRegistryImpl(
+		return SessionFactoryServiceRegistryImpl.create(
 				parent,
 				initiators,
 				providedServices,

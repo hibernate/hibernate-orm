@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.LockModeConverter;
 
 /**
- * Helper to deal with {@link LockModeType} <-> {@link LockMode} conversions.
+ * Helper to deal with conversions between {@link LockModeType} and {@link LockMode}.
  *
  * @author Steve Ebersole
  */
@@ -32,28 +30,17 @@ public final class LockModeTypeHelper {
 		if ( value == null ) {
 			return LockMode.NONE;
 		}
-		if ( LockMode.class.isInstance( value ) ) {
+		if (value instanceof LockMode) {
 			return (LockMode) value;
 		}
-		else if ( LockModeType.class.isInstance( value ) ) {
+		else if (value instanceof LockModeType) {
 			return getLockMode( (LockModeType) value );
 		}
-		else if ( String.class.isInstance( value ) ) {
-			// first try LockMode name
-			LockMode lockMode = LockMode.valueOf( (String) value );
-			if ( lockMode == null ) {
-				try {
-					lockMode = getLockMode( LockModeType.valueOf( (String) value ) );
-				}
-				catch ( Exception ignore ) {
-				}
-			}
-			if ( lockMode != null ) {
-				return lockMode;
-			}
+		else if (value instanceof String) {
+			return LockMode.fromExternalForm( (String) value );
 		}
 
-		throw new IllegalArgumentException( "Unknown lock mode source : " + value );
+		throw new IllegalArgumentException( "Unknown lock mode source: '" + value + "'; can't convert from value of type " + value.getClass() );
 	}
 
 }

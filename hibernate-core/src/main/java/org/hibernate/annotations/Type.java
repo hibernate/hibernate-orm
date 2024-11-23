@@ -1,43 +1,72 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.hibernate.usertype.UserType;
+
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines a Hibernate type mapping.
+ * Specifies a custom {@link UserType} for the annotated attribute mapping.
+ * This annotation may be applied:
+ * <ul>
+ * <li>directly to a property or field of an entity to specify the custom
+ *     type of the property or field,
+ * <li>indirectly, as a meta-annotation of an annotation type that is then
+ *     applied to various properties and fields, or
+ * <li>by default, via a {@linkplain TypeRegistration registration}.
+ * </ul>
+ * <p>
+ * For example, as an alternative to:
+ * <pre>
+ * &#64;Type(MonetaryAmountUserType.class)
+ * BigDecimal amount;
+ * </pre>
+ * <p>
+ * we may define an annotation type:
+ * <pre>
+ * &#64;Retention(RUNTIME)
+ * &#64;Target({METHOD,FIELD})
+ * &#64;Type(MonetaryAmountUserType.class)
+ * public @interface MonetaryAmount {}
+ * </pre>
+ * <p>
+ * and then write:
+ * <pre>
+ * &#64;MonetaryAmount
+ * BigDecimal amount;
+ * </pre>
+ * <p>
+ * which is much cleaner.
+ * <p>
+ * The use of a {@code UserType} is usually mutually exclusive with the
+ * compositional approach of {@link JavaType} and {@link JdbcType}.
  *
- * @see org.hibernate.type.Type
- * @see org.hibernate.usertype.UserType
- * @see org.hibernate.usertype.CompositeUserType
- *
- * @see TypeDef
- *
- * @author Emmanuel Bernard
- * @author Steve Ebersole
+ * @see UserType
+ * @see TypeRegistration
+ * @see CompositeType
  */
-@Target({FIELD, METHOD})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface Type {
 	/**
-	 * The Hibernate type name.  Usually the fully qualified name of an implementation class for
-	 * {@link org.hibernate.type.Type}, {@link org.hibernate.usertype.UserType} or
-	 * {@link org.hibernate.usertype.CompositeUserType}.  May also refer to a type definition by name
-	 * {@link TypeDef#name()}
+	 * The class which implements {@link UserType}.
 	 */
-	String type();
+	Class<? extends UserType<?>> value();
 
 	/**
-	 * Any configuration parameters for the named type.
+	 * Parameters to be injected into the custom type after it is
+	 * instantiated. The {@link UserType} implementation must implement
+	 * {@link org.hibernate.usertype.ParameterizedType} to receive the
+	 * parameters.
 	 */
 	Parameter[] parameters() default {};
 }

@@ -1,24 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
-import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.EntityDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_ONLY} access type.
+ * using the {@link AccessType#READ_ONLY} access type.
  *
  * @author Steve Ebersole
  */
@@ -32,7 +31,7 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 			EntityDataCachingConfig config) {
 		super( region, cacheKeysFactory, storageAccess );
 		if ( config.isMutable() ) {
-			SecondLevelCacheLogger.INSTANCE.readOnlyCachingMutableEntity( config.getNavigableRole() );
+			L2CACHE_LOGGER.readOnlyCachingMutableEntity( config.getNavigableRole() );
 		}
 	}
 

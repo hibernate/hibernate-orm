@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
 import java.util.Locale;
+import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Performs formatting of DDL SQL statements.
@@ -26,22 +25,30 @@ public class DDLFormatterImpl implements Formatter {
 	 */
 	public static final DDLFormatterImpl INSTANCE = new DDLFormatterImpl();
 
+	private static final Set<String> BREAKS = Set.of( "drop", "alter", "modify", "add", "references", "foreign", "on" );
+	private static final Set<String> QUOTES = Set.of( "\"", "`", "]", "[", "'" );
+
 	@Override
 	public String format(String sql) {
-		if ( StringHelper.isEmpty( sql ) ) {
+		if ( isEmpty( sql ) ) {
 			return sql;
 		}
 
-		if ( sql.toLowerCase(Locale.ROOT).startsWith( "create table" ) ) {
+		final String lowerCaseSql = sql.toLowerCase(Locale.ROOT);
+		if ( lowerCaseSql.startsWith( "create table" ) ) {
 			return formatCreateTable( sql );
 		}
-		else if ( sql.toLowerCase(Locale.ROOT).startsWith( "create" ) ) {
-			return sql;
-		}
-		else if ( sql.toLowerCase(Locale.ROOT).startsWith( "alter table" ) ) {
+		else if ( lowerCaseSql.startsWith( "create index" )
+				|| lowerCaseSql.startsWith( "create unique" ) ) {
 			return formatAlterTable( sql );
 		}
-		else if ( sql.toLowerCase(Locale.ROOT).startsWith( "comment on" ) ) {
+		else if ( lowerCaseSql.startsWith( "create" ) ) {
+			return INITIAL_LINE + sql;
+		}
+		else if ( lowerCaseSql.startsWith( "alter table" ) ) {
+			return formatAlterTable( sql );
+		}
+		else if ( lowerCaseSql.startsWith( "comment on" ) ) {
 			return formatCommentOn( sql );
 		}
 		else {
@@ -74,6 +81,7 @@ public class DDLFormatterImpl implements Formatter {
 		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
 		final StringTokenizer tokens = new StringTokenizer( sql, " (,)'[]\"", true );
 
+		boolean first = true;
 		boolean quoted = false;
 		while ( tokens.hasMoreTokens() ) {
 			final String token = tokens.nextToken();
@@ -81,11 +89,12 @@ public class DDLFormatterImpl implements Formatter {
 				quoted = !quoted;
 			}
 			else if ( !quoted ) {
-				if ( isBreak( token ) ) {
+				if ( !first && isBreak( token ) ) {
 					result.append( OTHER_LINES );
 				}
 			}
 			result.append( token );
+			first = false;
 		}
 
 		return result.toString();
@@ -120,7 +129,7 @@ public class DDLFormatterImpl implements Formatter {
 				if ( "(".equals( token ) ) {
 					depth++;
 					if ( depth == 1 ) {
-						result.append( OTHER_LINES );
+						result.append( OTHER_LINES ).append(' ');
 					}
 				}
 			}
@@ -130,19 +139,11 @@ public class DDLFormatterImpl implements Formatter {
 	}
 
 	private static boolean isBreak(String token) {
-		return "drop".equals( token ) ||
-				"add".equals( token ) ||
-				"references".equals( token ) ||
-				"foreign".equals( token ) ||
-				"on".equals( token );
+		return BREAKS.contains( token );
 	}
 
-	private static boolean isQuote(String tok) {
-		return "\"".equals( tok ) ||
-				"`".equals( tok ) ||
-				"]".equals( tok ) ||
-				"[".equals( tok ) ||
-				"'".equals( tok );
+	private static boolean isQuote(String token) {
+		return QUOTES.contains( token );
 	}
 
 }

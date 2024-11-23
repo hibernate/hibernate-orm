@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.cache;
 
@@ -29,7 +27,7 @@ import org.jboss.logging.Logger;
 public class CachingRegionFactory extends RegionFactoryTemplate {
 	private static final Logger LOG = Logger.getLogger( CachingRegionFactory.class.getName() );
 
-	public static String DEFAULT_ACCESSTYPE = "DefaultAccessType";
+	public static final String DEFAULT_ACCESSTYPE = "DefaultAccessType";
 	private final CacheKeysFactory cacheKeysFactory;
 
 	public CachingRegionFactory() {
@@ -50,7 +48,7 @@ public class CachingRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
-	protected void prepareForUse(SessionFactoryOptions settings, Map configValues) {
+	protected void prepareForUse(SessionFactoryOptions settings, Map<String,Object> configValues) {
 	}
 
 	@Override

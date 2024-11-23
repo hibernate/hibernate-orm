@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.criteria.internal;
+
+import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -22,6 +23,7 @@ import org.hibernate.type.Type;
  * @author Adam Warski (adam at warski dot org)
  */
 public class SimpleAuditExpression extends AbstractAtomicExpression {
+
 	private PropertyNameGetter propertyNameGetter;
 	private Object value;
 	private String op;
@@ -39,6 +41,7 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -48,7 +51,8 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 				propertyNameGetter
 		);
 
-		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
+		String prefixedPropertyName = componentPrefix.concat( propertyName );
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, prefixedPropertyName );
 
 		if ( relatedEntity == null ) {
 			// HHH-9178 - Add support to component type equality.
@@ -59,32 +63,52 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 			final Type type = getPropertyType( session, entityName, propertyName );
 			if ( type != null && type.isComponentType() ) {
 				if ( !"=".equals( op ) && !"<>".equals( op ) ) {
-					throw new AuditException( "Component-based criterion is not supported for op: " + op );
+					throw new AuditException(
+							String.format(
+									Locale.ENGLISH,
+									"Component-based criterion is not supported for op: %s",
+									op
+							)
+					);
 				}
 				final ComponentType componentType = (ComponentType) type;
 				for ( int i = 0; i < componentType.getPropertyNames().length; i++ ) {
 					final Object componentValue = componentType.getPropertyValue( value, i, session );
 					parameters.addWhereWithParam(
 							alias,
-							propertyName + "_" + componentType.getPropertyNames()[ i ],
+							prefixedPropertyName + "_" + componentType.getPropertyNames()[ i ],
 							op,
 							componentValue
 					);
 				}
 			}
 			else {
-				parameters.addWhereWithParam( alias, propertyName, op, value );
+				parameters.addWhereWithParam( alias, prefixedPropertyName, op, value );
 			}
 		}
-		else {
+		else if ( relatedEntity.getRelationType() == RelationType.TO_ONE ) {
 			if ( !"=".equals( op ) && !"<>".equals( op ) ) {
 				throw new AuditException(
-						"This type of operation: " + op + " (" + entityName + "." + propertyName +
-								") isn't supported and can't be used in queries."
+						String.format(
+								Locale.ENGLISH,
+								"This type of operation: %s (%s.%s) isn't supported and can't be used in queries.",
+								op,
+								entityName,
+								propertyName
+						)
 				);
 			}
 			Object id = relatedEntity.getIdMapper().mapToIdFromEntity( value );
 			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, "=".equals( op ) );
+		}
+		else {
+			throw new AuditException(
+					String.format(
+							"This type of relation (%s.%s) can't be used in audit query restrictions.",
+							entityName,
+							propertyName
+					)
+			);
 		}
 	}
 
@@ -99,7 +123,9 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 	private Type getPropertyType(SessionImplementor session, String entityName, String propertyName) {
 		// rather than rely on QueryException from calling getPropertyType(), this allows a non-failure way
 		// to determine whether to return null or lookup the value safely.
-		final EntityPersister persister = session.getSessionFactory().getMetamodel().entityPersister( entityName );
+		final EntityPersister persister = session.getSessionFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		for ( String name : persister.getPropertyNames() ) {
 			if ( name.equals( propertyName ) ) {
 				return persister.getPropertyType( propertyName );

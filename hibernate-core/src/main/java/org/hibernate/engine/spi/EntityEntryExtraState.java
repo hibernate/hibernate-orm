@@ -1,21 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.engine.spi;
 
 /**
- * Navigation methods for extra state objects attached to {@link org.hibernate.engine.spi.EntityEntry}.
+ * Navigation methods for extra state objects attached to {@link EntityEntry}.
  *
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public interface EntityEntryExtraState {
 
 	/**
-	 * Attach additional state to the core state of {@link org.hibernate.engine.spi.EntityEntry}
+	 * Attach additional state to the core state of {@link EntityEntry}
 	 * <p>
 	 * Implementations must delegate to the next state or add it as next state if last in line.
 	 */

@@ -9,14 +9,14 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <subclass
-            name="org.hibernate.query.hhh12076.SettlementTask"
-            extends="org.hibernate.query.hhh12076.Task"
-            discriminator-value="org.hibernate.query.hhh12076.SettlementTask"
+            name="org.hibernate.orm.test.query.hhh12076.SettlementTask"
+            extends="org.hibernate.orm.test.query.hhh12076.Task"
+            discriminator-value="org.hibernate.orm.test.query.hhh12076.SettlementTask"
             lazy="false">
 
         <many-to-one
                 name="linked"
-                class="org.hibernate.query.hhh12076.Settlement"
+                class="org.hibernate.orm.test.query.hhh12076.Settlement"
                 fetch="join">
             <column name="linked_id" not-null="true"/>
         </many-to-one>

@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jta;
 
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-import javax.transaction.TransactionSynchronizationRegistry;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.TransactionSynchronizationRegistry;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaSynchronizationStrategy;
@@ -26,6 +24,7 @@ import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
  * @author Steve Ebersole
  */
 public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
+	public static final String NAME = TestingJtaPlatformImpl.class.getName();
 	public static final TestingJtaPlatformImpl INSTANCE = new TestingJtaPlatformImpl();
 
 	private final TransactionManager transactionManager;

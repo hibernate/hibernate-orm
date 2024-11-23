@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy;
 
@@ -10,13 +8,14 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-
+import org.hibernate.collection.spi.LazyInitializable;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class MapProxy<K, V> implements Map<K, V>, Serializable {
+public class MapProxy<K, V> implements Map<K, V>, LazyInitializable, Serializable {
+
 	private static final long serialVersionUID = 8418037541773074646L;
 
 	private transient Initializor<Map<K, V>> initializor;
@@ -25,7 +24,7 @@ public class MapProxy<K, V> implements Map<K, V>, Serializable {
 	public MapProxy() {
 	}
 
-	public MapProxy(org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor<Map<K, V>> initializor) {
+	public MapProxy(Initializor<Map<K, V>> initializor) {
 		this.initializor = initializor;
 	}
 
@@ -33,6 +32,16 @@ public class MapProxy<K, V> implements Map<K, V>, Serializable {
 		if ( delegate == null ) {
 			delegate = initializor.initialize();
 		}
+	}
+
+	@Override
+	public final boolean wasInitialized() {
+		return delegate != null;
+	}
+
+	@Override
+	public final void forceInitialization() {
+		checkInit();
 	}
 
 	@Override
@@ -114,7 +123,7 @@ public class MapProxy<K, V> implements Map<K, V>, Serializable {
 	}
 
 	@Override
-	@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+	@SuppressWarnings({ "EqualsWhichDoesntCheckParameterClass" })
 	public boolean equals(Object obj) {
 		checkInit();
 		return delegate.equals( obj );

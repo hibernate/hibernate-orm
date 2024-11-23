@@ -1,142 +1,107 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.insert.AbstractSelectingDelegate;
-import org.hibernate.id.insert.IdentifierGeneratingInsert;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 
 /**
- * A generator that selects the just inserted row to determine the identifier
- * value assigned by the database. The correct row is located using a unique
- * key.
- * <p/>
- * One mapping parameter is required: key (unless a natural-id is defined in the mapping).
+ * A generator that {@code select}s the just-{@code insert}ed row to determine the
+ * column value assigned by the database. The correct row is located using a unique
+ * key of the entity, either:
+ * <ul>
+ * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
+ * <li>a property specified using the parameter named {@value #KEY}.
+ * </ul>
+ * <p>
+ * The second approach is provided for backward compatibility with older versions of
+ * Hibernate.
+ * <p>
+ * This generator is intended for use with primary keys assigned by a database trigger
+ * or something similar, for example:
+ * <pre>
+ * &#64;Entity &#64;Table(name="TableWithPKAssignedByTrigger")
+ * &#64;GenericGenerator(name = "triggered", type = SelectGenerator.class)
+ * public class TriggeredEntity {
+ *     &#64;Id @GeneratedValue(generator = "triggered")
+ *     private Long id;
+ *
+ *     &#64;NaturalId
+ *     private String name;
+ *
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * However, after a very long working life, this generator is now handing over its
+ * work to {@link org.hibernate.generator.internal.GeneratedGeneration}, and the
+ * above code may be written as:
+ * <pre>
+ * &#64;Entity &#64;Table(name="TableWithPKAssignedByTrigger")
+ * public class TriggeredEntity {
+ *     &#64;Id &#64;Generated
+ *     private Long id;
+ *
+ *     &#64;NaturalId
+ *     private String name;
+ *
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * For tables with identity/autoincrement columns, use {@link IdentityGenerator}.
+ * <p>
+ * The actual work involved in retrieving the primary key value is the job of
+ * {@link org.hibernate.id.insert.UniqueKeySelectingDelegate}.
+ * <p>
+ * Arguably, this class breaks the natural separation of responsibility between the
+ * {@linkplain OnExecutionGenerator generator} and the coordinating code, since its
+ * role is to specify how the generated value is <em>retrieved</em>.
+ *
+ * @see org.hibernate.annotations.NaturalId
+ * @see org.hibernate.id.insert.UniqueKeySelectingDelegate
  *
  * @author Gavin King
+ *
+ * @implNote This also implements the {@code select} generation type in {@code hbm.xml} mappings.
  */
-public class SelectGenerator extends AbstractPostInsertGenerator implements Configurable {
+public class SelectGenerator
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
+
+	/**
+	 * The property specifying the unique key name.
+	 */
+	public static final String KEY = "key";
+
 	private String uniqueKeyPropertyName;
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		uniqueKeyPropertyName = params.getProperty( "key" );
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) {
+		uniqueKeyPropertyName = parameters.getProperty( KEY );
 	}
 
-	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
-			PostInsertIdentityPersister persister,
-			Dialect dialect,
-			boolean isGetGeneratedKeysEnabled) throws HibernateException {
-		return new SelectGeneratorDelegate( persister, dialect, uniqueKeyPropertyName );
+	@Override
+	public String[] getUniqueKeyPropertyNames(EntityPersister persister) {
+		return uniqueKeyPropertyName != null
+				? new String[] { uniqueKeyPropertyName }
+				: getNaturalIdPropertyNames( persister );
 	}
 
-	private static String determineNameOfPropertyToUse(PostInsertIdentityPersister persister, String supplied) {
-		if ( supplied != null ) {
-			return supplied;
-		}
-		int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
-		if ( naturalIdPropertyIndices == null ) {
-			throw new IdentifierGenerationException(
-					"no natural-id property defined; need to specify [key] in " +
-							"generator parameters"
-			);
-		}
-		if ( naturalIdPropertyIndices.length > 1 ) {
-			throw new IdentifierGenerationException(
-					"select generator does not currently support composite " +
-							"natural-id properties; need to specify [key] in generator parameters"
-			);
-		}
-		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-			throw new IdentifierGenerationException(
-					"natural-id also defined as insert-generated; need to specify [key] " +
-							"in generator parameters"
-			);
-		}
-		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect) {
+		return false;
 	}
 
-
-	/**
-	 * The delegate for the select generation strategy.
-	 */
-	public static class SelectGeneratorDelegate
-			extends AbstractSelectingDelegate
-			implements InsertGeneratedIdentifierDelegate {
-		private final PostInsertIdentityPersister persister;
-		private final Dialect dialect;
-
-		private final String uniqueKeyPropertyName;
-		private final Type uniqueKeyType;
-		private final Type idType;
-
-		private final String idSelectString;
-
-		private SelectGeneratorDelegate(
-				PostInsertIdentityPersister persister,
-				Dialect dialect,
-				String suppliedUniqueKeyPropertyName) {
-			super( persister );
-			this.persister = persister;
-			this.dialect = dialect;
-			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, suppliedUniqueKeyPropertyName );
-
-			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
-			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
-			idType = persister.getIdentifierType();
-		}
-
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
-			return new IdentifierGeneratingInsert( dialect );
-		}
-
-
-		// AbstractSelectingDelegate impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		protected String getSelectSQL() {
-			return idSelectString;
-		}
-
-		protected void bindParameters(
-				SharedSessionContractImplementor session,
-				PreparedStatement ps,
-				Object entity) throws SQLException {
-			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
-			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
-		}
-
-		protected Serializable getResult(
-				SharedSessionContractImplementor session,
-				ResultSet rs,
-				Object entity) throws SQLException {
-			if ( !rs.next() ) {
-				throw new IdentifierGenerationException(
-						"the inserted row could not be located by the unique key: " +
-								uniqueKeyPropertyName
-				);
-			}
-			return (Serializable) idType.nullSafeGet(
-					rs,
-					persister.getRootTableKeyColumnNames(),
-					session,
-					entity
-			);
-		}
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return null;
 	}
 }

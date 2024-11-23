@@ -1,77 +1,236 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.Map;
-import java.util.Objects;
-
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.type.MetaType;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.Type;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
+
 /**
- * A Hibernate "any" type (ie. polymorphic association to
- * one-of-several tables).
+ * A mapping model object representing a {@linkplain org.hibernate.annotations.Any polymorphic association}
+ * to one of several tables.
+ *
  * @author Gavin King
  */
 public class Any extends SimpleValue {
-	private String identifierTypeName;
-	private String metaTypeName = "string";
-	private Map metaValues;
+	// hbm.xml mapping
+	private final MetaValue metaMapping;
+	private final SimpleValue keyMapping;
+
+	// annotations
+	private BasicValue discriminatorDescriptor;
+	private BasicValue keyDescriptor;
+
+	// common
+	private Map<Object,String> metaValueToEntityNameMap;
+	private ImplicitDiscriminatorStrategy implicitValueStrategy;
 	private boolean lazy = true;
 
-	/**
-	 * @deprecated Use {@link Any#Any(MetadataBuildingContext, Table)} instead.
-	 */
-	@Deprecated
-	public Any(MetadataImplementor metadata, Table table) {
-		super( metadata, table );
-	}
+	private AnyType resolvedType;
 
 	public Any(MetadataBuildingContext buildingContext, Table table) {
+		this( buildingContext, table, false );
+	}
+
+	public Any(MetadataBuildingContext buildingContext, Table table, boolean annotations) {
 		super( buildingContext, table );
+
+		if ( ! annotations ) {
+			metaMapping = new MetaValue( this::applySelectableToSuper, buildingContext, table );
+			metaMapping.setTypeName( "string" );
+			keyMapping = new KeyValue( this::applySelectableToSuper, buildingContext, table );
+		}
+		else {
+			metaMapping = null;
+			keyMapping = null;
+		}
+
+	}
+
+	public Any(Any original) {
+		super( original );
+
+		this.metaMapping = original.metaMapping == null ? null : original.metaMapping.copy();
+		this.keyMapping = original.keyMapping == null ? null : (SimpleValue) original.keyMapping.copy();
+
+		// annotations
+		this.discriminatorDescriptor = original.discriminatorDescriptor == null
+				? null
+				: original.discriminatorDescriptor.copy();
+		this.keyDescriptor = original.keyDescriptor == null ? null : original.keyDescriptor.copy();
+
+		// common
+		this.metaValueToEntityNameMap = original.metaValueToEntityNameMap == null
+				? null
+				: new HashMap<>(original.metaValueToEntityNameMap);
+		this.implicitValueStrategy = original.implicitValueStrategy;
+		this.lazy = original.lazy;
+	}
+
+	@Override
+	public Any copy() {
+		return new Any( this );
+	}
+
+	public void addSelectable(Selectable selectable) {
+		if ( selectable == null ) {
+			return;
+		}
+
+		if ( selectable instanceof Column ) {
+			super.justAddColumn( (Column) selectable );
+		}
+		else {
+			super.justAddFormula( (Formula) selectable );
+		}
+	}
+
+	private void applySelectableToSuper(Selectable selectable) {
+		if ( selectable instanceof Column ) {
+			super.justAddColumn( (Column) selectable );
+		}
+		else {
+			assert selectable instanceof Formula;
+			super.justAddFormula( (Formula) selectable );
+		}
+	}
+
+	public BasicValue getDiscriminatorDescriptor() {
+		return discriminatorDescriptor;
+	}
+
+	public BasicValue getKeyDescriptor() {
+		return keyDescriptor;
+	}
+
+	public MetaValue getMetaMapping() {
+		return metaMapping;
+	}
+
+	public SimpleValue getKeyMapping() {
+		return keyMapping;
 	}
 
 	public String getIdentifierType() {
-		return identifierTypeName;
+		return keyMapping.getTypeName();
 	}
 
 	public void setIdentifierType(String identifierType) {
-		this.identifierTypeName = identifierType;
+		this.keyMapping.setTypeName( identifierType );
 	}
 
-	public Type getType() throws MappingException {
-		final Type metaType = getMetadata().getTypeResolver().heuristicType( metaTypeName );
+	@Override
+	public AnyType getType() throws MappingException {
+		if ( resolvedType == null ) {
+			final Type discriminatorType;
+			if ( discriminatorDescriptor != null ) {
+				discriminatorType = discriminatorDescriptor.getType();
+			}
+			else {
+				discriminatorType = metaMapping.getType();
+			}
 
-		return getMetadata().getTypeResolver().getTypeFactory().any(
-				metaValues == null ? metaType : new MetaType( metaValues, metaType ),
-				getMetadata().getTypeResolver().heuristicType( identifierTypeName ),
-				isLazy()
-		);
+			final Type identifierType;
+			if ( keyDescriptor != null ) {
+				identifierType = keyDescriptor.getType();
+			}
+			else {
+				identifierType = keyMapping.getType();
+			}
+
+			resolvedType = MappingHelper.anyMapping(
+					discriminatorType,
+					identifierType,
+					metaValueToEntityNameMap,
+					implicitValueStrategy,
+					isLazy(),
+					getBuildingContext()
+			);
+		}
+
+		return resolvedType;
 	}
 
-	public void setTypeByReflection(String propertyClass, String propertyName) {}
+	@Override
+	public void addColumn(Column column) {
+		applySelectableLocally( column );
+	}
+
+	@Override
+	public void addColumn(Column column, boolean isInsertable, boolean isUpdatable) {
+		applySelectableLocally( column );
+	}
+
+	@Override
+	public void addFormula(Formula formula) {
+		applySelectableLocally( formula );
+	}
+
+	private void applySelectableLocally(Selectable selectable) {
+		// note: adding column to meta or key mapping ultimately calls back into `#applySelectableToSuper`
+		//		to add the column to the ANY super.
+
+		if ( discriminatorDescriptor == null && getColumnSpan() == 0 ) {
+			if ( selectable instanceof Column ) {
+				metaMapping.addColumn( (Column) selectable );
+			}
+			else {
+				assert selectable instanceof Formula;
+				metaMapping.addFormula( (Formula) selectable );
+			}
+		}
+		else {
+			if ( selectable instanceof Column ) {
+				keyMapping.addColumn( (Column) selectable );
+			}
+			else {
+				assert selectable instanceof Formula;
+				keyMapping.addFormula( (Formula) selectable );
+			}
+		}
+	}
 
 	public String getMetaType() {
-		return metaTypeName;
+		return metaMapping.typeName;
 	}
 
 	public void setMetaType(String type) {
-		metaTypeName = type;
+		metaMapping.setTypeName( type );
 	}
 
-	public Map getMetaValues() {
-		return metaValues;
+	public Map<Object,String> getMetaValues() {
+		return metaValueToEntityNameMap;
 	}
 
-	public void setMetaValues(Map metaValues) {
-		this.metaValues = metaValues;
+	@SuppressWarnings( "rawtypes" )
+	public void setMetaValues(Map metaValueToEntityNameMap) {
+		//noinspection unchecked
+		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
+	}
+
+	/**
+	 * Set the strategy for dealing with discriminator mappings which are not explicitly defined by
+	 * {@linkplain org.hibernate.annotations.AnyDiscriminatorValue}.
+	 *
+	 * @apiNote {@code null} indicates to not allow implicit mappings.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
+		this.implicitValueStrategy = implicitValueStrategy;
 	}
 
 	public boolean isLazy() {
@@ -82,10 +241,12 @@ public class Any extends SimpleValue {
 		this.lazy = lazy;
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName)
 		throws MappingException {
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -97,9 +258,232 @@ public class Any extends SimpleValue {
 
 	public boolean isSame(Any other) {
 		return super.isSame( other )
-				&& Objects.equals( identifierTypeName, other.identifierTypeName )
-				&& Objects.equals( metaTypeName, other.metaTypeName )
-				&& Objects.equals( metaValues, other.metaValues )
+				&& Objects.equals( getTypeNameOrNull( keyMapping ), getTypeNameOrNull( other.keyMapping ) )
+				&& Objects.equals( getTypeNameOrNull( metaMapping ), getTypeNameOrNull( other.metaMapping ) )
+				&& Objects.equals( metaValueToEntityNameMap, other.metaValueToEntityNameMap )
 				&& lazy == other.lazy;
+	}
+
+	private String getTypeNameOrNull(SimpleValue simpleValue) {
+		return simpleValue != null ? simpleValue.getTypeName() : null;
+	}
+
+	@Override
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
+		if ( discriminatorDescriptor != null ) {
+			return discriminatorDescriptor.isValid( mappingContext ) && keyDescriptor.isValid( mappingContext );
+		}
+		return metaMapping.isValid( mappingContext ) && keyMapping.isValid( mappingContext );
+	}
+
+	private static String columnName(Column column, MetadataBuildingContext buildingContext) {
+		final JdbcServices jdbcServices = buildingContext
+				.getBootstrapContext()
+				.getServiceRegistry()
+				.requireService( JdbcServices.class );
+		return column.getQuotedName( jdbcServices.getDialect() );
+	}
+
+	public void setDiscriminator(BasicValue discriminatorDescriptor) {
+		this.discriminatorDescriptor = discriminatorDescriptor;
+		if ( discriminatorDescriptor.getColumn() instanceof Column ) {
+			justAddColumn(
+					(Column) discriminatorDescriptor.getColumn(),
+					discriminatorDescriptor.isColumnInsertable( 0 ),
+					discriminatorDescriptor.isColumnUpdateable( 0 )
+			);
+		}
+		else {
+			justAddFormula( (Formula) discriminatorDescriptor.getColumn() );
+		}
+	}
+
+	public void setDiscriminatorValueMappings(Map<Object, Class<?>> discriminatorValueMappings) {
+		metaValueToEntityNameMap = new HashMap<>();
+		discriminatorValueMappings.forEach( (value, entity) -> {
+			metaValueToEntityNameMap.put( value, entity.getName() );
+		} );
+	}
+
+	public void setKey(BasicValue keyDescriptor) {
+		this.keyDescriptor = keyDescriptor;
+		if ( keyDescriptor.getColumn() instanceof Column ) {
+			justAddColumn(
+					(Column) keyDescriptor.getColumn(),
+					keyDescriptor.isColumnInsertable( 0 ),
+					keyDescriptor.isColumnUpdateable( 0 )
+			);
+		}
+		else {
+			justAddFormula( (Formula) keyDescriptor.getColumn() );
+		}
+	}
+
+	/**
+	 * The discriminator {@linkplain Value}
+	 */
+	public static class MetaValue extends SimpleValue {
+		private String typeName;
+		private String columnName;
+
+		private final Consumer<Selectable> selectableConsumer;
+
+		public MetaValue(
+				Consumer<Selectable> selectableConsumer,
+				MetadataBuildingContext buildingContext) {
+			super( buildingContext );
+			this.selectableConsumer = selectableConsumer;
+		}
+
+		public MetaValue(
+				Consumer<Selectable> selectableConsumer,
+				MetadataBuildingContext buildingContext,
+				Table table) {
+			super( buildingContext, table );
+			this.selectableConsumer = selectableConsumer;
+		}
+
+		private MetaValue(MetaValue original) {
+			super( original );
+			this.typeName = original.typeName;
+			this.columnName = original.columnName;
+			this.selectableConsumer = original.selectableConsumer;
+		}
+
+		@Override
+		public MetaValue copy() {
+			return new MetaValue( this );
+		}
+
+		@Override
+		public Type getType() throws MappingException {
+			return getMetadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( typeName );
+		}
+
+		@Override
+		public String getTypeName() {
+			return typeName;
+		}
+
+		@Override
+		public void setTypeName(String typeName) {
+			this.typeName = typeName;
+		}
+
+		public String getColumnName() {
+			return columnName;
+		}
+
+		@Override
+		public void addColumn(Column column) {
+			if ( columnName != null ) {
+				throw new MappingException( "ANY discriminator already contained column" );
+			}
+
+			super.addColumn( column );
+			this.columnName = columnName( column, getBuildingContext() );
+
+			selectableConsumer.accept( column );
+			column.setValue( this );
+		}
+
+		@Override
+		public void addColumn(Column column, boolean isInsertable, boolean isUpdatable) {
+			if ( columnName != null ) {
+				throw new MappingException( "ANY discriminator already contained column" );
+			}
+
+			super.addColumn( column, isInsertable, isUpdatable );
+			this.columnName = columnName( column, getBuildingContext() );
+
+			selectableConsumer.accept( column );
+			column.setValue( this );
+		}
+
+		@Override
+		public void addFormula(Formula formula) {
+			if ( columnName != null ) {
+				throw new MappingException( "ANY discriminator already contained column" );
+			}
+
+			super.addFormula( formula );
+			columnName = formula.getFormula();
+
+			selectableConsumer.accept( formula );
+		}
+
+		@Override
+		public boolean isValid(MappingContext mappingContext) {
+			return columnName != null
+				&& getType().getColumnSpan( mappingContext ) == 1;
+		}
+	}
+
+	public static class KeyValue extends SimpleValue {
+		private String typeName;
+
+		private final Consumer<Selectable> selectableConsumer;
+
+		public KeyValue(
+				Consumer<Selectable> selectableConsumer,
+				MetadataBuildingContext buildingContext) {
+			super( buildingContext );
+			this.selectableConsumer = selectableConsumer;
+		}
+
+		public KeyValue(
+				Consumer<Selectable> selectableConsumer,
+				MetadataBuildingContext buildingContext,
+				Table table) {
+			super( buildingContext, table );
+			this.selectableConsumer = selectableConsumer;
+		}
+
+		private KeyValue(KeyValue original) {
+			super( original );
+			this.typeName = original.typeName;
+			this.selectableConsumer = original.selectableConsumer;
+		}
+
+		@Override
+		public KeyValue copy() {
+			return new KeyValue( this );
+		}
+
+		@Override
+		public Type getType() throws MappingException {
+			return getMetadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( typeName );
+		}
+
+		@Override
+		public String getTypeName() {
+			return typeName;
+		}
+
+		@Override
+		public void setTypeName(String typeName) {
+			this.typeName = typeName;
+		}
+
+		@Override
+		public void addColumn(Column column) {
+			super.addColumn( column );
+
+			selectableConsumer.accept( column );
+		}
+
+		@Override
+		public void addColumn(Column column, boolean isInsertable, boolean isUpdatable) {
+			super.addColumn( column, isInsertable, isUpdatable );
+
+			selectableConsumer.accept( column );
+		}
+
+		@Override
+		public void addFormula(Formula formula) {
+			super.addFormula( formula );
+
+			selectableConsumer.accept( formula );
+		}
 	}
 }

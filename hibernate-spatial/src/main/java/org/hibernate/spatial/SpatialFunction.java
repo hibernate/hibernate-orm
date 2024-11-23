@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial;
 
 /**
@@ -16,8 +13,11 @@ package org.hibernate.spatial;
  * </ul>
  *
  * @author Karel Maesen, Geovise BVBA
+ *
  * creation-date: Oct 7, 2010
+ * @deprecated To be replaced by {@link CommonSpatialFunction}
  */
+@Deprecated
 public enum SpatialFunction {
 
 	/**
@@ -169,7 +169,7 @@ public enum SpatialFunction {
 	/**
 	 * The filter function
 	 * <p>
-	 * <p>Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&&" operator of PostGIS.
+	 * <p>Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&amp;&amp;" operator of PostGIS.
 	 */
 	filter( "filter" ),
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -14,16 +12,18 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * To be used as a replacement for {@code @JoinColumn} in most places.  The formula has to be a valid
- * SQL fragment
+ * Specifies a join condition based on an arbitrary native SQL formula
+ * instead of a {@linkplain jakarta.persistence.JoinColumn column name}.
  *
  * @author Sharath Reddy
+ *
+ * @see DialectOverride.JoinFormula
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface JoinFormula {
 	/**
-	 * The formula.
+	 * The formula, in native SQL.
 	 */
 	String value();
 

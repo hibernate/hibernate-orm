@@ -1,66 +1,121 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import java.io.Closeable;
-import java.io.Serializable;
-import java.sql.Connection;
 import java.util.List;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import java.util.function.Consumer;
 
+import jakarta.persistence.FindOption;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.jpa.HibernateEntityManager;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.jdbc.Work;
+import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+
 /**
- * The main runtime interface between a Java application and Hibernate. This is the
- * central API class abstracting the notion of a persistence service.<br>
- * <br>
- * The lifecycle of a <tt>Session</tt> is bounded by the beginning and end of a logical
- * transaction. (Long transactions might span several database transactions.)<br>
- * <br>
- * The main function of the <tt>Session</tt> is to offer create, read and delete operations
- * for instances of mapped entity classes. Instances may exist in one of three states:<br>
- * <br>
- * <i>transient:</i> never persistent, not associated with any <tt>Session</tt><br>
- * <i>persistent:</i> associated with a unique <tt>Session</tt><br>
- * <i>detached:</i> previously persistent, not associated with any <tt>Session</tt><br>
- * <br>
- * Transient instances may be made persistent by calling <tt>save()</tt>,
- * <tt>persist()</tt> or <tt>saveOrUpdate()</tt>. Persistent instances may be made transient
- * by calling<tt> delete()</tt>. Any instance returned by a <tt>get()</tt> or
- * <tt>load()</tt> method is persistent. Detached instances may be made persistent
- * by calling <tt>update()</tt>, <tt>saveOrUpdate()</tt>, <tt>lock()</tt> or <tt>replicate()</tt>. 
- * The state of a transient or detached instance may also be made persistent as a new
- * persistent instance by calling <tt>merge()</tt>.<br>
- * <br>
- * <tt>save()</tt> and <tt>persist()</tt> result in an SQL <tt>INSERT</tt>, <tt>delete()</tt>
- * in an SQL <tt>DELETE</tt> and <tt>update()</tt> or <tt>merge()</tt> in an SQL <tt>UPDATE</tt>. 
- * Changes to <i>persistent</i> instances are detected at flush time and also result in an SQL
- * <tt>UPDATE</tt>. <tt>saveOrUpdate()</tt> and <tt>replicate()</tt> result in either an
- * <tt>INSERT</tt> or an <tt>UPDATE</tt>.<br>
- * <br>
- * It is not intended that implementors be threadsafe. Instead each thread/transaction
- * should obtain its own instance from a <tt>SessionFactory</tt>.<br>
- * <br>
- * A <tt>Session</tt> instance is serializable if its persistent classes are serializable.<br>
- * <br>
- * A typical transaction should use the following idiom:
+ * The main runtime interface between a Java application and Hibernate. Represents the
+ * notion of a <em>persistence context</em>, a set of managed entity instances associated
+ * with a logical transaction.
+ * <p>
+ * The lifecycle of a {@code Session} is bounded by the beginning and end of the logical
+ * transaction. But a long logical transaction might span several database transactions.
+ * <p>
+ * The primary purpose of the {@code Session} is to offer create, read, and delete
+ * operations for instances of mapped entity classes. An instance may be in one of three
+ * states with respect to a given open session:
+ * <ul>
+ * <li><em>transient:</em> never persistent, and not associated with the {@code Session},
+ * <li><em>persistent:</em> currently associated with the {@code Session}, or
+ * <li><em>detached:</em> previously persistent, but not currently associated with the
+ *     {@code Session}.
+ * </ul>
+ * <p>
+ * At any given time, an instance may be associated with at most one open session.
+ * <p>
+ * Any instance returned by {@link #get(Class, Object)}, {@link #find(Class, Object)},
+ * or by a query is persistent. A persistent instance might hold references to other
+ * entity instances, and sometimes these references are <em>proxied</em> by an
+ * intermediate object. When an associated entity has not yet been fetched from the
+ * database, references to the unfetched entity are represented by uninitialized
+ * proxies. The state of an unfetched entity is automatically fetched from the
+ * database when a method of its proxy is invoked, if and only if the proxy is
+ * associated with an open session. Otherwise, {@link #getReference(Object)} may be
+ * used to trade a proxy belonging to a closed session for a new proxy associated
+ * with the current session.
+ * <p>
+ * A transient instance may be made persistent by calling {@link #persist(Object)}.
+ * A persistent instance may be made detached by calling {@link #detach(Object)}.
+ * A persistent instance may be marked for removal, and eventually made transient, by
+ * calling {@link #remove(Object)}.
+ * <p>
+ * Persistent instances are held in a managed state by the persistence context. Any
+ * change to the state of a persistent instance is automatically detected and eventually
+ * flushed to the database. This process of automatic change detection is called
+ * <em>dirty checking</em> and can be expensive in some circumstances. Dirty checking
+ * may be disabled by marking an entity as read-only using
+ * {@link #setReadOnly(Object, boolean)} or simply by {@linkplain #detach(Object) evicting}
+ * it from the persistence context. A session may be set to load entities as read-only
+ * {@linkplain #setDefaultReadOnly(boolean) by default}, or this may be controlled at the
+ * {@linkplain Query#setReadOnly(boolean) query level}.
+ * <p>
+ * The state of a transient or detached instance may be made persistent by copying it to
+ * a persistent instance using {@link #merge(Object)}. All older operations which moved a
+ * detached instance to the persistent state are now deprecated, and clients should now
+ * migrate to the use of {@code merge()}.
+ * <p>
+ * The persistent state of a managed entity may be refreshed from the database, discarding
+ * all modifications to the object held in memory, by calling {@link #refresh(Object)}.
+ * <p>
+ * From {@linkplain FlushMode time to time}, a {@linkplain #flush() flush operation} is
+ * triggered, and the session synchronizes state held in memory with persistent state
+ * held in the database by executing SQL {@code insert}, {@code update}, and {@code delete}
+ * statements. Note that SQL statements are often not executed synchronously by the methods
+ * of the {@code Session} interface. If synchronous execution of SQL is desired, the
+ * {@link StatelessSession} allows this.
+ * <p>
+ * Each managed instance has an associated {@link LockMode}. By default, the session
+ * obtains only {@link LockMode#READ} on an entity instance it reads from the database
+ * and {@link LockMode#WRITE} on an entity instance it writes to the database. This
+ * behavior is appropriate for programs which use optimistic locking.
+ * <ul>
+ * <li>A different lock level may be obtained by explicitly specifying the mode using
+ *     {@link #get(Class, Object, LockMode)}, {@link #find(Class, Object, LockModeType)},
+ *     {@link #refresh(Object, LockMode)}, {@link #refresh(Object, LockModeType)}, or
+ *     {@link org.hibernate.query.SelectionQuery#setLockMode(LockModeType)}.
+ * <li>The lock level of a managed instance already held by the session may be upgraded
+ *     to a more restrictive lock level by calling {@link #lock(Object, LockMode)} or
+ *     {@link #lock(Object, LockModeType)}.
+ * </ul>
+ * <p>
+ * A persistence context holds hard references to all its entities and prevents them
+ * from being garbage collected. Therefore, a {@code Session} is a short-lived object,
+ * and must be discarded as soon as a logical transaction ends. In extreme cases,
+ * {@link #clear()} and {@link #detach(Object)} may be used to control memory usage.
+ * However, for processes which read many entities, a {@link StatelessSession} should
+ * be used.
+ * <p>
+ * A session might be associated with a container-managed JTA transaction, or it might be
+ * in control of its own <em>resource-local</em> database transaction. In the case of a
+ * resource-local transaction, the client must demarcate the beginning and end of the
+ * transaction using a {@link Transaction}. A typical resource-local transaction should
+ * use the following idiom:
  * <pre>
- * Session sess = factory.openSession();
- * Transaction tx;
+ * Session session = factory.openSession();
+ * Transaction tx = null;
  * try {
- *     tx = sess.beginTransaction();
+ *     tx = session.beginTransaction();
  *     //do some work
  *     ...
  *     tx.commit();
@@ -70,573 +125,645 @@ import org.hibernate.stat.SessionStatistics;
  *     throw e;
  * }
  * finally {
- *     sess.close();
+ *     session.close();
  * }
  * </pre>
- * <br>
- * If the <tt>Session</tt> throws an exception, the transaction must be rolled back
- * and the session discarded. The internal state of the <tt>Session</tt> might not
- * be consistent with the database after the exception occurs.
+ * <p>
+ * It's crucially important to appreciate the following restrictions and why they exist:
+ * <ul>
+ * <li>If the {@code Session} throws an exception, the current transaction must be rolled
+ *     back and the session must be discarded. The internal state of the {@code Session}
+ *     cannot be expected to be consistent with the database after the exception occurs.
+ * <li>At the end of a logical transaction, the session must be explicitly {@linkplain
+ *     #close() destroyed}, so that all JDBC resources may be released.
+ * <li>A {@code Session} is never thread-safe. It contains various different sorts of
+ *     fragile mutable state. Each thread or transaction must obtain its own dedicated
+ *     instance from the {@link SessionFactory}.
+ * </ul>
+ * <p>
+ * An easy way to be sure that session and transaction management is being done correctly
+ * is to {@linkplain SessionFactory#inTransaction(Consumer) let the factory do it}:
+ * <pre>
+ * sessionFactory.inTransaction(session -&gt; {
+ *     //do the work
+ *     ...
+ * });
+ * </pre>
+ * <p>
+ * A session may be used to {@linkplain #doWork(Work) execute JDBC work} using its JDBC
+ * connection and transaction:
+ * <pre>
+ * session.doWork(connection -&gt; {
+ *     try ( PreparedStatement ps = connection.prepareStatement( " ... " ) ) {
+ *         ps.execute();
+ *     }
+ * });
+ * </pre>
+ * <p>
+ * A {@code Session} instance is serializable if its entities are serializable.
+ * <p>
+ * Every {@code Session} is a JPA {@link EntityManager}. Furthermore, when Hibernate is
+ * acting as the JPA persistence provider, the method {@link EntityManager#unwrap(Class)}
+ * may be used to obtain the underlying {@code Session}.
+ * <p>
+ * Hibernate, unlike JPA, allows a persistence unit where an entity class is mapped multiple
+ * times, with different entity names, usually to different tables. In this case, the session
+ * needs a way to identify the entity name of a given instance of the entity class. Therefore,
+ * some operations of this interface, including operations inherited from {@code EntityManager},
+ * are overloaded with a form that accepts an explicit entity name along with the instance. An
+ * alternative solution to this problem is to provide an {@link EntityNameResolver}.
  *
  * @see SessionFactory
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Session extends SharedSessionContract, EntityManager, HibernateEntityManager, AutoCloseable, Closeable {
-	/**
-	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
-	 *
-	 * @return The session builder
-	 */
-	SharedSessionBuilder sessionWithOptions();
+public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
-	 * Force this session to flush. Must be called at the end of a
-	 * unit of work, before committing the transaction and closing the
-	 * session (depending on {@link #setFlushMode(FlushMode)},
-	 * {@link Transaction#commit()} calls this method).
-	 * <p/>
-	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
+	 * Force this session to flush. Must be called at the end of a unit of work,
+	 * before the transaction is committed. Depending on the current
+	 * {@linkplain #setHibernateFlushMode(FlushMode) flush mode}, the session might
+	 * automatically flush when {@link Transaction#commit()} is called, and it is not
+	 * necessary to call this method directly.
+	 * <p>
+	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory.
 	 *
-	 * @throws HibernateException Indicates problems flushing the session or
-	 * talking to the database.
+	 * @throws HibernateException if changes could not be synchronized with the database
 	 */
-	void flush() throws HibernateException;
+	@Override
+	void flush();
 
 	/**
-	 * Set the flush mode for this session.
-	 * <p/>
-	 * The flush mode determines the points at which the session is flushed.
-	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
-	 * store with persistable state held in memory.
-	 * <p/>
-	 * For a logically "read only" session, it is reasonable to set the session's
-	 * flush mode to {@link FlushMode#MANUAL} at the start of the session (in
-	 * order to achieve some extra performance).
+	 * Set the current {@linkplain FlushModeType JPA flush mode} for this session.
+	 * <p>
+	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
+	 * store with persistable state held in memory. The current flush mode determines
+	 * when the session is automatically flushed.
 	 *
-	 * @param flushMode the new flush mode
+	 * @param flushMode the new {@link FlushModeType}
 	 *
-	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode(FlushMode)} instead
+	 * @see #setHibernateFlushMode(FlushMode)
 	 */
-	@Deprecated
-	void setFlushMode(FlushMode flushMode);
+	@Override
+	void setFlushMode(FlushModeType flushMode);
 
 	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * For users of the Hibernate native APIs, we've had to rename this method
-	 * as defined by Hibernate historically because the JPA contract defines a method of the same
-	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.  For
-	 * the former behavior, use {@link Session#getHibernateFlushMode()} instead.
+	 * Set the current {@linkplain FlushMode flush mode} for this session.
+	 * <p>
+	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
+	 * store with persistable state held in memory. The current flush mode determines
+	 * when the session is automatically flushed.
+	 * <p>
+	 * The {@linkplain FlushMode#AUTO default flush mode} is sometimes unnecessarily
+	 * aggressive. For a logically "read only" session, it's reasonable to set the
+	 * session's flush mode to {@link FlushMode#MANUAL} at the start of the session
+	 * in order to avoid some unnecessary work.
+	 * <p>
+	 * Note that {@link FlushMode} defines more options than {@link FlushModeType}.
 	 *
-	 * @return The FlushModeType in effect for this Session.
+	 * @param flushMode the new {@link FlushMode}
+	 */
+	void setHibernateFlushMode(FlushMode flushMode);
+
+	/**
+	 * Get the current {@linkplain FlushModeType JPA flush mode} for this session.
+	 *
+	 * @return the {@link FlushModeType} currently in effect
+	 *
+	 * @see #getHibernateFlushMode()
 	 */
 	@Override
 	FlushModeType getFlushMode();
 
 	/**
-	 * Set the flush mode for this session.
-	 * <p/>
-	 * The flush mode determines the points at which the session is flushed.
-	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
-	 * store with persistable state held in memory.
-	 * <p/>
-	 * For a logically "read only" session, it is reasonable to set the session's
-	 * flush mode to {@link FlushMode#MANUAL} at the start of the session (in
-	 * order to achieve some extra performance).
+	 * Get the current {@linkplain FlushMode flush mode} for this session.
 	 *
-	 * @param flushMode the new flush mode
-	 */
-	void setHibernateFlushMode(FlushMode flushMode);
-
-	/**
-	 * Get the current flush mode for this session.
-	 *
-	 * @return The flush mode
+	 * @return the {@link FlushMode} currently in effect
 	 */
 	FlushMode getHibernateFlushMode();
 
 	/**
-	 * Set the cache mode.
-	 * <p/>
-	 * Cache mode determines the manner in which this session can interact with
+	 * Set the current {@linkplain CacheMode cache mode} for this session.
+	 * <p>
+	 * The cache mode determines the manner in which this session can interact with
 	 * the second level cache.
 	 *
-	 * @param cacheMode The new cache mode.
+	 * @param cacheMode the new cache mode
 	 */
 	void setCacheMode(CacheMode cacheMode);
 
 	/**
-	 * Get the current cache mode.
+	 * Get the current {@linkplain CacheMode cache mode} for this session.
 	 *
-	 * @return The current cache mode.
+	 * @return the current cache mode
 	 */
 	CacheMode getCacheMode();
 
 	/**
+	 * The JPA-defined {@link CacheStoreMode}.
+	 *
+	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
+	 */
+	@Override
+	CacheStoreMode getCacheStoreMode();
+
+	/**
+	 * The JPA-defined {@link CacheRetrieveMode}.
+	 *
+	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
+	 */
+	@Override
+	CacheRetrieveMode getCacheRetrieveMode();
+
+	/**
+	 * Enable or disable writes to the second-level cache.
+	 *
+	 * @param cacheStoreMode a JPA-defined {@link CacheStoreMode}
+	 *
+	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
+	 */
+	@Override
+	void setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	/**
+	 * Enable or disable reads from the second-level cache.
+	 *
+	 * @param cacheRetrieveMode a JPA-defined {@link CacheRetrieveMode}
+	 *
+	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
+	 */
+	@Override
+	void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+
+	/**
+	 * Get the maximum batch size for batch fetching associations by
+	 * id in this session.
+	 *
+	 * @since 6.3
+	 */
+	int getFetchBatchSize();
+
+	/**
+	 * Set the maximum batch size for batch fetching associations by
+	 * id in this session. Override the
+	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#getDefaultBatchFetchSize()
+	 * factory-level} default controlled by the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE}.
+	 * <p>
+	 * <ul>
+	 * <li>If {@code batchSize>1}, then batch fetching is enabled.
+	 * <li>If {@code batchSize<0}, the batch size is inherited from
+	 *     the factory-level setting.
+	 * <li>Otherwise, batch fetching is disabled.
+	 * </ul>
+	 *
+	 * @param batchSize the maximum batch size for batch fetching
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE
+	 */
+	void setFetchBatchSize(int batchSize);
+
+	/**
+	 * Determine if subselect fetching is enabled in this session.
+	 *
+	 * @return {@code true} is subselect fetching is enabled
+	 *
+	 * @since 6.3
+	 */
+	boolean isSubselectFetchingEnabled();
+
+	/**
+	 * Enable or disable subselect fetching in this session. Override the
+	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#isSubselectFetchEnabled()
+	 * factory-level} default controlled by the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_SUBSELECT_FETCH}.
+	 *
+	 * @param enabled {@code true} to enable subselect fetching
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_SUBSELECT_FETCH
+	 */
+	void setSubselectFetchingEnabled(boolean enabled);
+
+	/**
 	 * Get the session factory which created this session.
 	 *
-	 * @return The session factory.
+	 * @return the session factory
+	 *
 	 * @see SessionFactory
 	 */
 	SessionFactory getSessionFactory();
 
 	/**
 	 * Cancel the execution of the current query.
-	 * <p/>
+	 * <p>
 	 * This is the sole method on session which may be safely called from
 	 * another thread.
 	 *
-	 * @throws HibernateException There was a problem canceling the query
+	 * @throws HibernateException if there was a problem cancelling the query
 	 */
-	void cancelQuery() throws HibernateException;
+	void cancelQuery();
 
 	/**
 	 * Does this session contain any changes which must be synchronized with
 	 * the database?  In other words, would any DML operations be executed if
 	 * we flushed this session?
 	 *
-	 * @return True if the session contains pending changes; false otherwise.
+	 * @return {@code true} if the session contains pending changes; {@code false} otherwise.
 	 * @throws HibernateException could not perform dirtying checking
 	 */
-	boolean isDirty() throws HibernateException;
+	boolean isDirty();
 
 	/**
-	 * Will entities and proxies that are loaded into this session be made 
+	 * Will entities and proxies that are loaded into this session be made
 	 * read-only by default?
+	 * <p>
+	 * To determine the read-only/modifiable setting for a particular entity
+	 * or proxy use {@link #isReadOnly(Object)}.
 	 *
-	 * To determine the read-only/modifiable setting for a particular entity 
-	 * or proxy:
-	 * @see Session#isReadOnly(Object)
+	 * @see #isReadOnly(Object)
 	 *
-	 * @return true, loaded entities/proxies will be made read-only by default; 
-	 *         false, loaded entities/proxies will be made modifiable by default. 
+	 * @return {@code true}, loaded entities/proxies will be made read-only by default;
+	 *		 {@code false}, loaded entities/proxies will be made modifiable by default.
 	 */
 	boolean isDefaultReadOnly();
 
 	/**
 	 * Change the default for entities and proxies loaded into this session
 	 * from modifiable to read-only mode, or from modifiable to read-only mode.
-	 *
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
-	 * read-only/modifiable setting as the uninitialized
-	 * proxy has, regardless of the session's current setting.
-	 *
+	 * read-only/modifiable setting as the uninitialized proxy has,
+	 * regardless of the session's current setting.
+	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
-	 * or proxy that is already in this session:
-	 * @see Session#setReadOnly(Object,boolean)
+	 * or proxy that already belongs to this session use
+	 * {@link #setReadOnly(Object, boolean)}.
+	 * <p>
+	 * To override this session's read-only/modifiable setting for all
+	 * entities and proxies loaded by a certain {@code Query} use
+	 * {@link Query#setReadOnly(boolean)}.
 	 *
-	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a Query:
+	 * @see #setReadOnly(Object,boolean)
 	 * @see Query#setReadOnly(boolean)
 	 *
-	 * @param readOnly true, the default for loaded entities/proxies is read-only;
-	 *                 false, the default for loaded entities/proxies is modifiable
+	 * @param readOnly {@code true}, the default for loaded entities/proxies is read-only;
+	 *				 {@code false}, the default for loaded entities/proxies is modifiable
 	 */
 	void setDefaultReadOnly(boolean readOnly);
 
 	/**
-	 * Return the identifier value of the given entity as associated with this
-	 * session.  An exception is thrown if the given entity instance is transient
-	 * or detached in relation to this session.
+	 * Return the identifier value of the given entity associated with this session.
+	 * An exception is thrown if the given entity instance is transient or detached
+	 * in relation to this session.
 	 *
-	 * @param object a persistent instance
+	 * @param object a persistent instance associated with this session
+	 *
 	 * @return the identifier
+	 *
 	 * @throws TransientObjectException if the instance is transient or associated with
 	 * a different session
 	 */
-	Serializable getIdentifier(Object object);
+	Object getIdentifier(Object object);
 
 	/**
-	 * Check if this entity is associated with this Session.  This form caters to
-	 * non-POJO entities, by allowing the entity-name to be passed in
+	 * Determine if the given entity is associated with this session.
 	 *
-	 * @param entityName The entity name
+	 * @param entityName the entity name
 	 * @param object an instance of a persistent class
 	 *
-	 * @return true if the given instance is associated with this <tt>Session</tt>
+	 * @return {@code true} if the given instance is associated with this {@code Session}
 	 */
 	boolean contains(String entityName, Object object);
 
 	/**
 	 * Remove this instance from the session cache. Changes to the instance will
 	 * not be synchronized with the database. This operation cascades to associated
-	 * instances if the association is mapped with <tt>cascade="evict"</tt>.
+	 * instances if the association is mapped with
+	 * {@link jakarta.persistence.CascadeType#DETACH}.
 	 *
-	 * @param object The entity to evict
+	 * @param object the managed instance to detach
+	 */
+	@Override
+	void detach(Object object);
+
+	/**
+	 * Remove this instance from the session cache. Changes to the instance will
+	 * not be synchronized with the database. This operation cascades to associated
+	 * instances if the association is mapped with
+	 * {@link jakarta.persistence.CascadeType#DETACH}.
+	 * <p>
+	 * This operation is a synonym for {@link #detach(Object)}.
+	 *
+	 * @param object the managed entity to evict
 	 *
 	 * @throws NullPointerException if the passed object is {@code null}
-	 * @throws IllegalArgumentException if the passed object is not defined as an entity
+	 * @throws IllegalArgumentException if the passed object is not mapped as an entity
 	 */
 	void evict(Object object);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 * <p/>
-	 * Convenient form of {@link #load(Class, Serializable, LockOptions)}
-	 *
-	 * @param theClass a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockMode the lock level
-	 *
-	 * @return the persistent instance or proxy
-	 *
-	 * @see #load(Class, Serializable, LockOptions)
-	 */
-	<T> T load(Class<T> theClass, Serializable id, LockMode lockMode);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 *
-	 * @param theClass a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockOptions contains the lock level
-	 * @return the persistent instance or proxy
-	 */
-	<T> T load(Class<T> theClass, Serializable id, LockOptions lockOptions);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 * <p/>
-	 * Convenient form of {@link #load(String, Serializable, LockOptions)}
-	 *
-	 * @param entityName a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockMode the lock level
-	 *
-	 * @return the persistent instance or proxy
-	 *
-	 * @see #load(String, Serializable, LockOptions)
-	 */
-	Object load(String entityName, Serializable id, LockMode lockMode);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * obtaining the specified lock mode, assuming the instance exists.
-	 *
-	 * @param entityName a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 * @param lockOptions contains the lock level
-	 *
-	 * @return the persistent instance or proxy
-	 */
-	Object load(String entityName, Serializable id, LockOptions lockOptions);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * assuming that the instance exists. This method might return a proxied instance that
-	 * is initialized on-demand, when a non-identifier method is accessed.
-	 * <br><br>
-	 * You should not use this method to determine if an instance exists (use <tt>get()</tt>
-	 * instead). Use this only to retrieve an instance that you assume exists, where non-existence
-	 * would be an actual error.
-	 *
-	 * @param theClass a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 *
-	 * @return the persistent instance or proxy
-	 */
-	<T> T load(Class<T> theClass, Serializable id);
-
-	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * assuming that the instance exists. This method might return a proxied instance that
-	 * is initialized on-demand, when a non-identifier method is accessed.
-	 * <br><br>
-	 * You should not use this method to determine if an instance exists (use <tt>get()</tt>
-	 * instead). Use this only to retrieve an instance that you assume exists, where non-existence
-	 * would be an actual error.
-	 *
-	 * @param entityName a persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
-	 *
-	 * @return the persistent instance or proxy
-	 */
-	Object load(String entityName, Serializable id);
-
-	/**
-	 * Read the persistent state associated with the given identifier into the given transient
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
 	 * instance.
+	 * <p>
+	 * The object returned by {@code get()} or {@code find()} is either an unproxied instance
+	 * of the given entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * This operation requests {@link LockMode#NONE}, that is, no lock, allowing the object
+	 * to be retrieved from the cache without the cost of database access. However, if it is
+	 * necessary to read the state from the database, the object will be returned with the
+	 * lock mode {@link LockMode#READ}.
+	 * <p>
+	 * To bypass the {@linkplain Cache second-level cache}, and ensure that the state of the
+	 * requested instance is read directly from the database, either:
+	 * <ul>
+	 * <li>call {@link #find(Class, Object, FindOption...)}, passing
+	 *     {@link CacheRetrieveMode#BYPASS} as an option,
+	 * <li>call {@link #find(Class, Object, LockMode)} with the explicit lock mode
+	 *     {@link LockMode#READ}, or
+	 * <li>{@linkplain #setCacheRetrieveMode set the cache mode} to
+	 *     {@link CacheRetrieveMode#BYPASS} before calling this method.
+	 * </ul>
 	 *
-	 * @param object an "empty" instance of the persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
+	 * @apiNote This operation is very similar to {@link #get(Class, Object)}.
+	 *
+	 * @param entityType the entity type
+	 * @param id an identifier
+	 *
+	 * @return a fully-fetched persistent instance or null
 	 */
-	void load(Object object, Serializable id);
+	@Override
+	<T> T find(Class<T> entityType, Object id);
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
+	 * <p>
+	 * Convenient form of {@link #find(Class, Object, LockOptions)}.
+	 *
+	 * @param entityType the entity type
+	 * @param id an identifier
+	 * @param lockMode the lock mode
+	 *
+	 * @return a fully-fetched persistent instance or null
+	 *
+	 * @since 7.0
+	 *
+	 * @see #find(Class, Object, LockOptions)
+	 */
+	<T> T find(Class<T> entityType, Object id, LockMode lockMode);
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
+	 *
+	 * @param entityType the entity type
+	 * @param id an identifier
+	 * @param lockOptions the lock mode
+	 *
+	 * @return a fully-fetched persistent instance or null
+	 *
+	 * @since 7.0
+	 */
+	<T> T find(Class<T> entityType, Object id, LockOptions lockOptions);
+
+	/**
+	 * Return the persistent instances of the given entity class with the given identifiers
+	 * as a list. The position of an instance in the returned list matches the position of its
+	 * identifier in the given list of identifiers, and the returned list contains a null value
+	 * if there is no persistent instance matching a given identifier. If an instance is already
+	 * associated with the session, that instance is returned. This method never returns an
+	 * uninitialized instance.
+	 * <p>
+	 * Every object returned by {@code findMultiple()} is either an unproxied instance of the
+	 * given entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * This method accepts {@link BatchSize} as an option, allowing control over the number of
+	 * records retrieved in a single database request. The performance impact of setting a batch
+	 * size depends on whether a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which {@linkplain org.hibernate.dialect.Dialect#supportsStandardArrays
+	 *     support standard SQL arrays}, a smaller batch size might be extremely inefficient
+	 *     compared to a very large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
+	 *     in long SQL statements with many JDBC parameters.
+	 * </ul>
+	 * <p>
+	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
+	 * {@link MultiIdentifierLoadAccess}.
+	 *
+	 * @param entityType the entity type
+	 * @param ids the list of identifiers
+	 * @param options options, if any
+	 *
+	 * @return an ordered list of persistent instances, with null elements representing missing
+	 *         entities, whose positions in the list match the positions of their ids in the
+	 *         given list of identifiers
+	 * @see #byMultipleIds(Class)
+	 * @since 7.0
+	 */
+	<E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options);
+
+	/**
+	 * Read the persistent state associated with the given identifier into the given
+	 * transient instance.
+	 *
+	 * @param object a transient instance of an entity class
+	 * @param id an identifier
+	 */
+	void load(Object object, Object id);
 
 	/**
 	 * Persist the state of the given detached instance, reusing the current
 	 * identifier value.  This operation cascades to associated instances if
-	 * the association is mapped with {@code cascade="replicate"}
+	 * the association is mapped with
+	 * {@link org.hibernate.annotations.CascadeType#REPLICATE}.
 	 *
 	 * @param object a detached instance of a persistent class
-	 * @param replicationMode The replication mode to use
+	 * @param replicationMode the replication mode to use
+	 *
+	 * @deprecated With no real replacement. For some use cases try
+	 *             {@link StatelessSession#upsert(Object)}.
 	 */
+	@Deprecated( since = "6.0" )
 	void replicate(Object object, ReplicationMode replicationMode);
 
 	/**
 	 * Persist the state of the given detached instance, reusing the current
 	 * identifier value.  This operation cascades to associated instances if
-	 * the association is mapped with {@code cascade="replicate"}
+	 * the association is mapped with
+	 * {@link org.hibernate.annotations.CascadeType#REPLICATE}.
 	 *
-	 * @param entityName The entity name
+	 * @param entityName the entity name
 	 * @param object a detached instance of a persistent class
-	 * @param replicationMode The replication mode to use
+	 * @param replicationMode the replication mode to use
+	 *
+	 * @deprecated With no real replacement. For some use cases try
+	 *             {@link StatelessSession#upsert(Object)}.
 	 */
+	@Deprecated( since = "6.0" )
 	void replicate(String entityName, Object object, ReplicationMode replicationMode) ;
 
 	/**
-	 * Persist the given transient instance, first assigning a generated identifier. (Or
-	 * using the current value of the identifier property if the <tt>assigned</tt>
-	 * generator is used.) This operation cascades to associated instances if the
-	 * association is mapped with {@code cascade="save-update"}
-	 *
-	 * @param object a transient instance of a persistent class
-	 *
-	 * @return the generated identifier
-	 */
-	Serializable save(Object object);
-
-	/**
-	 * Persist the given transient instance, first assigning a generated identifier. (Or
-	 * using the current value of the identifier property if the <tt>assigned</tt>
-	 * generator is used.)  This operation cascades to associated instances if the
-	 * association is mapped with {@code cascade="save-update"}
-	 *
-	 * @param entityName The entity name
-	 * @param object a transient instance of a persistent class
-	 *
-	 * @return the generated identifier
-	 */
-	Serializable save(String entityName, Object object);
-
-	/**
-	 * Either {@link #save(Object)} or {@link #update(Object)} the given
-	 * instance, depending upon resolution of the unsaved-value checks (see the
-	 * manual for discussion of unsaved-value checking).
-	 * <p/>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="save-update"}
-	 *
-	 * @param object a transient or detached instance containing new or updated state
-	 *
-	 * @see Session#save(java.lang.Object)
-	 * @see Session#update(Object object)
-	 */
-	void saveOrUpdate(Object object);
-
-	/**
-	 * Either {@link #save(String, Object)} or {@link #update(String, Object)}
-	 * the given instance, depending upon resolution of the unsaved-value checks
-	 * (see the manual for discussion of unsaved-value checking).
-	 * <p/>
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="save-update"}
-	 *
-	 * @param entityName The entity name
-	 * @param object a transient or detached instance containing new or updated state
-	 *
-	 * @see Session#save(String,Object)
-	 * @see Session#update(String,Object)
-	 */
-	void saveOrUpdate(String entityName, Object object);
-
-	/**
-	 * Update the persistent instance with the identifier of the given detached
-	 * instance. If there is a persistent instance with the same identifier,
-	 * an exception is thrown. This operation cascades to associated instances
-	 * if the association is mapped with {@code cascade="save-update"}
-	 *
-	 * @param object a detached instance containing updated state
-	 */
-	void update(Object object);
-
-	/**
-	 * Update the persistent instance with the identifier of the given detached
-	 * instance. If there is a persistent instance with the same identifier,
-	 * an exception is thrown. This operation cascades to associated instances
-	 * if the association is mapped with {@code cascade="save-update"}
-	 *
-	 * @param entityName The entity name
-	 * @param object a detached instance containing updated state
-	 */
-	void update(String entityName, Object object);
-
-	/**
 	 * Copy the state of the given object onto the persistent object with the same
 	 * identifier. If there is no persistent instance currently associated with
 	 * the session, it will be loaded. Return the persistent instance. If the
-	 * given instance is unsaved, save a copy of and return it as a newly persistent
+	 * given instance is unsaved, save a copy and return it as a newly persistent
 	 * instance. The given instance does not become associated with the session.
 	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="merge"}
-	 * <p/>
-	 * The semantics of this method are defined by JSR-220.
+	 * with {@link jakarta.persistence.CascadeType#MERGE}.
 	 *
 	 * @param object a detached instance with state to be copied
 	 *
 	 * @return an updated persistent instance
 	 */
-	Object merge(Object object);
+	@Override
+	<T> T merge(T object);
 
 	/**
 	 * Copy the state of the given object onto the persistent object with the same
 	 * identifier. If there is no persistent instance currently associated with
 	 * the session, it will be loaded. Return the persistent instance. If the
-	 * given instance is unsaved, save a copy of and return it as a newly persistent
+	 * given instance is unsaved, save a copy and return it as a newly persistent
 	 * instance. The given instance does not become associated with the session.
 	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="merge"}
-	 * <p/>
-	 * The semantics of this method are defined by JSR-220.
+	 * with {@link jakarta.persistence.CascadeType#MERGE}.
 	 *
-	 * @param entityName The entity name
+	 * @param entityName the entity name
 	 * @param object a detached instance with state to be copied
 	 *
 	 * @return an updated persistent instance
 	 */
-	Object merge(String entityName, Object object);
+	<T> T merge(String entityName, T object);
 
 	/**
-	 * Make a transient instance persistent. This operation cascades to associated
-	 * instances if the association is mapped with {@code cascade="persist"}
-	 * <p/>
-	 * The semantics of this method are defined by JSR-220.
+	 * Make a transient instance persistent and mark it for later insertion in the
+	 * database. This operation cascades to associated instances if the association
+	 * is mapped with {@link jakarta.persistence.CascadeType#PERSIST}.
+	 * <p>
+	 * For an entity with a {@linkplain jakarta.persistence.GeneratedValue generated}
+	 * id, {@code persist()} ultimately results in generation of an identifier for
+	 * the given instance. But this may happen asynchronously, when the session is
+	 * {@linkplain #flush() flushed}, depending on the identifier generation strategy.
 	 *
 	 * @param object a transient instance to be made persistent
 	 */
+	@Override
 	void persist(Object object);
+
 	/**
-	 * Make a transient instance persistent. This operation cascades to associated
-	 * instances if the association is mapped with {@code cascade="persist"}
-	 * <p/>
-	 * The semantics of this method are defined by JSR-220.
+	 * Make a transient instance persistent and mark it for later insertion in the
+	 * database. This operation cascades to associated instances if the association
+	 * is mapped with {@link jakarta.persistence.CascadeType#PERSIST}.
+	 * <p>
+	 * For entities with a {@link jakarta.persistence.GeneratedValue generated id},
+	 * {@code persist()} ultimately results in generation of an identifier for the
+	 * given instance. But this may happen asynchronously, when the session is
+	 * {@linkplain #flush() flushed}, depending on the identifier generation strategy.
 	 *
-	 * @param entityName The entity name
+	 * @param entityName the entity name
 	 * @param object a transient instance to be made persistent
 	 */
 	void persist(String entityName, Object object);
 
 	/**
-	 * Remove a persistent instance from the datastore. The argument may be
-	 * an instance associated with the receiving <tt>Session</tt> or a transient
-	 * instance with an identifier associated with existing persistent state.
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="delete"}
+	 * Obtain the specified lock level on the given managed instance associated
+	 * with this session. This operation may be used to:
+	 * <ul>
+	 * <li>perform a version check on an entity read from the second-level cache
+	 *     by requesting {@link LockMode#READ},
+	 * <li>schedule a version check at transaction commit by requesting
+	 *     {@link LockMode#OPTIMISTIC},
+	 * <li>schedule a version increment at transaction commit by requesting
+	 *     {@link LockMode#OPTIMISTIC_FORCE_INCREMENT}
+	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_READ}
+	 *     or {@link LockMode#PESSIMISTIC_WRITE}, or
+	 * <li>immediately increment the version of the given instance by requesting
+	 *     {@link LockMode#PESSIMISTIC_FORCE_INCREMENT}.
+	 * </ul>
+	 * <p>
+	 * If the requested lock mode is already held on the given entity, this
+	 * operation has no effect.
+	 * <p>
+	 * This operation cascades to associated instances if the association is
+	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
+	 * <p>
+	 * The modes {@link LockMode#WRITE} and {@link LockMode#UPGRADE_SKIPLOCKED}
+	 * are not legal arguments to {@code lock()}.
 	 *
-	 * @param object the instance to be removed
-	 */
-	void delete(Object object);
-
-	/**
-	 * Remove a persistent instance from the datastore. The <b>object</b> argument may be
-	 * an instance associated with the receiving <tt>Session</tt> or a transient
-	 * instance with an identifier associated with existing persistent state.
-	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="delete"}
-	 *
-	 * @param entityName The entity name for the instance to be removed.
-	 * @param object the instance to be removed
-	 */
-	void delete(String entityName, Object object);
-
-	/**
-	 * Obtain the specified lock level upon the given object. This may be used to
-	 * perform a version check (<tt>LockMode.READ</tt>), to upgrade to a pessimistic
-	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
-	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
-	 * instances if the association is mapped with <tt>cascade="lock"</tt>.
-	 * <p/>
-	 * Convenient form of {@link LockRequest#lock(Object)} via {@link #buildLockRequest(LockOptions)}
-	 *
-	 * @param object a persistent or transient instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockMode the lock level
-	 *
-	 * @see #buildLockRequest(LockOptions)
-	 * @see LockRequest#lock(Object)
 	 */
 	void lock(Object object, LockMode lockMode);
 
 	/**
-	 * Obtain the specified lock level upon the given object. This may be used to
-	 * perform a version check (<tt>LockMode.OPTIMISTIC</tt>), to upgrade to a pessimistic
-	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
-	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
-	 * instances if the association is mapped with <tt>cascade="lock"</tt>.
-	 * <p/>
-	 * Convenient form of {@link LockRequest#lock(String, Object)} via {@link #buildLockRequest(LockOptions)}
+	 * Obtain a lock on the given managed instance associated with this session,
+	 * using the given {@linkplain LockOptions lock options}.
+	 * <p>
+	 * This operation cascades to associated instances if the association is
+	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
-	 * @param entityName The name of the entity
-	 * @param object a persistent or transient instance
-	 * @param lockMode the lock level
+	 * @param object a persistent instance associated with this session
+	 * @param lockOptions the lock options
 	 *
-	 * @see #buildLockRequest(LockOptions)
-	 * @see LockRequest#lock(String, Object)
+	 * @since 6.2
 	 */
-	void lock(String entityName, Object object, LockMode lockMode);
+	void lock(Object object, LockOptions lockOptions);
 
 	/**
-	 * Build a LockRequest that specifies the LockMode, pessimistic lock timeout and lock scope.
-	 * timeout and scope is ignored for optimistic locking.  After building the LockRequest,
-	 * call LockRequest.lock to perform the requested locking. 
-	 * <p/>
-	 * Example usage:
-	 * {@code session.buildLockRequest().setLockMode(LockMode.PESSIMISTIC_WRITE).setTimeOut(60000).lock(entity);}
-	 *
-	 * @param lockOptions contains the lock level
-	 *
-	 * @return a lockRequest that can be used to lock the passed object.
-	 */
-	LockRequest buildLockRequest(LockOptions lockOptions);
-
-	/**
-	 * Re-read the state of the given instance from the underlying database. It is
-	 * inadvisable to use this to implement long-running sessions that span many
-	 * business tasks. This method is, however, useful in certain special circumstances.
-	 * For example
+	 * Reread the state of the given managed instance associated with this session
+	 * from the underlying database. This may be useful:
 	 * <ul>
-	 * <li>where a database trigger alters the object state upon insert or update
-	 * <li>after executing direct SQL (eg. a mass update) in the same session
-	 * <li>after inserting a <tt>Blob</tt> or <tt>Clob</tt>
+	 * <li>when a database trigger alters the object state upon insert or update,
+	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
+	 *     or delete statement,
+	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
+	 *     SQL statement, or
+	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}.
 	 * </ul>
+	 * <p>
+	 * This operation cascades to associated instances if the association is mapped
+	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
+	 * <p>
+	 * This operation requests {@link LockMode#READ}. To obtain a stronger lock,
+	 * call {@link #refresh(Object, LockMode)}.
 	 *
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 */
+	@Override
 	void refresh(Object object);
 
 	/**
-	 * Re-read the state of the given instance from the underlying database. It is
-	 * inadvisable to use this to implement long-running sessions that span many
-	 * business tasks. This method is, however, useful in certain special circumstances.
-	 * For example
-	 * <ul>
-	 * <li>where a database trigger alters the object state upon insert or update
-	 * <li>after executing direct SQL (eg. a mass update) in the same session
-	 * <li>after inserting a <tt>Blob</tt> or <tt>Clob</tt>
-	 * </ul>
-	 *
-	 * @param entityName a persistent class
-	 * @param object a persistent or detached instance
-	 */
-	void refresh(String entityName, Object object);
-
-	/**
-	 * Re-read the state of the given instance from the underlying database, with
-	 * the given <tt>LockMode</tt>. It is inadvisable to use this to implement
-	 * long-running sessions that span many business tasks. This method is, however,
-	 * useful in certain special circumstances.
-	 * <p/>
+	 * Reread the state of the given managed instance from the underlying database,
+	 * obtaining the given {@link LockMode}.
+	 * <p>
 	 * Convenient form of {@link #refresh(Object, LockOptions)}
 	 *
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockMode the lock mode to use
 	 *
 	 * @see #refresh(Object, LockOptions)
@@ -644,122 +771,147 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	void refresh(Object object, LockMode lockMode);
 
 	/**
-	 * Re-read the state of the given instance from the underlying database, with
-	 * the given <tt>LockMode</tt>. It is inadvisable to use this to implement
-	 * long-running sessions that span many business tasks. This method is, however,
-	 * useful in certain special circumstances.
+	 * Reread the state of the given managed instance from the underlying database,
+	 * obtaining the given {@link LockMode}.
 	 *
-	 * @param object a persistent or detached instance
+	 * @param object a persistent instance associated with this session
 	 * @param lockOptions contains the lock mode to use
 	 */
 	void refresh(Object object, LockOptions lockOptions);
 
 	/**
-	 * Re-read the state of the given instance from the underlying database, with
-	 * the given <tt>LockMode</tt>. It is inadvisable to use this to implement
-	 * long-running sessions that span many business tasks. This method is, however,
-	 * useful in certain special circumstances.
+	 * Mark a persistence instance associated with this session for removal from
+	 * the underlying database. Ths operation cascades to associated instances if
+	 * the association is mapped {@link jakarta.persistence.CascadeType#REMOVE}.
+	 * <p>
+	 * Except when operating in fully JPA-compliant mode, this operation does,
+	 * contrary to the JPA specification, accept a detached entity instance.
 	 *
-	 * @param entityName a persistent class
-	 * @param object a persistent or detached instance
-	 * @param lockOptions contains the lock mode to use
+	 * @param object the managed persistent instance to remove, or a detached
+	 *               instance unless operating in fully JPA-compliant mode
 	 */
-	void refresh(String entityName, Object object, LockOptions lockOptions);
+	@Override
+	void remove(Object object);
 
 	/**
-	 * Determine the current lock mode of the given object.
+	 * Determine the current {@link LockMode} of the given managed instance associated
+	 * with this session.
 	 *
-	 * @param object a persistent instance
+	 * @param object a persistent instance associated with this session
 	 *
 	 * @return the current lock mode
 	 */
 	LockMode getCurrentLockMode(Object object);
 
 	/**
-	 * Create a {@link Query} instance for the given collection and filter string.  Contains an implicit {@code FROM}
-	 * element named {@code this} which refers to the defined table for the collection elements, as well as an implicit
-	 * {@code WHERE} restriction for this particular collection instance's key value.
-	 *
-	 * @param collection a persistent collection
-	 * @param queryString a Hibernate query fragment.
-	 *
-	 * @return The query instance for manipulation and execution
-	 *
-	 * @deprecated (since 5.3) with no real replacement.
-	 */
-	@Deprecated
-	org.hibernate.Query createFilter(Object collection, String queryString);
-
-	/**
 	 * Completely clear the session. Evict all loaded instances and cancel all pending
 	 * saves, updates and deletions. Do not close open iterators or instances of
-	 * <tt>ScrollableResults</tt>.
+	 * {@link ScrollableResults}.
 	 */
+	@Override
 	void clear();
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance.
+	 * <p>
+	 * The object returned by {@code get()} or {@code find()} is either an unproxied instance
+	 * of the given entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * This operation requests {@link LockMode#NONE}, that is, no lock, allowing the object
+	 * to be retrieved from the cache without the cost of database access. However, if it is
+	 * necessary to read the state from the database, the object will be returned with the
+	 * lock mode {@link LockMode#READ}.
+	 * <p>
+	 * To bypass the second-level cache, and ensure that the state is read from the database,
+	 * either:
+	 * <ul>
+	 * <li>call {@link #get(Class, Object, LockMode)} with the explicit lock mode
+	 *     {@link LockMode#READ}, or
+	 * <li>{@linkplain #setCacheMode set the cache mode} to {@link CacheMode#IGNORE}
+	 *     before calling this method.
+	 * </ul>
 	 *
-	 * @param entityType The entity type
+	 * @apiNote This operation is very similar to {@link #find(Class, Object)}.
+	 *
+	 * @param entityType the entity type
 	 * @param id an identifier
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated Because the semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object)} instead.
 	 */
-	<T> T get(Class<T> entityType, Serializable id);
+	@Deprecated(since = "7")
+	<T> T get(Class<T> entityType, Object id);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
-	 * Obtain the specified lock mode if the instance exists.
-	 * <p/>
-	 * Convenient form of {@link #get(Class, Serializable, LockOptions)}
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
+	 * <p>
+	 * Convenient form of {@link #get(Class, Object, LockOptions)}.
 	 *
-	 * @param entityType The entity type
+	 * @apiNote This operation is very similar to {@link #find(Class, Object, LockModeType)}.
+	 *
+	 * @param entityType the entity type
 	 * @param id an identifier
 	 * @param lockMode the lock mode
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @see #get(Class, Serializable, LockOptions)
+	 * @see #get(Class, Object, LockOptions)
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object, LockMode)} instead.
 	 */
-	<T> T get(Class<T> entityType, Serializable id, LockMode lockMode);
+	@Deprecated(since = "7")
+	<T> T get(Class<T> entityType, Object id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
-	 * Obtain the specified lock mode if the instance exists.
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
 	 *
-	 * @param entityType The entity type
+	 * @param entityType the entity type
 	 * @param id an identifier
 	 * @param lockOptions the lock mode
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link #find(Class, Object, LockOptions)} instead.
 	 */
-	<T> T get(Class<T> entityType, Serializable id, LockOptions lockOptions);
+	@Deprecated(since = "7")
+	<T> T get(Class<T> entityType, Object id, LockOptions lockOptions);
 
 	/**
 	 * Return the persistent instance of the given named entity with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance.
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
-	Object get(String entityName, Serializable id);
+	@Deprecated(since = "7")
+	Object get(String entityName, Object id);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
-	 * Obtain the specified lock mode if the instance exists.
-	 * <p/>
-	 * Convenient form of {@link #get(String, Serializable, LockOptions)}
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
+	 * <p>
+	 * Convenient form of {@link #get(String, Object, LockOptions)}
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
@@ -767,172 +919,252 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @see #get(String, Serializable, LockOptions)
+	 * @see #get(String, Object, LockOptions)
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
-	Object get(String entityName, Serializable id, LockMode lockMode);
+	@Deprecated(since = "7")
+	Object get(String entityName, Object id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
-	 * Obtain the specified lock mode if the instance exists.
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
 	 * @param lockOptions contains the lock mode
 	 *
 	 * @return a persistent instance or null
+	 *
+	 * @deprecated The semantics of this method may change in a future release.
 	 */
-	Object get(String entityName, Serializable id, LockOptions lockOptions);
+	@Deprecated(since = "7")
+	Object get(String entityName, Object id, LockOptions lockOptions);
 
 	/**
 	 * Return the entity name for a persistent entity.
-	 *   
-	 * @param object a persistent entity
+	 *
+	 * @param object a persistent entity associated with this session
 	 *
 	 * @return the entity name
 	 */
 	String getEntityName(Object object);
-	
-	/**
-	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity type by
-	 * primary key.
-	 * 
-	 * @param entityName The entity name of the entity type to be retrieved
-	 *
-	 * @return load delegate for loading the specified entity type by primary key
-	 *
-	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
-	 */
-	IdentifierLoadAccess byId(String entityName);
 
 	/**
-	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple entities at once
-	 * as specified by primary key values.
+	 * Return a reference to the persistent instance with the given class and identifier,
+	 * making the assumption that the instance is still persistent in the database. This
+	 * method never results in access to the underlying data store, and thus might return
+	 * a proxy that is initialized on-demand, when a non-identifier method is accessed.
+	 * <p>
+	 * Note that {@link Hibernate#createDetachedProxy(SessionFactory, Class, Object)}
+	 * may be used to obtain a <em>detached</em> reference.
+	 * <p>
+	 * It's sometimes necessary to narrow a reference returned by {@code getReference()}
+	 * to a subtype of the given entity type. A direct Java typecast should never be used
+	 * in this situation. Instead, the method {@link Hibernate#unproxy(Object, Class)} is
+	 * the recommended way to narrow the type of a proxy object. Alternatively, a new
+	 * reference may be obtained by simply calling {@code getReference()} again, passing
+	 * the subtype. Either way, the narrowed reference will usually not be identical to
+	 * the original reference, when the references are compared using the {@code ==}
+	 * operator.
 	 *
-	 * @param entityClass The entity type to be retrieved
+	 * @param entityType the entity type
+	 * @param id the identifier of a persistent instance that exists in the database
 	 *
-	 * @return load delegate for loading the specified entity type by primary key values
-	 *
-	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
+	 * @return the persistent instance or proxy
 	 */
-	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
+	@Override
+	<T> T getReference(Class<T> entityType, Object id);
 
 	/**
-	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple entities at once
-	 * as specified by primary key values.
+	 * Return a reference to the persistent instance of the given named entity with the
+	 * given identifier, making the assumption that the instance is still persistent in
+	 * the database. This method never results in access to the underlying data store,
+	 * and thus might return a proxy that is initialized on-demand, when a non-identifier
+	 * method is accessed.
 	 *
-	 * @param entityName The entity name of the entity type to be retrieved
+	 * @param entityName the entity name
+	 * @param id the identifier of a persistent instance that exists in the database
 	 *
-	 * @return load delegate for loading the specified entity type by primary key values
-	 *
-	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
+	 * @return the persistent instance or proxy
 	 */
-	MultiIdentifierLoadAccess byMultipleIds(String entityName);
+	Object getReference(String entityName, Object id);
 
 	/**
-	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
-	 * primary key.
+	 * Return a reference to the persistent instance with the same identity as the given
+	 * instance, which might be detached, making the assumption that the instance is still
+	 * persistent in the database. This method never results in access to the underlying
+	 * data store, and thus might return a proxy that is initialized on-demand, when a
+	 * non-identifier method is accessed.
 	 *
-	 * @param entityClass The entity type to be retrieved
+	 * @param object a detached persistent instance
 	 *
-	 * @return load delegate for loading the specified entity type by primary key
+	 * @return the persistent instance or proxy
 	 *
-	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
+	 * @since 6.0
+	 */
+	@Override
+	<T> T getReference(T object);
+
+	/**
+	 * Create an {@link IdentifierLoadAccess} instance to retrieve an instance of the given
+	 * entity type by its primary key.
+	 *
+	 * @param entityClass the entity type to be retrieved
+	 *
+	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 */
 	<T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
 
 	/**
-	 * Create a {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its natural id.
-	 * 
-	 * @param entityName The entity name of the entity type to be retrieved
+	 * Create an {@link IdentifierLoadAccess} instance to retrieve an instance of the named
+	 * entity type by its primary key.
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @param entityName the entity name of the entity type to be retrieved
 	 *
-	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
+	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given name does not resolve to a mapped entity
 	 */
-	NaturalIdLoadAccess byNaturalId(String entityName);
+	<T> IdentifierLoadAccess<T> byId(String entityName);
 
 	/**
-	 * Create a {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its natural id.
-	 * 
-	 * @param entityClass The entity type to be retrieved
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the given entity type by their primary key values, using batching.
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @param entityClass the entity type to be retrieved
 	 *
-	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
+	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given class does not resolve as a mapped entity
+	 *
+	 * @see #findMultiple(Class, List, FindOption...)
+	 */
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
+
+	/**
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the named entity type by their primary key values, using batching.
+	 *
+	 * @param entityName the entity name of the entity type to be retrieved
+	 *
+	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given name does not resolve to a mapped entity
+	 */
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
+
+	/**
+	 * Create a {@link NaturalIdLoadAccess} instance to retrieve an instance of the given
+	 * entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which may be a composite natural id. The entity must have at least one attribute
+	 * annotated {@link org.hibernate.annotations.NaturalId}.
+	 *
+	 * @param entityClass the entity type to be retrieved
+	 *
+	 * @return an instance of {@link NaturalIdLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given class does not resolve as a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
 	<T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
 	/**
-	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its natural id.
+	 * Create a {@link NaturalIdLoadAccess} instance to retrieve an instance of the named
+	 * entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which may be a composite natural id. The entity must have at least one attribute
+	 * annotated {@link org.hibernate.annotations.NaturalId}.
 	 *
-	 * @param entityName The entity name of the entity type to be retrieved
+	 * @param entityName the entity name of the entity type to be retrieved
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @return an instance of {@link NaturalIdLoadAccess} for executing the lookup
 	 *
-	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
-	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
+	 * @throws HibernateException If the given name does not resolve to a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
-	SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName);
+	<T> NaturalIdLoadAccess<T> byNaturalId(String entityName);
 
 	/**
-	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its simple (single attribute) natural id.
+	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve an instance of the
+	 * given entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which must be a simple (non-composite) value. The entity must have exactly one
+	 * attribute annotated {@link org.hibernate.annotations.NaturalId}.
 	 *
-	 * @param entityClass The entity type to be retrieved
+	 * @param entityClass the entity type to be retrieved
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @return an instance of {@link SimpleNaturalIdLoadAccess} for executing the lookup
 	 *
-	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
-	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
+	 * @throws HibernateException If the given class does not resolve as a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
 
 	/**
-	 * Enable the named filter for this current session.
+	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve an instance of the
+	 * named entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which must be a simple (non-composite) value. The entity must have exactly one
+	 * attribute annotated {@link org.hibernate.annotations.NaturalId}.
 	 *
-	 * @param filterName The name of the filter to be enabled.
+	 * @param entityName the entity name of the entity type to be retrieved
 	 *
-	 * @return The Filter instance representing the enabled filter.
+	 * @return an instance of {@link SimpleNaturalIdLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given name does not resolve to a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
-	Filter enableFilter(String filterName);
+	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
 
 	/**
-	 * Retrieve a currently enabled filter by name.
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the given entity type by their by {@linkplain org.hibernate.annotations.NaturalId
+	 * natural id} values, using batching.
 	 *
-	 * @param filterName The name of the filter to be retrieved.
+	 * @param entityClass the entity type to be retrieved
 	 *
-	 * @return The Filter instance representing the enabled filter.
+	 * @return an instance of {@link NaturalIdMultiLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given class does not resolve as a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
-	Filter getEnabledFilter(String filterName);
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass);
 
 	/**
-	 * Disable the named filter for the current session.
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the named entity type by their by {@linkplain org.hibernate.annotations.NaturalId
+	 * natural id} values, using batching.
 	 *
-	 * @param filterName The name of the filter to be disabled.
+	 * @param entityName the entity name of the entity type to be retrieved
+	 *
+	 * @return an instance of {@link NaturalIdMultiLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given name does not resolve to a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
-	void disableFilter(String filterName);
-	
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
+
 	/**
-	 * Get the statistics for this session.
+	 * Get the {@linkplain SessionStatistics statistics} for this session.
 	 *
-	 * @return The session statistics being collected for this session
+	 * @return the session statistics being collected for this session
 	 */
 	SessionStatistics getStatistics();
 
 	/**
 	 * Is the specified entity or proxy read-only?
-	 *
+	 * <p>
 	 * To get the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.Session#isDefaultReadOnly()
+	 * entities and proxies that are loaded into the session use
+	 * {@link #isDefaultReadOnly()}
 	 *
-	 * @param entityOrProxy an entity or HibernateProxy
-	 * @return {@code true} if the entity or proxy is read-only, {@code false} if the entity or proxy is modifiable.
+	 * @see #isDefaultReadOnly()
+	 *
+	 * @param entityOrProxy an entity or proxy
+	 * @return {@code true} if the entity or proxy is read-only,
+	 *         {@code false} if the entity or proxy is modifiable.
 	 */
 	boolean isReadOnly(Object entityOrProxy);
 
@@ -940,23 +1172,92 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * Set an unmodified persistent object to read-only mode, or a read-only
 	 * object to modifiable mode. In read-only mode, no snapshot is maintained,
 	 * the instance is never dirty checked, and changes are not persisted.
-	 *
+	 * <p>
 	 * If the entity or proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
-	 * 
-	 * To set the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
-	 *
+	 * <p>
+	 * To set the default read-only/modifiable setting used for all entities
+	 * and proxies that are loaded into the session use
+	 * {@link #setDefaultReadOnly(boolean)}.
+	 * <p>
 	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a Query:
+	 * and proxies loaded by a {@code Query} use
+	 * {@link Query#setReadOnly(boolean)}
+	 *
+	 * @see #setDefaultReadOnly(boolean)
 	 * @see Query#setReadOnly(boolean)
-	 * 
-	 * @param entityOrProxy an entity or HibernateProxy
-	 * @param readOnly {@code true} if the entity or proxy should be made read-only; {@code false} if the entity or
-	 * proxy should be made modifiable
+	 * @see IdentifierLoadAccess#withReadOnly(boolean)
+	 *
+	 * @param entityOrProxy an entity or proxy
+	 * @param readOnly {@code true} if the entity or proxy should be made read-only;
+	 *				   {@code false} if the entity or proxy should be made modifiable
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
+
+	/**
+	 * Is the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name enabled in this session?
+	 *
+	 * @param name the name of the profile
+	 * @return True if fetch profile is enabled; false if not.
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	boolean isFetchProfileEnabled(String name) throws UnknownProfileException;
+
+	/**
+	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name in this session. If the requested fetch profile is
+	 * already enabled, the call has no effect.
+	 *
+	 * @param name the name of the fetch profile to be enabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	void enableFetchProfile(String name) throws UnknownProfileException;
+
+	/**
+	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name in this session. If the requested fetch profile is
+	 * not currently enabled, the call has no effect.
+	 *
+	 * @param name the name of the fetch profile to be disabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	void disableFetchProfile(String name) throws UnknownProfileException;
+
+	/**
+	 * Obtain a {@linkplain LobHelper factory} for instances of {@link java.sql.Blob}
+	 * and {@link java.sql.Clob}.
+	 *
+	 * @return an instance of {@link LobHelper}
+	 */
+	LobHelper getLobHelper();
+
+	/**
+	 * Obtain a {@link Session} builder with the ability to copy certain information
+	 * from this session.
+	 *
+	 * @return the session builder
+	 */
+	SharedSessionBuilder sessionWithOptions();
+
+	/**
+	 * Add one or more listeners to the Session
+	 *
+	 * @param listeners the listener(s) to add
+	 */
+	void addEventListeners(SessionEventListener... listeners);
 
 	@Override
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
@@ -968,194 +1269,42 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	RootGraph<?> getEntityGraph(String graphName);
 
 	@Override
-	@SuppressWarnings({"unchecked", "RedundantCast"})
-	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		return (List) getSessionFactory().findEntityGraphsByType( entityClass );
-	}
+	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 
-	/**
-	 * Disconnect the session from its underlying JDBC connection.  This is intended for use in cases where the
-	 * application has supplied the JDBC connection to the session and which require long-sessions (aka, conversations).
-	 * <p/>
-	 * It is considered an error to call this method on a session which was not opened by supplying the JDBC connection
-	 * and an exception will be thrown.
-	 * <p/>
-	 * For non-user-supplied scenarios, normal transaction management already handles disconnection and reconnection
-	 * automatically.
-	 *
-	 * @return the application-supplied connection or {@code null}
-	 *
-	 * @see #reconnect(Connection)
-	 */
-	Connection disconnect();
-
-	/**
-	 * Reconnect to the given JDBC connection.
-	 *
-	 * @param connection a JDBC connection
-	 * 
-	 * @see #disconnect()
-	 */
-	void reconnect(Connection connection);
-
-	/**
-	 * Is a particular fetch profile enabled on this session?
-	 *
-	 * @param name The name of the profile to be checked.
-	 * @return True if fetch profile is enabled; false if not.
-	 * @throws UnknownProfileException Indicates that the given name does not
-	 * match any known profile names
-	 *
-	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
-	 */
-	boolean isFetchProfileEnabled(String name) throws UnknownProfileException;
-
-	/**
-	 * Enable a particular fetch profile on this session.  No-op if requested
-	 * profile is already enabled.
-	 *
-	 * @param name The name of the fetch profile to be enabled.
-	 * @throws UnknownProfileException Indicates that the given name does not
-	 * match any known profile names
-	 *
-	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
-	 */
-	void enableFetchProfile(String name) throws UnknownProfileException;
-
-	/**
-	 * Disable a particular fetch profile on this session.  No-op if requested
-	 * profile is already disabled.
-	 *
-	 * @param name The name of the fetch profile to be disabled.
-	 * @throws UnknownProfileException Indicates that the given name does not
-	 * match any known profile names
-	 *
-	 * @see org.hibernate.engine.profile.FetchProfile for discussion of this feature
-	 */
-	void disableFetchProfile(String name) throws UnknownProfileException;
-
-	/**
-	 * Convenience access to the {@link TypeHelper} associated with this session's {@link SessionFactory}.
-	 * <p/>
-	 * Equivalent to calling {@link #getSessionFactory()}.{@link SessionFactory#getTypeHelper getTypeHelper()}
-	 *
-	 * @return The {@link TypeHelper} associated with this session's {@link SessionFactory}
-	 */
-	TypeHelper getTypeHelper();
-
-	/**
-	 * Retrieve this session's helper/delegate for creating LOB instances.
-	 *
-	 * @return This session's LOB helper
-	 */
-	LobHelper getLobHelper();
-
-	/**
-	 * Contains locking details (LockMode, Timeout and Scope).
-	 */
-	interface LockRequest {
-		/**
-		 * Constant usable as a time out value that indicates no wait semantics should be used in
-		 * attempting to acquire locks.
-		 */
-		int PESSIMISTIC_NO_WAIT = 0;
-		/**
-		 * Constant usable as a time out value that indicates that attempting to acquire locks should be allowed to
-		 * wait forever (apply no timeout).
-		 */
-		int PESSIMISTIC_WAIT_FOREVER = -1;
-
-		/**
-		 * Get the lock mode.
-		 *
-		 * @return the lock mode.
-		 */
-		LockMode getLockMode();
-
-		/**
-		 * Specify the LockMode to be used.  The default is LockMode.none.
-		 *
-		 * @param lockMode The lock mode to use for this request
-		 *
-		 * @return this LockRequest instance for operation chaining.
-		 */
-		LockRequest setLockMode(LockMode lockMode);
-
-		/**
-		 * Get the timeout setting.
-		 *
-		 * @return timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
-		 */
-		int getTimeOut();
-
-		/**
-		 * Specify the pessimistic lock timeout (check if your dialect supports this option).
-		 * The default pessimistic lock behavior is to wait forever for the lock.
-		 *
-		 * @param timeout is time in milliseconds to wait for lock.  -1 means wait forever and 0 means no wait.
-		 *
-		 * @return this LockRequest instance for operation chaining.
-		 */
-		LockRequest setTimeOut(int timeout);
-
-		/**
-		 * Check if locking is cascaded to owned collections and relationships.
-		 *
-		 * @return true if locking will be extended to owned collections and relationships.
-		 */
-		boolean getScope();
-
-		/**
-		 * Specify if LockMode should be cascaded to owned collections and relationships.
-		 * The association must be mapped with {@code cascade="lock"} for scope=true to work.
-		 *
-		 * @param scope {@code true} to cascade locks; {@code false} to not.
-		 *
-		 * @return {@code this}, for method chaining
-		 */
-		LockRequest setScope(boolean scope);
-
-		/**
-		 * Perform the requested locking.
-		 *
-		 * @param entityName The name of the entity to lock
-		 * @param object The instance of the entity to lock
-		 */
-		void lock(String entityName, Object object);
-
-		/**
-		 * Perform the requested locking.
-		 *
-		 * @param object The instance of the entity to lock
-		 */
-		void lock(Object object);
-	}
-
-	/**
-	 * Add one or more listeners to the Session
-	 *
-	 * @param listeners The listener(s) to add
-	 */
-	void addEventListeners(SessionEventListener... listeners);
+	// The following overrides should not be necessary,
+	// and are only needed to work around a bug in IntelliJ
 
 	@Override
-	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
-
-	// Override the JPA return type with the one exposed in QueryProducer
-	@Override
-	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
-
-	// Override the JPA return type with the one exposed in QueryProducer
-	@Override
-	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
-
-	// Override the JPA return type with the one exposed in QueryProducer
-	@Override
-	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
-
-
-	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
+	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
 
 	@Override
-	NativeQuery createSQLQuery(String queryString);
+	<R> Query<R> createQuery(TypedQueryReference<R> typedQueryReference);
+
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	Query createQuery(String queryString);
+
+	@Override
+	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	Query createNamedQuery(String name);
+
+	@Override
+	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+
+	/**
+	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}.
+	 *
+	 * @deprecated use {@link #createMutationQuery(CriteriaDelete)}
+	 */
+	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaDelete deleteQuery);
+
+	/**
+	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}.
+	 *
+	 * @deprecated use {@link #createMutationQuery(CriteriaUpdate)}
+	 */
+	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaUpdate updateQuery);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.cfg.internal;
 
@@ -24,7 +22,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.BasicType;
 
 /**
  * DomainDataRegionConfig implementation
@@ -99,7 +97,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 					x -> new EntityDataCachingConfigImpl(
 							rootEntityName,
 							bootEntityDescriptor.isVersioned()
-									? (Supplier<Comparator>) () -> ( (VersionType) bootEntityDescriptor.getVersion().getType() ).getComparator()
+									? (Supplier<Comparator>) () -> ( (BasicType<?>) bootEntityDescriptor.getVersion().getType() ).getJavaTypeDescriptor().getComparator()
 									: null,
 							bootEntityDescriptor.isMutable(),
 							accessType

@@ -1,24 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.transform;
-import java.util.HashMap;
 import java.util.Map;
+
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * {@link ResultTransformer} implementation which builds a map for each "row",
- * made up  of each aliased value where the alias is the map key.
- * <p/>
- * Since this transformer is stateless, all instances would be considered equal.
- * So for optimization purposes we limit it to a single, singleton {@link #INSTANCE instance}.
+ * made up of each aliased value where the alias is the map key.
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
-public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultTransformer {
+@Deprecated
+public class AliasToEntityMapResultTransformer implements ResultTransformer<Map<String,Object>>, TypedTupleTransformer<Map<String,Object>> {
 
 	public static final AliasToEntityMapResultTransformer INSTANCE = new AliasToEntityMapResultTransformer();
 
@@ -28,21 +28,22 @@ public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultT
 	private AliasToEntityMapResultTransformer() {
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
-		Map result = new HashMap(tuple.length);
-		for ( int i=0; i<tuple.length; i++ ) {
+	public Class getTransformedType() {
+		return Map.class;
+	}
+
+	@Override
+	public Map<String,Object> transformTuple(Object[] tuple, String[] aliases) {
+		Map<String,Object> result = CollectionHelper.mapOfSize( tuple.length );
+		for ( int i = 0; i < tuple.length; i++ ) {
 			String alias = aliases[i];
-			if ( alias!=null ) {
+			if ( alias != null ) {
 				result.put( alias, tuple[i] );
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
-		return false;
 	}
 
 	/**

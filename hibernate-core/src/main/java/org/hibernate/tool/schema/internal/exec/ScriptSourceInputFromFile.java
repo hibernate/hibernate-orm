@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -11,25 +9,22 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 import org.jboss.logging.Logger;
 
 /**
- * ScriptSourceInput implementation for File references.  A reader is opened here and then explicitly closed on
- * {@link #release}.
+ * ScriptSourceInput implementation for File references.
  *
  * @author Steve Ebersole
  */
-public class ScriptSourceInputFromFile extends AbstractScriptSourceInput implements ScriptSourceInput {
+public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
 
 	private final File file;
 	private final String charsetName;
-
-	private Reader reader;
 
 	/**
 	 * Constructs a ScriptSourceInputFromFile
@@ -43,25 +38,15 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput impleme
 	}
 
 	@Override
-	protected Reader reader() {
-		if ( reader == null ) {
-			throw new SchemaManagementException( "Illegal state - reader is null - not prepared" );
-		}
-		return reader;
-	}
-
-	@Override
-	public void prepare() {
-		super.prepare();
-		this.reader = toReader( file, charsetName );
-	}
-
-	@Override
-	protected String getScriptDescription() {
+	public String getScriptDescription() {
 		return file.getAbsolutePath();
 	}
 
-	@SuppressWarnings("ResultOfMethodCallIgnored")
+	@Override
+	protected Reader prepareReader() {
+		return toReader( file, charsetName );
+	}
+
 	private static Reader toReader(File file, String charsetName) {
 		if ( ! file.exists() ) {
 			log.warnf( "Specified schema generation script file [%s] did not exist for reading", file );
@@ -91,13 +76,18 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput impleme
 	}
 
 	@Override
-	public void release() {
+	protected void releaseReader(Reader reader) {
 		try {
 			reader.close();
 		}
 		catch (IOException e) {
 			log.warn( "Unable to close file reader for generation script source" );
 		}
+	}
+
+	@Override
+	public boolean containsScript(URL url) {
+		return file.getAbsolutePath().equals( url.getPath() );
 	}
 
 	@Override

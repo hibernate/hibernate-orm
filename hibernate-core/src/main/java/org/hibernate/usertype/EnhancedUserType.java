@@ -1,38 +1,43 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
 
+import org.hibernate.HibernateException;
+
 /**
  * A custom type that may function as an identifier or discriminator type
- * 
+ *
  * @author Gavin King
  */
-public interface EnhancedUserType extends UserType {
+public interface EnhancedUserType<J> extends UserType<J> {
+
 	/**
 	 * Return an SQL literal representation of the value
 	 */
-	String objectToSQLString(Object value);
-	
-	/**
-	 * Return a string representation of this value, as it should appear in an XML document
-	 *
-	 * @deprecated To be removed in 5.  Implement {@link org.hibernate.type.StringRepresentableType#toString(Object)}
-	 * instead.  See <a href="https://hibernate.onjira.com/browse/HHH-7776">HHH-7776</a> for details
-	 */
-	@Deprecated
-	String toXMLString(Object value);
+	String toSqlLiteral(J value);
 
 	/**
-	 * Parse a string representation of this value, as it appears in an XML document
+	 * Render the value to the string representation.
 	 *
-	 * @deprecated To be removed in 5.  Implement
-	 * {@link org.hibernate.type.StringRepresentableType#fromStringValue(String)} instead.
-	 * See <a href="https://hibernate.onjira.com/browse/HHH-7776">HHH-7776</a> for details
+	 * @param value The value to render to string.
+	 *
+	 * @return The string representation
+	 *
+	 * @throws HibernateException Problem rendering
 	 */
-	@Deprecated
-	Object fromXMLString(String xmlValue);
+	String toString(J value) throws HibernateException;
+
+	/**
+	 * Consume the given string representation back into this types java form.
+	 *
+	 * @param sequence The string representation to be consumed.
+	 *
+	 * @return The java type representation
+	 *
+	 * @throws HibernateException Problem consuming
+	 */
+	J fromStringValue(CharSequence sequence) throws HibernateException;
+
 }

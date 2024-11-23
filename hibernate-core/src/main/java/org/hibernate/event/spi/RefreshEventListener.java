@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 
@@ -16,16 +12,15 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public interface RefreshEventListener extends Serializable {
+public interface RefreshEventListener {
 
-    /** 
-     * Handle the given refresh event.
-     *
-     * @param event The refresh event to be handled.
-     * @throws HibernateException
-     */
-	public void onRefresh(RefreshEvent event) throws HibernateException;
-	
-	public void onRefresh(RefreshEvent event, Map refreshedAlready) throws HibernateException;
+	/**
+	 * Handle the given refresh event.
+	 *
+	 * @param event The refresh event to be handled.
+	 */
+	void onRefresh(RefreshEvent event) throws HibernateException;
+
+	void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) throws HibernateException;
 
 }

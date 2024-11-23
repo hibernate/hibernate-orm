@@ -1,21 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.internal.impl;
 
 import java.util.Collection;
 import java.util.List;
 
+import jakarta.persistence.criteria.JoinType;
+
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.AuditAssociationQuery;
+import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.query.Query;
 
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
@@ -23,6 +25,8 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * of a certain type has not been changed in a given revision.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
+ *
  * @see EntitiesAtRevisionQuery
  */
 public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
@@ -50,14 +54,13 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 	@Override
 	public List list() {
 		/*
-         * The query that we need to create:
-         *   SELECT new list(e) FROM versionsReferencedEntity e
-         *   WHERE
-         * (all specified conditions, transformed, on the "e" entity) AND
-         * e.revision = :revision
-         */
-		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
-		String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+		 * The query that we need to create:
+		 *   SELECT new list(e) FROM versionsReferencedEntity e
+		 *   WHERE
+		 * (all specified conditions, transformed, on the "e" entity) AND
+		 * e.revision = :revision
+		 */
+		String revisionPropertyPath = enversService.getConfig().getRevisionNumberPath();
 		qb.getRootParameters().addWhereWithParam( revisionPropertyPath, "=", revision );
 
 		// all specified conditions
@@ -66,14 +69,15 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 					enversService,
 					versionsReader,
 					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
 					QueryConstants.REFERENCED_ENTITY_ALIAS,
 					qb,
 					qb.getRootParameters()
 			);
 		}
 
-		for (final AuditAssociationQueryImpl<?> associationQuery : associationQueries) {
-			associationQuery.addCriterionsToQuery( versionsReader );
+		for ( AbstractAuditAssociationQuery<?> associationQuery : associationQueries ) {
+			associationQuery.addCriterionToQuery( versionsReader );
 		}
 
 		Query query = buildQuery();
@@ -84,5 +88,31 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 		}
 		List queryResult = query.list();
 		return applyProjections( queryResult, revision );
+	}
+
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(
+			String associationName,
+			JoinType joinType,
+			String alias,
+			AuditCriterion onClauseCriterion) {
+		AbstractAuditAssociationQuery<AuditQueryImplementor> query = associationQueryMap.get( associationName );
+		if ( query == null ) {
+			query = new EntitiesAtRevisionAssociationQuery<>(
+					enversService,
+					versionsReader,
+					this,
+					qb,
+					associationName,
+					joinType,
+					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
+					REFERENCED_ENTITY_ALIAS,
+					alias,
+					null
+			);
+			addAssociationQuery( associationName, query );
+		}
+		return query;
 	}
 }

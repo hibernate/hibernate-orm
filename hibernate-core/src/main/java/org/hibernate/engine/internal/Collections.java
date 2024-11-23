@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -18,13 +14,15 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 /**
  * Implements book-keeping for the collection persistence by reachability algorithm
@@ -33,6 +31,7 @@ import org.jboss.logging.Logger;
  */
 public final class Collections {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			Collections.class.getName()
 	);
@@ -43,7 +42,7 @@ public final class Collections {
 	 * @param coll The collection to be updated by un-reachability.
 	 * @param session The session
 	 */
-	public static void processUnreachableCollection(PersistentCollection coll, SessionImplementor session) {
+	public static void processUnreachableCollection(PersistentCollection<?> coll, SessionImplementor session) {
 		if ( coll.getOwner() == null ) {
 			processNeverReferencedCollection( coll, session );
 		}
@@ -52,7 +51,7 @@ public final class Collections {
 		}
 	}
 
-	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session) {
+	private static void processDereferencedCollection(PersistentCollection<?> coll, SessionImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
@@ -60,7 +59,7 @@ public final class Collections {
 		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Collection dereferenced: %s",
-					MessageHelper.collectionInfoString( loadedPersister, 
+					MessageHelper.collectionInfoString( loadedPersister,
 							coll, entry.getLoadedKey(), session
 					)
 			);
@@ -69,7 +68,7 @@ public final class Collections {
 		// do a check
 		final boolean hasOrphanDelete = loadedPersister != null && loadedPersister.hasOrphanDelete();
 		if ( hasOrphanDelete ) {
-			Serializable ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
+			Object ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
 			if ( ownerId == null ) {
 				// the owning entity may have been deleted and its identifier unset due to
 				// identifier-rollback; in which case, try to look up its identifier from
@@ -94,9 +93,9 @@ public final class Collections {
 			}
 			final EntityEntry e = persistenceContext.getEntry( owner );
 			//only collections belonging to deleted entities are allowed to be dereferenced in the case of orphan delete
-			if ( e != null && e.getStatus() != Status.DELETED && e.getStatus() != Status.GONE ) {
+			if ( e != null && !e.getStatus().isDeletedOrGone() ) {
 				throw new HibernateException(
-						"A collection with cascade=\"all-delete-orphan\" was no longer referenced by the owning entity instance: " +
+						"A collection with orphan deletion was no longer referenced by the owning entity instance: " +
 						loadedPersister.getRole()
 				);
 			}
@@ -109,7 +108,7 @@ public final class Collections {
 
 	}
 
-	private static void processNeverReferencedCollection(PersistentCollection coll, SessionImplementor session)
+	private static void processNeverReferencedCollection(PersistentCollection<?> coll, SessionImplementor session)
 			throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
@@ -117,7 +116,7 @@ public final class Collections {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Found collection with unloaded owner: %s",
-					MessageHelper.collectionInfoString( 
+					MessageHelper.collectionInfoString(
 							entry.getLoadedPersister(),
 							coll,
 							entry.getLoadedKey(),
@@ -133,22 +132,21 @@ public final class Collections {
 
 	}
 
-    /**
-     * Initialize the role of the collection.
-     *
-     * @param collection The collection to be updated by reachability.
-     * @param type The type of the collection.
-     * @param entity The owner of the collection.
+	/**
+	 * Initialize the role of the collection.
+	 *
+	 * @param collection The collection to be updated by reachability.
+	 * @param type The type of the collection.
+	 * @param entity The owner of the collection.
 	 * @param session The session from which this request originates
-     */
+	 */
 	public static void processReachableCollection(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			CollectionType type,
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
+		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( collection );
 
 		if ( ce == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()
@@ -159,7 +157,9 @@ public final class Collections {
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final CollectionPersister persister = factory.getMetamodel().collectionPersister( type.getRole() );
+		final CollectionPersister persister = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( type.getRole() );
 
 		ce.setCurrentPersister( persister );
 		//TODO: better to pass the id in as an argument?
@@ -236,9 +236,8 @@ public final class Collections {
 	 * 2. decide if the collection needs deleting/creating/updating (but
 	 *	don't actually schedule the action yet)
 	 */
-	@SuppressWarnings( {"JavaDoc"})
 	private static void prepareCollectionForUpdate(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			CollectionEntry entry,
 			SessionFactoryImplementor factory) {
 		if ( entry.isProcessed() ) {
@@ -295,8 +294,27 @@ public final class Collections {
 	}
 
 	/**
+	 * Determines if we can skip the explicit SQL delete statement, since
+	 * the rows will be deleted by {@code on delete cascade}.
+	 */
+	public static boolean skipRemoval(EventSource session, CollectionPersister persister, Object key) {
+		if ( persister != null
+				// TODO: same optimization for @OneToMany @OnDelete(action=SET_NULL)
+				&& !persister.isOneToMany() && persister.isCascadeDeleteEnabled() ) {
+			final EntityKey entityKey = session.generateEntityKey( key, persister.getOwnerEntityPersister() );
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final EntityEntry entry = persistenceContext.getEntry( persistenceContext.getEntity( entityKey ) );
+			return entry == null || entry.getStatus().isDeletedOrGone();
+		}
+		else {
+			return false;
+		}
+	}
+
+	/**
 	 * Disallow instantiation
 	 */
 	private Collections() {
 	}
+
 }

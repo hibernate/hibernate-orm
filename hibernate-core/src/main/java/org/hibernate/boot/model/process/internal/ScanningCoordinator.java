@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
 
@@ -10,37 +8,37 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.internal.UrlInputStreamAccess;
+import org.hibernate.boot.archive.scan.internal.DisabledScanner;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
+import org.hibernate.boot.archive.scan.spi.ScannerFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-import org.hibernate.cfg.AttributeConverterDefinition;
-import org.hibernate.service.ServiceRegistry;
 
 import org.jboss.logging.Logger;
 
 /**
- * Coordinates the process of executing {@link org.hibernate.boot.archive.scan.spi.Scanner} (if enabled)
+ * Coordinates the process of executing {@link Scanner} (if enabled)
  * and applying the resources (classes, packages and mappings) discovered.
  *
  * @author Steve Ebersole
@@ -64,10 +62,9 @@ public class ScanningCoordinator {
 			return;
 		}
 
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
 				bootstrapContext.getJpaTempClassLoader(),
-				classLoaderService
+				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class )
 		);
 
 		// NOTE : the idea with JandexInitializer/JandexInitManager was to allow adding classes
@@ -82,7 +79,7 @@ public class ScanningCoordinator {
 		applyScanResultsToManagedResources( managedResources, scanResult, bootstrapContext, xmlMappingBinderAccess );
 	}
 
-	private static final Class[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
+	private static final Class<?>[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
 
 	@SuppressWarnings("unchecked")
 	private static Scanner buildScanner(BootstrapContext bootstrapContext, ClassLoaderAccess classLoaderAccess) {
@@ -91,15 +88,22 @@ public class ScanningCoordinator {
 
 		if ( scannerSetting == null ) {
 			// No custom Scanner specified, use the StandardScanner
-			if ( archiveDescriptorFactory == null ) {
-				return new StandardScanner();
+			final Iterator<ScannerFactory> iterator = bootstrapContext.getServiceRegistry()
+					.requireService( ClassLoaderService.class )
+					.loadJavaServices( ScannerFactory.class )
+					.iterator();
+			if ( iterator.hasNext() ) {
+				// todo: check for multiple scanner and in case raise a warning?
+				final ScannerFactory factory = iterator.next();
+				return factory.getScanner( archiveDescriptorFactory );
 			}
 			else {
-				return new StandardScanner( archiveDescriptorFactory );
+				// todo: add a debug message that there is no Scanner?
+				return new DisabledScanner();
 			}
 		}
 		else {
-			if ( Scanner.class.isInstance( scannerSetting ) ) {
+			if ( scannerSetting instanceof Scanner ) {
 				if ( archiveDescriptorFactory != null ) {
 					throw new IllegalStateException(
 							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
@@ -112,8 +116,8 @@ public class ScanningCoordinator {
 				return (Scanner) scannerSetting;
 			}
 
-			final Class<? extends  Scanner> scannerImplClass;
-			if ( Class.class.isInstance( scannerSetting ) ) {
+			final Class<? extends Scanner> scannerImplClass;
+			if ( scannerSetting instanceof Class ) {
 				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
 			}
 			else {
@@ -122,7 +126,7 @@ public class ScanningCoordinator {
 
 
 			if ( archiveDescriptorFactory != null ) {
-				// find the single-arg constructor - its an error if none exists
+				// find the single-arg constructor - it's an error if none exists
 				try {
 					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
 					try {
@@ -191,13 +195,13 @@ public class ScanningCoordinator {
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
 
 		final ScanEnvironment scanEnvironment = bootstrapContext.getScanEnvironment();
-		final ServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService =
+				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
 
 
 		// mapping files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		final Set<String> nonLocatedMappingFileNames = new HashSet<String>();
+		final Set<String> nonLocatedMappingFileNames = new HashSet<>();
 		final List<String> explicitMappingFileNames = scanEnvironment.getExplicitlyListedMappingFiles();
 		if ( explicitMappingFileNames != null ) {
 			nonLocatedMappingFileNames.addAll( explicitMappingFileNames );
@@ -225,16 +229,17 @@ public class ScanningCoordinator {
 		// classes and packages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		final List<String> unresolvedListedClassNames = scanEnvironment.getExplicitlyListedClassNames() == null
-				? new ArrayList<String>()
-				: new ArrayList<String>( scanEnvironment.getExplicitlyListedClassNames() );
+				? new ArrayList<>()
+				: new ArrayList<>( scanEnvironment.getExplicitlyListedClassNames() );
 
 		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
 			if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.CONVERTER ) {
 				// converter classes are safe to load because we never enhance them,
 				// and notice we use the ClassLoaderService specifically, not the temp ClassLoader (if any)
 				managedResources.addAttributeConverterDefinition(
-						AttributeConverterDefinition.from(
-								classLoaderService.<AttributeConverter>classForName( classDescriptor.getName() )
+						new ClassBasedConverterDescriptor(
+								classLoaderService.classForName( classDescriptor.getName() ),
+								bootstrapContext.getClassmateContext()
 						)
 				);
 			}
@@ -270,11 +275,23 @@ public class ScanningCoordinator {
 				continue;
 			}
 
-			log.debugf(
-					"Unable to resolve class [%s] named in persistence unit [%s]",
-					unresolvedListedClassName,
-					scanEnvironment.getRootUrl()
-			);
+			// Last, try it by loading the class
+			try {
+				Class<?> clazz = classLoaderService.classForName( unresolvedListedClassName );
+				managedResources.addAnnotatedClassReference( clazz );
+				continue;
+			}
+			catch (ClassLoadingException ignore) {
+				// ignore this error
+			}
+
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Unable to resolve class [%s] named in persistence unit [%s]",
+						unresolvedListedClassName,
+						scanEnvironment.getRootUrl()
+				);
+			}
 		}
 	}
 }

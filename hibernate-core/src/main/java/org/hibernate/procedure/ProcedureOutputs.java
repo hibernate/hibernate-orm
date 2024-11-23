@@ -1,15 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure;
 
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Outputs;
 
 /**
- * Specialization of the {@link org.hibernate.result.Outputs} contract providing access to the stored procedure's registered
+ * Specialization of the {@link Outputs} contract providing access to the stored procedure's registered
  * output parameters.
  *
  * @author Steve Ebersole
@@ -17,17 +16,17 @@ import org.hibernate.result.Outputs;
 public interface ProcedureOutputs extends Outputs {
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
-	 * <p/>
+	 * <p>
 	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
-	 * accessed via the returns (see {@link #getNextOutput}
+	 * accessed via the returns (see {@link #goToNext()}
 	 *
-	 * @param parameterRegistration The parameter's registration memento.
+	 * @param parameter The parameter's registration memento.
 	 *
 	 * @return The output value.
 	 *
-	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, jakarta.persistence.ParameterMode)
 	 */
-	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
+	<T> T getOutputParameterValue(ProcedureParameter<T> parameter);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name under which the parameter was registered.
@@ -39,9 +38,9 @@ public interface ProcedureOutputs extends Outputs {
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
 	 * @throws NoSuchParameterException If no parameter with that name exists
 	 *
-	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, jakarta.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(String name);
+	Object getOutputParameterValue(String name);
 
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the name position under which the parameter was registered.
@@ -53,7 +52,7 @@ public interface ProcedureOutputs extends Outputs {
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
 	 * @throws NoSuchParameterException If no parameter with that position exists
 	 *
-	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(int, Class, jakarta.persistence.ParameterMode)
 	 */
-	public Object getOutputParameterValue(int position);
+	Object getOutputParameterValue(int position);
 }

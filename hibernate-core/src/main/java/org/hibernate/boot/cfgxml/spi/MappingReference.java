@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.cfgxml.spi;
 
@@ -14,12 +12,12 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
 
 /**
- * Represents a {@code <mapping/>} element within a cfg.xml file.
+ * Represents a {@code <mapping/>} element within a {@code cfg.xml} file.
  *
  * @author Steve Ebersole
  */
 public class MappingReference {
-	public static enum Type {
+	public enum Type {
 		RESOURCE,
 		CLASS,
 		FILE,
@@ -45,19 +43,19 @@ public class MappingReference {
 
 	public static MappingReference consume(JaxbCfgMappingReferenceType jaxbMapping) {
 		if ( StringHelper.isNotEmpty( jaxbMapping.getClazz() ) ) {
-			return new MappingReference( MappingReference.Type.CLASS, jaxbMapping.getClazz() );
+			return new MappingReference( Type.CLASS, jaxbMapping.getClazz() );
 		}
 		else if ( StringHelper.isNotEmpty( jaxbMapping.getFile() ) ) {
-			return  new MappingReference( MappingReference.Type.FILE, jaxbMapping.getFile() );
+			return  new MappingReference( Type.FILE, jaxbMapping.getFile() );
 		}
 		else if ( StringHelper.isNotEmpty( jaxbMapping.getResource() ) ) {
-			return new MappingReference( MappingReference.Type.RESOURCE, jaxbMapping.getResource() );
+			return new MappingReference( Type.RESOURCE, jaxbMapping.getResource() );
 		}
 		else if ( StringHelper.isNotEmpty( jaxbMapping.getJar() ) ) {
-			return new MappingReference( MappingReference.Type.JAR, jaxbMapping.getJar() );
+			return new MappingReference( Type.JAR, jaxbMapping.getJar() );
 		}
 		else if ( StringHelper.isNotEmpty( jaxbMapping.getPackage() ) ) {
-			return new MappingReference( MappingReference.Type.PACKAGE, jaxbMapping.getPackage() );
+			return new MappingReference( Type.PACKAGE, jaxbMapping.getPackage() );
 		}
 		else {
 			throw new ConfigurationException( "<mapping/> named unexpected reference type" );

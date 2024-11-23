@@ -1,46 +1,137 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
-import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.type.Type;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
 
 /**
+ * Manages all the parameter bindings for a particular query.
+ *
  * @author Steve Ebersole
  */
 @Incubating
 public interface QueryParameterBindings {
-	boolean isBound(QueryParameter parameter);
-
-	<T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter);
-	<T> QueryParameterBinding<T> getBinding(String name);
-	<T> QueryParameterBinding<T> getBinding(int position);
-
-	void verifyParametersBound(boolean callable);
-	String expandListValuedParameters(String queryString, SharedSessionContractImplementor producer);
-
-	<T> QueryParameterListBinding<T> getQueryParameterListBinding(QueryParameter<T> parameter);
-	<T> QueryParameterListBinding<T> getQueryParameterListBinding(String name);
-	<T> QueryParameterListBinding<T> getQueryParameterListBinding(int position);
-
-	Type[] collectPositionalBindTypes();
-	Object[] collectPositionalBindValues();
-	Map<String,TypedValue> collectNamedParameterBindings();
+	/**
+	 * Has binding been done for the given parameter.  Handles
+	 * cases where we do not (yet) have a binding object as well
+	 * by simply returning false.
+	 *
+	 * @param parameter The parameter to check for a binding
+	 *
+	 * @return {@code true} if its value has been bound; {@code false}
+	 * otherwise.
+	 */
+	boolean isBound(QueryParameterImplementor<?> parameter);
 
 	/**
-	 * @deprecated expect a different approach to org.hibernate.engine.spi.QueryParameters in 6.0
+	 * Access to the binding via QueryParameter reference
+	 *
+	 * @param parameter The QueryParameter reference
+	 *
+	 * @return The binding, or {@code null} if not yet bound
 	 */
-	@Deprecated
-	default boolean isMultiValuedBinding(QueryParameter parameter) {
-		return false;
+	default <P> QueryParameterBinding<P> getBinding(QueryParameter<P> parameter) {
+		return getBinding( (QueryParameterImplementor<P>) parameter );
+	}
+
+	/**
+	 * Access to the binding via QueryParameter reference
+	 *
+	 * @param parameter The QueryParameter reference
+	 *
+	 * @return The binding, or {@code null} if not yet bound
+	 */
+	<P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter);
+
+	/**
+	 * Access to the binding via name
+	 *
+	 * @param name The parameter name
+	 *
+	 * @return The binding, or {@code null} if not yet bound
+	 */
+	<P> QueryParameterBinding<P> getBinding(String name);
+
+	/**
+	 * Access to the binding via position
+	 *
+	 * @param position The parameter position
+	 *
+	 * @return The binding, or {@code null} if not yet bound
+	 */
+	<P> QueryParameterBinding<P> getBinding(int position);
+
+	/**
+	 * Validate the bindings.  Called just before execution
+	 */
+	void validate();
+
+	boolean hasAnyMultiValuedBindings();
+
+	/**
+	 * Generate a "memento" for these parameter bindings that can be used
+	 * in creating a {@link QueryKey}
+	 */
+	QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext);
+
+	void visitBindings(BiConsumer<QueryParameterImplementor<?>, QueryParameterBinding<?>> action);
+
+	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
+	};
+
+	/**
+	 * @deprecated Use {@link #empty()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "6.6")
+	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
+		@Override
+		public boolean isBound(QueryParameterImplementor parameter) {
+			return false;
+		}
+
+		@Override
+		public QueryParameterBinding<?> getBinding(QueryParameterImplementor parameter) {
+			return null;
+		}
+
+		@Override
+		public QueryParameterBinding<?> getBinding(String name) {
+			return null;
+		}
+
+		@Override
+		public QueryParameterBinding<?> getBinding(int position) {
+			return null;
+		}
+
+		@Override
+		public void visitBindings(BiConsumer action) {
+		}
+
+		@Override
+		public void validate() {
+		}
+
+		@Override
+		public boolean hasAnyMultiValuedBindings() {
+			return false;
+		}
+
+		@Override
+		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
+			return NO_PARAMETER_BINDING_MEMENTO;
+		}
+	};
+
+	static QueryParameterBindings empty() {
+		return QueryParameterBindingsImpl.EMPTY;
 	}
 }

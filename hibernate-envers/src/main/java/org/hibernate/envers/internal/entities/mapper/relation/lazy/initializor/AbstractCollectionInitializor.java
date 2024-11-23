@@ -1,18 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Initializes a persistent collection.
@@ -57,5 +59,26 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 		}
 
 		return collection;
+	}
+
+	/**
+	 * Creates a new object based on the specified class with the given constructor arguments.
+	 *
+	 * @param clazz the class, must not be {@literal null}
+	 * @param args the variadic constructor arguments, may be omitted.
+	 * @param <R> the return class type
+	 * @return a new instance of the class
+	 */
+	protected <R> R newObjectInstance(Class<R> clazz, Object... args) {
+		try {
+			final Constructor<R> constructor = ReflectHelper.getDefaultConstructor( clazz );
+			if ( constructor == null ) {
+				throw new AuditException( "Failed to locate default constructor for class: " + clazz.getName() );
+			}
+			return constructor.newInstance( args );
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			throw new AuditException( e );
+		}
 	}
 }

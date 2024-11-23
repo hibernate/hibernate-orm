@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
 
@@ -20,19 +18,19 @@ import org.hibernate.JDBCException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 
 /**
- * Helps to track statements and resultsets which need being closed.
+ * Helps to track {@link Statement}s and {@link ResultSet}s which need to be closed.
  * This class is not threadsafe.
- *
- * Note regarding performance: we had evidence that allocating Iterators
+ * <p>
+ * Note regarding performance: we had evidence that allocating {@code Iterator}s
  * to implement the cleanup on each element recursively was the dominant
- * resource cost, so we decided using "forEach" and lambdas in this case.
- * However the forEach/lambda combination is able to dodge allocating
- * Iterators on HashMap and ArrayList, but not on HashSet (at least on JDK8 and 11).
- * Therefore some types which should ideally be modelled as a Set have
- * been implemented using HashMap.
+ * resource cost, so we decided to use "for each" and lambdas in this case.
+ * However, the "for each"/lambda combination is able to dodge allocating
+ * {@code Iterator}s on {@code HashMap} and {@code ArrayList}, but not on {@code HashSet} (at least on JDK8 and 11).
+ * Therefore some types which should ideally be modelled as a {@code Set} have
+ * been implemented using {@code HashMap}.
  *
  * @author Steve Ebersole
  * @author Sanne Grinovero
@@ -47,12 +45,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	//Used instead of Collections.EMPTY_SET to avoid polymorphic calls on xref;
 	//Also, uses an HashMap as it were an HashSet, as technically we just need the Set semantics
 	//but in this case the overhead of HashSet is not negligible.
-	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<ResultSet,Object>( 1, 0.2f );
+	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<>( 1, 0.2f );
 
-	private final JdbcObserver jdbcObserver;
+	private final JdbcEventHandler jdbcEventHandler;
 
 	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
-	private final HashMap<ResultSet,Object> unassociatedResultSets = new HashMap<ResultSet,Object>();
+	private HashMap<ResultSet,Object> unassociatedResultSets;
 
 	private ArrayList<Blob> blobs;
 	private ArrayList<Clob> clobs;
@@ -64,21 +62,20 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		this( null );
 	}
 
-	public ResourceRegistryStandardImpl(JdbcObserver jdbcObserver) {
-		this.jdbcObserver = jdbcObserver;
+	public ResourceRegistryStandardImpl(JdbcEventHandler jdbcEventHandler) {
+		this.jdbcEventHandler = jdbcEventHandler;
 	}
 
 	@Override
 	public boolean hasRegisteredResources() {
 		return hasRegistered( xref )
-				|| hasRegistered( unassociatedResultSets )
-				|| hasRegistered( blobs )
-				|| hasRegistered( clobs )
-				|| hasRegistered( nclobs );
+			|| hasRegistered( unassociatedResultSets )
+			|| hasRegistered( blobs )
+			|| hasRegistered( clobs )
+			|| hasRegistered( nclobs );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
 
@@ -133,12 +130,19 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			else {
 				resultSets.remove( resultSet );
 				if ( resultSets.isEmpty() ) {
-					xref.remove( statement );
+					try {
+						if ( statement.isClosed() ) {
+							xref.remove( statement );
+						}
+					}
+					catch (SQLException e) {
+						log.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
+					}
 				}
 			}
 		}
 		else {
-			final Object removed = unassociatedResultSets.remove( resultSet );
+			final Object removed = unassociatedResultSets == null ? null : unassociatedResultSets.remove( resultSet );
 			if ( removed == null ) {
 				log.unregisteredResultSetWithoutStatement();
 			}
@@ -147,6 +151,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private static void closeAll(final HashMap<ResultSet,Object> resultSets) {
+		if ( resultSets == null ) {
+			return;
+		}
 		resultSets.forEach( (resultSet, o) -> close( resultSet ) );
 		resultSets.clear();
 	}
@@ -156,12 +163,13 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( s );
 	}
 
-	@SuppressWarnings({"unchecked"})
 	private static void close(final ResultSet resultSet) {
 		log.tracef( "Closing result set [%s]", resultSet );
 
 		try {
-			resultSet.close();
+			if ( resultSet != null ) {
+				resultSet.close();
+			}
 		}
 		catch (SQLException e) {
 			log.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
@@ -172,8 +180,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
-	public static void close(Statement statement) {
+	private static void close(Statement statement) {
 		log.tracef( "Closing prepared statement [%s]", statement );
 
 		try {
@@ -228,25 +235,27 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 
 			if ( resultSets == null || resultSets == EMPTY ) {
-				resultSets = new HashMap<ResultSet,Object>();
+				resultSets = new HashMap<>();
 				xref.put( statement, resultSets );
 			}
 			resultSets.put( resultSet, PRESENT );
 		}
 		else {
+			if ( unassociatedResultSets == null ) {
+				this.unassociatedResultSets = new HashMap<>();
+			}
 			unassociatedResultSets.put( resultSet, PRESENT );
 		}
 	}
 
 	private JDBCException convert(SQLException e, String s) {
-		// todo : implement
-		return null;
+		return new JDBCException( s, e );
 	}
 
 	@Override
 	public void register(Blob blob) {
 		if ( blobs == null ) {
-			blobs = new ArrayList<Blob>();
+			blobs = new ArrayList<>();
 		}
 
 		blobs.add( blob );
@@ -264,7 +273,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void register(Clob clob) {
 		if ( clobs == null ) {
-			clobs = new ArrayList<Clob>();
+			clobs = new ArrayList<>();
 		}
 		clobs.add( clob );
 	}
@@ -282,7 +291,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(NClob nclob) {
 		// todo : just store them in clobs?
 		if ( nclobs == null ) {
-			nclobs = new ArrayList<NClob>();
+			nclobs = new ArrayList<>();
 		}
 		nclobs.add( nclob );
 	}
@@ -316,8 +325,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void releaseResources() {
 		log.trace( "Releasing JDBC resources" );
 
-		if ( jdbcObserver != null ) {
-			jdbcObserver.jdbcReleaseRegistryResourcesStart();
+		if ( jdbcEventHandler != null ) {
+			jdbcEventHandler.jdbcReleaseRegistryResourcesStart();
 		}
 
 		xref.forEach( ResourceRegistryStandardImpl::releaseXref );
@@ -360,6 +369,10 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 				}
 			} );
 			nclobs = null;
+		}
+
+		if ( jdbcEventHandler != null ) {
+			jdbcEventHandler.jdbcReleaseRegistryResourcesEnd();
 		}
 	}
 

@@ -1,53 +1,80 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.hikaricp.internal;
 
 import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.HikariCPSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 
 import com.zaxxer.hikari.HikariConfig;
 
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.consumeSetting;
+
 /**
  * Utility class to map Hibernate properties to HikariCP configuration properties.
- * 
+ *
  * @author Brett Wooldridge
  * @author Luca Burgazzoli
  * @author Brett Meyer
  */
 public class HikariConfigurationUtil {
-	public static final String CONFIG_PREFIX = "hibernate.hikari.";
+	public static final String CONFIG_PREFIX = HikariCPSettings.HIKARI_CONFIG_PREFIX + ".";
 
 	/**
 	 * Create/load a HikariConfig from Hibernate properties.
-	 * 
+	 *
 	 * @param props a map of Hibernate properties
 	 * @return a HikariConfig
 	 */
-	@SuppressWarnings("rawtypes")
-	public static HikariConfig loadConfiguration(Map props) {
+	public static HikariConfig loadConfiguration(Map<String,Object> props) {
 		Properties hikariProps = new Properties();
-		copyProperty( AvailableSettings.AUTOCOMMIT, props, "autoCommit", hikariProps );
+		copyProperty( JdbcSettings.AUTOCOMMIT, props, "autoCommit", hikariProps );
 
-		copyProperty( AvailableSettings.DRIVER, props, "driverClassName", hikariProps );
-		copyProperty( AvailableSettings.URL, props, "jdbcUrl", hikariProps );
-		copyProperty( AvailableSettings.USER, props, "username", hikariProps );
-		copyProperty( AvailableSettings.PASS, props, "password", hikariProps );
+		copyProperty(
+				props,
+				"driverClassName",
+				hikariProps,
+				JdbcSettings.JAKARTA_JDBC_DRIVER,
+				JdbcSettings.DRIVER,
+				JdbcSettings.JPA_JDBC_DRIVER
+		);
+
+		copyProperty(
+				props,
+				"jdbcUrl",
+				hikariProps,
+				JdbcSettings.JAKARTA_JDBC_URL,
+				JdbcSettings.URL,
+				JdbcSettings.JPA_JDBC_URL
+		);
+
+		copyProperty(
+				props,
+				"username",
+				hikariProps,
+				JdbcSettings.JAKARTA_JDBC_USER,
+				JdbcSettings.USER,
+				JdbcSettings.JPA_JDBC_USER
+		);
+
+		copyProperty(
+				props,
+				"password",
+				hikariProps,
+				AvailableSettings.JAKARTA_JDBC_PASSWORD,
+				AvailableSettings.PASS,
+				AvailableSettings.JPA_JDBC_PASSWORD
+		);
 
 		copyIsolationSetting( props, hikariProps );
 
-		for ( Object keyo : props.keySet() ) {
-			if ( !(keyo instanceof String) ) {
-				continue;
-			}
-			String key = (String) keyo;
+		for ( String key : props.keySet() ) {
 			if ( key.startsWith( CONFIG_PREFIX ) ) {
 				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ), (String) props.get( key ) );
 			}
@@ -56,14 +83,21 @@ public class HikariConfigurationUtil {
 		return new HikariConfig( hikariProps );
 	}
 
-	@SuppressWarnings("rawtypes")
-	private static void copyProperty(String srcKey, Map src, String dstKey, Properties dst) {
+	private static void copyProperty(String srcKey, Map<String,Object> src, String dstKey, Properties dst) {
 		if ( src.containsKey( srcKey ) ) {
 			dst.setProperty( dstKey, (String) src.get( srcKey ) );
 		}
 	}
 
-	private static void copyIsolationSetting(Map props, Properties hikariProps) {
+	private static void copyProperty(Map<String,Object> src, String dstKey, Properties dst, String... srcKeys) {
+		consumeSetting(
+				src,
+				(name, value) -> dst.setProperty( dstKey, value ),
+				srcKeys
+		);
+	}
+
+	private static void copyIsolationSetting(Map<String,Object> props, Properties hikariProps) {
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( props );
 		if ( isolation != null ) {
 			hikariProps.put(

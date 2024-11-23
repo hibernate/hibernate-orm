@@ -1,46 +1,39 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.internal;
 
-import javax.persistence.metamodel.Attribute;
-
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
-import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
 
 /**
+ * Implementation of the JPA-defined {@link jakarta.persistence.Subgraph} interface.
+ *
  * @author Steve Ebersole
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
-	public SubGraphImpl(
-			ManagedTypeDescriptor<J> managedType,
-			boolean mutable,
-			SessionFactoryImplementor sessionFactory) {
-		super( managedType, mutable, sessionFactory );
+
+	public SubGraphImpl(ManagedDomainType<J> managedType, boolean mutable) {
+		super( managedType, mutable );
 	}
 
-	public SubGraphImpl(boolean mutable, AbstractGraph<J> original) {
-		super( mutable, original );
+	public SubGraphImpl(AbstractGraph<J> original, boolean mutable) {
+		super(original, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
-		return new SubGraphImpl<>( mutable, this );
+		return new SubGraphImpl<>(this, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		if ( ! mutable && ! isMutable() ) {
-			return this;
-		}
-
-		return makeCopy( true );
+		return !mutable && !isMutable() ? this : makeCopy( true );
 	}
 
 	@Override
@@ -49,30 +42,39 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(Attribute<? extends J, AJ> attribute) {
-		return addAttributeNode( (PersistentAttributeDescriptor) attribute );
+	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
+		return null;
 	}
 
 	@Override
-	public boolean appliesTo(ManagedTypeDescriptor<? super J> managedType) {
-		if ( this.getGraphedType().equals( managedType ) ) {
-			return true;
-		}
-
-		ManagedTypeDescriptor superType = managedType.getSuperType();
-		while ( superType != null ) {
-			if ( superType.equals( managedType ) ) {
-				return true;
-			}
-			superType = superType.getSuperType();
-		}
-
-		return false;
+	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(
+			PluralAttribute<? super J, ?, ? super E> attribute,
+			Class<E> type) {
+		return null;
 	}
 
 	@Override
-	public boolean appliesTo(Class<? super J> javaType) {
-		return appliesTo( sessionFactory().getMetamodel().managedType( javaType ) );
+	public <K> SubGraphImplementor<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <E> SubGraphImplementor<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName, Class<X> type) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <K> SubGraphImplementor<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 }

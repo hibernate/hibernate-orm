@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.io.Serializable;
-import javax.transaction.TransactionSynchronizationRegistry;
+import jakarta.transaction.TransactionSynchronizationRegistry;
 
 /**
  * Provides access to a {@link TransactionSynchronizationRegistry} for use by {@link TransactionSynchronizationRegistry}-based
@@ -21,5 +19,5 @@ public interface SynchronizationRegistryAccess extends Serializable {
 	 *
 	 * @return the synchronization registry
 	 */
-	public TransactionSynchronizationRegistry getSynchronizationRegistry();
+	TransactionSynchronizationRegistry getSynchronizationRegistry();
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
 
@@ -11,13 +9,9 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.type.Type;
 
 /**
- * Represents a non-identifier property within the Hibernate runtime-metamodel.
- *
- * @author Steve Ebersole
- *
- * @deprecated Use one of the {@link org.hibernate.tuple.Attribute}-based impls instead.
+ * @deprecated Replaced by {@link org.hibernate.metamodel.mapping.AttributeMapping}
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public class StandardProperty extends AbstractNonIdentifierAttribute implements NonIdentifierAttribute {
 
 	/**
@@ -29,10 +23,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 	 * @param lazy Should this property be handled lazily?
 	 * @param insertable Is this property an insertable value?
 	 * @param updateable Is this property an updateable value?
-	 * @param valueGenerationStrategy How (if) values for this attribute are generated
 	 * @param nullable Is this property a nullable value?
-	 * @param checkable Is this property a checkable value?
-	 * @param versionable Is this property a versionable value?
 	 * @param cascadeStyle The cascade style for this property's value.
 	 * @param fetchMode Any fetch mode defined for this property
 	 */
@@ -42,7 +33,6 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			ValueGeneration valueGenerationStrategy,
 			boolean nullable,
 			boolean checkable,
 			boolean versionable,
@@ -58,7 +48,6 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 						.setLazy( lazy )
 						.setInsertable( insertable )
 						.setUpdateable( updateable )
-						.setValueGenerationStrategy( valueGenerationStrategy )
 						.setNullable( nullable )
 						.setDirtyCheckable( checkable )
 						.setVersionable( versionable )

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -19,18 +17,18 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdentifierGeneratorDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
-import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingBindingDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
+import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.source.internal.OverriddenMappingDefaults;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
+import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 
@@ -47,33 +45,40 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	private final JaxbHbmHibernateMapping documentRoot;
 	private final Origin origin;
 	private final MetadataBuildingContext rootBuildingContext;
-	private final MappingDefaults mappingDefaults;
+	private final EffectiveMappingDefaults mappingDefaults;
 
 	private final ToolingHintContext toolingHintContext;
 
+	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
+
+	private final String contributor;
 
 	public MappingDocument(
+			String contributor,
 			JaxbHbmHibernateMapping documentRoot,
 			Origin origin,
 			MetadataBuildingContext rootBuildingContext) {
+		this.contributor = contributor;
 		this.documentRoot = documentRoot;
 		this.origin = origin;
 		this.rootBuildingContext = rootBuildingContext;
 
 		// todo : allow for a split in default-lazy for singular/plural
 
-		this.mappingDefaults = new OverriddenMappingDefaults.Builder( rootBuildingContext.getMappingDefaults() )
+		this.mappingDefaults = new OverriddenMappingDefaults.Builder( rootBuildingContext.getEffectiveDefaults() )
 				.setImplicitSchemaName( documentRoot.getSchema() )
 				.setImplicitCatalogName( documentRoot.getCatalog() )
 				.setImplicitPackageName( documentRoot.getPackage() )
 				.setImplicitPropertyAccessorName( documentRoot.getDefaultAccess() )
-				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
+//				.setImplicitCascadeStyleName( documentRoot.getDefaultCascade() )
 				.setEntitiesImplicitlyLazy( documentRoot.isDefaultLazy() )
 				.setAutoImportEnabled( documentRoot.isAutoImport() )
 				.setPluralAttributesImplicitlyLazy( documentRoot.isDefaultLazy() )
 				.build();
 
 		this.toolingHintContext = Helper.collectToolingHints( null, documentRoot );
+
+		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl( rootBuildingContext.getTypeDefinitionRegistry() );
 	}
 
 	public JaxbHbmHibernateMapping getDocumentRoot() {
@@ -105,12 +110,12 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	public String determineEntityName(String entityName, String clazz) {
 		return entityName != null
 				? entityName
-				: qualifyIfNeeded( clazz, mappingDefaults.getImplicitPackageName() );
+				: qualifyIfNeeded( clazz, mappingDefaults.getDefaultPackageName() );
 	}
 
 	@Override
 	public String qualifyClassName(String name) {
-		return qualifyIfNeeded( name, mappingDefaults.getImplicitPackageName() );
+		return qualifyIfNeeded( name, mappingDefaults.getDefaultPackageName() );
 	}
 
 	@Override
@@ -134,7 +139,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
-	public MappingDefaults getMappingDefaults() {
+	public EffectiveMappingDefaults getEffectiveDefaults() {
 		return mappingDefaults;
 	}
 
@@ -144,13 +149,18 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 	}
 
 	@Override
-	public ClassLoaderAccess getClassLoaderAccess() {
-		return rootBuildingContext.getClassLoaderAccess();
+	public ObjectNameNormalizer getObjectNameNormalizer() {
+		return rootBuildingContext.getObjectNameNormalizer();
 	}
 
 	@Override
-	public ObjectNameNormalizer getObjectNameNormalizer() {
-		return rootBuildingContext.getObjectNameNormalizer();
+	public TypeDefinitionRegistry getTypeDefinitionRegistry() {
+		return typeDefinitionRegistry;
+	}
+
+	@Override
+	public String getCurrentContributorName() {
+		return contributor;
 	}
 
 	@Override
@@ -232,10 +242,12 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 
 	@Override
 	public void processResultSetMappings() {
-		for ( ResultSetMappingBindingDefinition resultSetMappingBinding : documentRoot.getResultset() ) {
-			final ResultSetMappingDefinition binding = ResultSetMappingBinder.bind( resultSetMappingBinding, this );
-			getMetadataCollector().addResultSetMapping( binding );
-		}
+		documentRoot.getResultset().forEach(
+				(hbmResultSetMapping) -> {
+					getMetadataCollector().addResultSetMapping(
+							new HbmResultSetMappingDescriptor( hbmResultSetMapping, rootBuildingContext ) );
+				}
+		);
 	}
 
 	@Override

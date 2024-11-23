@@ -1,0 +1,270 @@
+= Hibernate 6.0 Final
+Steve Ebersole
+:awestruct-tags: ["Hibernate ORM"]
+:awestruct-layout: blog-post
+:docs-url: https://docs.jboss.org/hibernate/orm/6.0
+:javadocs-url: {docs-url}/javadocs
+:migration-guide-url: {docs-url}/migration-guide/migration-guide.html
+:user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
+:jakarta-transformer-url: https://github.com/eclipse/transformer
+
+It has been years in the making, but ORM 6.0 Final has finally been released!
+
+This announcement will discuss the major changes, as well as give insight into why
+certain choices were made.
+
+We will also be following up with a series of more focused posts targeting specific
+improvements or cool new features.  Stay tuned!
+
+
+[[api-spi]]
+== APIs and SPIs
+
+While many things have changed in 6.0, we strove to minimize changes to APIs to help
+mitigate migration costs.
+
+[NOTE]
+====
+See https://hibernate.org/community/compatibility-policy/ for a discussion of what we consider
+an API versus an SPI.
+====
+
+Applications which use only the Jakarta Persistence APIs will be source compatible within the
+discussion in <<jpa>>.
+
+Applications using Hibernate APIs will generally be bytecode and source compatible, aside
+from the removal of deprecated stuff.  There are a few one-off changes that break bytecode and/or
+source compatibility; these are covered in the link:{migration-guide-url}[migration guide].
+
+One specific change to note is that many of these contracts have been better defined with type
+parameters.  Theses were inconsistently (and sometimes poorly) defined in previous versions.
+
+Quite a few SPI contracts have changed to support many of the topics discussed here as well as in
+the link:{migration-guide-url}[migration guide].  Many will also be the subject of the mentioned
+follow-up posts.
+
+
+[[jpa]]
+== Jakarta Persistence
+
+Java Persistence has become Jakarta Persistence as part of the overall move of Java EE
+to Jakarta.  Various legal requirements forced the changing of the `javax` namespace -
+for persistence, that means changing from `javax.persistence` to `jakarta.persistence`
+for package names as well as property and hint names.
+
+This is clearly an unfortunate and invasive change, but beyond our control.  Luckily Jakarta
+have developed a link:{jakarta-transformer-url}[transformer] to help with these migrations.  We actually
+used this tool to migrate Hibernate's own source code.  It works well-ish.
+
+For those using Maven, you are in luck (well, within the bounds of actually using Maven) in that
+Jakarta themselves provide a Maven plugin to integrate this transformer.
+
+For those using Gradle, you can use the tasks we developed to transform Hibernate's source code.
+
+There is also a command-line form.  See the link:{jakarta-transformer-url}[transformer] docs for details.
+
+
+[[read-by-position]]
+== Read-by-position
+
+A few years ago, around the 5.4 timeframe, we worked with the amazing performance team at Red Hat
+to squeeze even more great performance out of Hibernate ORM.
+
+This work was part of a larger effort to improve the performance of WildFly.  Ultimately, the limiting
+factor to additional improvements within Hibernate was our approach of reading values from a JDBC
+`ResultSet` by name rather than by position.  For every JDBC driver out there, reading by name is slower.
+
+It quickly became obvious that minimal changes would not be enough, and so this work led to many changes.
+A great analogy is to consider migrating a Map-based solution to List-based.  There is the obvious impact
+of changing calls to accept an `int` rather than a `String` as well as internally keeping track of the
+positions of each selected value within the `ResultSet`.  There is also the perhaps not-so-obvious
+impact of changing the callers and consumers of those contracts to keep track of positions.
+
+These changes have led to improvements on a number of fronts:
+
+1. As mentioned, reading by position is significantly faster than reading by name which leads to
+performance improvements.
+2. Historically Hibernate generated SQL select queries with a defined pattern of named column aliases
+which were later used to access the specific result.  We've all seen these "ugly" aliases.  With these
+changes, those select-clause aliases are no longer needed resulting in much more readable generated
+SQL.
+3. Although we implemented some improved support for limiting needed joins within an entity mapping
+(joined inheritance, secondary tables) in 5.x, 6.0 allows even better opportunity for this.  In
+fact, the support for this in 5.x was conceptually back-ported from the 6.0 work.
+4. (2) and (3) combined results in much smaller SQL needing to be sent to the server which can
+have an impact on network communication.  Every bit helps.
+
+This was by far the biggest force behind 6.0 initially.
+
+
+
+[[mapping-model]]
+== Mapping Model
+
+The mapping model is an SPI and as such will not be seen by all users.  But
+it is a major development and impacts many users providing extensions.
+
+The main driving force behind this mapping model work was <<read-by-position>>,
+and we had a number of design goals in developing it:
+
+- support positional processing of attributes
+- make it object-oriented
+- make it user friendly
+
+This model can be accessed though
+link:{javadocs-url}/org/hibernate/engine/spi/SessionFactoryImplementor.html#getRuntimeMetamodels()[`RuntimeMetamodelsImplementor`]
+which provides access to both:
+
+- The Jakarta Persistence model : link:{javadocs-url}/org/hibernate/metamodel/spi/RuntimeMetamodelsImplementor.html#getJpaMetamodel()[`JpaMetamodelImplementor`]
+- Hibernate's mapping model : link:{javadocs-url}/org/hibernate/metamodel/spi/RuntimeMetamodelsImplementor.html#getMappingMetamodel()[`MappingMetamodelImplementor`]
+
+
+[[annotations]]
+== Annotations
+
+Historically, Hibernate's annotations grew directly from its `hbm.xml` mappings. These old
+annotations are String-based just like XML, providing all the cons of XML and really none
+of the benefits of annotations.
+
+6.0 redesigns Hibernate's annotations with type-safety in mind, as well as better leveraging
+the benefits of annotations.  Most are also usable as meta-annotations.
+
+Annotations for mapping basic values saw the most change.  The
+link:{user-guide-url}/html_single/Hibernate_User_Guide.html#basic[User Guide] contains
+the details.
+
+The mapping of embeddables has also changed.  Again, see the
+link:{user-guide-url}/html_single/Hibernate_User_Guide.html#embeddable[User Guide] for
+details.  Embeddables now support
+link:{user-guide-url}/html_single/Hibernate_User_Guide.html#embeddable-instantiator[constructor injection]
+
+
+[[query]]
+== Query API
+
+- Parameter binding
+- `Session#createSelectionQuery`
+- `Session#createMutationQuery`
+- others???
+
+
+[[sqm]]
+== Semantic Query Model
+
+Hibernate's Semantic Query Model (SQM) is its semantic representation of HQL
+and Criteria queries.  HQL is interpreted into SQM; Hibernate's Criteria
+implementations are SQM nodes.
+
+6.0 implements quite a few changes shared between HQL and Criteria.  Most of
+these are covered in link:{user-guide-url}#query-language[HQL] and
+link:{user-guide-url}#criteria[Criteria] chapters of the User Guide.
+
+Some specific changes include
+
+- Automatic de-duplication of single entity results in a Query.  See the link:{migration-guide-url}#query-sqm-rows[Migration Guide] for details
+- Set operations (union, intersect, except)
+- Set aggregations (listagg, e.g.)
+- Window operations (over, e.g.)
+- Vastly improved function support.  See the link:{user-guide-url}#hql-exp-functions[User Guide] for details.
+- ILIKE operator
+- Improved temporal support (arithmetic, etc)
+
+
+[[hql]]
+== HQL
+
+Previous versions of Hibernate used Antlr 2 for parsing.  6.0 updates to Antlr 4 for a few reasons:
+
+- Antlr 2 is no longer supported, and has not for years
+- Antlr 4 is faster than Antlr 2
+- Antlr 4 grammars are easier to maintain, while the previous Antlr 2 grammars were poorly defined (largely as a function of Antlr 2 itself) and difficult to maintain.
+
+
+
+[[criteria]]
+== Criteria
+
+Hibernate's legacy Criteria API has been deprecated for many years and has been fully removed in 6.0.
+Support for Criteria queries is now offered solely through the Jakarta Persistence APIs plus extensions.
+
+As mentioned in <<sqm>>, Hibernate's SQM model is the implementation of the Jakarta Persistence
+Criteria node APIs.  This offers significantly better performance in terms of execution compared to
+previous versions which essentially converted the Criteria to HQL and translated the HQL.
+
+6.0 also adds a new setting related to Criteria performance - `hibernate.criteria.copy_tree`.
+The Jakarta Persistence specification requires that a copy be made of the Criteria tree passed to
+`EntityManager#createQuery`.  This obviously has a performance impact, but is intended for safety.
+`hibernate.criteria.copy_tree` allows Hibernate to not make a copy of the tree which results in
+better performance.  Just be sure to not mutate the tree after the call to `#createQuery`.
+
+
+
+[[sql-ast]]
+== SQL as AST
+
+6.0 goes all-in in terms of modeling queries as trees.  We discussed above how that works
+for HQL and Criteria queries, but we also now model SQL queries as trees.
+
+This has quite a few benefits, but the main one is direct Dialect involvement.  The tree acts
+as an API to a contract which translates the AST into JDBC calls, which allows much more
+powerful involvement by the Dialect in this process.
+
+
+[[dialect-init]]
+== Dialect initialization
+
+In previous versions, Dialect was essentially static details about the database being used.
+This meant that Dialect implementations could not incorporate version-specific deviations,
+which is why Hibernate  had so many version-specific subclasses.
+
+6.0 changes the way Dialects are created to allow them to initialize themselves based on the
+version of the database/driver being used.
+
+
+[[incubating]]
+== @Incubating
+
+6.0 also introduces a new `@Incubating` annotation which is intended to notify users that
+a particular contract may change in the future.  These are typically new contracts which
+we may need to change in response to additional use cases or clarification of existing use cases.
+
+Think of it as a "use at your own risk" kind of notice.  Obviously we will strive to not change
+such contracts, but this gives us the flexibility to do so if needed and communicating that this
+could potentially happen to the user.
+
+Sometimes settings are considered incubating.  These are indicated by `@Incubating` on the
+corresponding `org.hibernate.cfg.AvailableSettings` field and are also logged using the
+`org.hibernate.orm.incubating` category.
+
+We also generate a documentation <<release-artifacts,report>>.
+
+
+[[release-artifacts]]
+== Release artifacts
+
+Starting with 6.0 we will no longer be publishing zip and tgz bundles to SourceForge.
+
+Starting in 6.0 we now publish additional documentation artifacts, such as:
+
+- The link:{migration-guide-url}[Migration Guide]
+- The generated link:{docs-url}/logging/logging.html[logging] report
+- The generated link:{docs-url}/incubating/incubating.txt[incubation] report
+- The generated link:{docs-url}/internals/internal.txt[internals] report
+
+Over the next few weeks we will also begin re-evaluating both:
+
+- The link:{docs-url}/integrationguide/[Integration Guide]
+- The link:{docs-url}/topical/[Topical Guide]
+
+Much of this content is either out-of-date or incorporated elsewhere.
+
+
+== Conclusion
+
+For additional details, see:
+
+- the link:{user-guide-url}[User Guide]
+- the link:{migration-guide-url}[Migration Guide]
+- the https://hibernate.org/orm/releases/6.0/[release page].
+
+To get in touch, use the usual channels as discussed on the https://hibernate.org/community/[website].

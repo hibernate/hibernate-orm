@@ -1,16 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.metamodel.CollectionClassification;
 
 /**
- * Defines a (contextual) set of values to use as defaults in the absence of related mapping information.  The
- * context here is conceptually a stack.  The "global" level is configuration settings.
+ * Values to use as defaults in the absence of certain mapping information.
+ *
+ * @implSpec Designed with stacking in mind, such that the defaults can be overridden at
+ *           various levels using simple wrapping and delegation. The "global" level is
+ *           configuration settings.
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -27,6 +29,8 @@ public interface MappingDefaults {
 	 * Identifies the database schema name to use if none specified in the mapping.
 	 *
 	 * @return The implicit schema name; may be {@code null}
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_SCHEMA
 	 */
 	String getImplicitSchemaName();
 
@@ -34,6 +38,8 @@ public interface MappingDefaults {
 	 * Identifies the database catalog name to use if none specified in the mapping.
 	 *
 	 * @return The implicit catalog name; may be {@code null}
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#DEFAULT_CATALOG
 	 */
 	String getImplicitCatalogName();
 
@@ -42,7 +48,7 @@ public interface MappingDefaults {
 	 *
 	 * {@code true} indicates that all identifier encountered within this context should be
 	 * quoted.  {@code false} indicates indicates that identifiers within this context are
-	 * onl;y quoted if explicitly quoted.
+	 * only quoted if explicitly quoted.
 	 *
 	 * @return {@code true}/{@code false}
 	 */
@@ -95,10 +101,7 @@ public interface MappingDefaults {
 	String getImplicitCascadeStyleName();
 
 	/**
-	 * Identifies the default {@link org.hibernate.property.access.spi.PropertyAccessStrategy} name to use if none specified in the
-	 * mapping.
-	 *
-	 * @return The implicit property accessor name
+	 * The default {@link org.hibernate.property.access.spi.PropertyAccessStrategy} to use if none specified in the mapping.
 	 *
 	 * @see org.hibernate.property.access.spi.PropertyAccessStrategy
 	 */
@@ -122,7 +125,15 @@ public interface MappingDefaults {
 	/**
 	 * The cache access type to use if none is specified
 	 *
-	 * @return The implicit cache access type.
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY
 	 */
 	AccessType getImplicitCacheAccessType();
+
+	/**
+	 * Collection semantics to be applied to {@link java.util.List} attributes
+	 * with no explicit configuration
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
+	 */
+	CollectionClassification getImplicitListClassification();
 }

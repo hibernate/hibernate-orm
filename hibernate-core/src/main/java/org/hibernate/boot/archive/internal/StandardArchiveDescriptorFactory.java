@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
@@ -85,11 +83,6 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 	}
 
 	@Override
-	public URL getURLFromPath(String jarPath) {
-		return ArchiveHelper.getURLFromPath( jarPath );
-	}
-
-	@Override
 	public URL adjustJarFileEntryUrl(URL url, URL rootUrl) {
 		final String protocol = url.getProtocol();
 		final boolean check = StringHelper.isEmpty( protocol )
@@ -106,6 +99,12 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 			return url;
 		}
 		else {
+			// see if the URL exists as a File (used for tests)
+			final File urlAsFile = new File( url.getFile() );
+			if ( urlAsFile.exists() && urlAsFile.isFile() ) {
+				return url;
+			}
+
 			// prefer to resolve the relative URL relative to the root PU URL per
 			// JPA 2.0 clarification.
 			final File rootUrlFile = new File( extractLocalFilePath( rootUrl ) );
@@ -130,12 +129,14 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 			}
 			catch (MalformedURLException e) {
 				// allow to pass through to return the original URL
-				log.debugf(
-						e,
-						"Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]",
-						filePart,
-						rootUrlFile.getAbsolutePath()
-				);
+				if ( log.isDebugEnabled() ) {
+					log.debugf(
+							e,
+							"Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]",
+							filePart,
+							rootUrlFile.getAbsolutePath()
+					);
+				}
 			}
 
 			return url;

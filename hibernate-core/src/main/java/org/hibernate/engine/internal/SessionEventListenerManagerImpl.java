@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -35,10 +33,10 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 		}
 		else {
 			// Resize our existing array and add the new listeners
-			final SessionEventListener[] newlist = new SessionEventListener[ existing.length + additionalListeners.length ];
-			System.arraycopy( existing, 0, newlist, 0, existing.length );
-			System.arraycopy( additionalListeners, 0, newlist, existing.length, additionalListeners.length );
-			this.listeners = newlist;
+			final SessionEventListener[] newList = new SessionEventListener[ existing.length + additionalListeners.length ];
+			System.arraycopy( existing, 0, newList, 0, existing.length );
+			System.arraycopy( additionalListeners, 0, newList, existing.length, additionalListeners.length );
+			this.listeners = newList;
 		}
 	}
 
@@ -226,6 +224,28 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 
 		for ( SessionEventListener listener : listeners ) {
 			listener.flushEnd( numberOfEntities, numberOfCollections );
+		}
+	}
+
+	@Override
+	public void prePartialFlushStart() {
+		if ( listeners == null ) {
+			return;
+		}
+
+		for ( SessionEventListener listener : listeners ) {
+			listener.prePartialFlushStart();
+		}
+	}
+
+	@Override
+	public void prePartialFlushEnd() {
+		if ( listeners == null ) {
+			return;
+		}
+
+		for ( SessionEventListener listener : listeners ) {
+			listener.prePartialFlushEnd();
 		}
 	}
 

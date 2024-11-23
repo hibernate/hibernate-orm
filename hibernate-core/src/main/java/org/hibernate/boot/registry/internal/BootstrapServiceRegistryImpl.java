@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.internal;
 
@@ -22,11 +20,14 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -45,7 +46,7 @@ public class BootstrapServiceRegistryImpl
 	private final boolean autoCloseRegistry;
 	private boolean active = true;
 
-	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
+	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<>();
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
 	private final ServiceBinding<StrategySelector> strategySelectorBinding;
@@ -100,23 +101,23 @@ public class BootstrapServiceRegistryImpl
 			LinkedHashSet<Integrator> providedIntegrators) {
 		this.autoCloseRegistry = autoCloseRegistry;
 
-		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
+		this.classLoaderServiceBinding = new ServiceBinding<>(
 				this,
 				ClassLoaderService.class,
 				classLoaderService
 		);
 
 		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
-		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
 				strategySelector
 		);
 
-		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
+		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
-				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
+				IntegratorServiceImpl.create( providedIntegrators, classLoaderService )
 		);
 	}
 
@@ -162,19 +163,19 @@ public class BootstrapServiceRegistryImpl
 			IntegratorService integratorService) {
 		this.autoCloseRegistry = autoCloseRegistry;
 
-		this.classLoaderServiceBinding = new ServiceBinding<ClassLoaderService>(
+		this.classLoaderServiceBinding = new ServiceBinding<>(
 				this,
 				ClassLoaderService.class,
 				classLoaderService
 		);
 
-		this.strategySelectorBinding = new ServiceBinding<StrategySelector>(
+		this.strategySelectorBinding = new ServiceBinding<>(
 				this,
 				StrategySelector.class,
 				strategySelector
 		);
 
-		this.integratorServiceBinding = new ServiceBinding<IntegratorService>(
+		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
 				integratorService
@@ -184,7 +185,7 @@ public class BootstrapServiceRegistryImpl
 
 
 	@Override
-	public <R extends Service> R getService(Class<R> serviceRole) {
+	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
 		final ServiceBinding<R> binding = locateServiceBinding( serviceRole );
 		return binding == null ? null : binding.getService();
 	}
@@ -224,7 +225,7 @@ public class BootstrapServiceRegistryImpl
 			}
 		}
 	}
-	
+
 	private synchronized void destroy(ServiceBinding serviceBinding) {
 		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}
@@ -234,7 +235,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public ServiceRegistry getParentServiceRegistry() {
+	public @Nullable ServiceRegistry getParentServiceRegistry() {
 		return null;
 	}
 
@@ -261,7 +262,7 @@ public class BootstrapServiceRegistryImpl
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( Stoppable.class.isInstance( service ) ) {
+		if ( service instanceof Stoppable ) {
 			try {
 				( (Stoppable) service ).stop();
 			}
@@ -274,7 +275,7 @@ public class BootstrapServiceRegistryImpl
 	@Override
 	public synchronized void registerChild(ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
-			childRegistries = new HashSet<ServiceRegistryImplementor>();
+			childRegistries = new HashSet<>();
 		}
 		if ( !childRegistries.add( child ) ) {
 			LOG.warnf(
@@ -305,5 +306,10 @@ public class BootstrapServiceRegistryImpl
 				);
 			}
 		}
+	}
+
+	@Override
+	public <T extends Service> T fromRegistryOrChildren(Class<T> serviceRole) {
+		return AbstractServiceRegistryImpl.fromRegistryOrChildren( serviceRole, this, childRegistries );
 	}
 }

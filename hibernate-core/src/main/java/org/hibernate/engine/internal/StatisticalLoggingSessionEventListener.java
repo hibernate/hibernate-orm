@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -11,6 +9,8 @@ import org.hibernate.BaseSessionEventListener;
 import org.jboss.logging.Logger;
 
 /**
+ * @see org.hibernate.cfg.AvailableSettings#LOG_SESSION_METRICS
+ *
  * @author Steve Ebersole
  */
 public class StatisticalLoggingSessionEventListener extends BaseSessionEventListener {
@@ -60,6 +60,9 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	private long partialFlushEntityCount;
 	private long partialFlushCollectionCount;
 	private long partialFlushTime;
+
+	private int prePartialFlushCount;
+	private long prePartialFlushTime;
 
 
 	// JDBC Connection acquisition ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -235,6 +238,22 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	// Partial-flushing  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private long partialFlushStart = -1;
+	private long prePartialFlushStart = -1;
+
+	@Override
+	public void prePartialFlushStart() {
+		assert prePartialFlushStart < 0 : "Nested calls to prePartialFlushStart";
+		prePartialFlushStart = System.nanoTime();
+	}
+
+	@Override
+	public void prePartialFlushEnd() {
+		assert prePartialFlushStart > 0 : "Unexpected call to prePartialFlushEnd; expecting prePartialFlushStart";
+
+		prePartialFlushCount++;
+		prePartialFlushTime += ( System.nanoTime() - prePartialFlushStart );
+		prePartialFlushStart = -1;
+	}
 
 	@Override
 	public void partialFlushStart() {
@@ -255,43 +274,48 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 
 	@Override
 	public void end() {
-		log.infof(
-				"Session Metrics {\n" +
-						"    %s nanoseconds spent acquiring %s JDBC connections;\n" +
-						"    %s nanoseconds spent releasing %s JDBC connections;\n" +
-						"    %s nanoseconds spent preparing %s JDBC statements;\n" +
-						"    %s nanoseconds spent executing %s JDBC statements;\n" +
-						"    %s nanoseconds spent executing %s JDBC batches;\n" +
-						"    %s nanoseconds spent performing %s L2C puts;\n" +
-						"    %s nanoseconds spent performing %s L2C hits;\n" +
-						"    %s nanoseconds spent performing %s L2C misses;\n" +
-						"    %s nanoseconds spent executing %s flushes (flushing a total of %s entities and %s collections);\n" +
-						"    %s nanoseconds spent executing %s partial-flushes (flushing a total of %s entities and %s collections)\n" +
-						"}",
-				jdbcConnectionAcquisitionTime,
-				jdbcConnectionAcquisitionCount,
-				jdbcConnectionReleaseTime,
-				jdbcConnectionReleaseCount,
-				jdbcPrepareStatementTime,
-				jdbcPrepareStatementCount,
-				jdbcExecuteStatementTime,
-				jdbcExecuteStatementCount,
-				jdbcExecuteBatchTime,
-				jdbcExecuteBatchCount,
-				cachePutTime,
-				cachePutCount,
-				cacheHitTime,
-				cacheHitCount,
-				cacheMissTime,
-				cacheMissCount,
-				flushTime,
-				flushCount,
-				flushEntityCount,
-				flushCollectionCount,
-				partialFlushTime,
-				partialFlushCount,
-				partialFlushEntityCount,
-				partialFlushCollectionCount
-		);
+		if ( log.isInfoEnabled() ) {
+			log.infof(
+					"Session Metrics {\n" +
+							"    %s nanoseconds spent acquiring %s JDBC connections;\n" +
+							"    %s nanoseconds spent releasing %s JDBC connections;\n" +
+							"    %s nanoseconds spent preparing %s JDBC statements;\n" +
+							"    %s nanoseconds spent executing %s JDBC statements;\n" +
+							"    %s nanoseconds spent executing %s JDBC batches;\n" +
+							"    %s nanoseconds spent performing %s L2C puts;\n" +
+							"    %s nanoseconds spent performing %s L2C hits;\n" +
+							"    %s nanoseconds spent performing %s L2C misses;\n" +
+							"    %s nanoseconds spent executing %s flushes (flushing a total of %s entities and %s collections);\n" +
+							"    %s nanoseconds spent executing %s pre-partial-flushes;\n" +
+							"    %s nanoseconds spent executing %s partial-flushes (flushing a total of %s entities and %s collections)\n" +
+							"}",
+					jdbcConnectionAcquisitionTime,
+					jdbcConnectionAcquisitionCount,
+					jdbcConnectionReleaseTime,
+					jdbcConnectionReleaseCount,
+					jdbcPrepareStatementTime,
+					jdbcPrepareStatementCount,
+					jdbcExecuteStatementTime,
+					jdbcExecuteStatementCount,
+					jdbcExecuteBatchTime,
+					jdbcExecuteBatchCount,
+					cachePutTime,
+					cachePutCount,
+					cacheHitTime,
+					cacheHitCount,
+					cacheMissTime,
+					cacheMissCount,
+					flushTime,
+					flushCount,
+					flushEntityCount,
+					flushCollectionCount,
+					prePartialFlushTime,
+					prePartialFlushCount,
+					partialFlushTime,
+					partialFlushCount,
+					partialFlushEntityCount,
+					partialFlushCollectionCount
+			);
+		}
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.internal;
 
@@ -24,7 +22,7 @@ public class SessionFactoryServiceRegistryFactoryInitiator implements StandardSe
 	}
 
 	@Override
-	public SessionFactoryServiceRegistryFactoryImpl initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public SessionFactoryServiceRegistryFactoryImpl initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		return new SessionFactoryServiceRegistryFactoryImpl( registry );
 	}
 }

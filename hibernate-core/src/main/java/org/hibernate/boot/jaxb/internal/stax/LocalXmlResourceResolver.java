@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
@@ -11,10 +9,14 @@ import java.io.InputStream;
 import java.net.URL;
 import javax.xml.stream.XMLStreamException;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.xsd.ConfigXsdSupport;
+import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.boot.xsd.XsdDescriptor;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -24,10 +26,10 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	public static final String CLASSPATH_EXTENSION_URL_BASE = "classpath://";
 
-	private final ClassLoaderService classLoaderService;
+	private final ResourceStreamLocator resourceStreamLocator;
 
-	public LocalXmlResourceResolver(ClassLoaderService classLoaderService) {
-		this.classLoaderService = classLoaderService;
+	public LocalXmlResourceResolver(ResourceStreamLocator resourceStreamLocator) {
+		this.resourceStreamLocator = resourceStreamLocator;
 	}
 
 	@Override
@@ -36,72 +38,78 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 		if ( namespace != null ) {
 			log.debugf( "Interpreting namespace : %s", namespace );
-			if ( INITIAL_JPA_XSD_MAPPING.matches( namespace ) ) {
-				return openUrlStream( INITIAL_JPA_XSD_MAPPING.getMappedLocalUrl() );
+			if ( MappingXsdSupport.latestDescriptor().getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.latestDescriptor() );
 			}
-			else if ( JPA_XSD_MAPPING.matches( namespace ) ) {
-				return openUrlStream( JPA_XSD_MAPPING.getMappedLocalUrl() );
+			if ( MappingXsdSupport.jpa10.getNamespaceUri().matches( namespace ) ) {
+				// JPA 1.0 and 2.0 share the same namespace URI
+				return openUrlStream( MappingXsdSupport.jpa10 );
 			}
-			else if ( PERSISTENCE_ORM_XSD_MAPPING.matches( namespace ) ) {
-				return openUrlStream( PERSISTENCE_ORM_XSD_MAPPING.getMappedLocalUrl() );
+			else if ( MappingXsdSupport.jpa21.getNamespaceUri().matches( namespace ) ) {
+				// JPA 2.1 and 2.2 share the same namespace URI
+				return openUrlStream( MappingXsdSupport.jpa21 );
 			}
-			else if ( PERSISTENCE_ORM_XSD_MAPPING2.matches( namespace ) ) {
-				return openUrlStream( PERSISTENCE_ORM_XSD_MAPPING2.getMappedLocalUrl() );
+			else if ( MappingXsdSupport.jpa30.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.jpa30 );
 			}
-			else if ( HBM_XSD_MAPPING.matches( namespace ) ) {
-				return openUrlStream( HBM_XSD_MAPPING.getMappedLocalUrl() );
+			else if ( MappingXsdSupport.jpa31.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.jpa31 );
 			}
-			else if ( HBM_XSD_MAPPING2.matches( namespace ) ) {
-				return openUrlStream( HBM_XSD_MAPPING2.getMappedLocalUrl() );
+			else if ( MappingXsdSupport.jpa32.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.jpa32 );
 			}
-			else if ( CFG_XSD_MAPPING.matches( namespace ) ) {
-				return openUrlStream( CFG_XSD_MAPPING.getMappedLocalUrl() );
+			else if ( ConfigXsdSupport.getJPA10().getNamespaceUri().matches( namespace ) ) {
+				// JPA 1.0 and 2.0 share the same namespace URI
+				return openUrlStream( ConfigXsdSupport.getJPA10() );
+			}
+			else if ( ConfigXsdSupport.getJPA21().getNamespaceUri().matches( namespace ) ) {
+				// JPA 2.1 and 2.2 share the same namespace URI
+				return openUrlStream( ConfigXsdSupport.getJPA21() );
+			}
+			else if ( ConfigXsdSupport.getJPA30().getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( ConfigXsdSupport.getJPA30() );
+			}
+			else if ( ConfigXsdSupport.getJPA31().getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( ConfigXsdSupport.getJPA31() );
+			}
+			else if ( MappingXsdSupport.hibernateMappingXml.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.hibernateMappingXml );
+			}
+			else if ( MappingXsdSupport.hbmXml.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.hbmXml );
+			}
+			else if ( ConfigXsdSupport.cfgXsd().getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( ConfigXsdSupport.cfgXsd() );
 			}
 		}
 
 		if ( publicID != null || systemID != null ) {
-			log.debugf( "Interpreting public/system identifier : [%s] - [%s]", publicID, systemID );
-			if ( HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
-				log.debug(
-						"Recognized hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
-				);
-				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
+			log.debugf( "Checking public/system identifiers `%s`/`%s` as DTD references", publicID, systemID );
+
+			if ( MAPPING_DTD.matches( publicID, systemID ) ) {
+				return openUrlStream( MAPPING_DTD.localSchemaUrl );
 			}
-			else if ( LEGACY_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
-				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
-						LEGACY_HBM_DTD_MAPPING.getIdentifierBase(),
-						HBM_DTD_MAPPING.getIdentifierBase()
-				);
-				log.debug(
-						"Recognized legacy hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
-				);
-				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
+
+			if ( ALTERNATE_MAPPING_DTD.matches( publicID, systemID ) ) {
+				return openUrlStream( ALTERNATE_MAPPING_DTD.localSchemaUrl );
 			}
-			else if ( LEGACY2_HBM_DTD_MAPPING.matches( publicID, systemID ) ) {
-				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
-						LEGACY2_HBM_DTD_MAPPING.getIdentifierBase(),
-						HBM_DTD_MAPPING.getIdentifierBase()
-				);
-				log.debug(
-						"Recognized legacy hibernate-mapping identifier; attempting to resolve on classpath under org/hibernate/"
-				);
-				return openUrlStream( HBM_DTD_MAPPING.getMappedLocalUrl() );
+
+			if ( LEGACY_MAPPING_DTD.matches( publicID, systemID ) ) {
+				DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace( LEGACY_MAPPING_DTD.getIdentifierBase(), MAPPING_DTD.getIdentifierBase() );
+				return openUrlStream( MAPPING_DTD.localSchemaUrl );
 			}
-			else if ( CFG_DTD_MAPPING.matches( publicID, systemID ) ) {
-				log.debug(
-						"Recognized hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
-				);
-				return openUrlStream( CFG_DTD_MAPPING.getMappedLocalUrl() );
+
+			if ( CFG_DTD.matches( publicID, systemID ) ) {
+				return openUrlStream( CFG_DTD.localSchemaUrl );
 			}
-			else if ( LEGACY_CFG_DTD_MAPPING.matches( publicID, systemID ) ) {
-				DeprecationLogger.DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace(
-						LEGACY_CFG_DTD_MAPPING.getIdentifierBase(),
-						CFG_DTD_MAPPING.getIdentifierBase()
-				);
-				log.debug(
-						"Recognized hibernate-configuration identifier; attempting to resolve on classpath under org/hibernate/"
-				);
-				return openUrlStream( CFG_DTD_MAPPING.getMappedLocalUrl() );
+
+			if ( ALTERNATE_CFG_DTD.matches( publicID, systemID ) ) {
+				return openUrlStream( ALTERNATE_CFG_DTD.localSchemaUrl );
+			}
+
+			if ( LEGACY_CFG_DTD.matches( publicID, systemID ) ) {
+				DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace( LEGACY_CFG_DTD.getIdentifierBase(), CFG_DTD.getIdentifierBase() );
+				return openUrlStream( CFG_DTD.localSchemaUrl );
 			}
 		}
 
@@ -125,6 +133,10 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		return null;
 	}
 
+	private InputStream openUrlStream(XsdDescriptor xsdDescriptor) {
+		return openUrlStream( LocalSchemaLocator.resolveLocalSchemaUrl( xsdDescriptor.getLocalResourceName() ) );
+	}
+
 	private InputStream openUrlStream(URL url) {
 		try {
 			return url.openStream();
@@ -136,126 +148,70 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 	private InputStream resolveInLocalNamespace(String path) {
 		try {
-			return classLoaderService.locateResourceStream( path );
+			return resourceStreamLocator.locateResourceStream( path );
 		}
 		catch ( Throwable t ) {
 			return null;
 		}
 	}
 
-	/**
-	 * Maps the namespace for the orm.xml xsd for jpa 1.0 and 2.0
-	 */
-	public static final NamespaceSchemaMapping INITIAL_JPA_XSD_MAPPING = new NamespaceSchemaMapping(
-			"http://java.sun.com/xml/ns/persistence/orm",
-			"org/hibernate/jpa/orm_2_0.xsd"
-	);
-
-	/**
-	 * Maps the namespace for the orm.xml xsd for jpa 2.1+
-	 */
-	public static final NamespaceSchemaMapping JPA_XSD_MAPPING = new NamespaceSchemaMapping(
-			"http://xmlns.jcp.org/xml/ns/persistence/orm",
-			"org/hibernate/jpa/orm_2_1.xsd"
-	);
-	
-	/**
-	 * Maps the namespace for the orm.xml xsd for Jakarta Persistence 2.2
-	 */
-	public static final NamespaceSchemaMapping PERSISTENCE_ORM_XSD_MAPPING = new NamespaceSchemaMapping(
-			"http://xmlns.jcp.org/xml/ns/persistence/orm",
-			"org/hibernate/jpa/orm_2_2.xsd"
-	);
-
-	/**
-	 * Maps the namespace for the orm.xml xsd for Jakarta Persistence 3.0
-	 */
-	public static final NamespaceSchemaMapping PERSISTENCE_ORM_XSD_MAPPING2 = new NamespaceSchemaMapping(
-			"https://jakarta.ee/xml/ns/persistence/orm",
-			"org/hibernate/jpa/orm_3_0.xsd"
-	);
-	
-	public static final NamespaceSchemaMapping HBM_XSD_MAPPING = new NamespaceSchemaMapping(
-			"http://www.hibernate.org/xsd/orm/hbm",
-			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd"
-	);
-
-	public static final NamespaceSchemaMapping HBM_XSD_MAPPING2 = new NamespaceSchemaMapping(
-			"http://www.hibernate.org/xsd/hibernate-mapping",
-			"org/hibernate/hibernate-mapping-4.0.xsd"
-	);
-
-	public static final NamespaceSchemaMapping CFG_XSD_MAPPING = new NamespaceSchemaMapping(
-			"http://www.hibernate.org/xsd/orm/cfg",
-			"org/hibernate/xsd/cfg/legacy-configuration-4.0.xsd"
-	);
-
-	public static final DtdMapping HBM_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-mapping",
+	public static final DtdDescriptor MAPPING_DTD = new DtdDescriptor(
+			"www.hibernate.org/dtd/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
-	public static final DtdMapping LEGACY_HBM_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-mapping",
+	public static final DtdDescriptor ALTERNATE_MAPPING_DTD = new DtdDescriptor(
+			"hibernate.org/dtd/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
-	public static final DtdMapping LEGACY2_HBM_DTD_MAPPING = new DtdMapping(
-			"http://hibernate.sourceforge.net/hibernate-mapping",
+	public static final DtdDescriptor LEGACY_MAPPING_DTD = new DtdDescriptor(
+			"hibernate.sourceforge.net/hibernate-mapping",
 			"org/hibernate/hibernate-mapping-3.0.dtd"
 	);
 
-	public static final DtdMapping CFG_DTD_MAPPING = new DtdMapping(
-			"http://www.hibernate.org/dtd/hibernate-configuration",
+	public static final DtdDescriptor CFG_DTD = new DtdDescriptor(
+			"www.hibernate.org/dtd/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 
-	public static final DtdMapping LEGACY_CFG_DTD_MAPPING = new DtdMapping(
-			"http://hibernate.sourceforge.net/hibernate-configuration",
+	public static final DtdDescriptor ALTERNATE_CFG_DTD = new DtdDescriptor(
+			"hibernate.org/dtd/hibernate-configuration",
+			"org/hibernate/hibernate-configuration-3.0.dtd"
+	);
+
+	public static final DtdDescriptor LEGACY_CFG_DTD = new DtdDescriptor(
+			"hibernate.sourceforge.net/hibernate-configuration",
 			"org/hibernate/hibernate-configuration-3.0.dtd"
 	);
 
 
-	public static class NamespaceSchemaMapping {
-		private final String namespace;
+	public static class DtdDescriptor {
+		private final String httpBase;
+		private final String httpsBase;
 		private final URL localSchemaUrl;
 
-		public NamespaceSchemaMapping(String namespace, String resourceName) {
-			this.namespace = namespace;
-			this.localSchemaUrl = LocalSchemaLocator.resolveLocalSchemaUrl( resourceName );
-		}
-
-		public boolean matches(String namespace) {
-			return this.namespace.equals( namespace );
-		}
-
-		public URL getMappedLocalUrl() {
-			return localSchemaUrl;
-		}
-	}
-
-	public static class DtdMapping {
-		private final String identifierBase;
-		private final URL localSchemaUrl;
-
-		public DtdMapping(String identifierBase, String resourceName) {
-			this.identifierBase = identifierBase;
+		public DtdDescriptor(String identifierBase, String resourceName) {
+			this.httpBase = "http://" + identifierBase;
+			this.httpsBase = "https://" + identifierBase;
 			this.localSchemaUrl = LocalSchemaLocator.resolveLocalSchemaUrl( resourceName );
 		}
 
 		public String getIdentifierBase() {
-			return identifierBase;
+			return httpBase;
 		}
 
 		public boolean matches(String publicId, String systemId) {
 			if ( publicId != null ) {
-				if ( publicId.startsWith( identifierBase ) ) {
+				if ( publicId.startsWith( httpBase )
+						|| publicId.startsWith( httpsBase ) ) {
 					return true;
 				}
 			}
 
 			if ( systemId != null ) {
-				if ( systemId.startsWith( identifierBase ) ) {
+				if ( systemId.startsWith( httpBase )
+						|| systemId.startsWith( httpsBase ) ) {
 					return true;
 				}
 			}

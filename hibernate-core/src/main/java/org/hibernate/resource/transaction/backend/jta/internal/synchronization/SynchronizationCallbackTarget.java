@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 /**
  * Defines "inflow" for JTA transactions from the perspective of Hibernate's registered JTA Synchronization
  * back into the TransactionCoordinator by means of the SynchronizationCallbackCoordinator.
- * <p/>
+ * <p>
  * That's a mouthful :)  The way it works is like this...<ul>
  *     <li>
- *         Hibernate will register a JTA {@link javax.transaction.Synchronization} implementation
+ *         Hibernate will register a JTA {@link jakarta.transaction.Synchronization} implementation
  *         ({@link RegisteredSynchronization}) which allows
  *         it to listen for completion of the JTA transaction.
  *     </li>
@@ -44,7 +42,7 @@ public interface SynchronizationCallbackTarget {
 	/**
 	 * Callback of before-completion.
 	 *
-	 * @see javax.transaction.Synchronization#beforeCompletion
+	 * @see jakarta.transaction.Synchronization#beforeCompletion
 	 */
 	void beforeCompletion();
 
@@ -53,7 +51,7 @@ public interface SynchronizationCallbackTarget {
 	 *
 	 * @param successful Was the transaction successful?
 	 *
-	 * @see javax.transaction.Synchronization#afterCompletion
+	 * @see jakarta.transaction.Synchronization#afterCompletion
 	 */
 	void afterCompletion(boolean successful, boolean delayed);
 }

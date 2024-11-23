@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
@@ -17,7 +14,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Defines an event class for the resolving of an entity id from the entity's natural-id
- * 
+ *
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
@@ -29,10 +26,10 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 	private final Object[] orderedNaturalIdValues;
 	private final LockOptions lockOptions;
 
-	private Serializable entityId;
+	private Object entityId;
 
 	public ResolveNaturalIdEvent(Map<String, Object> naturalIdValues, EntityPersister entityPersister, EventSource source) {
-		this( naturalIdValues, entityPersister, new LockOptions(), source );
+		this( naturalIdValues, entityPersister, LockOptions.NONE, source );
 	}
 
 	public ResolveNaturalIdEvent(
@@ -110,11 +107,11 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 		return lockOptions;
 	}
 
-	public Serializable getEntityId() {
+	public Object getEntityId() {
 		return entityId;
 	}
 
-	public void setEntityId(Serializable entityId) {
+	public void setEntityId(Object entityId) {
 		this.entityId = entityId;
 	}
 }

@@ -1,28 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
 
-import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.type.Type;
 
 /**
- * Represents a defined entity identifier property within the Hibernate
- * runtime-metamodel.
- *
- * @author Steve Ebersole
+ * @deprecated No direct replacement; see {@link org.hibernate.metamodel.mapping.EntityIdentifierMapping}
  */
+@Deprecated(forRemoval = true)
 public class IdentifierProperty extends AbstractAttribute implements IdentifierAttribute {
 
 	private final boolean virtual;
 	private final boolean embedded;
-	private final IdentifierValue unsavedValue;
-	private final IdentifierGenerator identifierGenerator;
+	private final Generator identifierGenerator;
 	private final boolean identifierAssignedByInsert;
 	private final boolean hasIdentifierMapper;
 
@@ -33,7 +27,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 * its owning entity.
 	 * @param type The Hibernate Type for the identifier property.
 	 * @param embedded Is this an embedded identifier.
-	 * @param unsavedValue The value which, if found as the value on the identifier
 	 * property, represents new (i.e., un-saved) instances of the owning entity.
 	 * @param identifierGenerator The generator to use for id value generation.
 	 */
@@ -41,15 +34,13 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			String name,
 			Type type,
 			boolean embedded,
-			IdentifierValue unsavedValue,
-			IdentifierGenerator identifierGenerator) {
+			Generator identifierGenerator) {
 		super( name, type );
 		this.virtual = false;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = false;
-		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.identifierAssignedByInsert = identifierGenerator.generatedOnExecution();
 	}
 
 	/**
@@ -57,7 +48,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 *
 	 * @param type The Hibernate Type for the identifier property.
 	 * @param embedded Is this an embedded identifier.
-	 * @param unsavedValue The value which, if found as the value on the identifier
 	 * property, represents new (i.e., un-saved) instances of the owning entity.
 	 * @param identifierGenerator The generator to use for id value generation.
 	 */
@@ -65,15 +55,13 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			Type type,
 			boolean embedded,
 			boolean hasIdentifierMapper,
-			IdentifierValue unsavedValue,
-			IdentifierGenerator identifierGenerator) {
+			Generator identifierGenerator) {
 		super( null, type );
 		this.virtual = true;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = hasIdentifierMapper;
-		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.identifierAssignedByInsert = identifierGenerator.generatedOnExecution();
 	}
 
 	@Override
@@ -87,12 +75,12 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	}
 
 	@Override
-	public IdentifierValue getUnsavedValue() {
-		return unsavedValue;
+	public IdentifierGenerator getIdentifierGenerator() {
+		return (IdentifierGenerator) identifierGenerator;
 	}
 
 	@Override
-	public IdentifierGenerator getIdentifierGenerator() {
+	public Generator getGenerator() {
 		return identifierGenerator;
 	}
 

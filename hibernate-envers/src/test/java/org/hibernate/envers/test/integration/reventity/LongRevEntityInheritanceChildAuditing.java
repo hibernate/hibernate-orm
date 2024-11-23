@@ -1,22 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.envers.test.integration.reventity;
 
-import java.util.Iterator;
+import java.util.List;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
-import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
+import org.hibernate.mapping.Selectable;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ChildEntity;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ParentEntity;
 import org.hibernate.mapping.Column;
+import org.hibernate.orm.test.envers.integration.reventity.LongRevNumberRevEntity;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * A join-inheritance test using a custom revision entity where the revision number is a long, mapped in the database
@@ -32,14 +32,17 @@ public class LongRevEntityInheritanceChildAuditing extends BaseEnversJPAFunction
 
 	@Test
 	public void testChildRevColumnType() {
-		// We need the second column
-		Iterator childEntityKeyColumnsIterator = metadata()
-				.getEntityBinding("org.hibernate.envers.test.integration.inheritance.joined.ChildEntity_AUD" )
+		// Hibernate now sorts columns that are part of the key and therefore this test needs to test
+		// for the existence of the specific key column rather than the expectation that is exists at
+		// a specific order.
+		List<Selectable> childEntityKeyColumns = metadata()
+				.getEntityBinding( ChildEntity.class.getName() + "_AUD" )
 				.getKey()
-				.getColumnIterator();
-		childEntityKeyColumnsIterator.next();
-		Column second = (Column) childEntityKeyColumnsIterator.next();
+				.getSelectables();
 
-		assertEquals( second.getSqlType(), "int" );
+		final String revisionColumnName = getConfiguration().getRevisionFieldName();
+		Column column = getColumnFromIteratorByName( childEntityKeyColumns, revisionColumnName );
+		assertNotNull( column );
+		assertEquals( column.getSqlType(), "int" );
 	}
 }

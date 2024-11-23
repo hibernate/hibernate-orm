@@ -1,17 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.enhanced;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.DialectDelegateWrapper;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
 
@@ -22,45 +21,46 @@ import org.hibernate.id.enhanced.SequenceStructure;
  */
 public class OrderedSequenceStructure extends SequenceStructure {
 
-	private static final String ORDER = " ORDER";
-
-	private AuxiliaryDatabaseObject sequenceObject;
+	private final AuxiliaryDatabaseObject sequenceObject;
+	private final String suffix;
 
 	public OrderedSequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
 			QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
-			Class numberType) {
-		super( jdbcEnvironment, qualifiedSequenceName, initialValue, incrementSize, numberType );
+			Class<?> numberType) {
+		this( jdbcEnvironment, qualifiedSequenceName, initialValue, incrementSize, false, numberType );
+	}
+
+	public OrderedSequenceStructure(
+			JdbcEnvironment jdbcEnvironment,
+			QualifiedName qualifiedSequenceName,
+			int initialValue,
+			int incrementSize,
+			boolean noCache,
+			Class<?> numberType) {
+		super( "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		// delegate to auxiliary object
-		return sequenceObject.sqlCreateStrings( dialect );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		// delegate to auxiliary object
-		return sequenceObject.sqlDropStrings( dialect );
+		final Dialect dialect = DialectDelegateWrapper.extractRealDialect( jdbcEnvironment.getDialect() );
+		if ( dialect instanceof OracleDialect ) {
+			this.suffix = ( noCache ? " NOCACHE" : "" ) + " ORDER";
+		}
+		else {
+			this.suffix = null;
+		}
 	}
 
 	@Override
 	protected void buildSequence(Database database) {
 		database.addAuxiliaryDatabaseObject( sequenceObject );
-		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				getQualifiedName(),
-				database.getJdbcEnvironment().getDialect()
-		);
+		this.physicalSequenceName = getQualifiedName();
 	}
 
 	private class OrderedSequence implements AuxiliaryDatabaseObject {
 		@Override
 		public String getExportIdentifier() {
-			return getName();
+			return getQualifiedName().render();
 		}
 
 		@Override
@@ -76,16 +76,17 @@ public class OrderedSequenceStructure extends SequenceStructure {
 		}
 
 		@Override
-		public String[] sqlCreateStrings(Dialect dialect) {
-			final String[] createStrings = dialect.getCreateSequenceStrings(
-					getName(),
+		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
+			Dialect dialect = context.getDialect();
+			final String[] createStrings = dialect.getSequenceSupport().getCreateSequenceStrings(
+					context.format( getPhysicalName() ),
 					getInitialValue(),
 					getSourceIncrementSize()
 			);
 
-			if ( dialect instanceof Oracle8iDialect ) {
+			if ( suffix != null ) {
 				for ( int i = 0; i < createStrings.length; ++i ) {
-					createStrings[ i ] = createStrings[ i ] + ORDER;
+					createStrings[i] = createStrings[i] + suffix;
 				}
 			}
 
@@ -93,8 +94,9 @@ public class OrderedSequenceStructure extends SequenceStructure {
 		}
 
 		@Override
-		public String[] sqlDropStrings(Dialect dialect) {
-			return dialect.getDropSequenceStrings( getName() );
+		public String[] sqlDropStrings(SqlStringGenerationContext context) {
+			Dialect dialect = context.getDialect();
+			return dialect.getSequenceSupport().getDropSequenceStrings( context.format( getPhysicalName() ) );
 		}
 	}
 }

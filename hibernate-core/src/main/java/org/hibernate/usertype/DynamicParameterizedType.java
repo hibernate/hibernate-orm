@@ -1,22 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
 
+import org.hibernate.Incubating;
+
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Properties;
 
 /**
- * Types who implements this interface will have in the setParameterValues an
- * instance of the class DynamicParameterizedType$ParameterType instead of
- * the key PARAMETER_TYPE = "org.hibernate.type.ParameterType"
- * 
- * The interface ParameterType provides some methods to read information
- * dynamically for build the type
- * 
+ * Types which implement this interface will have
+ * {@link ParameterizedType#setParameterValues(Properties)} called with an
+ * instance of the class {@link DynamicParameterizedType.ParameterType}
+ * instead of the key {@value PARAMETER_TYPE}.
+ *
  * @author Janario Oliveira
+ * @author Yanming Zhou
  */
 public interface DynamicParameterizedType extends ParameterizedType {
 	String PARAMETER_TYPE = "org.hibernate.type.ParameterType";
@@ -32,7 +33,12 @@ public interface DynamicParameterizedType extends ParameterizedType {
 
 	interface ParameterType {
 
-		Class getReturnedClass();
+		Class<?> getReturnedClass();
+
+		@Incubating
+		default Type getReturnedJavaType() {
+			return getReturnedClass();
+		}
 
 		Annotation[] getAnnotationsMethod();
 
@@ -46,5 +52,6 @@ public interface DynamicParameterizedType extends ParameterizedType {
 
 		String[] getColumns();
 
+		Long[] getColumnLengths();
 	}
 }

@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import org.hibernate.MappingException;
+import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -35,8 +33,7 @@ public enum InheritanceType {
 		}
 
 		// We assume that every subclass is of the same type.
-		final Subclass subclass = (Subclass) superclass.getSubclassIterator().next();
-
+		final Subclass subclass = superclass.getSubclasses().get(0);
 		if ( subclass instanceof SingleTableSubclass ) {
 			return InheritanceType.SINGLE;
 		}
@@ -47,6 +44,6 @@ public enum InheritanceType {
 			return InheritanceType.TABLE_PER_CLASS;
 		}
 
-		throw new MappingException( "Unknown subclass class: " + subclass.getClass() );
+		throw new EnversMappingException( "Unknown subclass class: " + subclass.getClass() );
 	}
 }

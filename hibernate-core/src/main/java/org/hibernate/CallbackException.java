@@ -1,16 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * Intended to be thrown from {@link org.hibernate.classic.Lifecycle} and {@link Interceptor} callbacks.
- * <p/>
- * IMPL NOTE : This is a legacy exception type from back in the day before Hibernate moved to a untyped (runtime)
- * exception strategy.
+ * Intended to be thrown from {@link org.hibernate.classic.Lifecycle}
+ * and {@link Interceptor} callbacks.
+ *
+ * @implNote This is a legacy exception type from back in the day before
+ * Hibernate moved to an unchecked exception strategy.
  *
  * @author Gavin King
  */

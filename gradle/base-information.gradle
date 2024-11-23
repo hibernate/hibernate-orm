@@ -6,78 +6,21 @@
  */
 
 apply plugin: 'base'
+apply plugin: 'org.hibernate.orm.build.env-project'
 
-File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
-
-ext {
-	ormVersionFile = versionFile
-	ormVersion = HibernateVersion.fromFile( versionFile, project )
-	// Override during releases
-	if ( project.hasProperty( 'releaseVersion' ) ) {
-		ormVersion = new HibernateVersion( project.releaseVersion, project )
+buildscript {
+	dependencies {
+		constraints {
+			classpath("org.apache.logging.log4j:log4j-core") {
+				version {
+					strictly("[2.17.1, 3[")
+					prefer("2.17.1")
+				}
+				because('CVE-2021-44228, CVE-2021-45046, CVE-2021-45105, CVE-2021-44832: Log4j vulnerable to remote code execution and other critical security vulnerabilities')
+			}
+		}
 	}
-	jpaVersion = new JpaVersion('2.2')
 }
 
-group = 'org.hibernate'
+group = 'org.hibernate.orm'
 version = project.ormVersion.fullName
-
-class JpaVersion {
-	/** The *normal* name (1.0, 2.0, ..) */
-	final String name;
-
-	final String osgiName
-
-	JpaVersion(String version){
-		this.name = version
-		this.osgiName = version + ".0"
-	}
-
-	@Override
-	String toString() {
-		return name
-	}
-}
-
-class HibernateVersion {
-	final String fullName
-	final String majorVersion
-	final String family
-
-	final String osgiVersion
-
-	final boolean isSnapshot
-
-	HibernateVersion(String fullName, Project project) {
-		this.fullName = fullName
-
-		final String[] hibernateVersionComponents = fullName.split( '\\.' )
-		this.majorVersion = hibernateVersionComponents[0]
-		this.family = hibernateVersionComponents[0] + '.' + hibernateVersionComponents[1]
-
-		this.isSnapshot = fullName.endsWith( '-SNAPSHOT' )
-
-		this.osgiVersion = isSnapshot ? family + '.' + hibernateVersionComponents[2] + '.SNAPSHOT' : fullName
-	}
-
-	static HibernateVersion fromFile(File file, Project project){
-		def fullName = readVersionProperties(file)
-		return new HibernateVersion(fullName, project)
-	}
-
-	private static String readVersionProperties(File file) {
-		if ( !file.exists() ) {
-			throw new GradleException( "Version file $file.canonicalPath does not exists" )
-		}
-		Properties versionProperties = new Properties()
-		file.withInputStream {
-			stream -> versionProperties.load( stream )
-		}
-		return versionProperties.hibernateVersion
-	}
-
-	@Override
-	String toString() {
-		return this.fullName
-	}
-}

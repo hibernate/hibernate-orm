@@ -1,14 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
@@ -17,35 +21,40 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
-import org.hibernate.service.spi.Manageable;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * Implementation of {@link org.hibernate.stat.Statistics} based on the {@link java.util.concurrent} package.
+ * Implementation of {@link Statistics} based on the {@link java.util.concurrent} package.
  *
  * @author Alex Snaps
  * @author Sanne Grinovero
  */
-@SuppressWarnings({ "unchecked" })
-public class StatisticsImpl implements StatisticsImplementor, Service, Manageable {
+public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 
-	private final MetamodelImplementor metamodel;
+	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;
-	private final String cacheRegionPrefix;
+
+	private final String[] allEntityNames;
+	private final String[] allCollectionRoles;
+
 	private final boolean secondLevelCacheEnabled;
 	private final boolean queryCacheEnabled;
 
 	private volatile boolean isStatisticsEnabled;
-	private volatile long startTime;
+	private volatile Instant startTime;
 
 	private final LongAdder sessionOpenCount = new LongAdder();
 	private final LongAdder sessionCloseCount = new LongAdder();
@@ -69,18 +78,18 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	private final LongAdder secondLevelCacheHitCount = new LongAdder();
 	private final LongAdder secondLevelCacheMissCount = new LongAdder();
 	private final LongAdder secondLevelCachePutCount = new LongAdder();
-	
+
 	private final LongAdder naturalIdCacheHitCount = new LongAdder();
 	private final LongAdder naturalIdCacheMissCount = new LongAdder();
 	private final LongAdder naturalIdCachePutCount = new LongAdder();
 	private final LongAdder naturalIdQueryExecutionCount = new LongAdder();
 	private final AtomicLong naturalIdQueryExecutionMaxTime = new AtomicLong();
-	private volatile String naturalIdQueryExecutionMaxTimeRegion;
-	private volatile String naturalIdQueryExecutionMaxTimeEntity;
+	private volatile @Nullable String naturalIdQueryExecutionMaxTimeRegion;
+	private volatile @Nullable String naturalIdQueryExecutionMaxTimeEntity;
 
 	private final LongAdder queryExecutionCount = new LongAdder();
 	private final AtomicLong queryExecutionMaxTime = new AtomicLong();
-	private volatile String queryExecutionMaxTimeQueryString;
+	private volatile @Nullable String queryExecutionMaxTimeQueryString;
 	private final LongAdder queryCacheHitCount = new LongAdder();
 	private final LongAdder queryCacheMissCount = new LongAdder();
 	private final LongAdder queryCachePutCount = new LongAdder();
@@ -97,9 +106,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
-	private final StatsNamedContainer<EntityStatisticsImpl> entityStatsMap = new StatsNamedContainer();
-	private final StatsNamedContainer<NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new StatsNamedContainer();
-	private final StatsNamedContainer<CollectionStatisticsImpl> collectionStatsMap = new StatsNamedContainer();
+	private final StatsNamedContainer<EntityStatisticsImpl> entityStatsMap = new StatsNamedContainer<>();
+	private final StatsNamedContainer<NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new StatsNamedContainer<>();
+	private final StatsNamedContainer<CollectionStatisticsImpl> collectionStatsMap = new StatsNamedContainer<>();
 
 	/**
 	 * Keyed by query string
@@ -111,23 +120,31 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	 */
 	private final StatsNamedContainer<CacheRegionStatisticsImpl> l2CacheStatsMap = new StatsNamedContainer<>();
 
-	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new StatsNamedContainer();
+	/**
+	 * Keyed by query SQL
+	 */
+	private final Map<String, Long> slowQueries = new ConcurrentHashMap<>();
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
 		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-		this.queryStatsMap = new StatsNamedContainer(
-				sessionFactory != null ?
-					sessionFactoryOptions.getQueryStatisticsMaxSize() :
-					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
+		this.queryStatsMap = new StatsNamedContainer<>(
+				sessionFactoryOptions.getQueryStatisticsMaxSize(),
 				20
 		);
-		clear();
-		metamodel = sessionFactory.getMetamodel();
+		resetStart();
+		metamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
 		cache = sessionFactory.getCache();
-		cacheRegionPrefix = sessionFactoryOptions.getCacheRegionPrefix();
 		secondLevelCacheEnabled = sessionFactoryOptions.isSecondLevelCacheEnabled();
 		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
+
+		final List<String> entityNames = new ArrayList<>();
+		metamodel.forEachEntityDescriptor( (entityDescriptor) -> entityNames.add( entityDescriptor.getEntityName() ) );
+		this.allEntityNames = entityNames.toArray( new String[0] );
+
+		final List<String> collectionRoles = new ArrayList<>();
+		metamodel.forEachCollectionDescriptor( (collectionDescriptor) -> collectionRoles.add( collectionDescriptor.getRole() ) );
+		this.allCollectionRoles = collectionRoles.toArray( new String[0] );
 	}
 
 	/**
@@ -137,7 +154,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		secondLevelCacheHitCount.reset();
 		secondLevelCacheMissCount.reset();
 		secondLevelCachePutCount.reset();
-		
+
 		naturalIdCacheHitCount.reset();
 		naturalIdCacheMissCount.reset();
 		naturalIdCachePutCount.reset();
@@ -187,17 +204,25 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		naturalIdQueryStatsMap.clear();
 		l2CacheStatsMap.clear();
 		queryStatsMap.clear();
-		deprecatedNaturalIdStatsMap.clear();
 
 		queryPlanCacheHitCount.reset();
 		queryPlanCacheMissCount.reset();
 
-		startTime = System.currentTimeMillis();
+		resetStart();
+	}
+
+	private void resetStart(@UnknownInitialization StatisticsImpl this) {
+		startTime = Instant.now();
+	}
+
+	@Override
+	public Instant getStart() {
+		return startTime;
 	}
 
 	@Override
 	public long getStartTime() {
-		return startTime;
+		return startTime.toEpochMilli();
 	}
 
 	@Override
@@ -206,8 +231,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
-	public void setStatisticsEnabled(boolean b) {
-		isStatisticsEnabled = b;
+	public void setStatisticsEnabled(boolean enabled) {
+		isStatisticsEnabled = enabled;
 	}
 
 
@@ -217,14 +242,16 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getEntityNames() {
-		return metamodel.getAllEntityNames();
+		return allEntityNames;
 	}
 
 	@Override
 	public EntityStatisticsImpl getEntityStatistics(String entityName) {
-		return entityStatsMap.getOrCompute(
-				entityName,
-				s -> new EntityStatisticsImpl( metamodel.entityPersister( s ) )
+		return NullnessUtil.castNonNull(
+					entityStatsMap.getOrCompute(
+							entityName,
+							this::instantiateEntityStatistics
+					)
 		);
 	}
 
@@ -321,15 +348,17 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getCollectionRoleNames() {
-		return metamodel.getAllCollectionRoles();
+		return allCollectionRoles;
 	}
 
 	@Override
 	public CollectionStatisticsImpl getCollectionStatistics(String role) {
-		return collectionStatsMap.getOrCompute(
-				role,
-				s -> new CollectionStatisticsImpl( metamodel.collectionPersister( s ) )
-		);
+		return NullnessUtil.castNonNull(
+					collectionStatsMap.getOrCompute(
+						role,
+						this::instantiateCollectionStatistics
+					)
+				);
 	}
 
 	@Override
@@ -414,27 +443,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public NaturalIdStatisticsImpl getNaturalIdStatistics(String rootEntityName) {
-		return naturalIdQueryStatsMap.getOrCompute(
-				rootEntityName,
-				s -> {
-					final EntityPersister entityDescriptor = metamodel.entityPersister( s );
-					if ( !entityDescriptor.hasNaturalIdentifier() ) {
-						throw new IllegalArgumentException( "Given entity [" + s + "] does not define natural-id" );
-					}
-					return new NaturalIdStatisticsImpl( entityDescriptor );
-				}
-		);
-	}
-
-	@Override
-	public DeprecatedNaturalIdCacheStatisticsImpl getNaturalIdCacheStatistics(String regionName) {
-		final String key = cache.unqualifyRegionName( regionName );
-		return deprecatedNaturalIdStatsMap.getOrCompute(
-				key,
-				unqualifiedRegionName -> new DeprecatedNaturalIdCacheStatisticsImpl(
-						unqualifiedRegionName,
-						cache.getNaturalIdAccessesInRegion( unqualifiedRegionName )
-				)
+		return NullnessUtil.castNonNull(
+					naturalIdQueryStatsMap.getOrCompute(
+						rootEntityName,
+						this::instantiateNaturalStatistics
+					)
 		);
 	}
 
@@ -449,12 +462,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
-	public String getNaturalIdQueryExecutionMaxTimeRegion() {
+	public @Nullable String getNaturalIdQueryExecutionMaxTimeRegion() {
 		return naturalIdQueryExecutionMaxTimeRegion;
 	}
 
 	@Override
-	public String getNaturalIdQueryExecutionMaxTimeEntity() {
+	public @Nullable String getNaturalIdQueryExecutionMaxTimeEntity() {
 		return naturalIdQueryExecutionMaxTimeEntity;
 	}
 
@@ -482,8 +495,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		getDomainDataRegionStatistics( regionName ).incrementPutCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCachePutCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementPutCount();
 	}
 
 	@Override
@@ -495,8 +506,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		getDomainDataRegionStatistics( regionName ).incrementHitCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheHitCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementHitCount();
 	}
 
 	@Override
@@ -508,14 +517,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheMissCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementMissCount();
-	}
-
-	private String qualify(final String regionName) {
-		return cacheRegionPrefix == null
-					? regionName
-					: cacheRegionPrefix + '.' + regionName;
 	}
 
 	@Override
@@ -534,19 +535,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 			naturalIdQueryExecutionMaxTimeEntity = rootEntityName;
 		}
 
-		final EntityPersister rootEntityPersister = metamodel.entityPersister( rootEntityName );
+		final EntityPersister rootEntityPersister = metamodel.getEntityDescriptor( rootEntityName );
 
 		getNaturalIdStatistics( rootEntityName ).queryExecuted( time );
 
-		if ( rootEntityPersister.hasNaturalIdCache() ) {
-			final String naturalIdRegionName = rootEntityPersister.getNaturalIdCacheAccessStrategy()
-					.getRegion()
-					.getName();
-			getNaturalIdCacheStatistics( qualify( naturalIdRegionName ) ).queryExecuted( time );
-
-			if ( isLongestQuery ) {
-				naturalIdQueryExecutionMaxTimeRegion = naturalIdRegionName;
-			}
+		if ( isLongestQuery && rootEntityPersister.hasNaturalIdCache() ) {
+			naturalIdQueryExecutionMaxTimeRegion
+					= rootEntityPersister.getNaturalIdCacheAccessStrategy().getRegion().getName();
 		}
 	}
 
@@ -556,80 +551,59 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String[] getSecondLevelCacheRegionNames() {
-		return cache.getSecondLevelCacheRegionNames();
+		return cache.getCacheRegionNames().toArray( new String[0] );
 	}
 
 	@Override
 	public CacheRegionStatisticsImpl getDomainDataRegionStatistics(String regionName) {
+		return NullnessUtil.castNonNull(
+					l2CacheStatsMap.getOrCompute(
+						regionName,
+						this::instantiateCacheRegionStatistics
+					)
+		);
+	}
+
+	@Override
+	public @Nullable CacheRegionStatisticsImpl getQueryRegionStatistics(final String regionName) {
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				s -> {
-					final Region region = cache.getRegion( s );
 
-					if ( region == null ) {
-						throw new IllegalArgumentException( "Unknown cache region : " + s );
+				new Function<>() {
+					@Override
+					public @Nullable CacheRegionStatisticsImpl apply(String regionName1) {
+						return StatisticsImpl.this.computeQueryRegionStatistics( regionName1 );
 					}
-
-					if ( region instanceof QueryResultsRegion ) {
-						throw new IllegalArgumentException(
-								"Region name [" + s + "] referred to a query result region, not a domain data region"
-						);
-					}
-
-					return new CacheRegionStatisticsImpl( region );
 				}
 		);
 	}
 
-	@Override
-	public CacheRegionStatisticsImpl getQueryRegionStatistics(String regionName) {
-		final CacheRegionStatisticsImpl existing = l2CacheStatsMap.get( regionName );
-		if ( existing != null ) {
-			return existing;
-		}
-
-		final QueryResultsCache regionAccess = cache
-				.getQueryResultsCacheStrictly( regionName );
+	private @Nullable CacheRegionStatisticsImpl computeQueryRegionStatistics(final String regionName) {
+		final QueryResultsCache regionAccess = cache.getQueryResultsCacheStrictly( regionName );
 		if ( regionAccess == null ) {
-			return null;
+			return null; //this null value will be cached
 		}
-
-		return l2CacheStatsMap.getOrCompute(
-				regionName,
-				s -> new CacheRegionStatisticsImpl( regionAccess.getRegion() )
-		);
+		else {
+			return new CacheRegionStatisticsImpl( regionAccess.getRegion() );
+		}
 	}
 
+
 	@Override
-	public CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
+	public @Nullable CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {
 		if ( ! secondLevelCacheEnabled ) {
 			return null;
 		}
 
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				s -> {
-					Region region = cache.getRegion( s );
-
-					if ( region == null ) {
-
-						if ( ! queryCacheEnabled ) {
-							return null;
-						}
-
-						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
-						// NOTE that this method is deprecated
-						region = cache.getQueryResultsCache( s ).getRegion();
+				new Function<>() {
+					@Override
+					public @Nullable CacheRegionStatisticsImpl apply(String regionName1) {
+						return StatisticsImpl.this.createCacheRegionStatistics( regionName1 );
 					}
-
-					return new CacheRegionStatisticsImpl( region );
 				}
 		);
-	}
-
-	@Override
-	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
-		return getCacheRegionStatistics( cache.unqualifyRegionName( regionName ) );
 	}
 
 	@Override
@@ -688,9 +662,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public QueryStatisticsImpl getQueryStatistics(String queryString) {
-		return queryStatsMap.getOrCompute(
-				queryString,
-				s -> new QueryStatisticsImpl( s )
+		return NullnessUtil.castNonNull(
+					queryStatsMap.getOrCompute(
+						queryString,
+						QueryStatisticsImpl::new
+					)
 		);
 	}
 
@@ -715,7 +691,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
-	public String getQueryExecutionMaxTimeQueryString() {
+	public @Nullable String getQueryExecutionMaxTimeQueryString() {
 		return queryExecutionMaxTimeQueryString;
 	}
 
@@ -805,18 +781,29 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
-	public void queryPlanCacheHit(String hql) {
+	public void queryPlanCacheHit(String query) {
 		queryPlanCacheHitCount.increment();
 
-		if ( hql != null ) {
-			getQueryStatistics( hql ).incrementPlanCacheHitCount();
+		if ( query != null ) {
+			getQueryStatistics( query ).incrementPlanCacheHitCount();
+		}
+	}
+
+	@Override
+	public void queryPlanCacheMiss(String query) {
+		queryPlanCacheMissCount.increment();
+
+		if ( query != null ) {
+			getQueryStatistics( query ).incrementPlanCacheMissCount();
 		}
 	}
 
 	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
-		return l2CacheStatsMap.getOrCompute(
-				regionName,
-				s -> new CacheRegionStatisticsImpl( cache.getQueryResultsCache( regionName ).getRegion() )
+		return NullnessUtil.castNonNull(
+					l2CacheStatsMap.getOrCompute(
+						regionName,
+						this::instantiateCacheRegionStatsForQueryResults
+					)
 		);
 	}
 
@@ -904,7 +891,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	@Override
 	public void logSummary() {
 		LOG.loggingStatistics();
-		LOG.startTime( startTime );
+		LOG.startTime( startTime.toEpochMilli() );
 		LOG.sessionsOpened( sessionOpenCount.sum() );
 		LOG.sessionsClosed( sessionCloseCount.sum() );
 		LOG.transactions( transactionCount.sum() );
@@ -946,47 +933,108 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 	@Override
 	public String toString() {
-		return new StringBuilder()
-				.append( "Statistics[" )
-				.append( "start time=" ).append( startTime )
-				.append( ",sessions opened=" ).append( sessionOpenCount )
-				.append( ",sessions closed=" ).append( sessionCloseCount )
-				.append( ",transactions=" ).append( transactionCount )
-				.append( ",successful transactions=" ).append( committedTransactionCount )
-				.append( ",optimistic lock failures=" ).append( optimisticFailureCount )
-				.append( ",flushes=" ).append( flushCount )
-				.append( ",connections obtained=" ).append( connectCount )
-				.append( ",statements prepared=" ).append( prepareStatementCount )
-				.append( ",statements closed=" ).append( closeStatementCount )
-				.append( ",second level cache puts=" ).append( secondLevelCachePutCount )
-				.append( ",second level cache hits=" ).append( secondLevelCacheHitCount )
-				.append( ",second level cache misses=" ).append( secondLevelCacheMissCount )
-				.append( ",entities loaded=" ).append( entityLoadCount )
-				.append( ",entities updated=" ).append( entityUpdateCount )
-				.append( ",entities inserted=" ).append( entityInsertCount )
-				.append( ",entities deleted=" ).append( entityDeleteCount )
-				.append( ",entities fetched=" ).append( entityFetchCount )
-				.append( ",collections loaded=" ).append( collectionLoadCount )
-				.append( ",collections updated=" ).append( collectionUpdateCount )
-				.append( ",collections removed=" ).append( collectionRemoveCount )
-				.append( ",collections recreated=" ).append( collectionRecreateCount )
-				.append( ",collections fetched=" ).append( collectionFetchCount )
-				.append( ",naturalId queries executed to database=" ).append( naturalIdQueryExecutionCount )
-				.append( ",naturalId cache puts=" ).append( naturalIdCachePutCount )
-				.append( ",naturalId cache hits=" ).append( naturalIdCacheHitCount )
-				.append( ",naturalId cache misses=" ).append( naturalIdCacheMissCount )
-				.append( ",naturalId max query time=" ).append( naturalIdQueryExecutionMaxTime )
-				.append( ",queries executed to database=" ).append( queryExecutionCount )
-				.append( ",query cache puts=" ).append( queryCachePutCount )
-				.append( ",query cache hits=" ).append( queryCacheHitCount )
-				.append( ",query cache misses=" ).append( queryCacheMissCount )
-				.append(",update timestamps cache puts=").append(updateTimestampsCachePutCount)
-				.append(",update timestamps cache hits=").append(updateTimestampsCacheHitCount)
-				.append(",update timestamps cache misses=").append(updateTimestampsCacheMissCount)
-				.append( ",max query time=" ).append( queryExecutionMaxTime )
-				.append( ",query plan cache hits=" ).append( queryPlanCacheHitCount )
-				.append( ",query plan cache misses=" ).append( queryPlanCacheMissCount )
-				.append( ']' )
-				.toString();
+		return "Statistics[" +
+				"start time=" + startTime +
+				",sessions opened=" + sessionOpenCount +
+				",sessions closed=" + sessionCloseCount +
+				",transactions=" + transactionCount +
+				",successful transactions=" + committedTransactionCount +
+				",optimistic lock failures=" + optimisticFailureCount +
+				",flushes=" + flushCount +
+				",connections obtained=" + connectCount +
+				",statements prepared=" + prepareStatementCount +
+				",statements closed=" + closeStatementCount +
+				",second level cache puts=" + secondLevelCachePutCount +
+				",second level cache hits=" + secondLevelCacheHitCount +
+				",second level cache misses=" + secondLevelCacheMissCount +
+				",entities loaded=" + entityLoadCount +
+				",entities updated=" + entityUpdateCount +
+				",entities inserted=" + entityInsertCount +
+				",entities deleted=" + entityDeleteCount +
+				",entities fetched=" + entityFetchCount +
+				",collections loaded=" + collectionLoadCount +
+				",collections updated=" + collectionUpdateCount +
+				",collections removed=" + collectionRemoveCount +
+				",collections recreated=" + collectionRecreateCount +
+				",collections fetched=" + collectionFetchCount +
+				",naturalId queries executed to database=" + naturalIdQueryExecutionCount +
+				",naturalId cache puts=" + naturalIdCachePutCount +
+				",naturalId cache hits=" + naturalIdCacheHitCount +
+				",naturalId cache misses=" + naturalIdCacheMissCount +
+				",naturalId max query time=" + naturalIdQueryExecutionMaxTime +
+				",queries executed to database=" + queryExecutionCount +
+				",query cache puts=" + queryCachePutCount +
+				",query cache hits=" + queryCacheHitCount +
+				",query cache misses=" + queryCacheMissCount +
+				",update timestamps cache puts=" + updateTimestampsCachePutCount +
+				",update timestamps cache hits=" + updateTimestampsCacheHitCount +
+				",update timestamps cache misses=" + updateTimestampsCacheMissCount +
+				",max query time=" + queryExecutionMaxTime +
+				",query plan cache hits=" + queryPlanCacheHitCount +
+				",query plan cache misses=" + queryPlanCacheMissCount +
+				']';
+	}
+
+	private EntityStatisticsImpl instantiateEntityStatistics(final String entityName) {
+		return new EntityStatisticsImpl( metamodel.getEntityDescriptor( entityName ) );
+	}
+
+	private CollectionStatisticsImpl instantiateCollectionStatistics(final String role) {
+		return new CollectionStatisticsImpl( metamodel.getCollectionDescriptor( role ) );
+	}
+
+	private NaturalIdStatisticsImpl instantiateNaturalStatistics(final String entityName) {
+		final EntityPersister entityDescriptor = metamodel.getEntityDescriptor( entityName );
+		if ( !entityDescriptor.hasNaturalIdentifier() ) {
+			throw new IllegalArgumentException( "Given entity [" + entityName + "] does not define natural-id" );
+		}
+		return new NaturalIdStatisticsImpl( entityDescriptor );
+	}
+
+	private CacheRegionStatisticsImpl instantiateCacheRegionStatistics(final String regionName) {
+		final Region region = cache.getRegion( regionName );
+
+		if ( region == null ) {
+			throw new IllegalArgumentException( "Unknown cache region : " + regionName );
+		}
+
+		if ( region instanceof QueryResultsRegion ) {
+			throw new IllegalArgumentException(
+					"Region name [" + regionName + "] referred to a query result region, not a domain data region"
+			);
+		}
+
+		return new CacheRegionStatisticsImpl( region );
+	}
+
+	private CacheRegionStatisticsImpl instantiateCacheRegionStatsForQueryResults(final String regionName) {
+		return new CacheRegionStatisticsImpl( cache.getQueryResultsCache( regionName ).getRegion() );
+	}
+
+	private @Nullable CacheRegionStatisticsImpl createCacheRegionStatistics(final String regionName) {
+		Region region = cache.getRegion( regionName );
+
+		if ( region == null ) {
+
+			if ( !queryCacheEnabled ) {
+				return null;
+			}
+
+			// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
+			// NOTE that this method is deprecated
+			region = cache.getQueryResultsCache( regionName ).getRegion();
+		}
+
+		return new CacheRegionStatisticsImpl( region );
+	}
+
+	@Override
+	public Map<String, Long> getSlowQueries() {
+		return slowQueries;
+	}
+
+	@Override
+	public void slowQuery(String sql, long executionTime) {
+		slowQueries.merge( sql, executionTime, Math::max );
 	}
 }

@@ -1,28 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.tuple.NonIdentifierAttribute;
-
-import java.io.Serializable;
 import java.util.Map;
 
+import org.hibernate.Internal;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+
 /**
- * Collection of convenience methods relating to operations across arrays of types...
+ * Certain operations for working with arrays of property values.
  *
  * @author Steve Ebersole
- *
- * @deprecated with no real replacement.  this was always intended as an internal class
  */
-@Deprecated
+@Internal
 public class TypeHelper {
 	/**
 	 * Disallow instantiation
@@ -60,83 +55,6 @@ public class TypeHelper {
 	}
 
 	/**
-	 * Apply the {@link Type#beforeAssemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param session The originating session
-	 */
-	public static void beforeAssemble(
-			final Serializable[] row,
-			final Type[] types,
-			final SharedSessionContractImplementor session) {
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				&& row[i] != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				types[i].beforeAssemble( row[i], session );
-			}
-		}
-	}
-
-	/**
-	 * Apply the {@link Type#assemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param session The originating session
-	 * @param owner The entity "owning" the values
-	 * @return The assembled state
-	 */
-	public static Object[] assemble(
-			final Serializable[] row,
-			final Type[] types,
-			final SharedSessionContractImplementor session,
-			final Object owner) {
-		Object[] assembled = new Object[row.length];
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				assembled[i] = row[i];
-			}
-			else {
-				assembled[i] = types[i].assemble( row[i], session, owner );
-			}
-		}
-		return assembled;
-	}
-
-	/**
-	 * Apply the {@link Type#disassemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param nonCacheable An array indicating which values to include in the disassembled state
-	 * @param session The originating session
-	 * @param owner The entity "owning" the values
-	 *
-	 * @return The disassembled state
-	 */
-	public static Serializable[] disassemble(
-			final Object[] row,
-			final Type[] types,
-			final boolean[] nonCacheable,
-			final SharedSessionContractImplementor session,
-			final Object owner) {
-		Serializable[] disassembled = new Serializable[row.length];
-		for ( int i = 0; i < row.length; i++ ) {
-			if ( nonCacheable!=null && nonCacheable[i] ) {
-				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-			}
-			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				disassembled[i] = (Serializable) row[i];
-			}
-			else {
-				disassembled[i] = types[i].disassemble( row[i], session, owner );
-			}
-		}
-		return disassembled;
-	}
-
-	/**
 	 * Apply the {@link Type#replace} operation across a series of values.
 	 *
 	 * @param original The source of the state
@@ -154,10 +72,11 @@ public class TypeHelper {
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache) {
+			final Map<Object, Object> copyCache) {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
@@ -168,6 +87,35 @@ public class TypeHelper {
 			}
 		}
 		return copied;
+	}
+
+	/**
+	 * Apply the {@link Type#replace} operation across a series of values.
+	 *
+	 * @param persister The EntityPersister
+	 * @param entity The source of the state
+	 * @param session The originating session
+	 * @param owner The entity "owning" the values
+	 * @param copyCache A map representing a cache of already replaced state
+	 *
+	 */
+	public static void replace(
+			final EntityPersister persister,
+			final Object entity,
+			final SharedSessionContractImplementor session,
+			final Object owner,
+			final Map<Object, Object> copyCache) {
+		final Object[] values = persister.getValues( entity );
+		final Type[] types = persister.getPropertyTypes();
+		for ( int i = 0; i < types.length; i++ ) {
+			final Object oldValue = values[i];
+			final Object newValue;
+			if ( oldValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& oldValue != PropertyAccessStrategyBackRefImpl.UNKNOWN
+					&& ( newValue = types[i].replace( values[i], values[i], session, owner, copyCache ) ) != oldValue ) {
+				persister.setValue( entity, i, newValue );
+			}
+		}
 	}
 
 	/**
@@ -189,7 +137,7 @@ public class TypeHelper {
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache,
+			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
 		Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
@@ -210,7 +158,7 @@ public class TypeHelper {
 	/**
 	 * Apply the {@link Type#replace} operation across a series of values, as long as the corresponding
 	 * {@link Type} is an association.
-	 * <p/>
+	 * <p>
 	 * If the corresponding type is a component type, then apply {@link Type#replace} across the component
 	 * subtypes but do not replace the component value itself.
 	 *
@@ -230,184 +178,65 @@ public class TypeHelper {
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner,
-			final Map copyCache,
+			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
-		Object[] copied = new Object[original.length];
+		final Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				copied[i] = target[i];
-			}
-			else if ( types[i].isComponentType() ) {
-				// need to extract the component values and check for subtype replacements...
-				CompositeType componentType = ( CompositeType ) types[i];
-				Type[] subtypes = componentType.getSubtypes();
-				Object[] origComponentValues = original[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( original[i], session );
-				Object[] targetComponentValues = target[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( target[i], session );
-				replaceAssociations( origComponentValues, targetComponentValues, subtypes, session, null, copyCache, foreignKeyDirection );
-				copied[i] = target[i];
-			}
-			else if ( !types[i].isAssociationType() ) {
+			final Object currentOriginal = original[i];
+			if ( currentOriginal == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| currentOriginal == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else {
-				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );
+				final Type type = types[i];
+				// AnyType is both a CompositeType and an AssociationType
+				// but here we want to treat it as an association
+				if ( type instanceof EntityType || type instanceof CollectionType || type instanceof AnyType ) {
+					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
+				}
+				else {
+					if ( type instanceof ComponentType ) {
+						final ComponentType compositeType = (ComponentType) type;
+						if ( target[i] != null ) {
+							// need to extract the component values and check for subtype replacements...
+							final Object[] objects = replaceCompositeAssociations(
+									session,
+									copyCache,
+									foreignKeyDirection,
+									target[i],
+									currentOriginal,
+									compositeType
+							);
+							target[i] = compositeType.replacePropertyValues( target[i], objects, session );
+						}
+					}
+					copied[i] = target[i];
+				}
 			}
 		}
 		return copied;
 	}
 
-	/**
-	 * Determine if any of the given field values are dirty, returning an array containing
-	 * indices of the dirty fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the dirty checking, per property
-	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
-	 *
-	 * @deprecated Use {org.hibernate.type.TypeHelper{@link #findDirty(NonIdentifierAttribute[], Object[], Object[], boolean[][], SharedSessionContractImplementor)} indtead
-	 */
-	@Deprecated
-	public static int[] findDirty(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final boolean anyUninitializedProperties,
-			final SharedSessionContractImplementor session) {
-		return findDirty( properties, currentState, previousState, includeColumns, session );
-	}
-
-	/**
-	 * Determine if any of the given field values are dirty, returning an array containing
-	 * indices of the dirty fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the dirty checking, per property
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
-	 */
-	public static int[] findDirty(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final SharedSessionContractImplementor session) {
-		int[] results = null;
-		int count = 0;
-		int span = properties.length;
-
-		for ( int i = 0; i < span; i++ ) {
-			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-					( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ||
-							( properties[i].isDirtyCheckable()
-									&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session ) ) );
-			if ( dirty ) {
-				if ( results == null ) {
-					results = new int[span];
-				}
-				results[count++] = i;
-			}
-		}
-
-		if ( count == 0 ) {
-			return null;
-		}
-		else {
-			return ArrayHelper.trim(results, count);
-		}
-	}
-
-	/**
-	 * Determine if any of the given field values are modified, returning an array containing
-	 * indices of the modified fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the mod checking, per property
-	 * @param includeProperties Array of property indices that identify which properties participate in check
-	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
-	 *
-	 * @deprecated Use {@link #findModified(NonIdentifierAttribute[], Object[], Object[], boolean[][], boolean[], boolean, SharedSessionContractImplementor)}
-	 * instead.
-	 */
-	@Deprecated
-	public static int[] findModified(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final boolean[] includeProperties,
-			final boolean anyUninitializedProperties,
-			final SharedSessionContractImplementor session) {
-		return findModified( properties, currentState, previousState, includeColumns, includeProperties, session );
-	}
-
-	/**
-	 * Determine if any of the given field values are modified, returning an array containing
-	 * indices of the modified fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the mod checking, per property
-	 * @param includeProperties Array of property indices that identify which properties participate in check
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
-	 **/
-	public static int[] findModified(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final boolean[] includeProperties,
-			final SharedSessionContractImplementor session) {
-		int[] results = null;
-		int count = 0;
-		int span = properties.length;
-
-		for ( int i = 0; i < span; i++ ) {
-			final boolean modified = currentState[ i ] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& includeProperties[ i ]
-					&& properties[ i ].isDirtyCheckable()
-					&& properties[ i ].getType().isModified( previousState[ i ], currentState[ i ], includeColumns[ i ], session );
-			if ( modified ) {
-				if ( results == null ) {
-					results = new int[ span ];
-				}
-				results[ count++ ] = i;
-			}
-		}
-
-		if ( count == 0 ) {
-			return null;
-		}
-		else {
-			int[] trimmed = new int[ count ];
-			System.arraycopy( results, 0, trimmed, 0, count );
-			return trimmed;
-		}
+	private static Object[] replaceCompositeAssociations(
+			SharedSessionContractImplementor session,
+			Map<Object, Object> copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			Object target, Object currentOriginal,
+			ComponentType compositeType) {
+		final Type[] subtypes = compositeType.getSubtypes();
+		return replaceAssociations(
+				currentOriginal == null
+						? new Object[subtypes.length]
+						: compositeType.getPropertyValues( currentOriginal, session ),
+				target == null
+						? new Object[subtypes.length]
+						: compositeType.getPropertyValues( target, session ),
+				subtypes,
+				session,
+				null,
+				copyCache,
+				foreignKeyDirection
+		);
 	}
 
 }

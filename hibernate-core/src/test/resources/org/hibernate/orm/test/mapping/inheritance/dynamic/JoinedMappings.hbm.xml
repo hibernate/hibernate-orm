@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+
+  This mapping demonstrates content-based discrimination for the
+  table-per-hierarchy mapping strategy, using a formula
+  discriminator.
+
+-->
+
+<hibernate-mapping
+        package="org.hibernate.orm.test.mapping.inheritance.dynamic"
+        default-access="field">
+
+    <class abstract="true" entity-name="Base" table="t_base">
+        <id type="integer" />
+        <property name="name" type="string"/>
+
+        <joined-subclass entity-name="Sub" table="t_sub">
+            <key column="sub_id"/>
+            <property name="subText" type="string"/>
+        </joined-subclass>
+    </class>
+</hibernate-mapping>

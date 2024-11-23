@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.Type;
+import org.hibernate.query.BindableType;
 
 /**
  * Descriptor regarding a named parameter.
@@ -15,7 +13,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public class NamedParameterDescriptor extends AbstractParameterDescriptor {
+public class NamedParameterDescriptor<T> extends AbstractParameterDescriptor<T> {
 	private final String name;
 
 	/**
@@ -25,7 +23,7 @@ public class NamedParameterDescriptor extends AbstractParameterDescriptor {
 	 * @param expectedType The expected type of the parameter, according to the translator
 	 * @param sourceLocations The locations of the named parameters (aye aye aye)
 	 */
-	public NamedParameterDescriptor(String name, Type expectedType, int[] sourceLocations) {
+	public NamedParameterDescriptor(String name, BindableType<T> expectedType, int[] sourceLocations) {
 		super( sourceLocations, expectedType );
 		this.name = name;
 	}
@@ -44,7 +42,7 @@ public class NamedParameterDescriptor extends AbstractParameterDescriptor {
 			return false;
 		}
 
-		NamedParameterDescriptor that = (NamedParameterDescriptor) o;
+		final NamedParameterDescriptor<?> that = (NamedParameterDescriptor<?>) o;
 		return getName().equals( that.getName() );
 	}
 
@@ -52,4 +50,5 @@ public class NamedParameterDescriptor extends AbstractParameterDescriptor {
 	public int hashCode() {
 		return getName().hashCode();
 	}
+
 }

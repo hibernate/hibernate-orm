@@ -1,276 +1,859 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
 
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.BigIntegerType;
-import org.hibernate.type.BinaryType;
-import org.hibernate.type.BooleanType;
-import org.hibernate.type.ByteType;
-import org.hibernate.type.CharacterType;
-import org.hibernate.type.DateType;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LocaleType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.ShortType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TextType;
-import org.hibernate.type.TimeType;
-import org.hibernate.type.TimestampType;
-import org.hibernate.type.Type;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
 
 /**
- * Represents an HQL/JPQL query or a compiled Criteria query.  Also acts as the Hibernate
- * extension to the JPA Query/TypedQuery contract
- * <p/>
- * NOTE: {@link org.hibernate.Query} is deprecated, and slated for removal in 6.0.
- * For the time being we leave all methods defined on {@link org.hibernate.Query}
- * rather than here because it was previously the public API so we want to leave that
- * unchanged in 5.x.  For 6.0 we will move those methods here and then delete that class.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable query, either:
+ * <ul>
+ * <li>a query written in HQL,
+ * <li>a named query written in HQL or native SQL, or
+ * <li>a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria query}.
+ * </ul>
+ * <p>
+ * The subtype {@link NativeQuery} represents a query written in native SQL.
+ * <p>
+ * This type simply mixes the {@link TypedQuery} interface defined by JPA with
+ * {@link SelectionQuery} and {@link MutationQuery}. Unfortunately, JPA does
+ * not distinguish between {@linkplain SelectionQuery selection queries} and
+ * {@linkplain MutationQuery mutation queries}, so we lose that distinction here.
+ * However, every {@code Query} may logically be classified as one or the other.
+ * <p>
+ * A {@code Query} may be obtained from the {@link org.hibernate.Session} by
+ * calling:
+ * <ul>
+ * <li>{@link QueryProducer#createQuery(String, Class)}, passing the HQL as a
+ *     string,
+ * <li>{@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ *     object}, or
+ * <li>{@link QueryProducer#createNamedQuery(String, Class)} passing the name
+ *     of a query defined using {@link jakarta.persistence.NamedQuery} or
+ *     {@link jakarta.persistence.NamedNativeQuery}.
+ * </ul>
+ * <p>
+ * A {@code Query} controls how a query is executed, and allows arguments to be
+ * bound to its parameters.
+ * <ul>
+ * <li>Selection queries are usually executed using {@link #getResultList()} or
+ *     {@link #getSingleResult()}.
+ * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
+ *     control limits and pagination.
+ * <li>The various overloads of {@link #setParameter(String, Object)} and
+ *     {@link #setParameter(int, Object)} allow arguments to be bound to named
+ *     and ordinal parameters defined by the query.
+ * </ul>
+ * <p>
+ * Note that this interface offers no real advantages over {@link SelectionQuery}
+ * except for compatibility with the JPA-defined {@link TypedQuery} interface.
  *
- * @author Steve Ebersole
  * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @param <R> The result type, for typed queries, or {@link Object} for untyped queries
+ *
+ * @see QueryProducer
  */
-@SuppressWarnings("UnusedDeclaration")
-public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQueryContract {
-	/**
-	 * Get the QueryProducer this Query originates from.
-	 */
-	QueryProducer getProducer();
-
-	Optional<R> uniqueResultOptional();
+@Incubating
+public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R> {
 
 	/**
-	 * Retrieve a Stream over the query results.
-	 * <p/>
-	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
-	 * is to return a a smarter stream in 6.x leveraging the SQM model.
+	 * Execute the query and return the query results as a {@link List}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
 	 *
-	 * <p>
-	 *
-	 * You should call {@link java.util.stream.Stream#close()} after processing the stream
-	 * so that the underlying resources are deallocated right away.
-	 *
-	 * @return The results Stream
-	 *
-	 * @since 5.2
+	 * @return the result list
 	 */
-	Stream<R> stream();
-
-	/**
-	 * Apply the given graph using the given semantic
-	 *
-	 * @param graph The graph the apply.
-	 * @param semantic The semantic to use when applying the graph
-	 *
-	 * @return this - for method chaining
-	 */
-	Query<R> applyGraph(RootGraph graph, GraphSemantic semantic);
-
-	/**
-	 * Apply the given graph using {@linkplain GraphSemantic#FETCH fetch semantics}
-	 *
-	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)} using
-	 * {@link GraphSemantic#FETCH} as the semantic
-	 */
-	default Query<R> applyFetchGraph(RootGraph graph) {
-		return applyGraph( graph, GraphSemantic.FETCH );
-	}
-
-	/**
-	 * Apply the given graph using {@linkplain GraphSemantic#LOAD load semantics}
-	 *
-	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)} using
-	 * {@link GraphSemantic#LOAD} as the semantic
-	 */
-	default Query<R> applyLoadGraph(RootGraph graph) {
-		return applyGraph( graph, GraphSemantic.LOAD );
-	}
-
-
-	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
-
-	Query<R> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
-
-	Query<R> setParameter(String name, LocalDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, Instant value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, LocalDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Overrides for methods we do not want deprecated
-
-	@Override
-	ScrollableResults scroll();
-
-	@Override
-	ScrollableResults scroll(ScrollMode scrollMode);
-
 	@Override
 	List<R> list();
 
+	/**
+	 * Execute the query and return the query results as a {@link List}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
+	 *
+	 * @implNote Delegates to {@link #list()}
+	 *
+	 * @return the results as a list
+	 */
+	@Override
 	default List<R> getResultList() {
 		return list();
 	}
 
+	/**
+	 * Execute the query and return the results in a
+	 * {@linkplain ScrollableResults scrollable form}.
+	 * <p>
+	 * This overload simply calls {@link #scroll(ScrollMode)} using the
+	 * {@linkplain Dialect#defaultScrollMode() dialect default scroll mode}.
+	 *
+	 * @apiNote The exact behavior of this method depends somewhat
+	 *          on the level of JDBC driver support for scrollable
+	 *          {@link java.sql.ResultSet}s, and so is not very
+	 *          portable between database.
+	 */
+	@Override
+	ScrollableResults<R> scroll();
+
+	/**
+	 * Execute the query and return the results in a
+	 * {@linkplain ScrollableResults scrollable form}. The capabilities
+	 * of the returned {@link ScrollableResults} depend on the specified
+	 * {@link ScrollMode}.
+	 *
+	 * @apiNote The exact behavior of this method depends somewhat
+	 *          on the level of JDBC driver support for scrollable
+	 *          {@link java.sql.ResultSet}s, and so is not very
+	 *          portable between database.
+	 */
+	@Override
+	ScrollableResults<R> scroll(ScrollMode scrollMode);
+
+	/**
+	 * Execute the query and return the query results as a {@link Stream}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the stream is packaged in an array of
+	 * type {@code Object[]}.
+	 * <p>
+	 * The client should call {@link Stream#close()} after processing the
+	 * stream so that resources are freed as soon as possible.
+	 *
+	 * @implNote Delegates to {@link #stream()}, which in turn delegates
+	 *           to this method. Implementors should implement at least
+	 *           one of these methods.
+	 *
+	 * @return The results as a {@link Stream}
+	 */
+	@Override
+	default Stream<R> getResultStream() {
+		return stream();
+	}
+
+	/**
+	 * Execute the query and return the query results as a {@link Stream}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the stream is packaged in an array of type
+	 * {@code Object[]}.
+	 * <p>
+	 * The client should call {@link Stream#close()} after processing the
+	 * stream so that resources are freed as soon as possible.
+	 *
+	 * @return The results as a {@link Stream}
+	 *
+	 * @since 5.2
+	 */
+	@Override
+	default Stream<R> stream() {
+		return list().stream();
+	}
+
+	/**
+	 * Execute the query and return the single result of the query, or
+	 * {@code null} if the query returns no results.
+	 *
+	 * @return the single result or {@code null} if there is no result to return
+	 *
+	 * @throws NonUniqueResultException if there is more than one matching result
+	 */
 	@Override
 	R uniqueResult();
 
-	default R getSingleResult() {
-		return uniqueResult();
+	/**
+	 * Execute the query and return the single result of the query,
+	 * throwing an exception if the query returns no results.
+	 *
+	 * @return the single result, only if there is exactly one
+	 *
+	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 * @throws jakarta.persistence.NoResultException if there is no result to return
+	 */
+	@Override
+	R getSingleResult();
+
+	/**
+	 * Execute the query and return the single result of the query as
+	 * an instance of {@link Optional}.
+	 *
+	 * @return the single result as an {@code Optional}
+	 *
+	 * @throws NonUniqueResultException if there is more than one matching result
+	 */
+	@Override
+	Optional<R> uniqueResultOptional();
+
+	/**
+	 * Execute an insert, update, or delete statement, and return the
+	 * number of affected entities.
+	 * <p>
+	 * For use with instances of {@link MutationQuery} created using
+	 * {@link QueryProducer#createMutationQuery(String)},
+	 * {@link QueryProducer#createNamedMutationQuery(String)},
+	 * {@link QueryProducer#createNativeMutationQuery(String)},
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 *
+	 * @return the number of affected entity instances
+	 *         (may differ from the number of affected rows)
+	 *
+	 * @see QueryProducer#createMutationQuery
+	 * @see QueryProducer#createMutationQuery(String)
+	 * @see QueryProducer#createNamedMutationQuery(String)
+	 * @see QueryProducer#createNativeMutationQuery(String)
+	 *
+	 * @see jakarta.persistence.Query#executeUpdate()
+	 *
+	 * @apiNote This method is needed because this interface extends
+	 *          {@link jakarta.persistence.Query}, which defines this method.
+	 *          See {@link MutationQuery} and {@link SelectionQuery}.
+	 *
+	 * @see QueryProducer#createMutationQuery
+	 */
+	@Override
+	int executeUpdate();
+
+	/**
+	 * Get the {@link QueryProducer} which produced this {@code Query},
+	 * that is, the {@link org.hibernate.Session} or
+	 * {@link org.hibernate.StatelessSession} that was used to create
+	 * this {@code Query} instance.
+	 *
+	 * @return The producer of this query
+	 */
+	SharedSessionContract getSession();
+
+	/**
+	 * The query as a string, or {@code null} in the case of a criteria query.
+	 */
+	String getQueryString();
+
+	/**
+	 * Apply the given graph using the given semantic
+	 *
+	 * @param graph The graph to apply.
+	 * @param semantic The semantic to use when applying the graph
+	 */
+	Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
+
+	/**
+	 * Apply the given graph using {@linkplain GraphSemantic#FETCH fetch semantics}.
+	 *
+	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
+	 *          using {@link GraphSemantic#FETCH} as the semantic.
+	 */
+	default Query<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
+		return applyGraph( graph, GraphSemantic.FETCH );
 	}
 
-	@Override
-	FlushMode getHibernateFlushMode();
+	/**
+	 * Apply the given graph using {@linkplain GraphSemantic#LOAD load semantics}.
+	 *
+	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
+	 *          using {@link GraphSemantic#LOAD} as the semantic.
+	 */
+	default Query<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
+		return applyGraph( graph, GraphSemantic.LOAD );
+	}
 
-	@Override
-	CacheMode getCacheMode();
+	/**
+	 * Obtain the comment currently associated with this query.
+	 * <p>
+	 * If SQL commenting is enabled, the comment will be added to the SQL
+	 * query sent to the database, which may be useful for identifying the
+	 * source of troublesome queries.
+	 * <p>
+	 * SQL commenting may be enabled using the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_SQL_COMMENTS}.
+	 *
+	 * @return The comment.
+	 */
+	String getComment();
 
-	@Override
-	String getCacheRegion();
+	/**
+	 * Set the comment for this query.
+	 * <p>
+	 * If SQL commenting is enabled, the comment will be added to the SQL
+	 * query sent to the database, which may be useful for identifying the
+	 * source of troublesome queries.
+	 * <p>
+	 * SQL commenting may be enabled using the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_SQL_COMMENTS}.
+	 *
+	 * @param comment The human-readable comment
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getComment()
+	 */
+	Query<R> setComment(String comment);
 
-	@Override
-	Integer getFetchSize();
+	/**
+	 * Add a database query hint to the SQL query.
+	 * <p>
+	 * A database hint is a completely different concept to a JPA hint
+	 * specified using {@link jakarta.persistence.QueryHint} or
+	 * {@link #getHints()}. These are hints to the JPA provider.
+	 * <p>
+	 * Multiple query hints may be specified. The operation
+	 * {@link Dialect#getQueryHintString(String, List)} determines how
+	 * the hint is actually added to the SQL query.
+	 *
+	 * @param hint The database specific query hint to add.
+	 */
+	Query<R> addQueryHint(String hint);
 
+	/**
+	 * Obtains the {@link LockOptions} in effect for this query.
+	 *
+	 * @return The {@link LockOptions} currently in effect
+	 *
+	 * @see LockOptions
+	 */
 	@Override
 	LockOptions getLockOptions();
 
-	@Override
-	String getComment();
+	/**
+	 * Apply the given {@linkplain LockOptions lock options} to this
+	 * query. Alias-specific lock modes in the given lock options are
+	 * merged with any alias-specific lock mode which have already been
+	 * {@linkplain #setLockMode(String, LockMode) set}. If a lock mode
+	 * has already been specified for an alias that is among the aliases
+	 * in the given lock options, the lock mode specified in the given
+	 * lock options overrides the lock mode that was already set.
+	 *
+	 * @param lockOptions The lock options to apply to the query.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getLockOptions()
+	 */
+	Query<R> setLockOptions(LockOptions lockOptions);
 
+	/**
+	 * Set the {@link LockMode} to use for particular alias defined in
+	 * the {@code FROM} clause of the query.
+	 * <p>
+	 * The alias-specific lock modes specified here are added to the
+	 * {@link #getLockOptions() LockOption}s.
+	 * <p>
+	 * The effect of alias-specific locking is quite dependent on the
+	 * driver and database. For maximum portability, the given lock
+	 * mode should be {@link LockMode#PESSIMISTIC_WRITE}.
+	 *
+	 * @param alias A query alias
+	 * @param lockMode The lock mode to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getLockOptions()
+	 */
 	@Override
-	String getQueryString();
+	Query<R> setLockMode(String alias, LockMode lockMode);
 
-	@Override
+	/**
+	 * Set a {@link TupleTransformer}.
+	 */
+	<T> Query<T> setTupleTransformer(TupleTransformer<T> transformer);
+
+	/**
+	 * Set a {@link ResultListTransformer}.
+	 */
+	Query<R> setResultListTransformer(ResultListTransformer<R> transformer);
+
+	/**
+	 * Get the execution options for this {@code Query}. Many of the setters
+	 * of this object update the state of the returned {@link QueryOptions}.
+	 * This is useful because it gives access to s primitive value in its
+	 * (nullable) wrapper form, rather than the primitive form as required
+	 * by JPA. This allows us to distinguish whether a value has been
+	 * explicitly set by the client.
+	 *
+	 * @return Return the encapsulation of this query's options.
+	 */
+	QueryOptions getQueryOptions();
+
+	/**
+	 * Access to information about query parameters.
+	 *
+	 * @return information about query parameters.
+	 */
 	ParameterMetadata getParameterMetadata();
+
+	/**
+	 * Bind the given argument to a named query parameter.
+	 * <p>
+	 * If the type of the parameter cannot be inferred from the context
+	 * in which it occurs, use one of the forms accept a "type".
+	 *
+	 * @see #setParameter(String, Object, Class)
+	 * @see #setParameter(String, Object, BindableType)
+	 */
+	@Override
+	Query<R> setParameter(String parameter, Object argument);
+
+	/**
+	 * Bind the given argument to a named query parameter using the given
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
+	 * {@link #setParameter(String, Object)} is used.
+	 *
+	 * @see #setParameter(String, Object, BindableType)
+	 */
+	<P> Query<R> setParameter(String parameter, P argument, Class<P> type);
+
+	/**
+	 * Bind the given argument to a named query parameter using the given
+	 * {@link BindableType}.
+	 */
+	<P> Query<R> setParameter(String parameter, P argument, BindableType<P> type);
+
+	/**
+	 * Bind an {@link Instant} value to the named query parameter using
+	 * just the portion indicated by the given {@link TemporalType}.
+	 */
+	Query<R> setParameter(String parameter, Instant argument, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(String parameter, Calendar argument, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(String parameter, Date argument, TemporalType temporalType);
+
+
+
+	/**
+	 * Bind the given argument to an ordinal query parameter.
+	 * <p>
+	 * If the type of the parameter cannot be inferred from the context in
+	 * which it occurs, use one of the forms which accepts a "type".
+	 *
+	 * @see #setParameter(int, Object, Class)
+	 * @see #setParameter(int, Object, BindableType)
+	 */
+	@Override
+	Query<R> setParameter(int parameter, Object argument);
+
+	/**
+	 * Bind the given argument to an ordinal query parameter using the given
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
+	 * {@link #setParameter(int, Object)} is used.
+	 *
+	 * @see #setParameter(int, Object, BindableType)
+	 */
+	<P> Query<R> setParameter(int parameter, P argument, Class<P> type);
+
+	/**
+	 * Bind the given argument to an ordinal query parameter using the given
+	 * {@link BindableType}.
+	 */
+	<P> Query<R> setParameter(int parameter, P argument, BindableType<P> type);
+
+	/**
+	 * Bind an {@link Instant} value to the ordinal query parameter using
+	 * just the portion indicated by the given {@link TemporalType}.
+	 */
+	Query<R> setParameter(int parameter, Instant argument, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(int parameter, Date argument, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(int parameter, Calendar argument, TemporalType temporalType);
+
+	/**
+	 * Bind an argument to the query parameter represented by the given
+	 * {@link QueryParameter}.
+	 * <p>
+	 * If the type of the parameter cannot be inferred from the context in
+	 * which it occurs, use one of the forms which accepts a "type".
+	 *
+	 * @see #setParameter(QueryParameter, Object, BindableType)
+	 *
+	 * @param parameter the query parameter memento
+	 * @param argument the argument, which might be null
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<T> Query<R> setParameter(QueryParameter<T> parameter, T argument);
+
+	/**
+	 * Bind an argument to the query parameter represented by the given
+	 * {@link QueryParameter} using the given Class reference to attempt to
+	 * determine the {@link BindableType} to use.  If unable to determine
+	 * an appropriate {@link BindableType}, {@link #setParameter(QueryParameter, Object)} is used
+	 *
+	 * @param parameter the query parameter memento
+	 * @param argument the argument, which might be null
+	 * @param type a {@link BindableType} representing the type of the parameter
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #setParameter(QueryParameter, Object, BindableType)
+	 */
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, Class<P> type);
+
+	/**
+	 * Bind an argument to the query parameter represented by the given
+	 * {@link QueryParameter} using the given {@link BindableType}.
+	 *
+	 * @param parameter the query parameter memento
+	 * @param argument the argument, which might be null
+	 * @param type an {@link BindableType} representing the type of the parameter
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, BindableType<P> type);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	<T> Query<R> setParameter(Parameter<T> parameter, T argument);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(Parameter<Calendar> parameter, Calendar argument, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(Parameter<Date> parameter, Date argument, TemporalType temporalType);
+
+
+
+	/**
+	 * Bind multiple arguments to a named query parameter.
+	 * <p>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element.
+	 *
+	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setParameterList(String parameter, @SuppressWarnings("rawtypes") Collection arguments);
+
+	/**
+	 * Bind multiple arguments to a named query parameter using the given
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
+	 * {@link #setParameterList(String, Collection)} is used.
+	 *
+	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(String parameter, Collection<? extends P> arguments, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to a named query parameter using the given
+	 * {@link BindableType}.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(String parameter, Collection<? extends P> arguments, BindableType<P> type);
+
+
+	/**
+	 * Bind multiple arguments to a named query parameter.
+	 * <p>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setParameterList(String parameter, Object[] values);
+
+	/**
+	 * Bind multiple arguments to a named query parameter using the given
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
+	 * {@link #setParameterList(String, Collection)} is used.
+	 *
+	 * @see #setParameterList(java.lang.String, Object[], BindableType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(String parameter, P[] arguments, Class<P> javaType);
+
+
+	/**
+	 * Bind multiple arguments to a named query parameter using the given
+	 * {@link BindableType}.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(String parameter, P[] arguments, BindableType<P> type);
+
+	/**
+	 * Bind multiple arguments to an ordinal query parameter.
+	 * <p>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setParameterList(int parameter, @SuppressWarnings("rawtypes") Collection arguments);
+
+	/**
+	 * Bind multiple arguments to an ordinal query parameter using the given
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
+	 * {@link #setParameterList(String, Collection)} is used.
+	 *
+	 * @see #setParameterList(int, Collection, BindableType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int parameter, Collection<? extends P> arguments, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to an ordinal query parameter using the given
+	 * {@link BindableType}.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int parameter, Collection<? extends P> arguments, BindableType<P> type);
+
+	/**
+	 * Bind multiple arguments to an ordinal query parameter.
+	 * <p>
+	 * The "type mapping" for the binding is inferred from the type of the
+	 * first collection element.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setParameterList(int parameter, Object[] arguments);
+
+	/**
+	 * Bind multiple arguments to an ordinal query parameter using the given
+	 * {@link Class} reference to attempt to determine the {@link BindableType}
+	 * to use. If unable to determine an appropriate {@link BindableType},
+	 * {@link #setParameterList(String, Collection)} is used.
+	 *
+	 * @see #setParameterList(int, Object[], BindableType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int parameter, P[] arguments, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to an ordinal query parameter using the given
+	 * {@link BindableType}.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int parameter, P[] arguments, BindableType<P> type);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the given
+	 * {@link QueryParameter}.
+	 * <p>
+	 * The type of the parameter is inferred from the context in which it occurs,
+	 * and from the type of the first given argument.
+	 *
+	 * @param parameter the parameter memento
+	 * @param arguments a collection of arguments
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the given
+	 * {@link QueryParameter} using the given Class reference to attempt to
+	 * determine the {@link BindableType} to use. If unable to determine an
+	 * appropriate {@link BindableType}, {@link #setParameterList(String, Collection)}
+	 * is used.
+	 *
+	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such
+	 *          as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the given
+	 * {@link QueryParameter}, inferring the {@link BindableType}.
+	 * <p>
+	 * The "type mapping" for the binding is inferred from the type of the first
+	 * collection element.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such
+	 *          as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, BindableType<P> type);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter}.
+	 * <p>
+	 * The type of the parameter is inferred between the context in which it
+	 * occurs, the type associated with the QueryParameter and the type of
+	 * the first given argument.
+	 *
+	 * @param parameter the parameter memento
+	 * @param arguments a collection of arguments
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter} using the given {@code Class} reference
+	 * to attempt to determine the {@link BindableType} to use. If unable to
+	 * determine an appropriate {@link BindableType},
+	 * {@link #setParameterList(String, Collection)} is used.
+	 *
+	 * @see #setParameterList(QueryParameter, Object[], BindableType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter}, inferring the {@link BindableType}.
+	 * <p>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element
+	 *
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments, BindableType<P> type);
+
+	/**
+	 * Bind the property values of the given bean to named parameters of the query,
+	 * matching property names with parameter names and mapping property types to
+	 * Hibernate types using heuristics.
+	 *
+	 * @param bean any JavaBean or POJO
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setProperties(Object bean);
+
+	/**
+	 * Bind the values of the given {@code Map} for each named parameters of
+	 * the query, matching key names with parameter names and mapping value
+	 * types to Hibernate types using heuristics.
+	 *
+	 * @param bean a {@link Map} of names to arguments
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - CommonQueryContract
 
-
-	// covariant overrides
-
-	@Override
-	Query<R> setMaxResults(int maxResult);
-
-	@Override
-	Query<R> setFirstResult(int startPosition);
-
-	@Override
-	Query<R> setHint(String hintName, Object value);
-
-	@Override
-	<T> Query<R> setParameter(Parameter<T> param, T value);
-
-	@Override
-	Query<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(String name, Object value);
-
-	@Override
-	Query<R> setParameter(String name, Object val, Type type);
-
-	@Override
-	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(String name, Date value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(int position, Object value);
-
-	@Override
-	Query<R> setParameter(int position, Calendar value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(int position, Date value, TemporalType temporalType);
-
-	@Override
-	<T> Query<R> setParameter(QueryParameter<T> parameter, T val);
-
-	@Override
-	<P> Query<R> setParameter(int position, P val, TemporalType temporalType);
-
-	@Override
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, Type type);
-
-	@Override
-	Query<R> setParameter(int position, Object val, Type type);
-
-	@Override
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
-
-	@Override
-	<P> Query<R> setParameter(String name, P val, TemporalType temporalType);
-
-	@Override
-	Query<R> setFlushMode(FlushModeType flushMode);
-
-	@Override
-	Query<R> setLockMode(LockModeType lockMode);
-
-	@Override
-	Query<R> setReadOnly(boolean readOnly);
-
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
-	Query<R> setCacheMode(CacheMode cacheMode);
+	Query<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	Query<R> setCacheable(boolean cacheable);
@@ -279,864 +862,80 @@ public interface Query<R> extends TypedQuery<R>, org.hibernate.Query<R>, CommonQ
 	Query<R> setCacheRegion(String cacheRegion);
 
 	@Override
+	Query<R> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	Query<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	Query<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+
+	@Override
 	Query<R> setTimeout(int timeout);
 
 	@Override
 	Query<R> setFetchSize(int fetchSize);
 
 	@Override
-	Query<R> setLockOptions(LockOptions lockOptions);
-
-	@Override
-	Query<R> setLockMode(String alias, LockMode lockMode);
-
-	@Override
-	Query<R> setComment(String comment);
-
-	@Override
-	Query<R> addQueryHint(String hint);
-
-	@Override
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<P> values);
-
-	@Override
-	Query<R> setParameterList(String name, Collection values);
-
-	@Override
-	Query<R> setParameterList(String name, Collection values, Type type);
-
-	@Override
-	Query<R> setParameterList(String name, Object[] values, Type type);
-
-	@Override
-	Query<R> setParameterList(String name, Object[] values);
-
-	@Override
-	Query<R> setProperties(Object bean);
-
-	@Override
-	Query<R> setProperties(Map bean);
+	Query<R> setReadOnly(boolean readOnly);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// deprecations
+	// covariant overrides - jakarta.persistence.Query/TypedQuery
 
-	/**
-	 * (Re)set the current FlushMode in effect for this query.
-	 *
-	 * @param flushMode The new FlushMode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see #getHibernateFlushMode()
-	 *
-	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode} instead
-	 */
 	@Override
-	@Deprecated
-	default Query<R> setFlushMode(FlushMode flushMode) {
-		setHibernateFlushMode( flushMode );
+	Query<R> setMaxResults(int maxResult);
+
+	@Override
+	Query<R> setFirstResult(int startPosition);
+
+//	@Override @Incubating
+//	default Query<R> setPage(int pageSize, int pageNumber) {
+//		setFirstResult( pageNumber * pageSize );
+//		setMaxResults( pageSize );
+//		return this;
+//	}
+
+	@Override @Incubating
+	default Query<R> setPage(Page page) {
+		setMaxResults( page.getMaxResults() );
+		setFirstResult( page.getFirstResult() );
 		return this;
 	}
 
+	@Override
+	Query<R> setHint(String hintName, Object value);
+
+	@Override
+	Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+
+	@Override
+	Query<R> enableFetchProfile(String profileName);
+
+	@Override
+	Query<R> disableFetchProfile(String profileName);
+
+	@Override @Deprecated(since = "7")
+	Query<R> setFlushMode(FlushModeType flushMode);
+
+	@Override
+	Query<R> setLockMode(LockModeType lockMode);
+
+	@Override @Incubating
+	Query<R> setOrder(List<? extends Order<? super R>> orderList);
+
+	@Override @Incubating
+	Query<R> setOrder(Order<? super R> order);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// deprecated methods
+
 	/**
-	 * Bind a positional String-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
+	 * @deprecated Use {@link #setTupleTransformer} or {@link #setResultListTransformer}
 	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setString(int position, String val) {
-		setParameter( position, val, StringType.INSTANCE );
-		return this;
+	@Deprecated(since = "5.2")
+	default <T> Query<T> setResultTransformer(ResultTransformer<T> transformer) {
+		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
 
-	/**
-	 * Bind a positional char-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setCharacter(int position, char val) {
-		setParameter( position, val, CharacterType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional boolean-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBoolean(int position, boolean val) {
-		setParameter( position, val, determineProperBooleanType( position, val, BooleanType.INSTANCE ) );
-		return this;
-	}
-
-	/**
-	 * Bind a positional byte-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setByte(int position, byte val) {
-		setParameter( position, val, ByteType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional short-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setShort(int position, short val) {
-		setParameter( position, val, ShortType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional int-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setInteger(int position, int val) {
-		setParameter( position, val, IntegerType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional long-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setLong(int position, long val) {
-		setParameter( position, val, LongType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional float-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setFloat(int position, float val) {
-		setParameter( position, val, FloatType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional double-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setDouble(int position, double val) {
-		setParameter( position, val, DoubleType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional binary-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBinary(int position, byte[] val) {
-		setParameter( position, val, BinaryType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional String-valued parameter using streaming.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setText(int position, String val) {
-		setParameter( position, val, TextType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional binary-valued parameter using serialization.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setSerializable(int position, Serializable val) {
-		setParameter( position, val );
-		return this;
-	}
-
-	/**
-	 * Bind a positional Locale-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setLocale(int position, Locale val) {
-		setParameter( position, val, LocaleType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional BigDecimal-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBigDecimal(int position, BigDecimal val) {
-		setParameter( position, val, BigDecimalType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional BigDecimal-valued parameter.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBigInteger(int position, BigInteger val) {
-		setParameter( position, val, BigIntegerType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional Date-valued parameter using just the Date portion.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setDate(int position, Date val) {
-		setParameter( position, val, DateType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional Date-valued parameter using just the Time portion.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setTime(int position, Date val) {
-		setParameter( position, val, TimeType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional Date-valued parameter using the full Timestamp.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setTimestamp(int position, Date val) {
-		setParameter( position, val, TimestampType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional Calendar-valued parameter using the full Timestamp portion.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setCalendar(int position, Calendar val) {
-		setParameter( position, val, TimestampType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a positional Calendar-valued parameter using just the Date portion.
-	 *
-	 * @param position The parameter position
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(int, Object)} or {@link #setParameter(int, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setCalendarDate(int position, Calendar val) {
-		setParameter( position, val, DateType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named String-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setString(String name, String val) {
-		setParameter( name, val, StringType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named char-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setCharacter(String name, char val) {
-		setParameter( name, val, CharacterType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named boolean-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBoolean(String name, boolean val) {
-		setParameter( name, val, determineProperBooleanType( name, val, BooleanType.INSTANCE ) );
-		return this;
-	}
-
-	/**
-	 * Bind a named byte-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setByte(String name, byte val) {
-		setParameter( name, val, ByteType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named short-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setShort(String name, short val) {
-		setParameter( name, val, ShortType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named int-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setInteger(String name, int val) {
-		setParameter( name, val, IntegerType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named long-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setLong(String name, long val) {
-		setParameter( name, val, LongType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named float-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setFloat(String name, float val) {
-		setParameter( name, val, FloatType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named double-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setDouble(String name, double val) {
-		setParameter( name, val, DoubleType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named binary-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBinary(String name, byte[] val) {
-		setParameter( name, val, BinaryType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named String-valued parameter using streaming.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setText(String name, String val) {
-		setParameter( name, val, TextType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named binary-valued parameter using serialization.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setSerializable(String name, Serializable val) {
-		setParameter( name, val );
-		return this;
-	}
-
-	/**
-	 * Bind a named Locale-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setLocale(String name, Locale val) {
-		setParameter( name, val, TextType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named BigDecimal-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBigDecimal(String name, BigDecimal val) {
-		setParameter( name, val, BigDecimalType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named BigInteger-valued parameter.
-	 *
-	 * @param name The parameter name
-	 * @param val The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setBigInteger(String name, BigInteger val) {
-		setParameter( name, val, BigIntegerType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind the val (time is truncated) of a given Date object to a named query parameter.
-	 *
-	 * @param name The name of the parameter
-	 * @param val The val object
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setDate(String name, Date val) {
-		setParameter( name, val, DateType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind the time (val is truncated) of a given Date object to a named query parameter.
-	 *
-	 * @param name The name of the parameter
-	 * @param val The val object
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setTime(String name, Date val) {
-		setParameter( name, val, TimeType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind the value and the time of a given Date object to a named query parameter.
-	 *
-	 * @param name The name of the parameter
-	 * @param value The value object
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setTimestamp(String name, Date value) {
-		setParameter( name, value, TimestampType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named Calendar-valued parameter using the full Timestamp.
-	 *
-	 * @param name The parameter name
-	 * @param value The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setCalendar(String name, Calendar value) {
-		setParameter( name, value, TimestampType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind a named Calendar-valued parameter using just the Date portion.
-	 *
-	 * @param name The parameter name
-	 * @param value The bind value
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setCalendarDate(String name, Calendar value) {
-		setParameter( name, value, DateType.INSTANCE );
-		return this;
-	}
-
-	/**
-	 * Bind an instance of a mapped persistent class to a JDBC-style query parameter.
-	 * Use {@link #setParameter(int, Object)} for null values.
-	 *
-	 * @param position the position of the parameter in the query
-	 * string, numbered from <tt>0</tt>.
-	 * @param val a non-null instance of a persistent class
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	Query<R> setEntity(int position, Object val);
-
-	/**
-	 * Bind an instance of a mapped persistent class to a named query parameter.  Use
-	 * {@link #setParameter(String, Object)} for null values.
-	 *
-	 * @param name the name of the parameter
-	 * @param val a non-null instance of a persistent class
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #setParameter(String, Object)} or {@link #setParameter(String, Object, Type)}
-	 * instead
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	Query<R> setEntity(String name, Object val);
-
-	/**
-	 * Set a strategy for handling the query results. This can be used to change
-	 * "shape" of the query result.
-	 *
-	 * @param transformer The transformer to apply
-	 *
-	 * @return this (for method chaining)
-	 *
-	 * @deprecated (since 5.2)
-	 * @todo develop a new approach to result transformers
-	 */
-	@Deprecated
-	Query<R> setResultTransformer(ResultTransformer transformer);
-
-	/**
-	 * Bind values and types to positional parameters.  Allows binding more than one at a time; no real performance
-	 * impact.
-	 *
-	 * The number of elements in each array should match.  That is, element number-0 in types array corresponds to
-	 * element-0 in the values array, etc,
-	 *
-	 * @param types The types
-	 * @param values The values
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) Bind values individually
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setParameters(Object[] values, Type[] types) {
-		assert values.length == types.length;
-		for ( int i = 0; i < values.length; i++ ) {
-			setParameter( i, values[i], types[i] );
-		}
-
-		return this;
-	}
-
-	/**
-	 * JPA 2.2 defines the {@code getResultStream} method so to get a {@link Stream} from the JDBC {@link java.sql.ResultSet}.
-	 *
-	 * Hibernate 5.2 already defines the {@link Query#stream()} method, so {@code getResultStream} can delegate to it.
-	 *
-	 * @return The results Stream
-	 * @since 5.2.11
-	 */
-	default Stream<R> getResultStream() {
-		return stream();
-	}
 }

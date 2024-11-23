@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc;
 
@@ -13,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * A registry for tracking JDBC resources
+ * A registry for tracking JDBC resources.
  *
  * @author Steve Ebersole
  */
@@ -45,13 +43,13 @@ public interface ResourceRegistry {
 
 	/**
 	 * Register a JDBC result set.
-	 * <p/>
+	 * <p>
 	 * Implementation note: Second parameter has been introduced to prevent
-	 * multiple registrations of the same statement in case {@link java.sql.ResultSet#getStatement()}
-	 * does not return original {@link java.sql.Statement} object.
+	 * multiple registrations of the same statement in case {@link ResultSet#getStatement()}
+	 * does not return original {@link Statement} object.
 	 *
 	 * @param resultSet The result set to register.
-	 * @param statement Statement from which {@link java.sql.ResultSet} has been generated.
+	 * @param statement Statement from which {@link ResultSet} has been generated.
 	 */
 	void register(ResultSet resultSet, Statement statement);
 
@@ -59,7 +57,7 @@ public interface ResourceRegistry {
 	 * Release a previously registered result set.
 	 *
 	 * @param resultSet The result set to release.
-	 * @param statement Statement from which {@link java.sql.ResultSet} has been generated.
+	 * @param statement Statement from which {@link ResultSet} has been generated.
 	 */
 	void release(ResultSet resultSet, Statement statement);
 

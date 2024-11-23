@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 
@@ -15,61 +11,60 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public interface LoadEventListener extends Serializable {
+public interface LoadEventListener {
 
 	/**
 	 * Handle the given load event.
 	 *
 	 * @param event The load event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
-	public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
+	void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
 
-	public static final LoadType RELOAD = new LoadType( "RELOAD" )
+	LoadType RELOAD = new LoadType( "RELOAD" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( true )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType GET = new LoadType( "GET" )
+	LoadType GET = new LoadType( "GET" )
 			.setAllowNulls( true )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( true )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType LOAD = new LoadType( "LOAD" )
+	LoadType LOAD = new LoadType( "LOAD" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( true )
 			.setCheckDeleted( true )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType IMMEDIATE_LOAD = new LoadType( "IMMEDIATE_LOAD" )
+	LoadType IMMEDIATE_LOAD = new LoadType( "IMMEDIATE_LOAD" )
 			.setAllowNulls( true )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( true );
 
-	public static final LoadType INTERNAL_LOAD_EAGER = new LoadType( "INTERNAL_LOAD_EAGER" )
+	LoadType INTERNAL_LOAD_EAGER = new LoadType( "INTERNAL_LOAD_EAGER" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType INTERNAL_LOAD_LAZY = new LoadType( "INTERNAL_LOAD_LAZY" )
+	LoadType INTERNAL_LOAD_LAZY = new LoadType( "INTERNAL_LOAD_LAZY" )
 			.setAllowNulls( false )
 			.setAllowProxyCreation( true )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( false );
 
-	public static final LoadType INTERNAL_LOAD_NULLABLE = new LoadType( "INTERNAL_LOAD_NULLABLE" )
+	LoadType INTERNAL_LOAD_NULLABLE = new LoadType( "INTERNAL_LOAD_NULLABLE" )
 			.setAllowNulls( true )
 			.setAllowProxyCreation( false )
 			.setCheckDeleted( false )
 			.setNakedEntityReturned( false );
 
-	public static final class LoadType {
-		private String name;
+	final class LoadType {
+		private final String name;
 
 		private boolean nakedEntityReturned;
 		private boolean allowNulls;

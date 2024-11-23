@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.result;
 
@@ -19,7 +17,7 @@ public interface ResultSetOutput extends Output {
 	 *
 	 * @return The consumed ResultSet values.
 	 */
-	public List getResultList();
+	List getResultList();
 
 	/**
 	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of
@@ -27,5 +25,5 @@ public interface ResultSetOutput extends Output {
 	 *
 	 * @return The single result.
 	 */
-	public Object getSingleResult();
+	Object getSingleResult();
 }

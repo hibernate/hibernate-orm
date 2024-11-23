@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * Raised whenever a duplicate for a certain type occurs.  Duplicate class, table, property name etc.
- * 
+ * Raised whenever a duplicate for a certain type occurs,
+ * such as a duplicate class, table, or property name.
+ *
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
@@ -20,43 +19,43 @@ public class DuplicateMappingException extends MappingException {
 		/**
 		 * A duplicate entity definition was encountered.
 		 */
-		ENTITY( "entity" ),
+		ENTITY( "entity definition" ),
 		/**
 		 * A duplicate collection role was encountered
 		 */
-		COLLECTION( "collection" ),
+		COLLECTION( "collection definition" ),
 		/**
 		 * A duplicate table definition was encountered.
 		 */
-		TABLE( "table" ),
+		TABLE( "table mapping" ),
 		/**
 		 * A duplicate property/attribute definition was encountered.
 		 */
-		PROPERTY( "property" ),
+		PROPERTY( "property mapping" ),
 		/**
 		 * A duplicate column definition was encountered.
 		 */
-		COLUMN( "column" ),
+		COLUMN( "column mapping" ),
 		/**
 		 * A duplicate column definition was encountered.
 		 */
-		COLUMN_BINDING( "column-binding" ),
+		COLUMN_BINDING( "physical column name mapping for logical column name" ),
 		/**
 		 * A duplicate named entity graph was encountered
 		 */
-		NAMED_ENTITY_GRAPH( "NamedEntityGraph" ),
+		NAMED_ENTITY_GRAPH( "named entity graph" ),
 		/**
 		 * A duplicate named query (ql or native) was encountered
 		 */
-		QUERY( "query" ),
+		QUERY( "named query" ),
 		/**
 		 * A duplicate ResultSetMapping was encountered
 		 */
-		RESULT_SET_MAPPING( "ResultSetMapping" ),
+		RESULT_SET_MAPPING( "SQL result set mapping" ),
 		/**
 		 * A duplicate NamedStoredProcedureQuery was encountered
 		 */
-		PROCEDURE( "NamedStoredProcedureQuery" );
+		PROCEDURE( "named stored procedure" );
 
 		private final String text;
 
@@ -69,59 +68,32 @@ public class DuplicateMappingException extends MappingException {
 	private final String type;
 
 	/**
-	 * Creates a DuplicateMappingException using the given type and name.
+	 * Creates a {@code DuplicateMappingException} using the given type and name.
 	 *
 	 * @param type The type of the duplicated thing.
 	 * @param name The name of the duplicated thing.
 	 */
 	public DuplicateMappingException(Type type, String name) {
-		this( type.text, name );
+		this ( "Duplicate " + type.text + " '" + name + "'", type, name );
 	}
 
 	/**
-	 * Creates a DuplicateMappingException using the given type and name.
-	 *
-	 * @param type The type of the duplicated thing.
-	 * @param name The name of the duplicated thing.
-	 *
-	 * @deprecated Use the for taking {@link Type} instead.
-	 */
-	@Deprecated
-	public DuplicateMappingException(String type, String name) {
-		this( "Duplicate " + type + " mapping " + name, type, name );
-	}
-
-	/**
-	 * Creates a DuplicateMappingException using the given customMessage, type and name.
+	 * Creates a {@code DuplicateMappingException} using the given customMessage, type and name.
 	 *
 	 * @param customMessage A custom exception message explaining the exception condition
 	 * @param type The type of the duplicated thing.
 	 * @param name The name of the duplicated thing.
 	 */
 	public DuplicateMappingException(String customMessage, Type type, String name) {
-		this( customMessage, type.name(), name );
-	}
-
-	/**
-	 * Creates a DuplicateMappingException using the given customMessage, type and name.
-	 *
-	 * @param customMessage A custom exception message explaining the exception condition
-	 * @param type The type of the duplicated thing.
-	 * @param name The name of the duplicated thing.
-	 *
-	 * @deprecated Use the for taking {@link Type} instead.
-	 */
-	@Deprecated
-	public DuplicateMappingException(String customMessage, String type, String name) {
 		super( customMessage );
-		this.type=type;
-		this.name=name;
+		this.type = type.name();
+		this.name = name;
 	}
 
 	public String getType() {
 		return type;
 	}
-	
+
 	public String getName() {
 		return name;
 	}

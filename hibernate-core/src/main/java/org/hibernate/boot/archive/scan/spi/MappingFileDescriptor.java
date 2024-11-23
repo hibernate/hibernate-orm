@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.scan.spi;
 
@@ -21,12 +19,12 @@ public interface MappingFileDescriptor {
 	 *
 	 * @return The mapping file resource name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Retrieves access to the InputStream for the mapping file.
 	 *
 	 * @return Access to the InputStream for the mapping file.
 	 */
-	public InputStreamAccess getStreamAccess();
+	InputStreamAccess getStreamAccess();
 }

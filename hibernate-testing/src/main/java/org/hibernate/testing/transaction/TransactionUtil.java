@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.transaction;
 
@@ -16,9 +14,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
@@ -26,15 +24,22 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.HANADialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.service.ServiceRegistry;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 
 import org.jboss.logging.Logger;
@@ -153,6 +158,24 @@ public class TransactionUtil {
 		default void afterTransactionCompletion() {
 
 		}
+	}
+
+	/**
+	 * JDBC transaction function
+	 *
+	 * @param <T> function result
+	 */
+	@FunctionalInterface
+	public interface JDBCTransactionFunction<T> {
+		T accept(Connection connection) throws SQLException;
+	}
+
+	/**
+	 * JDBC transaction function without return value
+	 */
+	@FunctionalInterface
+	public interface JDBCTransactionVoidFunction {
+		void accept(Connection connection) throws SQLException;
 	}
 
 	/**
@@ -555,7 +578,9 @@ public class TransactionUtil {
 	/**
 	 * Set Session or Statement timeout
 	 * @param session Hibernate Session
+	 * @deprecated Use {@link #withJdbcTimeout(Session, Runnable)} instead
 	 */
+	@Deprecated
 	public static void setJdbcTimeout(Session session) {
 		setJdbcTimeout( session, TimeUnit.SECONDS.toMillis( 1 ) );
 	}
@@ -563,83 +588,147 @@ public class TransactionUtil {
 	/**
 	 * Set Session or Statement timeout
 	 * @param session Hibernate Session
+	 * @deprecated Use {@link #withJdbcTimeout(Session, long, Runnable)} instead
 	 */
+	@Deprecated
 	public static void setJdbcTimeout(Session session, long millis) {
-
+		final Dialect dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
 		session.doWork( connection -> {
-			if ( Dialect.getDialect() instanceof PostgreSQL81Dialect ) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET statement_timeout TO %d", millis / 10));
-				}
+			setJdbcTimeout( dialect, connection, millis );
+		} );
+	}
 
+	private static void setJdbcTimeout(Dialect dialect, Connection connection, long millis) throws SQLException {
+		Dialect extractedDialect = DialectDelegateWrapper.extractRealDialect( dialect );
+		if ( extractedDialect instanceof PostgreSQLDialect || extractedDialect instanceof CockroachDialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				st.execute( String.format( "SET statement_timeout TO %d", millis ) );
 			}
-			else if( Dialect.getDialect() instanceof MySQLDialect ) {
-				try (PreparedStatement st = connection.prepareStatement("SET SESSION innodb_lock_wait_timeout = ?")) {
-					st.setLong( 1, TimeUnit.MILLISECONDS.toSeconds( millis ) );
-					st.execute();
-				}
-			}
-			else if( Dialect.getDialect() instanceof H2Dialect ) {
-				try (PreparedStatement st = connection.prepareStatement("SET LOCK_TIMEOUT ?")) {
-					st.setLong( 1, millis / 10 );
-					st.execute();
-				}
-			}
-			else if( Dialect.getDialect() instanceof SQLServerDialect ) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET LOCK_TIMEOUT %d", millis / 10));
+			catch (SQLException ex) {
+				// Ignore if resetting the statement timeout to 0 fails
+				// Since PostgreSQL is transactional anyway,
+				// the prior change of statement timeout will be undone on rollback
+				if ( millis != 0 ) {
+					throw ex;
 				}
 			}
-			else if( Dialect.getDialect() instanceof AbstractHANADialect ) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ));
+		}
+		else if ( extractedDialect instanceof MySQLDialect ) {
+			try (PreparedStatement st = connection.prepareStatement( "SET SESSION innodb_lock_wait_timeout = ?" )) {
+				// 50 seconds is the default
+				st.setLong( 1, millis == 0L ? 50 : Math.max( 1, Math.round( millis / 1e3f ) ) );
+				st.execute();
+			}
+		}
+		else if ( extractedDialect instanceof H2Dialect ) {
+			try (PreparedStatement st = connection.prepareStatement( "SET LOCK_TIMEOUT ?" )) {
+				// 10 seconds is the default we set
+				st.setLong( 1, millis == 0L ? 10_000 : millis );
+				st.execute();
+			}
+		}
+		else if ( extractedDialect instanceof SQLServerDialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				st.execute( String.format( "SET LOCK_TIMEOUT %d", millis == 0L ? -1L : millis ) );
+			}
+		}
+		else if ( extractedDialect instanceof HANADialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ) );
+			}
+		}
+		else if ( extractedDialect instanceof SybaseASEDialect ) {
+			try (Statement st = connection.createStatement()) {
+				//Prepared Statements fail for SET commands
+				if ( millis == 0L ) {
+					st.execute( "SET LOCK WAIT" );
+				}
+				else {
+					st.execute( String.format( "SET LOCK WAIT %d", Math.max( 1, Math.round( millis / 1e3f ) ) ) );
 				}
 			}
-			else if( Dialect.getDialect() instanceof SybaseASE15Dialect) {
-				try (Statement st = connection.createStatement()) {
-					//Prepared Statements fail for SET commands
-					st.execute(String.format( "SET LOCK WAIT %d", millis/1000 ));
-				}
+		}
+		else {
+			try {
+				connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
 			}
-			else {
-				try {
-					connection.setNetworkTimeout( Executors.newSingleThreadExecutor(), (int) millis );
-				}
-				catch (Throwable ignore) {
-				}
+			catch (Throwable ignore) {
+			}
+		}
+	}
+
+	/**
+	 * Run the runnable with a session or statement timeout
+	 *
+	 * @param session Hibernate Session
+	 */
+	public static void withJdbcTimeout(Session session, Runnable r) {
+		withJdbcTimeout( session, TimeUnit.SECONDS.toMillis( 1 ), r );
+	}
+
+	/**
+	 * Run the runnable with a session or statement timeout
+	 *
+	 * @param session Hibernate Session
+	 */
+	public static void withJdbcTimeout(Session session, long millis, Runnable r) {
+		final Dialect dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
+		session.doWork( connection -> {
+			try {
+				setJdbcTimeout( dialect, connection, millis );
+				r.run();
+			}
+			finally {
+				setJdbcTimeout( dialect, connection, 0 );
 			}
 		} );
 	}
 
 	/**
-	 * Use the supplied settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the supplied settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * A new JDBC {@link Statement} is created and passed to the supplied callback.
 	 *
 	 * @param consumer {@link Statement} callback to execute statements in auto-commit mode
-	 * @param settings Settings to build a new {@link org.hibernate.service.ServiceRegistry}
+	 * @param settings Settings to build a new {@link ServiceRegistry}
 	 */
-	public static void doInAutoCommit(Consumer<Statement> consumer, Map settings) {
-		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+	public static void doInAutoCommit(Consumer<Statement> consumer, Map<String,Object> settings) {
+		StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		if ( settings != null ) {
+			// Reset the connection provider to avoid rebuilding the shared connection pool for a single test
+			ssrb.applySetting( AvailableSettings.CONNECTION_PROVIDER, "" );
 			ssrb.applySettings( settings );
 		}
 		StandardServiceRegistry ssr = ssrb.build();
 
 		try {
-			try (Connection connection = ssr.getService( JdbcServices.class )
-					.getBootstrapJdbcConnectionAccess()
-					.obtainConnection();
-				Statement statement = connection.createStatement()) {
+			final JdbcConnectionAccess connectionAccess = ssr.getService( JdbcServices.class )
+					.getBootstrapJdbcConnectionAccess();
+			final Connection connection;
+			try {
+				connection = connectionAccess.obtainConnection();
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+			try (Statement statement = connection.createStatement()) {
 				connection.setAutoCommit( true );
 				consumer.accept( statement );
 			}
 			catch (SQLException e) {
 				log.debug( e.getMessage() );
+			}
+			finally {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException e) {
+					// ignore
+				}
 			}
 		}
 		finally {
@@ -648,7 +737,7 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Use the default settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the default settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * A new JDBC {@link Statement} is created and passed to the supplied callback.
@@ -660,15 +749,15 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Use the supplied settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the supplied settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * The supplied statements will be executed using the previously created connection
 	 *
-	 * @param settings Settings to build a new {@link org.hibernate.service.ServiceRegistry}
+	 * @param settings Settings to build a new {@link ServiceRegistry}
 	 * @param statements statements to be executed in auto-commit mode
 	 */
-	public static void doInAutoCommit(Map settings, String... statements) {
+	public static void doInAutoCommit(Map<String,Object> settings, String... statements) {
 		doInAutoCommit( s -> {
 			for ( String statement : statements ) {
 				try {
@@ -682,7 +771,7 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Use the default settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the default settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * The supplied statements will be executed using the previously created connection
@@ -691,5 +780,53 @@ public class TransactionUtil {
 	 */
 	public static void doInAutoCommit(String... statements) {
 		doInAutoCommit( null, statements );
+	}
+
+	public static void doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionVoidFunction function) throws SQLException {
+		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
+		final Connection connection;
+		try {
+			connection = connectionAccess.obtainConnection();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
+		try {
+			function.accept( connection );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
+	}
+
+	public static <T> T doWithJDBC(ServiceRegistry serviceRegistry, JDBCTransactionFunction<T> function) throws SQLException {
+		final JdbcConnectionAccess connectionAccess = serviceRegistry.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
+		final Connection connection;
+		try {
+			connection = connectionAccess.obtainConnection();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
+		try {
+			return function.accept( connection );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
+			}
+		}
 	}
 }

@@ -9,7 +9,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class
-            name="org.hibernate.query.hhh12076.Task"
+            name="org.hibernate.orm.test.query.hhh12076.Task"
             abstract="true"
             table="wf_task"
             lazy="false">
@@ -54,13 +54,13 @@
         </property>
         <many-to-one
                 name="status"
-                class="org.hibernate.query.hhh12076.TaskStatus"
+                class="org.hibernate.orm.test.query.hhh12076.TaskStatus"
                 fetch="select">
             <column name="task_status" not-null="true"/>
         </many-to-one>
         <many-to-one
                 name="parent"
-                class="org.hibernate.query.hhh12076.Task"
+                class="org.hibernate.orm.test.query.hhh12076.Task"
                 fetch="select">
             <column name="parent_id" not-null="false"/>
         </many-to-one>
@@ -72,7 +72,7 @@
                 cascade="all,delete-orphan"
                 batch-size="10">
             <key column="parent_id"/>
-            <one-to-many class="org.hibernate.query.hhh12076.Task"/>
+            <one-to-many class="org.hibernate.orm.test.query.hhh12076.Task"/>
         </set>
         <set
                 name="linkedTasks"
@@ -83,7 +83,7 @@
                 cascade="none">
             <key column="task_id"/>
             <many-to-many
-                    class="org.hibernate.query.hhh12076.Task"
+                    class="org.hibernate.orm.test.query.hhh12076.Task"
                     column="link_to_task_id"
             />
         </set>

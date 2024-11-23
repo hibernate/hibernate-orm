@@ -9,7 +9,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class
-            name="org.hibernate.query.hhh12076.Settlement"
+            name="org.hibernate.orm.test.query.hhh12076.Settlement"
             table="claim_settlement"
             lazy="false">
 
@@ -38,13 +38,13 @@
             <column name="status" not-null="true"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="type">12</param>
-                <param name="enumClass">org.hibernate.query.hhh12076.SettlementStatus</param>
+                <param name="enumClass">org.hibernate.orm.test.query.hhh12076.SettlementStatus</param>
             </type>
         </property>
 
         <many-to-one
                 name="claim"
-                class="org.hibernate.query.hhh12076.Claim"
+                class="org.hibernate.orm.test.query.hhh12076.Claim"
                 fetch="select">
             <column name="claim_id" not-null="true"/>
         </many-to-one>
@@ -57,7 +57,7 @@
                 batch-size="10"
                 order-by="order_index">
             <key column="settlement_id" not-null="true"/>
-            <one-to-many class="org.hibernate.query.hhh12076.SettlementExtension"/>
+            <one-to-many class="org.hibernate.orm.test.query.hhh12076.SettlementExtension"/>
         </set>
 
     </class>

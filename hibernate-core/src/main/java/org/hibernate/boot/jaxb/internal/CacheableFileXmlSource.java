@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
 
@@ -33,12 +31,12 @@ public class CacheableFileXmlSource extends XmlSource {
 	private final File serFile;
 	private final boolean strict;
 
-	public CacheableFileXmlSource(Origin origin, File xmlFile, boolean strict) {
+	public CacheableFileXmlSource(Origin origin, File xmlFile, File cachedFileDir, boolean strict) {
 		super( origin );
 		this.xmlFile = xmlFile;
 		this.strict = strict;
 
-		this.serFile = determineCachedFile( xmlFile );
+		this.serFile = new File( cachedFileDir, xmlFile.getName() + ".bin" );
 
 		if ( strict ) {
 			if ( !serFile.exists() ) {
@@ -85,7 +83,7 @@ public class CacheableFileXmlSource extends XmlSource {
 		else {
 			if ( !isSerfileObsolete() ) {
 				try {
-					return readSerFile();
+					return new Binding( readSerFile(), getOrigin() );
 				}
 				catch ( SerializationException e ) {
 					log.unableToDeserializeCache( serFile.getName(), e );
@@ -117,6 +115,9 @@ public class CacheableFileXmlSource extends XmlSource {
 	}
 
 	private static void writeSerFile(Serializable binding, File xmlFile, File serFile) {
+		if ( binding instanceof Binding<?> bindingWrapper ) {
+			binding = (Serializable) bindingWrapper.getRoot();
+		}
 		try ( FileOutputStream fos = new FileOutputStream( serFile ) ) {
 			if ( log.isDebugEnabled() ) {
 				log.debugf( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
@@ -133,14 +134,18 @@ public class CacheableFileXmlSource extends XmlSource {
 	}
 
 	public static void createSerFile(File xmlFile, Binder binder) {
+		createSerFile( xmlFile, determineCachedFile( xmlFile ), binder );
+	}
+
+	public static void createSerFile(File xmlFile, File outputFile, Binder binder) {
 		final Origin origin = new Origin( SourceType.FILE, xmlFile.getAbsolutePath() );
 		writeSerFile(
 				FileXmlSource.doBind( binder, xmlFile, origin ),
 				xmlFile,
-				determineCachedFile( xmlFile )
+				outputFile
 		);
 	}
-	
+
 	private boolean isSerfileObsolete() {
 		return xmlFile.exists() && serFile.exists() && xmlFile.lastModified() > serFile.lastModified();
 	}

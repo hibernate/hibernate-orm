@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jndi;
 import org.hibernate.HibernateException;
@@ -22,4 +20,14 @@ public class JndiException extends HibernateException {
 	public JndiException(String message, Throwable cause) {
 		super( message, cause );
 	}
+
+	/**
+	 * Constructs a JndiException
+	 *
+	 * @param message Message explaining the exception condition
+	 */
+	public JndiException(String message) {
+		super( message );
+	}
+
 }

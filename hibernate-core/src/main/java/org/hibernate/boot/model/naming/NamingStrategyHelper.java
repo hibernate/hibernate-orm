@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -14,32 +12,32 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 public interface NamingStrategyHelper {
 	/**
 	 * Called when the user supplied no explicit name/identifier for the given database object.
-	 * <p/>
-	 * Typically implementations will access the {@link ImplicitNamingStrategy} via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
+	 * <p>
+	 * Typically, implementations will access the {@link ImplicitNamingStrategy} via
+	 * {@link MetadataBuildingContext#getBuildingOptions()} to
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
-	 * <p/>
+	 * <p>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
+	 * {@link MetadataBuildingContext#getMetadataCollector()} to
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
 	 *
 	 * @param buildingContext The building context in which this is called.
 	 *
 	 * @return The implicit name
 	 */
-	public Identifier determineImplicitName(MetadataBuildingContext buildingContext);
+	Identifier determineImplicitName(MetadataBuildingContext buildingContext);
 
 	/**
 	 * Called when the user has supplied an explicit name for the database object.
-	 * <p/>
+	 * <p>
 	 * Typically implementations will access the {@link ImplicitNamingStrategy} via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
+	 * {@link MetadataBuildingContext#getBuildingOptions()} to
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
-	 * <p/>
+	 * <p>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
+	 * {@link MetadataBuildingContext#getMetadataCollector()} to
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
 	 *
 	 * @param explicitName The explicit object name.
@@ -47,18 +45,18 @@ public interface NamingStrategyHelper {
 	 *
 	 * @return The strategy-handled name.
 	 */
-	public Identifier handleExplicitName(String explicitName, MetadataBuildingContext buildingContext);
+	Identifier handleExplicitName(String explicitName, MetadataBuildingContext buildingContext);
 
 	/**
 	 * Handle converting a logical name to a physical name
-	 * <p/>
+	 * <p>
 	 * Typically implementations will access the {@link PhysicalNamingStrategy} via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
+	 * {@link MetadataBuildingContext#getBuildingOptions()} to
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getPhysicalNamingStrategy()}
-	 * <p/>
+	 * <p>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
+	 * {@link MetadataBuildingContext#getMetadataCollector()} to
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
 	 *
 	 * @param logicalName The logical name to convert to a physical name
@@ -66,5 +64,5 @@ public interface NamingStrategyHelper {
 	 *
 	 * @return The physical name
 	 */
-	public Identifier toPhysicalName(Identifier logicalName, MetadataBuildingContext buildingContext);
+	Identifier toPhysicalName(Identifier logicalName, MetadataBuildingContext buildingContext);
 }

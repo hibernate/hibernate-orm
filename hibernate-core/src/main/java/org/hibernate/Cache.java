@@ -1,27 +1,117 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import java.io.Serializable;
-
 /**
- * Provides an API for querying/managing the second level cache regions.
- * <p/>
- * CAUTION: None of these methods respect any isolation or transactional
- * semantics associated with the underlying caches.  Specifically, evictions
- * perform an immediate "hard" removal outside any transactions and/or locking
- * scheme(s).
+ * An API for directly querying and managing the second-level cache.
+ * <p>
+ * Hibernate has two levels of caching:
+ * <ul>
+ * <li>The <em>first-level cache</em> is better known as the persistence context.
+ *     It's the collection of managed entity instances associated with an open
+ *     {@link Session}.
+ * <li>The <em>second-level cache</em> is shared between all sessions belonging to
+ *     a given {@link SessionFactory}. It stores the state of an entity instance
+ *     in a destructured format, as a tuple of persistent attribute values. The
+ *     second-level cache is also used to store cached query result sets.
+ * </ul>
+ * <p>
+ * By nature, a second-level cache tends to undermine the ACID properties of
+ * transaction processing in a relational database. A second-level cache is often
+ * by far the easiest way to improve the performance of a system, but only at the
+ * cost of making it much more difficult to reason about concurrency. And so the
+ * cache is a potential source of bugs which are difficult to isolate and reproduce.
+ * <p>
+ * Therefore, only entities and collection roles explicitly annotated
+ * {@link jakarta.persistence.Cacheable} or {@link org.hibernate.annotations.Cache}
+ * are eligible for storage in the second-level cache, and so by default the state
+ * of an entity is always retrieved from the database when requested.
+ * <p>
+ * Hibernate segments the second-level cache into named <em>regions</em>, one for
+ * each mapped entity hierarchy or collection role, each with its own policies for
+ * expiry, persistence, and replication, which must be configured externally to
+ * Hibernate. An entity hierarchy or collection role may be explicitly assigned a
+ * region using the {@link org.hibernate.annotations.Cache} annotation, but, by
+ * default, the region name is just the name of the entity class or collection role.
+ * <p>
+ * The appropriate policies depend on the kind of data an entity represents. For
+ * example, a program might have different caching policies for "reference" data,
+ * for transactional data, and for data used for analytics. Ordinarily, the
+ * implementation of those policies is the responsibility of the
+ * {@linkplain org.hibernate.cache.spi.RegionFactory cache provider} and is
+ * transparent to code which makes use of a Hibernate {@link Session}. At worst,
+ * interaction with the cache may be controlled by specification of an explicit
+ * {@link CacheMode}.
+ * <p>
+ * Very occasionally, it's necessary or advantageous to control the cache explicitly
+ * via programmatic eviction, using, for example, {@link #evictEntityData(Class)} to
+ * evict a whole cache region, or {@link #evictEntityData(Class, Object)}, to evict
+ * a single item.
+ * <p>
+ * If multiple entities or roles are mapped to the same cache region, they share
+ * policies and even the same FIFO-type expiry queue (if any). This sounds useful,
+ * but comes with the downside that {@link #evictEntityData(Class)} for any one of
+ * the entities evicts <em>all</em> entities mapped to the same region. It's
+ * therefore much more common to have a distinct region for each entity and role.
+ * <p>
+ * None of the operations of this interface respect any isolation or transactional
+ * semantics associated with the underlying caches. In particular, eviction via
+ * the methods of this interface causes an immediate "hard" removal outside any
+ * current transaction and/or locking scheme.
+ * <p>
+ * The {@link org.hibernate.annotations.Cache} annotation also specifies a
+ * {@link org.hibernate.annotations.CacheConcurrencyStrategy}, a policy governing
+ * access to the second-level cache by concurrent transactions. Either:
+ * <ul>
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_ONLY
+ *     read-only access} for immutable data,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#NONSTRICT_READ_WRITE
+ *     read/write access with no locking}, when concurrent updates are
+ *     extremely improbable,
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#READ_WRITE
+ *     read/write access using soft locks} when concurrent updates are possible
+ *     but not common, or
+ * <li>{@linkplain org.hibernate.annotations.CacheConcurrencyStrategy#TRANSACTIONAL
+ *     transactional access} when concurrent updates are frequent.
+ * </ul>
+ * <p>
+ * It's important to always explicitly specify an appropriate policy, taking into
+ * account the expected patterns of data access, most importantly, the frequency
+ * of updates.
+ * <p>
+ * Query result sets may also be stored in the second-level cache. A query is made
+ * eligible for caching by calling
+ * {@link org.hibernate.query.SelectionQuery#setCacheable(boolean)}, and may be
+ * assigned to a region of the second-level cache by calling
+ * {@link org.hibernate.query.SelectionQuery#setCacheRegion(String)}. It's very
+ * important to understand that any entity instance in a query result set is cached
+ * by its id. If the entity itself is not {@linkplain org.hibernate.annotations.Cache
+ * cacheable}, or if the instance is not available in the second-level cache at the
+ * time a result set is retrieved from the cache, then the state of the entity must
+ * be read from the database. <em>This negates the benefits of caching the result
+ * set.</em> It's therefore very important to carefully "match" the caching policies
+ * of a query and the entities it returns.
+ * <p>
+ * Hibernate does not itself contain a high-quality implementation of a second-level
+ * cache backend with expiry, persistence, and replication, and depends on a plug-in
+ * implementation of {@link org.hibernate.cache.spi.RegionFactory} to integrate a
+ * backend storage mechanism. Therefore, the second-level cache is completely disabled
+ * by default, unless {@value org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY}
+ * is explicitly specified. For convenience, the second-level cache may also be enabled
+ * or disabled using {@value org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.annotations.Cache
+ * @see org.hibernate.annotations.CacheConcurrencyStrategy
+ * @see org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY
+ * @see org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE
  */
-@SuppressWarnings( {"UnusedDeclaration"})
-public interface Cache extends javax.persistence.Cache {
+public interface Cache extends jakarta.persistence.Cache {
 	/**
-	 * Access to the SessionFactory this Cache is bound to.
+	 * The {@link SessionFactory} to which this {@code Cache} belongs.
 	 *
 	 * @return The SessionFactory
 	 */
@@ -33,74 +123,77 @@ public interface Cache extends javax.persistence.Cache {
 	// Entity data
 
 	/**
-	 * Determine whether the cache contains data for the given entity "instance".
-	 * <p/>
-	 * The semantic here is whether the cache contains data visible for the
-	 * current call context.
+	 * Determine whether the cache contains an item for the entity of the given
+	 * type, and with the given identifier.
 	 *
-	 * @param entityClass The entity class.
+	 * @param entityClass The entity type
 	 * @param identifier The entity identifier
 	 *
 	 * @return True if the underlying cache contains corresponding data; false
 	 * otherwise.
 	 */
-	boolean containsEntity(Class entityClass, Serializable identifier);
+	boolean containsEntity(Class<?> entityClass, Object identifier);
 
 	/**
-	 * Determine whether the cache contains data for the given entity "instance".
-	 * <p/>
-	 * The semantic here is whether the cache contains data visible for the
-	 * current call context.
+	 * Determine whether the cache contains an item for the entity of the type
+	 * with the given name, and with the given identifier.
 	 *
-	 * @param entityName The entity name.
+	 * @param entityName The entity name
 	 * @param identifier The entity identifier
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
-	boolean containsEntity(String entityName, Serializable identifier);
+	boolean containsEntity(String entityName, Object identifier);
 
 	/**
-	 * Evicts the entity data for a particular entity "instance".
+	 * Evicts the cached item for the entity of the given type, and with the
+	 * given identifier, if there is any such item in the cache.
 	 *
-	 * @param entityClass The entity class.
+	 * @param entityClass The entity type
 	 * @param identifier The entity identifier
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class entityClass, Serializable identifier);
+	void evictEntityData(Class<?> entityClass, Object identifier);
 
 	/**
-	 * Evicts the entity data for a particular entity "instance".
+	 * Evict the cached item for the entity of the type with the given name,
+	 * and with the given identifier, if there is any such item in the cache.
 	 *
-	 * @param entityName The entity name.
+	 * @param entityName The entity name
 	 * @param identifier The entity identifier
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(String entityName, Serializable identifier);
+	void evictEntityData(String entityName, Object identifier);
 
 	/**
-	 * Evicts all entity data from the given region (i.e. for all entities of
-	 * type).
+	 * Evict all cached data from the cache region to which the given entity
+	 * type is assigned. Thus, every cached item for the given entity type will
+	 * be evicted, along with any cached items for any other entity type
+	 * assigned to the same cache region.
 	 *
-	 * @param entityClass The entity class.
+	 * @param entityClass The entity type
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class entityClass);
+	void evictEntityData(Class<?> entityClass);
 
 	/**
-	 * Evicts all entity data from the given region (i.e. for all entities of
-	 * type).
+	 * Evict all cached data from the cache region to which the given named
+	 * entity type is assigned. Thus, every cached item for the given entity
+	 * type will be evicted, along with any cached items for any other entity
+	 * type assigned to the same cache region.
 	 *
-	 * @param entityName The entity name.
+	 * @param entityName The entity name
 	 *
 	 * @since 5.3
 	 */
 	void evictEntityData(String entityName);
 
 	/**
-	 * Evict data from all entity regions.
+	 * Evict all cached data from every cache region to which any entity type
+	 * is assigned.
 	 *
 	 * @since 5.3
 	 */
@@ -112,25 +205,26 @@ public interface Cache extends javax.persistence.Cache {
 
 
 	/**
-	 * Evict cached data for the given entity's natural-id
+	 * Evict all cached natural id mappings for the given entity type.
 	 *
-	 * @param entityClass The entity class.
+	 * @param entityClass The entity type
 	 *
 	 * @since 5.3
 	 */
-	void evictNaturalIdData(Class entityClass);
+	void evictNaturalIdData(Class<?> entityClass);
 
 	/**
-	 * Evict cached data for the given entity's natural-id
+	 * Evict all cached natural id mappings for the entity type with the
+	 * given name.
 	 *
-	 * @param entityName The entity name.
+	 * @param entityName The entity name
 	 *
 	 * @since 5.3
 	 */
 	void evictNaturalIdData(String entityName);
 
 	/**
-	 * Evict cached data for all natural-ids (for all entities)
+	 * Evict all cached natural id mappings for every entity type.
 	 *
 	 * @since 5.3
 	 */
@@ -143,43 +237,43 @@ public interface Cache extends javax.persistence.Cache {
 	// Collection data
 
 	/**
-	 * Determine whether the cache contains data for the given collection.
-	 * <p/>
-	 * The semantic here is whether the cache contains data visible for the
-	 * current call context.
+	 * Determine whether the cache contains an item for the collection with the
+	 * given role and given identifier.
 	 *
-	 * @param role The name of the collection role (in form
-	 * [owner-entity-name].[collection-property-name]) whose regions should be
-	 * evicted.
+	 * @param role The name of the collection role in the form
+	 *             {@code package.OwnerEntityName.collectionPropertyName}
 	 * @param ownerIdentifier The identifier of the owning entity
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	boolean containsCollection(String role, Serializable ownerIdentifier);
-
+	boolean containsCollection(String role, Object ownerIdentifier);
 
 	/**
-	 * Evicts the cache data for the given identified collection "instance"
+	 * Evict the cached item for the collection with the given role and given
+	 * identifier, if there is any such item in the cache.
 	 *
-	 * @param role The "collection role" (in form [owner-entity-name].[collection-property-name]).
+	 * @param role The name of the collection role in the form
+	 *             {@code package.OwnerEntityName.collectionPropertyName}
 	 * @param ownerIdentifier The identifier of the owning entity
 	 *
 	 * @since 5.3
 	 */
-	void evictCollectionData(String role, Serializable ownerIdentifier);
+	void evictCollectionData(String role, Object ownerIdentifier);
 
 	/**
-	 * Evicts cached data for the given collection role
+	 * Evict all cached data from the cache region to which the given collection
+	 * role is assigned.
 	 *
-	 * @param role The "collection role" (in form [owner-entity-name].[collection-property-name]).
+	 * @param role The name of the collection role in the form
+	 *             {@code package.OwnerEntityName.collectionPropertyName}
 	 *
 	 * @since 5.3
 	 */
 	void evictCollectionData(String role);
 
 	/**
-	 * Evict cache data for all collections
+	 * Evict all cache data from every cache region to which some collection
+	 * role is assigned.
 	 *
 	 * @since 5.3
 	 */
@@ -192,31 +286,28 @@ public interface Cache extends javax.persistence.Cache {
 	// Query result data
 
 	/**
-	 * Determine whether the cache contains data for the given query.
-	 * <p/>
-	 * The semantic here is whether the cache contains any data for the given
-	 * region name since query result caches are not transactionally isolated.
+	 * Determine whether the given region name contains cached query results.
 	 *
-	 * @param regionName The cache name given to the query.
+	 * @param regionName The name of a cache region to which some query is assigned
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
 	boolean containsQuery(String regionName);
 
 	/**
-	 * Evicts all cached query results from the default region.
+	 * Evict all cached query results from the default region.
 	 */
 	void evictDefaultQueryRegion();
 
 	/**
-	 * Evicts all cached query results under the given name.
+	 * Evict all cached query results from the region with the given name.
 	 *
 	 * @param regionName The cache name associated to the queries being cached.
 	 */
 	void evictQueryRegion(String regionName);
 
 	/**
-	 * Evict data from all query regions.
+	 * Evict all cached query results from every region.
 	 */
 	void evictQueryRegions();
 
@@ -226,7 +317,7 @@ public interface Cache extends javax.persistence.Cache {
 	// Misc
 
 	/**
-	 * Evict all data from the named cache region
+	 * Evict all cached data from the named cache region.
 	 *
 	 * @since 5.3
 	 */
@@ -235,10 +326,11 @@ public interface Cache extends javax.persistence.Cache {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @apiNote Hibernate impl - we only evict entity data here in keeping
-	 * with the JPA intent (JPA only defines caching for entity data).  For
-	 * evicting all cache regions (collections, natural-ids and query results),
-	 * use {@link #evictAllRegions} instead.
+	 * @apiNote This operation only affects cached data for entities, in keeping
+	 * with the intent of the JPA specification, which only defines caching for
+	 * entity data. To evict all data from every cache region, including cached
+	 * collections, natural-id mappings, and cached query results, use
+	 * {@link #evictAllRegions()} instead.
 	 */
 	@Override
 	default void evictAll() {
@@ -247,7 +339,7 @@ public interface Cache extends javax.persistence.Cache {
 	}
 
 	/**
-	 * Evict data from all cache regions.
+	 * Evict all cached data from every cache region.
 	 */
 	default void evictAllRegions() {
 		evictEntityData();
@@ -256,144 +348,4 @@ public interface Cache extends javax.persistence.Cache {
 		evictDefaultQueryRegion();
 		evictQueryRegions();
 	}
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations (5.3)
-
-	/**
-	 * Evicts the entity data for a particular entity "instance".
-	 *
-	 * @param entityClass The entity class.
-	 * @param identifier The entity identifier
-	 *
-	 * @deprecated Use {@link Cache#evictEntityData(Class, Serializable)} instead
-	 */
-	@Deprecated
-	default void evictEntity(Class entityClass, Serializable identifier) {
-		evictEntityData( entityClass, identifier );
-	}
-
-	/**
-	 * Evicts the entity data for a particular entity "instance".
-	 *
-	 * @param entityName The entity name.
-	 * @param identifier The entity identifier
-	 *
-	 * @deprecated Use {@link Cache#evictEntityData(String, Serializable)} instead
-	 */
-	@Deprecated
-	default void evictEntity(String entityName, Serializable identifier) {
-		evictEntityData( entityName, identifier );
-	}
-
-	/**
-	 * Evicts all entity data from the given region (i.e. for all entities of
-	 * type).
-	 *
-	 * @param entityClass The entity class.
-	 *
-	 * @deprecated Use {@link Cache#evictEntityData(Class)} instead
-	 */
-	@Deprecated
-	default void evictEntityRegion(Class entityClass) {
-		evictEntityData( entityClass );
-	}
-
-	/**
-	 * Evicts all entity data from the given region (i.e. for all entities of
-	 * type).
-	 *
-	 * @param entityName The entity name.
-	 *
-	 * @deprecated Use {@link Cache#evictEntityData(String)} instead
-	 */
-	@Deprecated
-	default void evictEntityRegion(String entityName) {
-		evictEntityData( entityName );
-	}
-
-	/**
-	 * Evict data from all entity regions.
-	 *
-	 * @deprecated Use {@link Cache#evictEntityData()} instead
-	 */
-	@Deprecated
-	default void evictEntityRegions() {
-		evictEntityData();
-	}
-
-	/**
-	 * Evicts all naturalId data from the given region (i.e. for all entities of
-	 * type).
-	 *
-	 * @param entityClass The entity class.
-	 *
-	 * @deprecated Use {@link Cache#evictNaturalIdData(Class)} instead
-	 */
-	@Deprecated
-	default void evictNaturalIdRegion(Class entityClass) {
-		evictNaturalIdData( entityClass );
-	}
-
-	/**
-	 * Evicts all naturalId data from the given region (i.e. for all entities of
-	 * type).
-	 *
-	 * @param entityName The entity name.
-	 *
-	 * @deprecated Use {@link Cache#evictNaturalIdData(String)} instead
-	 */
-	@Deprecated
-	default void evictNaturalIdRegion(String entityName) {
-		evictNaturalIdData( entityName );
-	}
-
-	/**
-	 * Evict data from all naturalId regions.
-	 *
-	 * @deprecated Use {@link Cache#evictNaturalIdData()} instead
-	 */
-	@Deprecated
-	default void evictNaturalIdRegions() {
-		evictNaturalIdData();
-	}
-
-	/**
-	 * Evicts the cache data for the given identified collection instance.
-	 *
-	 * @param role The "collection role" (in form [owner-entity-name].[collection-property-name]).
-	 * @param ownerIdentifier The identifier of the owning entity
-	 *
-	 * @deprecated Use {@link Cache#evictCollectionData(String, Serializable)} instead
-	 */
-	@Deprecated
-	default void evictCollection(String role, Serializable ownerIdentifier) {
-		evictCollectionData( role, ownerIdentifier );
-	}
-
-	/**
-	 * Evicts all entity data from the given region (i.e. evicts cached data
-	 * for all of the specified collection role).
-	 *
-	 * @param role The "collection role" (in form [owner-entity-name].[collection-property-name]).
-	 *
-	 * @deprecated Use {@link Cache#evictCollectionData(String)} instead
-	 */
-	@Deprecated
-	default void evictCollectionRegion(String role) {
-		evictCollectionData( role );
-	}
-
-	/**
-	 * Evict data from all collection regions.
-	 *
-	 * @deprecated Use {@link Cache#evictCollectionData()} instead
-	 */
-	@Deprecated
-	default void evictCollectionRegions() {
-		evictCollectionData();
-	}
-
 }

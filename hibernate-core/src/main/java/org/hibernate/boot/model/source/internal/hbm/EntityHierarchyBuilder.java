@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -43,9 +41,9 @@ import org.jboss.logging.Logger;
 public class EntityHierarchyBuilder {
 	private static final Logger log = Logger.getLogger( EntityHierarchyBuilder.class );
 
-	private final List<EntityHierarchySourceImpl> entityHierarchyList = new ArrayList<EntityHierarchySourceImpl>();
+	private final List<EntityHierarchySourceImpl> entityHierarchyList = new ArrayList<>();
 
-	private final Map<String,AbstractEntitySourceImpl> entitySourceByNameMap = new HashMap<String, AbstractEntitySourceImpl>();
+	private final Map<String,AbstractEntitySourceImpl> entitySourceByNameMap = new HashMap<>();
 	private Map<String,List<ExtendsQueueEntry>> toBeLinkedQueue;
 
 	public EntityHierarchyBuilder() {
@@ -96,7 +94,10 @@ public class EntityHierarchyBuilder {
 			final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( mappingDocument, jaxbRootEntity );
 			entitySourceByNameMap.put( rootEntitySource.getEntityNamingSource().getEntityName(), rootEntitySource );
 
-			final EntityHierarchySourceImpl hierarchy = new EntityHierarchySourceImpl( rootEntitySource );
+			final EntityHierarchySourceImpl hierarchy = new EntityHierarchySourceImpl(
+					rootEntitySource,
+					mappingDocument
+			);
 			entityHierarchyList.add( hierarchy );
 
 			linkAnyWaiting( mappingDocument, rootEntitySource );
@@ -136,15 +137,15 @@ public class EntityHierarchyBuilder {
 			MappingDocument mappingDocument,
 			JaxbHbmEntityBaseDefinition entityBinding,
 			AbstractEntitySourceImpl container) {
-		if ( JaxbHbmDiscriminatorSubclassEntityType.class.isInstance( entityBinding ) ) {
+		if ( entityBinding instanceof JaxbHbmDiscriminatorSubclassEntityType ) {
 			final JaxbHbmDiscriminatorSubclassEntityType jaxbSubclass = (JaxbHbmDiscriminatorSubclassEntityType) entityBinding;
 			processElements( mappingDocument, jaxbSubclass.getSubclass(), container );
 		}
-		else if ( JaxbHbmJoinedSubclassEntityType.class.isInstance( entityBinding ) ) {
+		else if ( entityBinding instanceof JaxbHbmJoinedSubclassEntityType ) {
 			final JaxbHbmJoinedSubclassEntityType jaxbJoinedSubclass = (JaxbHbmJoinedSubclassEntityType) entityBinding;
 			processElements( mappingDocument, jaxbJoinedSubclass.getJoinedSubclass(), container );
 		}
-		else if ( JaxbHbmUnionSubclassEntityType.class.isInstance( entityBinding ) ) {
+		else if ( entityBinding instanceof JaxbHbmUnionSubclassEntityType ) {
 			final JaxbHbmUnionSubclassEntityType jaxbUnionSubclass = (JaxbHbmUnionSubclassEntityType) entityBinding;
 			processElements( mappingDocument, jaxbUnionSubclass.getUnionSubclass(), container );
 		}
@@ -176,7 +177,7 @@ public class EntityHierarchyBuilder {
 			MappingDocument mappingDocument,
 			JaxbHbmSubclassEntityBaseDefinition jaxbSubEntity,
 			EntitySource superEntity) {
-		if ( JaxbHbmJoinedSubclassEntityType.class.isInstance( jaxbSubEntity ) ) {
+		if (jaxbSubEntity instanceof JaxbHbmJoinedSubclassEntityType) {
 			return new JoinedSubclassEntitySourceImpl(
 					mappingDocument,
 					JaxbHbmJoinedSubclassEntityType.class.cast( jaxbSubEntity ),
@@ -238,14 +239,14 @@ public class EntityHierarchyBuilder {
 		List<ExtendsQueueEntry> waitingList = null;
 
 		if ( toBeLinkedQueue == null ) {
-			toBeLinkedQueue = new HashMap<String, List<ExtendsQueueEntry>>();
+			toBeLinkedQueue = new HashMap<>();
 		}
 		else {
 			waitingList = toBeLinkedQueue.get( jaxbSubEntityMapping.getExtends() );
 		}
 
 		if ( waitingList == null ) {
-			waitingList = new ArrayList<ExtendsQueueEntry>();
+			waitingList = new ArrayList<>();
 			toBeLinkedQueue.put( jaxbSubEntityMapping.getExtends(), waitingList );
 		}
 

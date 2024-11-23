@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,8 +16,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * Variation of {@link PooledOptimizer} which interprets the incoming database value as the lo value, rather than
- * the hi value, as well as using thread local to cache the generation state.
+ * Variation of {@link PooledOptimizer} which interprets the incoming database
+ * value as the lo value, rather than the hi value, as well as using thread local
+ * to cache the generation state.
  *
  * @author Stuart Douglas
  * @author Scott Marlow
@@ -27,26 +27,21 @@ import org.jboss.logging.Logger;
  */
 public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledLoOptimizer.class.getName()
 	);
 
-	private static class GenerationState {
-		// last value read from db source
-		private IntegralDataTypeHolder lastSourceValue;
-		// the current generator value
-		private IntegralDataTypeHolder value;
-		// the value at which we'll hit the db again
-		private IntegralDataTypeHolder upperLimitValue;
-	}
+	private final ThreadLocal<GenerationState> singleTenantState = ThreadLocal.withInitial( GenerationState::new );
+	private final ThreadLocal<Map<String, GenerationState>> multiTenantStates = ThreadLocal.withInitial( HashMap::new );
 
 	/**
-	 * Constructs a PooledLoThreadLocalOptimizer.
+	 * Constructs a {@code PooledLoThreadLocalOptimizer}.
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public PooledLoThreadLocalOptimizer(Class returnClass, int incrementSize) {
+	public PooledLoThreadLocalOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
@@ -56,50 +51,20 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 	@Override
 	public Serializable generate(AccessCallback callback) {
-		if ( callback.getTenantIdentifier() == null ) {
-			final GenerationState local = localAssignedIds.get();
-			if ( local.value != null && local.value.lt( local.upperLimitValue ) ) {
-				return local.value.makeValueThenIncrement();
-			}
-		}
-
-		synchronized (this) {
-			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
-			if ( generationState.lastSourceValue == null
-					|| !generationState.value.lt( generationState.upperLimitValue )) {
-				generationState.lastSourceValue = callback.getNextValue();
-				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
-				generationState.value = generationState.lastSourceValue.copy();
-				// handle cases where initial-value is less that one (hsqldb for instance).
-				while (generationState.value.lt( 1 )) {
-					generationState.value.increment();
-				}
-			}
-			return generationState.value.makeValueThenIncrement();
-		}
+		return locateGenerationState( callback.getTenantIdentifier() )
+				.generate( callback, incrementSize );
 	}
-
-	private Map<String, GenerationState> tenantSpecificState;
-	private final ThreadLocal<GenerationState> localAssignedIds = ThreadLocal.withInitial( GenerationState::new );
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {
 		if ( tenantIdentifier == null ) {
-			return localAssignedIds.get();
+			return singleTenantState.get();
 		}
 		else {
-			GenerationState state;
-			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new HashMap<String, GenerationState>();
+			Map<String, GenerationState> states = multiTenantStates.get();
+			GenerationState state = states.get( tenantIdentifier );
+			if ( state == null ) {
 				state = new GenerationState();
-				tenantSpecificState.put( tenantIdentifier, state );
-			}
-			else {
-				state = tenantSpecificState.get( tenantIdentifier );
-				if ( state == null ) {
-					state = new GenerationState();
-					tenantSpecificState.put( tenantIdentifier, state );
-				}
+				states.put( tenantIdentifier, state );
 			}
 			return state;
 		}
@@ -124,5 +89,27 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	@Override
 	public boolean applyIncrementSizeToSourceValues() {
 		return true;
+	}
+
+	private static class GenerationState {
+		// last value read from db source
+		private IntegralDataTypeHolder lastSourceValue;
+		// the current generator value
+		private IntegralDataTypeHolder value;
+		// the value at which we'll hit the db again
+		private IntegralDataTypeHolder upperLimitValue;
+
+		private Serializable generate(AccessCallback callback, int incrementSize) {
+			if ( value == null || !value.lt( upperLimitValue ) ) {
+				lastSourceValue = callback.getNextValue();
+				upperLimitValue = lastSourceValue.copy().add( incrementSize );
+				value = lastSourceValue.copy();
+				// handle cases where initial-value is less that one (hsqldb for instance).
+				while ( value.lt( 1 ) ) {
+					value.increment();
+				}
+			}
+			return value.makeValueThenIncrement();
+		}
 	}
 }

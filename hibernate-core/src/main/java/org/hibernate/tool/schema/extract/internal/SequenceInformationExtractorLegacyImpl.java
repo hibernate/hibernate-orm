@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,50 +33,31 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 			return SequenceInformationExtractorNoOpImpl.INSTANCE.extractMetadata( extractionContext );
 		}
 
-		final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment().getIdentifierHelper();
-		final Statement statement = extractionContext.getJdbcConnection().createStatement();
-		try {
-			final ResultSet resultSet = statement.executeQuery( lookupSql );
-			try {
-				final List<SequenceInformation> sequenceInformationList = new ArrayList<>();
-				while ( resultSet.next() ) {
-					sequenceInformationList.add(
-							new SequenceInformationImpl(
-									new QualifiedSequenceName(
-											identifierHelper.toIdentifier(
-												resultSetCatalogName( resultSet )
-											),
-											identifierHelper.toIdentifier(
-													resultSetSchemaName( resultSet )
-											),
-											identifierHelper.toIdentifier(
-													resultSetSequenceName( resultSet )
-											)
-									),
-									resultSetStartValueSize( resultSet ),
-									resultSetMinValue( resultSet ),
-									resultSetMaxValue( resultSet ),
-									resultSetIncrementValue( resultSet )
-							)
-					);
+		return extractionContext.getQueryResults(
+				lookupSql,
+				null,
+				(ExtractionContext.ResultSetProcessor<Iterable<SequenceInformation>>) resultSet -> {
+					final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment()
+							.getIdentifierHelper();
+					final List<SequenceInformation> sequenceInformationList = new ArrayList<>();
+					while ( resultSet.next() ) {
+						sequenceInformationList.add(
+								new SequenceInformationImpl(
+										new QualifiedSequenceName(
+												identifierHelper.toIdentifier( resultSetCatalogName( resultSet ) ),
+												identifierHelper.toIdentifier( resultSetSchemaName( resultSet ) ),
+												identifierHelper.toIdentifier( resultSetSequenceName( resultSet ) )
+										),
+										resultSetStartValueSize( resultSet ),
+										resultSetMinValue( resultSet ),
+										resultSetMaxValue( resultSet ),
+										resultSetIncrementValue( resultSet )
+								)
+						);
+					}
+					return sequenceInformationList;
 				}
-				return sequenceInformationList;
-			}
-			finally {
-				try {
-					resultSet.close();
-				}
-				catch (SQLException ignore) {
-				}
-			}
-		}
-		finally {
-			try {
-				statement.close();
-			}
-			catch (SQLException ignore) {
-			}
-		}
+		);
 	}
 
 	protected String sequenceNameColumn() {
@@ -124,22 +102,22 @@ public class SequenceInformationExtractorLegacyImpl implements SequenceInformati
 		return column != null ? resultSet.getString( column ) : null;
 	}
 
-	protected Long resultSetStartValueSize(ResultSet resultSet) throws SQLException {
+	protected Number resultSetStartValueSize(ResultSet resultSet) throws SQLException {
 		String column = sequenceStartValueColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}
 
-	protected Long resultSetMinValue(ResultSet resultSet) throws SQLException {
+	protected Number resultSetMinValue(ResultSet resultSet) throws SQLException {
 		String column = sequenceMinValueColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}
 
-	protected Long resultSetMaxValue(ResultSet resultSet) throws SQLException {
+	protected Number resultSetMaxValue(ResultSet resultSet) throws SQLException {
 		String column = sequenceMaxValueColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}
 
-	protected Long resultSetIncrementValue(ResultSet resultSet) throws SQLException {
+	protected Number resultSetIncrementValue(ResultSet resultSet) throws SQLException {
 		String column = sequenceIncrementColumn();
 		return column != null ? resultSet.getLong( column ) : null;
 	}

@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
 /**
  * Represents a "final" value that is initialized either {@link #ValueHolder(Object) up front} or once at some point
- * {@link #ValueHolder(ValueHolder.DeferredInitializer) after} declaration.
- * 
+ * {@linkplain #ValueHolder(DeferredInitializer) after} declaration.
+ *
  * Note: If a Serializable class has a {@link ValueHolder} property, that property should be declared transient!
  *
  * @author Steve Ebersole
@@ -21,15 +19,15 @@ public class ValueHolder<T> {
 	 *
 	 * @param <T>
 	 */
-	public static interface DeferredInitializer<T> {
+	public interface DeferredInitializer<T> {
 		/**
 		 * Build the initialization value.
-		 * <p/>
+		 * <p>
 		 * Implementation note: returning {@code null} is "ok" but will cause this method to keep being called.
 		 *
 		 * @return The initialization value.
 		 */
-		public T initialize();
+		T initialize();
 	}
 
 	private final DeferredInitializer<T> valueInitializer;

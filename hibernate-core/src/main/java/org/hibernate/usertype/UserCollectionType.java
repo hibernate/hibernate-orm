@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
 
@@ -12,32 +10,44 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
+ * A custom type for mapping user-written classes which implement {@link PersistentCollection}.
+ *
+ * @see PersistentCollection
  *
  * @author Gavin King
- * @see org.hibernate.collection.spi.PersistentCollection
+ * @author Steve Ebersole
  */
 public interface UserCollectionType {
+	/**
+	 * The classification mapped by this custom type
+	 */
+	CollectionClassification getClassification();
+
+	/**
+	 * The Java type that this type maps.
+	 */
+	Class<?> getCollectionClass();
 
 	/**
 	 * Instantiate an uninitialized instance of the collection wrapper
 	 */
-	PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister)
+	PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister)
 			throws HibernateException;
 
 	/**
 	 * Wrap an instance of a collection
 	 */
-	PersistentCollection wrap(SharedSessionContractImplementor session, Object collection);
+	PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection);
 
 	/**
 	 * Return an iterator over the elements of this collection - the passed collection
 	 * instance may or may not be a wrapper
 	 */
-	Iterator getElementsIterator(Object collection);
+	Iterator<?> getElementsIterator(Object collection);
 
 	/**
 	 * Optional operation. Does the collection contain the entity instance?

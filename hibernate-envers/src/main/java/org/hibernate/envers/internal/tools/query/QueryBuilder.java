@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools.query;
 
@@ -13,29 +11,28 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
+import org.hibernate.envers.function.OrderByFragmentFunction;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
+import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.envers.internal.tools.Triple;
+import org.hibernate.envers.query.criteria.AuditFunction;
+import org.hibernate.envers.query.criteria.AuditId;
+import org.hibernate.envers.query.criteria.AuditProperty;
+import org.hibernate.envers.query.criteria.internal.CriteriaTools;
+import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.Query;
-import org.hibernate.sql.Template;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.sql.ordering.antlr.ColumnReference;
-import org.hibernate.sql.ordering.antlr.FormulaReference;
-import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
-import org.hibernate.sql.ordering.antlr.OrderByTranslation;
-import org.hibernate.sql.ordering.antlr.SqlValueReference;
-import org.hibernate.type.CustomType;
+import org.hibernate.type.BasicType;
 
 /**
  * A class for incrementally building a HQL query.
@@ -65,17 +62,23 @@ public class QueryBuilder {
 	 */
 	private final List<JoinParameter> froms;
 	/**
-	 * A list of triples (alias, property name, order ascending?).
+	 * A list of order by clauses.
 	 */
-	private final List<Triple<String, String, Boolean>> orders;
+	private final List<OrderByClause> orders;
 	/**
 	 * A list of complete projection definitions: either a sole property name, or a function(property name).
 	 */
 	private final List<String> projections;
+	/**
+	 * Values of parameters used in projections.
+	 */
+	private final Map<String, Object> projectionQueryParamValues;
 
 	private final List<Pair<String, String>> orderFragments;
 
 	private final SessionFactoryImplementor sessionFactory;
+
+	private final BasicType<?> revisionType;
 
 	/**
 	 * @param entityName Main entity which should be selected.
@@ -98,12 +101,17 @@ public class QueryBuilder {
 		this.paramCounter = paramCounter;
 		this.sessionFactory = sessionFactory;
 
+		this.revisionType = sessionFactory.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( RevisionTypeType.class );
+
 		final Parameters rootParameters = new Parameters( alias, "and", paramCounter );
 		parameters.add( rootParameters );
 
 		froms = new ArrayList<>();
 		orders = new ArrayList<>();
 		projections = new ArrayList<>();
+		projectionQueryParamValues = new HashMap<>();
 		orderFragments = new ArrayList<>();
 
 		addFrom( entityName, alias, true );
@@ -114,6 +122,7 @@ public class QueryBuilder {
 		this.entityName = other.entityName;
 		this.alias = other.alias;
 		this.sessionFactory = other.sessionFactory;
+		this.revisionType = other.revisionType;
 		this.aliasCounter = other.aliasCounter.deepCopy();
 		this.paramCounter = other.paramCounter.deepCopy();
 		for (final Parameters params : other.parameters) {
@@ -123,6 +132,7 @@ public class QueryBuilder {
 		froms = new ArrayList<>( other.froms );
 		orders = new ArrayList<>( other.orders );
 		projections = new ArrayList<>( other.projections );
+		projectionQueryParamValues = new HashMap<>( other.projectionQueryParamValues );
 		orderFragments = new ArrayList<>( other.orderFragments );
 	}
 
@@ -187,12 +197,12 @@ public class QueryBuilder {
 		return result;
 	}
 
-	public void addOrder(String alias, String propertyName, boolean ascending) {
-		orders.add( Triple.make( alias, propertyName, ascending ) );
+	public void addOrder(String alias, String propertyName, boolean ascending, NullPrecedence nullPrecedence) {
+		orders.add( new OrderByClause( alias, propertyName, ascending, nullPrecedence ) );
 	}
 
-	public void addOrderFragment(String alias, String fragment) {
-		orderFragments.add( Pair.make( alias, fragment ) );
+	public void addOrderFragment(String alias, String orderByCollectionRole) {
+		orderFragments.add( Pair.make( alias, orderByCollectionRole ) );
 	}
 
 	public void addProjection(String function, String alias, String propertyName, boolean distinct) {
@@ -205,6 +215,101 @@ public class QueryBuilder {
 					function + "(" + (distinct ? "distinct " : "") + alias +
 					effectivePropertyName + ")"
 			);
+		}
+	}
+
+	public void addProjection(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			AuditFunction function) {
+		final StringBuilder expression = new StringBuilder();
+		appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				paramCounter,
+				projectionQueryParamValues,
+				alias,
+				expression,
+				function
+		);
+		projections.add( expression.toString() );
+	}
+
+	protected static void appendFunctionArgument(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			MutableInteger paramCounter,
+			Map<String, Object> queryParamValues,
+			String alias,
+			StringBuilder expression,
+			Object argument) {
+		if ( argument instanceof AuditFunction ) {
+			AuditFunction function = (AuditFunction) argument;
+			expression.append( function.getFunction() ).append( '(' );
+			boolean first = true;
+			for ( final Object innerArg : function.getArguments() ) {
+				if ( !first ) {
+					expression.append( ',' );
+				}
+				appendFunctionArgument(
+						configuration,
+						aliasToEntityNameMap,
+						aliasToComponentPropertyNameMap,
+						paramCounter,
+						queryParamValues,
+						alias,
+						expression,
+						innerArg
+				);
+				first = false;
+			}
+			expression.append( ')' );
+		}
+		else if ( argument instanceof AuditId ) {
+			AuditId<?> id = (AuditId<?>) argument;
+			String prefix = configuration.getOriginalIdPropertyName();
+			String idAlias = id.getAlias( alias );
+			String entityName = aliasToEntityNameMap.get( idAlias );
+			/*
+			 * Resolve the name of the id property by reusing the IdMapper.mapToQueryParametersFromId() method. Null is
+			 * passed as value because only the name of the property is of interest. TODO: is there a better way to
+			 * obtain the name of the id property?
+			 */
+			EnversService enversService = configuration.getEnversService();
+			List<QueryParameterData> parameters = enversService.getEntitiesConfigurations().get( entityName )
+					.getIdMapper()
+					.mapToQueryParametersFromId( null );
+			if ( parameters.size() != 1 ) {
+				throw new HibernateException( "Cannot add id property as function argument when id property is not a single column property" );
+			}
+			String propertyName = parameters.get( 0 ).getProperty( prefix );
+			if ( idAlias != null ) {
+				expression.append( idAlias ).append( '.' );
+			}
+			expression.append( propertyName );
+		}
+		else if ( argument instanceof AuditProperty ) {
+			AuditProperty<?> property = (AuditProperty<?>) argument;
+			String propertyAlias = property.getAlias( alias );
+			if ( propertyAlias != null ) {
+				expression.append( propertyAlias ).append( '.' );
+			}
+			String propertyPrefix = CriteriaTools.determineComponentPropertyPrefix(
+					configuration.getEnversService(),
+					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
+					propertyAlias
+			);
+			String propertyName = property.getPropertyNameGetter().get( configuration );
+			expression.append( propertyPrefix.concat( propertyName ) );
+		}
+		else {
+			String queryParam = "_p" + paramCounter.getAndIncrease();
+			queryParamValues.put( queryParam, argument );
+			expression.append( ':' ).append( queryParam );
 		}
 	}
 
@@ -225,6 +330,7 @@ public class QueryBuilder {
 			// all aliases separated with commas
 			StringTools.append( sb, getSelectAliasList().iterator(), ", " );
 		}
+		queryParamValues.putAll( projectionQueryParamValues );
 		sb.append( " from " );
 		// all from entities with aliases
 		boolean first = true;
@@ -257,36 +363,17 @@ public class QueryBuilder {
 			final Iterator<Pair<String, String>> fragmentIterator = orderFragments.iterator();
 			while( fragmentIterator.hasNext() ) {
 				final Pair<String, String> fragment = fragmentIterator.next();
-				final OrderByTranslation orderByFragmentTranslation = Template.translateOrderBy(
-						fragment.getSecond(),
-						new ColumnMapper() {
-							@Override
-							public SqlValueReference[] map(String reference) throws HibernateException {
-								return new SqlValueReference[ 0 ];
-							}
-						},
-						sessionFactory,
-						sessionFactory.getJdbcServices().getDialect(),
-						sessionFactory.getSqlFunctionRegistry()
-				);
-
-				sb.append( orderByFragmentTranslation.injectAliases( new QueryOrderByAliasResolver( fragment.getFirst() ) ) );
+				sb.append( OrderByFragmentFunction.FUNCTION_NAME ).append( '(' );
+				// The first argument is the sqm alias of the from node
+				QuotingHelper.appendSingleQuoteEscapedString( sb, fragment.getFirst() );
+				sb.append( ", " );
+				// The second argument is the collection role that contains the order by fragment
+				QuotingHelper.appendSingleQuoteEscapedString( sb, fragment.getSecond() );
+				sb.append( ')' );
 				if ( fragmentIterator.hasNext() ) {
 					sb.append( ", " );
 				}
 			}
-		}
-	}
-
-	private class QueryOrderByAliasResolver implements OrderByAliasResolver {
-		private String alias;
-		public QueryOrderByAliasResolver(String alias) {
-			this.alias = alias;
-		}
-
-		@Override
-		public String resolveTableAlias(String columnReference) {
-			return alias;
 		}
 	}
 
@@ -307,10 +394,9 @@ public class QueryBuilder {
 
 	private List<String> getOrderList() {
 		final List<String> orderList = new ArrayList<>();
-		for ( Triple<String, String, Boolean> order : orders ) {
-			orderList.add( order.getFirst() + "." + order.getSecond() + " " + (order.getThird() ? "asc" : "desc") );
+		for ( OrderByClause orderByClause : orders ) {
+			orderList.add( orderByClause.renderToHql() );
 		}
-
 		return orderList;
 	}
 
@@ -324,11 +410,7 @@ public class QueryBuilder {
 		for ( Map.Entry<String, Object> paramValue : queryParamValues.entrySet() ) {
 			if ( paramValue.getValue() instanceof RevisionType ) {
 				// this is needed when the ClassicQueryTranslatorFactory is used
-				query.setParameter(
-						paramValue.getKey(),
-						paramValue.getValue(),
-						new CustomType( new RevisionTypeType() )
-				);
+				query.setParameter( paramValue.getKey(), paramValue.getValue(), revisionType );
 			}
 			else {
 				query.setParameter( paramValue.getKey(), paramValue.getValue() );
@@ -410,4 +492,32 @@ public class QueryBuilder {
 
 	}
 
+	private static class OrderByClause {
+		private String alias;
+		private String propertyName;
+		private boolean ascending;
+		private NullPrecedence nullPrecedence;
+
+		public OrderByClause(String alias, String propertyName, boolean ascending, NullPrecedence nullPrecedence) {
+			this.alias = alias;
+			this.propertyName = propertyName;
+			this.ascending = ascending;
+			this.nullPrecedence = nullPrecedence;
+		}
+
+		public String renderToHql() {
+			StringBuilder hql = new StringBuilder();
+			hql.append( alias ).append( "." ).append( propertyName ).append( " " );
+			hql.append( ascending ? "asc" : "desc" );
+			if ( nullPrecedence != null ) {
+				if ( NullPrecedence.FIRST.equals( nullPrecedence ) ) {
+					hql.append( " nulls first" );
+				}
+				else {
+					hql.append( " nulls last" );
+				}
+			}
+			return hql.toString();
+		}
+	}
 }

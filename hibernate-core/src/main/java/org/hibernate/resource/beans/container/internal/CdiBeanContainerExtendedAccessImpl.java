@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
 
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.BeanManager;
 
+import org.hibernate.Internal;
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
@@ -33,7 +32,7 @@ public class CdiBeanContainerExtendedAccessImpl
 
 	private CdiBeanContainerExtendedAccessImpl(ExtendedBeanManager beanManager) {
 		beanManager.registerLifecycleListener( this );
-		log.debugf( "Extended access requested to CDI BeanManager : " + beanManager );
+		log.debugf( "Extended access requested to CDI BeanManager : %s", beanManager );
 	}
 
 	@Override
@@ -88,6 +87,11 @@ public class CdiBeanContainerExtendedAccessImpl
 		return usableBeanManager;
 	}
 
+	@Internal
+	public BeanManager getBeanManager() {
+		return usableBeanManager;
+	}
+
 	private class BeanImpl<B> implements ContainedBeanImplementor<B> {
 		private final Class<B> beanType;
 		private final BeanLifecycleStrategy lifecycleStrategy;
@@ -139,7 +143,7 @@ public class CdiBeanContainerExtendedAccessImpl
 		private NamedBeanImpl(
 				String name,
 				Class<B> beanType,
-				BeanLifecycleStrategy lifecycleStrategy, 
+				BeanLifecycleStrategy lifecycleStrategy,
 				BeanInstanceProducer fallbackProducer) {
 			this.name = name;
 			this.beanType = beanType;

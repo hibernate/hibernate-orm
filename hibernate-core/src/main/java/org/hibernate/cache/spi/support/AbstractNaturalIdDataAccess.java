@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -31,14 +29,14 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 
 	@Override
 	public Object generateCacheKey(
-			Object[] naturalIdValues,
+			Object naturalIdValues,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
-	public Object[] getNaturalIdValues(Object cacheKey) {
+	public Object getNaturalIdValues(Object cacheKey) {
 		return keysFactory.getNaturalIdValues( cacheKey );
 	}
 

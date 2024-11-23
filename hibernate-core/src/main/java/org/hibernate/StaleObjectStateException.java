@@ -1,33 +1,52 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import java.io.Serializable;
-
-import org.hibernate.pretty.MessageHelper;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
- * A specialized StaleStateException that carries information about the particular entity
- * instance that was the source of the failure.
+ * A specialized {@link StaleStateException} that carries information about
+ * the particular entity instance that was the source of the failure.
  *
  * @author Gavin King
  */
 public class StaleObjectStateException extends StaleStateException {
 	private final String entityName;
-	private final Serializable identifier;
+	private final Object identifier;
 
 	/**
-	 * Constructs a StaleObjectStateException using the supplied information.
+	 * Constructs a {@code StaleObjectStateException} using the supplied information.
 	 *
 	 * @param entityName The name of the entity
 	 * @param identifier The identifier of the entity
 	 */
-	public StaleObjectStateException(String entityName, Serializable identifier) {
-		super( "Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)" );
+	public StaleObjectStateException(String entityName, Object identifier) {
+		this( entityName, identifier, "Row was already updated or deleted by another transaction" );
+	}
+
+	/**
+	 * Constructs a {@code StaleObjectStateException} using the supplied information.
+	 *
+	 * @param entityName The name of the entity
+	 * @param identifier The identifier of the entity
+	 */
+	public StaleObjectStateException(String entityName, Object identifier, String message) {
+		super( message );
+		this.entityName = entityName;
+		this.identifier = identifier;
+	}
+
+	/**
+	 * Constructs a {@code StaleObjectStateException} using the supplied information
+	 * and cause.
+	 *
+	 * @param entityName The name of the entity
+	 * @param identifier The identifier of the entity
+	 */
+	public StaleObjectStateException(String entityName, Object identifier, StaleStateException cause) {
+		super( cause.getMessage(), cause );
 		this.entityName = entityName;
 		this.identifier = identifier;
 	}
@@ -36,12 +55,12 @@ public class StaleObjectStateException extends StaleStateException {
 		return entityName;
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return identifier;
 	}
 
 	public String getMessage() {
-		return super.getMessage() + " : " + MessageHelper.infoString( entityName, identifier );
+		return super.getMessage() + ": " + infoString( entityName, identifier );
 	}
 
 }

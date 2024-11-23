@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools.query;
 
@@ -11,8 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.envers.internal.tools.MutableInteger;
+import org.hibernate.envers.query.criteria.AuditFunction;
 
 /**
  * Parameters of a query, built using {@link QueryBuilder}.
@@ -171,7 +171,7 @@ public class Parameters {
 				right
 		);
 	}
-	
+
 	public void addWhere(String aliasLeft, String left, String op, String aliasRight, String right) {
 		final StringBuilder expression = new StringBuilder();
 
@@ -193,15 +193,15 @@ public class Parameters {
 	public void addWhereWithFunction(String alias, String left, String leftFunction, String op, Object paramValue){
 		final String paramName = generateQueryParam();
 		localQueryParamValues.put( paramName, paramValue );
-		
+
 		final StringBuilder expression = new StringBuilder();
-		
+
 		expression.append( leftFunction ).append( "(" );
 		expression.append( alias ).append( "." );
 		expression.append( left ).append( ")" );
 		expression.append( " " ).append( op ).append( " " );
 		expression.append( ":" ).append( paramName );
-		
+
 		expressions.add( expression.toString() );
 	}
 
@@ -294,16 +294,195 @@ public class Parameters {
 	 * @param op The operator.
 	 * @param right Right property name.
 	 * @param addAliasRight Whether to add the alias to the right property.
-     */
+	 */
 	public void addWhereOrNullRestriction(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
-		// apply the normal addWhere predicate
-		final Parameters sub1 = addSubParameters( "or" );
-		sub1.addWhere( left, addAliasLeft, op, right, addAliasRight );
+		if ( "=".equals( op ) ) {
+			addWhere( left, addAliasLeft, " is not distinct from ", right, addAliasRight );
+		}
+		else {
+			// apply the normal addWhere predicate
+			final Parameters sub1 = addSubParameters( "or" );
+			sub1.addWhere( left, addAliasLeft, op, right, addAliasRight );
 
-		// apply the is null predicate for both join properties
-		final Parameters sub2 = sub1.addSubParameters( "and" );
-		sub2.addNullRestriction( left, false );
-		sub2.addNullRestriction( right, false );
+			// apply the is null predicate for both join properties
+			final Parameters sub2 = sub1.addSubParameters( "and" );
+			sub2.addNullRestriction( left, false );
+			sub2.addNullRestriction( right, false );
+		}
+	}
+
+	/**
+	 * Add where clause with a function call on the left and a scalar value on the right.
+	 *
+	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
+	 * @param function the function.
+	 * @param op the operator.
+	 * @param value the scalar value.
+	 */
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			AuditFunction function,
+			String op,
+			Object value) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				function
+		);
+
+		expression.append( ' ' ).append( op );
+
+		String queryParam = generateQueryParam();
+		localQueryParamValues.put( queryParam, value );
+		expression.append( ' ' ).append( ':' ).append( queryParam );
+
+		expressions.add( expression.toString() );
+	}
+
+	/**
+	 * Add a where clause with a function call on the left and an optionally aliased property on the right.
+	 *
+	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
+	 * @param function the function.
+	 * @param op the operator.
+	 * @param aliasRight the optional alias of the right property, may be {@literal null}
+	 * @param right the property.
+	 */
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			AuditFunction function,
+			String op,
+			String aliasRight,
+			String right) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				function
+		);
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		if ( aliasRight != null ) {
+			expression.append( aliasRight ).append( '.' );
+		}
+		expression.append( right );
+
+		expressions.add( expression.toString() );
+	}
+
+	/**
+	 * Adds a where clause with a left (optionally aliased) property and a function call on the right side.
+	 *
+	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
+	 * @param aliasLeft the optional alias of the left property, may be {@literal null}
+	 * @param left the property.
+	 * @param op the operator.
+	 * @param function the function.
+	 */
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			String aliasLeft,
+			String left,
+			String op,
+			AuditFunction function) {
+		final StringBuilder expression = new StringBuilder();
+
+		if ( aliasLeft != null ) {
+			expression.append( aliasLeft ).append( '.' );
+		}
+		expression.append( left );
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				function
+		);
+
+		expressions.add( expression.toString() );
+	}
+
+	/**
+	 * Adds a where clause with a function call on both the left and right of the predicate.
+	 *
+	 * @param configuration the configuration.
+	 * @param aliasToEntityNameMap alias to entity name map, never {@literal null}
+	 * @param aliasToComponentPropertyNameMap alias to component property name map, never {@literal null}
+	 * @param left the left-side function.
+	 * @param op the operator.
+	 * @param right the right-side function.
+	 */
+	public void addWhereWithFunction(
+			Configuration configuration,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			AuditFunction left,
+			String op,
+			AuditFunction right) {
+		final StringBuilder expression = new StringBuilder();
+
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				left
+		);
+
+		expression.append( ' ' ).append( op ).append( ' ' );
+
+		QueryBuilder.appendFunctionArgument(
+				configuration,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				queryParamCounter,
+				localQueryParamValues,
+				alias,
+				expression,
+				right
+		);
+
+		expressions.add( expression.toString() );
+	}
+
+	public void addEntityTypeRestriction(String alias, String entityName) {
+		String expression = String.format( "type(%s) = %s", alias, entityName );
+		expressions.add( expression );
 	}
 
 	private void append(StringBuilder sb, String toAppend, MutableBoolean isFirst) {

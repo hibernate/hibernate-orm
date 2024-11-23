@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
@@ -11,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.ArchiveException;
@@ -21,7 +20,7 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
  *
  * @author Steve Ebersole
  */
-public class FileInputStreamAccess implements InputStreamAccess {
+public class FileInputStreamAccess implements InputStreamAccess, Serializable {
 	private final String name;
 	private final File file;
 

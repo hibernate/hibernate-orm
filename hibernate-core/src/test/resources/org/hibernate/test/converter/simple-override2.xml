@@ -10,10 +10,10 @@
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm http://xmlns.jcp.org/xml/ns/persistence/orm/orm_2_1.xsd"
                  version="2.1">
-    <!-- Intended for use in org.hibernate.test.converter.SimpleXmlOverriddenTest -->
+    <!-- Intended for use in org.hibernate.orm.test.mapping.converted.converter.SimpleXmlOverriddenTest -->
 
     <package>org.hibernate.jpa.test.convert</package>
-    <entity class="org.hibernate.test.converter.SimpleXmlOverriddenTest$TheEntity2">
+    <entity class="org.hibernate.orm.test.mapping.converted.converter.SimpleXmlOverriddenTest$TheEntity2">
         <convert attribute-name="it" disable-conversion="true"/>
     </entity>
 </entity-mappings>

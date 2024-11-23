@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
 
@@ -16,6 +14,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
@@ -88,10 +87,20 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 	}
 
 	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return null;
+	}
+
+	@Override
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
 			SessionImplementor session, String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Serializable id) {
+			Serializable oldColl, Object id) {
 		final List<PersistentCollectionChangeData> parentCollectionChanges = parentMapper.mapCollectionChanges(
 				session,
 				referencingPropertyName,
@@ -120,8 +129,10 @@ public class SubclassPropertyMapper extends AbstractPropertyMapper implements Ex
 	}
 
 	@Override
-	public CompositeMapperBuilder addComponent(PropertyData propertyData, Class componentClass) {
-		return main.addComponent( propertyData, componentClass );
+	public CompositeMapperBuilder addComponent(
+			PropertyData propertyData,
+			Class componentClass, EmbeddableInstantiator instantiator) {
+		return main.addComponent( propertyData, componentClass, instantiator );
 	}
 
 	@Override

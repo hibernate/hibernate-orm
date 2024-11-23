@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +27,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			SessionImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Serializable id, EntityPersister entityPersister, Object[] state) {
+			Object id, EntityPersister entityPersister, Object[] state) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = new HashMap<>();
@@ -48,13 +45,14 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			SessionImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Serializable id,
+			Object id,
 			Map<String, Object> data) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = data;
-		final String[] propertyNames = sessionImplementor.getFactory().getMetamodel()
-				.entityPersister( getEntityName() )
+		final String[] propertyNames = sessionImplementor.getFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor( getEntityName() )
 				.getPropertyNames();
 		this.state = ArraysTools.mapToArray( data, propertyNames );
 	}

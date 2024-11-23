@@ -1,24 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.envers.test.integration.modifiedflags;
 
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
-import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ChildEntity;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ParentEntity;
+import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
-import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
-import static org.hibernate.envers.test.tools.TestTools.makeList;
+import static org.hibernate.orm.test.envers.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.orm.test.envers.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)

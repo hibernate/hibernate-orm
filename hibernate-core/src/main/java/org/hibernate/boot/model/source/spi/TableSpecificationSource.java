@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
@@ -17,15 +15,15 @@ public interface TableSpecificationSource {
 	 *
 	 * @return The schema name. If {@code null}, the binder will apply the default.
 	 */
-	public String getExplicitSchemaName();
+	String getExplicitSchemaName();
 
 	/**
 	 * Obtain the supplied catalog name
 	 *
 	 * @return The catalog name. If {@code null}, the binder will apply the default.
 	 */
-	public String getExplicitCatalogName();
+	String getExplicitCatalogName();
 
-	public String getComment();
+	String getComment();
 
 }

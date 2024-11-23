@@ -1,19 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.MappingException;
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.boot.EnversMappingException;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesHolder;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
@@ -30,13 +29,14 @@ import org.hibernate.mapping.Value;
 import org.jboss.logging.Logger;
 
 /**
- * A helper class holding auditing meta-data for all persistent classes.
+ * A helper class holding auditing meta-data for all persistent classes during boot-time.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
 public class ClassesAuditingData {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			ClassesAuditingData.class.getName()
 	);
@@ -47,28 +47,18 @@ public class ClassesAuditingData {
 	/**
 	 * Stores information about auditing meta-data for the given class.
 	 *
-	 * @param pc Persistent class.
 	 * @param cad Auditing meta-data for the given class.
 	 */
-	public void addClassAuditingData(PersistentClass pc, ClassAuditingData cad) {
-		entityNameToAuditingData.put( pc.getEntityName(), cad );
-		persistentClassToAuditingData.put( pc, cad );
+	public void addClassAuditingData(ClassAuditingData cad) {
+		entityNameToAuditingData.put( cad.getEntityName(), cad );
+		persistentClassToAuditingData.put( cad.getPersistentClass(), cad );
 	}
 
 	/**
 	 * @return A collection of all auditing meta-data for persistent classes.
 	 */
-	public Collection<Map.Entry<PersistentClass, ClassAuditingData>> getAllClassAuditedData() {
-		return persistentClassToAuditingData.entrySet();
-	}
-
-	/**
-	 * @param entityName Name of the entity.
-	 *
-	 * @return Auditing meta-data for the given entity.
-	 */
-	public ClassAuditingData getClassAuditingData(String entityName) {
-		return entityNameToAuditingData.get( entityName );
+	public Collection<ClassAuditingData> getAllClassAuditedData() {
+		return persistentClassToAuditingData.values();
 	}
 
 	/**
@@ -79,12 +69,11 @@ public class ClassesAuditingData {
 	 * </ul>
 	 */
 	public void updateCalculatedFields() {
-		for ( Map.Entry<PersistentClass, ClassAuditingData> classAuditingDataEntry : persistentClassToAuditingData.entrySet() ) {
-			final PersistentClass pc = classAuditingDataEntry.getKey();
-			final ClassAuditingData classAuditingData = classAuditingDataEntry.getValue();
+		for ( ClassAuditingData classAuditingData : persistentClassToAuditingData.values() ) {
+			final PersistentClass persistentClass = classAuditingData.getPersistentClass();
 			for ( String propertyName : classAuditingData.getNonSyntheticPropertyNames() ) {
-				final Property property = pc.getProperty( propertyName );
-				updateCalculatedProperty( pc.getEntityName(), property, propertyName, classAuditingData );
+				final Property property = persistentClass.getProperty( propertyName );
+				updateCalculatedProperty( persistentClass.getEntityName(), property, propertyName, classAuditingData );
 			}
 		}
 	}
@@ -158,16 +147,13 @@ public class ClassesAuditingData {
 
 	private void addSyntheticIndexProperty(List value, String propertyAccessorName, ClassAuditingData classAuditingData) {
 		final Value indexValue = value.getIndex();
-		if ( indexValue != null && indexValue.getColumnIterator().hasNext() ) {
-			final String indexColumnName = indexValue.getColumnIterator().next().getText();
+		if ( indexValue != null && indexValue.getSelectables().size() > 0 ) {
+			final String indexColumnName = indexValue.getSelectables().get( 0 ).getText();
 			if ( indexColumnName != null ) {
 				final PropertyAuditingData auditingData = new PropertyAuditingData(
 						indexColumnName,
 						propertyAccessorName,
-						ModificationStore.FULL,
-						RelationTargetAuditMode.AUDITED,
-						null,
-						null,
+						RelationTargetNotFoundAction.ERROR,
 						false,
 						true,
 						indexValue
@@ -180,16 +166,13 @@ public class ClassesAuditingData {
 	private void addMapEnumeratedKey(Value value, String propertyAccessorName, ClassAuditingData classAuditingData) {
 		if ( value instanceof org.hibernate.mapping.Map ) {
 			final Value indexValue = ( (org.hibernate.mapping.Map) value ).getIndex();
-			if ( indexValue != null && indexValue.getColumnIterator().hasNext() ) {
-				final String indexColumnName = indexValue.getColumnIterator().next().getText();
+			if ( indexValue != null && indexValue.getSelectables().size() > 0 ) {
+				final String indexColumnName = indexValue.getSelectables().get( 0 ).getText();
 				if ( !StringTools.isEmpty( indexColumnName ) ) {
 					final PropertyAuditingData propertyAuditingData = new PropertyAuditingData(
 							indexColumnName,
 							propertyAccessorName,
-							ModificationStore.FULL,
-							RelationTargetAuditMode.AUDITED,
-							null,
-							null,
+							RelationTargetNotFoundAction.ERROR,
 							true,
 							true,
 							indexValue
@@ -202,13 +185,19 @@ public class ClassesAuditingData {
 	}
 
 	private void forcePropertyInsertable(
-			ClassAuditingData classAuditingData, String propertyName,
-			String entityName, String referencedEntityName) {
+			ClassAuditingData classAuditingData,
+			String propertyName,
+			String entityName,
+			String referencedEntityName) {
 		if ( propertyName != null ) {
 			if ( classAuditingData.getPropertyAuditingData( propertyName ) == null ) {
-				throw new MappingException(
-						"@AuditMappedBy points to a property that doesn't exist: " +
-								referencedEntityName + "." + propertyName
+				throw new EnversMappingException(
+						String.format(
+								Locale.ENGLISH,
+								"@AuditMappedBy points to a property that doesn't exist: %s.%s",
+								referencedEntityName,
+								propertyName
+						)
 				);
 			}
 
@@ -219,9 +208,7 @@ public class ClassesAuditingData {
 					entityName
 			);
 
-			classAuditingData
-					.getPropertyAuditingData( propertyName )
-					.setForceInsertable( true );
+			classAuditingData.getPropertyAuditingData( propertyName ).setForceInsertable( true );
 		}
 	}
 }

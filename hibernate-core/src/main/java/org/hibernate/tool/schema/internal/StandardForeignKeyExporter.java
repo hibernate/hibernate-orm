@@ -1,23 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 /**
+ * An {@link Exporter} for {@linkplain ForeignKey foreign key constraints}.
+ *
  * @author Steve Ebersole
  */
 public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
@@ -31,7 +34,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(ForeignKey foreignKey, Metadata metadata) {
+	public String[] getSqlCreateStrings(ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
 		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
@@ -48,7 +51,47 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		final String[] columnNames = new String[numberOfColumns];
 		final String[] targetColumnNames = new String[numberOfColumns];
 
-		final Iterator targetItr;
+		final List<Column> targetColumns = getTargetColumns( foreignKey, numberOfColumns );
+		final List<Column> columns = foreignKey.getColumns();
+		for ( int i=0; i<columns.size() && i<targetColumns.size(); i++ ) {
+			columnNames[i] = columns.get(i).getQuotedName( dialect );
+			targetColumnNames[i] = targetColumns.get(i).getQuotedName( dialect );
+		}
+
+		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
+		final String targetTableName = context.format( foreignKey.getReferencedTable().getQualifiedTableName() );
+
+		final StringBuilder buffer = new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
+				.append(
+						foreignKey.getKeyDefinition() != null
+								? dialect.getAddForeignKeyConstraintString(
+										foreignKey.getName(),
+										foreignKey.getKeyDefinition()
+								)
+								: dialect.getAddForeignKeyConstraintString(
+										foreignKey.getName(),
+										columnNames,
+										targetTableName,
+										targetColumnNames,
+										foreignKey.isReferenceToPrimaryKey()
+								)
+				);
+
+		if ( dialect.supportsCascadeDelete() ) {
+			final OnDeleteAction onDeleteAction = foreignKey.getOnDeleteAction();
+			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
+				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
+			}
+		}
+
+		if ( isNotEmpty( foreignKey.getOptions() ) ) {
+			buffer.append( " " ).append( foreignKey.getOptions() );
+		}
+
+		return new String[] { buffer.toString() };
+	}
+
+	private static List<Column> getTargetColumns(ForeignKey foreignKey, int numberOfColumns) {
 		if ( foreignKey.isReferenceToPrimaryKey() ) {
 			if ( numberOfColumns != foreignKey.getReferencedTable().getPrimaryKey().getColumnSpan() ) {
 				throw new AssertionFailure(
@@ -63,7 +106,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 						)
 				);
 			}
-			targetItr = foreignKey.getReferencedTable().getPrimaryKey().getColumnIterator();
+			return foreignKey.getReferencedTable().getPrimaryKey().getColumns();
 		}
 		else {
 			if ( numberOfColumns != foreignKey.getReferencedColumns().size() ) {
@@ -79,54 +122,12 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 						)
 				);
 			}
-			targetItr = foreignKey.getReferencedColumns().iterator();
+			return foreignKey.getReferencedColumns();
 		}
-
-		int i = 0;
-		final Iterator itr = foreignKey.getColumnIterator();
-		while ( itr.hasNext() ) {
-			columnNames[i] = ( (Column) itr.next() ).getQuotedName( dialect );
-			targetColumnNames[i] = ( (Column) targetItr.next() ).getQuotedName( dialect );
-			i++;
-		}
-
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
-				dialect
-		);
-		final String targetTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getReferencedTable().getQualifiedTableName(),
-				dialect
-		);
-
-		final StringBuilder buffer = new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
-				.append(
-						foreignKey.getKeyDefinition() != null ?
-								dialect.getAddForeignKeyConstraintString(
-										foreignKey.getName(),
-										foreignKey.getKeyDefinition()
-								) :
-								dialect.getAddForeignKeyConstraintString(
-										foreignKey.getName(),
-										columnNames,
-										targetTableName,
-										targetColumnNames,
-										foreignKey.isReferenceToPrimaryKey()
-								)
-				);
-
-		if ( dialect.supportsCascadeDelete() ) {
-			if ( foreignKey.isCascadeDeleteEnabled() ) {
-				buffer.append( " on delete cascade" );
-			}
-		}
-
-		return new String[] { buffer.toString() };
 	}
 
 	@Override
-	public String[] getSqlDropStrings(ForeignKey foreignKey, Metadata metadata) {
+	public String[] getSqlDropStrings(ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
 		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
@@ -139,19 +140,13 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			return NO_COMMANDS;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
-				dialect
-		);
-		return new String[] {
-				getSqlDropStrings( sourceTableName, foreignKey, dialect )
-		};
+		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
+		return new String[] { getSqlDropStrings( sourceTableName, foreignKey, dialect ) };
 	}
 
 	private String getSqlDropStrings(String tableName, ForeignKey foreignKey, Dialect dialect) {
 		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
-		buf.append( dialect.getDropForeignKeyString() );
+		buf.append(" ").append( dialect.getDropForeignKeyString() ).append(" ");
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			buf.append( "if exists " );
 		}

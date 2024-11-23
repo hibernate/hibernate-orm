@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.map;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
@@ -25,17 +21,16 @@ public class MapProxyFactory implements ProxyFactory {
 
 	public void postInstantiate(
 			final String entityName,
-			final Class persistentClass,
-			final Set interfaces,
+			final Class<?> persistentClass,
+			final Set<Class<?>> interfaces,
 			final Method getIdentifierMethod,
 			final Method setIdentifierMethod,
-			CompositeType componentIdType) throws HibernateException {
+			CompositeType componentIdType) {
 		this.entityName = entityName;
-
 	}
 
 	@Override
-	public HibernateProxy getProxy(final Serializable id, final SharedSessionContractImplementor session) {
+	public HibernateProxy getProxy(final Object id, final SharedSessionContractImplementor session) {
 		return new MapProxy( new MapLazyInitializer( entityName, id, session ) );
 	}
 

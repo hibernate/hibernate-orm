@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
 
@@ -51,6 +49,13 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport, DynamicCompon
 			AuditReaderImplementor versionsReader,
 			Number revision);
 
+	Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision);
+
 	/**
 	 * Maps collection changes.
 	 *
@@ -65,7 +70,7 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport, DynamicCompon
 	List<PersistentCollectionChangeData> mapCollectionChanges(
 			SessionImplementor session, String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Serializable id);
+			Serializable oldColl, Object id);
 
 	void mapModifiedFlagsToMapFromEntity(
 			SessionImplementor session,

@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 /**
  * Used to locate named CDI beans.
@@ -14,7 +12,7 @@ import javax.inject.Named;
  * @author Yoann Rodière
  * @author Steve Ebersole
  */
-public class NamedBeanQualifier extends javax.enterprise.util.AnnotationLiteral<Named> implements Named {
+public class NamedBeanQualifier extends jakarta.enterprise.util.AnnotationLiteral<Named> implements Named {
 	private final String name;
 
 	NamedBeanQualifier(String name) {

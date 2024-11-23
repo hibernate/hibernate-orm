@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -22,12 +21,14 @@ public class StandardAuxiliaryDatabaseObjectExporter implements Exporter<Auxilia
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, Metadata metadata) {
-		return object.sqlCreateStrings( dialect );
+	public String[] getSqlCreateStrings(AuxiliaryDatabaseObject object, Metadata metadata,
+			SqlStringGenerationContext context) {
+		return object.sqlCreateStrings( context );
 	}
 
 	@Override
-	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, Metadata metadata) {
-		return object.sqlDropStrings( dialect );
+	public String[] getSqlDropStrings(AuxiliaryDatabaseObject object, Metadata metadata,
+			SqlStringGenerationContext context) {
+		return object.sqlDropStrings( context );
 	}
 }

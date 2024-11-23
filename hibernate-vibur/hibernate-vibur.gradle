@@ -7,16 +7,14 @@
 
 description = 'Integration for Vibur Connection pooling as a Hibernate ORM ConnectionProvider'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.vibur )
+    implementation project( ':hibernate-core' )
+    implementation libs.vibur
 
-    testCompile( libraries.vibur + ':tests' )
-    testCompile( 'com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2' )
-    testCompile project( ':hibernate-testing' )
-    testCompile( libraries.mockito )
+    testImplementation project( ':hibernate-testing' )
+    testImplementation "org.vibur:vibur-dbcp:${libs.versions.vibur.get()}:tests"
+    testImplementation 'com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2'
 }
 

@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import java.io.Serializable;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
@@ -40,7 +37,7 @@ public final class ToOneEntityLoader {
 		}
 		else {
 			// Not audited relation, look up entity with Hibernate.
-			return versionsReader.getSessionImplementor().immediateLoad( entityName, (Serializable) entityId );
+			return versionsReader.getSessionImplementor().immediateLoad( entityName, entityId );
 		}
 	}
 
@@ -57,10 +54,10 @@ public final class ToOneEntityLoader {
 			EnversService enversService) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
-				.getMetamodel()
-				.entityPersister( entityName );
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		return persister.createProxy(
-				(Serializable) entityId,
+				entityId,
 				new ToOneDelegateSessionImplementor( versionsReader, entityClass, entityId, revision, removed, enversService )
 		);
 	}
@@ -79,8 +76,8 @@ public final class ToOneEntityLoader {
 			EnversService enversService) {
 		final EntityPersister persister = versionsReader.getSessionImplementor()
 				.getFactory()
-				.getMetamodel()
-				.entityPersister( entityName );
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		if ( persister.hasProxy() ) {
 			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, enversService );
 		}

@@ -1,35 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -37,8 +30,9 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * @author Steve Ebersole
  * @author Gunnar Morling
  * @author Guillaume Smet
- * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
- * to a specialization of {@link SessionFactoryBuilder}
+ *
+ * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
+ *            to a specialization of {@link MetadataBuilderImplementor}.
  */
 public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionFactoryBuilder> implements SessionFactoryBuilder {
 	private final SessionFactoryBuilder delegate;
@@ -143,13 +137,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public T applyDefaultEntityMode(EntityMode entityMode) {
-		delegate.applyDefaultEntityMode( entityMode );
-		return getThis();
-	}
-
-	@Override
 	public T applyNullabilityChecking(boolean enabled) {
 		delegate.applyNullabilityChecking( enabled );
 		return getThis();
@@ -162,39 +149,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		delegate.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return getThis();
-	}
-
-	@Override
-	public T applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		delegate.applyEntityTuplizer( entityMode, tuplizerClass );
-		return getThis();
-	}
-
-	@Override
-	public T applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		delegate.applyMultiTableBulkIdStrategy( strategy );
-		return getThis();
-	}
-
-	@Override
 	public T applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		delegate.applyTempTableDdlTransactionHandling( handling );
 		return getThis();
 	}
 
 	@Override
-	public T applyBatchFetchStyle(BatchFetchStyle style) {
-		delegate.applyBatchFetchStyle( style );
-		return getThis();
-	}
-
-	@Override
-	public SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay) {
+	public T applyDelayedEntityLoaderCreations(boolean delay) {
 		delegate.applyDelayedEntityLoaderCreations( delay );
 		return getThis();
 	}
@@ -212,7 +173,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public T applySubselectFetchEnabled(boolean enabled) {
+		delegate.applySubselectFetchEnabled( enabled );
+		return getThis();
+	}
+
+	@Override
+	public T applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		delegate.applyDefaultNullPrecedence( nullPrecedence );
 		return getThis();
 	}
@@ -230,13 +197,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		delegate.applyMultiTenancyStrategy( strategy );
+	public T applyMultiTenancy(boolean enabled) {
+		delegate.applyMultiTenancy(enabled);
 		return getThis();
 	}
 
 	@Override
-	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		delegate.applyCurrentTenantIdentifierResolver( resolver );
 		return getThis();
 	}
@@ -250,19 +217,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyPreferUserTransactions(boolean preferUserTransactions) {
 		delegate.applyPreferUserTransactions( preferUserTransactions );
-		return getThis();
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public T applyQuerySubstitutions(Map substitutions) {
-		delegate.applyQuerySubstitutions( substitutions );
-		return getThis();
-	}
-
-	@Override
-	public T applyStrictJpaQueryLanguageCompliance(boolean enabled) {
-		delegate.applyStrictJpaQueryLanguageCompliance( enabled );
 		return getThis();
 	}
 
@@ -285,7 +239,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
+	public T applyQueryCacheLayout(CacheLayout cacheLayout) {
+		delegate.applyQueryCacheLayout( cacheLayout );
+		return getThis();
+	}
+
+	@Override
+	public T applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
 		delegate.applyTimestampsCacheFactory( factory );
 		return getThis();
 	}
@@ -339,12 +299,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyResultSetsWrapping(boolean enabled) {
-		delegate.applyResultSetsWrapping( enabled );
-		return getThis();
-	}
-
-	@Override
 	public T applyGetGeneratedKeysSupport(boolean enabled) {
 		delegate.applyGetGeneratedKeysSupport( enabled );
 		return getThis();
@@ -356,15 +310,8 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 		return getThis();
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
-	public T applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		delegate.applyConnectionReleaseMode( connectionReleaseMode );
-		return getThis();
-	}
-
-	@Override
-	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
+	public T applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
 		delegate.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
 		return getThis();
 	}
@@ -378,8 +325,14 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applySqlFunction(
 			String registrationName,
-			SQLFunction sqlFunction) {
+			SqmFunctionDescriptor sqlFunction) {
 		delegate.applySqlFunction( registrationName, sqlFunction );
+		return getThis();
+	}
+
+	@Override
+	public T applyCollectionsInDefaultFetchGroup(boolean enabled) {
+		delegate.applyCollectionsInDefaultFetchGroup( enabled );
 		return getThis();
 	}
 
@@ -396,33 +349,33 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
+	public T enableJpaQueryCompliance(boolean enabled) {
 		delegate.enableJpaQueryCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
+	public T enableJpaOrderByMappingCompliance(boolean enabled) {
+		delegate.enableJpaOrderByMappingCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public T enableJpaTransactionCompliance(boolean enabled) {
 		delegate.enableJpaTransactionCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
-		delegate.enableJpaListCompliance( enabled );
+	public T enableJpaCascadeCompliance(boolean enabled) {
+		delegate.enableJpaCascadeCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
+	public T enableJpaClosedCompliance(boolean enabled) {
 		delegate.enableJpaClosedCompliance( enabled );
 		return getThis();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <S extends SessionFactoryBuilder> S unwrap(Class<S> type) {
-		return (S) this;
 	}
 
 	@Override
@@ -440,6 +393,18 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 		delegate.applyConnectionHandlingMode( connectionHandlingMode );
+		return getThis();
+	}
+
+	@Override
+	public T applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+		delegate.applyJsonFormatMapper( jsonFormatMapper );
+		return getThis();
+	}
+
+	@Override
+	public T applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+		delegate.applyXmlFormatMapper( xmlFormatMapper );
 		return getThis();
 	}
 

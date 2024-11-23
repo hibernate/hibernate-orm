@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
@@ -21,10 +19,10 @@ import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
-import static org.hibernate.internal.log.UrlMessageBundle.URL_LOGGER;
+import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
- * Descriptor for exploded (directory) archives
+ * An {@code ArchiveDescriptor} for exploded (directory) archives.
  *
  * @author Steve Ebersole
  */
@@ -72,16 +70,16 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 			}
 		}
 		catch (URISyntaxException e) {
-			URL_LOGGER.logMalformedUrl( getArchiveUrl(), e );
+			URL_MESSAGE_LOGGER.logMalformedUrl( getArchiveUrl(), e );
 			return null;
 		}
 
 		if ( !archiveUrlDirectory.exists() ) {
-			URL_LOGGER.logFileDoesNotExist( getArchiveUrl() );
+			URL_MESSAGE_LOGGER.logFileDoesNotExist( getArchiveUrl() );
 			return null;
 		}
 		if ( !archiveUrlDirectory.isDirectory() ) {
-			URL_LOGGER.logFileIsNotDirectory( getArchiveUrl() );
+			URL_MESSAGE_LOGGER.logFileIsNotDirectory( getArchiveUrl() );
 			return null;
 		}
 

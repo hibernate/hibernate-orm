@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization;
-
-import java.io.Serializable;
 
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -39,7 +35,7 @@ public class EntityChangeNotifier {
 	 * @param vwu Performed work unit.
 	 */
 	public void entityChanged(Session session, Object currentRevisionData, AuditWorkUnit vwu) {
-		Serializable entityId = vwu.getEntityId();
+		Object entityId = vwu.getEntityId();
 		if ( entityId instanceof PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId ) {
 			// Notify about a change in collection owner entity.
 			entityId = ( (PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId ).getOwnerId();

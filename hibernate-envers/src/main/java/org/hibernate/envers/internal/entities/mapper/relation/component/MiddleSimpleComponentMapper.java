@@ -1,36 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.component;
 
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.query.Parameters;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
-public final class MiddleSimpleComponentMapper implements MiddleComponentMapper {
+public final class MiddleSimpleComponentMapper extends AbstractMiddleComponentMapper {
+	private final Configuration configuration;
 	private final String propertyName;
-	private final AuditEntitiesConfiguration verEntCfg;
 
-	public MiddleSimpleComponentMapper(AuditEntitiesConfiguration verEntCfg, String propertyName) {
+	public MiddleSimpleComponentMapper(Configuration configuration, String propertyName) {
+		this.configuration = configuration;
 		this.propertyName = propertyName;
-		this.verEntCfg = verEntCfg;
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator, Map<String, Object> data,
 			Object dataObject, Number revision) {
-		return ( (Map<String, Object>) data.get( verEntCfg.getOriginalIdPropName() ) ).get( propertyName );
+		return ( (Map<String, Object>) data.get( configuration.getOriginalIdPropertyName() ) ).get( propertyName );
 	}
 
 	@Override

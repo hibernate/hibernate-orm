@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
@@ -12,6 +10,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
@@ -28,7 +27,7 @@ import org.hibernate.type.Type;
 public final class EntityPrinter {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityPrinter.class );
 
-	private SessionFactoryImplementor factory;
+	private final SessionFactoryImplementor factory;
 
 	/**
 	 * Renders an entity to a string.
@@ -39,13 +38,14 @@ public final class EntityPrinter {
 	 * @return the entity rendered to a string
 	 */
 	public String toString(String entityName, Object entity) throws HibernateException {
-		EntityPersister entityPersister = factory.getEntityPersister( entityName );
-
+		final EntityPersister entityPersister = factory.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		if ( entityPersister == null || !entityPersister.isInstance( entity ) ) {
 			return entity.getClass().getName();
 		}
 
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 
 		if ( entityPersister.hasIdentifierProperty() ) {
 			result.put(
@@ -59,7 +59,7 @@ public final class EntityPrinter {
 
 		Type[] types = entityPersister.getPropertyTypes();
 		String[] names = entityPersister.getPropertyNames();
-		Object[] values = entityPersister.getPropertyValues( entity );
+		Object[] values = entityPersister.getValues( entity );
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( !names[i].startsWith( "_" ) ) {
 				final String strValue;
@@ -75,7 +75,7 @@ public final class EntityPrinter {
 				result.put( names[i], strValue );
 			}
 		}
-		return entityName + result.toString();
+		return entityName + result;
 	}
 
 	public String toString(Type[] types, Object[] values) throws HibernateException {
@@ -89,7 +89,7 @@ public final class EntityPrinter {
 	}
 
 	public String toString(Map<String, TypedValue> namedTypedValues) throws HibernateException {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
 			result.put(
 					entry.getKey(), entry.getValue().getType().toLoggableString(
@@ -102,19 +102,23 @@ public final class EntityPrinter {
 	}
 
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
-	public void toString(Iterable<Map.Entry<EntityKey, Object>> entitiesByEntityKey) throws HibernateException {
+	public void toString(Iterable<Map.Entry<EntityKey, EntityHolder>> entitiesByEntityKey) throws HibernateException {
 		if ( !LOG.isDebugEnabled() || !entitiesByEntityKey.iterator().hasNext() ) {
 			return;
 		}
 
 		LOG.debug( "Listing entities:" );
 		int i = 0;
-		for ( Map.Entry<EntityKey, Object> entityKeyAndEntity : entitiesByEntityKey ) {
+		for ( Map.Entry<EntityKey, EntityHolder> entityKeyAndEntity : entitiesByEntityKey ) {
+			final EntityHolder holder = entityKeyAndEntity.getValue();
+			if ( holder.getEntity() == null ) {
+				continue;
+			}
 			if ( i++ > 20 ) {
 				LOG.debug( "More......" );
 				break;
 			}
-			LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), entityKeyAndEntity.getValue() ) );
+			LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 		}
 	}
 

@@ -1,16 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Structured CacheEntry format for persistent Maps.
@@ -28,7 +26,7 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 	public Object structure(Object item) {
 		final CollectionCacheEntry entry = (CollectionCacheEntry) item;
 		final Serializable[] state = entry.getState();
-		final Map map = new HashMap( state.length );
+		final Map map = CollectionHelper.mapOfSize( state.length );
 		int i = 0;
 		while ( i < state.length ) {
 			map.put( state[i++], state[i++] );

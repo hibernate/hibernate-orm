@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.spi;
 
@@ -17,7 +15,7 @@ public interface ArchiveContext {
 	 *
 	 * @return {@code true} if it is the root url
 	 */
-	public boolean isRootUrl();
+	boolean isRootUrl();
 
 	/**
 	 * Get the handler for the given entry, which generally is indicated by the entry type (a {@code .class} file, a
@@ -27,5 +25,5 @@ public interface ArchiveContext {
 	 *
 	 * @return The appropriate handler for the entry
 	 */
-	public ArchiveEntryHandler obtainArchiveEntryHandler(ArchiveEntry entry);
+	ArchiveEntryHandler obtainArchiveEntryHandler(ArchiveEntry entry);
 }

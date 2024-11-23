@@ -1,6 +1,8 @@
 [[BytecodeEnhancement]]
 === Bytecode Enhancement
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-enhancement: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 
 Hibernate "grew up" not supporting bytecode enhancement at all.
 At that time, Hibernate only supported proxy-based alternative for lazy loading and always used diff-based dirty calculation.
@@ -8,13 +10,11 @@ Hibernate 3.x saw the first attempts at bytecode enhancement support in Hibernat
 We consider those initial attempts (up until 5.0) completely as an incubation.
 The support for bytecode enhancement in 5.0 onward is what we are discussing here.
 
-[[BytecodeEnhancement-capabilities]]
-==== Capabilities
+See <<tooling-enhancement>> for discussion of performing enhancement.
 
-Hibernate supports the enhancement of an application Java domain model for the purpose of adding various persistence-related capabilities directly into the class.
 
 [[BytecodeEnhancement-lazy-loading]]
-===== Lazy attribute loading
+==== Lazy attribute loading
 
 Think of this as partial loading support.
 Essentially, you can tell Hibernate that only part(s) of an entity should be loaded upon fetching from the database and when the other part(s) should be loaded as well.
@@ -29,9 +29,9 @@ This behavior is explicitly controllable through the `@org.hibernate.annotations
 [[BytecodeEnhancement-lazy-loading-example]]
 .`@LazyGroup` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-loading-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-loading-example]
 ----
 ====
 
@@ -46,7 +46,7 @@ The plan is to relax that requirement later.
 ====
 
 [[BytecodeEnhancement-dirty-tracking]]
-===== In-line dirty tracking
+==== In-line dirty tracking
 
 Historically Hibernate only supported diff-based dirty calculation for determining which entities in a persistence context have changed.
 This essentially means that Hibernate would keep track of the last known state of an entity in regards to the database (typically the last read or write).
@@ -59,7 +59,7 @@ In this approach Hibernate will manipulate the bytecode of your classes to add "
 During the flush time, Hibernate asks your entity what has changed rather than having to perform the state-diff calculations.
 
 [[BytecodeEnhancement-dirty-tracking-bidirectional]]
-===== Bidirectional association management
+==== Bidirectional association management
 
 Hibernate strives to keep your application as close to "normal Java usage" (idiomatic Java) as possible.
 Consider a domain model with a normal `Person`/`Book` bidirectional association:
@@ -67,18 +67,18 @@ Consider a domain model with a normal `Person`/`Book` bidirectional association:
 [[BytecodeEnhancement-dirty-tracking-bidirectional-example]]
 .Bidirectional association
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-example]
 ----
 ====
 
 [[BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]]
 .Incorrect normal Java usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]
 ----
 ====
 
@@ -87,83 +87,17 @@ This blows up in normal Java usage. The correct normal Java usage is:
 [[BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]]
 .Correct normal Java usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]
 ----
 ====
 
 Bytecode-enhanced bi-directional association management makes that first example work by managing the "other side" of a bi-directional association whenever one side is manipulated.
 
 [[BytecodeEnhancement-dirty-tracking-optimizations]]
-===== Internal performance optimizations
+==== Internal performance optimizations
 
-Additionally, we use the enhancement process to add some additional code that allows us to optimized certain performance characteristics of the persistence context.
-These are hard to discuss without diving into a discussion of Hibernate internals.
-
-[[BytecodeEnhancement-enhancement]]
-==== Performing enhancement
-
-[[BytecodeEnhancement-enhancement-runtime]]
-===== Runtime enhancement
-
-Currently, runtime enhancement of the domain model is only supported in managed JPA environments following the JPA-defined SPI for performing class transformations.
-
-Even then, this support is disabled by default. To enable runtime enhancement, specify one of the following configuration properties:
-
-`*hibernate.enhancer.enableDirtyTracking*` (e.g. `true` or `false` (default value))::
-Enable dirty tracking feature in runtime bytecode enhancement.
-
-`*hibernate.enhancer.enableLazyInitialization*` (e.g. `true` or `false` (default value))::
-Enable lazy loading feature in runtime bytecode enhancement. This way, even basic types (e.g. `@Basic(fetch = FetchType.LAZY`)) can be fetched lazily.
-
-`*hibernate.enhancer.enableAssociationManagement*` (e.g. `true` or `false` (default value))::
-Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
-
-[NOTE]
-====
-Also, at the moment, only annotated classes support runtime enhancement.
-====
-
-[[BytecodeEnhancement-enhancement-gradle]]
-===== Gradle plugin
-
-Hibernate provides a Gradle plugin that is capable of providing build-time enhancement of the domain model as they are compiled as part of a Gradle build.
-To use the plugin, a project would first need to apply it:
-
-.Apply the Gradle plugin
-====
-[source,gradle]
-----
-include::extras/gradle-example.gradle[]
-----
-====
-
-The configuration that is available is exposed through a registered Gradle DSL extension:
-
-enableLazyInitialization:: Whether enhancement for lazy attribute loading should be done.
-enableDirtyTracking:: Whether enhancement for self-dirty tracking should be done.
-enableAssociationManagement:: Whether enhancement for bi-directional association management should be done.
-
-The default value for all 3 configuration settings is `false`.
-
-The `enhance { }` block is required in order for enhancement to occur.
-Enhancement is disabled by default in preparation for additions capabilities (hbm2ddl, etc) in the plugin.
-
-[[BytecodeEnhancement-enhancement-maven]]
-===== Maven plugin
-
-Hibernate provides a Maven plugin capable of providing build-time enhancement of the domain model as they are compiled as part of a Maven build.
-See the section on the <<BytecodeEnhancement-enhancement-gradle>> for details on the configuration settings. Again, the default for those 3 is `false`.
-
-The Maven plugin supports one additional configuration settings: failOnError, which controls what happens in case of error.
-The default behavior is to fail the build, but it can be set so that only a warning is issued.
-
-.Apply the Maven plugin
-====
-[source,xml]
-----
-include::extras/maven-example.pom[]
-----
-====
+Additionally, we use the enhancement process to add some additional code that allows us to optimize certain performance
+characteristics of the persistence context.  These are hard to discuss without diving into a discussion of Hibernate internals.
 

@@ -1,0 +1,38 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.type.internal;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.java.VersionJavaType;
+import org.hibernate.usertype.UserVersionType;
+
+/**
+ *
+ * @author Christian Beikov
+ */
+public class UserTypeVersionJavaTypeWrapper<J> extends UserTypeJavaTypeWrapper<J> implements VersionJavaType<J> {
+
+	public UserTypeVersionJavaTypeWrapper(UserVersionType<J> userType) {
+		super( userType );
+	}
+
+	@Override
+	public J seed(
+			Long length,
+			Integer precision,
+			Integer scale, SharedSessionContractImplementor session) {
+		return ( (UserVersionType<J>) userType ).seed( session );
+	}
+
+	@Override
+	public J next(
+			J current,
+			Long length,
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
+		return ( (UserVersionType<J>) userType ).next( current, session );
+	}
+}

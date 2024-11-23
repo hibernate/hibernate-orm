@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.testing.converter;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.geolatte.geom.Geometry;
 
@@ -17,7 +15,7 @@ import org.geolatte.geom.Geometry;
  * @author Steve Ebersole
  */
 @Entity
-@Table( name = "SP_CUST_TYPE_CONV_ENTITY")
+@Table(name = "SP_CUST_TYPE_CONV_ENTITY")
 public class MyEntity {
 	private Integer id;
 	private Geometry geometry;

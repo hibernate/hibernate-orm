@@ -1,29 +1,48 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Locale;
 
+import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
  * Represents a JPA callback using a dedicated listener
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
-class ListenerCallback extends AbstractCallback {
+public class ListenerCallback extends AbstractCallback {
+
+	public static class Definition implements CallbackDefinition {
+		private final Class<?> listenerClass;
+		private final Method callbackMethod;
+		private final CallbackType callbackType;
+
+		public Definition(Class<?> listenerClass, Method callbackMethod, CallbackType callbackType) {
+			this.listenerClass = listenerClass;
+			this.callbackMethod = callbackMethod;
+			this.callbackType = callbackType;
+		}
+
+		@Override
+		public Callback createCallback(ManagedBeanRegistry beanRegistry) {
+			return new ListenerCallback( beanRegistry.getBean( listenerClass ), callbackMethod, callbackType );
+		}
+	}
 
 	private final Method callbackMethod;
-	private final ManagedBean listenerManagedBean;
+	private final ManagedBean<?> listenerManagedBean;
 
-	ListenerCallback(ManagedBean listenerManagedBean, Method callbackMethod, CallbackType callbackType) {
+	ListenerCallback(ManagedBean<?> listenerManagedBean, Method callbackMethod, CallbackType callbackType) {
 		super( callbackType );
 		this.listenerManagedBean = listenerManagedBean;
 		this.callbackMethod = callbackMethod;
@@ -50,5 +69,16 @@ class ListenerCallback extends AbstractCallback {
 		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"ListenerCallback([%s] %s.%s)",
+				getCallbackType().name(),
+				callbackMethod.getDeclaringClass().getName(),
+				callbackMethod.getName()
+		);
 	}
 }

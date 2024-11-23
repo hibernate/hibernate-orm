@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
 import java.util.Map;
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -45,6 +43,17 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
+		Object value = nullSafeMapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+		setPropertyValue( obj, value );
+	}
+
+	@Override
+	public Object nullSafeMapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
 
 		Object value;
@@ -60,8 +69,7 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 							"." + getPropertyData().getBeanName() + ".", e
 			);
 		}
-
-		setPropertyValue( obj, value );
+		return value;
 	}
 
 	/**

@@ -1,22 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.lazytoone;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -26,23 +28,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Same as {@link InstrumentedLazyToOneTest} except here we enable bytecode-enhanced proxies
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class InstrumentedProxyLazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(
+		annotatedClasses = {
+				Airport.class, Flight.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class InstrumentedProxyLazyToOneTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Airport.class, Flight.class };
-	}
-
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		inTransaction(
+	@BeforeEach
+	protected void prepareTest(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction(
 				(session) -> {
 					final Airport austin = new Airport( 1, "AUS" );
 					final Airport baltimore = new Airport( 2, "BWI" );
@@ -59,22 +62,22 @@ public class InstrumentedProxyLazyToOneTest extends BaseNonConfigCoreFunctionalT
 		);
 	}
 
-	@Override
-	protected void cleanupTestData() throws Exception {
-		inTransaction(
+	@AfterEach
+	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "delete Flight" ).executeUpdate();
-					session.createQuery( "delete Airport" ).executeUpdate();
+					session.createMutationQuery( "delete Flight" ).executeUpdate();
+					session.createMutationQuery( "delete Airport" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	public void testEnhancedWithProxy() {
-		final StatisticsImplementor statistics = sessionFactory().getStatistics();
+	public void testEnhancedWithProxy(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		inTransaction(
+		scope.inTransaction(
 				(session) -> {
 					final Flight flight1 = session.byId( Flight.class ).load( 1 );
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.dialect.hana;
 
@@ -11,6 +9,7 @@ import java.util.List;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.Type;
 
 public class HANASpatialFunction extends StandardSQLFunction {
@@ -32,13 +31,13 @@ public class HANASpatialFunction extends StandardSQLFunction {
 		this.staticFunction = staticFunction;
 	}
 
-	public HANASpatialFunction(String name, Type registeredType, boolean firstArgumentIsGeometryType) {
+	public HANASpatialFunction(String name, BasicTypeReference<?> registeredType, boolean firstArgumentIsGeometryType) {
 		super( name, registeredType );
 		this.argumentIsGeometryTypeMask.set( 1, firstArgumentIsGeometryType );
 		this.staticFunction = false;
 	}
 
-	public HANASpatialFunction(String name, Type registeredType, boolean[] argumentIsGeometryTypeMask) {
+	public HANASpatialFunction(String name, BasicTypeReference<?> registeredType, boolean[] argumentIsGeometryTypeMask) {
 		super( name, registeredType );
 		for ( int i = 0; i < argumentIsGeometryTypeMask.length; i++ ) {
 			this.argumentIsGeometryTypeMask.set( i + 1, argumentIsGeometryTypeMask[i] );
@@ -46,13 +45,13 @@ public class HANASpatialFunction extends StandardSQLFunction {
 		this.staticFunction = false;
 	}
 
-	public HANASpatialFunction(String name, Type registeredType, boolean firstArgumentIsGeometryType, boolean staticFunction) {
+	public HANASpatialFunction(String name, BasicTypeReference<?> registeredType, boolean firstArgumentIsGeometryType, boolean staticFunction) {
 		super( name, registeredType );
 		this.argumentIsGeometryTypeMask.set( staticFunction ? 0 : 1, firstArgumentIsGeometryType );
 		this.staticFunction = staticFunction;
 	}
 
-	@Override
+
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
 		if ( arguments.size() == 0 ) {
 			return getName() + "()";

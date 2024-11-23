@@ -1,27 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.loading.internal.LoadContexts;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.results.spi.LoadContexts;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Represents the state of "stuff" Hibernate is tracking, including (not exhaustive):
@@ -31,20 +33,18 @@ import org.hibernate.persister.entity.EntityPersister;
  *     <li>snapshots</li>
  *     <li>proxies</li>
  * </ul>
- * <p/>
+ * <p>
  * Often referred to as the "first level cache".
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"JavaDoc"})
 public interface PersistenceContext {
 	/**
 	 * Marker object used to indicate (via reference checking) that no row was returned.
 	 */
 	Object NO_ROW = new MarkerObject( "NO_ROW" );
 
-	@SuppressWarnings( {"UnusedDeclaration"})
 	boolean isStateless();
 
 	/**
@@ -61,25 +61,30 @@ public interface PersistenceContext {
 	 */
 	LoadContexts getLoadContexts();
 
-	/**
-	 * Add a collection which has no owner loaded
-	 *
-	 * @param key The collection key under which to add the collection
-	 * @param collection The collection to add
-	 */
-	void addUnownedCollection(CollectionKey key, PersistentCollection collection);
+	default boolean hasLoadContext() {
+		getLoadContexts();
+		return true;
+	}
+
+//	/**
+//	 * Add a collection which has no owner loaded
+//	 *
+//	 * @param key The collection key under which to add the collection
+//	 * @param collection The collection to add
+//	 */
+//	void addUnownedCollection(CollectionKey key, PersistentCollection<?> collection);
 
 	/**
 	 * Take ownership of a previously unowned collection, if one.  This method returns {@code null} if no such
 	 * collection was previously added () or was previously removed.
-	 * <p/>
+	 * <p>
 	 * This should indicate the owner is being loaded and we are ready to "link" them.
 	 *
 	 * @param key The collection key for which to locate a collection collection
 	 *
 	 * @return The unowned collection, or {@code null}
 	 */
-	PersistentCollection useUnownedCollection(CollectionKey key);
+	PersistentCollection<?> useUnownedCollection(CollectionKey key);
 
 	/**
 	 * Get the {@link BatchFetchQueue}, instantiating one if necessary.
@@ -93,11 +98,10 @@ public interface PersistenceContext {
 	 */
 	void clear();
 
-	/**
-	 * @return false if we know for certain that all the entities are read-only
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	boolean hasNonReadOnlyEntities();
+//	/**
+//	 * @return false if we know for certain that all the entities are read-only
+//	 */
+//	boolean hasNonReadOnlyEntities();
 
 	/**
 	 * Set the status of an entry
@@ -123,11 +127,11 @@ public interface PersistenceContext {
 	 *
 	 * @see #getCachedDatabaseSnapshot
 	 */
-	Object[] getDatabaseSnapshot(Serializable id, EntityPersister persister);
+	Object[] getDatabaseSnapshot(Object id, EntityPersister persister);
 
 	/**
 	 * Retrieve the cached database snapshot for the requested entity key.
-	 * <p/>
+	 * <p>
 	 * This differs from {@link #getDatabaseSnapshot} in two important respects:<ol>
 	 * <li>no snapshot is obtained from the database if not already cached</li>
 	 * <li>an entry of {@link #NO_ROW} here is interpreted as an exception</li>
@@ -147,7 +151,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The current (non-cached) snapshot of the entity's natural id state.
 	 */
-	Object[] getNaturalIdSnapshot(Serializable id, EntityPersister persister);
+	Object getNaturalIdSnapshot(Object id, EntityPersister persister);
 
 	/**
 	 * Add a canonical mapping from entity key to entity instance
@@ -233,7 +237,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The matching collection entry
 	 */
-	CollectionEntry getCollectionEntry(PersistentCollection coll);
+	CollectionEntry getCollectionEntry(PersistentCollection<?> coll);
 
 	/**
 	 * Adds an entity to the internal caches.
@@ -258,17 +262,21 @@ public interface PersistenceContext {
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
 			final boolean disableVersionIncrement);
 
+	EntityEntry addReferenceEntry(
+			final Object entity,
+			final Status status);
+
 	/**
 	 * Is the given collection associated with this persistence context?
 	 */
-	boolean containsCollection(PersistentCollection collection);
+	boolean containsCollection(PersistentCollection<?> collection);
 
 	/**
 	 * Is the given proxy associated with this persistence context?
@@ -280,41 +288,37 @@ public interface PersistenceContext {
 	 *
 	 * @param value The possible proxy to be reassociated.
 	 * @return Whether the passed value represented an actual proxy which got initialized.
-	 * @throws MappingException
 	 */
-	boolean reassociateIfUninitializedProxy(Object value) throws MappingException;
+	boolean reassociateIfUninitializedProxy(Object value) ;
 
 	/**
 	 * If a deleted entity instance is re-saved, and it has a proxy, we need to
 	 * reset the identifier of the proxy
 	 */
-	void reassociateProxy(Object value, Serializable id) throws MappingException;
+	void reassociateProxy(Object value, Object id);
 
 	/**
 	 * Get the entity instance underlying the given proxy, throwing
 	 * an exception if the proxy is uninitialized. If the given object
 	 * is not a proxy, simply return the argument.
 	 */
-	Object unproxy(Object maybeProxy) throws HibernateException;
+	Object unproxy(Object maybeProxy);
 
 	/**
 	 * Possibly unproxy the given reference and reassociate it with the current session.
 	 *
 	 * @param maybeProxy The reference to be unproxied if it currently represents a proxy.
 	 * @return The unproxied instance.
-	 * @throws HibernateException
 	 */
-	Object unproxyAndReassociate(Object maybeProxy) throws HibernateException;
+	Object unproxyAndReassociate(Object maybeProxy);
 
 	/**
 	 * Attempts to check whether the given key represents an entity already loaded within the
 	 * current session.
 	 *
 	 * @param object The entity reference against which to perform the uniqueness check.
-	 *
-	 * @throws HibernateException
 	 */
-	void checkUniqueness(EntityKey key, Object object) throws HibernateException;
+	void checkUniqueness(EntityKey key, Object object);
 
 	/**
 	 * If the existing proxy is insufficiently "narrow" (derived), instantiate a new proxy
@@ -327,25 +331,29 @@ public interface PersistenceContext {
 	 * @param key The internal cache key for the proxied entity.
 	 * @param object (optional) the actual proxied entity instance.
 	 * @return An appropriately narrowed instance.
-	 * @throws HibernateException
 	 */
-	Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object)
-			throws HibernateException;
+	Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object);
 
 	/**
-	 * Return the existing proxy associated with the given <tt>EntityKey</tt>, or the
+	 * Return the existing proxy associated with the given {@code EntityKey}, or the
 	 * third argument (the entity associated with the key) if no proxy exists. Init
 	 * the proxy to the target implementation, if necessary.
 	 */
-	Object proxyFor(EntityPersister persister, EntityKey key, Object impl)
-			throws HibernateException;
+	Object proxyFor(EntityPersister persister, EntityKey key, Object impl);
 
 	/**
-	 * Return the existing proxy associated with the given <tt>EntityKey</tt>, or the
+	 * Return the existing proxy associated with the given {@code EntityKey}, or the
 	 * argument (the entity associated with the key) if no proxy exists.
 	 * (slower than the form above)
 	 */
-	Object proxyFor(Object impl) throws HibernateException;
+	Object proxyFor(Object impl);
+
+	/**
+	 * Return the existing {@linkplain EntityHolder#getProxy() proxy} associated with
+	 * the given {@link EntityHolder}, or the {@linkplain EntityHolder#getEntity() entity}
+	 * if no proxy exists.
+	 */
+	Object proxyFor(EntityHolder holder, EntityPersister persister);
 
 	/**
 	 * Cross between {@link #addEntity(EntityKey, Object)} and {@link #addProxy(EntityKey, Object)}
@@ -356,8 +364,7 @@ public interface PersistenceContext {
 	/**
 	 * Get the entity that owns this persistent collection
 	 */
-	Object getCollectionOwner(Serializable key, CollectionPersister collectionPersister)
-			throws MappingException;
+	Object getCollectionOwner(Object key, CollectionPersister collectionPersister);
 
 	/**
 	 * Get the entity that owned this persistent collection when it was loaded
@@ -366,7 +373,7 @@ public interface PersistenceContext {
 	 * @return the owner if its entity ID is available from the collection's loaded key
 	 * and the owner entity is in the persistence context; otherwise, returns null
 	 */
-	Object getLoadedCollectionOwnerOrNull(PersistentCollection collection);
+	Object getLoadedCollectionOwnerOrNull(PersistentCollection<?> collection);
 
 	/**
 	 * Get the ID for the entity that owned this persistent collection when it was loaded
@@ -374,51 +381,51 @@ public interface PersistenceContext {
 	 * @param collection The persistent collection
 	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
 	 */
-	Serializable getLoadedCollectionOwnerIdOrNull(PersistentCollection collection);
+	Object getLoadedCollectionOwnerIdOrNull(PersistentCollection<?> collection);
 
 	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
-	void addUninitializedCollection(CollectionPersister persister,
-			PersistentCollection collection, Serializable id);
+	void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id);
 
 	/**
 	 * add a detached uninitialized collection
 	 */
-	void addUninitializedDetachedCollection(CollectionPersister persister,
-			PersistentCollection collection);
+	void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection<?> collection);
 
 	/**
 	 * Add a new collection (ie. a newly created one, just instantiated by the
 	 * application, with no database state or snapshot)
 	 * @param collection The collection to be associated with the persistence context
 	 */
-	void addNewCollection(CollectionPersister persister, PersistentCollection collection)
-			throws HibernateException;
+	void addNewCollection(CollectionPersister persister, PersistentCollection<?> collection);
 
 	/**
 	 * add an (initialized) collection that was created by another session and passed
 	 * into update() (ie. one with a snapshot and existing state on the database)
 	 */
-	void addInitializedDetachedCollection(CollectionPersister collectionPersister,
-			PersistentCollection collection) throws HibernateException;
+	void addInitializedDetachedCollection(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection);
 
 	/**
 	 * add a collection we just pulled out of the cache (does not need initializing)
 	 */
-	CollectionEntry addInitializedCollection(CollectionPersister persister,
-			PersistentCollection collection, Serializable id) throws HibernateException;
+	CollectionEntry addInitializedCollection(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object id);
 
 	/**
-	 * Get the collection instance associated with the <tt>CollectionKey</tt>
+	 * Get the collection instance associated with the {@code CollectionKey}
 	 */
-	PersistentCollection getCollection(CollectionKey collectionKey);
+	PersistentCollection<?> getCollection(CollectionKey collectionKey);
 
 	/**
 	 * Register a collection for non-lazy loading at the end of the
 	 * two-phase load
 	 */
-	void addNonLazyCollection(PersistentCollection collection);
+	void addNonLazyCollection(PersistentCollection<?> collection);
 
 	/**
 	 * Force initialization of all non-lazy collections encountered during
@@ -428,34 +435,38 @@ public interface PersistenceContext {
 	void initializeNonLazyCollections() throws HibernateException;
 
 	/**
-	 * Get the <tt>PersistentCollection</tt> object for an array
+	 * Get the {@code PersistentCollection} object for an array
 	 */
-	PersistentCollection getCollectionHolder(Object array);
+	PersistentCollection<?> getCollectionHolder(Object array);
 
 	/**
-	 * Register a <tt>PersistentCollection</tt> object for an array.
+	 * Register a {@code PersistentCollection} object for an array.
 	 * Associates a holder with an array - MUST be called after loading
 	 * array, since the array instance is not created until endLoad().
 	 */
-	void addCollectionHolder(PersistentCollection holder);
+	void addCollectionHolder(PersistentCollection<?> holder);
 
 	/**
 	 * Remove the mapping of collection to holder during eviction
 	 * of the owning entity
 	 */
-	PersistentCollection removeCollectionHolder(Object array);
+	PersistentCollection<?> removeCollectionHolder(Object array);
 
 	/**
 	 * Get the snapshot of the pre-flush collection state
 	 */
-	Serializable getSnapshot(PersistentCollection coll);
+	Serializable getSnapshot(PersistentCollection<?> coll);
 
-	/**
-	 * Get the collection entry for a collection passed to filter,
-	 * which might be a collection wrapper, an array, or an unwrapped
-	 * collection. Return null if there is no entry.
-	 */
-	CollectionEntry getCollectionEntryOrNull(Object collection);
+//	/**
+//	 * Get the collection entry for a collection passed to filter,
+//	 * which might be a collection wrapper, an array, or an unwrapped
+//	 * collection. Return null if there is no entry.
+//	 *
+//	 * @deprecated Intended use was in handling Hibernate's legacy
+//	 * "collection filter via Query" feature which has been removed
+//	 */
+//	@Deprecated
+//	CollectionEntry getCollectionEntryOrNull(Object collection);
 
 	/**
 	 * Get an existing proxy by key
@@ -469,7 +480,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Remove a proxy from the session cache.
-	 * <p/>
+	 * <p>
 	 * Additionally, ensure that any load optimization references
 	 * such as batch or subselect loading get cleaned up as well.
 	 *
@@ -479,19 +490,44 @@ public interface PersistenceContext {
 	Object removeProxy(EntityKey key);
 
 	/**
-	 * Retrieve the set of EntityKeys representing nullifiable references
-	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
+	 * Return an existing entity holder for the entity key, possibly creating one if necessary.
+	 * Will claim the entity holder by registering the given entity initializer, if it isn't claimed yet.
+	 *
+	 * @param key The key under which to add an entity
+	 * @param entity The entity instance to add
+	 * @param processingState The processing state which initializes the entity if successfully claimed
+	 * @param initializer The initializer to claim the entity instance
 	 */
-	@Deprecated
-	HashSet getNullifiableEntityKeys();
+	@Incubating
+	EntityHolder claimEntityHolderIfPossible(
+			EntityKey key,
+			@Nullable Object entity,
+			JdbcValuesSourceProcessingState processingState,
+			EntityInitializer<?> initializer);
+
+	@Incubating
+	EntityHolder addEntityHolder(EntityKey key, Object entity);
+
+	@Nullable EntityHolder getEntityHolder(EntityKey key);
+
+	boolean containsEntityHolder(EntityKey key);
+
+	@Nullable EntityHolder removeEntityHolder(EntityKey key);
+
+	@Incubating
+	void postLoad(JdbcValuesSourceProcessingState processingState, Consumer<EntityHolder> loadedConsumer);
 
 	/**
-	 * Get the mapping from key value to entity instance
-	 * @deprecated this will be removed: it provides too wide access, making it hard to optimise the internals
-	 * for specific access needs. Consider using #iterateEntities instead.
+	 * Doubly internal
 	 */
-	@Deprecated
-	Map getEntitiesByKey();
+	@Internal
+	Map<EntityKey,Object> getEntitiesByKey();
+
+	/**
+	 * Doubly internal
+	 */
+	@Internal
+	Map<EntityKey,EntityHolder> getEntityHoldersByKey();
 
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
@@ -499,31 +535,30 @@ public interface PersistenceContext {
 	 */
 	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
 
-	/**
-	 * Get the mapping from entity instance to entity entry
-	 *
-	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement; only valid really for
-	 * sizing, see {@link #getNumberOfManagedEntities}.  For iterating the entity/EntityEntry combos, see
-	 * {@link #reentrantSafeEntityEntries}
-	 */
-	@Deprecated
-	Map getEntityEntries();
+//	/**
+//	 * Get the mapping from entity instance to entity entry
+//	 *
+//	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement; only valid really for
+//	 * sizing, see {@link #getNumberOfManagedEntities}.  For iterating the entity/EntityEntry combos, see
+//	 * {@link #reentrantSafeEntityEntries}
+//	 */
+//	@Deprecated
+//	Map getEntityEntries();
 
 	int getNumberOfManagedEntities();
 
 	/**
-	 * Get the mapping from collection instance to collection entry
-	 * @deprecated use {@link #removeCollectionEntry(PersistentCollection)} or {@link #getCollectionEntriesSize()}, {@link #forEachCollectionEntry(BiConsumer,boolean)}.
+	 * Doubly internal
 	 */
-	@Deprecated
-	Map getCollectionEntries();
+	@Internal
+	@Nullable Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries();
 
 	/**
 	 * Execute some action on each entry of the collectionEntries map, optionally iterating on a defensive copy.
 	 * @param action the lambda to apply on each PersistentCollection,CollectionEntry map entry of the PersistenceContext.
 	 * @param concurrent set this to false for improved efficiency, but that would make it illegal to make changes to the underlying collectionEntries map.
 	 */
-	void forEachCollectionEntry(BiConsumer<PersistentCollection,CollectionEntry> action, boolean concurrent);
+	void forEachCollectionEntry(BiConsumer<PersistentCollection<?>,CollectionEntry> action, boolean concurrent);
 
 	/**
 	 * Get the mapping from collection key to collection instance
@@ -533,7 +568,7 @@ public interface PersistenceContext {
 	 * N.B. This might return an immutable map: do not use for mutations!
 	 */
 	@Deprecated
-	Map getCollectionsByKey();
+	Map<CollectionKey,PersistentCollection<?>> getCollectionsByKey();
 
 	/**
 	 * How deep are we cascaded?
@@ -553,7 +588,6 @@ public interface PersistenceContext {
 	/**
 	 * Is a flush cycle currently in process?
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	boolean isFlushing();
 
 	/**
@@ -583,16 +617,16 @@ public interface PersistenceContext {
 	String toString();
 
 	/**
-	 * Search <tt>this</tt> persistence context for an associated entity instance which is considered the "owner" of
-	 * the given <tt>childEntity</tt>, and return that owner's id value.  This is performed in the scenario of a
+	 * Search {@code this} persistence context for an associated entity instance which is considered the "owner" of
+	 * the given {@code childEntity}, and return that owner's id value.  This is performed in the scenario of a
 	 * uni-directional, non-inverse one-to-many collection (which means that the collection elements do not maintain
 	 * a direct reference to the owner).
-	 * <p/>
+	 * <p>
 	 * As such, the processing here is basically to loop over every entity currently associated with this persistence
 	 * context and for those of the correct entity (sub) type to extract its collection role property value and see
 	 * if the child is contained within that collection.  If so, we have found the owner; if not, we go on.
-	 * <p/>
-	 * Also need to account for <tt>mergeMap</tt> which acts as a local copy cache managed for the duration of a merge
+	 * <p>
+	 * Also need to account for {@code mergeMap} which acts as a local copy cache managed for the duration of a merge
 	 * operation.  It represents a map of the detached entity instances pointing to the corresponding managed instance.
 	 *
 	 * @param entityName The entity name for the entity type which would own the child
@@ -603,7 +637,7 @@ public interface PersistenceContext {
 	 * @return The id of the entityName instance which is said to own the child; null if an appropriate owner not
 	 * located.
 	 */
-	Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap);
+	Object getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap);
 
 	/**
 	 * Search the persistence context for an index of the child object,
@@ -625,51 +659,47 @@ public interface PersistenceContext {
 	/**
 	 * Will entities and proxies that are loaded into this persistence
 	 * context be made read-only by default?
-	 *
-	 * To determine the read-only/modifiable setting for a particular entity
-	 * or proxy:
-	 * @see PersistenceContext#isReadOnly(Object)
-	 * @see org.hibernate.Session#isReadOnly(Object)
+	 * <p>
+	 * To determine the read-only/modifiable setting for a particular
+	 * entity or proxy, call {@link #isReadOnly(Object)}.
 	 *
 	 * @return true, loaded entities/proxies will be made read-only by default;
 	 *         false, loaded entities/proxies will be made modifiable by default.
 	 *
 	 * @see org.hibernate.Session#isDefaultReadOnly()
+	 * @see org.hibernate.Session#isReadOnly(Object)
 	 */
 	boolean isDefaultReadOnly();
 
 	/**
 	 * Change the default for entities and proxies loaded into this persistence
-	 * context from modifiable to read-only mode, or from modifiable to read-only
-	 * mode.
-	 *
+	 * context from modifiable to read-only mode, or from read-only mode to
+	 * modifiable.
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
 	 * read-only/modifiable setting as the uninitialized
 	 * proxy has, regardless of the persistence context's current setting.
-	 *
+	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
-	 * or proxy that is already in this session:
-+	 * @see PersistenceContext#setReadOnly(Object,boolean)
-	 * @see org.hibernate.Session#setReadOnly(Object, boolean)
-	 *
-	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a Query:
-	 * @see org.hibernate.Query#setReadOnly(boolean)
+	 * or proxy that is already in this session, call
+	 * {@link #setReadOnly(Object,boolean)}.
 	 *
 	 * @param readOnly true, the default for loaded entities/proxies is read-only;
 	 *                 false, the default for loaded entities/proxies is modifiable
 	 *
 	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 * @see org.hibernate.query.Query#setReadOnly(boolean)
+	 * @see org.hibernate.Session#isReadOnly(Object)
 	 */
 	void setDefaultReadOnly(boolean readOnly);
 
 	/**
 	 * Is the entity or proxy read-only?
-	 * <p/>
+	 * <p>
 	 * To determine the default read-only/modifiable setting used for entities and proxies that are loaded into the
 	 * session use {@link org.hibernate.Session#isDefaultReadOnly}
 	 *
@@ -683,29 +713,32 @@ public interface PersistenceContext {
 	/**
 	 * Set an unmodified persistent object to read-only mode, or a read-only
 	 * object to modifiable mode.
-	 *
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
 	 * read-only/modifiable setting as the uninitialized
 	 * proxy has, regardless of the session's current setting.
-	 *
+	 * <p>
 	 * If the entity or proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
 	 *
 	 * @param entityOrProxy an entity or proxy
-	 * @param readOnly if {@code true}, the entity or proxy is made read-only; otherwise, the entity or proxy is made
-	 * modifiable.
+	 * @param readOnly if {@code true}, the entity or proxy is made read-only;
+	 *                 otherwise, the entity or proxy is made modifiable.
 	 *
 	 * @see org.hibernate.Session#setDefaultReadOnly
 	 * @see org.hibernate.Session#setReadOnly
-	 * @see org.hibernate.Query#setReadOnly
+	 * @see org.hibernate.query.Query#setReadOnly
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
-	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId);
+	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Object generatedId);
+
+	@Internal
+	void replaceEntityEntryRowId(Object entity, Object rowId);
 
 	/**
 	 * Add a child/parent relation to cache for cascading op
@@ -724,11 +757,10 @@ public interface PersistenceContext {
 
 	/**
 	 * Register keys inserted during the current transaction
-	 *
-	 * @param persister The entity persister
+	 *  @param persister The entity persister
 	 * @param id The id
 	 */
-	void registerInsertedKey(EntityPersister persister, Serializable id);
+	void registerInsertedKey(EntityPersister persister, Object id);
 
 	/**
 	 * Allows callers to check to see if the identified entity was inserted during the current transaction.
@@ -738,7 +770,7 @@ public interface PersistenceContext {
 	 *
 	 * @return True if inserted during this transaction, false otherwise.
 	 */
-	boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
+	boolean wasInsertedDuringTransaction(EntityPersister persister, Object id);
 
 	/**
 	 * Checks if a certain {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.
@@ -752,7 +784,6 @@ public interface PersistenceContext {
 
 	/**
 	 * Registers an {@link EntityKey} as nullifiable on this {@link PersistenceContext}.
-	 * @param key
 	 */
 	void registerNullifiableEntityKey(EntityKey key);
 
@@ -761,6 +792,14 @@ public interface PersistenceContext {
 	 * @see #registerNullifiableEntityKey(EntityKey)
 	 */
 	boolean isNullifiableEntityKeysEmpty();
+
+	boolean containsDeletedUnloadedEntityKey(EntityKey ek);
+
+	void registerDeletedUnloadedEntityKey(EntityKey key);
+
+	void removeDeletedUnloadedEntityKey(EntityKey key);
+
+	boolean containsDeletedUnloadedEntityKeys();
 
 	/**
 	 * The size of the internal map storing all collection entries.
@@ -774,7 +813,7 @@ public interface PersistenceContext {
 	 * @param collection the collection to remove
 	 * @return the matching {@link CollectionEntry}, if any was removed.
 	 */
-	CollectionEntry removeCollectionEntry(PersistentCollection collection);
+	CollectionEntry removeCollectionEntry(PersistentCollection<?> collection);
 
 	/**
 	 * Remove all state of the collections-by-key map.
@@ -783,11 +822,10 @@ public interface PersistenceContext {
 
 	/**
 	 * Adds a collection in the collections-by-key map.
-	 * @param collectionKey
-	 * @param persistentCollection
+	 *
 	 * @return the previous collection, it the key was already mapped.
 	 */
-	PersistentCollection addCollectionByKey(CollectionKey collectionKey, PersistentCollection persistentCollection);
+	PersistentCollection<?> addCollectionByKey(CollectionKey collectionKey, PersistentCollection<?> persistentCollection);
 
 	/**
 	 * Remove a collection-by-key mapping.
@@ -798,169 +836,20 @@ public interface PersistenceContext {
 	/**
 	 * A read-only iterator on all entities managed by this persistence context
 	 */
-	Iterator managedEntitiesIterator();
-
-	/**
-	 * Provides centralized access to natural-id-related functionality.
-	 */
-	interface NaturalIdHelper {
-		Serializable INVALID_NATURAL_ID_REFERENCE = new Serializable() {};
-
-		/**
-		 * Given an array of "full entity state", extract the portions that represent the natural id
-		 *
-		 * @param state The attribute state array
-		 * @param persister The persister representing the entity type.
-		 *
-		 * @return The extracted natural id values
-		 */
-		Object[] extractNaturalIdValues(Object[] state, EntityPersister persister);
-
-		/**
-		 * Given an entity instance, extract the values that represent the natural id
-		 *
-		 * @param entity The entity instance
-		 * @param persister The persister representing the entity type.
-		 *
-		 * @return The extracted natural id values
-		 */
-		Object[] extractNaturalIdValues(Object entity, EntityPersister persister);
-
-		/**
-		 * Performs processing related to creating natural-id cross-reference entries on load.
-		 * Handles both the local (transactional) and shared (second-level) caches.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param id The primary key value
-		 * @param naturalIdValues The natural id values
-		 */
-		void cacheNaturalIdCrossReferenceFromLoad(
-				EntityPersister persister,
-				Serializable id,
-				Object[] naturalIdValues);
-
-		/**
-		 * Creates necessary local cross-reference entries.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param id The primary key value
-		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.
-		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
-		 * @param source Enumeration representing how these values are coming into cache.
-		 */
-		void manageLocalNaturalIdCrossReference(
-				EntityPersister persister,
-				Serializable id,
-				Object[] state,
-				Object[] previousState,
-				CachedNaturalIdValueSource source);
-
-		/**
-		 * Cleans up local cross-reference entries.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param id The primary key value
-		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 *
-		 * @return The local cached natural id values (could be different from given values).
-		 */
-		Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] state);
-
-		/**
-		 * Creates necessary shared (second level cache) cross-reference entries.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param id The primary key value
-		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.
-		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
-		 * @param source Enumeration representing how these values are coming into cache.
-		 */
-		void manageSharedNaturalIdCrossReference(
-				EntityPersister persister,
-				Serializable id,
-				Object[] state,
-				Object[] previousState,
-				CachedNaturalIdValueSource source);
-
-		/**
-		 * Cleans up local cross-reference entries.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param id The primary key value
-		 * @param naturalIdValues The natural id values array
-		 */
-		void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues);
-
-		/**
-		 * Given a persister and primary key, find the corresponding cross-referenced natural id values.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param pk The primary key value
-		 *
-		 * @return The cross-referenced natural-id values, or {@code null}
-		 */
-		Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
-
-		/**
-		 * Given a persister and natural-id values, find the corresponding cross-referenced primary key. Will return
-		 * {@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE} if the given natural ids are known to
-		 * be invalid.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param naturalIdValues The natural id value(s)
-		 *
-		 * @return The corresponding cross-referenced primary key,
-		 * 		{@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE},
-		 * 		or {@code null}.
-		 */
-		Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues);
-
-		/**
-		 * Find all the locally cached primary key cross-reference entries for the given persister.
-		 *
-		 * @param persister The persister representing the entity type.
-		 *
-		 * @return The primary keys
-		 */
-		Collection<Serializable> getCachedPkResolutions(EntityPersister persister);
-
-		/**
-		 * Part of the "load synchronization process".  Responsible for maintaining cross-reference entries
-		 * when natural-id values were found to have changed.  Also responsible for tracking the old values
-		 * as no longer valid until the next flush because otherwise going to the database would just re-pull
-		 * the old values as valid.  In this last responsibility, {@link #cleanupFromSynchronizations} is
-		 * the inverse process called after flush to clean up those entries.
-		 *
-		 * @param persister The persister representing the entity type.
-		 * @param pk The primary key
-		 * @param entity The entity instance
-		 *
-		 * @see #cleanupFromSynchronizations
-		 */
-		void handleSynchronization(EntityPersister persister, Serializable pk, Object entity);
-
-		/**
-		 * The clean up process of {@link #handleSynchronization}.  Responsible for cleaning up the tracking
-		 * of old values as no longer valid.
-		 */
-		void cleanupFromSynchronizations();
-
-		/**
-		 * Called on {@link org.hibernate.Session#evict} to give a chance to clean up natural-id cross refs.
-		 *
-		 * @param object The entity instance.
-		 * @param persister The entity persister
-		 * @param identifier The entity identifier
-		 */
-		void handleEviction(Object object, EntityPersister persister, Serializable identifier);
-	}
+	Iterator<Object> managedEntitiesIterator();
 
 	/**
 	 * Access to the natural-id helper for this persistence context
 	 *
 	 * @return This persistence context's natural-id helper
 	 */
-	NaturalIdHelper getNaturalIdHelper();
+	NaturalIdResolutions getNaturalIdResolutions();
+
+	/**
+		Remove the {@link EntityHolder} and set its state to DETACHED
+	 */
+	default @Nullable EntityHolder detachEntity(EntityKey key) {
+		EntityHolder entityHolder = removeEntityHolder( key );
+		return entityHolder;
+	}
 }

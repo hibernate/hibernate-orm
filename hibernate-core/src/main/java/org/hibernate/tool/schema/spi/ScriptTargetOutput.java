@@ -1,20 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
 /**
- * Contract for hiding the differences between a passed Writer, File or URL in
- * terms of how we write output scripts.
+ * Contract for hiding the differences between a passed {@code Writer},
+ * {@code File} or {@code URL} in terms of how we write output scripts.
  *
  * @author Steve Ebersole
  */
 public interface ScriptTargetOutput {
 	/**
-	 * Prepare the script target to {@link #accept(String) accept} commands
+	 * Prepare the script target to {@linkplain #accept(String) accept} commands
 	 */
 	void prepare();
 

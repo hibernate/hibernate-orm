@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -15,16 +13,20 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public abstract class ObjectNameNormalizer {
-	private Database database;
+public class ObjectNameNormalizer {
+	private final MetadataBuildingContext context;
+
+	public ObjectNameNormalizer(MetadataBuildingContext context) {
+		this.context = context;
+	}
 
 	/**
 	 * Normalizes the quoting of identifiers.
-	 * <p/>
+	 * <p>
 	 * This implements the rules set forth in JPA 2 (section "2.13 Naming of Database Objects") which
-	 * states that the double-quote (") is the character which should be used to denote a <tt>quoted
-	 * identifier</tt>.  Here, we handle recognizing that and converting it to the more elegant
-	 * backtick (`) approach used in Hibernate..  Additionally we account for applying what JPA2 terms
+	 * states that the double-quote (") is the character which should be used to denote a {@code quoted
+	 * identifier}.  Here, we handle recognizing that and converting it to the more elegant
+	 * backtick (`) approach used in Hibernate.  Additionally, we account for applying what JPA2 terms
 	 * "globally quoted identifiers".
 	 *
 	 * @param identifierText The identifier to be quoting-normalized.
@@ -35,17 +37,11 @@ public abstract class ObjectNameNormalizer {
 	}
 
 	protected Database database() {
-		if ( database == null ) {
-			database = getBuildingContext().getMetadataCollector().getDatabase();
-		}
-		return database;
+		return getBuildingContext().getMetadataCollector().getDatabase();
 	}
 
 	public Identifier normalizeIdentifierQuoting(Identifier identifier) {
-		return getBuildingContext().getMetadataCollector()
-				.getDatabase()
-				.getJdbcEnvironment()
-				.getIdentifierHelper()
+		return database().getJdbcEnvironment().getIdentifierHelper()
 				.normalizeQuoting( identifier );
 	}
 
@@ -58,10 +54,7 @@ public abstract class ObjectNameNormalizer {
 	 */
 	public String normalizeIdentifierQuotingAsString(String identifierText) {
 		final Identifier identifier = normalizeIdentifierQuoting( identifierText );
-		if ( identifier == null ) {
-			return null;
-		}
-		return identifier.render( database().getDialect() );
+		return identifier == null ? null : identifier.render( database().getDialect() );
 	}
 
 	public String toDatabaseIdentifierText(String identifierText) {
@@ -77,26 +70,16 @@ public abstract class ObjectNameNormalizer {
 	 * @return The logical name
 	 */
 	public Identifier determineLogicalName(String explicitName, NamingStrategyHelper namingStrategyHelper) {
-		Identifier logicalName;
-		if ( StringHelper.isEmpty( explicitName ) ) {
-			logicalName = namingStrategyHelper.determineImplicitName( getBuildingContext() );
-		}
-		else {
-			logicalName = namingStrategyHelper.handleExplicitName( explicitName, getBuildingContext() );
-		}
-		logicalName = getBuildingContext().getMetadataCollector()
-				.getDatabase()
-				.getJdbcEnvironment()
-				.getIdentifierHelper()
-				.normalizeQuoting( logicalName );
-
-		return logicalName;
+		final Identifier logicalName = StringHelper.isEmpty( explicitName )
+				? namingStrategyHelper.determineImplicitName( getBuildingContext() )
+				: namingStrategyHelper.handleExplicitName( explicitName, getBuildingContext() );
+		return database().getJdbcEnvironment().getIdentifierHelper().normalizeQuoting( logicalName );
 	}
 
 	/**
 	 * Intended only for use in handling quoting requirements for {@code column-definition}
-	 * as defined by {@link javax.persistence.Column#columnDefinition()},
-	 *  {@link javax.persistence.JoinColumn#columnDefinition}, etc.  This method should not
+	 * as defined by {@link jakarta.persistence.Column#columnDefinition()},
+	 *  {@link jakarta.persistence.JoinColumn#columnDefinition}, etc.  This method should not
 	 * be called in any other scenario.
 	 *
 	 * @param text The specified column definition
@@ -112,12 +95,14 @@ public abstract class ObjectNameNormalizer {
 	/**
 	 * Access the contextual information related to the current process of building metadata.  Here,
 	 * that typically might be needed for accessing:<ul>
-	 *     <li>{@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}</li>
-	 *     <li>{@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}</li>
-	 *     <li>{@link org.hibernate.boot.model.relational.Database}</li>
+	 *     <li>{@link ImplicitNamingStrategy}</li>
+	 *     <li>{@link PhysicalNamingStrategy}</li>
+	 *     <li>{@link Database}</li>
 	 * </ul>
 	 *
 	 * @return The current building context
 	 */
-	protected abstract MetadataBuildingContext getBuildingContext();
+	protected MetadataBuildingContext getBuildingContext() {
+		return context;
+	}
 }

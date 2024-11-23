@@ -1,26 +1,28 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.lang.reflect.Type;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
-
-import org.jboss.logging.Logger;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Mutability;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.descriptor.java.EnumJavaType;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.SerializableJavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class RegistryHelper {
-	private static final Logger log = Logger.getLogger( RegistryHelper.class );
 
 	/**
 	 * Singleton access
@@ -30,34 +32,67 @@ public class RegistryHelper {
 	private RegistryHelper() {
 	}
 
-	@SuppressWarnings("unchecked")
-	public <J> JavaTypeDescriptor<J> resolveDescriptor(
-			Map<Class,JavaTypeDescriptor> descriptorsByClass,
-			Class<J> cls,
-			Supplier<JavaTypeDescriptor<J>> defaultValueSupplier) {
-		if ( cls == null ) {
-			throw new IllegalArgumentException( "Class passed to locate JavaTypeDescriptor cannot be null" );
+	public <J> JavaType<J> createTypeDescriptor(
+			Type javaType,
+			Supplier<MutabilityPlan<J>> fallbackMutabilityPlanResolver,
+			TypeConfiguration typeConfiguration) {
+		return createTypeDescriptor(
+				javaType,
+				(javaTypeClass) -> {
+					MutabilityPlan<J> mutabilityPlan = determineMutabilityPlan( javaType, typeConfiguration );
+					if ( mutabilityPlan == null ) {
+						mutabilityPlan = fallbackMutabilityPlanResolver.get();
+					}
+					return mutabilityPlan;
+				}
+		);
+	}
+
+	public <J> MutabilityPlan<J> determineMutabilityPlan(Type javaType, TypeConfiguration typeConfiguration) {
+		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );
+
+		if ( javaTypeClass.isAnnotationPresent( Immutable.class ) ) {
+			return ImmutableMutabilityPlan.instance();
 		}
 
-		JavaTypeDescriptor<J> descriptor = descriptorsByClass.get( cls );
-		if ( descriptor != null ) {
-			return descriptor;
+		if ( javaTypeClass.isAnnotationPresent( Mutability.class ) ) {
+			final Mutability annotation = javaTypeClass.getAnnotation( Mutability.class );
+			return typeConfiguration.createMutabilityPlan( annotation.value() );
 		}
 
-		if ( cls.isEnum() ) {
-			descriptor = new EnumJavaTypeDescriptor( cls );
-			descriptorsByClass.put( cls, descriptor );
-			return descriptor;
+		if ( javaTypeClass.isEnum() || javaTypeClass.isPrimitive() || ReflectHelper.isRecord( javaTypeClass ) ) {
+			return ImmutableMutabilityPlan.instance();
 		}
 
-		// find the first "assignable" match
-		for ( Map.Entry<Class, JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
-			if ( entry.getKey().isAssignableFrom( cls ) ) {
-				log.debugf( "Using  cached JavaTypeDescriptor instance for Java class [%s]", cls.getName() );
-				return entry.getValue();
-			}
+		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
+			return (MutabilityPlan<J>) SerializableJavaType.SerializableMutabilityPlan.INSTANCE;
 		}
 
-		return defaultValueSupplier.get();
+		return null;
+	}
+
+	private  <J> JavaType<J> createTypeDescriptor(
+			Type javaType,
+			Function<Class<J>,MutabilityPlan<J>> mutabilityPlanResolver) {
+		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );
+
+		if ( javaTypeClass.isEnum() ) {
+			// enums are unequivocally immutable
+			//noinspection rawtypes, unchecked
+			return new EnumJavaType( javaTypeClass );
+		}
+
+		final MutabilityPlan<J> plan = mutabilityPlanResolver.apply( javaTypeClass );
+
+		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
+			//noinspection rawtypes, unchecked
+			return new SerializableJavaType( javaTypeClass, plan );
+		}
+
+		return new UnknownBasicJavaType<>( javaType, plan );
+	}
+
+	private <J> Class<J> determineJavaTypeClass(Type javaType) {
+		return ReflectHelper.getClass( javaType );
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
@@ -14,6 +12,8 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * Base contract for all identifier mappers.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
@@ -83,13 +83,26 @@ public interface IdMapper {
 
 	/**
 	 * Adds query statements, which contains restrictions, which express the property that the id of the entity
+	 * with alias prefix1, is equal to the id of the entity with alias prefix2 mapped by the second mapper
+	 * (the second mapper must be for the same entity, but it can have, for example, prefixed properties).
+	 *
+	 * @param parameters Parameters, to which to add the statements.
+	 * @param prefix1 First alias of the entity + prefix to add to the properties.
+	 * @param mapper2 Second mapper for the same entity, which will be used to get properties for the right side
+	 * of the equation.
+	 * @param prefix2 Second alias of the entity + prefix to add to the properties.
+	 */
+	void addNullableIdsEqualToQuery(Parameters parameters, String prefix1, IdMapper mapper2, String prefix2);
+
+	/**
+	 * Adds query statements, which contains restrictions, which express the property that the id of the entity
 	 * with alias prefix, is equal to the given object.
 	 *
 	 * @param parameters Parameters, to which to add the statements.
 	 * @param id Value of id.
 	 * @param alias the alias to use in the specified parameters (may be null).
 	 * @param prefix Prefix to add to the properties (may be null).
-	 * @param equals Should this query express the "=" relation or the "<>" relation.
+	 * @param equals Should this query express the {@code "="} relation or the {@code "<>"} relation.
 	 */
 	void addIdEqualsToQuery(Parameters parameters, Object id, String alias, String prefix, boolean equals);
 
@@ -100,7 +113,7 @@ public interface IdMapper {
 	 *
 	 * @param parameters Parameters, to which to add the statements.
 	 * @param prefix Prefix to add to the properties (may be null).
-	 * @param equals Should this query express the "=" relation or the "<>" relation.
+	 * @param equals Should this query express the {@code "="} relation or the {@code "<>"} relation.
 	 */
 	void addNamedIdEqualsToQuery(Parameters parameters, String prefix, boolean equals);
 
@@ -111,7 +124,7 @@ public interface IdMapper {
 	 * @param parameters Parameters, to which to add the statements.
 	 * @param prefix Prefix to add to the properties (may be null).
 	 * @param mapper The identifier mapper to use
-	 * @param equals Should this query express the "=" relation or the "<>" relation.
+	 * @param equals Should this query express the {@code "="} relation or the {@code "<>"} relation.
 	 *
 	 * @since 5.2.2
 	 */

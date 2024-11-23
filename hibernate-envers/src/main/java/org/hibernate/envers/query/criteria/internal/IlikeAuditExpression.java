@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.criteria.internal;
 
@@ -27,8 +25,12 @@ public class IlikeAuditExpression extends AbstractAtomicExpression {
 	@Override
 	protected void addToQuery(
 			EnversService enversService,
-			AuditReaderImplementor versionsReader, String entityName,
-			String alias, QueryBuilder qb, Parameters parameters) {
+			AuditReaderImplementor versionsReader,
+			String entityName,
+			String alias,
+			String componentPrefix,
+			QueryBuilder qb,
+			Parameters parameters) {
 
 		String propertyName = CriteriaTools.determinePropertyName(
 				enversService,
@@ -36,9 +38,10 @@ public class IlikeAuditExpression extends AbstractAtomicExpression {
 				entityName,
 				propertyNameGetter
 		);
-		CriteriaTools.checkPropertyNotARelation( enversService, entityName, propertyName );
 
-		parameters.addWhereWithFunction( alias, propertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
+		String prefixedPropertyName = componentPrefix.concat( propertyName );
+		CriteriaTools.checkPropertyNotARelation( enversService, entityName, prefixedPropertyName );
+		parameters.addWhereWithFunction( alias, prefixedPropertyName, " lower ", " like ", value.toLowerCase( Locale.ROOT ) );
 	}
 
 }

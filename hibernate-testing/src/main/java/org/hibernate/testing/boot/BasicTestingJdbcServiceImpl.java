@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.boot;
 
@@ -17,22 +15,21 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.internal.ResultSetWrapperImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 
 /**
  * Implementation of the {@link JdbcServices} contract for use by tests.
- * <p/>
+ * <p>
  * An alternative approach is to build a {@link ServiceRegistryTestingImpl} and grab the {@link JdbcServices}
  * from that.
  *
@@ -46,6 +43,7 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 
 	private JdbcConnectionAccess jdbcConnectionAccess;
 	private ServiceRegistry serviceRegistry;
+	private ParameterMarkerStrategy parameterMarkerStrategy;
 
 	public void start() {
 	}
@@ -58,10 +56,11 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 		dialect = ConnectionProviderBuilder.getCorrespondingDialect();
 		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
 		sqlStatementLogger = new SqlStatementLogger( true, false, false );
+		this.jdbcConnectionAccess = new JdbcConnectionAccessImpl( connectionProvider );
 
 		Connection jdbcConnection = connectionProvider.getConnection();
 		try {
-			jdbcEnvironment = new JdbcEnvironmentImpl( jdbcConnection.getMetaData(), dialect );
+			jdbcEnvironment = new JdbcEnvironmentImpl( jdbcConnection.getMetaData(), dialect, jdbcConnectionAccess );
 		}
 		finally {
 			try {
@@ -71,7 +70,6 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 			}
 		}
 
-		this.jdbcConnectionAccess = new JdbcConnectionAccessImpl( connectionProvider );
 	}
 
 	public void release() {
@@ -98,12 +96,13 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 		return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
 	}
 
-	public ResultSetWrapper getResultSetWrapper() {
-		return new ResultSetWrapperImpl( serviceRegistry );
-	}
-
 	public SqlStatementLogger getSqlStatementLogger() {
 		return sqlStatementLogger;
+	}
+
+	@Override
+	public ParameterMarkerStrategy getParameterMarkerStrategy() {
+		return parameterMarkerStrategy;
 	}
 
 	public SqlExceptionHelper getSqlExceptionHelper() {
@@ -117,5 +116,6 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
+		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
 	}
 }

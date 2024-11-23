@@ -9,7 +9,7 @@
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  version="2.1"
         >
-    <package>org.hibernate.jpa.test.procedure</package>
+    <package>org.hibernate.orm.test.jpa.procedure</package>
     <entity class="User" metadata-complete="true">
         <named-stored-procedure-query name="s1" procedure-name="p1">
             <parameter class="java.lang.Integer" mode="IN" name="p11"/>

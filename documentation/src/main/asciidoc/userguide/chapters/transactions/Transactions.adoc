@@ -1,6 +1,8 @@
 [[transactions]]
-== Transactions and concurrency control
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/transactions
+== Transactions
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-transaction: {core-project-dir}/src/test/java/org/hibernate/orm/test/transactions
 
 It is important to understand that the term transaction has many different yet related meanings in regards to persistence and Object/Relational Mapping.
 In most use-cases these definitions align, but that is not always the case.
@@ -25,22 +27,22 @@ which are built by the `org.hibernate.resource.transaction.spi.TransactionCoordi
 `TransactionCoordinatorBuilder` represents a strategy for dealing with transactions whereas TransactionCoordinator represents one instance of that strategy related to a Session.
 Which `TransactionCoordinatorBuilder` implementation to use is defined by the `hibernate.transaction.coordinator_class` setting.
 
-`jdbc` (the default for non-JPA applications):: Manages transactions via calls to `java.sql.Connection`
+`jdbc` (the default for non-Jakarta Persistence applications):: Manages transactions via calls to `java.sql.Connection`
 `jta`:: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
 
-If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will 
+If a Jakarta Persistence application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will
 automatically build the proper transaction coordinator based on the transaction type for the persistence unit.
 
-If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate 
+If a non-Jakarta Persistence application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate
 will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
-A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta` 
+A non-Jakarta Persistence application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta`
 or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBuilder` that builds a 
 `org.hibernate.resource.transaction.TransactionCoordinator` that properly coordinates with JTA-based transactions. 
 
 [NOTE]
 ====
 For details on implementing a custom `TransactionCoordinatorBuilder`, or simply better understanding how it works, see the
-http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
 ====
 
 Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior.
@@ -114,27 +116,27 @@ Let's take a look at using the Transaction API in the various environments.
 [[transactions-api-jdbc-example]]
 .Using Transaction API in JDBC
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-jdbc-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-jdbc-example]
 ----
 ====
 
 [[transactions-api-cmt-example]]
 .Using Transaction API in JTA (CMT)
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-cmt-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-cmt-example]
 ----
 ====
 
 [[transactions-api-bmt-example]]
 .Using Transaction API in JTA (BMT)
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-bmt-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-bmt-example]
 ----
 ====
 
@@ -297,7 +299,7 @@ Session-per-request-with-detached-objects and session-per-conversation each have
 ==== Session-per-application anti-pattern
 
 The _session-per-application_ is also considered an anti-pattern.
-The Hibernate `Session`, like the JPA `EntityManager`, is not a thread-safe object and it is intended to be confined to a single thread at once.
+The Hibernate `Session`, like the Jakarta Persistence `EntityManager`, is not a thread-safe object and it is intended to be confined to a single thread at once.
 If the `Session` is shared among multiple threads, there will be race conditions as well as visibility issues, so beware of this.
 
 An exception thrown by Hibernate means you have to rollback your database transaction and close the `Session` immediately. 

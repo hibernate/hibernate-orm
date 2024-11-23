@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -22,13 +19,13 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyConfiguration.Interceptor {
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyInterceptor.class );
 
-	private final Class[] interfaces;
+	private final Class<?>[] interfaces;
 
 	public ByteBuddyInterceptor(
 			String entityName,
-			Class persistentClass,
-			Class[] interfaces,
-			Serializable id,
+			Class<?> persistentClass,
+			Class<?>[] interfaces,
+			Object id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType,
@@ -85,9 +82,10 @@ public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyC
 				getEntityName(),
 				persistentClass,
 				interfaces,
-				getIdentifier(),
+				getInternalIdentifier(),
 				( isReadOnlySettingAvailable() ? Boolean.valueOf( isReadOnly() ) : isReadOnlyBeforeAttachedToSession() ),
 				getSessionFactoryUuid(),
+				getSessionFactoryName(),
 				isAllowLoadOutsideTransaction(),
 				getIdentifierMethod,
 				setIdentifierMethod,

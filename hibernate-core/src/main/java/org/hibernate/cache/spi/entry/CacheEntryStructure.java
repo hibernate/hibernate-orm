@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
 
@@ -21,7 +19,7 @@ public interface CacheEntryStructure {
 	 *
 	 * @return The structured form.
 	 */
-	public Object structure(Object item);
+	Object structure(Object item);
 
 	/**
 	 * Convert the previous structured form of the item back into its item form.
@@ -31,5 +29,5 @@ public interface CacheEntryStructure {
 	 *
 	 * @return The item
 	 */
-	public Object destructure(Object structured, SessionFactoryImplementor factory);
+	Object destructure(Object structured, SessionFactoryImplementor factory);
 }

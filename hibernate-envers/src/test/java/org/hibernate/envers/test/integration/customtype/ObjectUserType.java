@@ -1,27 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.ValueAccess;
+import org.hibernate.usertype.CompositeUserType;
+
+import jakarta.persistence.Lob;
 
 /**
  * Custom type used to persist binary representation of Java object in the database.
@@ -30,16 +20,31 @@ import org.hibernate.usertype.UserType;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ObjectUserType implements UserType {
-	private static final int[] TYPES = new int[] {Types.VARCHAR, Types.BLOB};
+public class ObjectUserType implements CompositeUserType<Object> {
 
 	@Override
-	public int[] sqlTypes() {
-		return TYPES;
+	public Object getPropertyValue(Object component, int property) throws HibernateException {
+		switch ( property ) {
+			case 0:
+				return component;
+			case 1:
+				return component.getClass().getName();
+		}
+		return null;
 	}
 
 	@Override
-	public Class returnedClass() {
+	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+		return valueAccess.getValue( 0, Object.class );
+	}
+
+	@Override
+	public Class<?> embeddable() {
+		return TaggedObject.class;
+	}
+
+	@Override
+	public Class<Object> returnedClass() {
 		return Object.class;
 	}
 
@@ -57,77 +62,6 @@ public class ObjectUserType implements UserType {
 	@Override
 	public int hashCode(Object x) throws HibernateException {
 		return x.hashCode();
-	}
-
-	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		final String type = rs.getString( names[0] ); // For debug purpose.
-		return convertInputStreamToObject( rs.getBinaryStream( names[1] ) );
-	}
-
-	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		if ( value == null ) {
-			st.setNull( index, TYPES[0] );
-			st.setNull( index + 1, TYPES[1] );
-		}
-		else {
-			st.setString( index, value.getClass().getName() );
-			st.setBinaryStream( index + 1, convertObjectToInputStream( value ) );
-		}
-	}
-
-	private InputStream convertObjectToInputStream(Object value) {
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		ObjectOutputStream objectOutputStream = null;
-		try {
-			objectOutputStream = new ObjectOutputStream( byteArrayOutputStream );
-			objectOutputStream.writeObject( value );
-			objectOutputStream.flush();
-			return new ByteArrayInputStream( byteArrayOutputStream.toByteArray() );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( e );
-		}
-		finally {
-			closeQuietly( objectOutputStream );
-		}
-	}
-
-	private Object convertInputStreamToObject(InputStream inputStream) {
-		ObjectInputStream objectInputStream = null;
-		try {
-			objectInputStream = new ObjectInputStream( inputStream );
-			return objectInputStream.readObject();
-		}
-		catch (Exception e) {
-			throw new RuntimeException( e );
-		}
-		finally {
-			closeQuietly( objectInputStream );
-		}
-	}
-
-	private void closeQuietly(OutputStream stream) {
-		if ( stream != null ) {
-			try {
-				stream.close();
-			}
-			catch (IOException e) {
-			}
-		}
-	}
-
-	private void closeQuietly(InputStream stream) {
-		if ( stream != null ) {
-			try {
-				stream.close();
-			}
-			catch (IOException e) {
-			}
-		}
 	}
 
 	@Override
@@ -153,5 +87,11 @@ public class ObjectUserType implements UserType {
 	@Override
 	public Object replace(Object original, Object target, Object owner) throws HibernateException {
 		return original;
+	}
+
+	public static class TaggedObject {
+		String type;
+		@Lob
+		Serializable object;
 	}
 }

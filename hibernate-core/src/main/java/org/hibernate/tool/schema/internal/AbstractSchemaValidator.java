@@ -1,21 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
-import java.util.Iterator;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -23,6 +21,7 @@ import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
+import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
@@ -31,7 +30,12 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
+
 /**
+ * Base implementation of {@link SchemaValidator}.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractSchemaValidator implements SchemaValidator {
@@ -44,28 +48,31 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			HibernateSchemaManagementTool tool,
 			SchemaFilter validateFilter) {
 		this.tool = tool;
-		if ( validateFilter == null ) {
-			this.schemaFilter = DefaultSchemaFilter.INSTANCE;
-		}
-		else {
-			this.schemaFilter = validateFilter;
-		}
+		this.schemaFilter = validateFilter == null ? DefaultSchemaFilter.INSTANCE : validateFilter;
 	}
 
 	@Override
-	public void doValidation(Metadata metadata, ExecutionOptions options) {
+	public void doValidation(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter) {
+		SqlStringGenerationContext context = SqlStringGenerationContextImpl.fromConfigurationMap(
+				tool.getServiceRegistry().requireService( JdbcEnvironment.class ),
+				metadata.getDatabase(),
+				options.getConfigurationValues()
+		);
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 
 		final DdlTransactionIsolator isolator = tool.getDdlTransactionIsolator( jdbcContext );
-
 		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 				tool.getServiceRegistry(),
 				isolator,
-				metadata.getDatabase().getDefaultNamespace().getName()
+				context,
+				tool
 		);
 
 		try {
-			performValidation( metadata, databaseInformation, options, jdbcContext.getDialect() );
+			performValidation( metadata, databaseInformation, options, contributableInclusionFilter, jdbcContext.getDialect() );
 		}
 		finally {
 			try {
@@ -83,22 +90,27 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
-				validateTables( metadata, databaseInformation, options, dialect, namespace );
+				validateTables( metadata, databaseInformation, options, contributableInclusionFilter, dialect, namespace );
 			}
 		}
 
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Sequence sequence : namespace.getSequences() ) {
-					if ( schemaFilter.includeSequence( sequence ) ) {
-						final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation(
-								sequence.getName()
-						);
-						validateSequence( sequence, sequenceInformation );
+					if ( !schemaFilter.includeSequence( sequence ) ) {
+						continue;
 					}
+
+					if ( ! contributableInclusionFilter.matches( sequence ) ) {
+						continue;
+					}
+
+					final SequenceInformation sequenceInformation = databaseInformation.getSequenceInformation( sequence.getName() );
+					validateSequence( sequence, sequenceInformation );
 				}
 			}
 		}
@@ -108,6 +120,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			DatabaseInformation databaseInformation,
 			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
 			Dialect dialect, Namespace namespace);
 
 	protected void validateTable(
@@ -125,23 +138,20 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			);
 		}
 
-		final Iterator selectableItr = table.getColumnIterator();
-		while ( selectableItr.hasNext() ) {
-			final Selectable selectable = (Selectable) selectableItr.next();
-			if ( Column.class.isInstance( selectable ) ) {
-				final Column column = (Column) selectable;
-				final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
-				if ( existingColumn == null ) {
-					throw new SchemaManagementException(
-							String.format(
-									"Schema-validation: missing column [%s] in table [%s]",
-									column.getName(),
-									table.getQualifiedTableName()
-							)
-					);
-				}
-				validateColumnType( table, column, existingColumn, metadata, options, dialect );
+		for ( Column column : table.getColumns() ) {
+			final ColumnInformation existingColumn =
+					//QUESTION: should this use metadata.getDatabase().toIdentifier( column.getQuotedName() )
+					tableInformation.getColumn( toIdentifier( column.getQuotedName() ) );
+			if ( existingColumn == null ) {
+				throw new SchemaManagementException(
+						String.format(
+								"Schema-validation: missing column [%s] in table [%s]",
+								column.getName(),
+								table.getQualifiedTableName()
+						)
+				);
 			}
+			validateColumnType( table, column, existingColumn, metadata, options, dialect );
 		}
 	}
 
@@ -152,9 +162,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			Dialect dialect) {
-		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| column.getSqlType( dialect, metadata ).toLowerCase(Locale.ROOT).startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
-		if ( !typesMatch ) {
+		if ( !hasMatchingType( column, columnInformation, metadata, dialect ) ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: wrong column type encountered in column [%s] in " +
@@ -163,19 +171,11 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 							table.getQualifiedTableName(),
 							columnInformation.getTypeName().toLowerCase(Locale.ROOT),
 							JdbcTypeNameMapper.getTypeName( columnInformation.getTypeCode() ),
-							column.getSqlType().toLowerCase(Locale.ROOT),
+							column.getSqlType( metadata ).toLowerCase(Locale.ROOT),
 							JdbcTypeNameMapper.getTypeName( column.getSqlTypeCode( metadata ) )
 					)
 			);
 		}
-
-		// this is the old Hibernate check...
-		//
-		// but I think a better check involves checks against type code and then the type code family, not
-		// just the type name.
-		//
-		// See org.hibernate.type.descriptor.sql.JdbcTypeFamilyInformation
-		// todo : this ^^
 	}
 
 	protected void validateSequence(Sequence sequence, SequenceInformation sequenceInformation) {
@@ -185,13 +185,13 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			);
 		}
 
-		if ( sequenceInformation.getIncrementSize() > 0
-				&& sequence.getIncrementSize() != sequenceInformation.getIncrementSize() ) {
+		if ( sequenceInformation.getIncrementValue() != null && sequenceInformation.getIncrementValue().intValue() > 0
+				&& sequence.getIncrementSize() != sequenceInformation.getIncrementValue().intValue() ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: sequence [%s] defined inconsistent increment-size; found [%s] but expecting [%s]",
 							sequence.getName(),
-							sequenceInformation.getIncrementSize(),
+							sequenceInformation.getIncrementValue(),
 							sequence.getIncrementSize()
 					)
 			);

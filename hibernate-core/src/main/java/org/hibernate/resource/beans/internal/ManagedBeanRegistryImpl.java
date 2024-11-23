@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.internal;
 
@@ -12,17 +10,18 @@ import java.util.Map;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * Abstract support (template pattern) for ManagedBeanRegistry implementations
+ * Abstract support (template pattern) for {@link ManagedBeanRegistry} implementations
  *
  * @author Steve Ebersole
  */
 public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContainer.LifecycleOptions, Stoppable {
-	private Map<String,ManagedBean<?>> registrations = new HashMap<>();
+	private final Map<String,ManagedBean<?>> registrations = new HashMap<>();
 
 	private final BeanContainer beanContainer;
 
@@ -46,29 +45,35 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> ManagedBean<T> getBean(Class<T> beanClass) {
-		final ManagedBean existing = registrations.get( beanClass.getName() );
+		return getBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
+		final ManagedBean<?> existing = registrations.get( beanClass.getName() );
 		if ( existing != null ) {
-			return existing;
+			//noinspection unchecked
+			return (ManagedBean<T>) existing;
 		}
 
-		final ManagedBean bean;
+		final ManagedBean<T> bean;
 		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
+			bean = new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer );
 		}
 		else {
 			final ContainedBean<T> containedBean = beanContainer.getBean(
 					beanClass,
 					this,
-					FallbackBeanInstanceProducer.INSTANCE
+					fallbackBeanInstanceProducer
 			);
 
 			if ( containedBean instanceof ManagedBean ) {
-				bean = (ManagedBean) containedBean;
+				//noinspection unchecked
+				bean = (ManagedBean<T>) containedBean;
 			}
 			else {
-				bean = new ContainedBeanManagedBeanAdapter( beanClass, containedBean );
+				bean = new ContainedBeanManagedBeanAdapter<>( beanClass, containedBean );
 			}
 		}
 
@@ -78,32 +83,41 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract) {
+		return getBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(
+			String beanName,
+			Class<T> beanContract,
+			BeanInstanceProducer fallbackBeanInstanceProducer) {
 		final String key = beanContract.getName() + ':' + beanName;
 
-		final ManagedBean existing = registrations.get( key );
+		final ManagedBean<?> existing = registrations.get( key );
 		if ( existing != null ) {
-			return existing;
+			//noinspection unchecked
+			return (ManagedBean<T>) existing;
 		}
 
-		final ManagedBean bean;
+		final ManagedBean<T> bean;
 		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE );
+			bean = new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer );
 		}
 		else {
 			final ContainedBean<T> containedBean = beanContainer.getBean(
 					beanName,
 					beanContract,
 					this,
-					FallbackBeanInstanceProducer.INSTANCE
+					fallbackBeanInstanceProducer
 			);
 
 			if ( containedBean instanceof ManagedBean ) {
-				bean = (ManagedBean) containedBean;
+				//noinspection unchecked
+				bean = (ManagedBean<T>) containedBean;
 			}
 			else {
-				bean = new ContainedBeanManagedBeanAdapter( beanContract, containedBean );
+				bean = new ContainedBeanManagedBeanAdapter<>( beanContract, containedBean );
 			}
 		}
 

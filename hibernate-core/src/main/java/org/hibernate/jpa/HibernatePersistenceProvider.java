@@ -1,48 +1,49 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
 
+import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.LoadState;
-import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.ProviderUtil;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceConfiguration;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.spi.LoadState;
+import jakarta.persistence.spi.PersistenceProvider;
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.spi.ProviderUtil;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
-import org.jboss.logging.Logger;
-
 /**
- * The Hibernate {@link PersistenceProvider} implementation
+ * The best-ever implementation of a JPA {@link PersistenceProvider}.
  *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
-	private static final Logger log = Logger.getLogger( HibernatePersistenceProvider.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( HibernatePersistenceProvider.class );
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
-	
+
 	/**
 	 * {@inheritDoc}
-	 * <p/>
-	 * Note: per-spec, the values passed as {@code properties} override values found in {@code persistence.xml}
+	 *
+	 * @implSpec Per the specification, the values passed as {@code properties} override values found in {@code persistence.xml}
 	 */
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
@@ -52,38 +53,29 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
 			return null;
 		}
-		else {
-			return builder.build();
-		}
+		return builder.build();
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties) {
 		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, null );
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader) {
 		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, providedClassLoader, null );
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoaderService providedClassLoaderService) {
 		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null, providedClassLoaderService );
 	}
 
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties,
+	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map<?,?> properties,
 			ClassLoader providedClassLoader, ClassLoaderService providedClassLoaderService) {
 		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
-		final Map integration = wrap( properties );
-		final List<ParsedPersistenceXmlDescriptor> units;
-		try {
-			units = PersistenceXmlParser.locatePersistenceUnits( integration );
-		}
-		catch (Exception e) {
-			log.debug( "Unable to locate persistence units", e );
-			throw new PersistenceException( "Unable to locate persistence units", e );
-		}
+		final Map<?,?> integration = wrap( properties );
+		final Collection<PersistenceUnitDescriptor> units = locatePersistenceUnits( integration, providedClassLoader, providedClassLoaderService );
 
 		log.debugf( "Located and parsed %s persistence units; checking each", units.size() );
 
@@ -92,13 +84,15 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			throw new PersistenceException( "No name provided and multiple persistence units found" );
 		}
 
-		for ( ParsedPersistenceXmlDescriptor persistenceUnit : units ) {
-			log.debugf(
-					"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
-					persistenceUnit.getName(),
-					persistenceUnit.getProviderClassName(),
-					persistenceUnitName
-			);
+		for ( PersistenceUnitDescriptor persistenceUnit : units ) {
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
+						persistenceUnit.getName(),
+						persistenceUnit.getProviderClassName(),
+						persistenceUnitName
+				);
+			}
 
 			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
 			if ( !matches ) {
@@ -112,7 +106,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			if (providedClassLoaderService != null) {
+			if ( providedClassLoaderService != null ) {
 				return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService );
 			}
 			else {
@@ -124,26 +118,51 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected static Map wrap(Map properties) {
+	protected static Map<?,?> wrap(Map<?,?> properties) {
 		return properties == null ? Collections.emptyMap() : Collections.unmodifiableMap( properties );
+	}
+
+	// Check before changing: may be overridden in Quarkus
+	protected Collection<PersistenceUnitDescriptor> locatePersistenceUnits(Map<?, ?> integration, ClassLoader providedClassLoader,
+			ClassLoaderService providedClassLoaderService) {
+		final Collection<PersistenceUnitDescriptor> units;
+		try {
+			var parser = PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService );
+			final List<URL> xmlUrls = parser.getClassLoaderService().locateResources( "META-INF/persistence.xml" );
+			if ( xmlUrls.isEmpty() ) {
+				log.unableToFindPersistenceXmlInClasspath();
+				units = List.of();
+			}
+			else {
+				units = parser.parse( xmlUrls ).values();
+			}
+		}
+		catch (Exception e) {
+			log.debug( "Unable to locate persistence units", e );
+			throw new PersistenceException( "Unable to locate persistence units", e );
+		}
+		return units;
 	}
 
 	/**
 	 * {@inheritDoc}
-	 * <p/>
+	 * <p>
 	 * Note: per-spec, the values passed as {@code properties} override values found in {@link PersistenceUnitInfo}
 	 */
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		log.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
+		}
 
 		return getEntityManagerFactoryBuilder( info, properties ).build();
 	}
 
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map map) {
-		log.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
+		}
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder( info, map );
 		builder.generateSchema();
@@ -162,17 +181,17 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return true;
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map integration) {
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitInfo info, Map<?,?> integration) {
 		return Bootstrap.getEntityManagerFactoryBuilder( info, integration );
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration, ClassLoader providedClassLoader) {
+			Map<?,?> integration, ClassLoader providedClassLoader) {
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader );
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map integration, ClassLoaderService providedClassLoaderService) {
+			Map<?,?> integration, ClassLoaderService providedClassLoaderService) {
 		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
 
@@ -186,10 +205,20 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			return PersistenceUtilHelper.isLoadedWithReference( proxy, property, cache );
 		}
 		@Override
-		public LoadState isLoaded(Object o) {
-			return PersistenceUtilHelper.isLoaded(o);
+		public LoadState isLoaded(Object object) {
+			return PersistenceUtilHelper.getLoadState( object );
 		}
 	};
+
+	@Override
+	public EntityManagerFactory createEntityManagerFactory(PersistenceConfiguration configuration) {
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder(
+				new PersistenceConfigurationDescriptor( configuration ),
+				Collections.emptyMap(),
+				HibernatePersistenceProvider.class.getClassLoader()
+		);
+		return builder.build();
+	}
 
 	@Override
 	public ProviderUtil getProviderUtil() {

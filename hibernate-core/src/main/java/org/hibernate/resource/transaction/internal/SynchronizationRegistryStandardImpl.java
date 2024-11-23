@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.internal;
 
 import java.util.LinkedHashSet;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -16,7 +14,7 @@ import org.hibernate.resource.transaction.NullSynchronizationException;
 import org.hibernate.resource.transaction.spi.SynchronizationRegistryImplementor;
 
 /**
- * The standard implementation of the SynchronizationRegistry contract
+ * The standard implementation of the {@link org.hibernate.resource.transaction.spi.SynchronizationRegistry} contract.
  *
  * @author Steve Ebersole
  */
@@ -41,7 +39,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 		}
 
 		if ( synchronizations == null ) {
-			synchronizations = new LinkedHashSet<Synchronization>();
+			synchronizations = new LinkedHashSet<>();
 		}
 
 		final boolean added = synchronizations.add( synchronization );

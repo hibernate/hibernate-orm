@@ -1,21 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.identity;
+
+import org.hibernate.dialect.DatabaseVersion;
 
 /**
  * @author Andrea Boriero
  */
 public class HSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
+	final private DatabaseVersion dbVersion;
 
-	final private int hsqldbVersion;
-
-	public HSQLIdentityColumnSupport(int hsqldbVersion) {
-
-		this.hsqldbVersion = hsqldbVersion;
+	public HSQLIdentityColumnSupport(DatabaseVersion dbVersion) {
+		this.dbVersion = dbVersion;
 	}
 
 	@Override
@@ -36,6 +34,6 @@ public class HSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentityInsertString() {
-		return hsqldbVersion < 200 ? "null" : "default";
+		return dbVersion.isBefore( 2 ) ? "null" : "default";
 	}
 }

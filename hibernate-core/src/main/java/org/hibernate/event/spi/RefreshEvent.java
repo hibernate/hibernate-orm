@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
@@ -16,10 +15,10 @@ import org.hibernate.LockOptions;
  */
 public class RefreshEvent extends AbstractEvent {
 
-	private Object object;
+	private final Object object;
 	private String entityName;
 
-	private LockOptions lockOptions = new LockOptions().setLockMode(LockMode.READ);
+	private LockOptions lockOptions = new LockOptions(LockMode.READ);
 
 	public RefreshEvent(Object object, EventSource source) {
 		super(source);
@@ -49,6 +48,11 @@ public class RefreshEvent extends AbstractEvent {
 		}
 		this.lockOptions = lockOptions;
 	}
+
+	/**
+	 * @deprecated use {@link #RefreshEvent(Object, LockOptions, EventSource)} instead.
+	 */
+	@Deprecated(since = "7.0")
 	public RefreshEvent(String entityName, Object object, LockOptions lockOptions, EventSource source){
 		this(object,lockOptions,source);
 		this.entityName = entityName;
@@ -75,10 +79,10 @@ public class RefreshEvent extends AbstractEvent {
 	}
 
 	public int getLockTimeout() {
-		return this.lockOptions.getTimeOut();
+		return lockOptions.getTimeOut();
 	}
 
 	public boolean getLockScope() {
-		return this.lockOptions.getScope();
+		return lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
 	}
 }

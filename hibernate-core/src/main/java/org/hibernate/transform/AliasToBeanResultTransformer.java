@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.transform;
 
@@ -14,39 +12,30 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyChainedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyFieldImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * Result transformer that allows to transform a result to
  * a user specified class which will be populated via setter
  * methods or fields matching the alias names.
- * <p/>
- * <pre>
- * List resultWithAliasedBean = s.createCriteria(Enrolment.class)
- * 			.createAlias("student", "st")
- * 			.createAlias("course", "co")
- * 			.setProjection( Projections.projectionList()
- * 					.add( Projections.property("co.description"), "courseDescription" )
- * 			)
- * 			.setResultTransformer( new AliasToBeanResultTransformer(StudentDTO.class) )
- * 			.list();
- * <p/>
- *  StudentDTO dto = (StudentDTO)resultWithAliasedBean.get(0);
- * 	</pre>
  *
  * @author max
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
-public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransformer {
+@Deprecated
+public class AliasToBeanResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
 
 	// IMPL NOTE : due to the delayed population of setters (setters cached
 	// 		for performance), we really cannot properly define equality for
 	// 		this transformer
 
-	private final Class resultClass;
+	private final Class<T> resultClass;
 	private boolean isInitialized;
 	private String[] aliases;
 	private Setter[] setters;
 
-	public AliasToBeanResultTransformer(Class resultClass) {
+	public AliasToBeanResultTransformer(Class<T> resultClass) {
 		if ( resultClass == null ) {
 			throw new IllegalArgumentException( "resultClass cannot be null" );
 		}
@@ -55,13 +44,13 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 	}
 
 	@Override
-	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
-		return false;
+	public Class<T> getTransformedType() {
+		return resultClass;
 	}
 
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
-		Object result;
+	public T transformTuple(Object[] tuple, String[] aliases) {
+		T result;
 
 		try {
 			if ( ! isInitialized ) {
@@ -70,19 +59,16 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			else {
 				check( aliases );
 			}
-			
+
 			result = resultClass.newInstance();
 
 			for ( int i = 0; i < aliases.length; i++ ) {
 				if ( setters[i] != null ) {
-					setters[i].set( result, tuple[i], null );
+					setters[i].set( result, tuple[i] );
 				}
 			}
 		}
-		catch ( InstantiationException e ) {
-			throw new HibernateException( "Could not instantiate resultclass: " + resultClass.getName() );
-		}
-		catch ( IllegalAccessException e ) {
+		catch ( InstantiationException | IllegalAccessException e ) {
 			throw new HibernateException( "Could not instantiate resultclass: " + resultClass.getName() );
 		}
 
@@ -101,7 +87,7 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			String alias = aliases[ i ];
 			if ( alias != null ) {
 				this.aliases[ i ] = alias;
-				setters[ i ] = propertyAccessStrategy.buildPropertyAccess( resultClass, alias ).getSetter();
+				setters[ i ] = propertyAccessStrategy.buildPropertyAccess( resultClass, alias, true ).getSetter();
 			}
 		}
 		isInitialized = true;
@@ -124,16 +110,10 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			return false;
 		}
 
-		AliasToBeanResultTransformer that = ( AliasToBeanResultTransformer ) o;
+		AliasToBeanResultTransformer<?> that = (AliasToBeanResultTransformer<?>) o;
 
-		if ( ! resultClass.equals( that.resultClass ) ) {
-			return false;
-		}
-		if ( ! Arrays.equals( aliases, that.aliases ) ) {
-			return false;
-		}
-
-		return true;
+		return resultClass.equals( that.resultClass )
+			&& Arrays.equals( aliases, that.aliases );
 	}
 
 	@Override

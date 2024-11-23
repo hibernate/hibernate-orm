@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
@@ -10,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.internal.log.ConnectionAccessLogger;
+import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
@@ -22,13 +21,10 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	private final JdbcContext jdbcContext;
 
 	private Connection jdbcConnection;
+	private boolean unsetAutoCommit;
 
 	public DdlTransactionIsolatorNonJtaImpl(JdbcContext jdbcContext) {
 		this.jdbcContext = jdbcContext;
-	}
-
-	@Override
-	public void prepare() {
 	}
 
 	@Override
@@ -38,22 +34,29 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 
 	@Override
 	public Connection getIsolatedConnection() {
+		return getIsolatedConnection(true);
+	}
+
+	@Override
+	public Connection getIsolatedConnection(boolean autocommit) {
 		if ( jdbcConnection == null ) {
 			try {
 				this.jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
 
 				try {
-					if ( !jdbcConnection.getAutoCommit() ) {
-						ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl( jdbcContext.getJdbcConnectionAccess() );
-
+					if ( jdbcConnection.getAutoCommit() != autocommit ) {
 						try {
-							jdbcConnection.commit();
-							jdbcConnection.setAutoCommit( true );
+							if ( autocommit ) {
+								ConnectionAccessLogger.INSTANCE.informConnectionLocalTransactionForNonJtaDdl( jdbcContext.getJdbcConnectionAccess() );
+								jdbcConnection.commit();
+							}
+							jdbcConnection.setAutoCommit( autocommit );
+							unsetAutoCommit = true;
 						}
 						catch (SQLException e) {
 							throw jdbcContext.getSqlExceptionHelper().convert(
 									e,
-									"Unable to set JDBC Connection into auto-commit mode in preparation for DDL execution"
+									"Unable to set JDBC Connection auto-commit mode in preparation for DDL execution"
 							);
 						}
 					}
@@ -79,11 +82,47 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	@Override
 	public void release() {
 		if ( jdbcConnection != null ) {
+			Throwable originalException = null;
 			try {
-				jdbcContext.getJdbcConnectionAccess().releaseConnection( jdbcConnection );
+				if ( unsetAutoCommit ) {
+					try {
+						jdbcConnection.setAutoCommit( !jdbcConnection.getAutoCommit() );
+					}
+					catch (SQLException e) {
+						originalException = jdbcContext.getSqlExceptionHelper().convert(
+								e,
+								"Unable to unset auto-commit mode for JDBC Connection used for DDL execution" );
+					}
+					catch (Throwable t1) {
+						originalException = t1;
+					}
+				}
 			}
-			catch (SQLException e) {
-				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to release JDBC Connection used for DDL execution" );
+			finally {
+				Throwable suppressed = null;
+				try {
+					jdbcContext.getJdbcConnectionAccess().releaseConnection( jdbcConnection );
+				}
+				catch (SQLException e) {
+					suppressed = jdbcContext.getSqlExceptionHelper().convert(
+							e,
+							"Unable to release JDBC Connection used for DDL execution" );
+				}
+				catch (Throwable t2) {
+					suppressed = t2;
+				}
+				jdbcConnection = null;
+				if ( suppressed != null ) {
+					if ( originalException == null ) {
+						originalException = suppressed;
+					}
+					else {
+						originalException.addSuppressed( suppressed );
+					}
+				}
+			}
+			if ( originalException != null ) {
+				ExceptionHelper.doThrow( originalException );
 			}
 		}
 	}

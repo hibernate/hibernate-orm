@@ -17,8 +17,8 @@
     </parent>
 
     <artifactId>hibernate-tutorial-entitymanager</artifactId>
-    <name>Hibernate JPA Tutorial</name>
-    <description>Hibernate tutorial illustrating the use of JPA APIs and annotations for mapping metadata</description>
+    <name>Hibernate Jakarta Persistence Tutorial</name>
+    <description>Hibernate tutorial illustrating the use of the Jakarta Persistence APIs and annotations for mapping metadata</description>
 
     <properties>
         <!-- Skip artifact deployment -->

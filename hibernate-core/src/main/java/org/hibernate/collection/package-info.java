@@ -1,0 +1,19 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+/**
+ * This package defines a framework for lazy-initializing and state-tracking
+ * collection wrappers.
+ * <p>
+ * The interface {@link org.hibernate.collection.spi.PersistentCollection}
+ * and all its implementations belong to an SPI. They are not part of the
+ * public API of Hibernate, and are not meant to be used directly by typical
+ * programs which use Hibernate for persistence.
+ *
+ * @see org.hibernate.proxy
+ */
+package org.hibernate.collection;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -15,15 +13,21 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies in-memory Set/Map sorting using a specified {@link Comparator} for sorting.
+ * Sort a {@link java.util.Set} or {@link java.util.Map} using the given {@link Comparator}.
+ * <p>
+ * Sorting is performed in memory, by Java's {@link java.util.TreeSet} or {@link java.util.TreeMap},
+ * and is maintained by any operation that mutates the collection.
+ * <ul>
+ * <li>Use {@link SortNatural} to sort by {@linkplain java.util.Comparator natural order}.
+ * <li>Use {@link jakarta.persistence.OrderBy} to order using an expression written in HQL.
+ * <li>Use {@link SQLOrder} to order using an expression written in native SQL.
+ * </ul>
+ * <p>
+ * It is illegal to use both {@code SortComparator} and {@link SortNatural}.
  *
- * NOTE : Sorting is different than ordering (see {@link OrderBy}) which is applied during the SQL SELECT.
- *
- * For sorting based on natural sort order, use {@link SortNatural} instead.  It is illegal to combine
- * {@link SortComparator} and {@link SortNatural}.
- *
- * @see OrderBy
  * @see SortComparator
+ * @see jakarta.persistence.OrderBy
+ * @see SQLOrder
  *
  * @author Steve Ebersole
  */
@@ -31,7 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface SortComparator {
 	/**
-	 * Specifies the comparator class to use.
+	 * A class which implements {@link Comparator Comparator&lt;E&gt;} where {@code E} is the element type.
 	 */
 	Class<? extends Comparator<?>> value();
 }

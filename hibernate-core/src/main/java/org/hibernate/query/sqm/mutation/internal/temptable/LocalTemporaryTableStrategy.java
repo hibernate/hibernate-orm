@@ -1,0 +1,70 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.mutation.internal.temptable;
+
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+
+/**
+ * Strategy based on ANSI SQL's definition of a "local temporary table" (local to each db session).
+ *
+ * @author Steve Ebersole
+ */
+public class LocalTemporaryTableStrategy {
+
+	public static final String SHORT_NAME = "local_temporary";
+	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.local_temporary.drop_tables";
+
+	private final TemporaryTable temporaryTable;
+	private final SessionFactoryImplementor sessionFactory;
+
+	private boolean dropIdTables;
+
+	public LocalTemporaryTableStrategy(
+			TemporaryTable temporaryTable,
+			SessionFactoryImplementor sessionFactory) {
+		this.temporaryTable = temporaryTable;
+		this.sessionFactory = sessionFactory;
+	}
+
+	public void prepare(
+			MappingModelCreationProcess mappingModelCreationProcess,
+			JdbcConnectionAccess connectionAccess) {
+		final ConfigurationService configService =
+				mappingModelCreationProcess.getCreationContext()
+						.getBootstrapContext().getServiceRegistry()
+						.requireService( ConfigurationService.class );
+		this.dropIdTables = configService.getSetting(
+				DROP_ID_TABLES,
+				StandardConverters.BOOLEAN,
+				false
+		);
+	}
+
+	public void release(SessionFactoryImplementor sessionFactory, JdbcConnectionAccess connectionAccess) {
+		// Nothing to do here. This happens through ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions
+	}
+
+	public TemporaryTable getTemporaryTable() {
+		return temporaryTable;
+	}
+
+	public EntityMappingType getEntityDescriptor() {
+		return getTemporaryTable().getEntityDescriptor();
+	}
+
+	public boolean isDropIdTables() {
+		return dropIdTables;
+	}
+
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+}

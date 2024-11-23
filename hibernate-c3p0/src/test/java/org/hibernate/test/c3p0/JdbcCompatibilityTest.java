@@ -1,48 +1,51 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.c3p0;
 
 import java.sql.Statement;
 
-import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests that checks the JDBC 4.2 compatibility of c3p0
- * 
+ *
  * @author Vlad Mihalcea
  */
-@RequiresDialect(SQLServer2005Dialect.class)
-public class JdbcCompatibilityTest extends BaseCoreFunctionalTestCase {
+@RequiresDialect(value = SQLServerDialect.class)
+@DomainModel(
+		annotatedClasses = { IrrelevantEntity.class }
+)
+@SessionFactory
+public class JdbcCompatibilityTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11308" )
-	public void testJdbc41() {
-		doInHibernate( this::sessionFactory, session -> {
+	@JiraKey(value = "HHH-11308")
+	public void testJdbc41(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.doWork( connection -> {
 				//Connection#getSchema was added in Java 1.7
 				String schema = connection.getSchema();
-				assertNotNull(schema);
+				assertNotNull( schema );
 			} );
 		} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11308" )
-	public void testJdbc42() {
-		doInHibernate( this::sessionFactory, session -> {
+	@JiraKey(value = "HHH-11308")
+	public void testJdbc42(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			for ( int i = 0; i < 5; i++ ) {
 				IrrelevantEntity entity = new IrrelevantEntity();
 				entity.setName( getClass().getName() );
@@ -50,16 +53,12 @@ public class JdbcCompatibilityTest extends BaseCoreFunctionalTestCase {
 			}
 			session.flush();
 			session.doWork( connection -> {
-				try( Statement statement = connection.createStatement()) {
+				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "DELETE FROM IrrelevantEntity" );
-					assertEquals( 5, statement.getLargeUpdateCount());
+					assertEquals( 5, statement.getLargeUpdateCount() );
 				}
 			} );
 		} );
 	}
-	
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ IrrelevantEntity.class };
-	}
+
 }

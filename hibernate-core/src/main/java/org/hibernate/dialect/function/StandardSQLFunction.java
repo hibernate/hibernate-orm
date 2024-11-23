@@ -1,108 +1,62 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.List;
+import java.util.function.Supplier;
 
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.type.BasicTypeReference;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Provides a standard implementation that supports the majority of the HQL
- * functions that are translated to SQL. The Dialect and its sub-classes use
- * this class to provide details required for processing of the associated
- * function.
+ * Simplified API allowing users to contribute
+ * {@link org.hibernate.query.sqm.function.SqmFunctionDescriptor}s
+ * to HQL.
  *
  * @author David Channon
  */
-public class StandardSQLFunction implements SQLFunction {
-	private final String name;
-	private final Type registeredType;
+public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
+	private final BasicTypeReference<?> type;
 
-	/**
-	 * Construct a standard SQL function definition with a variable return type;
-	 * the actual return type will depend on the types to which the function
-	 * is applied.
-	 * <p/>
-	 * Using this form, the return type is considered non-static and assumed
-	 * to be the type of the first argument.
-	 *
-	 * @param name The name of the function.
-	 */
 	public StandardSQLFunction(String name) {
 		this( name, null );
 	}
 
-	/**
-	 * Construct a standard SQL function definition with a static return type.
-	 *
-	 * @param name The name of the function.
-	 * @param registeredType The static return type.
-	 */
-	public StandardSQLFunction(String name, Type registeredType) {
-		this.name = name;
-		this.registeredType = registeredType;
+	public StandardSQLFunction(String name, BasicTypeReference<?> type) {
+		this( name, true, type );
 	}
 
-	/**
-	 * Function name accessor
-	 *
-	 * @return The function name.
-	 */
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * Function static return type accessor.
-	 *
-	 * @return The static function return type; or null if return type is
-	 * not static.
-	 */
-	public Type getType() {
-		return registeredType;
-	}
-
-	@Override
-	public boolean hasArguments() {
-		return true;
-	}
-
-	@Override
-	public boolean hasParenthesesIfNoArguments() {
-		return true;
-	}
-
-	@Override
-	public Type getReturnType(Type firstArgumentType, Mapping mapping) {
-		return registeredType == null ? firstArgumentType : registeredType;
-	}
-
-	@Override
-	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
-		final StringBuilder buf = new StringBuilder();
-		buf.append( getRenderedName( arguments) ).append( '(' );
-		for ( int i = 0; i < arguments.size(); i++ ) {
-			buf.append( arguments.get( i ) );
-			if ( i < arguments.size() - 1 ) {
-				buf.append( ", " );
+	public StandardSQLFunction(String name, boolean useParentheses, BasicTypeReference<?> type) {
+		super( name, useParentheses, null, new FunctionReturnTypeResolver() {
+			@Override
+			public ReturnableType<?> resolveFunctionReturnType(
+					ReturnableType<?> impliedType,
+					@Nullable SqmToSqlAstConverter converter,
+					List<? extends SqmTypedNode<?>> arguments,
+					TypeConfiguration typeConfiguration) {
+				return type == null ? null : typeConfiguration.getBasicTypeRegistry().resolve( type );
 			}
-		}
-		return buf.append( ')' ).toString();
+
+			@Override
+			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+				return type == null || impliedTypeAccess == null ? null : impliedTypeAccess.get();
+			}
+		} );
+		this.type = type;
 	}
 
-	protected String getRenderedName(List arguments) {
-		return getName();
+	public BasicTypeReference<?> getType() {
+		return type;
 	}
-
-	@Override
-	public String toString() {
-		return name;
-	}
-
 }

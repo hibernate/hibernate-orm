@@ -1,17 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import javax.persistence.TemporalType;
 
-import org.hibernate.type.Type;
+import org.hibernate.query.BindableType;
+import org.hibernate.query.QueryArgumentException;
+import org.hibernate.query.BindingContext;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Andrea Boriero
@@ -23,40 +26,69 @@ public class QueryParameterBindingValidator {
 	private QueryParameterBindingValidator() {
 	}
 
-	public <P> void validate(Type paramType, Object bind) {
-		validate( paramType, bind, null );
+	public void validate(BindableType<?> paramType, Object bind, BindingContext bindingContext) {
+		validate( paramType, bind, null, bindingContext);
 	}
 
-	public <P> void validate(Type paramType, Object bind, TemporalType temporalType) {
+	public void validate(
+			BindableType<?> paramType,
+			Object bind,
+			TemporalType temporalPrecision,
+			BindingContext bindingContext) {
 		if ( bind == null || paramType == null ) {
 			// nothing we can check
 			return;
 		}
-		final Class parameterType = paramType.getReturnedClass();
-		if ( parameterType == null ) {
+
+		final Class<?> parameterJavaType;
+		final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible(bindingContext);
+		if ( paramType.getBindableJavaType() != null ) {
+			parameterJavaType = paramType.getBindableJavaType();
+		}
+		else {
+			parameterJavaType = sqmExpressible.getBindableJavaType();
+		}
+
+		if ( parameterJavaType == null ) {
 			// nothing we can check
 			return;
 		}
 
-		if ( Collection.class.isInstance( bind ) && !Collection.class.isAssignableFrom( parameterType ) ) {
+		if ( bind instanceof Collection && !Collection.class.isAssignableFrom( parameterJavaType ) ) {
 			// we have a collection passed in where we are expecting a non-collection.
 			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
 			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
 			//			will fall through to the main check.
-			validateCollectionValuedParameterBinding( parameterType, (Collection) bind, temporalType );
+			validateCollectionValuedParameterBinding(
+					parameterJavaType,
+					(Collection<?>) bind,
+					temporalPrecision
+			);
 		}
 		else if ( bind.getClass().isArray() ) {
-			validateArrayValuedParameterBinding( parameterType, bind, temporalType );
+			validateArrayValuedParameterBinding(
+					parameterJavaType,
+					bind,
+					temporalPrecision
+			);
 		}
 		else {
-			if ( !isValidBindValue( parameterType, bind, temporalType ) ) {
-				throw new IllegalArgumentException(
+			if ( !isValidBindValue(
+					sqmExpressible.getExpressibleJavaType(),
+					parameterJavaType,
+					bind,
+					temporalPrecision
+			) ) {
+				throw new QueryArgumentException(
 						String.format(
-								"Parameter value [%s] did not match expected type [%s (%s)]",
+								"Argument [%s] of type [%s] did not match parameter type [%s (%s)]",
 								bind,
-								parameterType.getName(),
-								extractName( temporalType )
-						)
+								bind.getClass().getName(),
+								parameterJavaType.getName(),
+								extractName( temporalPrecision )
+						),
+						parameterJavaType,
+						bind
 				);
 			}
 		}
@@ -67,49 +99,78 @@ public class QueryParameterBindingValidator {
 	}
 
 	private void validateCollectionValuedParameterBinding(
-			Class parameterType,
-			Collection value,
+			Class<?> parameterType,
+			Collection<?> value,
 			TemporalType temporalType) {
 		// validate the elements...
 		for ( Object element : value ) {
 			if ( !isValidBindValue( parameterType, element, temporalType ) ) {
-				throw new IllegalArgumentException(
+				throw new QueryArgumentException(
 						String.format(
 								"Parameter value element [%s] did not match expected type [%s (%s)]",
 								element,
 								parameterType.getName(),
 								extractName( temporalType )
 						)
+						,
+						parameterType,
+						element
 				);
 			}
 		}
 	}
 
-	private static boolean isValidBindValue(Class expectedType, Object value, TemporalType temporalType) {
+	private static boolean isValidBindValue(
+			JavaType<?> expectedJavaType,
+			Class<?> expectedType,
+			Object value,
+			TemporalType temporalType) {
+		if ( value == null ) {
+			return true;
+		}
+		else if ( expectedJavaType.isInstance( value ) ) {
+			return true;
+		}
+		else if ( temporalType != null ) {
+			final boolean parameterDeclarationIsTemporal = Date.class.isAssignableFrom( expectedType )
+					|| Calendar.class.isAssignableFrom( expectedType );
+			final boolean bindIsTemporal = value instanceof Date
+					|| value instanceof Calendar;
+
+			return parameterDeclarationIsTemporal && bindIsTemporal;
+		}
+
+		return false;
+	}
+
+	private static boolean isValidBindValue(
+			Class<?> expectedType,
+			Object value,
+			TemporalType temporalType) {
 		if ( expectedType.isPrimitive() ) {
 			if ( expectedType == boolean.class ) {
-				return Boolean.class.isInstance( value );
+				return value instanceof Boolean;
 			}
 			else if ( expectedType == char.class ) {
-				return Character.class.isInstance( value );
+				return value instanceof Character;
 			}
 			else if ( expectedType == byte.class ) {
-				return Byte.class.isInstance( value );
+				return value instanceof Byte;
 			}
 			else if ( expectedType == short.class ) {
-				return Short.class.isInstance( value );
+				return value instanceof Short;
 			}
 			else if ( expectedType == int.class ) {
-				return Integer.class.isInstance( value );
+				return value instanceof Integer;
 			}
 			else if ( expectedType == long.class ) {
-				return Long.class.isInstance( value );
+				return value instanceof Long;
 			}
 			else if ( expectedType == float.class ) {
-				return Float.class.isInstance( value );
+				return value instanceof Float;
 			}
 			else if ( expectedType == double.class ) {
-				return Double.class.isInstance( value );
+				return value instanceof Double;
 			}
 			return false;
 		}
@@ -122,28 +183,28 @@ public class QueryParameterBindingValidator {
 		else if ( temporalType != null ) {
 			final boolean parameterDeclarationIsTemporal = Date.class.isAssignableFrom( expectedType )
 					|| Calendar.class.isAssignableFrom( expectedType );
-			final boolean bindIsTemporal = Date.class.isInstance( value )
-					|| Calendar.class.isInstance( value );
+			final boolean bindIsTemporal = value instanceof Date
+					|| value instanceof Calendar;
 
-			if ( parameterDeclarationIsTemporal && bindIsTemporal ) {
-				return true;
-			}
+			return parameterDeclarationIsTemporal && bindIsTemporal;
 		}
 
 		return false;
 	}
 
 	private void validateArrayValuedParameterBinding(
-			Class parameterType,
+			Class<?> parameterType,
 			Object value,
 			TemporalType temporalType) {
 		if ( !parameterType.isArray() ) {
-			throw new IllegalArgumentException(
+			throw new QueryArgumentException(
 					String.format(
 							"Encountered array-valued parameter binding, but was expecting [%s (%s)]",
 							parameterType.getName(),
 							extractName( temporalType )
-					)
+					),
+					parameterType,
+					value
 			);
 		}
 
@@ -151,13 +212,15 @@ public class QueryParameterBindingValidator {
 			// we have a primitive array.  we validate that the actual array has the component type (type of elements)
 			// we expect based on the component type of the parameter specification
 			if ( !parameterType.getComponentType().isAssignableFrom( value.getClass().getComponentType() ) ) {
-				throw new IllegalArgumentException(
+				throw new QueryArgumentException(
 						String.format(
 								"Primitive array-valued parameter bind value type [%s] did not match expected type [%s (%s)]",
 								value.getClass().getComponentType().getName(),
 								parameterType.getName(),
 								extractName( temporalType )
-						)
+						),
+						parameterType,
+						value
 				);
 			}
 		}
@@ -167,13 +230,15 @@ public class QueryParameterBindingValidator {
 			final Object[] array = (Object[]) value;
 			for ( Object element : array ) {
 				if ( !isValidBindValue( parameterType.getComponentType(), element, temporalType ) ) {
-					throw new IllegalArgumentException(
+					throw new QueryArgumentException(
 							String.format(
 									"Array-valued parameter value element [%s] did not match expected type [%s (%s)]",
 									element,
 									parameterType.getName(),
 									extractName( temporalType )
-							)
+							),
+							parameterType,
+							array
 					);
 				}
 			}

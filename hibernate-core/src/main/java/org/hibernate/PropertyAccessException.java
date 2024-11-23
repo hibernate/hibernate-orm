@@ -1,32 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.qualify;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A problem occurred accessing a property of an instance of a
  * persistent class by reflection, or via enhanced entities.
- * There are a number of possible underlying causes, including
+ * There are a number of possible underlying causes, including:
  * <ul>
- * <li>failure of a security check
- * <li>an exception occurring inside the getter or setter method
- * <li>a nullable database column was mapped to a primitive-type property
- * <li>the Hibernate type was not castable to the property type (or vice-versa)
+ * <li>failure of a security check,
+ * <li>an exception occurring inside the getter or setter method,
+ * <li>a nullable database column was mapped to a primitive-type
+ *     property, or
+ * <li>the Hibernate type was not castable to the property type
+ *     (or vice-versa)
  * </ul>
+ *
  * @author Gavin King
  */
 public class PropertyAccessException extends HibernateException {
-	private final Class persistentClass;
+	private final Class<?> persistentClass;
 	private final String propertyName;
 	private final boolean wasSetter;
 
 	/**
-	 * Constructs a PropertyAccessException using the specified information.
+	 * Constructs a {@code PropertyAccessException} using the specified information.
 	 *
 	 * @param cause The underlying cause
 	 * @param message A message explaining the exception condition
@@ -35,10 +38,10 @@ public class PropertyAccessException extends HibernateException {
 	 * @param propertyName The name of the property.
 	 */
 	public PropertyAccessException(
-			Throwable cause,
+			@Nullable Throwable cause,
 			String message,
 			boolean wasSetter,
-			Class persistentClass,
+			Class<?> persistentClass,
 			String propertyName) {
 		super( message, cause );
 		this.persistentClass = persistentClass;
@@ -46,7 +49,7 @@ public class PropertyAccessException extends HibernateException {
 		this.propertyName = propertyName;
 	}
 
-	public Class getPersistentClass() {
+	public Class<?> getPersistentClass() {
 		return persistentClass;
 	}
 
@@ -61,7 +64,7 @@ public class PropertyAccessException extends HibernateException {
 	@Override
 	public String getMessage() {
 		return originalMessage()
-				+ ( wasSetter ? " setter of " : " getter of " )
-				+ StringHelper.qualify( persistentClass.getName(), propertyName );
+				+ ": '" + qualify( persistentClass.getName(), propertyName ) + "'"
+				+ ( wasSetter ? " (setter)" : " (getter)" );
 	}
 }

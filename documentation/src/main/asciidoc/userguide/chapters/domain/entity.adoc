@@ -1,9 +1,11 @@
 ﻿[[entity]]
 === Entity types
-:sourcedir-locking: ../../../../../test/java/org/hibernate/userguide/locking
-:sourcedir-mapping: ../../../../../test/java/org/hibernate/userguide/mapping
-:sourcedir-proxy: ../../../../../test/java/org/hibernate/userguide/proxy
-:sourcedir-persister: ../../../../../test/java/org/hibernate/userguide/persister
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:example-dir-mapping: {core-test-base}/mapping
+:example-dir-proxy: {core-test-base}/proxy
+:example-dir-persister: {core-test-base}/persister
 :extrasdir: extras
 
 .Usage of the word _entity_
@@ -18,10 +20,10 @@ Throughout this chapter and thereafter, entity types will be simply referred to 
 [[entity-pojo]]
 ==== POJO Models
 
-Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines its requirements for an entity class.
-Applications that wish to remain portable across JPA providers should adhere to these requirements:
+Section _2.1 The Entity Class_ of the _Java Persistence 2.1 specification_ defines its requirements for an entity class.
+Applications that wish to remain portable across Jakarta Persistence providers should adhere to these requirements:
 
-* The entity class must be annotated with the `javax.persistence.Entity` annotation (or be denoted as such in XML mapping).
+* The entity class must be annotated with the `jakarta.persistence.Entity` annotation (or be denoted as such in XML mapping).
 * The entity class must have a public or protected no-argument constructor. It may define additional constructors as well.
 * The entity class must be a top-level class.
 * An enum or interface may not be designated as an entity.
@@ -62,16 +64,16 @@ See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enha
 [[entity-pojo-constructor]]
 ==== Implement a no-argument constructor
 
-The entity class should have a no-argument constructor. Both Hibernate and JPA require this.
+The entity class should have a no-argument constructor. Both Hibernate and Jakarta Persistence require this.
 
-JPA requires that this constructor be defined as public or protected.
-Hibernate, for the most part, does not care about the constructor visibility, as long as the system SecurityManager allows overriding the visibility setting.
+Jakarta Persistence requires that this constructor be defined as public or protected.
+Hibernate, for the most part, does not care about the constructor visibility, and will override the visibility setting.
 That said, the constructor should be defined with at least package visibility if you wish to leverage runtime proxy generation.
 
 [[entity-pojo-accessors]]
 ==== Declare getters and setters for persistent attributes
 
-The JPA specification requires this, otherwise, the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
+The Jakarta Persistence specification requires this, otherwise, the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
 
 Although Hibernate does not require it, it is recommended to follow the JavaBean conventions and define getters and setters for entity persistent attributes.
 Nevertheless, you can still tell Hibernate to directly access the entity fields.
@@ -105,7 +107,7 @@ The placement of the `@Id` annotation marks the <<chapters/domain/access.adoc#ac
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identifier-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identifier-mapping-example, indent=0]
 ----
 ====
 
@@ -114,7 +116,7 @@ Hibernate offers multiple identifier generation strategies, see the <<chapters/d
 [[entity-pojo-mapping]]
 ==== Mapping the entity
 
-The main piece in mapping the entity is the {jpaJavadocUrlPrefix}Entity.html[`javax.persistence.Entity`] annotation.
+The main piece in mapping the entity is the {jpaJavadocUrlPrefix}Entity.html[`jakarta.persistence.Entity`] annotation.
 
 The `@Entity` annotation defines just the {jpaJavadocUrlPrefix}Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
 
@@ -134,7 +136,7 @@ In the following example, the entity name (e.g. `Book`) is given by the unqualif
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/Book.java[tag=entity-pojo-mapping-implicit-name-example, indent=0]
+include::{example-dir-mapping}/identifier/Book.java[tag=entity-pojo-mapping-implicit-name-example, indent=0]
 ----
 ====
 
@@ -145,21 +147,21 @@ However, the entity name can also be set explicitly as illustrated by the follow
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-mapping-example, indent=0]
 ----
 ====
 
 An entity models a database table.
 The identifier uniquely identifies each row in that table.
 By default, the name of the table is assumed to be the same as the name of the entity.
-To explicitly give the name of the table or to specify other information about the table, we would use the `javax.persistence.Table` annotation.
+To explicitly give the name of the table or to specify other information about the table, we would use the `jakarta.persistence.Table` annotation.
 
 [[entity-pojo-table-mapping-example]]
 .Simple `@Entity` with `@Table`
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-pojo-table-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-pojo-table-mapping-example, indent=0]
 ----
 ====
 
@@ -168,7 +170,7 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-po
 
 Without specifying the catalog of the associated database table a given entity is mapped to, Hibernate will use the default catalog associated with the current database connection.
 
-However, if your database hosts multiple catalogs, you can specify the catalog where a given table is located using the `catalog` attribute of the JPA {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
+However, if your database hosts multiple catalogs, you can specify the catalog where a given table is located using the `catalog` attribute of the Jakarta Persistence {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
 
 Let's assume we are using MySQL and want to map a `Book` entity to the `book` table located in the `public` catalog
 which looks as follows.
@@ -182,14 +184,14 @@ include::{extrasdir}/entity/mapping-post-table-catalog-mysql-example.sql[]
 ----
 ====
 
-Now, to map the `Book` entity to the `book` table in the `public` catalog we can use the `catalog` attribute of the `@Table` JPA annotation.
+Now, to map the `Book` entity to the `book` table in the `public` catalog we can use the `catalog` attribute of the `@Table` Jakarta Persistence annotation.
 
 [[mapping-entity-table-catalog-mysql-example]]
 .Specifying the database catalog using the `@Table` annotation
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-entity-table-catalog-mysql-example, indent=0]
+include::{example-dir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-entity-table-catalog-mysql-example, indent=0]
 ----
 ====
 
@@ -198,7 +200,7 @@ include::{sourcedir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-
 
 Without specifying the schema of the associated database table a given entity is mapped to, Hibernate will use the default schema associated with the current database connection.
 
-However, if your database supports schemas, you can specify the schema where a given table is located using the `schema` attribute of the JPA {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
+However, if your database supports schemas, you can specify the schema where a given table is located using the `schema` attribute of the Jakarta Persistence {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
 
 Let's assume we are using PostgreSQL and want to map a `Book` entity to the `book` table located in the `library` schema
 which looks as follows.
@@ -212,14 +214,14 @@ include::{extrasdir}/entity/mapping-post-table-schema-postgresql-example.sql[]
 ----
 ====
 
-Now, to map the `Book` entity to the `book` table in the `library` schema we can use the `schema` attribute of the `@Table` JPA annotation.
+Now, to map the `Book` entity to the `book` table in the `library` schema we can use the `schema` attribute of the `@Table` Jakarta Persistence annotation.
 
-[[mapping-entity-table-catalog-mysql-example]]
+[[mapping-entity-table-catalog-postgresql-example]]
 .Specifying the database schema using the `@Table` annotation
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/EntityTableSchemaTest.java[tag=mapping-entity-table-schema-postgresql-example, indent=0]
+include::{example-dir-mapping}/identifier/EntityTableSchemaTest.java[tag=mapping-entity-table-schema-postgresql-example, indent=0]
 ----
 ====
 
@@ -261,7 +263,7 @@ So if we ask a Hibernate `Session` to load that specific Person multiple times w
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-identity-scope-example, indent=0]
 ----
 ====
 
@@ -272,7 +274,7 @@ Consider we have a `Library` parent entity which contains a `java.util.Set` of `
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-mapping-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-mapping-example, indent=0]
 ----
 ====
 
@@ -281,7 +283,7 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-se
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-set-identity-scope-example, indent=0]
 ----
 ====
 
@@ -292,12 +294,12 @@ However, the semantic changes when we mix instances loaded from different Sessio
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-identity-scope-example, indent=0]
 ----
 
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-set-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-multi-session-set-identity-scope-example, indent=0]
 ----
 ====
 
@@ -314,7 +316,7 @@ Consider yet another case:
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-transient-set-identity-scope-example, indent=0]
+include::{example-dir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-transient-set-identity-scope-example, indent=0]
 ----
 ====
 
@@ -329,7 +331,7 @@ A common initial approach is to use the entity's identifier attribute as the bas
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-example, indent=0]
+include::{example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-example, indent=0]
 ----
 ====
 
@@ -340,13 +342,13 @@ It turns out that this still breaks when adding transient instance of `Book` to 
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-example, indent=0]
+include::{example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-example, indent=0]
 ----
 ====
 
 The issue here is a conflict between the use of the generated identifier, the contract of `Set`, and the equals/hashCode implementations.
 `Set` says that the equals/hashCode value for an object should not change while the object is part of the `Set`.
-But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the JPA transaction is committed.
+But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the Jakarta Persistence transaction is committed.
 
 Note that this is just a concern when using generated identifiers.
 If you are using assigned identifiers this will not be a problem, assuming the identifier value is assigned prior to adding to the `Set`.
@@ -358,7 +360,7 @@ Another option is to force the identifier to be generated and set prior to addin
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-force-flush-example, indent=0]
+include::{example-dir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=entity-pojo-naive-equals-hashcode-persist-force-flush-example, indent=0]
 ----
 ====
 
@@ -371,7 +373,7 @@ The final approach is to use a "better" equals/hashCode implementation, making u
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-example, indent=0]
+include::{example-dir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-example, indent=0]
 ----
 ====
 
@@ -382,7 +384,7 @@ This time, when adding a `Book` to the `Library` `Set`, you can retrieve the `Bo
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-persist-example, indent=0]
+include::{example-dir-mapping}/identifier/NaturalIdEqualsHashCodeEntityTest.java[tag=entity-pojo-natural-id-equals-hashcode-persist-example, indent=0]
 ----
 ====
 
@@ -410,7 +412,7 @@ You can map an entity to a SQL query using the https://docs.jboss.org/hibernate/
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
+include::{example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-example,indent=0]
 ----
 ====
 
@@ -426,8 +428,14 @@ So, if we have the following `AccountTransaction` record, the `AccountSummary` b
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
+include::{example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-find-example,indent=0]
 ----
+====
+
+[NOTE]
+====
+The underlying `@Subselect` SQL query supports standard Hibernate placeholders ( see <<chapters/query/native/Native.adoc#sql-global-catalog-schema,Catalog and schema in SQL queries>> ).
+Global settings can be overridden using the `schema` or `catalog` attributes of the `@Table` annotation.
 ====
 
 If we add a new `AccountTransaction` entity and refresh the `AccountSummary` entity, the balance is updated accordingly:
@@ -437,7 +445,7 @@ If we add a new `AccountTransaction` entity and refresh the `AccountSummary` ent
 ====
 [source,java]
 ----
-include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
+include::{example-dir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-entity-refresh-example,indent=0]
 ----
 ====
 
@@ -451,137 +459,58 @@ when executing an HQL or JPQL which selects from the `AccountSummary` entity,
 Hibernate will trigger a Persistence Context flush if there are pending `Account`, `Client` or `AccountTransaction` entity state transitions.
 ====
 
-[[entity-proxy]]
-==== Define a custom entity proxy
+[[concrete-proxy]]
+==== Create proxies that resolve their inheritance subtype
 
-By default, when it needs to use a proxy instead of the actual POJO, Hibernate is going to use a Bytecode manipulation library like
-http://jboss-javassist.github.io/javassist/[Javassist] or
-http://bytebuddy.net/[Byte Buddy].
+When working with lazy associations or entity references for types that define and inheritance hierarchy Hibernate often creates proxies starting from the root class, with no information about the actual subtype that's referenced by the lazy instance. This can be a problem when using `instanceof` to check the type of said lazy entity references or when trying to cast to the concrete subtype.
 
-However, if the entity class is final, Javassist will not create a proxy and you will get a POJO even when you only need a proxy reference.
-In this case, you could proxy an interface that this particular entity implements, as illustrated by the following example.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation can be used on an entity hierarchy root mapping to specify that Hibernate should always try to resolve the actual subtype corresponding to the proxy instance created. This effectively means that proxies for that entity hierarchy will always be created from the correct subclass, allowing to preserve laziness and enable using type checks and casts.
 
-[[entity-proxy-interface-mapping]]
-.Final entity class implementing the `Identifiable` interface
+[[entity-concrete-proxy-mapping]]
+.Root entity class annotated with `@ConcreteProxy`
 ====
 [source,java]
 ----
-include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-interface-mapping,indent=0]
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-mapping,indent=0]
 ----
 ====
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Proxy.html[`@Proxy`]
-annotation is used to specify a custom proxy implementation for the current annotated entity.
+In the following example we load the parent's lazy association and resolve to the concrete `SingleSubChild1` type:
 
-When loading the `Book` entity proxy, Hibernate is going to proxy the `Identifiable` interface instead as illustrated by the following example:
-
-[[entity-proxy-persist-mapping]]
-.Proxying the final entity class implementing the `Identifiable` interface
+[[entity-concrete-proxy-find]]
+.Loading parent entity with lazy association
 ====
 [source,java]
 ----
-include::{sourcedir-proxy}/ProxyInterfaceTest.java[tag=entity-proxy-persist-mapping,indent=0]
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-find,indent=0]
 ----
 
 [source,sql]
 ----
-include::{extrasdir}/entity/entity-proxy-persist-mapping.sql[]
+include::{extrasdir}/entity/entity-concrete-proxy-find.sql[]
 ----
 ====
 
-As you can see in the associated SQL snippet, Hibernate issues no SQL SELECT query since the proxy can be
-constructed without needing to fetch the actual entity POJO.
+IMPORTANT: This added functionality does not come free: in order to determine the concrete type to use when creating the Proxy instance, Hibernate might need to access the association target's table(s) to discover the actual subtype corresponding to a specific identifier value.
 
-[[entity-tuplizer]]
-==== Dynamic entity proxies using the @Tuplizer annotation
+The concrete type will be determined:
 
-It is possible to map your entities as dynamic proxies using
-the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation.
+* With *single table* inheritance, the discriminator column value will be left joined when fetching associations or simply read from the entity table when getting references.
+* When using *joined* inheritance, all subtype tables will need to be left joined to determine the concrete type. Note however that when using an explicit discriminator column, the behavior is the same as for single-table inheritance.
+* Finally, for *table-per-class* inheritance, all subtype tables will need to be (union) queried to determine the concrete type.
 
-In the following entity mapping, both the embeddable and the entity are mapped as interfaces, not POJOs.
+In the following example, you can see how Hibernate issues a query to resolve the concrete proxy type for an entity reference:
 
-[[entity-tuplizer-entity-mapping]]
-.Dynamic entity proxy mapping
+[[entity-concrete-proxy-reference]]
+.Resolving the concrete proxy type for `getReference()`:
 ====
 [source,java]
 ----
-include::{sourcedir-proxy}/tuplizer/Cuisine.java[tag=entity-tuplizer-entity-mapping,indent=0]
+include::{example-dir-proxy}/concrete/AbstractConcreteProxyTest.java[tag=entity-concrete-proxy-reference,indent=0]
 ----
 
-[source,java]
+[source,sql]
 ----
-include::{sourcedir-proxy}/tuplizer/Country.java[tag=entity-tuplizer-entity-mapping,indent=0]
+include::{extrasdir}/entity/entity-concrete-proxy-reference.sql[]
 ----
 ====
-
-The `@Tuplizer` instructs Hibernate to use the `DynamicEntityTuplizer` and `DynamicEmbeddableTuplizer` to handle
-the associated entity and embeddable object types.
-
-Both the `Cuisine` entity and the `Country` embeddable types are going to be instantiated as Java dynamic proxies,
-as you can see in the following `DynamicInstantiator` example:
-
-[[entity-tuplizer-instantiator]]
-.Instantiating entities and embeddables as dynamic proxies
-====
-[source,java]
-----
-include::{sourcedir-proxy}/tuplizer/DynamicEntityTuplizer.java[tag=entity-tuplizer-instantiator,indent=0]
-----
-
-[source,java]
-----
-include::{sourcedir-proxy}/tuplizer/DynamicEmbeddableTuplizer.java[tag=entity-tuplizer-instantiator,indent=0]
-----
-
-[source,java]
-----
-include::{sourcedir-proxy}/tuplizer/DynamicInstantiator.java[tag=entity-tuplizer-instantiator,indent=0]
-----
-
-[source,java]
-----
-include::{sourcedir-proxy}/tuplizer/ProxyHelper.java[tag=entity-tuplizer-instantiator,indent=0]
-----
-
-[source,java]
-----
-include::{sourcedir-proxy}/tuplizer/DataProxyHandler.java[tag=entity-tuplizer-instantiator,indent=0]
-----
-====
-
-With the `DynamicInstantiator` in place, we can work with the dynamic proxy entities just like with POJO entities.
-
-[[entity-tuplizer-dynamic-proxy-example]]
-.Persisting entities and embeddables as dynamic proxies
-====
-[source,java]
-----
-include::{sourcedir-proxy}/tuplizer/TuplizerTest.java[tag=entity-tuplizer-dynamic-proxy-example,indent=0]
-----
-====
-
-[[entity-persister]]
-==== Define a custom entity persister
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Persister.html[`@Persister`] annotation is used to specify a custom entity or collection persister.
-
-For entities, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/entity/EntityPersister.html[`EntityPersister`] interface.
-
-For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
-
-[[entity-persister-mapping]]
-.Entity persister mapping
-====
-[source,java]
-----
-include::{sourcedir-persister}/Author.java[tag=entity-persister-mapping,indent=0]
-----
-
-[source,java]
-----
-include::{sourcedir-persister}/Book.java[tag=entity-persister-mapping,indent=0]
-----
-====
-
-By providing your own `EntityPersister` and `CollectionPersister` implementations,
-you can control how entities and collections are persisted into the database.

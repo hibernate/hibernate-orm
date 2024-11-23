@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.PropertyPath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * An ImplicitNamingStrategy implementation which uses full composite paths
@@ -37,7 +35,7 @@ public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrat
 			process( parent, sb );
 			sb.append( '_' );
 		}
-		else if ( PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( property ) ) {
+		else if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property ) ) {
 			// skip it, do not pass go
 			sb.append( "id" );
 			return;

@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.Iterator;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.MappingContext;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * Indexed collections include Lists, Maps, arrays and
@@ -24,62 +24,68 @@ public abstract class IndexedCollection extends Collection {
 
 	private Value index;
 
-	/**
-	 * @deprecated Use {@link IndexedCollection#IndexedCollection(MetadataBuildingContext, PersistentClass)} insetad.
-	 */
-	@Deprecated
-	public IndexedCollection(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
 	public IndexedCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	public IndexedCollection(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, owner, buildingContext );
+	}
+
+	protected IndexedCollection(IndexedCollection original) {
+		super( original );
+		this.index = original.index == null ? null : original.index.copy();
 	}
 
 	public Value getIndex() {
 		return index;
 	}
+
 	public void setIndex(Value index) {
 		this.index = index;
 	}
+
 	public final boolean isIndexed() {
 		return true;
 	}
 
+	public boolean hasMapKeyProperty() {
+		return false;
+	}
+
 	@Override
 	public boolean isSame(Collection other) {
-		return other instanceof IndexedCollection
-				&& isSame( (IndexedCollection) other );
+		return other instanceof IndexedCollection indexedCollection
+			&& isSame( indexedCollection );
 	}
 
 	public boolean isSame(IndexedCollection other) {
 		return super.isSame( other )
-				&& isSame( index, other.index );
+			&& isSame( index, other.index );
 	}
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
-			pk.addColumns( getKey().getColumnIterator() );
+			final PrimaryKey pk = new PrimaryKey( getCollectionTable() );
+			pk.addColumns( getKey() );
 
 			// index should be last column listed
-			boolean isFormula = false;
-			Iterator iter = getIndex().getColumnIterator();
-			while ( iter.hasNext() ) {
-				if ( ( (Selectable) iter.next() ).isFormula() ) {
-					isFormula=true;
+			boolean indexIsPartOfElement = false;
+			for ( Selectable selectable: getIndex().getSelectables() ) {
+				if ( selectable.isFormula() || !getCollectionTable().containsColumn( (Column) selectable ) ) {
+					indexIsPartOfElement = true;
 				}
 			}
-			if (isFormula) {
-				//if it is a formula index, use the element columns in the PK
-				pk.addColumns( getElement().getColumnIterator() );
+			if ( indexIsPartOfElement ) {
+				//if it is part of the element, use the element columns in the PK
+				pk.addColumns( getElement() );
 			}
 			else {
-				pk.addColumns( getIndex().getColumnIterator() );
+				pk.addColumns( getIndex() );
 			}
 			getCollectionTable().setPrimaryKey(pk);
 		}
-		else {
+//		else {
 			// don't create a unique key, 'cos some
 			// databases don't like a UK on nullable
 			// columns
@@ -87,23 +93,29 @@ public abstract class IndexedCollection extends Collection {
 			list.addAll( getKey().getConstraintColumns() );
 			list.addAll( getIndex().getConstraintColumns() );
 			getCollectionTable().createUniqueKey(list);*/
-		}
+//		}
 	}
 
+	@Deprecated
 	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+		validate( (MappingContext) mapping);
+	}
+
+	public void validate(MappingContext mappingContext) throws MappingException {
+		super.validate( mappingContext );
 
 		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
 
-		if ( !getIndex().isValid(mapping) ) {
+		if ( !getIndex().isValid( mappingContext ) ) {
 			throw new MappingException(
-				"collection index mapping has wrong number of columns: " +
-				getRole() +
-				" type: " +
-				getIndex().getType().getName()
+					"collection index mapping has wrong number of columns: " +
+							getRole() +
+							" type: " +
+							getIndex().getType().getName()
 			);
 		}
 	}
+
 
 	public boolean isList() {
 		return false;

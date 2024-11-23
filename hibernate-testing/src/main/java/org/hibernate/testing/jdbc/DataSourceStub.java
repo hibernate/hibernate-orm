@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jdbc;
 
@@ -14,6 +12,7 @@ import javax.sql.DataSource;
 
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 /**
@@ -27,7 +26,7 @@ public class DataSourceStub implements DataSource {
 	public DataSourceStub(String id) {
 		this.id = id;
 		connectionProvider = new DriverManagerConnectionProviderImpl();
-		connectionProvider.configure( ConnectionProviderBuilder.getConnectionProviderProperties() );
+		connectionProvider.configure( PropertiesHelper.map( ConnectionProviderBuilder.getConnectionProviderProperties() ) );
 
 		printWriter = null;
 	}

@@ -1,3 +1,4 @@
+[[registries-guide]]
 = Services and Registries
 :imagesdir: images
 :toc:
@@ -343,7 +344,7 @@ service to be injected is optional, use `InjectService#required=false`.
 Once built, a ServiceRegistry is generally considered immutable.  The Services themselves might accept
 re-configuration, but immutability here means adding/replacing services.  So all the services hosted in a particular
 ServiceRegistry must be known up-front.  To this end, building a ServiceRegistry usually employees a
-http://en.wikipedia.org/wiki/Builder_pattern[builder^].
+https://en.wikipedia.org/wiki/Builder_pattern[builder^].
 
 === Building BootstrapServiceRegistry
 

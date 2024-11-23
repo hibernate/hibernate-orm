@@ -1,24 +1,46 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.projection;
 
+import java.util.Map;
+
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public interface AuditProjection {
+
 	/**
-	 * @param enversService The EnversService
+	 * Adds an audit projection to the specified query.
 	 *
-	 * @return the projection data
+	 * @param enversService the Envers service
+	 * @param auditReader the audit reader implementor
+	 * @param aliasToEntityNameMap the entity name alias map
+	 * @param baseAlias the base alias, if one is specified; may be {@literal null}
+	 * @param queryBuilder the query builder
 	 */
-	ProjectionData getData(EnversService enversService);
+	void addProjectionToQuery(
+			EnversService enversService,
+			AuditReaderImplementor auditReader,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			String baseAlias,
+			QueryBuilder queryBuilder);
+
+	/**
+	 * Get the alias associated with the audit projection.
+	 *
+	 * @param baseAlias the base alias if one exists; may be {@literal null}
+	 * @return the alias
+	 */
+	String getAlias(String baseAlias);
 
 	/**
 	 * @param enversService the Envers service
@@ -36,35 +58,4 @@ public interface AuditProjection {
 			final Object value
 	);
 
-	class ProjectionData {
-
-		private final String function;
-		private final String alias;
-		private final String propertyName;
-		private final boolean distinct;
-
-		public ProjectionData(String function, String alias, String propertyName, boolean distinct) {
-			this.function = function;
-			this.alias = alias;
-			this.propertyName = propertyName;
-			this.distinct = distinct;
-		}
-
-		public String getFunction() {
-			return function;
-		}
-
-		public String getAlias(String baseAlias) {
-			return alias == null ? baseAlias : alias;
-		}
-
-		public String getPropertyName() {
-			return propertyName;
-		}
-
-		public boolean isDistinct() {
-			return distinct;
-		}
-
-	}
 }

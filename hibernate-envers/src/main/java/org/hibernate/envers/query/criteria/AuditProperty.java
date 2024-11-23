@@ -1,16 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.criteria;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
+import org.hibernate.envers.query.criteria.internal.CriteriaTools;
+import org.hibernate.envers.query.criteria.internal.FunctionPropertyAuditExpression;
 import org.hibernate.envers.query.criteria.internal.IlikeAuditExpression;
 import org.hibernate.envers.query.criteria.internal.InAuditExpression;
 import org.hibernate.envers.query.criteria.internal.NotNullAuditExpression;
@@ -29,6 +32,7 @@ import org.hibernate.envers.query.projection.internal.PropertyAuditProjection;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 @SuppressWarnings({"JavaDoc"})
 public class AuditProperty<T> implements AuditProjection {
@@ -38,6 +42,15 @@ public class AuditProperty<T> implements AuditProjection {
 	public AuditProperty(String alias, PropertyNameGetter propertyNameGetter) {
 		this.alias = alias;
 		this.propertyNameGetter = propertyNameGetter;
+	}
+
+	@Override
+	public String getAlias(String baseAlias) {
+		return alias == null ? baseAlias : alias;
+	}
+
+	public PropertyNameGetter getPropertyNameGetter() {
+		return propertyNameGetter;
 	}
 
 	public AuditCriterion hasChanged() {
@@ -71,36 +84,16 @@ public class AuditProperty<T> implements AuditProjection {
 
 	/**
 	 * Apply a "like" constraint
-	 *
-	 * @deprecated since 5.2, use {@link #like(String, MatchMode)}.
-	 */
-	@Deprecated
-	public AuditCriterion like(String value, org.hibernate.criterion.MatchMode matchMode) {
-		return new SimpleAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ), " like" );
-	}
-
-	/**
-	 * Apply a "like" constraint
 	 */
 	public AuditCriterion like(String value, MatchMode matchMode) {
 		return new SimpleAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ), " like " );
 	}
 
-    /**
-     *  Apply an "ilike" constraint
-     */
+	/**
+	 *  Apply an "ilike" constraint
+	 */
 	public AuditCriterion ilike(T value) {
 		return new IlikeAuditExpression( alias, propertyNameGetter, value.toString() );
-	}
-
-	/**
-	 * Apply an "ilike" constraint
-	 *
-	 * @deprecated since 5.2, use {@link #ilike(String, MatchMode)}.
-	 */
-	@Deprecated
-	public AuditCriterion ilike(String value, org.hibernate.criterion.MatchMode matchMode) {
-		return new IlikeAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ) );
 	}
 
 	/**
@@ -299,6 +292,48 @@ public class AuditProperty<T> implements AuditProjection {
 	}
 
 	/**
+	 * Apply an "equal" constraint to a function
+	 */
+	public AuditCriterion eqFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "=" );
+	}
+
+	/**
+	 * Apply a "not equal" constraint to a function
+	 */
+	public AuditCriterion neFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "<>" );
+	}
+
+	/**
+	 * Apply a "less than" constraint to a function
+	 */
+	public AuditCriterion ltFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "<" );
+	}
+
+	/**
+	 * Apply a "less than or equal" constraint to a function
+	 */
+	public AuditCriterion leFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, "<=" );
+	}
+
+	/**
+	 * Apply a "greater than" constraint to a function
+	 */
+	public AuditCriterion gtFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, ">" );
+	}
+
+	/**
+	 * Apply a "greater than or equal" constraint to a function
+	 */
+	public AuditCriterion geFunction(AuditFunction otherFunction) {
+		return new FunctionPropertyAuditExpression( alias, propertyNameGetter, otherFunction, ">=" );
+	}
+
+	/**
 	 * Apply an "is not null" constraint to the another property
 	 */
 	public AuditCriterion isNotNull() {
@@ -367,8 +402,34 @@ public class AuditProperty<T> implements AuditProjection {
 
 	// Projection on this property
 
-	public ProjectionData getData(EnversService enversService) {
-		return new ProjectionData( null, alias, propertyNameGetter.get( enversService ), false );
+	@Override
+	public void addProjectionToQuery(
+			EnversService enversService,
+			AuditReaderImplementor auditReader,
+			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
+			String baseAlias,
+			QueryBuilder queryBuilder) {
+		String projectionEntityAlias = getAlias( baseAlias );
+		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
+		String propertyName = CriteriaTools.determinePropertyName(
+				enversService,
+				auditReader,
+				projectionEntityName,
+				propertyNameGetter
+		);
+		String propertyNamePrefix = CriteriaTools.determineComponentPropertyPrefix(
+				enversService,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				projectionEntityAlias
+		);
+		queryBuilder.addProjection(
+				null,
+				projectionEntityAlias,
+				propertyNamePrefix.concat( propertyName ),
+				false
+		);
 	}
 
 	// Order
@@ -386,10 +447,15 @@ public class AuditProperty<T> implements AuditProjection {
 	public AuditOrder desc() {
 		return new PropertyAuditOrder( alias, propertyNameGetter, false );
 	}
-	
+
 	@Override
-	public Object convertQueryResult(EnversService enversService, EntityInstantiator entityInstantiator, String entityName, Number revision, Object value) {
+	public Object convertQueryResult(
+			EnversService enversService,
+			EntityInstantiator entityInstantiator,
+			String entityName,
+			Number revision,
+			Object value) {
 		return value;
 	}
-	
+
 }

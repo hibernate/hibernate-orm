@@ -1,60 +1,59 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.StringHelper;
 
 /**
- * Enumeration of the various types of sources understood by various SchemaManagementTooling
- * delegates.
+ * Enumerates the various types of sources understood by the schema management
+ * tooling.
  *
- * @see AvailableSettings#HBM2DDL_CREATE_SOURCE
- * @see AvailableSettings#HBM2DDL_DROP_SOURCE
+ * @see AvailableSettings#JAKARTA_HBM2DDL_CREATE_SOURCE
+ * @see AvailableSettings#JAKARTA_HBM2DDL_DROP_SOURCE
  *
  * @author Steve Ebersole
  */
 public enum SourceType {
 	/**
-	 * "metadata" - The O/RM metadata is used as the exclusive source for generation
+	 * The ORM metadata is used as the exclusive source generation of for DDL
+	 * commands.
 	 */
-	METADATA( "metadata" ),
+	METADATA,
 	/**
-	 * "script" - External DDL script(s) are used as the exclusive source for generation.  The scripts for schema
-	 * creation and dropping come from different sources.  The creation DDL script is identified by the
-	 * {@value AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE} setting; the drop DDL script is identified by the
-	 * {@value AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE} setting.
+	 * External DDL script(s) are used as the exclusive source for DDL commands.
+	 * <p>
+	 * The scripts for schema creation and dropping come from different sources:
+	 * <ul>
+	 * <li>The creation DDL script is identified by the setting
+	 * {@value AvailableSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}.
+	 * <li>The drop DDL script is identified by the setting
+	 * {@value AvailableSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}.
+	 * </ul>
 	 *
-	 * @see AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE
-	 * @see AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE
+	 * @see AvailableSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
+	 * @see AvailableSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE
 	 */
-	SCRIPT( "script" ),
+	SCRIPT,
 	/**
-	 * "metadata-then-script" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
-	 * with the O/RM metadata being applied first.
+	 * Both the ORM metadata and external DDL scripts are used as sources for
+	 * generation, with the commands from the external DDL script(s) being
+	 * executed last.
 	 *
 	 * @see #METADATA
 	 * @see #SCRIPT
 	 */
-	METADATA_THEN_SCRIPT( "metadata-then-script" ),
+	METADATA_THEN_SCRIPT,
 	/**
-	 * "script-then-metadata" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
-	 * with the commands from the external DDL script(s) being applied first
+	 * Both the O/M metadata and external DDL scripts are used as sources for
+	 * generation, with the commands from the external DDL script(s) being
+	 * executed first.
 	 *
 	 * @see #SCRIPT
 	 * @see #METADATA
 	 */
-	SCRIPT_THEN_METADATA( "script-then-metadata" );
-
-	private final String externalName;
-
-	SourceType(String externalName) {
-		this.externalName = externalName;
-	}
+	SCRIPT_THEN_METADATA;
 
 	/**
 	 * Used when processing JPA configuration to interpret the user config value
@@ -70,29 +69,19 @@ public enum SourceType {
 			return defaultValue;
 		}
 
-		if ( SourceType.class.isInstance( value ) ) {
+		if ( value instanceof SourceType ) {
 			return (SourceType) value;
 		}
 
-		final String name = value.toString().trim();
+		final String name = value.toString().trim().replace('-', '_');
 		if ( name.isEmpty() ) {
-			// empty is in fact valid as means to interpret default value based on other settings
-			return defaultValue;
-		}
-
-		if ( METADATA.externalName.equals( value ) ) {
 			return METADATA;
 		}
-		else if ( SCRIPT.externalName.equals( value ) ) {
-			return SCRIPT;
+		for ( SourceType sourceType: values() ) {
+			if ( sourceType.toString().equalsIgnoreCase(name) ) {
+				return sourceType;
+			}
 		}
-		else if ( METADATA_THEN_SCRIPT.externalName.equals( value ) ) {
-			return METADATA_THEN_SCRIPT;
-		}
-		else if ( SCRIPT_THEN_METADATA.externalName.equals( value ) ) {
-			return SCRIPT_THEN_METADATA;
-		}
-
-		throw new IllegalArgumentException( "Unrecognized schema generation source-type value : '" + value + '\'');
+		throw new IllegalArgumentException( "Unrecognized schema generation source type: '" + value + "'");
 	}
 }

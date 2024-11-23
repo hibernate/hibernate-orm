@@ -1,5 +1,8 @@
-delete_statement ::=
-    delete_clause [where_clause]
+deleteStatement
+    : "DELETE" "FROM"? entityWithJoins whereClause?
 
-delete_clause ::=
-    DELETE FROM entity_name [[AS] identification_variable]
+entityWithJoins
+	: fromRoot (join | crossJoin | jpaCollectionJoin)*
+
+fromRoot
+	: entityName variable?

@@ -1,70 +1,64 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
-import java.io.Serializable;
-import java.sql.Connection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import javax.persistence.FlushModeType;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TransactionRequiredException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.ScrollMode;
+import org.hibernate.StatelessSession;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
-import org.hibernate.cfg.Environment;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
- * {@link org.hibernate.StatelessSession} as used by other parts of Hibernate (such as
- * {@link org.hibernate.type.Type}, {@link EntityPersister} and
- * {@link org.hibernate.persister.collection.CollectionPersister} implementors
- *
- * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
+ * {@link org.hibernate.StatelessSession} as used by other parts of Hibernate,
+ * including implementors of {@link org.hibernate.type.Type}, {@link EntityPersister},
+ * and {@link org.hibernate.persister.collection.CollectionPersister}.
+ * <p>
+ * The {@code Session}, via this interface, implements:
+ * <ul>
  *     <li>
- *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionOwner} to drive the behavior of a "JDBC session".
- *         Can therefor be used to construct a JdbcCoordinator, which (for now) models a "JDBC session"
+ *         {@link JdbcSessionOwner}, and so the session also acts as the orchestrator
+ *         of a "JDBC session", and may be used to construct a {@link JdbcCoordinator}.
  *     </li>
  *     <li>
- *         {@link Options}
- *         to drive the creation of the {@link TransactionCoordinator} delegate.
- *         This allows it to be passed along to
+ *         {@link Options}, allowing the session to control the creation of the
+ *         {@link TransactionCoordinator} delegate when it is passed as an argument to
  *         {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder#buildTransactionCoordinator}
  *     </li>
  *     <li>
- *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
+ *         {@link LobCreationContext}, and so the session may act as the context for
+ *         JDBC LOB instance creation.
  *     </li>
  *     <li>
- *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior needed while
- *         binding/extracting values to/from JDBC as part of the Type contracts
+ *         {@link WrapperOptions}, and so the session may influence the process of binding
+ *         and extracting values to and from JDBC, which is performed by implementors of
+ *         {@link org.hibernate.type.descriptor.jdbc.JdbcType}.
  *     </li>
  * </ul>
  *
@@ -72,76 +66,117 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public interface SharedSessionContractImplementor
-		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions, QueryProducerImplementor {
+		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions,
+					QueryProducerImplementor, JavaType.CoercionContext {
 
-	// todo : this is the shared contract between Session and StatelessSession, but it defines methods that StatelessSession does not implement
-	//	(it just throws UnsupportedOperationException).  To me it seems like it is better to properly isolate those methods
-	//	into just the Session hierarchy.  They include (at least):
-	//		1) get/set CacheMode
-	//		2) get/set FlushMode
-	//		3) get/set (default) read-only
-	//		4) #setAutoClear
-	//		5) #disableTransactionAutoJoin
+	// todo : this is the shared contract between Session and StatelessSession,
+	//        but it defines methods that StatelessSession does not implement
+	//	      To me it seems like it is better to properly isolate those methods
+	//	      into just the Session hierarchy. They include (at least):
+	//		  1) get/set CacheMode
+	//		  2) get/set FlushMode
+	//		  3) get/set (default) read-only
 
 	/**
-	 * Get the creating <tt>SessionFactoryImplementor</tt>
+	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
 	SessionFactoryImplementor getFactory();
 
+	/**
+	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
+	 */
+	@Override
+	default SessionFactoryImplementor getSessionFactory() {
+		return getFactory();
+	}
+
+	/**
+	 * Obtain the {@link TypeConfiguration} for the factory which created this session.
+	 */
+	@Override
+	default TypeConfiguration getTypeConfiguration() {
+		return getFactory().getTypeConfiguration();
+	}
+
+	/**
+	 * Get the {@link SessionEventListenerManager} associated with this session.
+	 */
 	SessionEventListenerManager getEventListenerManager();
 
 	/**
 	 * Get the persistence context for this session.
-	 * See also {@link #getPersistenceContextInternal()} for
-	 * an alternative.
+	 * <p>
+	 * See {@link #getPersistenceContextInternal()} for
+	 * a faster alternative.
 	 *
-	 * This method is not extremely fast: if you need to access
-	 * the PersistenceContext multiple times, prefer keeping
-	 * a reference to it over invoking this method multiple times.
+	 * @implNote This method is not extremely fast: if you need to
+	 *            call the {@link PersistenceContext} multiple times,
+	 *            prefer keeping a reference to it instead of invoking
+	 *            this method multiple times.
 	 */
 	PersistenceContext getPersistenceContext();
 
+	/**
+	 * Obtain the {@link JdbcCoordinator} for this session.
+	 */
 	JdbcCoordinator getJdbcCoordinator();
 
+	/**
+	 * Obtain the {@link JdbcServices} for the factory which created this session.
+	 */
 	JdbcServices getJdbcServices();
 
 	/**
-	 * The multi-tenancy tenant identifier, if one.
-	 *
-	 * @return The tenant identifier; may be {@code null}
-	 */
-	String getTenantIdentifier();
-
-	/**
-	 * A UUID associated with each Session.  Useful mainly for logging.
-	 *
-	 * @return The UUID
+	 * Obtain a {@link UUID} which uniquely identifies this session.
+	 * <p>
+	 * The UUID is useful mainly for logging.
 	 */
 	UUID getSessionIdentifier();
 
 	/**
-	 * Checks whether the session is closed.  Provided separately from
-	 * {@link #isOpen()} as this method does not attempt any JTA synchronization
-	 * registration, whereas {@link #isOpen()} does; which makes this one
-	 * nicer to use for most internal purposes.
+	 * Returns this object, fulfilling the contract of {@link WrapperOptions}.
+	 */
+	@Override
+	default SharedSessionContractImplementor getSession() {
+		return this;
+	}
+
+	/**
+	 * Obtain a "token" which uniquely identifies this session.
+	 */
+	default Object getSessionToken() {
+		return this;
+	}
+
+	/**
+	 * Determines whether the session is closed.
+	 * <p>
+	 * @apiNote Provided separately from {@link #isOpen()} as this method
+	 *          does not attempt any JTA synchronization registration,
+	 *          whereas {@link #isOpen()} does. This one is better for most
+	 *          internal purposes.
 	 *
 	 * @return {@code true} if the session is closed; {@code false} otherwise.
 	 */
 	boolean isClosed();
 
 	/**
-	 * Checks whether the session is open or is waiting for auto-close
+	 * Determines whether the session is open or is waiting for auto-close.
 	 *
-	 * @return {@code true} if the session is closed or if it's waiting for auto-close; {@code false} otherwise.
+	 * @return {@code true} if the session is closed, or if it's waiting
+	 *         for auto-close; {@code false} otherwise.
 	 */
 	default boolean isOpenOrWaitingForAutoClose() {
 		return !isClosed();
 	}
 
 	/**
-	 * Performs a check whether the Session is open, and if not:<ul>
-	 *     <li>marks current transaction (if one) for rollback only</li>
-	 *     <li>throws an IllegalStateException (JPA defines the exception type)</li>
+	 * Check whether the session is open, and if not:
+	 * <ul>
+	 *     <li>mark the current transaction, if any, for rollback only,
+	 *         and</li>
+	 *     <li>throw an {@code IllegalStateException}.
+	 *         (JPA specifies this exception type.)</li>
 	 * </ul>
 	 */
 	default void checkOpen() {
@@ -149,52 +184,48 @@ public interface SharedSessionContractImplementor
 	}
 
 	/**
-	 * Performs a check whether the Session is open, and if not:<ul>
-	 *     <li>if {@code markForRollbackIfClosed} is true, marks current transaction (if one) for rollback only</li>
-	 *     <li>throws an IllegalStateException (JPA defines the exception type)</li>
+	 * Check whether the session is open, and if not:
+	 * <ul>
+	 *     <li>if {@code markForRollbackIfClosed = true}, mark the
+	 *         current transaction, if any, for rollback only, and
+	 *     <li>throw an {@code IllegalStateException}.
+	 *         (JPA specifies this exception type.)
 	 * </ul>
 	 */
 	void checkOpen(boolean markForRollbackIfClosed);
 
 	/**
-	 * Marks current transaction (if one) for rollback only
+	 * Prepare for the execution of a {@link Query} or
+	 * {@link org.hibernate.procedure.ProcedureCall}
+	 */
+	void prepareForQueryExecution(boolean requiresTxn);
+
+	/**
+	 * Marks current transaction, if any, for rollback only.
 	 */
 	void markForRollbackOnly();
 
 	/**
-	 * A "timestamp" at or before the start of the current transaction.
-	 *
-	 * @apiNote This "timestamp" need not be related to timestamp in the Java Date/millisecond
-	 * sense.  It just needs to be an incrementing value.  See
-	 * {@link CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()}
-	 */
-	long getTransactionStartTimestamp();
-
-	/**
-	 * @deprecated (since 5.3) Use {@link #getTransactionStartTimestamp()} instead.
-	 */
-	@Deprecated
-	default long getTimestamp() {
-		return getTransactionStartTimestamp();
-	}
-
-	/**
-	 * The current CacheTransactionContext associated with the Session.  This may
-	 * return {@code null} when the Session is not currently part of a transaction.
+	 * The current {@link CacheTransactionSynchronization} associated
+	 * with this session. This may be {@code null} if the session is not
+	 * currently associated with an active transaction.
 	 */
 	CacheTransactionSynchronization getCacheTransactionSynchronization();
 
 	/**
-	 * Does this <tt>Session</tt> have an active Hibernate transaction
-	 * or is there a JTA transaction in progress?
+	 * Does this session have an active Hibernate transaction, or is it
+	 * associated with a JTA transaction currently in progress?
 	 */
 	boolean isTransactionInProgress();
 
 	/**
-	 * Check if an active Transaction is necessary for the update operation to be executed.
-	 * If an active Transaction is necessary but it is not then a TransactionRequiredException is raised.
+	 * Check if an active {@link Transaction} is available before performing
+	 * an update operation against the database.
+	 * <p>
+	 * If an active transaction is necessary, but no transaction is active,
+	 * a {@link TransactionRequiredException} is raised.
 	 *
-	 * @param exceptionMessage the message to use for the TransactionRequiredException
+	 * @param exceptionMessage the message to use for the {@link TransactionRequiredException}
 	 */
 	default void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( !isTransactionInProgress() ) {
@@ -203,281 +234,269 @@ public interface SharedSessionContractImplementor
 	}
 
 	/**
-	 * Provides access to the underlying transaction or creates a new transaction if
-	 * one does not already exist or is active.  This is primarily for internal or
-	 * integrator use.
+	 * Retrieves the current {@link Transaction}, or creates a new transaction
+	 * if there is no transaction active.
+	 * <p>
+	 * This method is primarily for internal or integrator use.
 	 *
-	 * @return the transaction
-     */
+	 * @return the {@link Transaction}
+	 */
 	Transaction accessTransaction();
 
 	/**
-	 * Hide the changing requirements of entity key creation
+	 * Instantiate an {@link EntityKey} with the given id and for the
+	 * entity represented by the given {@link EntityPersister}.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister
 	 *
 	 * @return The entity key
 	 */
-	EntityKey generateEntityKey(Serializable id, EntityPersister persister);
+	EntityKey generateEntityKey(Object id, EntityPersister persister);
 
 	/**
-	 * Retrieves the interceptor currently in use by this event source.
-	 *
-	 * @return The interceptor.
+	 * Retrieves the {@link Interceptor} associated with this session.
 	 */
 	Interceptor getInterceptor();
 
 	/**
-	 * Enable/disable automatic cache clearing from after transaction
-	 * completion (for EJB3)
+	 * Enable or disable automatic cache clearing from after transaction
+	 * completion.
+	 *
+	 * @deprecated there's no good reason to expose this here
 	 */
+	@Deprecated(since = "6")
 	void setAutoClear(boolean enabled);
 
 	/**
-	 * Initialize the collection (if not already initialized)
+	 * Initialize the given collection (if not already initialized).
 	 */
-	void initializeCollection(PersistentCollection collection, boolean writing)
+	void initializeCollection(PersistentCollection<?> collection, boolean writing)
 			throws HibernateException;
 
 	/**
-	 * Load an instance without checking if it was deleted.
-	 * <p/>
-	 * When <tt>nullable</tt> is disabled this method may create a new proxy or
-	 * return an existing proxy; if it does not exist, throw an exception.
-	 * <p/>
-	 * When <tt>nullable</tt> is enabled, the method does not create new proxies
-	 * (but might return an existing proxy); if it does not exist, return
-	 * <tt>null</tt>.
-	 * <p/>
-	 * When <tt>eager</tt> is enabled, the object is eagerly fetched
+	 * Obtain an entity instance with the given id, without checking if it was
+	 * deleted or scheduled for deletion.
+	 * <ul>
+	 * <li>When {@code nullable = false}, this method may create a new proxy or
+	 *     return an existing proxy; if it does not exist, an exception is thrown.
+	 * <li>When {@code nullable = true}, the method does not create new proxies,
+	 *     though it might return an existing proxy; if it does not exist, a
+	 *     {@code null} value is returned.
+	 * </ul>
+	 * <p>
+	 * When {@code eager = true}, the object is eagerly fetched from the database.
 	 */
-	Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
+	Object internalLoad(String entityName, Object id, boolean eager, boolean nullable)
 			throws HibernateException;
 
 	/**
-	 * Load an instance immediately. This method is only called when lazily initializing a proxy.
+	 * Load an instance immediately.
+	 * This method is only called when lazily initializing a proxy.
 	 * Do not return the proxy.
 	 */
-	Object immediateLoad(String entityName, Serializable id) throws HibernateException;
+	Object immediateLoad(String entityName, Object id) throws HibernateException;
 
 
 	/**
-	 * Execute a <tt>find()</tt> query
-	 */
-	List list(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute an <tt>iterate()</tt> query
-	 */
-	Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a <tt>scroll()</tt> query
-	 */
-	ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a criteria query
-	 */
-	ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode);
-
-	/**
-	 * Execute a criteria query
-	 */
-	List list(Criteria criteria);
-
-	/**
-	 * Execute a filter
-	 */
-	List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Iterate a filter
-	 */
-	Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Get the <tt>EntityPersister</tt> for any instance
+	 * Get the {@link EntityPersister} for the given entity instance.
 	 *
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
-	EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
+	EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException;
 
 	/**
-	 * Get the entity instance associated with the given <tt>Key</tt>,
-	 * calling the Interceptor if necessary
+	 * Get the entity instance associated with the given {@link EntityKey},
+	 * calling the {@link Interceptor} if necessary.
 	 */
 	Object getEntityUsingInterceptor(EntityKey key) throws HibernateException;
 
 	/**
-	 * Return the identifier of the persistent object, or null if
-	 * not associated with the session
+	 * Return the identifier of the persistent object, or null if it is
+	 * not associated with this session.
 	 */
-	Serializable getContextEntityIdentifier(Object object);
+	Object getContextEntityIdentifier(Object object);
 
 	/**
-	 * The best guess entity name for an entity not in an association
+	 * Obtain the best estimate of the entity name of the given entity
+	 * instance, which is not involved in an association, by also
+	 * considering information held in the proxy, and whether the object
+	 * is already associated with this session.
 	 */
 	String bestGuessEntityName(Object object);
 
 	/**
-	 * The guessed entity name for an entity not in an association
+	 * Obtain the best estimate of the entity name of the given entity
+	 * instance, which is not involved in an association, by also
+	 * considering information held in the proxy, and whether the object
+	 * is already associated with this session.
+	 */
+	default String bestGuessEntityName(Object object, EntityEntry entry) {
+		return bestGuessEntityName( object );
+	}
+
+	/**
+	 * Obtain an estimate of the entity name of the given entity instance,
+	 * which is not involved in an association, using only the
+	 * {@link org.hibernate.EntityNameResolver}.
 	 */
 	String guessEntityName(Object entity) throws HibernateException;
 
 	/**
-	 * Instantiate the entity class, initializing with the given identifier
+	 * Instantiate the entity class, initializing with the given identifier.
 	 */
-	Object instantiate(String entityName, Serializable id) throws HibernateException;
+	Object instantiate(String entityName, Object id) throws HibernateException;
 
 	/**
-	 * Execute an SQL Query
+	 * Instantiate the entity class of the given {@link EntityPersister},
+	 * initializing the new instance with the given identifier.
+	 * <p>
+	 * This is more efficient than {@link #instantiate(String, Object)},
+	 * but not always interchangeable, since a single persister might be
+	 * responsible for multiple types.
 	 */
-	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
+	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	/**
-	 * Execute an SQL Query
+	 * Are entities and proxies loaded by this session read-only by default?
 	 */
-	ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
+	boolean isDefaultReadOnly();
 
 	/**
-	 * Execute a native SQL query, and return the results as a fully built list.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The result list.
-	 *
-	 * @throws HibernateException
+	 * Get the current {@link CacheMode} for this session.
 	 */
-	List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute a native SQL query, and return the results as a scrollable result.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The resulting scrollable result.
-	 *
-	 * @throws HibernateException
-	 */
-	ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
-
-	int getDontFlushFromFind();
-
-	/**
-	 * Execute a HQL update or delete query
-	 */
-	int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException;
-
-	/**
-	 * Execute a native SQL update or delete query
-	 */
-	int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters)
-			throws HibernateException;
-
-
 	CacheMode getCacheMode();
 
+	/**
+	 * Set the current {@link CacheMode} for this session.
+	 */
 	void setCacheMode(CacheMode cm);
 
-	/**
-	 * Set the flush mode for this session.
-	 * <p/>
-	 * The flush mode determines the points at which the session is flushed.
-	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
-	 * store with persistable state held in memory.
-	 * <p/>
-	 * For a logically "read only" session, it is reasonable to set the session's
-	 * flush mode to {@link FlushMode#MANUAL} at the start of the session (in
-	 * order to achieve some extra performance).
-	 *
-	 * @param flushMode the new flush mode
-	 *
-	 * @deprecated (since 5.2) use {@link #setHibernateFlushMode(FlushMode)} instead
-	 */
-	@Deprecated
-	void setFlushMode(FlushMode flushMode);
+	void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled);
+
+	boolean isCriteriaCopyTreeEnabled();
+
+	boolean getNativeJdbcParametersIgnored();
+
+	void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored);
 
 	/**
-	 * Get the flush mode for this session.
-	 * <p/>
+	 * Get the current {@link FlushModeType} for this session.
+	 * <p>
 	 * For users of the Hibernate native APIs, we've had to rename this method
 	 * as defined by Hibernate historically because the JPA contract defines a method of the same
-	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.  For
-	 * the former behavior, use {@link #getHibernateFlushMode()} instead.
+	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.
+	 * For the former behavior, use {@link #getHibernateFlushMode()} instead.
 	 *
-	 * @return The FlushModeType in effect for this Session.
+	 * @return The {@link FlushModeType} in effect for this Session.
+	 *
+	 * @deprecated there's no good reason to expose this here
 	 */
+	@Deprecated(since = "6")
 	FlushModeType getFlushMode();
 
 	/**
-	 * Set the flush mode for this session.
-	 * <p/>
+	 * Set the current {@link FlushMode} for this session.
+	 * <p>
 	 * The flush mode determines the points at which the session is flushed.
-	 * <i>Flushing</i> is the process of synchronizing the underlying persistent
+	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory.
-	 * <p/>
-	 * For a logically "read only" session, it is reasonable to set the session's
-	 * flush mode to {@link FlushMode#MANUAL} at the start of the session (in
-	 * order to achieve some extra performance).
+	 * <p>
+	 * For a logically "read-only" session, it's reasonable to set the session
+	 * flush mode to {@link FlushMode#MANUAL} at the start of the session
+	 * (in order skip some work and gain some extra performance).
 	 *
 	 * @param flushMode the new flush mode
 	 */
 	void setHibernateFlushMode(FlushMode flushMode);
 
 	/**
-	 * Get the current flush mode for this session.
+	 * Get the current {@link FlushMode} for this session.
 	 *
 	 * @return The flush mode
 	 */
 	FlushMode getHibernateFlushMode();
 
-	Connection connection();
-
+	/**
+	 * Flush this session.
+	 */
 	void flush();
 
-	boolean isEventSource();
-
-	void afterScrollOperation();
-
-	boolean shouldAutoClose();
-
-	boolean isAutoCloseSessionEnabled();
-
-	default boolean isQueryParametersValidationEnabled(){
-		return getFactory().getSessionFactoryOptions().isQueryParametersValidationEnabled();
+	/**
+	 * Determines if this session implements {@link EventSource}.
+	 * <p>
+	 * Only stateful session are sources of events. If this object is
+	 * a stateless session, this method return {@code false}.
+	 */
+	default boolean isEventSource() {
+		return false;
 	}
 
 	/**
-	 * Get the load query influencers associated with this session.
+	 * Cast this session to {@link EventSource} if possible.
+	 * <p>
+	 * Only stateful session are sources of events. If this object is
+	 * a stateless session, this method throws.
 	 *
-	 * @return the load query influencers associated with this session;
+	 * @throws ClassCastException if the cast is not possible
+	 */
+	default EventSource asEventSource() {
+		throw new ClassCastException( "session is not an EventSource" );
+	}
+
+	/**
+	 * Called after each operation on a {@link org.hibernate.ScrollableResults},
+	 * providing an opportunity for a stateless session to clear its
+	 * temporary persistence context. For a stateful session, this method
+	 * does nothing.
+	 */
+	void afterScrollOperation();
+
+	/**
+	 * Should this session be automatically closed after the current
+	 * transaction completes?
+	 *
+	 * @deprecated there's no reason to expose this here
+	 */
+	@Deprecated(since = "6")
+	boolean shouldAutoClose();
+
+	/**
+	 * Is auto-close at transaction completion enabled?
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#AUTO_CLOSE_SESSION
+	 * @see SessionFactoryOptions#isAutoCloseSessionEnabled()
+	 *
+	 * @deprecated there's no reason to expose this here
+	 */
+	@Deprecated(since = "6")
+	boolean isAutoCloseSessionEnabled();
+
+	/**
+	 * Get the {@link LoadQueryInfluencers} associated with this session.
+	 *
+	 * @return the {@link LoadQueryInfluencers} associated with this session;
 	 *         should never be null.
 	 */
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	/**
-	 * The converter associated to a Session might be lazily initialized: only invoke
-	 * this getter when there is actual need to use it.
+	 * Obtain an {@link ExceptionConverter} for reporting an error.
+	 * <p>
+	 * The converter associated to a session might be lazily initialized,
+	 * so only invoke this getter when there's an actual need to use it.
 	 *
 	 * @return the ExceptionConverter for this Session.
 	 */
 	ExceptionConverter getExceptionConverter();
 
 	/**
-	 * Get the currently configured JDBC batch size either at the Session-level or SessionFactory-level.
+	 * Get the currently configured JDBC batch size, which might have
+	 * been specified at either the session or factory level.
 	 *
-	 * If the Session-level JDBC batch size was not configured, return the SessionFactory-level one.
-	 *
-	 * @return Session-level or or SessionFactory-level JDBC batch size.
+	 * @return the session-level JDBC batch size is set, or the
+	 *         factory-level setting otherwise
 	 *
 	 * @since 5.2
 	 *
@@ -486,47 +505,82 @@ public interface SharedSessionContractImplementor
 	 */
 	default Integer getConfiguredJdbcBatchSize() {
 		final Integer sessionJdbcBatchSize = getJdbcBatchSize();
-
-		return sessionJdbcBatchSize == null ?
-			ConfigurationHelper.getInt(
-					Environment.STATEMENT_BATCH_SIZE,
-					getFactory().getProperties(),
-					1
-			) :
-			sessionJdbcBatchSize;
+		return sessionJdbcBatchSize == null
+				? getFactory().getSessionFactoryOptions().getJdbcBatchSize()
+				: sessionJdbcBatchSize;
 	}
 
 	/**
-	 * @deprecated (since 5.2) - see deprecation note on
-	 * org.hibernate.jpa.spi.HibernateEntityManagerImplementor#createQuery(java.lang.String, java.lang.Class, javax.persistence.criteria.Selection, org.hibernate.jpa.spi.HibernateEntityManagerImplementor.QueryOptions)
-	 * @return The typed query
-	 */
-	@Deprecated
-	<T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			HibernateEntityManagerImplementor.QueryOptions queryOptions);
-
-	/**
-	 * This is similar to {@link #getPersistenceContext()}, with
-	 * two main differences:
-	 * a) this version performs better as
-	 * it allows for inlining and probably better prediction
-	 * b) see SessionImpl{@link #getPersistenceContext()} : it
-	 * does some checks on the current state of the Session.
+	 * Similar to {@link #getPersistenceContext()}, with two differences:
+	 * <ol>
+	 * <li>this version performs better as it allows for inlining
+	 *     and probably better prediction, and
+	 * <li>it skips some checks of the current state of the session.
+	 * </ol>
+	 * Choose wisely: performance is important, but correctness comes first.
 	 *
-	 * Choose wisely: performance is important, correctness comes first.
-	 *
-	 * @return the PersistenceContext associated to this session.
+	 * @return the {@link PersistenceContext} associated to this session.
 	 */
 	PersistenceContext getPersistenceContextInternal();
 
-	default boolean isEnforcingFetchGraph() {
+	/**
+	 * detect in-memory changes, determine if the changes are to tables
+	 * named in the query and, if so, complete execution the flush
+	 *
+	 * @param querySpaces the tables named in the query.
+	 *
+	 * @return true if flush is required, false otherwise.
+	 */
+	boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException;
+
+	default boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return autoFlushIfRequired( querySpaces );
+	}
+
+	default void autoPreFlush(){
+	}
+
+	/**
+	 * Check if there is a Hibernate or JTA transaction in progress and,
+	 * if there is not, flush if necessary, making sure that the connection
+	 * has been committed (if it is not in autocommit mode), and finally
+	 * run the after completion processing.
+	 *
+	 * @param success {@code true} if the operation a success
+	 */
+	void afterOperation(boolean success);
+
+	/**
+	 * Cast this object to {@link SessionImplementor}, if possible.
+	 *
+	 * @throws ClassCastException if the cast is not possible
+	 */
+	default SessionImplementor asSessionImplementor() {
+		throw new ClassCastException( "session is not a SessionImplementor" );
+	}
+
+	/**
+	 * Does this object implement {@link SessionImplementor}?
+	 */
+	default boolean isSessionImplementor() {
 		return false;
 	}
 
-	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
+	/**
+	 * Cast this object to {@link StatelessSession}, if possible.
+	 *
+	 * @throws ClassCastException if the cast is not possible
+	 */
+	default StatelessSession asStatelessSession() {
+		throw new ClassCastException( "session is not a StatelessSession" );
+	}
+
+	/**
+	 * Does this object implement {@link StatelessSession}?
+	 */
+	default boolean isStatelessSession() {
+		return false;
 	}
 
 }

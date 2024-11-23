@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
@@ -21,7 +19,12 @@ public interface SchemaMigrator {
 	 *
 	 * @param metadata Represents the schema to be altered.
 	 * @param options Options for executing the alteration
+	 * @param contributableInclusionFilter Filter for Contributable instances to use
 	 * @param targetDescriptor description of the target(s) for the alteration commands
 	 */
-	void doMigration(Metadata metadata, ExecutionOptions options, TargetDescriptor targetDescriptor);
+	void doMigration(
+			Metadata metadata,
+			ExecutionOptions options,
+			ContributableMatcher contributableInclusionFilter,
+			TargetDescriptor targetDescriptor);
 }

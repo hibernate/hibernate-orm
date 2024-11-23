@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 
@@ -15,12 +11,14 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public interface AutoFlushEventListener extends Serializable {
+public interface AutoFlushEventListener {
 
-    /** Handle the given auto-flush event.
-     *
-     * @param event The auto-flush event to be handled.
-     * @throws HibernateException
-     */
-	public void onAutoFlush(AutoFlushEvent event) throws HibernateException;
+	/** Handle the given auto-flush event.
+	 *
+	 * @param event The auto-flush event to be handled.
+	 */
+	void onAutoFlush(AutoFlushEvent event) throws HibernateException;
+
+	default void onAutoPreFlush(EventSource source) throws HibernateException {
+	}
 }

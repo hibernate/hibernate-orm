@@ -1,18 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-import javax.xml.bind.JAXBElement;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.jaxb.hbm.internal.ImplicitResultSetMappingDefinition;
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType;
@@ -21,13 +15,17 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
-import org.hibernate.cfg.SecondPass;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.boot.model.internal.QueryBinder;
+import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.internal.log.DeprecationLogger;
+
+import jakarta.xml.bind.JAXBElement;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * @author Steve Ebersole
@@ -39,31 +37,45 @@ public class NamedQueryBinder {
 		processNamedQuery( context, namedQueryBinding, "" );
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Named HQL query
+
 	public static void processNamedQuery(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmNamedQueryType namedQueryBinding,
 			String prefix) {
-		String query = null;
-		java.util.Map<String,String> parameterTypeMap = null;
+		final String registrationName = prefix + namedQueryBinding.getName();
+
+		final NamedHqlQueryDefinition.Builder<?> queryBuilder =
+				new NamedHqlQueryDefinition.Builder<>( registrationName )
+						.setComment( namedQueryBinding.getComment() )
+						.setCacheable( namedQueryBinding.isCacheable() )
+						.setCacheMode( namedQueryBinding.getCacheMode() )
+						.setCacheRegion( namedQueryBinding.getCacheRegion() )
+						.setTimeout( namedQueryBinding.getTimeout() )
+						.setReadOnly( namedQueryBinding.isReadOnly() )
+						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFetchSize( namedQueryBinding.getFetchSize() );
+
+		boolean foundQuery = false;
 
 		for ( Object content : namedQueryBinding.getContent() ) {
-			if ( String.class.isInstance( content ) ) {
-				String trimmed = ((String)content).trim();
-				if ( StringHelper.isNotEmpty( trimmed ) ) {
-					query = trimmed;
+			if ( content instanceof String ) {
+				final String hqlString = nullIfEmpty( ( (String) content ).trim() );
+				if ( isNotEmpty( hqlString ) ) {
+					queryBuilder.setHqlString( hqlString );
+					foundQuery = true;
 				}
 			}
 			else {
-				final JaxbHbmQueryParamType paramTypeBinding = 
-						(JaxbHbmQueryParamType)((JAXBElement)content).getValue();
-				if ( parameterTypeMap == null ) {
-					parameterTypeMap = new HashMap<String,String>();
-				}
-				parameterTypeMap.put( paramTypeBinding.getName(), paramTypeBinding.getType() );
+				final JaxbHbmQueryParamType paramTypeBinding = (JaxbHbmQueryParamType)
+						( (JAXBElement<?>) content ).getValue();
+				queryBuilder.addParameterTypeHint( paramTypeBinding.getName(), paramTypeBinding.getType() );
 			}
 		}
 
-		if ( query == null ) {
+		if ( ! foundQuery ) {
 			throw new org.hibernate.boot.MappingException(
 					String.format(
 							"Named query [%s] did not specify query string",
@@ -72,22 +84,13 @@ public class NamedQueryBinder {
 					context.getOrigin()
 			);
 		}
-		context.getMetadataCollector().addNamedQuery(
-				new NamedQueryDefinitionBuilder()
-						.setName( prefix + namedQueryBinding.getName() )
-						.setQuery( query )
-						.setComment( namedQueryBinding.getComment() )
-						.setCacheable( namedQueryBinding.isCacheable() )
-						.setCacheMode( namedQueryBinding.getCacheMode() )
-						.setCacheRegion( namedQueryBinding.getCacheRegion() )
-						.setTimeout( namedQueryBinding.getTimeout() )
-						.setReadOnly( namedQueryBinding.isReadOnly() )
-						.setFlushMode( namedQueryBinding.getFlushMode() )
-						.setFetchSize( namedQueryBinding.getFetchSize() )
-						.setParameterTypes( parameterTypeMap )
-						.createNamedQueryDefinition()
-		);
+
+		context.getMetadataCollector().addNamedQuery( queryBuilder.build() );
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Named native query
 
 	public static void processNamedNativeQuery(
 			HbmLocalMetadataBuildingContext context,
@@ -99,22 +102,28 @@ public class NamedQueryBinder {
 			final HbmLocalMetadataBuildingContext context,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			String prefix) {
-		final String queryName = prefix + namedQueryBinding.getName();
-		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder()
-				.setName( queryName )
-				.setComment( namedQueryBinding.getComment() )
-				.setCacheable( namedQueryBinding.isCacheable() )
-				.setCacheMode( namedQueryBinding.getCacheMode() )
-				.setCacheRegion( namedQueryBinding.getCacheRegion() )
-				.setTimeout( namedQueryBinding.getTimeout() )
-				.setReadOnly( namedQueryBinding.isReadOnly() )
-				.setFlushMode( namedQueryBinding.getFlushMode() )
-				.setFetchSize( namedQueryBinding.getFetchSize() )
-				.setCallable( namedQueryBinding.isCallable() )
-				.setResultSetRef( namedQueryBinding.getResultsetRef() );
+		if ( namedQueryBinding.isCallable() ) {
+			DeprecationLogger.DEPRECATION_LOGGER.warn(
+					"Marking named native queries as callable is no longer supported; use `@jakarta.persistence.NamedStoredProcedureQuery` instead.  Ignoring."
+			);
+		}
 
-		final ImplicitResultSetMappingDefinition.Builder implicitResultSetMappingBuilder
-				= new ImplicitResultSetMappingDefinition.Builder( queryName );
+		final String registrationName = prefix + namedQueryBinding.getName();
+
+		final NamedNativeQueryDefinition.Builder<?> builder =
+				new NamedNativeQueryDefinition.Builder<>( registrationName )
+						.setComment( namedQueryBinding.getComment() )
+						.setCacheable( namedQueryBinding.isCacheable() )
+						.setCacheMode( namedQueryBinding.getCacheMode() )
+						.setCacheRegion( namedQueryBinding.getCacheRegion() )
+						.setTimeout( namedQueryBinding.getTimeout() )
+						.setReadOnly( namedQueryBinding.isReadOnly() )
+						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFetchSize( namedQueryBinding.getFetchSize() )
+						.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
+
+		final ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder =
+				new ImplicitHbmResultSetMappingDescriptorBuilder( registrationName, context );
 
 		boolean foundQuery = false;
 
@@ -142,7 +151,7 @@ public class NamedQueryBinder {
 		}
 
 		if ( implicitResultSetMappingBuilder.hasAnyReturns() ) {
-			if ( StringHelper.isNotEmpty( namedQueryBinding.getResultsetRef() ) ) {
+			if ( isNotEmpty( namedQueryBinding.getResultsetRef() ) ) {
 				throw new org.hibernate.boot.MappingException(
 						String.format(
 								"Named native query [%s] specified both a resultset-ref and an inline mapping of results",
@@ -152,89 +161,85 @@ public class NamedQueryBinder {
 				);
 			}
 
-			// Building a ResultSet mapping needs access to entity bindings for any entity
-			// returns it defines.  But binding for those entities may have not been
-			// completed yet.  For "normal" ResultSet mappings, this is already handled by
-			// the fact that MetadataSourceProcessor#processResultSetMappings() is called
-			// after all entity hierarchies have been processed.  However, here we are in
-			// the middle of processing named-queries (either top-level or entity-level)
-			// and have no guarantee that any entity bindings we may need here are bound.
-			// So we add the second-pass to bind the implicit resultSet mapping.
-			//
-			// It is possible to know here whether the second-pass is needed or whether we
-			// can immediately bind the ResultSet mapping.
-			// todo : consider implementing this (^^) checking
+			context.getMetadataCollector().addResultSetMapping( implicitResultSetMappingBuilder.build( context ) );
 
-			final ImplicitResultSetMappingDefinition implicitResultSetMappingDefinition = implicitResultSetMappingBuilder.build();
-			builder.setResultSetRef( implicitResultSetMappingDefinition.getName() );
-			context.getMetadataCollector().addSecondPass(
-					new SecondPass() {
-						@Override
-						public void doSecondPass(Map persistentClasses) throws MappingException {
-							final ResultSetMappingDefinition resultSetMappingDefinition =
-									ResultSetMappingBinder.bind( implicitResultSetMappingDefinition, context );
-							context.getMetadataCollector().addResultSetMapping( resultSetMappingDefinition );
-							NativeSQLQueryReturn[] newQueryReturns = resultSetMappingDefinition.getQueryReturns();
-							final NamedSQLQueryDefinition queryDefinition =
-									context.getMetadataCollector().getNamedNativeQueryDefinition( queryName );
-							if ( queryDefinition != null ) {
-								queryDefinition.addQueryReturns( newQueryReturns );
-							}
-						}
-					}
-			);
+			builder.setResultSetMappingName( implicitResultSetMappingBuilder.getRegistrationName() );
 		}
 
-		context.getMetadataCollector().addNamedNativeQuery( builder.createNamedQueryDefinition() );
+		if ( namedQueryBinding.isCallable() ) {
+			final NamedProcedureCallDefinition definition = QueryBinder.createStoredProcedure(
+					builder, context,
+					() -> illegalCallSyntax( context, namedQueryBinding, builder.getSqlString() )
+			);
+			context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
+			DeprecationLogger.DEPRECATION_LOGGER.warn(
+					"Marking named native queries as callable is deprecated; use `<named-stored-procedure-query/>` instead."
+			);
+		}
+		else {
+			context.getMetadataCollector().addNamedNativeQuery( builder.build() );
+		}
+	}
+
+	private static MappingException illegalCallSyntax(
+			HbmLocalMetadataBuildingContext context,
+			JaxbHbmNamedNativeQueryType namedQueryBinding,
+			String sqlString) {
+		return new MappingException(
+				String.format(
+						"Callable named native query [%s] doesn't use the JDBC call syntax: %s",
+						namedQueryBinding.getName(),
+						sqlString
+				),
+				context.getOrigin()
+		);
 	}
 
 	private static boolean processNamedQueryContentItem(
 			Object content,
-			NamedSQLQueryDefinitionBuilder builder,
-			ImplicitResultSetMappingDefinition.Builder implicitResultSetMappingBuilder,
+			NamedNativeQueryDefinition.Builder<?> queryBuilder,
+			ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {
-		if ( String.class.isInstance( content ) ) {
+		if ( content instanceof String ) {
 			// Especially when the query string is wrapped in CDATA we will get
 			// "extra" Strings here containing just spaces and/or newlines.  This
 			// bit tries to account for them.
-			final String contentString = StringHelper.nullIfEmpty( ( (String) content ).trim() );
+			final String contentString = nullIfEmpty( ( (String) content ).trim() );
 			if ( contentString != null ) {
-				builder.setQuery( (String) content );
+				queryBuilder.setSqlString( (String) content );
 				return true;
 			}
 			else {
 				return false;
 			}
 		}
-		else if ( JAXBElement.class.isInstance( content ) ) {
+		else if ( content instanceof JAXBElement ) {
 			return processNamedQueryContentItem(
-					( (JAXBElement) content ).getValue(),
-					builder,
+					( (JAXBElement<?>) content ).getValue(),
+					queryBuilder,
 					implicitResultSetMappingBuilder,
 					namedQueryBinding,
 					context
 			);
 		}
 
-		if ( JaxbHbmQueryParamType.class.isInstance( content ) ) {
-			final JaxbHbmQueryParamType paramTypeBinding = (JaxbHbmQueryParamType) content;
-			builder.addParameterType( paramTypeBinding.getName(), paramTypeBinding.getType() );
+		if ( content instanceof JaxbHbmQueryParamType paramTypeBinding ) {
+			queryBuilder.addParameterTypeHint( paramTypeBinding.getName(), paramTypeBinding.getType() );
 		}
-		else if ( JaxbHbmSynchronizeType.class.isInstance( content ) ) {
-			final JaxbHbmSynchronizeType synchronizedSpace = (JaxbHbmSynchronizeType) content;
-			builder.addSynchronizedQuerySpace( synchronizedSpace.getTable() );
+		else if ( content instanceof JaxbHbmSynchronizeType synchronizedSpace ) {
+			queryBuilder.addSynchronizedQuerySpace( synchronizedSpace.getTable() );
 		}
-		else if ( JaxbHbmNativeQueryScalarReturnType.class.isInstance( content ) ) {
+		else if ( content instanceof JaxbHbmNativeQueryScalarReturnType ) {
 			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryScalarReturnType) content );
 		}
-		else if ( JaxbHbmNativeQueryReturnType.class.isInstance( content ) ) {
+		else if ( content instanceof JaxbHbmNativeQueryReturnType ) {
 			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryReturnType) content );
 		}
-		else if ( JaxbHbmNativeQueryJoinReturnType.class.isInstance( content ) ) {
+		else if ( content instanceof JaxbHbmNativeQueryJoinReturnType ) {
 			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryJoinReturnType) content );
 		}
-		else if ( JaxbHbmNativeQueryCollectionLoadReturnType.class.isInstance( content ) ) {
+		else if ( content instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
 			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryCollectionLoadReturnType) content );
 		}
 		else {
@@ -244,7 +249,7 @@ public class NamedQueryBinder {
 							"Encountered unexpected content type [%s] for named native query [%s] : [%s]",
 							content.getClass().getName(),
 							namedQueryBinding.getName(),
-							content.toString()
+							content
 					),
 					context.getOrigin()
 			);

@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.scan.internal;
 
 import java.util.Collections;
+import java.util.Set;
 
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
@@ -24,11 +23,22 @@ import org.hibernate.boot.archive.scan.spi.Scanner;
  * @author Petteri Pitkanen
  */
 public class DisabledScanner implements Scanner {
-	private static final ScanResult emptyScanResult = new ScanResultImpl(
-		Collections.<PackageDescriptor>emptySet(),
-		Collections.<ClassDescriptor>emptySet(),
-		Collections.<MappingFileDescriptor>emptySet()
-	);
+	private static final ScanResult emptyScanResult = new ScanResult() {
+		@Override
+		public Set<PackageDescriptor> getLocatedPackages() {
+			return Collections.emptySet();
+		}
+
+		@Override
+		public Set<ClassDescriptor> getLocatedClasses() {
+			return Collections.emptySet();
+		}
+
+		@Override
+		public Set<MappingFileDescriptor> getLocatedMappingFiles() {
+			return Collections.emptySet();
+		}
+	};
 
 	@Override
 	public ScanResult scan(final ScanEnvironment environment, final ScanOptions options, final ScanParameters parameters) {

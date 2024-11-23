@@ -1,19 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * Parameter invalid or not found in the query.
- * 
+ * Indicates a problem with the runtime arguments bound to query parameters.
+ *
  * @author Emmanuel Bernard
  */
 public class QueryParameterException extends QueryException {
 	/**
-	 * Constructs a QueryParameterException using the supplied exception message.
+	 * Constructs a {@code QueryParameterException} using the supplied exception message.
 	 *
 	 * @param message The message explaining the exception condition
 	 */
@@ -22,7 +20,7 @@ public class QueryParameterException extends QueryException {
 	}
 
 	/**
-	 * Constructs a QueryParameterException
+	 * Constructs a {@code QueryParameterException}
 	 *
 	 * @param message The message explaining the exception condition
 	 * @param queryString The query that led to the exception
@@ -32,8 +30,13 @@ public class QueryParameterException extends QueryException {
 		super( message, queryString, cause );
 	}
 
-	@Override
-	protected QueryException generateQueryException(String queryString) {
-		return new QueryParameterException( super.getOriginalMessage(), queryString, this );
+	/**
+	 * Constructs a {@code QueryParameterException}
+	 *
+	 * @param message The message explaining the exception condition
+	 * @param queryString The query that led to the exception
+	 */
+	public QueryParameterException(String message, String queryString) {
+		super( message, queryString );
 	}
 }

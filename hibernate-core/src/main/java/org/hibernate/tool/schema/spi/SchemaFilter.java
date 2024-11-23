@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
@@ -50,5 +48,25 @@ public interface SchemaFilter {
 	 * @return {@code true} to include the sequence; {@code false} otherwise
 	 */
 	boolean includeSequence(Sequence sequence);
+
+	/**
+	 * Matches everything
+	 */
+	SchemaFilter ALL = new SchemaFilter() {
+		@Override
+		public boolean includeNamespace( Namespace namespace ) {
+			return true;
+		}
+
+		@Override
+		public boolean includeTable( Table table ) {
+			return true;
+		}
+
+		@Override
+		public boolean includeSequence( Sequence sequence ) {
+			return true;
+		}
+	};
 
 }

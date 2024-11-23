@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
 
@@ -39,8 +37,24 @@ public class SequenceInformationExtractorOracleDatabaseImpl extends SequenceInfo
 	}
 
 	@Override
-	protected Long resultSetMaxValue(ResultSet resultSet) throws SQLException {
-		return resultSet.getBigDecimal( "max_value" ).longValue();
+	protected String sequenceMaxValueColumn() {
+		return "max_value";
+	}
+
+
+	@Override
+	protected Number resultSetIncrementValue(ResultSet resultSet) throws SQLException {
+		return resultSet.getBigDecimal( sequenceIncrementColumn() );
+	}
+
+	@Override
+	protected Number resultSetMinValue(ResultSet resultSet) throws SQLException {
+		return resultSet.getBigDecimal( sequenceMinValueColumn() );
+	}
+
+	@Override
+	protected Number resultSetMaxValue(ResultSet resultSet) throws SQLException {
+		return resultSet.getBigDecimal( sequenceMaxValueColumn() );
 	}
 
 	@Override

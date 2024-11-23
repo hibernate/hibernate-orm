@@ -1,0 +1,23 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.engine.jdbc.mutation;
+
+import org.hibernate.sql.model.TableMapping;
+
+/**
+ * Used to check if a table should be included in the current execution
+ *
+ * @author Steve Ebersole
+ */
+@FunctionalInterface
+public interface TableInclusionChecker {
+	/**
+	 * Perform the check
+	 *
+	 * @return {@code true} indicates the table should be included;
+	 * {@code false} indicates it should not
+	 */
+	boolean include(TableMapping tableMapping);
+}

@@ -1,19 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.JdbcDataType;
 import org.hibernate.boot.model.source.spi.SizeSource;
+
+import static java.util.Collections.addAll;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +24,7 @@ class ColumnSourceImpl
 		implements ColumnSource {
 	private final String tableName;
 	private final JaxbHbmColumnType columnElement;
-	private final TruthValue nullable;
+	private final Boolean nullable;
 	private final Set<String> indexConstraintNames;
 	private final Set<String> ukConstraintNames;
 
@@ -37,27 +38,19 @@ class ColumnSourceImpl
 				mappingDocument,
 				tableName,
 				columnElement,
-				interpretNotNullToNullability( columnElement.isNotNull() ),
+				columnElement.isNotNull() == null
+						? null
+						: !columnElement.isNotNull(),
 				indexConstraintNames,
 				ukConstraintNames
 		);
-	}
-
-	private static TruthValue interpretNotNullToNullability(Boolean notNull) {
-		if ( notNull == null ) {
-			return TruthValue.UNKNOWN;
-		}
-		else {
-			// not-null == nullable, so the booleans are reversed
-			return notNull ? TruthValue.FALSE : TruthValue.TRUE;
-		}
 	}
 
 	ColumnSourceImpl(
 			MappingDocument mappingDocument,
 			String tableName,
 			JaxbHbmColumnType columnElement,
-			TruthValue nullable,
+			Boolean nullable,
 			Set<String> indexConstraintNames,
 			Set<String> ukConstraintNames) {
 		super( mappingDocument );
@@ -65,14 +58,12 @@ class ColumnSourceImpl
 		this.columnElement = columnElement;
 		this.nullable = nullable;
 
-		this.indexConstraintNames = CommaSeparatedStringHelper.splitAndCombine(
-				indexConstraintNames,
-				columnElement.getIndex()
-		);
-		this.ukConstraintNames = CommaSeparatedStringHelper.splitAndCombine(
-				ukConstraintNames,
-				columnElement.getUniqueKey()
-		);
+		this.indexConstraintNames =
+				splitAndCombine( indexConstraintNames,
+						columnElement.getIndex() );
+		this.ukConstraintNames =
+				splitAndCombine( ukConstraintNames,
+						columnElement.getUniqueKey() );
 	}
 
 	@Override
@@ -86,7 +77,7 @@ class ColumnSourceImpl
 	}
 
 	@Override
-	public TruthValue isNullable() {
+	public Boolean isNullable() {
 		return nullable;
 	}
 
@@ -126,8 +117,8 @@ class ColumnSourceImpl
 
 	@Override
 	public boolean isUnique() {
-		// TODO: should TruthValue be returned instead of boolean?
-		return columnElement.isUnique() != null && columnElement.isUnique().booleanValue();
+		return columnElement.isUnique() != null
+			&& columnElement.isUnique();
 	}
 
 	@Override
@@ -153,5 +144,16 @@ class ColumnSourceImpl
 	@Override
 	public Set<String> getUniqueKeyConstraintNames() {
 		return ukConstraintNames;
+	}
+
+	public static Set<String> splitAndCombine(Set<String> stringSet, String values) {
+		if ( values == null || values.isEmpty() ) {
+			return stringSet;
+		}
+		else {
+			final HashSet<String> set = new HashSet<>( stringSet );
+			addAll( set, splitAtCommas( values ) );
+			return set;
+		}
 	}
 }

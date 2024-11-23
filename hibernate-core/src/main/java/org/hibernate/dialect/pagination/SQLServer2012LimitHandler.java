@@ -1,132 +1,68 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.dialect.pagination.SQLServer2005LimitHandler.Keyword;
 
 /**
- * LIMIT clause handler compatible with SQL Server 2012 and later.
+ * A {@link LimitHandler} compatible with SQL Server 2012 which
+ * introduced support for the ANSI SQL standard syntax
+ * {@code OFFSET m ROWS FETCH NEXT n ROWS ONLY}, though this syntax
+ * is considered part of the {@code ORDER BY} clause, and with the
+ * wrinkle that both {@code ORDER BY} and the {@code OFFSET} clause
+ * are required.
  *
  * @author Chris Cranford
+ * @author Gavin King
  */
-public class SQLServer2012LimitHandler extends SQLServer2005LimitHandler {
-	// determines whether the limit handler used offset/fetch or 2005 behavior.
-	private boolean usedOffsetFetch;
+public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
+
+	// ORDER BY ...
+	// [
+	//   OFFSET m {ROW|ROWS}
+	//   [FETCH {FIRST|NEXT} n {ROW|ROWS} ONLY]
+	// ]
+
+	public static final SQLServer2012LimitHandler INSTANCE = new SQLServer2012LimitHandler();
 
 	public SQLServer2012LimitHandler() {
-
+		super(true);
 	}
 
+	/**
+	 * {@code OFFSET} and {@code FETCH} have to come right at the end
+	 * of the {@code ORDER BY} clause, and {@code OFFSET} is required
+	 * in order to have a {@code FETCH}:
+	 * <pre>order by ... offset m rows [fetch next n rows only]</pre>
+	 */
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
+	void begin(String sql, StringBuilder offsetFetch, boolean hasFirstRow, boolean hasMaxRows) {
 
-	@Override
-	public boolean supportsVariableLimit() {
-		return true;
-	}
+		//see https://docs.microsoft.com/en-us/sql/t-sql/queries/select-order-by-clause-transact-sql?view=sql-server-2017
 
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		// SQLServer mandates the following rules to use OFFSET/LIMIT
-		//  * An 'ORDER BY' is required
-		//  * The 'OFFSET ...' clause is mandatory, cannot use 'FETCH ...' by itself.
-		//  * The 'TOP' clause isn't permitted with LIMIT/OFFSET.
-		if ( hasOrderBy( sql ) ) {
-			if ( !LimitHelper.useLimit( this, selection ) ) {
-				return sql;
+		if ( Keyword.ORDER_BY.rootOffset( sql ) <= 0 ) {
+			//we need to add a whole 'order by' clause
+			offsetFetch.append(" order by ");
+			int from = Keyword.FROM.rootOffset( sql );
+			if ( from > 0 ) {
+				//if we can find the end of the select
+				//clause, we will add a dummy column to
+				//it below, so order by that column
+				// Always need an order by clause: https://blog.jooq.org/2014/05/13/sql-server-trick-circumvent-missing-order-by-clause/
+				offsetFetch.append("@@version");
 			}
-			return applyOffsetFetch( selection, sql, getInsertPosition( sql ) );
-		}
-		return super.processSql( sql, selection );
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		// when using the offset fetch clause, the max value is passed as-is.
-		// SQLServer2005LimitHandler uses start + max values.
-		return usedOffsetFetch ? false : super.useMaxForLimit();
-	}
-
-	@Override
-	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		// When using the offset/fetch clause, the first row is passed as-is
-		// SQLServer2005LimitHandler uses zeroBasedFirstResult + 1
-		if ( usedOffsetFetch ) {
-			return zeroBasedFirstResult;
-		}
-		return super.convertToFirstRowValue( zeroBasedFirstResult );
-	}
-
-	@Override
-	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
-	throws SQLException {
-		if ( usedOffsetFetch && !LimitHelper.hasFirstRow( selection ) ) {
-			// apply just the max value when offset fetch applied
-			statement.setInt( index, getMaxOrLimit( selection ) );
-			return 1;
-		}
-		return super.bindLimitParametersAtEndOfQuery( selection, statement, index );
-	}
-
-	private String getOffsetFetch(RowSelection selection) {
-		if ( !LimitHelper.hasFirstRow( selection ) ) {
-			return " offset 0 rows fetch next ? rows only";
-		}
-		return " offset ? rows fetch next ? rows only";
-	}
-
-	private int getInsertPosition(String sql) {
-		int position = sql.length() - 1;
-		for ( ; position > 0; --position ) {
-			char ch = sql.charAt( position );
-			if ( ch != ';' && ch != ' ' && ch != '\r' && ch != '\n' ) {
-				break;
+			else {
+				//otherwise order by the first column
+				offsetFetch.append("1");
 			}
 		}
-		return position + 1;
-	}
 
-	private String applyOffsetFetch(RowSelection selection, String sql, int position) {
-		usedOffsetFetch = true;
-
-		StringBuilder sb = new StringBuilder();
-		sb.append( sql.substring( 0, position ) );
-		sb.append( getOffsetFetch( selection ) );
-		if ( position > sql.length() ) {
-			sb.append( sql.substring( position - 1 ) );
+		if ( !hasFirstRow ) {
+			//the offset clause is required, but
+			//the superclass doesn't add it
+			offsetFetch.append(" offset 0 rows");
 		}
-
-		return sb.toString();
-	}
-
-	private boolean hasOrderBy(String sql) {
-		int depth = 0;
-
-		String lowerCaseSQL = sql.toLowerCase();
-
-		for ( int i = lowerCaseSQL.length() - 1; i >= 0; --i ) {
-			char ch = lowerCaseSQL.charAt( i );
-			if ( ch == '(' ) {
-				depth++;
-			}
-			else if ( ch == ')' ) {
-				depth--;
-			}
-			if ( depth == 0 ) {
-				if ( lowerCaseSQL.startsWith( "order by ", i ) ) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 }

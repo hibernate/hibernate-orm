@@ -1,31 +1,40 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.spi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 import org.hibernate.HibernateException;
-import org.hibernate.transform.BasicTransformerAdapter;
+import org.hibernate.query.TypedTupleTransformer;
+import org.hibernate.transform.ResultTransformer;
+
+import static java.util.Locale.ROOT;
 
 /**
- * ResultTransformer adapter for handling Tuple results from Native queries
+ * A {@link ResultTransformer} for handling JPA {@link Tuple} results from native queries.
  *
  * @author Arnold Galovics
  */
-public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
+public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, TypedTupleTransformer<Tuple> {
+
+	public static final NativeQueryTupleTransformer INSTANCE = new NativeQueryTupleTransformer();
 
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	public Tuple transformTuple(Object[] tuple, String[] aliases) {
 		return new NativeTupleImpl( tuple, aliases );
+	}
+
+	@Override
+	public Class<Tuple> getTransformedType() {
+		return Tuple.class;
 	}
 
 	private static class NativeTupleElementImpl<X> implements TupleElement<X> {
@@ -52,10 +61,12 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 
 	private static class NativeTupleImpl implements Tuple {
 
-		private Object[] tuple;
+		private final Object[] tuple;
 
-		private Map<String, Object> aliasToValue = new LinkedHashMap<>();
-		private Map<String, String> aliasReferences = new LinkedHashMap<>();
+		private final int size;
+
+		private final Map<String, Object> aliasToValue = new LinkedHashMap<>();
+		private final Map<String, String> aliasReferences = new LinkedHashMap<>();
 
 		public NativeTupleImpl(Object[] tuple, String[] aliases) {
 			if ( tuple == null ) {
@@ -69,9 +80,13 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 			}
 			this.tuple = tuple;
 			for ( int i = 0; i < tuple.length; i++ ) {
-				aliasToValue.put( aliases[i], tuple[i] );
-				aliasReferences.put( aliases[i].toLowerCase(), aliases[i] );
+				final String alias = aliases[i];
+				if ( alias != null ) {
+					aliasToValue.put( alias, tuple[i] );
+					aliasReferences.put( alias.toLowerCase(ROOT), alias );
+				}
 			}
+			size = tuple.length;
 		}
 
 		@Override
@@ -83,7 +98,7 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 
 		@Override
 		public Object get(String alias) {
-			final String aliasReference = aliasReferences.get( alias.toLowerCase() );
+			final String aliasReference = aliasReferences.get( alias.toLowerCase(ROOT) );
 			if ( aliasReference != null && aliasToValue.containsKey( aliasReference ) ) {
 				return aliasToValue.get( aliasReference );
 			}
@@ -102,7 +117,7 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 			if ( i < 0 ) {
 				throw new IllegalArgumentException( "requested tuple index must be greater than zero" );
 			}
-			if ( i >= aliasToValue.size() ) {
+			if ( i >= size ) {
 				throw new IllegalArgumentException( "requested tuple index exceeds actual tuple size" );
 			}
 			return tuple[i];
@@ -115,8 +130,13 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 		}
 
 		@Override
+		public String toString() {
+			return Arrays.toString( tuple );
+		}
+
+		@Override
 		public List<TupleElement<?>> getElements() {
-			List<TupleElement<?>> elements = new ArrayList<>( aliasToValue.size() );
+			List<TupleElement<?>> elements = new ArrayList<>( size );
 
 			for ( Map.Entry<String, Object> entry : aliasToValue.entrySet() ) {
 				elements.add( new NativeTupleElementImpl<>( getValueClass( entry.getValue() ), entry.getKey() ) );

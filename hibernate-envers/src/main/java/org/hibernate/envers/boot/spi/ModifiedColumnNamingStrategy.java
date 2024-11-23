@@ -1,17 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.model.AttributeContainer;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.mapping.Value;
-
-import org.dom4j.Element;
 
 /**
  * Defines a naming strategy for applying modified columns to the audited entity metamodel.
@@ -24,14 +21,14 @@ public interface ModifiedColumnNamingStrategy {
 	/**
 	 * Adds modified columns to the audited entity metamodel.
 	 *
-	 * @param globalCfg the envers global configuration
+	 * @param configuration the envers configuration
 	 * @param value the property value
-	 * @param parent the parent audited entity metamodel
+	 * @param mapping the entity mapping model
 	 * @param propertyAuditingData the property auditing data
 	 */
 	void addModifiedColumns(
-			GlobalConfiguration globalCfg,
+			Configuration configuration,
 			Value value,
-			Element parent,
+			AttributeContainer mapping,
 			PropertyAuditingData propertyAuditingData);
 }

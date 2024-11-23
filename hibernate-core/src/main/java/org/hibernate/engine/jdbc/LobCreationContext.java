@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
 import java.sql.Connection;
@@ -17,7 +15,8 @@ public interface LobCreationContext {
 	/**
 	 * The callback contract for making use of the JDBC {@link Connection}.
 	 */
-	public static interface Callback<T> {
+	@FunctionalInterface
+	interface Callback<T> {
 		/**
 		 * Perform whatever actions are necessary using the provided JDBC {@link Connection}.
 		 *
@@ -27,7 +26,11 @@ public interface LobCreationContext {
 		 *
 		 * @throws SQLException Indicates trouble accessing the JDBC driver to create the LOB
 		 */
-		public T executeOnConnection(Connection connection) throws SQLException;
+		T executeOnConnection(Connection connection) throws SQLException;
+
+		default T from(Connection connection) throws SQLException {
+			return executeOnConnection( connection );
+		}
 	}
 
 	/**
@@ -39,5 +42,9 @@ public interface LobCreationContext {
 	 *
 	 * @return The LOB created by the callback.
 	 */
-	public <T> T execute(Callback<T> callback);
+	<T> T execute(Callback<T> callback);
+
+	default <T> T fromContext(Callback<T> callback) {
+		return execute( callback );
+	}
 }

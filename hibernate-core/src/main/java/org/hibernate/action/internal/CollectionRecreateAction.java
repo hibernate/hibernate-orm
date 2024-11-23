@@ -1,18 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
@@ -27,17 +22,16 @@ public final class CollectionRecreateAction extends CollectionAction {
 
 	/**
 	 * Constructs a CollectionRecreateAction
-	 *
-	 * @param collection The collection being recreated
+	 *  @param collection The collection being recreated
 	 * @param persister The collection persister
 	 * @param id The collection key
 	 * @param session The session
 	 */
 	public CollectionRecreateAction(
-			final PersistentCollection collection,
+			final PersistentCollection<?> collection,
 			final CollectionPersister persister,
-			final Serializable id,
-			final SharedSessionContractImplementor session) {
+			final Object id,
+			final EventSource session) {
 		super( persister, collection, id, session );
 	}
 
@@ -45,8 +39,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	public void execute() throws HibernateException {
 		// this method is called when a new non-null collection is persisted
 		// or when an existing (non-null) collection is moved to a new owner
-		final PersistentCollection collection = getCollection();
-		
+		final PersistentCollection<?> collection = getCollection();
 		preRecreate();
 		final SharedSessionContractImplementor session = getSession();
 		getPersister().recreate( collection, getKey(), session);
@@ -61,24 +54,22 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void preRecreate() {
-		final EventListenerGroup<PreCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_RECREATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PreCollectionRecreateEvent event = new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
-		for ( PreCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreRecreateCollection( event );
-		}
+		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_RECREATE
+				.fireLazyEventOnEachListener( this::newPreCollectionRecreateEvent,
+						PreCollectionRecreateEventListener::onPreRecreateCollection );
+	}
+
+	private PreCollectionRecreateEvent newPreCollectionRecreateEvent() {
+		return new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
 	}
 
 	private void postRecreate() {
-		final EventListenerGroup<PostCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_RECREATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostCollectionRecreateEvent event = new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
-		for ( PostCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostRecreateCollection( event );
-		}
+		getFastSessionServices().eventListenerGroup_POST_COLLECTION_RECREATE
+				.fireLazyEventOnEachListener( this::newPostCollectionRecreateEvent,
+						PostCollectionRecreateEventListener::onPostRecreateCollection );
+	}
+
+	private PostCollectionRecreateEvent newPostCollectionRecreateEvent() {
+		return new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
 	}
 }

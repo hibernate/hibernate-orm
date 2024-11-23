@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 
 /**
  * Used in building the AuditConfiguration to allow callbacks for generated audit entities.
@@ -15,7 +12,8 @@ import org.dom4j.DocumentException;
  * The idea here is to allow a Envers to "callback" with any
  *
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public interface MappingCollector {
-	void addDocument(Document document) throws DocumentException;
+	void addDocument(JaxbHbmHibernateMapping mapping);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
 
@@ -14,7 +12,7 @@ import org.hibernate.boot.model.naming.Identifier;
  *
  * @author Steve Ebersole
  */
-public class Sequence implements Exportable {
+public class Sequence implements ContributableDatabaseObject {
 	public static class Name extends QualifiedNameParser.NameParts {
 		public Name(
 				Identifier catalogIdentifier,
@@ -26,23 +24,47 @@ public class Sequence implements Exportable {
 
 	private final QualifiedSequenceName name;
 	private final String exportIdentifier;
-	private int initialValue = 1;
-	private int incrementSize = 1;
+	private final String contributor;
+	private final int initialValue;
+	private final int incrementSize;
+	private final String options;
 
-	public Sequence(Identifier catalogName, Identifier schemaName, Identifier sequenceName) {
-		this.name = new QualifiedSequenceName( catalogName, schemaName, sequenceName );
-		this.exportIdentifier = name.render();
+	public Sequence(
+			String contributor,
+			Identifier catalogName,
+			Identifier schemaName,
+			Identifier sequenceName) {
+		this( contributor, catalogName, schemaName, sequenceName, 1, 1, null );
 	}
 
 	public Sequence(
+			String contributor,
 			Identifier catalogName,
 			Identifier schemaName,
 			Identifier sequenceName,
 			int initialValue,
 			int incrementSize) {
-		this( catalogName, schemaName, sequenceName );
+		this( contributor, catalogName, schemaName, sequenceName, initialValue, incrementSize, null );
+	}
+
+	public Sequence(
+			String contributor,
+			Identifier catalogName,
+			Identifier schemaName,
+			Identifier sequenceName,
+			int initialValue,
+			int incrementSize,
+			String options) {
+		this.contributor = contributor;
+		this.name = new QualifiedSequenceName(
+				catalogName,
+				schemaName,
+				sequenceName
+		);
+		this.exportIdentifier = name.render();
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
+		this.options = options;
 	}
 
 	public QualifiedSequenceName getName() {
@@ -54,12 +76,21 @@ public class Sequence implements Exportable {
 		return exportIdentifier;
 	}
 
+	@Override
+	public String getContributor() {
+		return contributor;
+	}
+
 	public int getInitialValue() {
 		return initialValue;
 	}
 
 	public int getIncrementSize() {
 		return incrementSize;
+	}
+
+	public String getOptions() {
+		return options;
 	}
 
 	public void validate(int initialValue, int incrementSize) {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -29,7 +27,7 @@ public interface ManagedEntity extends Managed {
 	 *
 	 * @return The entity instance.
 	 */
-	public Object $$_hibernate_getEntityInstance();
+	Object $$_hibernate_getEntityInstance();
 
 	/**
 	 * Provides access to the associated EntityEntry.
@@ -38,7 +36,7 @@ public interface ManagedEntity extends Managed {
 	 *
 	 * @see #$$_hibernate_setEntityEntry
 	 */
-	public EntityEntry $$_hibernate_getEntityEntry();
+	EntityEntry $$_hibernate_getEntityEntry();
 
 	/**
 	 * Injects the EntityEntry associated with this entity instance.  The EntityEntry represents state associated
@@ -46,7 +44,7 @@ public interface ManagedEntity extends Managed {
 	 *
 	 * @param entityEntry The EntityEntry associated with this entity instance.
 	 */
-	public void $$_hibernate_setEntityEntry(EntityEntry entityEntry);
+	void $$_hibernate_setEntityEntry(EntityEntry entityEntry);
 
 	/**
 	 * Part of entry linking; obtain reference to the previous entry.  Can be {@code null}, which should indicate
@@ -54,7 +52,7 @@ public interface ManagedEntity extends Managed {
 	 *
 	 * @return The previous entry
 	 */
-	public ManagedEntity $$_hibernate_getPreviousManagedEntity();
+	ManagedEntity $$_hibernate_getPreviousManagedEntity();
 
 	/**
 	 * Part of entry linking; sets the previous entry.  Again, can be {@code null}, which should indicate
@@ -62,7 +60,7 @@ public interface ManagedEntity extends Managed {
 	 *
 	 * @param previous The previous entry
 	 */
-	public void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous);
+	void $$_hibernate_setPreviousManagedEntity(ManagedEntity previous);
 
 	/**
 	 * Part of entry linking; obtain reference to the next entry.  Can be {@code null}, which should indicate
@@ -70,7 +68,7 @@ public interface ManagedEntity extends Managed {
 	 *
 	 * @return The next entry
 	 */
-	public ManagedEntity $$_hibernate_getNextManagedEntity();
+	ManagedEntity $$_hibernate_getNextManagedEntity();
 
 	/**
 	 * Part of entry linking; sets the next entry.  Again, can be {@code null}, which should indicate
@@ -78,5 +76,56 @@ public interface ManagedEntity extends Managed {
 	 *
 	 * @param next The next entry
 	 */
-	public void $$_hibernate_setNextManagedEntity(ManagedEntity next);
+	void $$_hibernate_setNextManagedEntity(ManagedEntity next);
+
+	/**
+	 * Used to understand if the tracker can be used to detect dirty properties.
+	 *
+	 * <pre>
+	 * &#64;Entity
+	 * class MyEntity{
+	 * 	&#64;Id Integer id
+	 * 	String name
+	 * }
+	 *
+	 * inSession (
+	 * 	session -> {
+	 * 		MyEntity entity = new MyEntity(1, "Poul");
+	 * 		session.persist(entity);
+	 * });
+	 *
+	 *
+	 * inSession (
+	 * 	session -> {
+	 * 		MyEntity entity = new MyEntity(1, null);
+	 * 		session.merge(entity);
+	 * });
+	 * </pre>
+	 * Because the attribute `name` has been set to null the SelfDirtyTracker
+	 * does not detect any change and so doesn't mark the attribute as dirty
+	 * so the merge does not perform any update.
+	 *
+	 *
+	 * @param useTracker true if the tracker can be used to detect dirty properties, false otherwise
+	 *
+	 */
+	void $$_hibernate_setUseTracker(boolean useTracker);
+
+	/**
+	 * Can the tracker be used to detect dirty attributes
+	 *
+	 * @return true if the tracker can be used to detect dirty properties, false otherwise
+	 */
+	boolean $$_hibernate_useTracker();
+
+	/**
+	 * Special internal contract to optimize type checking
+	 * @see PrimeAmongSecondarySupertypes
+	 * @return this same instance
+	 */
+	@Override
+	default ManagedEntity asManagedEntity() {
+		return this;
+	}
+
 }

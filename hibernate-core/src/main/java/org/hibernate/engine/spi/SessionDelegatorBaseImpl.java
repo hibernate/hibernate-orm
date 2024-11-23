@@ -1,33 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
-import java.io.Serializable;
-import java.sql.Connection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.StoredProcedureQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Selection;
-import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -38,15 +21,12 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.Query;
+import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.ReplicationMode;
-import org.hibernate.ScrollMode;
-import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
-import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -54,62 +34,66 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.QueryProducerImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * This class is meant to be extended.
- *
- * Wraps and delegates all methods to a {@link SessionImplementor} and
- * a {@link Session}. This is useful for custom implementations of this
- * API so that only some methods need to be overridden
+ * A wrapper class that delegates all method invocations to a delegate instance of
+ * {@link SessionImplementor}. This is useful for custom implementations of that
+ * API, so that only some methods need to be overridden
+ * <p>
  * (Used by Hibernate Search).
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2012 Red Hat Inc.
+ * @author Sanne Grinovero
  */
 @SuppressWarnings("deprecation")
 public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	protected final SessionImplementor delegate;
 
-	/**
-	 * @deprecated (since 5.3) SessionDelegatorBaseImpl should take just one argument, the SessionImplementor.
-	 * Use the {@link #SessionDelegatorBaseImpl(SessionImplementor)} form instead
-	 */
-	@Deprecated
-	public SessionDelegatorBaseImpl(SessionImplementor delegate, Session session) {
-		if ( delegate == null ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from a null delegate object" );
-		}
-		if ( session == null ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from a null Session" );
-		}
-		if ( delegate != session ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from different Session/SessionImplementor references" );
-		}
-
+	public SessionDelegatorBaseImpl(SessionImplementor delegate) {
 		this.delegate = delegate;
 	}
 
-	public SessionDelegatorBaseImpl(SessionImplementor delegate) {
-		this( delegate, delegate );
-	}
-
 	/**
-	 * Returns the underlying delegate. Be careful that it has a different behavior from the {@link #getDelegate()}
-	 * method coming from the EntityManager interface which returns the current session.
+	 * Returns the delegate session.
+	 * <p>
+	 * @apiNote This returns a different object to the {@link #getDelegate()}
+	 *          method inherited from {@link jakarta.persistence.EntityManager}.
 	 *
 	 * @see SessionDelegatorBaseImpl#getDelegate()
 	 */
@@ -128,6 +112,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Object getTenantIdentifierValue() {
+		return delegate.getTenantIdentifierValue();
+	}
+
+	@Override
 	public UUID getSessionIdentifier() {
 		return delegate.getSessionIdentifier();
 	}
@@ -138,7 +127,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
+	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		return delegate.generateEntityKey( id, persister );
 	}
 
@@ -163,42 +152,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
-		return delegate.getLockRequest( lockModeType, properties );
-	}
-
-	@Override
-	public LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {
-		return delegate.buildLockOptions( lockModeType, properties );
-	}
-
-	@Override
-	public <T> QueryImplementor<T> createQuery(
-			String jpaqlString,
-			Class<T> resultClass,
-			Selection selection,
-			QueryOptions queryOptions) {
-		return delegate.createQuery( jpaqlString,resultClass, selection, queryOptions );
-	}
-
-	@Override
-	public void initializeCollection(PersistentCollection collection, boolean writing) throws HibernateException {
+	public void initializeCollection(PersistentCollection<?> collection, boolean writing) throws HibernateException {
 		delegate.initializeCollection( collection, writing );
 	}
 
 	@Override
-	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable) throws HibernateException {
+	public Object internalLoad(String entityName, Object id, boolean eager, boolean nullable) throws HibernateException {
 		return delegate.internalLoad( entityName, id, eager, nullable );
 	}
 
 	@Override
-	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
+	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		return delegate.immediateLoad( entityName, id );
-	}
-
-	@Override
-	public long getTimestamp() {
-		return delegate.getTimestamp();
 	}
 
 	@Override
@@ -207,42 +172,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.list( query, queryParameters );
-	}
-
-	@Override
-	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.iterate( query, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scroll( query, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode) {
-		return delegate.scroll( criteria, scrollMode );
-	}
-
-	@Override
-	public List list(Criteria criteria) {
-		return delegate.list( criteria );
-	}
-
-	@Override
-	public List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
-		return delegate.listFilter( collection, filter, queryParameters );
-	}
-
-	@Override
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
-		return delegate.iterateFilter( collection, filter, queryParameters );
-	}
-
-	@Override
-	public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException {
+	public EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException {
 		return delegate.getEntityPersister( entityName, object );
 	}
 
@@ -252,7 +182,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Serializable getContextEntityIdentifier(Object object) {
+	public Object getContextEntityIdentifier(Object object) {
 		return delegate.getContextEntityIdentifier( object );
 	}
 
@@ -267,33 +197,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object instantiate(String entityName, Serializable id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
-	}
-
-	@Override
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-		return delegate.listCustomQuery( customQuery, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scrollCustomQuery( customQuery, queryParameters );
-	}
-
-	@Override
-	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-		return delegate.list( spec, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scroll( spec, queryParameters );
-	}
-
-	@Override
-	public int getDontFlushFromFind() {
-		return delegate.getDontFlushFromFind();
 	}
 
 	@Override
@@ -302,23 +207,53 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-		return delegate.executeUpdate( query, queryParameters );
-	}
-
-	@Override
-	public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException {
-		return delegate.executeNativeUpdate( specification, queryParameters );
-	}
-
-	@Override
 	public CacheMode getCacheMode() {
 		return delegate.getCacheMode();
 	}
 
 	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return delegate.getCacheRetrieveMode();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return delegate.getCacheStoreMode();
+	}
+
+	@Override
 	public void setCacheMode(CacheMode cm) {
 		delegate.setCacheMode( cm );
+	}
+
+	@Override
+	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		delegate.setCacheStoreMode( cacheStoreMode );
+	}
+
+	@Override
+	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		delegate.setCacheRetrieveMode( cacheRetrieveMode );
+	}
+
+	@Override
+	public void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled) {
+		delegate.setCriteriaCopyTreeEnabled( jpaCriteriaCopyComplianceEnabled );
+	}
+
+	@Override
+	public boolean isCriteriaCopyTreeEnabled() {
+		return delegate.isCriteriaCopyTreeEnabled();
+	}
+
+	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return delegate.getNativeJdbcParametersIgnored();
+	}
+
+	@Override
+	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
+		delegate.setNativeJdbcParametersIgnored( nativeJdbcParametersIgnored );
 	}
 
 	@Override
@@ -342,11 +277,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public long getTransactionStartTimestamp() {
-		return delegate.getTransactionStartTimestamp();
-	}
-
-	@Override
 	public FlushModeType getFlushMode() {
 		return delegate.getFlushMode();
 	}
@@ -367,11 +297,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setFlushMode(FlushMode fm) {
-		delegate.setHibernateFlushMode( fm );
-	}
-
-	@Override
 	public void lock(Object entity, LockModeType lockMode) {
 		delegate.lock( entity, lockMode );
 	}
@@ -382,8 +307,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Connection connection() {
-		return delegate.connection();
+	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
+		delegate.lock( entity, lockMode, options );
 	}
 
 	@Override
@@ -394,6 +319,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isEventSource() {
 		return delegate.isEventSource();
+	}
+
+	@Override
+	public EventSource asEventSource() {
+		return delegate.asEventSource();
 	}
 
 	@Override
@@ -447,11 +377,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return delegate.isQueryParametersValidationEnabled();
-	}
-
-	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return delegate.shouldAutoJoinTransaction();
 	}
@@ -469,6 +394,27 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public PersistenceContext getPersistenceContextInternal() {
 		return delegate.getPersistenceContextInternal();
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
+		return delegate.autoFlushIfRequired( querySpaces );
+	}
+
+	@Override
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return delegate.autoFlushIfRequired( querySpaces, skipPreFlush );
+	}
+
+	@Override
+	public void autoPreFlush() {
+		delegate.autoPreFlush();
+	}
+
+	@Override
+	public void afterOperation(boolean success) {
+		delegate.afterOperation( success );
 	}
 
 	@Override
@@ -527,7 +473,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
+	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		return delegate.getCriteriaBuilder();
 	}
 
@@ -547,8 +493,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+		return delegate.createEntityGraph( rootType, graphName );
+	}
+
+	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return delegate.createQuery( selectQuery );
 	}
 
 	@Override
@@ -556,89 +512,181 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.getEntityGraphs( entityClass );
 	}
 
-	@Override
-	public QueryImplementor getNamedQuery(String name) {
-		return delegate.getNamedQuery( name );
+	private QueryProducerImplementor queryDelegate() {
+		return delegate;
 	}
 
 	@Override
-	public NativeQueryImplementor getNamedSQLQuery(String name) {
-		return delegate.getNamedSQLQuery( name );
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
+		//noinspection resource
+		return delegate().createMutationQuery( updateQuery );
 	}
 
 	@Override
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
-		return delegate.getNamedNativeQuery( name );
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
+		//noinspection resource
+		return delegate().createMutationQuery( deleteQuery );
 	}
 
 	@Override
-	public QueryImplementor createQuery(String queryString) {
-		return delegate.createQuery( queryString );
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+		//noinspection resource
+		return delegate().createMutationQuery( insertSelect );
 	}
 
 	@Override
-	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
-		return delegate.createQuery( queryString, resultType );
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
+		//noinspection resource
+		return delegate().createMutationQuery( insertSelect );
 	}
 
 	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		return delegate.createQuery( criteriaQuery );
+		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
-		return delegate.createQuery( updateQuery );
+		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
-		return delegate.createQuery( deleteQuery );
+		return queryDelegate().createQuery( deleteQuery );
 	}
 
 	@Override
+	public <T> QueryImplementor<T> createQuery(TypedQueryReference<T> typedQueryReference) {
+		return queryDelegate().createQuery( typedQueryReference );
+	}
+
+	@Override @SuppressWarnings("rawtypes")
+	public QueryImplementor getNamedQuery(String name) {
+		return queryDelegate().getNamedQuery( name );
+	}
+
+	@Override @SuppressWarnings("rawtypes")
+	public NativeQueryImplementor getNamedNativeQuery(String name) {
+		return queryDelegate().getNamedNativeQuery( name );
+	}
+
+	@Override @SuppressWarnings("rawtypes")
+	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
+	}
+
+	@Override @SuppressWarnings("rawtypes")
+	public QueryImplementor createQuery(String queryString) {
+		return queryDelegate().createQuery( queryString );
+	}
+
+	@Override
+	public SelectionQuery<?> createSelectionQuery(String hqlString) {
+		return queryDelegate().createSelectionQuery( hqlString );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
+		return queryDelegate().createSelectionQuery( hqlString, resultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
+		return queryDelegate().createSelectionQuery( criteria );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
+		return queryDelegate().createQuery( queryString, resultType );
+	}
+
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createNamedQuery(String name) {
-		return delegate.createNamedQuery( name );
+		return queryDelegate().createNamedQuery( name );
 	}
 
 	@Override
 	public <T> QueryImplementor<T> createNamedQuery(String name, Class<T> resultClass) {
-		return delegate.createNamedQuery( name, resultClass );
+		return queryDelegate().createNamedQuery( name, resultClass );
 	}
 
 	@Override
+	public SelectionQuery<?> createNamedSelectionQuery(String name) {
+		//noinspection resource
+		return delegate().createNamedSelectionQuery( name );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType) {
+		//noinspection resource
+		return delegate().createNamedSelectionQuery( name, resultType );
+	}
+
+	@Override @SuppressWarnings("rawtypes")
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		return delegate.createNativeQuery( sqlString );
+		return queryDelegate().createNativeQuery( sqlString );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	//note: we're doing something a bit funny here to work around
+	//      the clashing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		return delegate.createNativeQuery( sqlString, resultClass );
+		return queryDelegate().createNativeQuery( sqlString, resultClass );
 	}
 
 	@Override
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMapping) {
-		return delegate.createNativeQuery( sqlString, resultSetMapping );
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
+		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
+	}
+
+	@Override @SuppressWarnings("rawtypes")
+	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
 	@Override
-	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, String resultSetMappingName, Class<T> resultClass) {
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, resultClass );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(String statementString) {
+		return delegate.createMutationQuery( statementString );
+	}
+
+	@Override
+	public MutationQuery createNamedMutationQuery(String name) {
+		return delegate.createNamedMutationQuery( name );
+	}
+
+	@Override
+	public MutationQuery createNativeMutationQuery(String sqlString) {
+		return delegate.createNativeMutationQuery( sqlString );
+	}
+
+	@Override
+	public ProcedureCall createNamedStoredProcedureQuery(String name) {
 		return delegate.createNamedStoredProcedureQuery( name );
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName) {
 		return delegate.createStoredProcedureQuery( procedureName );
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		return delegate.createStoredProcedureQuery( procedureName, resultClasses );
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		return delegate.createStoredProcedureQuery( procedureName, resultSetMappings );
+	}
+
+	@Override
+	public void prepareForQueryExecution(boolean requiresTxn) {
+		delegate.prepareForQueryExecution( requiresTxn );
 	}
 
 	@Override
@@ -657,22 +705,15 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * This is an implementation of EntityManager#getDelegate(). It returns the current session and not the delegate
-	 * session as it is what we want. The name of the method is misleading here but, as it is part of JPA, we cannot do
-	 * anything about it.
-	 * <p>
-	 * To get the underlying delegate, use {@link #delegate()} instead.
+	 * This is the implementation of {@link jakarta.persistence.EntityManager#getDelegate()}.
+	 * It returns this object and <em>not</em> what we call the "delegate" session here.
+	 * To get the delegate session, use {@link #delegate()} instead.
 	 *
 	 * @see SessionDelegatorBaseImpl#delegate()
 	 */
 	@Override
 	public Object getDelegate() {
 		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor createSQLQuery(String queryString) {
-		return delegate.createSQLQuery( queryString );
 	}
 
 	@Override
@@ -686,33 +727,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
 		return delegate.createStoredProcedureCall( procedureName, resultClasses );
 	}
 
 	@Override
 	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
 		return delegate.createStoredProcedureCall( procedureName, resultSetMappings );
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass) {
-		return delegate.createCriteria( persistentClass );
-	}
-
-	@Override
-	public Criteria createCriteria(Class persistentClass, String alias) {
-		return delegate.createCriteria( persistentClass, alias );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName) {
-		return delegate.createCriteria( entityName );
-	}
-
-	@Override
-	public Criteria createCriteria(String entityName, String alias) {
-		return delegate.createCriteria( entityName, alias );
 	}
 
 	@Override
@@ -751,7 +772,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Serializable getIdentifier(Object object) {
+	public Object getIdentifier(Object object) {
 		return delegate.getIdentifier( object );
 	}
 
@@ -786,37 +807,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T load(Class<T> theClass, Serializable id, LockMode lockMode) {
-		return delegate.load( theClass, id, lockMode );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Serializable id, LockOptions lockOptions) {
-		return delegate.load( theClass, id, lockOptions );
-	}
-
-	@Override
-	public Object load(String entityName, Serializable id, LockMode lockMode) {
-		return delegate.load( entityName, id, lockMode );
-	}
-
-	@Override
-	public Object load(String entityName, Serializable id, LockOptions lockOptions) {
-		return delegate.load( entityName, id, lockOptions );
-	}
-
-	@Override
-	public <T> T load(Class<T> theClass, Serializable id) {
-		return delegate.load( theClass, id );
-	}
-
-	@Override
-	public Object load(String entityName, Serializable id) {
-		return delegate.load( entityName, id );
-	}
-
-	@Override
-	public void load(Object object, Serializable id) {
+	public void load(Object object, Object id) {
 		delegate.load( object, id );
 	}
 
@@ -831,42 +822,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Serializable save(Object object) {
-		return delegate.save( object );
-	}
-
-	@Override
-	public Serializable save(String entityName, Object object) {
-		return delegate.save( entityName, object );
-	}
-
-	@Override
-	public void saveOrUpdate(Object object) {
-		delegate.saveOrUpdate( object );
-	}
-
-	@Override
-	public void saveOrUpdate(String entityName, Object object) {
-		delegate.saveOrUpdate( entityName, object );
-	}
-
-	@Override
-	public void update(Object object) {
-		delegate.update( object );
-	}
-
-	@Override
-	public void update(String entityName, Object object) {
-		delegate.update( entityName, object );
-	}
-
-	@Override
-	public Object merge(Object object) {
+	public <T> T merge(T object) {
 		return delegate.merge( object );
 	}
 
 	@Override
-	public Object merge(String entityName, Object object) {
+	public <T> T merge(String entityName, T object) {
 		return delegate.merge( entityName, object );
 	}
 
@@ -881,28 +842,53 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey) {
 		return delegate.find( entityClass, primaryKey );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
 		return delegate.find( entityClass, primaryKey, properties );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
 		return delegate.find( entityClass, primaryKey, lockMode );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
 		return delegate.find( entityClass, primaryKey, lockMode, properties );
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
-		return delegate.getReference( entityClass, primaryKey );
+	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+		return delegate.find( entityClass, primaryKey, options );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+		return delegate.find( entityGraph, primaryKey, options );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityType, Object id, LockMode lockMode) {
+		return delegate.find( entityType, id, lockMode );
+	}
+
+	@Override
+	public <T> T find(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return delegate.find( entityType, id, lockOptions );
+	}
+
+	@Override
+	public <T> T getReference(Class<T> entityClass, Object id) {
+		return delegate.getReference( entityClass, id );
+	}
+
+	@Override
+	public Object getReference(String entityName, Object id) {
+		return delegate.getReference( entityName, id );
 	}
 
 	@Override
@@ -911,28 +897,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void delete(Object object) {
-		delegate.delete( object );
-	}
-
-	@Override
-	public void delete(String entityName, Object object) {
-		delegate.delete( entityName, object );
-	}
-
-	@Override
 	public void lock(Object object, LockMode lockMode) {
 		delegate.lock( object, lockMode );
 	}
 
 	@Override
-	public void lock(String entityName, Object object, LockMode lockMode) {
-		delegate.lock( entityName, object, lockMode );
+	public void lock(String entityName, Object object, LockOptions lockOptions) {
+		delegate.lock( entityName, object, lockOptions );
 	}
 
 	@Override
-	public LockRequest buildLockRequest(LockOptions lockOptions) {
-		return delegate.buildLockRequest( lockOptions );
+	public void lock(Object object, LockOptions lockOptions) {
+		delegate.lock( object, lockOptions );
 	}
 
 	@Override
@@ -956,8 +932,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(String entityName, Object object) {
-		delegate.refresh( entityName, object );
+	public void refresh(Object entity, RefreshOption... options) {
+		delegate.refresh( entity, options );
 	}
 
 	@Override
@@ -971,18 +947,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(String entityName, Object object, LockOptions lockOptions) {
-		delegate.refresh( entityName, object, lockOptions );
-	}
-
-	@Override
 	public LockMode getCurrentLockMode(Object object) {
 		return delegate.getCurrentLockMode( object );
-	}
-
-	@Override
-	public Query createFilter(Object collection, String queryString) {
-		return delegate.createFilter( collection, queryString );
 	}
 
 	@Override
@@ -996,32 +962,37 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T get(Class<T> theClass, Serializable id) {
+	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
+		return delegate.findMultiple( entityType, ids, options );
+	}
+
+	@Override
+	public <T> T get(Class<T> theClass, Object id) {
 		return delegate.get( theClass, id );
 	}
 
 	@Override
-	public <T> T get(Class<T> theClass, Serializable id, LockMode lockMode) {
+	public <T> T get(Class<T> theClass, Object id, LockMode lockMode) {
 		return delegate.get( theClass, id, lockMode );
 	}
 
 	@Override
-	public <T> T get(Class<T> theClass, Serializable id, LockOptions lockOptions) {
+	public <T> T get(Class<T> theClass, Object id, LockOptions lockOptions) {
 		return delegate.get( theClass, id, lockOptions );
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id) {
+	public Object get(String entityName, Object id) {
 		return delegate.get( entityName, id );
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id, LockMode lockMode) {
+	public Object get(String entityName, Object id, LockMode lockMode) {
 		return delegate.get( entityName, id, lockMode );
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id, LockOptions lockOptions) {
+	public Object get(String entityName, Object id, LockOptions lockOptions) {
 		return delegate.get( entityName, id, lockOptions );
 	}
 
@@ -1031,7 +1002,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public IdentifierLoadAccess byId(String entityName) {
+	public <T> T getReference(T object) {
+		return delegate.getReference( object );
+	}
+
+	@Override
+	public <T> IdentifierLoadAccess<T> byId(String entityName) {
 		return delegate.byId( entityName );
 	}
 
@@ -1041,7 +1017,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public MultiIdentifierLoadAccess byMultipleIds(String entityName) {
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName) {
 		return delegate.byMultipleIds( entityName );
 	}
 
@@ -1051,7 +1027,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public NaturalIdLoadAccess byNaturalId(String entityName) {
+	public <T> NaturalIdLoadAccess<T> byNaturalId(String entityName) {
 		return delegate.byNaturalId( entityName );
 	}
 
@@ -1061,13 +1037,23 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName) {
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName) {
 		return delegate.bySimpleNaturalId( entityName );
 	}
 
 	@Override
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
 		return delegate.bySimpleNaturalId( entityClass );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
+		return delegate.byMultipleNaturalId( entityClass );
+	}
+
+	@Override
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
+		return delegate.byMultipleNaturalId( entityName );
 	}
 
 	@Override
@@ -1111,16 +1097,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Connection disconnect() {
-		return delegate.disconnect();
-	}
-
-	@Override
-	public void reconnect(Connection connection) {
-		delegate.reconnect( connection );
-	}
-
-	@Override
 	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException {
 		return delegate.isFetchProfileEnabled( name );
 	}
@@ -1136,11 +1112,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public TypeHelper getTypeHelper() {
-		return delegate.getTypeHelper();
-	}
-
-	@Override
 	public LobHelper getLobHelper() {
 		return delegate.getLobHelper();
 	}
@@ -1151,17 +1122,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public boolean isFlushBeforeCompletionEnabled() {
-		return delegate.isFlushBeforeCompletionEnabled();
-	}
-
-	@Override
 	public ActionQueue getActionQueue() {
 		return delegate.getActionQueue();
 	}
 
 	@Override
-	public Object instantiate(EntityPersister persister, Serializable id) throws HibernateException {
+	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
 		return delegate.instantiate( persister, id );
 	}
 
@@ -1171,33 +1137,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void merge(String entityName, Object object, Map copiedAlready) throws HibernateException {
-		delegate.merge( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void persist(String entityName, Object object, Map createdAlready) throws HibernateException {
-		delegate.persist( entityName, object, createdAlready );
-	}
-
-	@Override
-	public void persistOnFlush(String entityName, Object object, Map copiedAlready) {
-		delegate.persistOnFlush( entityName, object, copiedAlready );
-	}
-
-	@Override
-	public void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException {
-		delegate.refresh( entityName, object, refreshedAlready );
-	}
-
-	@Override
-	public void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities) {
-		delegate.delete( entityName, child, isCascadeDeleteEnabled, transientEntities );
-	}
-
-	@Override
-	public void removeOrphanBeforeUpdates(String entityName, Object child) {
-		delegate.removeOrphanBeforeUpdates( entityName, child );
+	public void forceFlush(EntityKey e) throws HibernateException {
+		delegate.forceFlush( e );
 	}
 
 	@Override
@@ -1211,13 +1152,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public LobCreator getLobCreator() {
-		return delegate.getLobCreator();
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return delegate.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return delegate.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public LobCreator getLobCreator() {
+		return delegate.getLobCreator();
 	}
 
 	@Override
@@ -1226,8 +1167,33 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public EventManager getEventManager() {
+		return delegate.getEventManager();
+	}
+
+	@Override
 	public void setJdbcBatchSize(Integer jdbcBatchSize) {
 		delegate.setJdbcBatchSize( jdbcBatchSize );
+	}
+
+	@Override
+	public boolean isSubselectFetchingEnabled() {
+		return delegate.isSubselectFetchingEnabled();
+	}
+
+	@Override
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		delegate.setSubselectFetchingEnabled( enabled );
+	}
+
+	@Override
+	public int getFetchBatchSize() {
+		return delegate.getFetchBatchSize();
+	}
+
+	@Override
+	public void setFetchBatchSize(int batchSize) {
+		delegate.setFetchBatchSize( batchSize );
 	}
 
 	@Override

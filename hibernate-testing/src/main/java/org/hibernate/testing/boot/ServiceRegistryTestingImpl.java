@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.boot;
 
@@ -17,6 +15,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -32,8 +31,15 @@ public class ServiceRegistryTestingImpl
 		extends StandardServiceRegistryImpl
 		implements ServiceRegistryImplementor {
 
+	private ServiceRegistryTestingImpl(
+			boolean autoCloseRegistry,
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map<String, Object> configurationValues) {
+		super( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
+	}
+
 	public static ServiceRegistryTestingImpl forUnitTesting() {
-		return new ServiceRegistryTestingImpl(
+		return ServiceRegistryTestingImpl.create(
 				true,
 				new BootstrapServiceRegistryBuilder().build(),
 				StandardServiceInitiators.LIST,
@@ -41,12 +47,12 @@ public class ServiceRegistryTestingImpl
 						dialectFactoryService(),
 						connectionProviderService()
 				),
-				Environment.getProperties()
+				PropertiesHelper.map( Environment.getProperties() )
 		);
 	}
 
-	public static ServiceRegistryTestingImpl forUnitTesting(Map settings) {
-		return new ServiceRegistryTestingImpl(
+	public static ServiceRegistryTestingImpl forUnitTesting(Map<String,Object> settings) {
+		return ServiceRegistryTestingImpl.create(
 				true,
 				new BootstrapServiceRegistryBuilder().build(),
 				StandardServiceInitiators.LIST,
@@ -58,23 +64,28 @@ public class ServiceRegistryTestingImpl
 		);
 	}
 
-	private static ProvidedService dialectFactoryService() {
-		return new ProvidedService<DialectFactory>( DialectFactory.class, new DialectFactoryTestingImpl() );
+	private static ProvidedService<DialectFactory> dialectFactoryService() {
+		return new ProvidedService<>( DialectFactory.class, new DialectFactoryTestingImpl() );
 	}
 
-	private static ProvidedService connectionProviderService() {
-		return new ProvidedService<ConnectionProvider>(
+	private static ProvidedService<ConnectionProvider> connectionProviderService() {
+		return new ProvidedService<>(
 				ConnectionProvider.class,
 				ConnectionProviderBuilder.buildConnectionProvider( true )
 		);
 	}
 
-	public ServiceRegistryTestingImpl(
+	public static ServiceRegistryTestingImpl create(
 			boolean autoCloseRegistry,
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			List<StandardServiceInitiator> serviceInitiators,
-			List<ProvidedService> providedServices,
-			Map<?, ?> configurationValues) {
-		super( autoCloseRegistry, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
+			List<StandardServiceInitiator<?>> serviceInitiators,
+			List<ProvidedService<?>> providedServices,
+			Map<String,Object> configurationValues) {
+
+		ServiceRegistryTestingImpl instance = new ServiceRegistryTestingImpl( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
+		instance.initialize();
+		instance.applyServiceRegistrations( serviceInitiators, providedServices );
+
+		return instance;
 	}
 }

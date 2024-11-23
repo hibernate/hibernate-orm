@@ -1,21 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * Factory for {@link Optimizer} instances.
@@ -24,130 +22,55 @@ import org.jboss.logging.Logger;
  */
 public class OptimizerFactory {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			OptimizerFactory.class.getName()
 	);
 
-	/**
-	 * Does the given optimizer name represent a pooled strategy?
-	 *
-	 * @param optimizerName The name of the optimizer
-	 *
-	 * @return {@code true} indicates the optimizer is a pooled strategy.
-	 */
-	public static boolean isPooledOptimizer(String optimizerName) {
-		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( optimizerName );
-		return standardDescriptor != null && standardDescriptor.isPooled();
-	}
+	private static final Class<?>[] CTOR_SIG = new Class[] { Class.class, int.class };
 
-	private static final Class[] CTOR_SIG = new Class[] { Class.class, int.class };
-
-	/**
-	 * Builds an optimizer
-	 *
-	 * @param type The optimizer type, either a short-hand name or the {@link Optimizer} class name.
-	 * @param returnClass The generated value java type
-	 * @param incrementSize The increment size.
-	 *
-	 * @return The built optimizer
-	 *
-	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
-	 */
-	@Deprecated
-	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
+	private static Optimizer buildOptimizer(OptimizerDescriptor descriptor, Class<?> returnClass, int incrementSize) {
 		final Class<? extends Optimizer> optimizerClass;
-
-		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );
-		if ( standardDescriptor != null ) {
-			optimizerClass = standardDescriptor.getOptimizerClass();
+		try {
+			optimizerClass = descriptor.getOptimizerClass();
 		}
-		else {
-			try {
-				optimizerClass = ReflectHelper.classForName( type );
-			}
-			catch( Throwable ignore ) {
-				LOG.unableToLocateCustomOptimizerClass( type );
-				return buildFallbackOptimizer( returnClass, incrementSize );
-			}
+		catch ( Throwable ignore ) {
+			LOG.unableToLocateCustomOptimizerClass( descriptor.getExternalName() );
+			return buildFallbackOptimizer( returnClass, incrementSize );
 		}
 
 		try {
-			final Constructor ctor = optimizerClass.getConstructor( CTOR_SIG );
-			return (Optimizer) ctor.newInstance( returnClass, incrementSize );
+			final Constructor<? extends Optimizer> ctor = optimizerClass.getConstructor( CTOR_SIG );
+			return ctor.newInstance( returnClass, incrementSize );
 		}
-		catch( Throwable ignore ) {
-			LOG.unableToInstantiateOptimizer( type );
+		catch ( Throwable ignore ) {
+			LOG.unableToInstantiateOptimizer( descriptor.getExternalName() );
 		}
 
 		return buildFallbackOptimizer( returnClass, incrementSize );
 	}
 
-	private static Optimizer buildFallbackOptimizer(Class returnClass, int incrementSize) {
+	private static Optimizer buildFallbackOptimizer(Class<?> returnClass, int incrementSize) {
 		return new NoopOptimizer( returnClass, incrementSize );
 	}
 
 	/**
 	 * Builds an optimizer
 	 *
-	 * @param type The optimizer type, either a short-hand name or the {@link Optimizer} class name.
+	 * @param type The optimizer type, either a shorthand name or the {@link Optimizer} class name.
 	 * @param returnClass The generated value java type
 	 * @param incrementSize The increment size.
 	 * @param explicitInitialValue The user supplied initial-value (-1 indicates the user did not specify).
 	 *
 	 * @return The built optimizer
 	 */
-	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize, long explicitInitialValue) {
+	public static Optimizer buildOptimizer(OptimizerDescriptor type, Class<?> returnClass, int incrementSize, long explicitInitialValue) {
 		final Optimizer optimizer = buildOptimizer( type, returnClass, incrementSize );
-		if ( InitialValueAwareOptimizer.class.isInstance( optimizer ) ) {
+		if ( optimizer instanceof InitialValueAwareOptimizer ) {
 			( (InitialValueAwareOptimizer) optimizer ).injectInitialValue( explicitInitialValue );
 		}
 		return optimizer;
 	}
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#NONE}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String NONE = StandardOptimizerDescriptor.NONE.getExternalName();
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#HILO}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String HILO = StandardOptimizerDescriptor.HILO.getExternalName();
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#LEGACY_HILO}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String LEGACY_HILO = "legacy-hilo";
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#POOLED}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String POOL = "pooled";
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#POOLED_LO}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String POOL_LO = "pooled-lo";
 
 	/**
 	 * Determine the optimizer to use when there was not one explicitly specified.
@@ -156,17 +79,18 @@ public class OptimizerFactory {
 		if ( incrementSize <= 1 ) {
 			return StandardOptimizerDescriptor.NONE.getExternalName();
 		}
-
-		// see if the user defined a preferred pooled optimizer...
-		final String preferredPooledOptimizerStrategy = configSettings.getProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER );
-		if ( StringHelper.isNotEmpty( preferredPooledOptimizerStrategy ) ) {
-			return preferredPooledOptimizerStrategy;
+		else {
+			// see if the user defined a preferred pooled optimizer...
+			final String preferredPooledOptimizerStrategy =
+					configSettings.getProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER );
+			if ( isNotEmpty( preferredPooledOptimizerStrategy ) ) {
+				return preferredPooledOptimizerStrategy;
+			}
+			else {
+				// otherwise fallback to the fallback strategy
+				return StandardOptimizerDescriptor.POOLED.getExternalName();
+			}
 		}
-
-		// otherwise fallback to the fallback strategy (considering the deprecated PREFER_POOLED_VALUES_LO setting)
-		return ConfigurationHelper.getBoolean( AvailableSettings.PREFER_POOLED_VALUES_LO, configSettings, false )
-				? StandardOptimizerDescriptor.POOLED_LO.getExternalName()
-				: StandardOptimizerDescriptor.POOLED.getExternalName();
 	}
 
 	private OptimizerFactory() {

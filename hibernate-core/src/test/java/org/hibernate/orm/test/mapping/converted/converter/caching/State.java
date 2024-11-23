@@ -1,0 +1,31 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.mapping.converted.converter.caching;
+
+import org.hibernate.annotations.Immutable;
+
+/**
+ * @author Steve Ebersole
+ */
+@Immutable
+public enum State {
+	TX( "TX", "Texas" );
+
+	private final String code;
+	private final String name;
+
+	State(String code, String name) {
+		this.code = code;
+		this.name = name;
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public String getName() {
+		return name;
+	}
+}

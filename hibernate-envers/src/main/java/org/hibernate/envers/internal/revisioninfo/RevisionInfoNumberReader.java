@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.revisioninfo;
 
@@ -19,8 +17,9 @@ import org.hibernate.service.ServiceRegistry;
 public class RevisionInfoNumberReader {
 	private final Getter revisionIdGetter;
 
-	public RevisionInfoNumberReader(Class<?> revisionInfoClass, PropertyData revisionInfoIdData, ServiceRegistry serviceRegistry) {
+	public RevisionInfoNumberReader(Class<?> revisionInfoClass, PropertyData revisionInfoIdData, ServiceRegistry serviceRegistry, RevisionInfoGenerator generator) {
 		revisionIdGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoIdData, serviceRegistry );
+		generator.setRevisionInfoNumberReader( this );
 	}
 
 	public Number getRevisionNumber(Object revision) {

@@ -1,24 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
-import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
@@ -29,10 +25,9 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.jboss.logging.Logger;
@@ -40,10 +35,10 @@ import org.jboss.logging.Logger;
 /**
  * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly
  * managing both sides of the association (ie, the ManyToOne collection is changed w/o properly managing the OneToMany).
- * 
- * For this functionality to be used, {@link org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be
+ * <p>
+ * For this functionality to be used, {@value org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be
  * enabled.  For performance reasons, it's disabled by default.
- * 
+ *
  * @author Andreas Berger
  */
 public class CollectionCacheInvalidator
@@ -56,13 +51,11 @@ public class CollectionCacheInvalidator
 	public static boolean PROPAGATE_EXCEPTION = false;
 
 	@Override
-	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry) {
-		integrate( serviceRegistry, sessionFactory );
-	}
-
-	@Override
-	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	public void integrate(
+			Metadata metadata,
+			BootstrapContext bootstrapContext,
+			SessionFactoryImplementor sessionFactory) {
+		integrate( sessionFactory );
 	}
 
 	@Override
@@ -71,7 +64,7 @@ public class CollectionCacheInvalidator
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(EntityPersister persister) {
 		return true;
 	}
 
@@ -85,7 +78,7 @@ public class CollectionCacheInvalidator
 		evictCache( event.getEntity(), event.getPersister(), event.getSession(), event.getOldState() );
 	}
 
-	private void integrate(SessionFactoryServiceRegistry serviceRegistry, SessionFactoryImplementor sessionFactory) {
+	private void integrate(SessionFactoryImplementor sessionFactory) {
 		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 		if ( !sessionFactoryOptions.isAutoEvictCollectionCache() ) {
 			// feature is disabled
@@ -95,7 +88,8 @@ public class CollectionCacheInvalidator
 			// Nothing to do, if caching is disabled
 			return;
 		}
-		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final EventListenerRegistry eventListenerRegistry =
+				sessionFactory.getServiceRegistry().requireService( EventListenerRegistry.class );
 		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
 		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
 		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );
@@ -105,7 +99,7 @@ public class CollectionCacheInvalidator
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 
-			final MetamodelImplementor metamodel = factory.getMetamodel();
+			final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 			Set<String> collectionRoles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( collectionRoles == null || collectionRoles.isEmpty() ) {
 				return;
@@ -113,7 +107,7 @@ public class CollectionCacheInvalidator
 			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 			final boolean debugEnabled = LOG.isDebugEnabled();
 			for ( String role : collectionRoles ) {
-				final CollectionPersister collectionPersister = metamodel.collectionPersister( role );
+				final CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
 				if ( !collectionPersister.hasCache() ) {
 					// ignore collection if no caching is used
 					continue;
@@ -123,14 +117,14 @@ public class CollectionCacheInvalidator
 				if ( !collectionPersister.isManyToMany() &&
 						mappedBy != null && !mappedBy.isEmpty() ) {
 					int i = entityMetamodel.getPropertyIndex( mappedBy );
-					Serializable oldId = null;
+					Object oldId = null;
 					if ( oldState != null ) {
 						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the
 						// old one
 						oldId = getIdentifier( session, oldState[i] );
 					}
-					Object ref = persister.getPropertyValue( entity, i );
-					Serializable id = getIdentifier( session, ref );
+					Object ref = persister.getValue( entity, i );
+					Object id = getIdentifier( session, ref );
 
 					// only evict if the related entity has changed
 					if ( ( id != null && !id.equals( oldId ) ) || ( oldId != null && !oldId.equals( id ) ) ) {
@@ -148,9 +142,9 @@ public class CollectionCacheInvalidator
 					}
 					final CollectionDataAccess cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
 					final SoftLock softLock = cacheAccessStrategy.lockRegion();
-					session.getActionQueue().registerProcess( (success, session1) -> {
-						cacheAccessStrategy.unlockRegion( softLock );
-					} );
+					session.getActionQueue().registerProcess(
+							(success, session1) -> cacheAccessStrategy.unlockRegion( softLock )
+					);
 				}
 			}
 		}
@@ -163,49 +157,50 @@ public class CollectionCacheInvalidator
 		}
 	}
 
-	private Serializable getIdentifier(EventSource session, Object obj) {
-		Serializable id = null;
+	private Object getIdentifier(EventSource session, Object obj) {
+		Object id = null;
 		if ( obj != null ) {
 			id = session.getContextEntityIdentifier( obj );
 			if ( id == null ) {
-				id = session.getSessionFactory().getMetamodel().entityPersister( obj.getClass() ).getIdentifier( obj, session );
+				final EntityPersister persister = session.getFactory()
+						.getRuntimeMetamodels()
+						.getMappingMetamodel()
+						.getEntityDescriptor( obj.getClass() );
+				id = persister.getIdentifier( obj, session );
 			}
 		}
 		return id;
 	}
 
-	private void evict(Serializable id, CollectionPersister collectionPersister, EventSource session) {
+	private void evict(Object id, CollectionPersister collectionPersister, EventSource session) {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
 		}
-		AfterTransactionCompletionProcess afterTransactionProcess = new CollectionEvictCacheAction(
+		CollectionEvictCacheAction evictCacheAction = new CollectionEvictCacheAction(
 				collectionPersister,
 				null,
 				id,
 				session
-		).lockCache();
-		session.getActionQueue().registerProcess( afterTransactionProcess );
+		);
+		evictCacheAction.execute();
+		session.getActionQueue().registerProcess( evictCacheAction.getAfterTransactionCompletionProcess() );
 	}
 
 	//execute the same process as invalidation with collection operations
 	private static final class CollectionEvictCacheAction extends CollectionAction {
-		protected CollectionEvictCacheAction(
+		CollectionEvictCacheAction(
 				CollectionPersister persister,
-				PersistentCollection collection,
-				Serializable key,
-				SharedSessionContractImplementor session) {
+				PersistentCollection<?> collection,
+				Object key,
+				EventSource session) {
 			super( persister, collection, key, session );
 		}
 
 		@Override
 		public void execute() throws HibernateException {
-		}
-
-		public AfterTransactionCompletionProcess lockCache() {
 			beforeExecutions();
-			return getAfterTransactionCompletionProcess();
+			evict();
 		}
-
-
 	}
+
 }

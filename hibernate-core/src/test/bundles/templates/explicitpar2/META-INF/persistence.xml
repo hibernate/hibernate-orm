@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  -->
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+    <persistence-unit name="manager1" transaction-type="RESOURCE_LOCAL">
+        <jar-file>META-INF/externaljar2.jar</jar-file>
+
+        <class>org.hibernate.orm.test.jpa.Cat</class>
+		<class>org.hibernate.orm.test.jpa.Kitten</class>
+        <class>org.hibernate.orm.test.jpa.Distributor</class>
+        <class>org.hibernate.orm.test.jpa.Item</class>
+
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+        <properties>
+            <property name="hibernate.dialect" value="@db.dialect@"/>
+            <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>
+            <property name="hibernate.connection.username" value="@jdbc.user@"/>
+            <property name="hibernate.connection.password" value="@jdbc.pass@"/>
+            <property name="hibernate.connection.url" value="@jdbc.url@"/>
+            <property name="hibernate.connection.init_sql" value="@connection.init_sql@"/>
+            <property name="hibernate.cache.use_query_cache" value="true"/>
+            <property name="hibernate.cache.region_prefix" value="hibernate.test"/>
+            <property name="hibernate.jdbc.batch_size" value="0"/>
+            <property name="hibernate.max_fetch_depth" value="3"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.generate_statistics" value="true"/>
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
+            <property name="hibernate.physical_naming_strategy" value="org.hibernate.orm.test.jpa.MyNamingStrategy"/>
+
+            <!-- cache configuration -->
+            <property name="hibernate.classcache.org.hibernate.orm.test.jpa.Item" value="read-write"/>
+            <property name="hibernate.collectioncache.org.hibernate.orm.test.jpa.Item.distributors"
+                      value="read-write, RegionName"/>
+
+            <!-- event overriding -->
+            <property name="hibernate.event.listener.pre-insert" value="org.hibernate.orm.test.jpa.NoOpListener"/>
+        </properties>
+    </persistence-unit>
+</persistence>

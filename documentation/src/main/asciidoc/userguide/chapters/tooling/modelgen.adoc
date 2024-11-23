@@ -1,0 +1,124 @@
+[[tooling-modelgen]]
+=== Static Metamodel Generator
+:root-project-dir: ../../../../../../..
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:example-dir-metamodelgen-generated: {testing-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:toolingTestsDir: {core-project-dir}/src/test/java/org/hibernate/orm/test/tooling
+:ann-proc: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-082C33A5-CBCA-471A-845E-E77F79B7B049__GUID-3FA757C8-B67B-46BC-AEF9-7C3FFB126A93
+:ann-proc-path: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-214E175F-0F06-4CDC-B511-5BA469955F5A
+:ann-proc-options: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-6CC814A4-8A29-434A-B7E1-DF8234784E7C
+:intg-guide: https://docs.jboss.org/hibernate/orm/6.3/introduction/html_single/Hibernate_Introduction.html#generator
+
+Jakarta Persistence defines a typesafe Criteria API which allows <<criteria,`Criteria`>>
+queries to be constructed in a strongly-typed manner, utilizing so-called static metamodel
+classes.  The Hibernate Static Metamodel Generator, available via the published
+`org.hibernate.orm:hibernate-processor` artifact, is an link:{ann-proc}[annotation processor]
+used to generate these static metamodel classes.
+
+[NOTE]
+====
+The Hibernate Static Metamodel Generator has many additional capabilities beyond static metamodel
+class generation.  See the link:{intg-guide}[Introduction Guide] for a complete discussion of its
+capabilities.  The rest of the discussion here is limited to the Jakarta Persistence static metamodel.
+
+The generator is expected to be run using the `javac` link:{ann-proc-path}[-processorpath] option.
+See the tool-specific discussions (<<tooling-gradle-modelgen,Gradle>>, <<tooling-maven-modelgen,Maven>>
+and <<tooling-ant,Ant>>) for details on integrating the generator into those environments.
+====
+
+[[tooling-modelgen-classes]]
+==== Metamodel classes
+
+The structure of the metamodel classes is described in the Jakarta Persistence
+specification, but for completeness the definition is repeated in the following
+paragraphs.  For every class in a persistence-unit, the generator will produce
+a static metamodel class based on the following rules:
+
+* For each managed class `X` in package `p`, a metamodel class `X_` is created in package `p`.
+* The name of the metamodel class is derived from the name of the managed class by appending "_" to the managed class name.
+* The metamodel class `X_` must be annotated with the `jakarta.persistence.StaticMetamodel` annotation.  The generation
+can also be configured to add the `javax.annotation.processing.Generated` annotation.
+* If class `X` extends another class `S`, where `S` is the most derived managed class extended by `X`, then
+class `X_` must extend class `S_`, where `S_` is the metamodel class created for `S`.
+* For every persistent singular attribute `y` declared by class `X`, where the type of `y` is `Y`,
+the metamodel class must contain a declaration as follows:
+
+ public static volatile SingularAttribute<X, Y> y;
+
+* For every persistent plural attribute `z` declared by class `X`, where the element type of `z` is `Z`, the metamodel
+class must contain a declaration as follows:
+
+** if the collection type of `z` is `java.util.Collection`, then
+
+ public static volatile CollectionAttribute<X, Z> z;
+
+** if the collection type of `z` is `java.util.Set`, then
+
+ public static volatile SetAttribute<X, Z> z;
+
+** if the collection type of `z` is `java.util.List`, then
+
+ public static volatile ListAttribute<X, Z> z;
+
+** if the collection type of `z` is `java.util.Map`, then
++
+ public static volatile MapAttribute<X, K, Z> z;
++
+where `K` is the type of the key of the map in class `X`
+
+* Import statements must be included for `jakarta.persistence.metamodel` types as
+needed, as well as all domain model classes (i.e., `X`, `S`, `Y`, `Z`, and `K`).
+
+As an example, consider the following domain model -
+
+[[ex-tooling-modelgen-model]]
+.`Order` and `Item` entities
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/tooling/Customer.java[tags=tooling-modelgen-model]
+include::{example-dir-model}/tooling/Order.java[tags=tooling-modelgen-model]
+include::{example-dir-model}/tooling/Item.java[tags=tooling-modelgen-model]
+----
+====
+
+Given this model, the generator will produce classes named `Customer_`, `Order_` and `Item_`.  As an example:
+
+[[tooling-modelgen-metamodel]]
+.`Order_`
+====
+[source, java, indent=0]
+----
+include::{example-dir-metamodelgen-generated}/tooling/Order_.java[]
+----
+====
+
+At boot-time, Hibernate will find these classes and populate them.  They can then be used in
+Criteria queries for type-safe path references.  For example:
+
+[[tooling-modelgen-usage]]
+.Static Metamodel usage
+====
+[source, java, indent=0]
+----
+include::{toolingTestsDir}/modelgen/ModelGenTests.java[tags=tooling-modelgen-usage]
+----
+====
+
+[[tooling-modelgen-options]]
+==== Generation Options
+
+The Hibernate Static Metamodel Generator accepts a number of configuration options, which are specified as
+part of the `javac` execution using standard link:{ann-proc-options}[-A] options -
+
+`-Adebug=[true|false]`:: Enables debug logging from the generator.
+`-AfullyAnnotationConfigured=[true|false]`:: Controls whether `orm.xml` mapping should be considered.
+`-ApersistenceXml=[path]`:: Specifies the path to the `persistence.xml` file.
+`-AormXml=[path]`:: Specifies the path to an `orm.xml` file.
+`-AlazyXmlParsing=[true|false]`:: Controls whether the processor should attempt to determine whether any `orm.xml` files have changed.
+`-AaddGeneratedAnnotation=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated` to the generated classes.
+`-addGenerationDate=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated#date`.
+`-addSuppressWarningsAnnotation=[warning[,warning]*|true]`:: A comma-separated list of warnings to suppress, or simply `true` if `@SuppressWarnings({"deprecation","rawtypes"})` should be added to the generated classes.
+

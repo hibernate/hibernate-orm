@@ -1,6 +1,8 @@
 [[naming]]
 === Naming strategies
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/naming
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-naming: {core-project-dir}/src/test/java/org/hibernate/orm/test/naming
 
 Part of the mapping of an object model to the relational database is
 mapping names from the object model to the corresponding database names.
@@ -13,35 +15,19 @@ Hibernate looks at this as 2-stage process:
 * Second is the resolving of this logical name to a physical name which is defined
 	by the <<PhysicalNamingStrategy>> contract.
 
-
-[NOTE]
-.Historical NamingStrategy contract
-====
-Historically Hibernate defined just a single `org.hibernate.cfg.NamingStrategy`.  That singular
-NamingStrategy contract actually combined the separate concerns that are now modeled individually
-as ImplicitNamingStrategy and PhysicalNamingStrategy.
-
-Also, the NamingStrategy contract was often not flexible enough to properly apply a given naming
-"rule", either because the API lacked the information to decide or because the API was honestly
-not well defined as it grew.
-
-Due to these limitation, `org.hibernate.cfg.NamingStrategy` has been deprecated
-in favor of ImplicitNamingStrategy and PhysicalNamingStrategy.
-====
-
 At the core, the idea behind each naming strategy is to minimize the amount of
 repetitive information a developer must provide for mapping a domain model.
 
 
 [NOTE]
-.JPA Compatibility
+.Jakarta Persistence Compatibility
 ====
-JPA defines inherent rules about implicit logical name determination.  If JPA provider
-portability is a major concern, or if you really just like the JPA-defined implicit
+Jakarta Persistence defines inherent rules about implicit logical name determination.  If Jakarta Persistence provider
+portability is a major concern, or if you really just like the Jakarta Persistence-defined implicit
 naming rules, be sure to stick with ImplicitNamingStrategyJpaCompliantImpl (the default).
 
-Also, JPA defines no separation between logical and physical name.  Following the JPA
-specification, the logical name *is* the physical name.  If JPA provider portability
+Also, Jakarta Persistence defines no separation between logical and physical name.  Following the Jakarta Persistence
+specification, the logical name *is* the physical name.  If Jakarta Persistence provider portability
 is important, applications should prefer not to specify a PhysicalNamingStrategy.
 ====
 
@@ -66,9 +52,9 @@ the implementation using the `hibernate.implicit_naming_strategy` configuration 
 * pre-defined "short names" for the out-of-the-box implementations
 +
 `default`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - an alias for `jpa`
-`jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - the JPA 2.0 compliant naming strategy
+`jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - the Jakarta Persistence compliant naming strategy
 `legacy-hbm`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl` - compliant with the original Hibernate NamingStrategy
-`legacy-jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` - compliant with the legacy NamingStrategy developed for JPA 1.0, which was unfortunately unclear in many respects regarding implicit naming rules
+`legacy-jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` - compliant with the legacy NamingStrategy developed for Java Persistence 1.0, which was unfortunately unclear in many respects regarding implicit naming rules
 `component-path`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl` - mostly follows `ImplicitNamingStrategyJpaCompliantImpl` rules, except that it uses the full composite paths, as opposed to just the ending property part
 +
 * reference to a Class that implements the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
@@ -89,7 +75,7 @@ into the mapping via explicit names.
 
 While the purpose of an ImplicitNamingStrategy is to determine that an attribute named `accountNumber` maps to
 a logical column name of `accountNumber` when not explicitly specified, the purpose of a PhysicalNamingStrategy
-would be, for example, to say that the physical column name should instead be abbreviated `acct_num`.
+would be, for example, to say that the physical column name should instead be abbreviated to `acct_num`.
 
 [NOTE]
 ====
@@ -113,7 +99,7 @@ whose naming standards are to:
 ====
 [source,java]
 ----
-include::{sourcedir}/AcmeCorpPhysicalNamingStrategy.java[]
+include::{example-dir-naming}/AcmeCorpPhysicalNamingStrategy.java[]
 ----
 ====
 

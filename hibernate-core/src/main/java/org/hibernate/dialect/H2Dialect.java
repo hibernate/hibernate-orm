@@ -1,269 +1,678 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
-import org.hibernate.JDBCException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
-import org.hibernate.dialect.identity.H2IdentityColumnSupport;
+import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.H2V1SequenceSupport;
+import org.hibernate.dialect.sequence.H2V2SequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
+import jakarta.persistence.TemporalType;
+
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
- * A dialect compatible with the H2 database.
+ * A {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
+ * @author Jürgen Kreitler
  */
 public class H2Dialect extends Dialect {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			H2Dialect.class.getName()
-	);
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
 
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-		}
+	private final boolean ansiSequence;
+	private final boolean cascadeConstraints;
+	private final boolean useLocalTime;
 
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean bindLimitParametersInReverseOrder() {
-			return true;
-		}
-	};
-
-	private final boolean supportsTuplesInSubqueries;
-	private final String querySequenceString;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
+	private final String querySequenceString;
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+
+	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
+
+	public H2Dialect(DialectResolutionInfo info) {
+		this( staticDetermineDatabaseVersion( info ) );
+		registerKeywords( info );
+	}
+
+	public H2Dialect() {
+		this( MINIMUM_VERSION );
+	}
+
+	public H2Dialect(DatabaseVersion version) {
+		super(version);
+
+		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
+		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
+		ansiSequence = true;
+
+		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
+		cascadeConstraints = true;
+		// 1.4.200 introduced changes in current_time and current_timestamp
+		useLocalTime = true;
+
+		this.sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
+		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+		this.optionalTableUpdateStrategy = H2Dialect::usingMerge;
+	}
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return staticDetermineDatabaseVersion(info);
+	}
+
+	// Static version necessary to call from constructor
+	private static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
+		DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
+		if ( info.getDatabaseVersion() != null ) {
+			version = DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) );
+		}
+		return version;
+	}
+
+	private static int parseBuildId(DialectResolutionInfo info) {
+		final String databaseVersion = info.getDatabaseVersion();
+		if ( databaseVersion == null ) {
+			return 0;
+		}
+
+		final String[] bits = StringHelper.split( ". -", databaseVersion );
+		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
+	}
+
+	@Override
+	public boolean getDefaultNonContextualLobCreation() {
+		// http://code.google.com/p/h2database/issues/detail?id=235
+		return true;
+	}
+
+	@Override
+	public boolean supportsStandardArrays() {
+		return true;
+	}
+
+	@Override
+	public boolean useArrayForMultiValuedParameters() {
+		// Performance is worse than the in-predicate version
+		return false;
+	}
+
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		return switch (sqlTypeCode) {
+			// h2 recognizes NCHAR and NCLOB as aliases
+			// but, according to the docs, not NVARCHAR
+			// so just normalize all these types
+			case NCHAR -> columnType( CHAR );
+			case NVARCHAR -> columnType( VARCHAR );
+			case NCLOB -> columnType( CLOB );
+			default -> super.columnType( sqlTypeCode );
+		};
+	}
+
+	@Override
+	protected String castType(int sqlTypeCode) {
+		return switch (sqlTypeCode) {
+			case CHAR, NCHAR -> "char";
+			case VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "varbinary";
+			default -> super.castType( sqlTypeCode );
+		};
+	}
+
+	@Override
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeRegistry();
+
+		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
+	}
+
+	public boolean hasOddDstBehavior() {
+		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
+		return true;
+	}
+
+	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+
+		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
+		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+
+		functionFactory.pi();
+		functionFactory.cot();
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.log10();
+		functionFactory.mod_operator();
+		functionFactory.rand();
+		functionFactory.soundex();
+		functionFactory.translate();
+		functionFactory.bitand();
+		functionFactory.bitor();
+		functionFactory.bitxor();
+		functionFactory.bitnot();
+		functionFactory.bitAndOr();
+		functionFactory.yearMonthDay();
+		functionFactory.hourMinuteSecond();
+		functionFactory.dayOfWeekMonthYear();
+		functionFactory.weekQuarter();
+		functionFactory.daynameMonthname();
+		if ( useLocalTime ) {
+			functionFactory.localtimeLocaltimestamp();
+		}
+		functionFactory.trunc_dateTrunc();
+		functionFactory.dateTrunc();
+		functionFactory.bitLength();
+		functionFactory.octetLength();
+		functionFactory.ascii();
+		functionFactory.octetLength();
+		functionFactory.space();
+		functionFactory.repeat();
+		functionFactory.chr_char();
+		functionFactory.instr();
+		functionFactory.substr();
+		//also natively supports ANSI-style substring()
+		functionFactory.position();
+		functionFactory.trim1();
+		functionFactory.concat_pipeOperator();
+		functionFactory.nowCurdateCurtime();
+		functionFactory.sysdate();
+		functionFactory.insert();
+//		functionFactory.everyAny(); //this would work too
+		functionFactory.everyAny_boolAndOr();
+		functionFactory.median();
+		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
+		functionFactory.format_formatdatetime();
+		functionFactory.rownum();
+		functionFactory.windowFunctions();
+		functionFactory.listagg( null );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.array();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_h2( getMaximumArraySize() );
+		functionFactory.arrayPositions_h2( getMaximumArraySize() );
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_operator();
+		functionFactory.arrayPrepend_operator();
+		functionFactory.arrayAppend_operator();
+		functionFactory.arrayContains_h2( getMaximumArraySize() );
+		functionFactory.arrayIntersects_h2( getMaximumArraySize() );
+		functionFactory.arrayGet_h2();
+		functionFactory.arraySet_h2( getMaximumArraySize() );
+		functionFactory.arrayRemove_h2( getMaximumArraySize() );
+		functionFactory.arrayRemoveIndex_h2( getMaximumArraySize() );
+		functionFactory.arraySlice();
+		functionFactory.arrayReplace_h2( getMaximumArraySize() );
+		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_h2();
+		functionFactory.arrayToString_h2( getMaximumArraySize() );
+
+		functionFactory.jsonObject();
+		functionFactory.jsonArray();
+		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+			functionFactory.jsonValue_h2();
+			functionFactory.jsonQuery_h2();
+			functionFactory.jsonExists_h2();
+			functionFactory.jsonArrayAgg_h2();
+			functionFactory.jsonObjectAgg_h2();
+		}
+
+		functionFactory.xmlelement_h2();
+		functionFactory.xmlcomment();
+		functionFactory.xmlforest_h2();
+		functionFactory.xmlconcat_h2();
+		functionFactory.xmlpi_h2();
+
+		functionFactory.unnest_h2( getMaximumArraySize() );
+		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
+		functionFactory.jsonTable_h2( getMaximumArraySize() );
+	}
 
 	/**
-	 * Constructs a H2Dialect
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to <a href="https://github.com/h2database/h2database/issues/1815">issue 1815</a>.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
 	 */
-	public H2Dialect() {
-		super();
+	protected int getMaximumArraySize() {
+		return 1000;
+	}
 
-		int buildId = Integer.MIN_VALUE;
-		boolean supportsTuplesInSubqueries = false;
+	/**
+	 * Since H2 doesn't support ordinality for the {@code system_range} function or {@code lateral},
+	 * it's impossible to use {@code system_range} for non-constant cases.
+	 * Luckily, correlation can be emulated, but requires that there is an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
 
-		try {
-			// HHH-2300
-			final Class h2ConstantsClass = ReflectHelper.classForName( "org.h2.engine.Constants" );
-			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MAJOR" ).get( null );
-			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MINOR" ).get( null );
-			buildId = (Integer) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "nord";
+	}
 
-			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
-				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
+	@Override
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		tableTypesList.add( "BASE TABLE" );
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
+		return switch (columnTypeName) {
+			// Use REAL instead of FLOAT to get Float as recommended Java type
+			case "FLOAT(24)" -> Types.REAL;
+			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+		};
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		// As of H2 2.0 we get a FLOAT type code even though it is a DOUBLE
+		switch ( jdbcTypeCode ) {
+			case FLOAT:
+				if ( "DOUBLE PRECISION".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( DOUBLE );
+				}
+				break;
+			case OTHER:
+				if ( "GEOMETRY".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( GEOMETRY );
+				}
+				else if ( "JSON".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( JSON );
+				}
+				break;
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
+		return switch (baseTypeName) {
+			case "CHARACTER VARYING" -> VARCHAR;
+			default -> super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		};
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 1_048_576;
+	}
+
+	@Override
+	public String currentTime() {
+		return useLocalTime ? "localtime" : super.currentTime();
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return useLocalTime ? "localtimestamp" : super.currentTimestamp();
+	}
+
+	@Override
+	public String currentTimestampWithTimeZone() {
+		return "current_timestamp";
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return new StandardSqlAstTranslatorFactory() {
+			@Override
+			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
+					SessionFactoryImplementor sessionFactory, Statement statement) {
+				return new H2SqlAstTranslator<>( sessionFactory, statement );
 			}
-			supportsTuplesInSubqueries = majorVersion > 1 || minorVersion > 4 || buildId >= 198;
-		}
-		catch ( Exception e ) {
-			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
-			// not using the correct classloader
-			LOG.undeterminedH2Version();
-		}
+		};
+	}
 
-		if ( buildId >= 32 ) {
-			this.sequenceInformationExtractor = buildId >= 201
-					? SequenceInformationExtractorLegacyImpl.INSTANCE
-					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
-			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+	/**
+	 * In H2, the extract() function does not return
+	 * fractional seconds for the field
+	 * {@link TemporalUnit#SECOND}. We work around
+	 * this here with two calls to extract().
+	 */
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		return unit == SECOND
+				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
+				: super.extractPattern(unit);
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return "cast(?1 as ?2)";
 		}
 		else {
-			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
-			this.querySequenceString = null;
+			return super.castPattern( from, to );
 		}
-		this.supportsTuplesInSubqueries = supportsTuplesInSubqueries;
+	}
 
-		registerColumnType( Types.BOOLEAN, "boolean" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.BINARY, "binary" );
-		registerColumnType( Types.BIT, "boolean" );
-		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, buildId >= 201 ? "numeric($p,$s)" : "decimal($p,$s)" );
-		registerColumnType( Types.NUMERIC, buildId >= 201 ? "numeric($p,$s)" : "decimal($p,$s)" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
-		// H2 does define "longvarchar", but it is a simple alias to "varchar"
-		registerColumnType( Types.LONGVARCHAR, String.format( "varchar(%d)", Integer.MAX_VALUE ) );
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.VARBINARY, buildId >= 201 ? "varbinary($l)" : "binary($l)" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+	@Override @SuppressWarnings("deprecation")
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		if ( intervalType != null ) {
+			return "(?2+?3)";
+		}
+		return unit == SECOND
+				//TODO: if we have an integral number of seconds
+				//      (the common case) this is unnecessary
+				? "dateadd(nanosecond,?2*1e9,?3)"
+				: "dateadd(?1,?2,?3)";
+	}
 
-		// Aggregations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
-
-		// select topic, syntax from information_schema.help
-		// where section like 'Function%' order by section, topic
-		//
-		// see also ->  http://www.h2database.com/html/functions.html
-
-		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan2", new StandardSQLFunction( "atan2", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "bitand", new StandardSQLFunction( "bitand", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bitor", new StandardSQLFunction( "bitor", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bitxor", new StandardSQLFunction( "bitxor", StandardBasicTypes.INTEGER ) );
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "compress", new StandardSQLFunction( "compress", StandardBasicTypes.BINARY ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "decrypt", new StandardSQLFunction( "decrypt", StandardBasicTypes.BINARY ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "encrypt", new StandardSQLFunction( "encrypt", StandardBasicTypes.BINARY ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "expand", new StandardSQLFunction( "compress", StandardBasicTypes.BINARY ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "hash", new StandardSQLFunction( "hash", StandardBasicTypes.BINARY ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NoArgSQLFunction( "rand", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "round", new StandardSQLFunction( "round", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "roundmagic", new StandardSQLFunction( "roundmagic", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "truncate", new StandardSQLFunction( "truncate", StandardBasicTypes.DOUBLE ) );
-
-		// String Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "difference", new StandardSQLFunction( "difference", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hextoraw", new StandardSQLFunction( "hextoraw", StandardBasicTypes.STRING ) );
-		registerFunction( "insert", new StandardSQLFunction( "lower", StandardBasicTypes.STRING ) );
-		registerFunction( "left", new StandardSQLFunction( "left", StandardBasicTypes.STRING ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase", StandardBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim", StandardBasicTypes.STRING ) );
-		registerFunction( "octet_length", new StandardSQLFunction( "octet_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "position", new StandardSQLFunction( "position", StandardBasicTypes.INTEGER ) );
-		registerFunction( "rawtohex", new StandardSQLFunction( "rawtohex", StandardBasicTypes.STRING ) );
-		registerFunction( "repeat", new StandardSQLFunction( "repeat", StandardBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
-		registerFunction( "right", new StandardSQLFunction( "right", StandardBasicTypes.STRING ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", StandardBasicTypes.STRING ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-		registerFunction( "stringencode", new StandardSQLFunction( "stringencode", StandardBasicTypes.STRING ) );
-		registerFunction( "stringdecode", new StandardSQLFunction( "stringdecode", StandardBasicTypes.STRING ) );
-		registerFunction( "stringtoutf8", new StandardSQLFunction( "stringtoutf8", StandardBasicTypes.BINARY ) );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase", StandardBasicTypes.STRING ) );
-		registerFunction( "utf8tostring", new StandardSQLFunction( "utf8tostring", StandardBasicTypes.STRING ) );
-
-		// Time and Date Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "curdate", new NoArgSQLFunction( "curdate", StandardBasicTypes.DATE ) );
-		registerFunction( "curtime", new NoArgSQLFunction( "curtime", StandardBasicTypes.TIME ) );
-		registerFunction( "curtimestamp", new NoArgSQLFunction( "curtimestamp", StandardBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME ) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "datediff", new StandardSQLFunction( "datediff", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-
-		// System Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		registerFunction( "database", new NoArgSQLFunction( "database", StandardBasicTypes.STRING ) );
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
-
-		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		// http://code.google.com/p/h2database/issues/detail?id=235
-		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	@Override @SuppressWarnings("deprecation")
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		if ( unit == null ) {
+			return "(?3-?2)";
+		}
+		return "datediff(?1,?2,?3)";
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS )  ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, temporalAccessor );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "timestamp with time zone '" );
+					appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				else {
+					appender.appendSql( "timestamp '" );
+					appendAsTimestampWithNanos( appender, temporalAccessor, false, jdbcTimeZone );
+					appender.appendSql( '\'' );
+				}
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return " for update";
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeLiteralOffset() ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, date, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, date );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp with time zone '" );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				if ( supportsTimeLiteralOffset() ) {
+					appender.appendSql( "time with time zone '" );
+					appendAsTime( appender, calendar, jdbcTimeZone );
+				}
+				else {
+					appender.appendSql( "time '" );
+					appendAsLocalTime( appender, calendar );
+				}
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp with time zone '" );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public boolean supportsTimeLiteralOffset() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsTemporalLiteralOffset() {
+		return true;
+	}
+
+	@Override
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NATIVE;
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
+		return true;
+	}
+
+	@Override
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( bool );
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
+		return OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override
-	public boolean supportsLimit() {
+	public boolean supportsDistinctFromPredicate() {
 		return true;
 	}
 
 	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
+	public boolean supportsIfExistsAfterTableName() {
+		return !supportsIfExistsBeforeTableName();
 	}
 
 	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
+	public boolean supportsIfExistsBeforeTableName() {
+		return cascadeConstraints;
 	}
 
 	@Override
-	public boolean bindLimitParametersFirst() {
-		return false;
+	public boolean supportsIfExistsAfterAlterTable() {
+		return cascadeConstraints;
 	}
 
 	@Override
@@ -272,33 +681,36 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
+	public String getCascadeConstraintsString() {
+		return cascadeConstraints ? " cascade "
+				: super.getCascadeConstraintsString();
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
 		return true;
 	}
 
 	@Override
-	public boolean supportsPooledSequences() {
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "alter column " + columnName + " set data type " + columnType;
+		// if only altering the type, no need to specify the whole definition
+//		return "alter column " + columnName + " " + columnDefinition;
+	}
+
+	@Override
+	public boolean supportsCommentOn() {
 		return true;
 	}
 
 	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
+	public boolean dropConstraints() {
+		return false;
 	}
 
 	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence if exists " + sequenceName;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "call next value for " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return ansiSequence ? H2V2SequenceSupport.INSTANCE: H2V1SequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -312,87 +724,103 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
 	}
 
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		/**
-		 * Extract the name of the violated constraint from the given SQLException.
-		 *
-		 * @param sqle The exception that was the result of the constraint violation.
-		 * @return The extracted constraint name.
-		 */
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			String constraintName = null;
-			// 23000: Check constraint violation: {0}
-			// 23001: Unique index or primary key violation: {0}
-			if ( sqle.getSQLState().startsWith( "23" ) ) {
-				final String message = sqle.getMessage();
-				final int idx = message.indexOf( "violation: " );
-				if ( idx > 0 ) {
-					constraintName = message.substring( idx + "violation: ".length() );
+	@Override
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new GlobalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
+						entityDescriptor,
+						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new GlobalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						entityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "TRANSACTIONAL";
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.GLOBAL;
+	}
+
+	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return EXTRACTOR;
+	}
+
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				// 23000: Check constraint violation: {0}
+				// 23001: Unique index or primary key violation: {0}
+				if ( sqle.getSQLState().startsWith( "23" ) ) {
+					final String message = sqle.getMessage();
+					final int i = message.indexOf( "violation: " );
+					if ( i > 0 ) {
+						String constraintDescription =
+								message.substring( i + "violation: ".length() )
+										.replace( "\"", "" );
+						if ( sqle.getSQLState().equals( "23506" ) ) {
+							constraintDescription = constraintDescription.substring( 1, constraintDescription.indexOf( ':' ) );
+						}
+						final int j = constraintDescription.indexOf(" ON ");
+						return j>0 ? constraintDescription.substring(0, j) : constraintDescription;
+					}
 				}
-				if ( sqle.getSQLState().equals("23506") ) {
-					constraintName  = constraintName.substring( 1, constraintName.indexOf(":") );
-				}
-			}
-			return constraintName;
-		}
-	};
+				return null;
+			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		SQLExceptionConversionDelegate delegate = super.buildSQLExceptionConversionDelegate();
-		if (delegate == null) {
-			delegate = new SQLExceptionConversionDelegate() {
-				@Override
-				public JDBCException convert(SQLException sqlException, String message, String sql) {
-					final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-
-					if (40001 == errorCode) {
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case 23505 ->
+						// Unique constraint violation
+							new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+							);
+					case 40001 ->
 						// DEADLOCK DETECTED
-						return new LockAcquisitionException(message, sqlException, sql);
-					}
-
-					if (50200 == errorCode) {
+							new LockAcquisitionException(message, sqlException, sql);
+					case 50200 ->
 						// LOCK NOT AVAILABLE
-						return new PessimisticLockException(message, sqlException, sql);
-					}
-
-					if ( 90006 == errorCode ) {
+							new PessimisticLockException(message, sqlException, sql);
+					case 90006 ->
 						// NULL not allowed for column [90006-145]
-						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
-					}
-
-					return null;
-				}
-			};
-		}
-		return delegate;
-	}
-
-	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create cached local temporary table if not exists";
-					}
-
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						// actually 2 different options are specified here:
-						//		1) [on commit drop] - says to drop the table on transaction commit
-						//		2) [transactional] - says to not perform an implicit commit of any current transaction
-						return "on commit drop transactional";					}
-				},
-				AfterUseAction.CLEAN,
-				TempTableDdlTransactionHandling.NONE
-		);
+							new ConstraintViolationException( message, sqlException, sql,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+					case 57014 ->
+							new QueryTimeoutException( message, sqlException, sql );
+					default -> null;
+				};
 	}
 
 	@Override
@@ -410,17 +838,17 @@ public class H2Dialect extends Dialect {
 		return "call current_timestamp()";
 	}
 
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
-	}
-
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsTupleCounts() {
+		return true;
 	}
 
 	@Override
@@ -435,45 +863,216 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTuplesInSubqueries() {
-		return supportsTuplesInSubqueries;
-	}
-
-	// Do not drop constraints explicitly, just do this by cascading instead.
-	@Override
-	public boolean dropConstraints() {
-		return false;
+	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.ALIAS;
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " CASCADE ";
-	}
-
-	// CASCADE has to be AFTER IF EXISTS in case it's after the tablename
-	@Override
-	public boolean supportsIfExistsAfterTableName() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeTableName() {
+	public boolean supportsOffsetInSubquery() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsFetchClause(FetchClauseType type) {
+		return true;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP_AND_CONSTANTS;
 	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new H2IdentityColumnSupport();
+		return H2FinalTableIdentityColumnSupport.INSTANCE;
+	}
+
+	/**
+	 * @return {@code true} because we can use {@code select ... from final table (insert .... )}
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsInsertReturningGeneratedKeys() {
+		return true;
+	}
+
+	@Override
+	public boolean unquoteGetGeneratedKeys() {
+		return true;
+	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, int position) throws SQLException {
+		return position;
 	}
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return addQueryHints( query, hints );
 	}
 
 	@Override
-	public boolean supportsSelectAliasInGroupByClause() {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql(
+				new Replacer( format, "'", "''" )
+				.replace("e", "u")
+				.replace( "xxx", "XXX" )
+				.replace( "xx", "XX" )
+				.replace( "x", "X" )
+				.result()
+		);
+	}
+
+	public String translateExtractField(TemporalUnit unit) {
+		return switch (unit) {
+			case DAY_OF_MONTH -> "day";
+			case WEEK -> "iso_week";
+			default -> unit.toString();
+		};
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return " generated always as (" + generatedAs + ")";
+	}
+
+	@Override
+	public boolean canDisableConstraints() {
 		return true;
+	}
+
+	@Override
+	public String getEnableConstraintsStatement() {
+		return "set referential_integrity true";
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
+	}
+
+	@Override
+	public String getDisableConstraintsStatement() {
+		return "set referential_integrity false";
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public String rowId(String rowId) {
+		return "_rowid_";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return BIGINT;
+	}
+
+	@FunctionalInterface
+	private interface OptionalTableUpdateStrategy {
+		MutationOperation buildMutationOperation(
+				EntityMutationTarget mutationTarget,
+				OptionalTableUpdate optionalTableUpdate,
+				SessionFactoryImplementor factory);
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	private static MutationOperation usingMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+//	private static MutationOperation withoutMerge(
+//			EntityMutationTarget mutationTarget,
+//			OptionalTableUpdate optionalTableUpdate,
+//			SessionFactoryImplementor factory) {
+//		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+//	}
+
+	@Override
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return OrdinalParameterMarkerStrategy.INSTANCE;
+	}
+
+	public static class OrdinalParameterMarkerStrategy implements ParameterMarkerStrategy {
+		/**
+		 * Singleton access
+		 */
+		public static final OrdinalParameterMarkerStrategy INSTANCE = new OrdinalParameterMarkerStrategy();
+
+		@Override
+		public String createMarker(int position, JdbcType jdbcType) {
+			return "?" + position;
+		}
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public String getCaseInsensitiveLike() {
+		return "ilike";
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike(){
+		return true;
+	}
+
+	@Override
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 
 }

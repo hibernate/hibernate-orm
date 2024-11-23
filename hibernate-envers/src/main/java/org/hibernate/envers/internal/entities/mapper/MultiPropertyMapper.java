@@ -1,14 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
 
 import java.io.Serializable;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +17,7 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Getter;
 
 /**
@@ -47,7 +44,9 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 	}
 
 	@Override
-	public CompositeMapperBuilder addComponent(PropertyData propertyData, Class componentClass) {
+	public CompositeMapperBuilder addComponent(
+			PropertyData propertyData,
+			Class componentClass, EmbeddableInstantiator instantiator) {
 		if ( properties.get( propertyData ) != null ) {
 			// This is needed for second pass to work properly in the components mapper
 			return (CompositeMapperBuilder) properties.get( propertyData );
@@ -55,7 +54,8 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 		final ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(
 				propertyData,
-				componentClass
+				componentClass,
+				instantiator
 		);
 		addComposite( propertyData, componentMapperBuilder );
 
@@ -101,49 +101,42 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Boolean>() {
-					@Override
-					public Boolean run() {
-						boolean ret = false;
-						for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
-							final PropertyData propertyData = entry.getKey();
-							final PropertyMapper propertyMapper = entry.getValue();
+		boolean ret = false;
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 
-							// synthetic properties are not part of the entity model; therefore they should be ignored.
-							if ( propertyData.isSynthetic() ) {
-								continue;
-							}
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
+			}
 
-							Getter getter;
-							if ( newObj != null ) {
-								getter = ReflectionTools.getGetter(
-										newObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else if ( oldObj != null ) {
-								getter = ReflectionTools.getGetter(
-										oldObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else {
-								return false;
-							}
+			Getter getter;
+			if ( newObj != null ) {
+				getter = ReflectionTools.getGetter(
+						newObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
+				);
+			}
+			else if ( oldObj != null ) {
+				getter = ReflectionTools.getGetter(
+						oldObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
+				);
+			}
+			else {
+				return false;
+			}
 
-							ret |= propertyMapper.mapToMapFromEntity(
-									session, data,
-									newObj == null ? null : getter.get( newObj ),
-									oldObj == null ? null : getter.get( oldObj )
-							);
-						}
-						return ret;
-					}
-				}
-		);
+			ret |= propertyMapper.mapToMapFromEntity(
+					session, data,
+					newObj == null ? null : getter.get( newObj ),
+					oldObj == null ? null : getter.get( oldObj )
+			);
+		}
+		return ret;
 	}
 
 	@Override
@@ -152,49 +145,40 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
-							final PropertyData propertyData = entry.getKey();
-							final PropertyMapper propertyMapper = entry.getValue();
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 
-							// synthetic properties are not part of the entity model; therefore they should be ignored.
-							if ( propertyData.isSynthetic() ) {
-								continue;
-							}
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
+			}
 
-							Getter getter;
-							if ( newObj != null ) {
-								getter = ReflectionTools.getGetter(
-										newObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else if ( oldObj != null ) {
-								getter = ReflectionTools.getGetter(
-										oldObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else {
-								break;
-							}
+			Getter getter;
+			if ( newObj != null ) {
+				getter = ReflectionTools.getGetter(
+						newObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
+				);
+			}
+			else if ( oldObj != null ) {
+				getter = ReflectionTools.getGetter(
+						oldObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
+				);
+			}
+			else {
+				break;
+			}
 
-							propertyMapper.mapModifiedFlagsToMapFromEntity(
-									session, data,
-									newObj == null ? null : getter.get( newObj ),
-									oldObj == null ? null : getter.get( oldObj )
-							);
-						}
-
-						return null;
-					}
-				}
-		);
+			propertyMapper.mapModifiedFlagsToMapFromEntity(
+					session, data,
+					newObj == null ? null : getter.get( newObj ),
+					oldObj == null ? null : getter.get( oldObj )
+			);
+		}
 	}
 
 	@Override
@@ -208,6 +192,16 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 		for ( PropertyMapper mapper : properties.values() ) {
 			mapper.mapToEntityFromMap( enversService, obj, data, primaryKey, versionsReader, revision );
 		}
+	}
+
+	@Override
+	public Object mapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
+		return null;
 	}
 
 	private Pair<PropertyMapper, String> getMapperAndDelegatePropName(String referencingPropertyName) {
@@ -249,7 +243,7 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			SessionImplementor session,
 			String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Serializable id) {
+			Serializable oldColl, Object id) {
 		final Pair<PropertyMapper, String> pair = getMapperAndDelegatePropName( referencingPropertyName );
 		final PropertyMapper mapper = pair.getFirst();
 		if ( mapper != null ) {

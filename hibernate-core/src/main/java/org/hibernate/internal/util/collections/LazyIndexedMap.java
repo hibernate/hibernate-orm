@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
 
@@ -15,13 +13,13 @@ import java.util.function.Function;
  * the focus on the Enum aspect is modelled as an int primitive:
  * think of using the ordinals of an Enum to simulate the EnumMap.
  * Proper abstraction of the indexing strategy is left to subclasses.
- * <p/>
+ * <p>
  * There are various reasons to not expose the Enum on this class API;
  * the primary is that in some of the cases in which we need the pattern,
  * there is the need to hold an additional couple of values beyond the
  * ones modelled by the Enum, essentially having some extra keys in the map;
  * this could be modelled by defining a new Enum but that's also not ideal.
- * <p/>
+ * <p>
  * Another reason is that the goal of this class is to allow the host to
  * save memory, as we typically need to keep references to many of these
  * objects for a long time; being able to refer purely to an array is

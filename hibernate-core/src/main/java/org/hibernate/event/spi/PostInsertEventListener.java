@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
-
-import java.io.Serializable;
 
 /**
  * Called after inserting an item in the datastore
@@ -14,6 +10,6 @@ import java.io.Serializable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface PostInsertEventListener extends Serializable, PostActionEventListener {
+public interface PostInsertEventListener extends PostActionEventListener {
 	void onPostInsert(PostInsertEvent event);
 }

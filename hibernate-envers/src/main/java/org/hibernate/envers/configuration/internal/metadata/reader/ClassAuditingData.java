@@ -1,25 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.envers.AuditTable;
-
-import static org.hibernate.envers.internal.tools.Tools.newHashMap;
+import org.hibernate.mapping.PersistentClass;
 
 /**
+ * Boot-time audit data for a specific entity class.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Sebastian Komander
  * @author Hern&aacut;n Chanfreau
  * @author Chris Cranford
  */
 public class ClassAuditingData implements AuditedPropertiesHolder {
+
+	private final PersistentClass persistentClass;
 	private final Map<String, PropertyAuditingData> properties;
 	private final Map<String, String> secondaryTableDictionary;
 
@@ -31,9 +35,10 @@ public class ClassAuditingData implements AuditedPropertiesHolder {
 	 */
 	private boolean defaultAudited;
 
-	public ClassAuditingData() {
-		properties = newHashMap();
-		secondaryTableDictionary = newHashMap();
+	public ClassAuditingData(PersistentClass persistentClass) {
+		this.persistentClass = persistentClass;
+		this.properties = new HashMap<>();
+		this.secondaryTableDictionary = new HashMap<>();
 	}
 
 	@Override
@@ -49,6 +54,19 @@ public class ClassAuditingData implements AuditedPropertiesHolder {
 	@Override
 	public PropertyAuditingData getPropertyAuditingData(String propertyName) {
 		return properties.get( propertyName );
+	}
+
+	@Override
+	public List<AuditOverrideData> getAuditingOverrides() {
+		return Collections.emptyList();
+	}
+
+	public PersistentClass getPersistentClass() {
+		return persistentClass;
+	}
+
+	public String getEntityName() {
+		return persistentClass.getEntityName();
 	}
 
 	public Iterable<String> getPropertyNames() {
@@ -82,14 +100,14 @@ public class ClassAuditingData implements AuditedPropertiesHolder {
 
 	public Iterable<String> getNonSyntheticPropertyNames() {
 		return properties.entrySet().stream()
-				.filter( e -> !e.getValue().isSyntheic() )
+				.filter( e -> !e.getValue().isSynthetic() )
 				.map( Map.Entry::getKey )
 				.collect( Collectors.toList() );
 	}
 
 	public Iterable<PropertyAuditingData> getSyntheticProperties() {
 		return properties.values().stream()
-				.filter( p -> p.isSyntheic() )
+				.filter( PropertyAuditingData::isSynthetic )
 				.collect( Collectors.toList() );
 	}
 }

@@ -1,18 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.internal.EntityManagerMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -21,7 +20,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public final class LogHelper {
-	private static final EntityManagerMessageLogger log = Logger.getMessageLogger( EntityManagerMessageLogger.class, LogHelper.class.getName() );
+	private static final CoreMessageLogger log = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, LogHelper.class.getName() );
 
 	private LogHelper() {
 	}
@@ -53,7 +52,7 @@ public final class LogHelper {
 				.append( descriptor.getNonJtaDataSource() )
 				.append( "\n\t" )
 				.append( "Transaction type: " )
-				.append( descriptor.getTransactionType() )
+				.append( descriptor.getPersistenceUnitTransactionType() )
 				.append( "\n\t" )
 				.append( "PU root URL: " )
 				.append( descriptor.getPersistenceUnitRootUrl() )

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -13,12 +11,13 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
- * Represents a consolidation of all session creation options into a builder style delegate.
- * 
+ * Allows creation of a new {@link Session} with specific options.
+ *
  * @author Steve Ebersole
+ *
+ * @see SessionFactory#withOptions()
  */
-@SuppressWarnings("UnusedReturnValue")
-public interface SessionBuilder<T extends SessionBuilder> {
+public interface SessionBuilder {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -33,29 +32,29 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T interceptor(Interceptor interceptor);
+	SessionBuilder interceptor(Interceptor interceptor);
 
 	/**
 	 * Signifies that no {@link Interceptor} should be used.
-	 * <p/>
-	 * By default the {@link Interceptor} associated with the {@link SessionFactory} is passed to the
-	 * {@link Session} whenever we open one without the user having specified a specific interceptor to
-	 * use.
-	 * <p/>
-	 * Calling {@link #interceptor(Interceptor)} with null has the same net effect.
+	 * <p>
+	 * By default, if no {@code Interceptor} is explicitly specified, the
+	 * {@code Interceptor} associated with the {@link SessionFactory} is
+	 * inherited by the new {@link Session}.
+	 * <p>
+	 * Calling {@link #interceptor(Interceptor)} with null has the same effect.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T noInterceptor();
+	SessionBuilder noInterceptor();
 
 	/**
-	 * Applies a specific StatementInspector to the session options.
+	 * Applies the given {@link StatementInspector} to the session.
 	 *
 	 * @param statementInspector The StatementInspector to use.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T statementInspector(StatementInspector statementInspector);
+	SessionBuilder statementInspector(StatementInspector statementInspector);
 
 	/**
 	 * Adds a specific connection to the session options.
@@ -64,16 +63,17 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection(Connection connection);
+	SessionBuilder connection(Connection connection);
 
 	/**
-	 * Signifies that the connection release mode from the original session should be used to create the new session.
+	 * Signifies that the connection release mode from the original session
+	 * should be used to create the new session.
 	 *
 	 * @param mode The connection handling mode to use.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+	SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	/**
 	 * Should the session built automatically join in any ongoing JTA transactions.
@@ -82,9 +82,9 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.SynchronizationType#SYNCHRONIZED
+	 * @see jakarta.persistence.SynchronizationType#SYNCHRONIZED
 	 */
-	T autoJoinTransactions(boolean autoJoinTransactions);
+	SessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
 	 * Should the session be automatically cleared on a failed transaction?
@@ -93,7 +93,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T autoClear(boolean autoClear);
+	SessionBuilder autoClear(boolean autoClear);
 
 	/**
 	 * Specify the initial FlushMode to use for the opened Session
@@ -102,9 +102,9 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.PersistenceContextType
+	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	T flushMode(FlushMode flushMode);
+	SessionBuilder flushMode(FlushMode flushMode);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -112,43 +112,40 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @param tenantIdentifier The tenant identifier.
 	 *
 	 * @return {@code this}, for method chaining
+	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
-	T tenantIdentifier(String tenantIdentifier);
+	@Deprecated(since = "6.4", forRemoval = true)
+	SessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	/**
-	 * Apply one or more SessionEventListener instances to the listeners for the Session to be built.
+	 * Define the tenant identifier to be associated with the opened session.
+	 *
+	 * @param tenantIdentifier The tenant identifier.
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.4
+	 */
+	SessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	/**
+	 * Add one or more {@link SessionEventListener} instances to the list of
+	 * listeners for the new session to be built.
 	 *
 	 * @param listeners The listeners to incorporate into the built Session
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T eventListeners(SessionEventListener... listeners);
+	SessionBuilder eventListeners(SessionEventListener... listeners);
 
 	/**
-	 * Remove all listeners intended for the built Session currently held here, including any auto-apply ones; in other
-	 * words, start with a clean slate.
-	 *
-	 * {@code this}, for method chaining
-	 */
-	T clearEventListeners();
-
-	T jdbcTimeZone(TimeZone timeZone);
-
-	/**
-	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
-	 * when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
-	 *
-	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise
-	 * <p>
-	 * The default value is {@code true}
+	 * Remove all listeners intended for the built session currently held here,
+	 * including any auto-apply ones; in other words, start with a clean slate.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
-	}
+	SessionBuilder clearEventListeners();
 
-
+	SessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
 	 * Should the session be automatically closed after transaction completion?
@@ -157,44 +154,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.PersistenceContextType
-	 *
-	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
-	 * {@link org.hibernate.engine.spi.SessionOwner}
+	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	@Deprecated
-	T autoClose(boolean autoClose);
-
-	/**
-	 * Use a specific connection release mode for these session options.
-	 *
-	 * @param connectionReleaseMode The connection release mode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #connectionHandlingMode} instead
-	 */
-	@Deprecated
-	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
-
-	/**
-	 * Should the session be automatically flushed during the "before completion" phase of transaction handling.
-	 *
-	 * @param flushBeforeCompletion Should the session be automatically flushed
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
-		return (T) this;
-	}
+	SessionBuilder autoClose(boolean autoClose);
 }

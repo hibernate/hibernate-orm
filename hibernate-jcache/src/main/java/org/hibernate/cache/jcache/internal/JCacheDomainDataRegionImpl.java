@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.jcache.internal;
 
@@ -12,7 +10,6 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
-import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -20,6 +17,8 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.support.DomainDataRegionImpl;
 import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.cache.spi.support.RegionFactoryTemplate;
+
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
  * @author Vlad Mihalcea
@@ -37,7 +36,7 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 
 	@Override
 	protected EntityDataAccess generateTransactionalEntityDataAccess(EntityDataCachingConfig entityAccessConfig) {
-		SecondLevelCacheLogger.INSTANCE.nonStandardSupportForAccessType(
+		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
 				getRegionFactory().getClass().getSimpleName()
@@ -47,7 +46,7 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 
 	@Override
 	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(NaturalIdDataCachingConfig accessConfig) {
-		SecondLevelCacheLogger.INSTANCE.nonStandardSupportForAccessType(
+		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
 				getRegionFactory().getClass().getSimpleName()
@@ -57,7 +56,7 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 
 	@Override
 	protected CollectionDataAccess generateTransactionalCollectionDataAccess(CollectionDataCachingConfig accessConfig) {
-		SecondLevelCacheLogger.INSTANCE.nonStandardSupportForAccessType(
+		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
 				getRegionFactory().getClass().getSimpleName()

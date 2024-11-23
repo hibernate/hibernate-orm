@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.spi;
 
+import org.hibernate.service.UnknownUnwrapTypeException;
+
 /**
- * Optional contract for services that wrap stuff that to which it is useful to have access.  For example, a service
- * that maintains a {@link javax.sql.DataSource} might want to expose access to the {@link javax.sql.DataSource} or
- * its {@link java.sql.Connection} instances.
+ * Optional contract for services that wrap stuff that to which it is useful to have access.
+ * <p>
+ * For example, a service that maintains a {@link javax.sql.DataSource} might want to expose
+ * access to the {@link javax.sql.DataSource} or its {@link java.sql.Connection} instances.
  *
  * @author Steve Ebersole
  */
@@ -21,7 +22,7 @@ public interface Wrapped {
 	 *
 	 * @return True/false.
 	 */
-	public boolean isUnwrappableAs(Class unwrapType);
+	boolean isUnwrappableAs(Class<?> unwrapType);
 
 	/**
 	 * Unproxy the service proxy
@@ -32,5 +33,5 @@ public interface Wrapped {
 	 *
 	 * @throws UnknownUnwrapTypeException if the service cannot be unwrapped as the indicated type
 	 */
-	public <T> T unwrap(Class<T> unwrapType);
+	<T> T unwrap(Class<T> unwrapType);
 }

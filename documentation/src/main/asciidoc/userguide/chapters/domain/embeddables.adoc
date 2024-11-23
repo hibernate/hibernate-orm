@@ -1,10 +1,15 @@
 [[embeddables]]
-=== Embeddable types
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/embeddable
+=== Embeddable values
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {root-project-dir}/hibernate-core/src/test/java
+:example-dir-emeddable: {core-test-base}/org/hibernate/orm/test/mapping/embeddable
+:example-dir-embeddableinstantiator: {core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
+:example-dir-compositeusertype: {core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/usertype
 :extrasdir: extras
 
 Historically Hibernate called these components.
-JPA calls them embeddables.
+Jakarta Persistence calls them embeddables.
 Either way, the concept is the same: a composition of values.
 
 For example, we might have a `Publisher` class that is a composition of `name` and `country`,
@@ -23,7 +28,7 @@ Throughout this chapter and thereafter, for brevity sake, embeddable types may a
 ====
 [source,java]
 ----
-include::{sourcedir}/NestedEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
+include::{example-dir-emeddable}/NestedEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
 ----
 ====
 
@@ -40,7 +45,7 @@ Most often, embeddable types are used to group multiple basic type mappings and 
 ====
 [source,java]
 ----
-include::{sourcedir}/SimpleEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
+include::{example-dir-emeddable}/SimpleEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -51,7 +56,7 @@ include::{extrasdir}/embeddable/simple-embeddable-type-mapping-example.sql[]
 
 [NOTE]
 ====
-JPA defines two terms for working with an embeddable type: `@Embeddable` and `@Embedded`.
+Jakarta Persistence defines two terms for working with an embeddable type: `@Embeddable` and `@Embedded`.
 
 `@Embeddable` is used to describe the mapping type itself (e.g. `Publisher`).
 
@@ -70,34 +75,28 @@ In fact, that table could also be mapped by the following entity type instead.
 ====
 [source,java]
 ----
-include::{sourcedir}/SimpleEmbeddableEquivalentTest.java[tag=embeddable-type-mapping-example, indent=0]
+include::{example-dir-emeddable}/SimpleEmbeddableEquivalentTest.java[tag=embeddable-type-mapping-example, indent=0]
 ----
 ====
 
 The composition form is certainly more object-oriented, and that becomes more evident as we work with multiple embeddable types.
 
-[[embeddable-multiple]]
-==== Multiple embeddable types
-
-Although from an object-oriented perspective, it's much more convenient to work with embeddable types, this example doesn't work as-is.
-When the same embeddable type is included multiple times in the same parent entity type, the JPA specification demands to set the associated column names explicitly.
-
-This requirement is due to how object properties are mapped to database columns.
-By default, JPA expects a database column having the same name with its associated object property.
-When including multiple embeddables, the implicit name-based mapping rule doesn't work anymore because multiple object properties could end-up being mapped to the same database column.
-
-We have a few options to handle this issue.
-
 [[embeddable-override]]
 ==== Overriding Embeddable types
 
-JPA defines the `@AttributeOverride` annotation to handle this scenario.
-This way, the mapping conflict is resolved by setting up explicit name-based property-column type mappings.
+Although from an object-oriented perspective, it's much more convenient to work with embeddable types, when we reuse the same
+embeddable multiple times on the same class, the Jakarta Persistence specification requires to set the associated column names explicitly.
 
-If an Embeddable type is used multiple times in some entity, you need to use the
-{jpaJavadocUrlPrefix}AttributeOverride.html[`@AttributeOverride`] and
-{jpaJavadocUrlPrefix}AssociationOverride.html[`@AssociationOverride`] annotations
-to override the default column names defined by the Embeddable.
+This requirement is due to how object properties are mapped to database columns.
+By default, Jakarta Persistence expects a database column having the same name with its associated object property.
+When including multiple embeddables, the implicit name-based mapping rule doesn't work anymore because multiple object
+properties could end-up being mapped to the same database column.
+
+When an embeddable type is used multiple times, Jakarta Persistence defines the `@AttributeOverride`
+and `@AssociationOverride` annotations to handle this scenario to override the default column names defined
+by the Embeddable.
+
+NOTE: See <<embeddable-multiple-namingstrategy>> for an alternative to using `@AttributeOverride` and `@AssociationOverride`
 
 Considering you have the following `Publisher` embeddable type
 which defines a `@ManyToOne` association with the `Country` entity:
@@ -107,7 +106,7 @@ which defines a `@ManyToOne` association with the `Country` entity:
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableOverrideTest.java[tag=embeddable-type-association-mapping-example, indent=0]
+include::{example-dir-emeddable}/EmbeddableOverrideTest.java[tag=embeddable-type-association-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -126,7 +125,7 @@ Therefore, the `Book` entity needs to override the embeddable type mappings for 
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableOverrideTest.java[tag=embeddable-type-override-mapping-example, indent=0]
+include::{example-dir-emeddable}/EmbeddableOverrideTest.java[tag=embeddable-type-override-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -135,46 +134,6 @@ include::{extrasdir}/embeddable/embeddable-type-override-mapping-example.sql[]
 ----
 ====
 
-[[embeddable-multiple-namingstrategy]]
-==== Embeddables and ImplicitNamingStrategy
-
-[IMPORTANT]
-====
-The `ImplicitNamingStrategyComponentPathImpl` is a Hibernate-specific feature.
-Users concerned with JPA provider portability should instead prefer explicit column naming with `@AttributeOverride`.
-====
-
-Hibernate naming strategies are covered in detail in <<chapters/domain/naming.adoc#naming,Naming>>.
-However, for the purposes of this discussion, Hibernate has the capability to interpret implicit column names in a way that is safe for use with multiple embeddable types.
-
-[[embeddable-multiple-namingstrategy-entity-mapping]]
-.Implicit multiple embeddable type mapping
-====
-[source,java]
-----
-include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-namingstrategy-entity-mapping, indent=0]
-----
-====
-
-To make it work, you need to use the `ImplicitNamingStrategyComponentPathImpl` naming strategy.
-
-[[embeddable-multiple-ImplicitNamingStrategyComponentPathImpl]]
-.Enabling implicit embeddable type mapping using the component path naming strategy
-====
-[source,java]
-----
-include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-ImplicitNamingStrategyComponentPathImpl, indent=0]
-----
-====
-
-Now the "path" to attributes are used in the implicit column naming:
-
-[source,sql]
-----
-include::{extrasdir}/embeddable/embeddable-multiple-namingstrategy-entity-mapping.sql[]
-----
-
-You could even develop your own naming strategy to do other types of implicit naming strategies.
 
 [[embeddable-collections]]
 ==== Collections of embeddable types
@@ -217,14 +176,14 @@ However, for simple embeddable types, there is no such construct and so you need
 [[embeddable-Target-example]]
 .`@Target` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TargetTest.java[tags=embeddable-Target-example]
+include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-example]
 ----
 ====
 
 The `coordinates` embeddable type is mapped as the `Coordinates` interface.
-However, Hibernate needs to know the actual implementation tye, which is `GPS` in this case,
+However, Hibernate needs to know the actual implementation type, which is `GPS` in this case,
 hence the `@Target` annotation is used to provide this information.
 
 Assuming we have persisted the following `City` entity:
@@ -232,9 +191,9 @@ Assuming we have persisted the following `City` entity:
 [[embeddable-Target-persist-example]]
 .`@Target` persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TargetTest.java[tags=embeddable-Target-persist-example]
+include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-persist-example]
 ----
 ====
 
@@ -243,9 +202,9 @@ When fetching the `City` entity, the `coordinates` property is mapped by the `@T
 [[embeddable-Target-fetching-example]]
 .`@Target` fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/TargetTest.java[tags=embeddable-Target-fetching-example]
+include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -264,9 +223,9 @@ The Hibernate-specific `@Parent` annotation allows you to reference the owner en
 [[embeddable-Parent-example]]
 .`@Parent` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-example]
+include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-example]
 ----
 ====
 
@@ -275,9 +234,9 @@ Assuming we have persisted the following `City` entity:
 [[embeddable-Parent-persist-example]]
 .`@Parent` persist example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-persist-example]
+include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-persist-example]
 ----
 ====
 
@@ -286,10 +245,376 @@ When fetching the `City` entity, the `city` property of the embeddable type acts
 [[embeddable-Parent-fetching-example]]
 .`@Parent` fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-fetching-example]
+include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-fetching-example]
 ----
 ====
 
 Therefore, the `@Parent` annotation is used to define the association between an embeddable type and the owning entity.
+
+
+[[embeddable-instantiator]]
+==== Custom instantiation
+
+Jakarta Persistence requires embeddable classes to follow Java Bean conventions.  Part of this is the
+definition of a non-arg constructor.  However, not all value compositions applications might map as embeddable
+values follow Java Bean conventions - e.g. a struct or Java 15 record.
+
+Hibernate allows the use of a custom instantiator for creating the embeddable instances through the
+`org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.  For example, consider the following
+embeddable:
+
+[[embeddable-instantiator-embeddable-ex]]
+.`EmbeddableInstantiator` - Embeddable
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embedded/Name.java[tags=embeddable-instantiator-embeddable]
+----
+====
+
+Here, `Name` only allows use of the constructor accepting its state.  Because this class does not follow Java Bean
+conventions, in terms of constructor, a custom strategy for instantiation is needed.
+
+[[embeddable-instantiator-impl-ex]]
+.`EmbeddableInstantiator` - Implementation
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embedded/NameInstantiator.java[tags=embeddable-instantiator-impl]
+----
+====
+
+There are a few ways to specify the custom instantiator.  The `@org.hibernate.annotations.EmbeddableInstantiator`
+annotation can be used on the embedded attribute:
+
+[[embeddable-instantiator-property-ex]]
+.`@EmbeddableInstantiator` on attribute
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embedded/Person.java[tags=embeddable-instantiator-property]
+----
+====
+
+`@EmbeddableInstantiator` may also be specified on the embeddable class:
+
+[[embeddable-instantiator-class-ex]]
+.`@EmbeddableInstantiator` on class
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/embeddable/Name.java[tags=embeddable-instantiator-class]
+
+include::{example-dir-embeddableinstantiator}/embeddable/Person.java[tags=embeddable-instantiator-class]
+----
+====
+
+
+Lastly, `@org.hibernate.annotations.EmbeddableInstantiatorRegistration` may be used, which is useful
+when the application developer does not control the embeddable to be able to apply the instantiator
+on the <<embeddable-instantiator-class-ex,embeddable>>.
+
+[[embeddable-instantiator-registration-ex]]
+.`@EmbeddableInstantiatorRegistration`
+====
+[source, java, indent=0]
+----
+include::{example-dir-embeddableinstantiator}/registered/Person.java[tags=embeddable-instantiator-registration]
+----
+====
+
+
+
+
+[[embeddable-mapping-custom]]
+==== Custom type mapping
+
+Another approach is to supply the implementation of the `org.hibernate.usertype.CompositeUserType` contract using `@CompositeType`,
+which is an extension to the `org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.
+
+There are also corresponding, specialized forms of `@CompositeType` for specific model parts:
+
+* When mapping a Map, `@CompositeType` describes the Map value while `@MapKeyCompositeType` describes the Map key
+* For collection mappings, `@CompositeType` describes the elements
+
+For example, consider the following custom type:
+
+[[embeddable-usertype-domain-ex]]
+.`CompositeUserType` - Domain type
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/embedded/Name.java[tags=embeddable-usertype-domain]
+----
+====
+
+Here, `Name` only allows use of the constructor accepting its state.  Because this class does not follow Java Bean
+conventions, a custom user type for instantiation and state access is needed.
+
+[[embeddable-usertype-impl-ex]]
+.`CompositeUserType` - Implementation
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/embedded/NameCompositeUserType.java[tags=embeddable-usertype-impl]
+----
+====
+
+A composite user type needs an embeddable mapper class, which represents the embeddable mapping structure of the type
+i.e. the way the type would look like if you had the option to write a custom `@Embeddable` class.
+
+In addition to the instantiation logic, a composite user type also has to provide a way to decompose the returned type
+into the individual components/properties of the embeddable mapper class through `getPropertyValue`.
+The property index, just like in the `instantiate` method, is based on the alphabetical order of the attribute names
+of the embeddable mapper class.
+
+The composite user type also needs to provide methods to handle the mutability, equals, hashCode and the cache
+serialization and deserialization of the returned type.
+
+There are a few ways to specify the composite user type.  The `@org.hibernate.annotations.CompositeType`
+annotation can be used on the embedded and element collection attributes:
+
+[[embeddable-usertype-property-ex]]
+.`@CompositeType` on attribute
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/embedded/Person.java[tags=embeddable-usertype-property]
+----
+====
+
+Or `@org.hibernate.annotations.CompositeTypeRegistration` may be used, which is useful
+when the application developer wants to apply the composite user type for all domain type uses.
+
+[[embeddable-usertype-registration-ex]]
+.`@CompositeTypeRegistration`
+====
+[source, java, indent=0]
+----
+include::{example-dir-compositeusertype}/registered/Person.java[tags=embeddable-usertype-registration]
+----
+====
+
+
+
+
+[[embeddable-multiple-namingstrategy]]
+==== Embeddables and ImplicitNamingStrategy
+
+[IMPORTANT]
+====
+The `ImplicitNamingStrategyComponentPathImpl` is a Hibernate-specific feature.
+Users concerned with Jakarta Persistence provider portability should instead prefer explicit column naming with `@AttributeOverride`.
+====
+
+Hibernate naming strategies are covered in detail in <<chapters/domain/naming.adoc#naming,Naming>>.
+However, for the purposes of this discussion, Hibernate has the capability to interpret implicit column names in a way that is safe for use with multiple embeddable types.
+
+[[embeddable-multiple-namingstrategy-entity-mapping]]
+.Implicit multiple embeddable type mapping
+====
+[source,java]
+----
+include::{example-dir-emeddable}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-namingstrategy-entity-mapping, indent=0]
+----
+====
+
+To make it work, you need to use the `ImplicitNamingStrategyComponentPathImpl` naming strategy.
+
+[[embeddable-multiple-ImplicitNamingStrategyComponentPathImpl]]
+.Enabling implicit embeddable type mapping using the component path naming strategy
+====
+[source,java]
+----
+include::{example-dir-emeddable}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-ImplicitNamingStrategyComponentPathImpl, indent=0]
+----
+====
+
+Now the "path" to attributes are used in the implicit column naming:
+
+[source,sql]
+----
+include::{extrasdir}/embeddable/embeddable-multiple-namingstrategy-entity-mapping.sql[]
+----
+
+You could even develop your own naming strategy to do other types of implicit naming strategies.
+
+[[embeddable-mapping-aggregate]]
+==== Aggregate embeddable mapping
+
+An embeddable mapping is usually just a way to encapsulate columns of a table into a Java type,
+but as of Hibernate 6.2, it is also possible to map embeddable types as SQL aggregate types.
+
+Currently, there are three possible SQL aggregate types which can be specified by annotating one of the following
+annotations on a persistent attribute:
+
+* `@Struct` - maps to a named SQL object type
+* `@JdbcTypeCode(SqlTypes.JSON)` - maps to the SQL type JSON
+* `@JdbcTypeCode(SqlTypes.SQLXML)` - maps to the SQL type XML
+
+Any read or assignment (in an update statement) expression for an attribute of such an embeddable
+will resolve to the proper SQL expression to access/update the attribute of the SQL type.
+
+Since object, JSON and XML types are not supported equally on all databases, beware that not every mapping will work on all databases.
+The following table outlines the current support for the different aggregate types:
+
+|===
+|Database |Struct |JSON |XML
+
+|PostgreSQL
+|Yes
+|Yes
+|No (not yet)
+
+|Oracle
+|Yes
+|Yes
+|No (not yet)
+
+|DB2
+|Yes
+|No (not yet)
+|No (not yet)
+
+|SQL Server
+|No (not yet)
+|No (not yet)
+|No (not yet)
+|===
+
+Also note that embeddable types that are used in aggregate mappings do not yet support all kinds of attribute mappings, most notably:
+
+* Association mappings (`@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@ElementCollection`)
+* Basic array mappings
+
+===== `@Struct` aggregate embeddable mapping
+
+The `@Struct` annotation can be placed on either the persistent attribute, or the embeddable type,
+and requires the specification of a name i.e. the name of the SQL object type that it maps to.
+
+The following example mapping, maps the `EmbeddableAggregate` type to the SQL object type `structType`:
+
+.Mapping embeddable as SQL object type on persistent attribute level
+====
+[source,java]
+----
+include::{example-dir-emeddable}/StructEmbeddableTest.java[tag=embeddable-struct-type-mapping-example, indent=0]
+----
+====
+
+The schema generation will by default emit DDL for that object type, which looks something along the lines of
+
+====
+[source,sql]
+----
+create type structType as (
+    ...
+)
+create table StructHolder as (
+    id bigint not null primary key,
+    aggregate structType
+)
+----
+====
+
+The name and the nullability of the column can be refined through applying a `@Column` on the persistent attribute.
+
+One very important thing to note is that the order of columns in the DDL definition of a type must match the order that Hibernate expects.
+By default, the order of columns is based on the alphabetical ordering of the embeddable type attribute names.
+
+Consider the following class:
+
+====
+[source,java]
+----
+@Embeddable
+@Struct(name = "myStruct")
+public class MyStruct {
+	@Column(name = "b")
+	String attr1;
+	@Column(name = "a")
+	String attr2;
+}
+----
+====
+
+The expected ordering of columns will be `(b,a)`, because the name `attr1` comes before `attr2` in alphabetical ordering.
+This example aims at showing the importance of the persistent attribute name.
+
+Defining the embeddable type as Java record instead of a class can force a particular ordering through the definition of canonical constructor.
+
+====
+[source,java]
+----
+@Embeddable
+@Struct(name = "myStruct")
+public record MyStruct (
+	@Column(name = "a")
+	String attr2,
+	@Column(name = "b")
+	String attr1
+) {}
+----
+====
+
+In this particular example, the expected ordering of columns will be `(a,b)`, because the canonical constructor of the record
+defines a specific ordering of persistent attributes, which Hibernate makes use of for `@Struct` mappings.
+
+It is not necessary to switch to Java records to configure the order though.
+The `@Struct` annotation allows specifying the order through the `attributes` member,
+an array of attribute names that the embeddable type declares, which defines the order in columns appear in the SQL object type.
+
+The same ordering as with the Java record can be achieved this way:
+
+====
+[source,java]
+----
+@Embeddable
+@Struct(name = "myStruct", attributes = {"attr2", "attr1"})
+public class MyStruct {
+	@Column(name = "b")
+	String attr1;
+	@Column(name = "a")
+	String attr2;
+}
+----
+====
+
+===== JSON/XML aggregate embeddable mapping
+
+The `@JdbcTypeCode` annotation for JSON and XML mappings can only be placed on the persistent attribute.
+
+The following example mapping, maps the `EmbeddableAggregate` type to the JSON SQL type:
+
+.Mapping embeddable as JSON
+====
+[source,java]
+----
+include::{example-dir-emeddable}/JsonEmbeddableTest.java[tag=embeddable-json-type-mapping-example, indent=0]
+----
+====
+
+The schema generation will by default emit DDL that ensures the constraints of the embeddable type are respected, which looks something along the lines of
+
+====
+[source,sql]
+----
+create table JsonHolder as (
+    id bigint not null primary key,
+    aggregate json,
+    check (json_value(aggregate, '$.attribute1') is not null)
+)
+----
+====
+
+Again, the name and the nullability of the `aggregate` column can be refined through applying a `@Column` on the persistent attribute.
+
+[[embeddable-mapping-aggregate-collections]]
+==== Embeddable mappings containing collections
+
+Mapping <<chapters/domain/collections.adoc#collections,collections>> inside an `@Embeddable` value is supported in most cases. There are a couple exceptions:
+
+* If the values of an <<chapters/domain/collections.adoc#collections-elemental,@ElementCollection>> is of embeddable type, that embeddable cannot contain nested collections;
+* Explicitly selecting an embeddable that contains collections in a query is currently not supported (we wouldn't be able to correctly initialize the collection since its owning entity instance would be missing from the Persistence Context).

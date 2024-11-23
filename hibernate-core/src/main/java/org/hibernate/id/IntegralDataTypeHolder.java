@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 import java.io.Serializable;
@@ -11,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Defines a common api for dealing with data of integral data type.
+ * Defines a common API for dealing with data of integral data type.
  *
  * @author Steve Ebersole
  */
@@ -21,9 +19,9 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @param value The primitive integral value.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder initialize(long value);
+	IntegralDataTypeHolder initialize(long value);
 
 	/**
 	 * Initialize the internal value from the given result set, using the specified default value
@@ -32,71 +30,71 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 * @param resultSet The JDBC result set
 	 * @param defaultValue The default value to use if we did not get a result set value.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 *
 	 * @throws SQLException Any exception from accessing the result set
 	 */
-	public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException;
+	IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException;
 
 	/**
-	 * Bind this holders internal value to the given result set.
+	 * Bind this holder's internal value to the given result set.
 	 *
 	 * @param preparedStatement The JDBC prepared statement
 	 * @param position The position at which to bind
 	 *
 	 * @throws SQLException Any exception from accessing the statement
 	 */
-	public void bind(PreparedStatement preparedStatement, int position) throws SQLException;
+	void bind(PreparedStatement preparedStatement, int position) throws SQLException;
 
 	/**
 	 * Equivalent to a ++ operation
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder increment();
+	IntegralDataTypeHolder increment();
 
 	/**
 	 * Perform an addition
 	 *
 	 * @param addend The value to add to this integral.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder add(long addend);
+	IntegralDataTypeHolder add(long addend);
 
 	/**
 	 * Equivalent to a -- operation
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder decrement();
+	IntegralDataTypeHolder decrement();
 
 	/**
 	 * Perform a subtraction
 	 *
 	 * @param subtrahend The value to subtract from this integral.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder subtract(long subtrahend);
+	IntegralDataTypeHolder subtract(long subtrahend);
 
 	/**
 	 * Perform a multiplication.
 	 *
 	 * @param factor The factor by which to multiple this integral
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor);
+	IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor);
 
 	/**
 	 * Perform a multiplication.
 	 *
 	 * @param factor The factor by which to multiple this integral
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder multiplyBy(long factor);
+	IntegralDataTypeHolder multiplyBy(long factor);
 
 	/**
 	 * Perform an equality comparison check
@@ -105,7 +103,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if the two are equal
 	 */
-	public boolean eq(IntegralDataTypeHolder other);
+	boolean eq(IntegralDataTypeHolder other);
 
 	/**
 	 * Perform an equality comparison check
@@ -114,7 +112,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if the two are equal
 	 */
-	public boolean eq(long other);
+	boolean eq(long other);
 
 	/**
 	 * Perform a "less than" comparison check.  We check to see if our value is less than
@@ -124,7 +122,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is less than the 'other' value.
 	 */
-	public boolean lt(IntegralDataTypeHolder other);
+	boolean lt(IntegralDataTypeHolder other);
 
 	/**
 	 * Perform a "less than" comparison check.  We check to see if our value is less than
@@ -134,7 +132,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is less than the 'other' value.
 	 */
-	public boolean lt(long other);
+	boolean lt(long other);
 
 	/**
 	 * Perform a "greater than" comparison check.  We check to see if our value is greater
@@ -144,7 +142,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is greater than the 'other' value.
 	 */
-	public boolean gt(IntegralDataTypeHolder other);
+	boolean gt(IntegralDataTypeHolder other);
 
 	/**
 	 * Perform a "greater than" comparison check.  We check to see if our value is greater
@@ -154,28 +152,28 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is greater than the 'other' value.
 	 */
-	public boolean gt(long other);
+	boolean gt(long other);
 
 	/**
 	 * Make a copy of this holder.
 	 *
 	 * @return The copy.
 	 */
-	public IntegralDataTypeHolder copy();
+	IntegralDataTypeHolder copy();
 
 	/**
 	 * Return the internal value.
 	 *
 	 * @return The current internal value
 	 */
-	public Number makeValue();
+	Number makeValue();
 
 	/**
 	 * Increment the internal state, but return the pre-incremented value.
 	 *
 	 * @return The pre-incremented internal value
 	 */
-	public Number makeValueThenIncrement();
+	Number makeValueThenIncrement();
 
 	/**
 	 * Increment the internal state by the given addend, but return the pre-incremented value.
@@ -184,5 +182,5 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return The pre-incremented internal value
 	 */
-	public Number makeValueThenAdd(long addend);
+	Number makeValueThenAdd(long addend);
 }

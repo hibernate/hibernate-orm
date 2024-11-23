@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -10,20 +8,20 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 
 /**
  * Context for determining the implicit name of a "join column" (think
- * {@link javax.persistence.JoinColumn}).
+ * {@link jakarta.persistence.JoinColumn}).
  *
  * @author Steve Ebersole
  *
- * @see javax.persistence.JoinColumn
+ * @see jakarta.persistence.JoinColumn
  */
 public interface ImplicitJoinColumnNameSource extends ImplicitNameSource {
-	public static enum Nature {
+	enum Nature {
 		ELEMENT_COLLECTION,
 		ENTITY_COLLECTION,
 		ENTITY
 	}
 
-	public Nature getNature();
+	Nature getNature();
 
 	/**
 	 * Access to entity naming information.  For "normal" join columns, this will
@@ -32,7 +30,7 @@ public interface ImplicitJoinColumnNameSource extends ImplicitNameSource {
 	 *
 	 * @return Owning entity naming information
 	 */
-	public EntityNaming getEntityNaming();
+	EntityNaming getEntityNaming();
 
 	/**
 	 * Access to the name of the attribute that defines the association.  For
@@ -41,19 +39,19 @@ public interface ImplicitJoinColumnNameSource extends ImplicitNameSource {
 	 *
 	 * @return The owning side's attribute name.
 	 */
-	public AttributePath getAttributePath();
+	AttributePath getAttributePath();
 
 	/**
 	 * Access the name of the table that is the target of the FK being described
 	 *
 	 * @return The referenced table name
 	 */
-	public Identifier getReferencedTableName();
+	Identifier getReferencedTableName();
 
 	/**
 	 * Access the name of the column that is the target of the FK being described
 	 *
 	 * @return The referenced column name
 	 */
-	public Identifier getReferencedColumnName();
+	Identifier getReferencedColumnName();
 }

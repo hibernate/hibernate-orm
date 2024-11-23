@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.testing.dialects.mysql;
 
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
 import org.geolatte.geom.ByteBuffer;
@@ -24,12 +21,12 @@ import org.locationtech.jts.geom.Point;
 public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 
 
-	MySQL8ExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		super( dataSourceUtils );
+	public MySQL8ExpectationsFactory() {
+		super();
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Touches(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Touches(t.geom, ST_geomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -37,7 +34,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_overlaps(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Overlaps(t.geom, ST_geomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -45,7 +42,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Intersects(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Intersects(t.geom, ST_GeomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -53,7 +50,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeWithinStatement(Geometry geom) {
+	public NativeSQLStatement createNativeWithinStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Within(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Within(t.geom, ST_GeomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -61,7 +58,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Equals(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Equals(t.geom, ST_GeomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -69,7 +66,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Crosses(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Crosses(t.geom, ST_geomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -77,7 +74,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeContainsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeContainsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Contains(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Contains(t.geom, ST_geomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -85,7 +82,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Disjoint(t.geom, ST_GeomFromText(?, 31370)) from geomtest t where ST_Disjoint(t.geom, ST_geomFromText(?, 31370)) = 1 ",
 				geom.toText()
@@ -93,20 +90,20 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 
-
 	@Override
-	protected NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
-		throw new UnsupportedOperationException();
+	public NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
+		String sql = "select t.id, ST_Relate(t.geom, ST_GeomFromText(?, 31370), '" + matrix + "' ) from geomtest t where ST_Relate(t.geom, ST_GeomFromText(?, 31370), '" + matrix + "') = 1 ";
+		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
+	public NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
 		throw new UnsupportedOperationException();
 	}
 
 
 	@Override
-	protected NativeSQLStatement createNativeFilterStatement(Geometry geom) {
+	public NativeSQLStatement createNativeFilterStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MBRIntersects(t.geom, ST_GeomFromtext(?, 31370)) from geomtest t where MBRIntersects(t.geom, ST_GeomFromtext(?, 31370)) = 1",
 				geom.toText()
@@ -114,7 +111,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_distance(t.geom, ST_GeomFromText(?, 31370)) from geomtest t ",
 				geom.toText()
@@ -122,12 +119,12 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDimensionSQL() {
+	public NativeSQLStatement createNativeDimensionSQL() {
 		return createNativeSQLStatement( "select id, ST_dimension(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
+	public NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, ST_buffer(t.geom,?) from geomtest t ",
 				new Object[] { distance }
@@ -135,7 +132,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
+	public NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_convexhull(ST_Union(t.geom, ST_GeomFromText(?, 31370))) from geomtest t",
 				geom.toText()
@@ -143,7 +140,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_intersection(t.geom, ST_GeomFromtext(?, 31370)) from geomtest t ",
 				geom.toText()
@@ -151,7 +148,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Difference(t.geom, ST_GeomFromtext(?, 31370)) from geomtest t ",
 				geom.toText()
@@ -159,7 +156,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Symdifference(t.geom, ST_GeomFromtext(?, 31370)) from geomtest t ",
 				geom.toText()
@@ -167,7 +164,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Union(t.geom, ST_GeomFromtext(?, 31370)) from geomtest t",
 				geom.toText()
@@ -175,57 +172,57 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsTextStatement() {
+	public NativeSQLStatement createNativeAsTextStatement() {
 		return createNativeSQLStatement( "select id, ST_astext(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeSridStatement() {
+	public NativeSQLStatement createNativeSridStatement() {
 		return createNativeSQLStatement( "select id, ST_SRID(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsSimpleStatement() {
+	public NativeSQLStatement createNativeIsSimpleStatement() {
 		return createNativeSQLStatement( "select id, ST_IsSimple(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsEmptyStatement() {
+	public NativeSQLStatement createNativeIsEmptyStatement() {
 		return createNativeSQLStatement( "select id, ST_IsEmpty(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsNotEmptyStatement() {
+	public NativeSQLStatement createNativeIsNotEmptyStatement() {
 		return createNativeSQLStatement( "select id, not ST_IsEmpty(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBoundaryStatement() {
-		throw new UnsupportedOperationException();
+	public NativeSQLStatement createNativeBoundaryStatement() {
+		return createNativeSQLStatement( "select id, st_boundary(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEnvelopeStatement() {
+	public NativeSQLStatement createNativeEnvelopeStatement() {
 		return createNativeSQLStatement( "select id, ST_Envelope(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsBinaryStatement() {
+	public NativeSQLStatement createNativeAsBinaryStatement() {
 		return createNativeSQLStatement( "select id, ST_AsBinary(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeometryTypeStatement() {
+	public NativeSQLStatement createNativeGeometryTypeStatement() {
 		return createNativeSQLStatement( "select id, ST_GeometryType(geom) from geomtest" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTransformStatement(int epsg) {
+	public NativeSQLStatement createNativeTransformStatement(int epsg) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
+	public NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
 		return createNativeSQLStatement( "select t.id, (ST_Srid(t.geom) = " + srid + ") from geomtest t where ST_SRID(t.geom) =  " + srid );
 	}
 

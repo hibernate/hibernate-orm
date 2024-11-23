@@ -1,25 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * PropertyAccess implementation that deal with an underlying Map as the container using
- * {@link Map#get} and {@link Map#put}
+ * {@link PropertyAccess} implementation that deals with an underlying {@code Map}
+ * as the container, using {@link Map#get} and {@link Map#put}.
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -58,33 +58,39 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 		}
 
 		@Override
-		public Object get(Object owner) {
+		@SuppressWarnings("rawtypes")
+		public @Nullable Object get(Object owner) {
 			return ( (Map) owner ).get( propertyName );
 		}
 
 		@Override
-		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			return get( owner );
 		}
 
 		@Override
-		public Class getReturnType() {
+		public Class<?> getReturnTypeClass() {
 			// we just don't know...
 			return Object.class;
 		}
 
 		@Override
-		public Member getMember() {
+		public Type getReturnType() {
+			return Object.class;
+		}
+
+		@Override
+		public @Nullable Member getMember() {
 			return null;
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}
@@ -98,17 +104,17 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public void set(Object target, Object value, SessionFactoryImplementor factory) {
+		public void set(Object target, @Nullable Object value) {
 			( (Map) target ).put( propertyName, value );
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}

@@ -1,35 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
 
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.internal.SessionImpl;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -46,29 +42,28 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Chris Cranford
  */
-@TestForIssue(jiraKey = "HHH-12304")
+@JiraKey(value = "HHH-12304")
 public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 	// An extended type to trigger the need for Envers to supply type information in the HBM mappings.
 	// This should be treated the same as any other property annotated as Enumerated or uses an Enum.
-	public static class ExtendedEnumType extends org.hibernate.type.EnumType {
+	public static class ExtendedEnumType extends org.hibernate.type.EnumType<Widget.Status> {
 
 	}
 
 	@Entity(name = "Widget")
-	@TypeDef(name = "extended_enum", typeClass = ExtendedEnumType.class)
 	@Audited
 	public static class Widget {
 		@Id
 		@GeneratedValue
 		private Integer id;
 
+		@Type( ExtendedEnumType.class )
 		@Enumerated(EnumType.STRING)
-		@Type(type = "extended_enum")
 		private Status status;
 
 		@Enumerated
-		@Type(type = "extended_enum")
+		@Type( ExtendedEnumType.class )
 		private Status status2;
 
 		public enum Status {
@@ -168,18 +163,18 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final SessionFactoryImplementor sessionFactory = entityManager.unwrap( SessionImplementor.class ).getSessionFactory();
 
-			final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( entityClass );
+			final EntityPersister entityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityClass );
 			final EnversService enversService = sessionFactory.getServiceRegistry().getService( EnversService.class );
 
 			final String entityName = entityPersister.getEntityName();
-			final String auditEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+			final String auditEntityName = enversService.getConfig().getAuditEntityName( entityName );
 
-			final EntityPersister auditedEntityPersister = sessionFactory.getMetamodel().entityPersister( auditEntityName );
+			final EntityPersister auditedEntityPersister = sessionFactory.getMappingMetamodel().getEntityDescriptor( auditEntityName );
 
 			final org.hibernate.type.Type propertyType = auditedEntityPersister.getPropertyType( propertyName );
 			assertTyping( CustomType.class, propertyType );
 
-			final UserType userType = ( (CustomType) propertyType ).getUserType();
+			final UserType userType = ( (CustomType<Object>) propertyType ).getUserType();
 			assertTyping( typeClass, userType );
 			assertTyping( org.hibernate.type.EnumType.class, userType );
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
@@ -22,11 +20,11 @@ public interface Orderable {
 	/**
 	 * The order by clause used during loading this plural attribute.
 	 *
-	 * <p/>
+	 * <p>
 	 * If the ordering element is not specified, ordering by
 	 * the primary key of the associated entity is assumed
 	 *
-	 * @see javax.persistence.OrderBy#value()
+	 * @see jakarta.persistence.OrderBy#value()
 	 *
 	 * @return The {@code ORDER BY} fragment used during loading this plural attribute from DB.
 	 */

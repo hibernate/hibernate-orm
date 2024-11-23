@@ -1,20 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model;
 
+import jakarta.persistence.GenerationType;
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.TypeDetails;
+
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
+import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorStrategy;
+import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
+import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
- * Identifier generator definition, should be immutable.
+ * Models the definition of an {@linkplain org.hibernate.id.IdentityGenerator identifier generator}
+ *
+ * @implSpec Should be immutable.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -31,12 +49,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			final Map<String, String> parameters) {
 		this.name = name;
 		this.strategy = strategy;
-		if ( CollectionHelper.isEmpty( parameters ) ) {
-			this.parameters = Collections.emptyMap();
-		}
-		else {
-			this.parameters = Collections.unmodifiableMap( parameters );
-		}
+		this.parameters = isEmpty( parameters ) ? emptyMap() : unmodifiableMap( parameters );
 	}
 
 	public IdentifierGeneratorDefinition(
@@ -52,7 +65,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 	public IdentifierGeneratorDefinition(String name, String strategy) {
 		this.name = name;
 		this.strategy = strategy;
-		this.parameters = Collections.emptyMap();
+		this.parameters = emptyMap();
 	}
 
 	/**
@@ -76,6 +89,65 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		return parameters;
 	}
 
+	@Internal
+	public static IdentifierGeneratorDefinition createImplicit(
+			String name,
+			TypeDetails idType,
+			String generatorName,
+			GenerationType generationType) {
+		// If we were unable to locate an actual matching named generator assume
+		// a sequence/table of the given name, make one based on GenerationType.
+
+		if ( generationType == null ) {
+			generationType = GenerationType.SEQUENCE;
+		}
+
+		switch ( generationType ) {
+			case SEQUENCE:
+				return buildSequenceGeneratorDefinition( name );
+			case TABLE:
+				return buildTableGeneratorDefinition( name );
+			case IDENTITY:
+				throw new AnnotationException(
+						"@GeneratedValue annotation specified 'strategy=IDENTITY' and 'generator'"
+								+ " but the generator name is unnecessary"
+				);
+			case UUID:
+				throw new AnnotationException(
+						"@GeneratedValue annotation specified 'strategy=UUID' and 'generator'"
+								+ " but the generator name is unnecessary"
+				);
+			case AUTO:
+				return new IdentifierGeneratorDefinition(
+						name,
+						generatorStrategy( generationType, generatorName, idType ),
+						singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
+				);
+			default:
+				throw new AssertionFailure( "unknown generator type: " + generationType );
+		}
+	}
+
+	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name) {
+		final Builder builder = new Builder();
+		final TableGeneratorJpaAnnotation tableGeneratorUsage = TABLE_GENERATOR.createUsage( null );
+		if ( StringHelper.isNotEmpty( name ) ) {
+			tableGeneratorUsage.name( name );
+		}
+		interpretTableGenerator( tableGeneratorUsage, builder );
+		return builder.build();
+	}
+
+	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
+		final Builder builder = new Builder();
+		final SequenceGeneratorJpaAnnotation sequenceGeneratorUsage = SEQUENCE_GENERATOR.createUsage( null );
+		if ( StringHelper.isNotEmpty( name ) ) {
+			sequenceGeneratorUsage.name( name );
+		}
+		interpretSequenceGenerator( sequenceGeneratorUsage, builder );
+		return builder.build();
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -86,18 +158,9 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		}
 
 		IdentifierGeneratorDefinition that = (IdentifierGeneratorDefinition) o;
-
-		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
-			return false;
-		}
-		if ( parameters != null ? !parameters.equals( that.parameters ) : that.parameters != null ) {
-			return false;
-		}
-		if ( strategy != null ? !strategy.equals( that.strategy ) : that.strategy != null ) {
-			return false;
-		}
-
-		return true;
+		return Objects.equals(name, that.name)
+			&& Objects.equals(strategy, that.strategy)
+			&& Objects.equals(parameters, that.parameters);
 	}
 
 	@Override
@@ -144,7 +207,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 
 		private Map<String, String> parameters() {
 			if ( parameters == null ) {
-				parameters = new HashMap<String, String>();
+				parameters = new HashMap<>();
 			}
 			return parameters;
 		}

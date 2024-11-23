@@ -1,19 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.strategy.AuditStrategy;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
@@ -30,17 +26,13 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 	private final MiddleComponentData[] componentDatas;
 
 	public OneEntityQueryGenerator(
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			Configuration configuration,
 			String versionsMiddleEntityName,
 			MiddleIdData referencingIdData,
 			boolean revisionTypeInId,
 			MiddleComponentData... componentData) {
 		super(
-				globalCfg,
-				verEntCfg,
-				auditStrategy,
+				configuration,
 				versionsMiddleEntityName,
 				referencingIdData,
 				revisionTypeInId,
@@ -79,7 +71,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 		// ee.originalId.id_ref_ing = :id_ref_ing
 		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(
 				qb.getRootParameters(),
-				verEntCfg.getOriginalIdPropName(),
+				configuration.getOriginalIdPropertyName(),
 				true
 		);
 
@@ -95,8 +87,8 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 
 	@Override
 	protected void applyValidPredicates(QueryBuilder qb, Parameters rootParameters, boolean inclusive) {
-		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+		final String revisionPropertyPath = configuration.getRevisionNumberPath();
+		final String originalIdPropertyName = configuration.getOriginalIdPropertyName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 		// (with ee association at revision :revision)
 		// --> based on auditStrategy (see above)
@@ -104,7 +96,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 				qb,
 				rootParameters,
 				revisionPropertyPath,
-				verEntCfg.getRevisionEndFieldName(),
+				configuration.getRevisionEndFieldName(),
 				true,
 				referencingIdData,
 				entityName,
@@ -129,7 +121,7 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 		// Excluding current revision, because we need to match data valid at the previous one.
 		applyValidPredicates( remQb, valid, false );
 		// ee.revision = :revision
-		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), "=", REVISION_PARAMETER );
+		removed.addWhereWithNamedParam( configuration.getRevisionNumberPath(), "=", REVISION_PARAMETER );
 		// ee.revision_type = DEL
 		removed.addWhereWithNamedParam( getRevisionTypePath(), "=", DEL_REVISION_TYPE_PARAMETER );
 	}

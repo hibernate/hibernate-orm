@@ -1,32 +1,39 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
-import java.io.Serializable;
-import java.util.Set;
-import java.util.function.Consumer;
+import java.util.Collection;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Wrapper for a {@link TimestampsRegion} adding handling of stale results
+ * Tracks invalidation of "query spaces" (tables) for the purpose of
+ * determining if a cached query result set is stale. Implementations
+ * use a {@linkplain TimestampsRegion special region} the second-level
+ * cache to store invalidation timestamps.
+ * <ul>
+ * <li>A query space is {@linkplain #invalidate invalidated} in the
+ *     {@code TimestampsCache} when a SQL DML statement executed by
+ *     Hibernate affects the corresponding table.
+ * <li>A cached query result set is {@linkplain #isUpToDate checked for
+ *     staleness} against the {@code TimestampsCache} when it is read
+ *     from a {@link QueryResultsRegion} by a {@link QueryResultsCache}.
+ * </ul>
  *
  * @author Steve Ebersole
  */
-public interface TimestampsCache extends UpdateTimestampsCache {
+public interface TimestampsCache {
 	/**
-	 * The region used to store all timestamps data
+	 * The region used to store all timestamp data.
 	 */
 	TimestampsRegion getRegion();
 
 	/**
 	 * Perform pre-invalidation of the passed spaces (table names)
-	 * against the timestamps region data
+	 * against the timestamp region data.
 	 */
 	void preInvalidate(
 			String[] spaces,
@@ -34,7 +41,7 @@ public interface TimestampsCache extends UpdateTimestampsCache {
 
 	/**
 	 * Perform invalidation of the passed spaces (table names)
-	 * against the timestamps region data
+	 * against the timestamp region data.
 	 */
 	void invalidate(
 			String[] spaces,
@@ -43,66 +50,27 @@ public interface TimestampsCache extends UpdateTimestampsCache {
 	/**
 	 * Perform an up-to-date check for the given set of query spaces as
 	 * part of verifying the validity of cached query results.
-	 *
-	 * @param spaces The spaces to check
-	 * @param timestamp The timestamp from the transaction when the query results were cached.
-	 * @param session The session whether this check originated.
-	 *
-	 * @return Whether all those spaces are up-to-date
 	 */
 	boolean isUpToDate(
 			String[] spaces,
 			Long timestamp,
 			SharedSessionContractImplementor session);
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations
-
-
-	@Override
-	default void preInvalidate(Serializable[] spaces, SharedSessionContractImplementor session) {
-		final String[] spaceStrings = new String[ spaces.length ];
-		// todo - does this copy work?
-		System.arraycopy( spaces, 0, spaceStrings, 0, spaces.length );
-		preInvalidate( spaceStrings, session );
-	}
-
-	@Override
-	default void invalidate(Serializable[] spaces, SharedSessionContractImplementor session) {
-		final String[] spaceStrings = new String[ spaces.length ];
-		// todo - does this copy work?
-		System.arraycopy( spaces, 0, spaceStrings, 0, spaces.length );
-		invalidate( spaceStrings, session );
-	}
-
-	@Override
-	default boolean isUpToDate(
-			Set<Serializable> spaces,
+	/**
+	 * Perform an up-to-date check for the given set of query spaces as
+	 * part of verifying the validity of cached query results.
+	 */
+	boolean isUpToDate(
+			Collection<String> spaces,
 			Long timestamp,
-			SharedSessionContractImplementor session) {
-		final String[] spaceArray = new String[ spaces.size() ];
+			SharedSessionContractImplementor session);
 
-		spaces.forEach(
-				new Consumer<Serializable>() {
-					int position = 0;
-					@Override
-					public void accept(Serializable serializable) {
-						spaceArray[position++] = (String) serializable;
-					}
-				}
-		);
-
-		return isUpToDate( spaceArray, timestamp, session );
-	}
-
-	@Override
 	default void clear() throws CacheException {
 		getRegion().clear();
 	}
 
-	@Override
 	default void destroy() {
 		// nothing to do - the region itself is destroyed
 	}
+
 }

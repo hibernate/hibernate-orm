@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -12,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Rob Worsnop
@@ -59,9 +57,7 @@ public class FilterConfiguration {
 		}
 		else if ( persistentClass != null ) {
 			String table = persistentClass.getTable().getQualifiedName(
-					factory.getDialect(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
+					factory.getSqlStringGenerationContext()
 			);
 			return Collections.singletonMap( null, table );
 		}
@@ -71,18 +67,19 @@ public class FilterConfiguration {
 	}
 
 	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
-		Map<String, String> ret = new HashMap<String, String>();
+		final Map<String, String> ret = new HashMap<>();
 		if ( aliasTableMap != null ) {
 			ret.putAll( aliasTableMap );
 		}
+
 		if ( aliasEntityMap != null ) {
 			for ( Map.Entry<String, String> entry : aliasEntityMap.entrySet() ) {
-				ret.put(
-						entry.getKey(),
-						Joinable.class.cast( factory.getEntityPersister( entry.getValue() ) ).getTableName()
-				);
+				final EntityPersister joinable = factory.getMappingMetamodel()
+						.getEntityDescriptor( entry.getValue() );
+				ret.put( entry.getKey(), joinable.getTableName() );
 			}
 		}
+
 		return ret;
 	}
 }

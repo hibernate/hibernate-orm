@@ -1,18 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.internal;
 
+import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.mapping.Value;
-
-import org.dom4j.Element;
 
 /**
  * A {@link ModifiedColumnNamingStrategy} that adds modified columns with the following rules:
@@ -26,12 +22,12 @@ import org.dom4j.Element;
  * @author Chris Cranford
  * @since 5.4.7
  */
-public class LegacyModifiedColumnNamingStrategy implements ModifiedColumnNamingStrategy {
+public class LegacyModifiedColumnNamingStrategy extends AbstractModifiedColumnNamingStrategy {
 	@Override
 	public void addModifiedColumns(
-			GlobalConfiguration globalCfg,
+			Configuration configuration,
 			Value value,
-			Element parent,
+			AttributeContainer mapping,
 			PropertyAuditingData propertyAuditingData) {
 		final String columnName;
 		if ( propertyAuditingData.isModifiedFlagNameExplicitlySpecified() ) {
@@ -40,12 +36,6 @@ public class LegacyModifiedColumnNamingStrategy implements ModifiedColumnNamingS
 		else {
 			columnName = propertyAuditingData.getModifiedFlagName();
 		}
-		MetadataTools.addModifiedFlagPropertyWithColumn(
-				parent,
-				propertyAuditingData.getName(),
-				globalCfg.getModifiedFlagSuffix(),
-				propertyAuditingData.getModifiedFlagName(),
-				columnName
-		);
+		mapping.addAttribute( createModifiedFlagAttribute( propertyAuditingData, configuration, columnName ) );
 	}
 }

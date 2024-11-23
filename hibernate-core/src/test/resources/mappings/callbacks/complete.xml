@@ -1,0 +1,128 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+  -->
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_2.xsd"
+                 version="3.2">
+
+    <persistence-unit-metadata>
+        <persistence-unit-defaults>
+            <entity-listeners>
+                <entity-listener class="org.hibernate.orm.test.jpa.callbacks.xml.complete.ListenerA">
+                    <pre-persist method-name="prePersist"/>
+                    <post-persist method-name="postPersist"/>
+                    <pre-remove method-name="preRemove"/>
+                    <post-remove method-name="postRemove"/>
+                    <pre-update method-name="preUpdate"/>
+                    <post-update method-name="postUpdate"/>
+                    <post-load method-name="postLoad"/>
+                </entity-listener>
+            </entity-listeners>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+
+    <package>org.hibernate.orm.test.jpa.callbacks.xml.complete</package>
+
+
+    <mapped-superclass class="LineItemSuper">
+        <entity-listeners>
+            <entity-listener class="ListenerA">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+            <entity-listener class="ListenerB">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+        </entity-listeners>
+    </mapped-superclass>
+
+
+    <entity class="LineItem">
+        <exclude-default-listeners/>
+        <exclude-superclass-listeners/>
+        <entity-listeners>
+            <entity-listener class="ListenerB">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+            <entity-listener class="ListenerC">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+        </entity-listeners>
+    </entity>
+
+    <entity class="Order">
+        <table name="ORDER_TABLE"/>
+        <entity-listeners>
+            <entity-listener class="ListenerB">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+            <entity-listener class="ListenerC">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+        </entity-listeners>
+    </entity>
+
+    <entity class="Product">
+        <table name="PRODUCT_TABLE"/>
+        <entity-listeners>
+            <entity-listener class="ListenerB">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+            <entity-listener class="ListenerC">
+                <pre-persist method-name="prePersist"/>
+                <post-persist method-name="postPersist"/>
+                <pre-remove method-name="preRemove"/>
+                <post-remove method-name="postRemove"/>
+                <pre-update method-name="preUpdate"/>
+                <post-update method-name="postUpdate"/>
+                <post-load method-name="postLoad"/>
+            </entity-listener>
+        </entity-listeners>
+    </entity>
+
+</entity-mappings>

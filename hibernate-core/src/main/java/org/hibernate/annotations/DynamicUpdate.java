@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -13,22 +11,18 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * For updating, should this entity use dynamic sql generation where only changed columns get referenced in the
- * prepared sql statement?
- * <p/>
- * Note, for re-attachment of detached entities this is not possible without select-before-update being enabled.
+ * Specifies that SQL {@code update} statements for the annotated entity
+ * are generated dynamically, and only include columns which are actually
+ * being updated.
+ * <p>
+ * This might result in improved performance if it is common to change
+ * only some of the attributes of the entity. However, there is a cost
+ * associated with generating the SQL at runtime.
+ * <p>
  *
  * @author Steve Ebersole
- *
- * @see SelectBeforeUpdate
  */
 @Target( TYPE )
 @Retention( RUNTIME )
 public @interface DynamicUpdate {
-	/**
-	 * Should dynamic update generation be used for this entity?  {@code true} says the update sql will be dynamic
-	 * generated.  Default is {@code true} (since generally this annotation is not used unless the user wants dynamic
-	 * generation).
-	 */
-	boolean value() default true;
 }

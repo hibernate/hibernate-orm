@@ -1,19 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.spi;
-
-import java.io.Serializable;
 
 /**
  * Registry of Callbacks by entity and type
  *
  * @author Steve Ebersole
  */
-public interface CallbackRegistry extends Serializable {
+public interface CallbackRegistry {
 	/**
 	 * Do we have any registered callbacks of the given type for the given entity?
 	 *
@@ -23,7 +19,7 @@ public interface CallbackRegistry extends Serializable {
 	 * @return {@code true} indicates there are already registered callbacks of
 	 * that type for that class; {@code false} indicates there are not.
 	 */
-	boolean hasRegisteredCallbacks(Class entityClass, CallbackType callbackType);
+	boolean hasRegisteredCallbacks(Class<?> entityClass, CallbackType callbackType);
 
 	void preCreate(Object entity);
 	void postCreate(Object entity);
@@ -37,29 +33,10 @@ public interface CallbackRegistry extends Serializable {
 	boolean postLoad(Object entity);
 
 	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
-	 * {@link CallbackType#POST_PERSIST}
+	 * Signals that the CallbackRegistry will no longer be used.
+	 * In particular, it is important to release references to class types
+	 * to avoid classloader leaks.
 	 */
-	@Deprecated
-	boolean hasPostCreateCallbacks(Class entityClass);
+	void release();
 
-	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
-	 * {@link CallbackType#POST_UPDATE}
-	 */
-	@Deprecated
-	boolean hasPostUpdateCallbacks(Class entityClass);
-
-	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead passing
-	 * {@link CallbackType#POST_REMOVE}
-	 */
-	@Deprecated
-	boolean hasPostRemoveCallbacks(Class entityClass);
-
-	/**
-	 * @deprecated Use {@link #hasRegisteredCallbacks(Class, CallbackType)} instead.
-	 */
-	@Deprecated
-	boolean hasRegisteredCallbacks(Class entityClass, Class annotationClass);
 }

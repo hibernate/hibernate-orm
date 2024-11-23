@@ -1,0 +1,59 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.antlr;
+
+import javax.inject.Inject;
+
+import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.TaskProvider;
+
+/**
+ * @author Steve Ebersole
+ */
+public class AntlrSpec {
+	public static final String REGISTRATION_NAME = "antlr4";
+
+	private final DirectoryProperty grammarBaseDirectory;
+	private final DirectoryProperty outputBaseDirectory;
+
+	private final NamedDomainObjectContainer<SplitGrammarDescriptor> grammarDescriptors;
+
+	@Inject
+	@SuppressWarnings("UnstableApiUsage")
+	public AntlrSpec(Project project, TaskProvider<Task> groupingTask) {
+		final ObjectFactory objectFactory = project.getObjects();
+		final ProjectLayout layout = project.getLayout();
+
+		grammarBaseDirectory = objectFactory.directoryProperty();
+		grammarBaseDirectory.convention( layout.getProjectDirectory().dir( "src/main/antlr" ) );
+
+		outputBaseDirectory = objectFactory.directoryProperty();
+		outputBaseDirectory.convention( layout.getBuildDirectory().dir( "generated/sources/antlr/main" ) );
+
+		grammarDescriptors = objectFactory.domainObjectContainer(
+				SplitGrammarDescriptor.class,
+				new GrammarDescriptorFactory( this, groupingTask, project )
+		);
+	}
+
+	public DirectoryProperty getGrammarBaseDirectory() {
+		return grammarBaseDirectory;
+	}
+
+	public DirectoryProperty getOutputBaseDirectory() {
+		return outputBaseDirectory;
+	}
+
+	public NamedDomainObjectContainer<SplitGrammarDescriptor> getGrammarDescriptors() {
+		return grammarDescriptors;
+	}
+}

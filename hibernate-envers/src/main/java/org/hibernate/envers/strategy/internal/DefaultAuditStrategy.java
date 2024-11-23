@@ -1,16 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.strategy.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.Session;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
@@ -42,11 +37,11 @@ public class DefaultAuditStrategy implements AuditStrategy {
 	public void perform(
 			Session session,
 			String entityName,
-			AuditEntitiesConfiguration auditEntitiesConfiguration,
-			Serializable id,
+			Configuration configuration,
+			Object id,
 			Object data,
 			Object revision) {
-		session.save( auditEntitiesConfiguration.getAuditEntityName( entityName ), data );
+		session.persist( configuration.getAuditEntityName( entityName ), data );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
 	}
 
@@ -55,10 +50,10 @@ public class DefaultAuditStrategy implements AuditStrategy {
 			Session session,
 			String entityName,
 			String propertyName,
-			AuditEntitiesConfiguration auditEntitiesConfiguration,
+			Configuration configuration,
 			PersistentCollectionChangeData persistentCollectionChangeData,
 			Object revision) {
-		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
+		session.persist( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, persistentCollectionChangeData.getData() );
 	}
 
@@ -71,7 +66,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 	 */
 	@Override
 	public void addEntityAtRevisionRestriction(
-			GlobalConfiguration globalCfg,
+			Configuration configuration,
 			QueryBuilder rootQueryBuilder,
 			Parameters parameters,
 			String revisionProperty,
@@ -98,7 +93,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 		);
 
 		// add subquery to rootParameters
-		String subqueryOperator = globalCfg.getCorrelatedSubqueryOperator();
+		String subqueryOperator = configuration.getCorrelatedSubqueryOperator();
 		parameters.addWhere( revisionProperty, addAlias, subqueryOperator, maxERevQb );
 	}
 

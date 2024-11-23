@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.internal.impl;
 
@@ -11,9 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -40,6 +38,7 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected EntityInstantiator entityInstantiator;
@@ -50,14 +49,16 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected String versionsEntityName;
 	protected QueryBuilder qb;
 	protected final Map<String, String> aliasToEntityNameMap = new HashMap<>();
+	protected final Map<String, String> aliasToComponentPropertyNameMap = new HashMap<>();
 
 	protected boolean hasOrder;
 
 	protected final EnversService enversService;
 	protected final AuditReaderImplementor versionsReader;
 
-	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
-	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
+	// todo: can these association query collections be merged?
+	protected final List<AbstractAuditAssociationQuery<?>> associationQueries = new ArrayList<>();
+	protected final Map<String, AbstractAuditAssociationQuery<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
 	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
 
 	protected AbstractAuditQuery(
@@ -80,7 +81,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 		entityClassName = cls.getName();
 		this.entityName = entityName;
-		versionsEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+		versionsEntityName = enversService.getConfig().getAuditEntityName( entityName );
 		if ( !enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
 			throw new NotAuditedException( entityName, "Entity [" + entityName + "] is not versioned" );
 		}
@@ -93,7 +94,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	public String getAlias() {
 		return REFERENCED_ENTITY_ALIAS;
 	}
-	
+
 	protected Query buildQuery() {
 		Query query = qb.toQuery( versionsReader.getSessionImplementor() );
 		setQueryProperties( query );
@@ -134,21 +135,16 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	// Projection and order
 
 	public AuditQuery addProjection(AuditProjection projection) {
-		AuditProjection.ProjectionData projectionData = projection.getData( enversService );
-		String projectionEntityAlias = projectionData.getAlias( REFERENCED_ENTITY_ALIAS );
+		String projectionEntityAlias = projection.getAlias( REFERENCED_ENTITY_ALIAS );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		registerProjection( projectionEntityName, projection );
-		String propertyName = CriteriaTools.determinePropertyName(
+		projection.addProjectionToQuery(
 				enversService,
 				versionsReader,
-				projectionEntityName,
-				projectionData.getPropertyName()
-		);
-		qb.addProjection(
-				projectionData.getFunction(),
-				projectionEntityAlias,
-				propertyName,
-				projectionData.isDistinct()
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				REFERENCED_ENTITY_ALIAS,
+				qb
 		);
 		return this;
 	}
@@ -164,7 +160,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	public AuditQuery addOrder(AuditOrder order) {
 		hasOrder = true;
-		AuditOrder.OrderData orderData = order.getData( enversService );
+		AuditOrder.OrderData orderData = order.getData( enversService.getConfig() );
 		String orderEntityAlias = orderData.getAlias( REFERENCED_ENTITY_ALIAS );
 		String orderEntityName = aliasToEntityNameMap.get( orderEntityAlias );
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -173,7 +169,18 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				orderEntityName,
 				orderData.getPropertyName()
 		);
-		qb.addOrder( orderEntityAlias, propertyName, orderData.isAscending() );
+		String componentPrefix = CriteriaTools.determineComponentPropertyPrefix(
+				enversService,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				orderEntityAlias
+		);
+		qb.addOrder(
+				orderEntityAlias,
+				componentPrefix.concat( propertyName ),
+				orderData.isAscending(),
+				orderData.getNullPrecedence()
+		);
 		return this;
 	}
 
@@ -188,23 +195,11 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	@Override
 	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType, String alias) {
-		AuditAssociationQueryImpl<AuditQueryImplementor> result = associationQueryMap.get( associationName );
-		if (result == null) {
-			result = new AuditAssociationQueryImpl<>(
-					enversService,
-					versionsReader,
-					this,
-					qb,
-					associationName,
-					joinType,
-					aliasToEntityNameMap,
-					REFERENCED_ENTITY_ALIAS,
-					alias
-			);
-			associationQueries.add( result );
-			associationQueryMap.put( associationName, result );
-		}
-		return result;
+		return traverseRelation(
+				associationName,
+				joinType,
+				alias,
+				null );
 	}
 
 	// Query properties
@@ -303,7 +298,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			query.setComment( comment );
 		}
 		if ( flushMode != null ) {
-			query.setFlushMode( flushMode );
+			query.setHibernateFlushMode( flushMode );
 		}
 		if ( cacheMode != null ) {
 			query.setCacheMode( cacheMode );
@@ -323,7 +318,15 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				if ( projections.size() == 1 ) {
 					// qr is the value of the projection itself
 					final Pair<String, AuditProjection> projection = projections.get( 0 );
-					result.add( projection.getSecond().convertQueryResult( enversService, entityInstantiator, projection.getFirst(), revision, qr ) );
+					result.add(
+							projection.getSecond().convertQueryResult(
+									enversService,
+									entityInstantiator,
+									projection.getFirst(),
+									revision,
+									qr
+							)
+					);
 				}
 				else {
 					// qr is an array where each of its components holds the value of corresponding projection
@@ -331,7 +334,13 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 					Object[] tresults = new Object[qresults.length];
 					for ( int i = 0; i < qresults.length; i++ ) {
 						final Pair<String, AuditProjection> projection = projections.get( i );
-						tresults[i] = projection.getSecond().convertQueryResult( enversService, entityInstantiator, projection.getFirst(), revision, qresults[i] );
+						tresults[i] = projection.getSecond().convertQueryResult(
+								enversService,
+								entityInstantiator,
+								projection.getFirst(),
+								revision,
+								qresults[i]
+						);
 					}
 					result.add( tresults );
 				}
@@ -350,5 +359,10 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected String getEntityName() {
 		// todo: can this be replaced by a call to getEntittyConfiguration#getEntityClassName()?
 		return entityName;
+	}
+
+	protected void addAssociationQuery(String associationName, AbstractAuditAssociationQuery<AuditQueryImplementor> query) {
+		associationQueries.add( query );
+		associationQueryMap.put( associationName, query );
 	}
 }

@@ -1,24 +1,42 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.profile;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BagType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.engine.FetchStyle.JOIN;
+import static org.hibernate.engine.FetchStyle.SUBSELECT;
+
 /**
- * A 'fetch profile' allows a user to dynamically modify the fetching strategy used for particular associations at
- * runtime, whereas that information was historically only statically defined in the metadata.
- * <p/>
- * This class defines the runtime representation of this data.
+ * The runtime representation of a Hibernate
+ * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+ * defined in annotations.
+ * <p>
+ * Fetch profiles compete with JPA-defined
+ * {@linkplain jakarta.persistence.NamedEntityGraph named entity graphs}.
+ * The semantics of these two facilities are not identical, however,
+ * since a fetch profile is a list, not a graph, and is not by nature
+ * rooted at any one particular entity. Instead, given a root entity as
+ * input, an active fetch profile contributes to the determination of
+ * the fetch graph.
+ * <p>
+ * A named fetch profile may be enabled in a given session
+ * by calling {@link org.hibernate.Session#enableFetchProfile(String)}.
+ *
+ * @see org.hibernate.mapping.FetchProfile
  *
  * @author Steve Ebersole
  */
@@ -26,14 +44,15 @@ public class FetchProfile {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchProfile.class );
 
 	private final String name;
-	private Map<String,Fetch> fetches = new HashMap<String,Fetch>();
+	private final Map<String,Fetch> fetches = new HashMap<>();
 
 	private boolean containsJoinFetchedCollection;
 	private boolean containsJoinFetchedBag;
-	private Fetch bagJoinFetch;
+	private @Nullable Fetch bagJoinFetch;
 
 	/**
-	 * Constructs a FetchProfile, supplying its unique name (unique within the SessionFactory).
+	 * Constructs a {@link FetchProfile} with the given unique name.
+	 * Fetch profile names must be unique within a given {@code SessionFactory}.
 	 *
 	 * @param name The name under which we are bound in the sessionFactory
 	 */
@@ -42,45 +61,27 @@ public class FetchProfile {
 	}
 
 	/**
-	 * Add a fetch to the profile.
+	 * Add a {@linkplain Fetch fetch override} to the profile.
 	 *
-	 * @param association The association to be fetched
-	 * @param fetchStyleName The name of the fetch style to apply
+	 * @param fetch The fetch override to add.
 	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public void addFetch(Association association, String fetchStyleName) {
-		addFetch( association, Fetch.Style.parse( fetchStyleName ) );
-	}
-
-	/**
-	 * Add a fetch to the profile.
-	 *
-	 * @param association The association to be fetched
-	 * @param style The style to apply
-	 */
-	public void addFetch(Association association, Fetch.Style style) {
-		addFetch( new Fetch( association, style ) );
-	}
-
-	/**
-	 * Add a fetch to the profile.
-	 *
-	 * @param fetch The fetch to add.
-	 */
+	@Internal
 	public void addFetch(final Fetch fetch) {
-		final String fetchAssociactionRole = fetch.getAssociation().getRole();
-		final Type associationType = fetch.getAssociation().getOwner().getPropertyType( fetch.getAssociation().getAssociationPath() );
-		if ( associationType.isCollectionType() ) {
-			LOG.tracev( "Handling request to add collection fetch [{0}]", fetchAssociactionRole );
+		final Association association = fetch.getAssociation();
+		final String role = association.getRole();
+		final Type associationType =
+				association.getOwner().getPropertyType( association.getAssociationPath() );
+		if ( associationType instanceof CollectionType ) {
+			LOG.tracev( "Handling request to add collection fetch [{0}]", role );
 
 			// couple of things for which to account in the case of collection
 			// join fetches
-			if ( Fetch.Style.JOIN == fetch.getStyle() ) {
+			if ( fetch.getMethod() == JOIN ) {
 				// first, if this is a bag we need to ignore it if we previously
 				// processed collection join fetches
-				if ( BagType.class.isInstance( associationType ) ) {
+				if ( associationType instanceof BagType ) {
 					if ( containsJoinFetchedCollection ) {
-						LOG.containsJoinFetchedCollection( fetchAssociactionRole );
+						LOG.containsJoinFetchedCollection( role );
 						// EARLY EXIT!!!
 						return;
 					}
@@ -91,7 +92,7 @@ public class FetchProfile {
 				// we need to go back and ignore that previous bag join fetch.
 				if ( containsJoinFetchedBag ) {
 					// just for safety...
-					if ( fetches.remove( bagJoinFetch.getAssociation().getRole() ) != bagJoinFetch ) {
+					if ( bagJoinFetch != null && fetches.remove( bagJoinFetch.getAssociation().getRole() ) != bagJoinFetch ) {
 						LOG.unableToRemoveBagJoinFetch();
 					}
 					bagJoinFetch = null;
@@ -101,58 +102,48 @@ public class FetchProfile {
 				containsJoinFetchedCollection = true;
 			}
 		}
-		fetches.put( fetchAssociactionRole, fetch );
+		fetches.put( role, fetch );
 	}
 
 	/**
-	 * Getter for property 'name'.
-	 *
-	 * @return Value for property 'name'.
+	 * The name of this fetch profile
 	 */
 	public String getName() {
 		return name;
 	}
 
 	/**
-	 * Getter for property 'fetches'.  Map of {@link Fetch} instances, keyed by association <tt>role</tt>
-	 *
-	 * @return Value for property 'fetches'.
+	 * A map of {@link Fetch} instances, keyed by association role
 	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
 	public Map<String,Fetch> getFetches() {
 		return fetches;
 	}
 
 	/**
-	 * Obtain the fetch associated with the given role.
+	 * Obtain the {@linkplain Fetch fetch override} associated with
+	 * the given role.
 	 *
-	 * @param role The role identifying the fetch
+	 * @param role The role name identifying the association
 	 *
-	 * @return The fetch, or {@code null} if a matching one was not found
+	 * @return The {@code Fetch}, or {@code null} if there was
+	 *         no {@code Fetch} for the given association
 	 */
-	public Fetch getFetchByRole(String role) {
+	public @Nullable Fetch getFetchByRole(String role) {
 		return fetches.get( role );
 	}
 
-	/**
-	 * Getter for property 'containsJoinFetchedCollection', which flags whether
-	 * this fetch profile contained any collection join fetches.
-	 *
-	 * @return Value for property 'containsJoinFetchedCollection'.
-	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public boolean isContainsJoinFetchedCollection() {
-		return containsJoinFetchedCollection;
+	@Override
+	public String toString() {
+		return "FetchProfile[" + name + "]";
 	}
 
-	/**
-	 * Getter for property 'containsJoinFetchedBag', which flags whether this
-	 * fetch profile contained any bag join fetches
-	 *
-	 * @return Value for property 'containsJoinFetchedBag'.
-	 */
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public boolean isContainsJoinFetchedBag() {
-		return containsJoinFetchedBag;
+	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister persister) {
+		for ( Fetch fetch : getFetches().values() ) {
+			if ( fetch.getMethod() == SUBSELECT
+					&& fetch.getAssociation().getOwner() == persister ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

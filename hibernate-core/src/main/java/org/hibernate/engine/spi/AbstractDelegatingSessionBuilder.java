@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
 import java.util.TimeZone;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -25,7 +22,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder> implements SessionBuilder<T> {
+public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder {
 
 	private final SessionBuilder delegate;
 
@@ -33,9 +30,8 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 		this.delegate = delegate;
 	}
 
-	@SuppressWarnings("unchecked")
-	protected T getThis() {
-		return (T) this;
+	protected SessionBuilder getThis() {
+		return this;
 	}
 
 	protected SessionBuilder delegate() {
@@ -48,100 +44,86 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 	}
 
 	@Override
-	public T interceptor(Interceptor interceptor) {
+	public SessionBuilder interceptor(Interceptor interceptor) {
 		delegate.interceptor( interceptor );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T noInterceptor() {
+	public SessionBuilder noInterceptor() {
 		delegate.noInterceptor();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T statementInspector(StatementInspector statementInspector) {
+	public SessionBuilder statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T connection(Connection connection) {
+	public SessionBuilder connection(Connection connection) {
 		delegate.connection( connection );
-		return getThis();
-	}
-
-	@SuppressWarnings("deprecation")
-	@Override
-	public T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		delegate.connectionReleaseMode( connectionReleaseMode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoJoinTransactions(boolean autoJoinTransactions) {
+	public SessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClose(boolean autoClose) {
+	public SessionBuilder autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
-		return getThis();
+		return this;
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		delegate.flushBeforeCompletion( flushBeforeCompletion );
-		return getThis();
-	}
-
-	@Override
-	public T tenantIdentifier(String tenantIdentifier) {
+	@Override @Deprecated(forRemoval = true)
+	public SessionBuilder tenantIdentifier(String tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T eventListeners(SessionEventListener... listeners) {
+	public SessionBuilder tenantIdentifier(Object tenantIdentifier) {
+		delegate.tenantIdentifier( tenantIdentifier );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T clearEventListeners() {
+	public SessionBuilder clearEventListeners() {
 		delegate.clearEventListeners();
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T jdbcTimeZone(TimeZone timeZone) {
+	public SessionBuilder jdbcTimeZone(TimeZone timeZone) {
 		delegate.jdbcTimeZone(timeZone);
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T setQueryParameterValidation(boolean enabled) {
-		delegate.setQueryParameterValidation( enabled );
-		return getThis();
-	}
-
-	@Override
-	public T connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
+	public SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T autoClear(boolean autoClear) {
+	public SessionBuilder autoClear(boolean autoClear) {
 		delegate.autoClear( autoClear );
-		return getThis();
+		return this;
 	}
 
 	@Override
-	public T flushMode(FlushMode flushMode) {
+	public SessionBuilder flushMode(FlushMode flushMode) {
 		delegate.flushMode( flushMode );
-		return getThis();
+		return this;
 	}
 }

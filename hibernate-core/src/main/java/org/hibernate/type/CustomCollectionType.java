@@ -1,30 +1,27 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
+ * A custom type for mapping user-written classes that implement {@code PersistentCollection}
  *
- * @see org.hibernate.collection.spi.PersistentCollection
- * @see org.hibernate.usertype.UserCollectionType
+ * @see PersistentCollection
+ * @see UserCollectionType
  * @author Gavin King
  */
 public class CustomCollectionType extends CollectionType {
@@ -32,57 +29,35 @@ public class CustomCollectionType extends CollectionType {
 	private final UserCollectionType userType;
 	private final boolean customLogging;
 
-	/**
-	 * @deprecated Use the other constructor
-	 */
-	@Deprecated
 	public CustomCollectionType(
-			TypeFactory.TypeScope typeScope,
-			Class userTypeClass,
+			ManagedBean<? extends UserCollectionType> userTypeBean,
 			String role,
 			String foreignKeyPropertyName) {
-		this( userTypeClass, role, foreignKeyPropertyName );
-	}
+		super(role, foreignKeyPropertyName );
 
-	public CustomCollectionType(
-			Class userTypeClass,
-			String role,
-			String foreignKeyPropertyName) {
-		super( role, foreignKeyPropertyName );
-		userType = createUserCollectionType( userTypeClass );
-		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
-	}
-
-	private static UserCollectionType createUserCollectionType(Class userTypeClass) {
-		if ( !UserCollectionType.class.isAssignableFrom( userTypeClass ) ) {
-			throw new MappingException( "Custom type does not implement UserCollectionType: " + userTypeClass.getName() );
-		}
-
-		try {
-			return ( UserCollectionType ) userTypeClass.newInstance();
-		}
-		catch ( InstantiationException ie ) {
-			throw new MappingException( "Cannot instantiate custom type: " + userTypeClass.getName() );
-		}
-		catch ( IllegalAccessException iae ) {
-			throw new MappingException( "IllegalAccessException trying to instantiate custom type: " + userTypeClass.getName() );
-		}
+		userType = userTypeBean.getBeanInstance();
+		customLogging = userType instanceof LoggableUserType;
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key)
+	public Class<?> getReturnedClass() {
+		return userType.instantiate( -1 ).getClass();
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return userType.getClassification();
+	}
+
+	@Override
+	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
 	throws HibernateException {
 		return userType.instantiate( session, persister );
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
+	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
 		return userType.wrap( session, collection );
-	}
-
-	@Override
-	public Class getReturnedClass() {
-		return userType.instantiate( -1 ).getClass();
 	}
 
 	@Override
@@ -91,7 +66,7 @@ public class CustomCollectionType extends CollectionType {
 	}
 
 	@Override
-	public Iterator getElementsIterator(Object collection) {
+	public Iterator<?> getElementsIterator(Object collection) {
 		return userType.getElementsIterator(collection);
 	}
 
@@ -107,8 +82,8 @@ public class CustomCollectionType extends CollectionType {
 
 	@Override
 	public Object replaceElements(Object original, Object target, Object owner, Map copyCache, SharedSessionContractImplementor session)
-	throws HibernateException {
-		CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
+			throws HibernateException {
+		CollectionPersister cp = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( getRole() );
 		return userType.replaceElements(original, target, cp, owner, copyCache, session);
 	}
 

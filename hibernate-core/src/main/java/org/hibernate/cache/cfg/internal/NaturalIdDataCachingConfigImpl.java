@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.cfg.internal;
-
-import java.util.Iterator;
 
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.access.AccessType;
@@ -36,10 +32,8 @@ public class NaturalIdDataCachingConfigImpl
 	}
 
 	private boolean hasAnyMutableNaturalIdProps() {
-		final Iterator itr = rootEntityDescriptor.getDeclaredPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property prop = (Property) itr.next();
-			if ( prop.isNaturalIdentifier() && prop.isUpdateable() ) {
+		for ( Property property : rootEntityDescriptor.getDeclaredProperties() ) {
+			if ( property.isNaturalIdentifier() && property.isUpdateable() ) {
 				return true;
 			}
 		}

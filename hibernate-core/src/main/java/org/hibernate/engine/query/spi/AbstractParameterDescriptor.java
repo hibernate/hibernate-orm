@@ -1,27 +1,27 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.BindableType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.type.Type;
 
 /**
- * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
+ * @apiNote Consider this contract (and its subcontracts) as incubating as we transition to 6.0 and SQM.
  *
  * @author Steve Ebersole
  */
 @Incubating
-public abstract class AbstractParameterDescriptor implements QueryParameter {
+public abstract class AbstractParameterDescriptor<T> implements QueryParameter<T> {
 	private final int[] sourceLocations;
 
-	private Type expectedType;
+	private BindableType<T> expectedType;
 
-	public AbstractParameterDescriptor(int[] sourceLocations, Type expectedType) {
+	public AbstractParameterDescriptor(int[] sourceLocations, BindableType<T> expectedType) {
 		this.sourceLocations = sourceLocations;
 		this.expectedType = expectedType;
 	}
@@ -37,25 +37,29 @@ public abstract class AbstractParameterDescriptor implements QueryParameter {
 	}
 
 	@Override
-	public Class getParameterType() {
-		return expectedType == null ? null : expectedType.getReturnedClass();
+	public Class<T> getParameterType() {
+		return expectedType == null ? null : expectedType.getBindableJavaType();
 	}
 
 	@Override
-	public Type getHibernateType() {
+	public BindableType<T> getHibernateType() {
 		return getExpectedType();
 	}
 
-	@Override
-	public int[] getSourceLocations() {
-		return sourceLocations;
-	}
 
-	public Type getExpectedType() {
+	public BindableType<T> getExpectedType() {
 		return expectedType;
 	}
 
-	public void resetExpectedType(Type expectedType) {
+	public void resetExpectedType(BindableType<T> expectedType) {
 		this.expectedType = expectedType;
+	}
+
+	@Override
+	public boolean allowsMultiValuedBinding() {
+		if ( expectedType instanceof EntityTypeImpl ) {
+			return ( (EntityTypeImpl<T>) expectedType ).getIdType() instanceof EmbeddableDomainType;
+		}
+		return expectedType instanceof EmbeddableDomainType;
 	}
 }

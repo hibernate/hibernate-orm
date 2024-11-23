@@ -1,34 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
 
 /**
  * Provides the information needed to properly handle type discrimination
  * in HQL queries, either by 'something.class' or 'type(something)' references.
  *
+ * @deprecated The functionality of DiscriminatorMetadata, {@link DiscriminatorType} and {@link MetaType}  have been
+ * consolidated into {@link EntityDiscriminatorMapping} and {@link DiscriminatorConverter}
+ *
  * @author Steve Ebersole
  */
+@Deprecated( since = "6.2", forRemoval = true )
 public interface DiscriminatorMetadata {
-	/**
-	 * Get the sql fragment that is used to determine the actual discriminator value for a row.
-	 *
-	 * @param sqlQualificationAlias The qualification alias to append to any columns references in
-	 * the generated fragment.
-	 *
-	 * @return The fragment
-	 */
-	public String getSqlFragment(String sqlQualificationAlias);
 
 	/**
-	 * Get the type used to resolve the actual discriminator value resulting from
-	 * {@link #getSqlFragment} back into a {@link Class} reference.
+	 * Get the type used to resolve the actual discriminator value.
 	 *
 	 * @return The resolution type.
 	 */
-	public Type getResolutionType();
+	Type getResolutionType();
 }

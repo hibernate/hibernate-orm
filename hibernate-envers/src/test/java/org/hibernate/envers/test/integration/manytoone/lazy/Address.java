@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.manytoone.lazy;
 
@@ -10,12 +8,12 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 /**
  * @author Chris Cranford
@@ -23,33 +21,33 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "address")
 public class Address extends BaseDomainEntity {
-    private static final long serialVersionUID = 7380477602657080463L;
+	private static final long serialVersionUID = 7380477602657080463L;
 
-    @Column(name = "name")
-    private String name;
+	@Column(name = "name")
+	private String name;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "id", cascade = CascadeType.ALL)
-    Collection<AddressVersion> versions = new LinkedList<>();
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "id", cascade = CascadeType.ALL)
+	Collection<AddressVersion> versions = new LinkedList<>();
 
-    Address() {
-    }
+	Address() {
+	}
 
-    Address(Instant when, String who, String name) {
-        super( when, who );
-        this.name = name;
-    }
+	Address(Instant when, String who, String name) {
+		super( when, who );
+		this.name = name;
+	}
 
-    public AddressVersion addInitialVersion(String description) {
-        AddressVersion version = new AddressVersion( getCreatedAt(), getCreatedBy(), this, 0, description );
-        versions.add( version );
-        return version;
-    }
+	public AddressVersion addInitialVersion(String description) {
+		AddressVersion version = new AddressVersion( getCreatedAt(), getCreatedBy(), this, 0, description );
+		versions.add( version );
+		return version;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public Collection<AddressVersion> getVersions() {
-        return versions;
-    }
+	public Collection<AddressVersion> getVersions() {
+		return versions;
+	}
 }

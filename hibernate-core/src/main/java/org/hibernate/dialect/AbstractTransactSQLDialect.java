@@ -1,129 +1,181 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
+
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.function.CastingConcatFunction;
+import org.hibernate.dialect.function.TransactSQLStrFunction;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
+import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CharIndexFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.type.StandardBasicTypes;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * An abstract base class for Sybase and MS SQL Server dialects.
  *
  * @author Gavin King
  */
-abstract class AbstractTransactSQLDialect extends Dialect {
-	public AbstractTransactSQLDialect() {
-		super();
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.BIGINT, "numeric(19,0)" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "smallint" );
-		registerColumnType( Types.INTEGER, "int" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
-		registerColumnType( Types.DATE, "datetime" );
-		registerColumnType( Types.TIME, "datetime" );
-		registerColumnType( Types.TIMESTAMP, "datetime" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
-		registerColumnType( Types.BLOB, "image" );
-		registerColumnType( Types.CLOB, "text" );
+public abstract class AbstractTransactSQLDialect extends Dialect {
 
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "len", new StandardSQLFunction( "len", StandardBasicTypes.LONG ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "str", new StandardSQLFunction( "str", StandardBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "reverse", new StandardSQLFunction( "reverse" ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
+	public AbstractTransactSQLDialect(DatabaseVersion version) {
+		super(version);
+	}
 
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
+	public AbstractTransactSQLDialect(DialectResolutionInfo info) {
+		super(info);
+	}
 
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "getdate", StandardBasicTypes.DATE ) );
+	@Override
+	protected String columnType(int sqlTypeCode) {
+		// note that 'real' is double precision on SQL Server, single precision on Sybase
+		// but 'float' is single precision on Sybase, double precision on SQL Server
+		return switch (sqlTypeCode) {
+			case BOOLEAN -> "bit";
 
-		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "getutcdate", new NoArgSQLFunction( "getutcdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		registerFunction( "datename", new StandardSQLFunction( "datename", StandardBasicTypes.STRING ) );
+			// 'tinyint' is an unsigned type in Sybase and
+			// SQL Server, holding values in the range 0-255
+			// see HHH-6779
+			case TINYINT -> "smallint";
 
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
+			//it's called 'int' not 'integer'
+			case INTEGER -> "int";
 
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "square", new StandardSQLFunction( "square" ) );
-		registerFunction( "rand", new StandardSQLFunction( "rand", StandardBasicTypes.FLOAT ) );
+			case DATE, TIME, TIMESTAMP, TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "datetime";
 
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
+			case BLOB -> "image";
+			case CLOB -> "text";
+			case NCLOB -> "ntext";
 
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
+			default -> super.columnType( sqlTypeCode );
+		};
+	}
 
-		registerFunction( "isnull", new StandardSQLFunction( "isnull" ) );
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 0;
+	}
 
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "+", ")" ) );
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		if ( jdbcTypeCode == Types.BIT ) {
+			return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
+		}
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeRegistry
+		);
+	}
 
-		registerFunction( "length", new StandardSQLFunction( "len", StandardBasicTypes.INTEGER ) );
-		registerFunction( "trim", new SQLFunctionTemplate( StandardBasicTypes.STRING, "ltrim(rtrim(?1))" ) );
-		registerFunction( "locate", new CharIndexFunction() );
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
 
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		functionFactory.cot();
+		functionFactory.ln_log();
+		functionFactory.log_loglog();
+		functionFactory.log10();
+		functionFactory.atan2_atn2();
+		functionFactory.mod_operator();
+		functionFactory.square();
+		functionFactory.rand();
+		functionFactory.radians();
+		functionFactory.degrees();
+		functionFactory.pi();
+		functionFactory.reverse();
+		functionFactory.space();
+		functionFactory.pad_replicate();
+		functionFactory.yearMonthDay();
+		functionFactory.ascii();
+		functionFactory.chr_char();
+		functionFactory.trim1();
+		functionFactory.repeat_replicate();
+		functionFactory.characterLength_len();
+		functionFactory.substring_substringLen();
+		functionFactory.datepartDatename();
+		functionFactory.lastDay_eomonth();
+
+		functionFactory.bitandorxornot_operator();
+
+		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		functionContributions.getFunctionRegistry().register( "str", new TransactSQLStrFunction( functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register(
+				"concat",
+				new CastingConcatFunction(
+						this,
+						"+",
+						false,
+						SqlAstNodeRenderingMode.DEFAULT,
+						functionContributions.getTypeConfiguration()
+				)
+		);
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return replaceLtrimRtrim( specification, isWhitespace );
+	}
+
+	public static String replaceLtrimRtrim(TrimSpec specification, boolean isWhitespace) {
+		return switch (specification) {
+			case LEADING -> isWhitespace
+					? "ltrim(?1)"
+					: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
+			case TRAILING -> isWhitespace
+					? "rtrim(?1)"
+					: "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
+			default -> isWhitespace
+					? "ltrim(rtrim(?1))"
+					: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
+		};
 	}
 
 	@Override
 	public String getAddColumnString() {
 		return "add";
-	}
-
-	@Override
-	public String getNullColumnString() {
-		return "";
 	}
 
 	@Override
@@ -137,6 +189,11 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return RowLockStrategy.TABLE;
+	}
+
+	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
 		return lockOptions.getLockMode().greaterThan( LockMode.READ ) ? tableName + " holdlock" : tableName;
 	}
@@ -144,14 +201,11 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		// TODO:  merge additional lock options support in Dialect.applyLocksToSql
-		final Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		final StringBuilder buffer = new StringBuilder( sql );
-
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) itr.next();
-			final LockMode lockMode = (LockMode) entry.getValue();
+		for ( Map.Entry<String, LockMode> entry: aliasedLockOptions.getAliasSpecificLocks() ) {
+			final LockMode lockMode = entry.getValue();
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
-				final String alias = (String) entry.getKey();
+				final String alias = entry.getKey();
 				int start = -1;
 				int end = -1;
 				if ( sql.endsWith( " " + alias ) ) {
@@ -213,18 +267,64 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String generateIdTableName(String baseName) {
-						return "#" + baseName;
-					}
-				},
-				// sql-server, at least needed this dropped after use; strange!
-				AfterUseAction.DROP,
-				TempTableDdlTransactionHandling.NONE
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
+	}
+
+	@Override
+	public boolean requiresCastForConcatenatingNonStrings() {
+		return true;
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
+						entityDescriptor,
+						basename -> '#' + TemporaryTable.ID_TABLE_PREFIX + basename,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						entityDescriptor,
+						name -> '#' + TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.LOCAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateCommand() {
+		return "create table";
+	}
+
+	@Override
+	public AfterUseAction getTemporaryTableAfterUseAction() {
+		// sql-server, at least needed this dropped after use; strange!
+		return AfterUseAction.DROP;
+	}
+
+	@Override
+	public BeforeUseAction getTemporaryTableBeforeUseAction() {
+		return BeforeUseAction.CREATE;
 	}
 
 	@Override
@@ -233,16 +333,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
-	}
 
 	@Override
 	public boolean supportsExistsInSelect() {
@@ -263,19 +353,20 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
-	
-	@Override
-	public boolean supportsTuplesInSubqueries() {
-		return false;
-	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new AbstractTransactSQLIdentityColumnSupport();
+		return AbstractTransactSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
 	public boolean supportsPartitionBy() {
 		return true;
+	}
+
+	@Override
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		appender.appendSql( "0x" );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 	}
 }

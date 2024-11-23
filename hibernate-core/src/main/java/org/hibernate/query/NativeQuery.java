@@ -1,150 +1,543 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.SQLQuery;
-import org.hibernate.SynchronizeableQuery;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.BasicTypeReference;
+
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
 
 /**
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable query written in the
+ * native SQL dialect of the underlying database. Since Hibernate does not
+ * actually understand SQL, it often requires some help in interpreting the
+ * semantics of a native SQL query.
+ * <p>
+ * Along with the operations inherited from {@link Query}, this interface
+ * provides control over:
+ * <ul>
+ * <li>mapping the result set of the native SQL query, and
+ * <li>synchronization of the database with state held in memory before
+ *     execution of the query, via automatic flushing of the session.
+ * </ul>
+ * <p>
+ * A {@code NativeQuery} may be obtained from the {@link org.hibernate.Session}
+ * by calling:
+ * <ul>
+ * <li>{@link QueryProducer#createNativeQuery(String, Class)}, passing
+ *     native SQL as a string, or
+ * <li>{@link QueryProducer#createNativeQuery(String, String, Class)}
+ *     passing the native SQL string and the name of a result set mapping
+ *     defined using {@link jakarta.persistence.SqlResultSetMapping}.
+ * </ul>
+ * <p>
+ * A result set mapping may be specified by:
+ * <ul>
+ * <li>a named {@link jakarta.persistence.SqlResultSetMapping} passed to
+ *     {@link QueryProducer#createNativeQuery(String, String, Class)},
+ * <li>a named  {@link jakarta.persistence.SqlResultSetMapping} specified
+ *     using {@link jakarta.persistence.NamedNativeQuery#resultSetMapping}
+ *     for a named query, or
+ * <li>by calling the various {@link #addEntity}, {@link #addRoot},
+ *     {@link #addJoin}, {@link #addFetch} and {@link #addScalar} methods
+ *     of this object.
+ * </ul>
+ * <p>
+ * The third option is a legacy of much older versions of Hibernate and is
+ * currently disfavored.
+ * <p>
+ * To determine if an automatic {@linkplain org.hibernate.Session#flush flush}
+ * is required before execution of the query, Hibernate must know which tables
+ * affect the query result set. JPA provides no standard way to do this.
+ * Instead, this information may be provided via:
+ * <ul>
+ * <li>{@link org.hibernate.annotations.NamedNativeQuery#querySpaces} for
+ *     a named query, or
+ * <li>by calling {@link #addSynchronizedEntityClass},
+ *     {@link #addSynchronizedEntityName}, or
+ *     {@link #addSynchronizedQuerySpace}.
+ * </ul>
+ *
+ * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @see Query
+ * @see SynchronizeableQuery
+ * @see QueryProducer
  */
-public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQuery<T> {
+public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
+	/**
+	 * Declare a scalar query result. Hibernate will attempt to automatically
+	 * detect the underlying type.
+	 * <p>
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
+	 * {@link jakarta.persistence.ColumnResult} in annotations
+	 *
+	 * @param columnAlias The column alias in the result set to be
+	 *                    processed as a scalar result
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addScalar(String columnAlias);
 
-	@Override
-	NativeQuery<T> setFlushMode(FlushMode flushMode);
+	/**
+	 * Declare a scalar query result.
+	 * <p>
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
+	 * {@link jakarta.persistence.ColumnResult} in annotations.
+	 *
+	 * @param columnAlias The column alias in the result set to be
+	 *                    processed as a scalar result
+	 * @param type The Hibernate type as which to treat the value.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicTypeReference type);
 
-	@Override
-	NativeQuery<T> setResultSetMapping(String name);
+	/**
+	 * Declare a scalar query result.
+	 * <p>
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
+	 * {@link jakarta.persistence.ColumnResult} in annotations.
+	 *
+	 * @param columnAlias The column alias in the result set to be
+	 *                    processed as a scalar result
+	 * @param type The Hibernate type as which to treat the value.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicDomainType type);
 
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
+	/**
+	 * Declare a scalar query result using the specified result type.
+	 * <p>
+	 * Hibernate will implicitly determine an appropriate conversion,
+	 * if it can. Otherwise, an exception will be thrown.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType);
 
-	@Override
-	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
+	/**
+	 * Declare a scalar query result with an explicit conversion.
+	 *
+	 * @param relationalJavaType The Java type expected by the converter as its
+	 *                           "relational" type.
+	 * @param converter The conversion to apply. Consumes the JDBC value based
+	 *                  on {@code relationalJavaType}.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
 
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type type);
+	/**
+	 * Declare a scalar query result with an explicit conversion.
+	 *
+	 * @param jdbcJavaType The Java type expected by the converter as its
+	 *                     "relational model" type.
+	 * @param domainJavaType The Java type expected by the converter as its
+	 *                       "object model" type.
+	 * @param converter The conversion to apply. Consumes the JDBC value based
+	 *                  on {@code relationalJavaType}.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<O,R> NativeQuery<T> addScalar(String columnAlias, Class<O> domainJavaType, Class<R> jdbcJavaType, AttributeConverter<O,R> converter);
 
-	@Override
-	NativeQuery<T> setParameter(String name, Object val, Type type);
+	/**
+	 * Declare a scalar query result with an explicit conversion.
+	 *
+	 * @param relationalJavaType The Java type expected by the converter as its
+	 *                           "relational" type.
+	 * @param converter The conversion to apply. Consumes the JDBC value based
+	 *                  on {@code relationalJavaType}.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<C> NativeQuery<T> addScalar(String columnAlias, Class<C> relationalJavaType, Class<? extends AttributeConverter<?,C>> converter);
 
-	@Override
-	NativeQuery<T> setParameter(int position, Object val, Type type);
+	/**
+	 * Declare a scalar query result with an explicit conversion.
+	 *
+	 * @param jdbcJavaType The Java type expected by the converter as its
+	 *                     "relational model" type.
+	 * @param domainJavaType The Java type expected by the converter as its
+	 *                       "object model" type.
+	 * @param converter The conversion to apply.  Consumes the JDBC value
+	 *                  based on {@code relationalJavaType}.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	<O,R> NativeQuery<T> addScalar(
+			String columnAlias,
+			Class<O> domainJavaType,
+			Class<R> jdbcJavaType,
+			Class<? extends AttributeConverter<O,R>> converter);
 
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
+	<J> InstantiationResultNode<J> addInstantiation(Class<J> targetJavaType);
 
-	@Override
-	NativeQuery<T> setParameter(String name, Object val, TemporalType temporalType);
+	/**
+	 * Defines a result based on a specified attribute. Differs from adding
+	 * a scalar in that any conversions or other semantics defined on the
+	 * attribute are automatically applied to the mapping.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") Class entityJavaType, String attributePath);
 
-	@Override
-	NativeQuery<T> setParameter(int position, Object val, TemporalType temporalType);
+	/**
+	 * Defines a result based on a specified attribute.  Differs from adding
+	 * a scalar in that any conversions or other semantics defined on the
+	 * attribute are automatically applied to the mapping.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	NativeQuery<T> addAttributeResult(String columnAlias, String entityName, String attributePath);
 
-	@Override
-	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	/**
+	 * Defines a result based on a specified attribute. Differs from adding a
+	 * scalar in that any conversions or other semantics defined on the attribute
+	 * are automatically applied to the mapping.
+	 * <p>
+	 * This form accepts the JPA Attribute mapping describing the attribute
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 6.0
+	 */
+	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") SingularAttribute attribute);
 
-	@Override
-	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	/**
+	 * Add a new root return mapping, returning a {@link RootReturn} to allow
+	 * further definition.
+	 *
+	 * @param tableAlias The SQL table alias to map to this entity
+	 * @param entityName The name of the entity
+	 *
+	 * @return The return config object for further control.
+	 *
+	 * @since 3.6
+	 */
+	RootReturn addRoot(String tableAlias, String entityName);
 
-	@Override
-	NativeQuery<T> setParameter(String name, Object value);
+	/**
+	 * Add a new root return mapping, returning a {@link RootReturn} to allow
+	 * further definition.
+	 *
+	 * @param tableAlias The SQL table alias to map to this entity
+	 * @param entityType The java type of the entity
+	 *
+	 * @return The return config object for further control.
+	 *
+	 * @since 3.6
+	 */
+	RootReturn addRoot(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
-	@Override
-	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
+	/**
+	 * Declare a "root" entity, without specifying an alias. The expectation
+	 * here is that the table alias is the same as the unqualified entity name.
+	 * <p>
+	 * Use {@link #addRoot} if you need further control of the mapping
+	 *
+	 * @param entityName The entity name that is the root return of the query
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addEntity(String entityName);
 
-	@Override
-	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
+	/**
+	 * Declare a "root" entity.
+	 *
+	 * @param tableAlias The SQL table alias
+	 * @param entityName The entity name
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addEntity(String tableAlias, String entityName);
 
-	@Override
-	NativeQuery<T> setParameter(int position, Object value);
+	/**
+	 * Declare a "root" entity, specifying a lock mode.
+	 *
+	 * @param tableAlias The SQL table alias
+	 * @param entityName The entity name
+	 * @param lockMode The lock mode for this return.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
-	@Override
-	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
+	/**
+	 * Declare a "root" entity, without specifying an alias. The expectation here
+	 * is that the table alias is the same as the unqualified entity name.
+	 *
+	 * @param entityType The java type of the entity to add as a root
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addEntity(@SuppressWarnings("rawtypes") Class entityType);
 
-	@Override
-	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
+	/**
+	 * Declare a "root" entity.
+	 *
+	 * @param tableAlias The SQL table alias
+	 * @param entityType The java type of the entity to add as a root
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
-	@Override
-	NativeQuery<T> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
+	/**
+	 * Declare a "root" entity, specifying a lock mode.
+	 *
+	 * @param tableAlias The SQL table alias
+	 * @param entityClass The entity {@link Class}
+	 * @param lockMode The lock mode for this return
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass, LockMode lockMode);
 
-	@Override
-	NativeQuery<T> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType);
+	/**
+	 * Declare a join fetch result.
+	 *
+	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch.
+	 * @param ownerTableAlias Identify the table alias of the owner of this association.
+	 *                        Should match the alias of a previously added root or fetch.
+	 * @param joinPropertyName The name of the property being join fetched.
+	 *
+	 * @return The return config object for further control.
+	 *
+	 * @since 3.6
+	 */
+	FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
-	@Override
-	NativeQuery<T> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType);
+	/**
+	 * Declare a join fetch result.
+	 *
+	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch.
+	 * @param path The association path of form {@code [owner-alias].[property-name]}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addJoin(String tableAlias, String path);
 
-	@Override
-	NativeQuery<T> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
+	/**
+	 * Declare a join fetch result.
+	 *
+	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch
+	 * @param ownerTableAlias Identify the table alias of the owner of this association.
+	 *                        Should match the alias of a previously added root or fetch.
+	 * @param joinPropertyName The name of the property being join fetched.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 3.6
+	 */
+	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
 
-	@Override
-	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
+	/**
+	 * Declare a join fetch result, specifying a lock mode.
+	 *
+	 * @param tableAlias The SQL table alias for the data to be mapped to this fetch
+	 * @param path The association path of form {@code [owner-alias].[property-name]}.
+	 * @param lockMode The lock mode for this return.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
 
-	@Override
-	NativeQuery<T> setParameter(String name, LocalDateTime value, TemporalType temporalType);
+	/**
+	 * Simple unification interface for all returns from the various {@code addXYZ()}
+	 * methods. Allows control over the "shape" of that particular part of the fetch
+	 * graph.
+	 * <p>
+	 * Some nodes can be query results, while others simply describe a part of one of
+	 * the results.
+	 */
+	interface ResultNode {
+	}
 
-	@Override
-	NativeQuery<T> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
+	/**
+	 * A {@link ResultNode} which can be a query result.
+	 */
+	interface ReturnableResultNode extends ResultNode {
+	}
 
-	@Override
-	NativeQuery<T> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
+	interface InstantiationResultNode<J> extends ReturnableResultNode {
+		default InstantiationResultNode<J> addBasicArgument(String columnAlias) {
+			return addBasicArgument( columnAlias, null );
+		}
 
-	@Override
-	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
+		InstantiationResultNode<J> addBasicArgument(String columnAlias, String argumentAlias);
+	}
 
-	@Override
-	NativeQuery<T> setParameter(int position, LocalDateTime value, TemporalType temporalType);
+	/**
+	 * Allows access to further control how properties within a root or join
+	 * fetch are mapped back from the result set. Generally used in composite
+	 * value scenarios.
+	 */
+	interface ReturnProperty extends ResultNode {
+		/**
+		 * Add a column alias to this property mapping.
+		 *
+		 * @param columnAlias The column alias.
+		 *
+		 * @return {@code this}, for method chaining
+		 */
+		ReturnProperty addColumnAlias(String columnAlias);
+	}
 
-	@Override
-	NativeQuery<T> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
+	/**
+	 * Allows access to further control how root returns are mapped back from
+	 * result sets.
+	 */
+	interface RootReturn extends ReturnableResultNode {
 
-	@Override
-	NativeQuery<T> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
+		String getTableAlias();
 
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
+		String getDiscriminatorAlias();
 
-	@Override
-	NativeQuery<T> setParameterList(String name, Collection values);
+		EntityMappingType getEntityMapping();
 
-	@Override
-	NativeQuery<T> setParameterList(String name, Collection values, Type type);
+		NavigablePath getNavigablePath();
 
-	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
+		LockMode getLockMode();
 
-	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values);
+		/**
+		 * Set the lock mode for this return.
+		 *
+		 * @param lockMode The new lock mode.
+		 *
+		 * @return {@code this}, for method chaining
+		 */
+		RootReturn setLockMode(LockMode lockMode);
 
-	@Override
-	NativeQuery<T> setProperties(Object bean);
+		RootReturn addIdColumnAliases(String... aliases);
 
-	@Override
-	NativeQuery<T> setProperties(Map bean);
+		/**
+		 * Name the column alias that identifies the entity's discriminator.
+		 *
+		 * @param columnAlias The discriminator column alias
+		 *
+		 * @return {@code this}, for method chaining
+		 */
+		RootReturn setDiscriminatorAlias(String columnAlias);
 
+		/**
+		 * Add a simple property-to-one-column mapping.
+		 *
+		 * @param propertyName The name of the property.
+		 * @param columnAlias The name of the column
+		 *
+		 * @return {@code this}, for method chaining
+		 */
+		RootReturn addProperty(String propertyName, String columnAlias);
+
+		/**
+		 * Add a property, presumably with more than one column.
+		 *
+		 * @param propertyName The name of the property.
+		 *
+		 * @return The config object for further control.
+		 */
+		ReturnProperty addProperty(String propertyName);
+	}
+
+	/**
+	 * Allows access to further control how collection returns are mapped back
+	 * from result sets.
+	 */
+	interface CollectionReturn extends ReturnableResultNode {
+
+		String getTableAlias();
+
+		PluralAttributeMapping getPluralAttribute();
+
+		NavigablePath getNavigablePath();
+	}
+
+	/**
+	 * Allows access to further control how join fetch returns are mapped back
+	 * from result sets.
+	 */
+	interface FetchReturn extends ResultNode {
+
+		String getTableAlias();
+
+		String getOwnerAlias();
+
+		String getFetchableName();
+
+		/**
+		 * Set the lock mode for this return.
+		 *
+		 * @param lockMode The new lock mode.
+		 *
+		 * @return {@code this}, for method chaining
+		 */
+		FetchReturn setLockMode(LockMode lockMode);
+
+		/**
+		 * Add a simple property-to-one-column mapping.
+		 *
+		 * @param propertyName The name of the property.
+		 * @param columnAlias The name of the column
+		 *
+		 * @return {@code this}, for method chaining
+		 */
+		FetchReturn addProperty(String propertyName, String columnAlias);
+
+		/**
+		 * Add a property, presumably with more than one column.
+		 *
+		 * @param propertyName The name of the property.
+		 *
+		 * @return The config object for further control.
+		 */
+		ReturnProperty addProperty(String propertyName);
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - SynchronizeableQuery
 	@Override
 	NativeQuery<T> addSynchronizedQuerySpace(String querySpace);
 
@@ -152,61 +545,29 @@ public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQu
 	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	NativeQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	NativeQuery<T> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
-	@Override
-	boolean isCallable();
 
-	@Override
-	NativeQuery<T> addScalar(String columnAlias);
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - Query
 
-	@Override
-	NativeQuery<T> addScalar(String columnAlias, Type type);
-
-	@Override
-	RootReturn addRoot(String tableAlias, String entityName);
-
-	@Override
-	RootReturn addRoot(String tableAlias, Class entityType);
-
-	@Override
-	NativeQuery<T> addEntity(String entityName);
-
-	@Override
-	NativeQuery<T> addEntity(String tableAlias, String entityName);
-
-	@Override
-	NativeQuery<T> addEntity(String tableAlias, String entityName, LockMode lockMode);
-
-	@Override
-	NativeQuery<T> addEntity(Class entityType);
-
-	@Override
-	NativeQuery<T> addEntity(String tableAlias, Class entityType);
-
-	@Override
-	NativeQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
-
-	@Override
-	FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName);
-
-	@Override
-	NativeQuery<T> addJoin(String tableAlias, String path);
-
-	@Override
-	NativeQuery<T> addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName);
-
-	@Override
-	NativeQuery<T> addJoin(String tableAlias, String path, LockMode lockMode);
-
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
+	NativeQuery<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setFlushMode(FlushModeType flushMode);
 
 	@Override
 	NativeQuery<T> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	NativeQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	NativeQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	NativeQuery<T> setCacheable(boolean cacheable);
@@ -223,9 +584,33 @@ public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQu
 	@Override
 	NativeQuery<T> setReadOnly(boolean readOnly);
 
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	LockOptions getLockOptions();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
 	@Override
 	NativeQuery<T> setLockOptions(LockOptions lockOptions);
 
+	/**
+	 * Not applicable to native SQL queries.
+	 *
+	 * @throws IllegalStateException for consistency with JPA
+	 */
 	@Override
 	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
 
@@ -244,6 +629,172 @@ public interface NativeQuery<T> extends Query<T>, SQLQuery<T>, SynchronizeableQu
 	@Override
 	NativeQuery<T> setHint(String hintName, Object value);
 
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #getHibernateLockMode()} to obtain the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
+	@Override
+	LockModeType getLockMode();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	LockMode getHibernateLockMode();
+
+	/**
+	 * Not applicable to native SQL queries, due to an unfortunate
+	 * requirement of the JPA specification.
+	 * <p>
+	 * Use {@link #setHibernateLockMode(LockMode)} or the hint named
+	 * {@value org.hibernate.jpa.HibernateHints#HINT_NATIVE_LOCK_MODE}
+	 * to set the lock mode.
+	 *
+	 * @throws IllegalStateException as required by JPA
+	 */
 	@Override
 	NativeQuery<T> setLockMode(LockModeType lockMode);
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override
+	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
+
+	@Override
+	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);
+
+	@Override
+	NativeQuery<T> setResultListTransformer(ResultListTransformer<T> transformer);
+
+	@Override @Deprecated @SuppressWarnings("deprecation")
+	<S> NativeQuery<S> setResultTransformer(ResultTransformer<S> transformer);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Object value);
+
+	@Override
+	<P> NativeQuery<T> setParameter(String name, P val, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(String name, P val, BindableType<P> type);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Object value);
+
+	@Override
+	<P> NativeQuery<T> setParameter(int position, P val, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(int position, P val, BindableType<P> type);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
+
+	@Override
+	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+
+	@Override
+	NativeQuery<T> setParameterList(String name, Object[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, P[] values, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, P[] values, BindableType<P> type);
+
+	@Override
+	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, BindableType<P> javaType);
+
+	@Override
+	NativeQuery<T> setParameterList(int position, Object[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, P[] values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, P[] values, BindableType<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+
+	@Override
+	NativeQuery<T> setProperties(Object bean);
+
+	@Override
+	NativeQuery<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

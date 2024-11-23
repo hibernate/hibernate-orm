@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
@@ -18,8 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Standard support for {@link org.hibernate.cache.spi.access.NaturalIdDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_WRITE} access type.
+ * Standard support for {@link NaturalIdDataAccess}
+ * using the {@link AccessType#READ_WRITE} access type.
  *
  * @author Steve Ebersole
  */
@@ -53,14 +51,14 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 
 	@Override
 	public Object generateCacheKey(
-			Object[] naturalIdValues,
+			Object naturalIdValues,
 			EntityPersister rootEntityDescriptor,
 			SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, rootEntityDescriptor, session );
 	}
 
 	@Override
-	public Object[] getNaturalIdValues(Object cacheKey) {
+	public Object getNaturalIdValues(Object cacheKey) {
 		return keysFactory.getNaturalIdValues( cacheKey );
 	}
 

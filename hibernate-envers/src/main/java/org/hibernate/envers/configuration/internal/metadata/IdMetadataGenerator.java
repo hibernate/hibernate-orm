@@ -1,17 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
 import java.util.Locale;
 
-import org.hibernate.MappingException;
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.boot.EnversMappingException;
+import org.hibernate.envers.boot.model.AttributeContainer;
+import org.hibernate.envers.boot.model.CompositeIdentifier;
+import org.hibernate.envers.boot.model.Identifier;
+import org.hibernate.envers.boot.model.IdentifierRelation;
+import org.hibernate.envers.boot.model.ManyToOneAttribute;
+import org.hibernate.envers.boot.registry.classloading.ClassLoaderAccessHelper;
+import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.IdMappingData;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -19,20 +21,18 @@ import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.EmbeddedIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
+import org.hibernate.envers.internal.entities.mapper.id.NestedEmbeddedIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
-import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
-
-import org.dom4j.Element;
-import org.dom4j.tree.DefaultElement;
 
 /**
  * Generates metadata for primary identifiers (ids) of versions entities.
@@ -40,16 +40,17 @@ import org.dom4j.tree.DefaultElement;
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public final class IdMetadataGenerator {
-	private final AuditMetadataGenerator mainGenerator;
+public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 
-	IdMetadataGenerator(AuditMetadataGenerator auditMetadataGenerator) {
-		mainGenerator = auditMetadataGenerator;
+	private final BasicMetadataGenerator basicMetadataGenerator;
+
+	public IdMetadataGenerator(EnversMetadataBuildingContext metadataBuildingContext, BasicMetadataGenerator basicMetadataGenerator) {
+		super( metadataBuildingContext );
+		this.basicMetadataGenerator = basicMetadataGenerator;
 	}
 
 	private Class<?> loadClass(Component component) {
-		final String className = component.getComponentClassName();
-		return ReflectionTools.loadClass( className, mainGenerator.getClassLoaderService() );
+		return ClassLoaderAccessHelper.loadClass( getMetadataBuildingContext(), component.getComponentClassName() );
 	}
 
 	private static boolean isSameType(Property left, Property right) {
@@ -57,13 +58,14 @@ public final class IdMetadataGenerator {
 	}
 
 	private boolean addIdProperty(
-			Element parent,
+			AttributeContainer attributeContainer,
 			boolean key,
 			SimpleIdMapperBuilder mapper,
 			Property mappedProperty,
-			Property virtualProperty) {
+			Property virtualProperty,
+			boolean audited) {
 
-		if ( PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( mappedProperty.getName() ) ) {
+		if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( mappedProperty.getName() ) ) {
 			return false;
 		}
 
@@ -71,52 +73,58 @@ public final class IdMetadataGenerator {
 
 		if ( ManyToOneType.class.isInstance( mappedProperty.getType() ) ) {
 			// This can technically be a @ManyToOne or logical @OneToOne
-			final boolean added = addManyToOne( parent, propertyAuditingData, mappedProperty.getValue(), mapper );
+			final boolean added = addManyToOne( attributeContainer, propertyAuditingData, mappedProperty.getValue(), mapper );
 			if ( added && mapper != null ) {
 				if ( virtualProperty != null && !isSameType( mappedProperty, virtualProperty ) ) {
 					// A virtual property is only available when an @IdClass is used.  We specifically need to map
 					// both the value and virtual types when they differ so we can adequately map between them at
 					// appropriate points.
-					final Type valueType = mappedProperty.getType();
-					final Type virtualValueType = virtualProperty.getType();
-					mapper.add( propertyAuditingData.resolvePropertyData( valueType, virtualValueType ) );
+					propertyAuditingData.setPropertyType( mappedProperty.getType() );
+					propertyAuditingData.setVirtualPropertyType( virtualProperty.getType() );
+					mapper.add( propertyAuditingData.resolvePropertyData() );
 				}
 				else {
 					// In this branch the identifier either doesn't use an @IdClass or the property types between
 					// the @IdClass and containing entity are identical, allowing us to use prior behavior.
-					mapper.add( propertyAuditingData.resolvePropertyData( mappedProperty.getType() ) );
+					propertyAuditingData.setPropertyType( mappedProperty.getType() );
+					mapper.add( propertyAuditingData.resolvePropertyData() );
 				}
 			}
 
 			return added;
 		}
+		else if ( ComponentType.class.isInstance( mappedProperty.getType() ) ) {
+			final Component component = (Component) mappedProperty.getValue();
+			final NestedEmbeddedIdMapper nestedMapper;
+			if ( mapper != null ) {
+				final PropertyData propertyData = propertyAuditingData.resolvePropertyData();
+				nestedMapper = new NestedEmbeddedIdMapper( propertyData, component );
+				mapper.add( propertyData, nestedMapper );
+			}
+			else {
+				nestedMapper = null;
+			}
+			return addIdProperties( attributeContainer, component, null, nestedMapper, key, audited );
+		}
 
-		return addBasic( parent, propertyAuditingData, mappedProperty.getValue(), mapper, key );
+		return addBasic( attributeContainer, propertyAuditingData, mappedProperty.getValue(), mapper, key );
 	}
 
 	private boolean addIdProperties(
-			Element parent,
+			AttributeContainer attributeContainer,
 			Component component,
 			Component virtualComponent,
 			SimpleIdMapperBuilder mapper,
 			boolean key,
 			boolean audited) {
-		final Iterator properties = component.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = (Property) properties.next();
-
-			final Property virtualProperty;
-			if ( virtualComponent != null ) {
-				virtualProperty = virtualComponent.getProperty( property.getName() );
-			}
-			else {
-				virtualProperty = null;
-			}
-
-			if ( !addIdProperty( parent, key, mapper, property, virtualProperty ) ) {
+		for ( Property property : component.getProperties() ) {
+			final Property virtualProperty = virtualComponent != null
+					? virtualComponent.getProperty( property.getName() )
+					: null;
+			if ( !addIdProperty( attributeContainer, key, mapper, property, virtualProperty, audited ) ) {
 				// If the entity is audited, and a non-supported id component is used, throw exception.
 				if ( audited ) {
-					throw new MappingException(
+					throw new EnversMappingException(
 							String.format(
 									Locale.ROOT,
 									"Type not supported: %s",
@@ -143,29 +151,29 @@ public final class IdMetadataGenerator {
 	}
 
 	private void generateSecondPass(String entityName, Component component) {
-		Iterator properties = component.getPropertyIterator();
-		while ( properties.hasNext() ) {
-			final Property property = (Property) properties.next();
-			if ( property.getValue() instanceof ToOne ) {
+		for ( Property property : component.getProperties() ) {
+			final Value value = property.getValue();
+			if ( value instanceof ToOne ) {
 				final PropertyAuditingData propertyData = getIdPersistentPropertyAuditingData( property );
-				final String referencedEntityName = ( (ToOne) property.getValue() ).getReferencedEntityName();
+				final String referencedEntityName = ( (ToOne) value).getReferencedEntityName();
 
-				final String prefix = mainGenerator.getVerEntCfg().getOriginalIdPropName() + "." + propertyData.getName();
+				final String prefix = getMetadataBuildingContext().getConfiguration()
+						.getOriginalIdPropertyName() + "." + propertyData.getName();
 
 				final IdMapper relMapper;
-				if ( mainGenerator.getEntitiesConfigurations().containsKey( referencedEntityName ) ) {
-					relMapper = mainGenerator.getEntitiesConfigurations().get( referencedEntityName ).getIdMapper();
+				if ( hasAuditedEntityConfiguration( referencedEntityName ) ) {
+					relMapper = getAuditedEntityConfiguration( referencedEntityName ).getIdMapper();
 				}
-				else if ( mainGenerator.getNotAuditedEntitiesConfigurations().containsKey( referencedEntityName ) ) {
-					relMapper = mainGenerator.getNotAuditedEntitiesConfigurations().get( referencedEntityName ).getIdMapper();
+				else if ( hasNotAuditedEntityConfiguration( referencedEntityName ) ) {
+					relMapper = getNotAuditedEntityConfiguration( referencedEntityName ).getIdMapper();
 				}
 				else {
-					throw new MappingException( "Unable to locate entity configuration for [" + referencedEntityName + "]" );
+					throw new EnversMappingException( "Unable to locate entity configuration for [" + referencedEntityName + "]" );
 				}
 
 				final IdMapper prefixedMapper = relMapper.prefixMappedProperties( prefix + "." );
 
-				mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
+				getAuditedEntityConfiguration( entityName ).addToOneRelation(
 						prefix,
 						referencedEntityName,
 						prefixedMapper,
@@ -176,17 +184,14 @@ public final class IdMetadataGenerator {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
-	IdMappingData addId(PersistentClass pc, boolean audited) {
-		// Xml mapping which will be used for relations
-		final Element relIdMapping = new DefaultElement( "properties" );
-		// Xml mapping which will be used for the primary key of the versions table
-		final Element origIdMapping = new DefaultElement( "composite-id" );
+	public IdMappingData addIdAndGetMappingData(PersistentClass persistentClass, boolean audited) {
+		final Property idProp = persistentClass.getIdentifierProperty();
+		final Component idMapper = persistentClass.getIdentifierMapper();
 
-		final Property idProp = pc.getIdentifierProperty();
-		final Component idMapper = pc.getIdentifierMapper();
+		Identifier identifier = new CompositeIdentifier( getMetadataBuildingContext() );
+		IdentifierRelation relation = new IdentifierRelation();
 
-		// Checking if the id mapping is supported
+		// Check if the id mapping is supported
 		if ( idMapper == null && idProp == null ) {
 			return null;
 		}
@@ -194,67 +199,39 @@ public final class IdMetadataGenerator {
 		SimpleIdMapperBuilder mapper;
 		if ( idMapper != null ) {
 			// Multiple id
-			final Class componentClass = loadClass( (Component) pc.getIdentifier() );
-			final Component virtualComponent = (Component) pc.getIdentifier();
-			mapper = new MultipleIdMapper( componentClass, pc.getServiceRegistry() );
-			if ( !addIdProperties(
-					relIdMapping,
-					idMapper,
-					virtualComponent,
-					mapper,
-					false,
-					audited
-			) ) {
+			final Component virtualComponent = (Component) persistentClass.getIdentifier();
+			mapper = new MultipleIdMapper( virtualComponent );
+
+			if ( !addIdProperties( relation, idMapper, virtualComponent, mapper, false, audited ) ) {
 				return null;
 			}
 
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
-			if ( !addIdProperties(
-					origIdMapping,
-					idMapper,
-					virtualComponent,
-					null,
-					true,
-					audited
-			) ) {
+			if ( !addIdProperties( identifier, idMapper, virtualComponent, null, true, audited ) ) {
 				return null;
 			}
 		}
 		else if ( idProp.isComposite() ) {
 			// Embedded id
 			final Component idComponent = (Component) idProp.getValue();
-			final Class embeddableClass = loadClass( idComponent );
-			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), embeddableClass, pc.getServiceRegistry() );
-			if ( !addIdProperties(
-					relIdMapping,
-					idComponent,
-					null,
-					mapper,
-					false,
-					audited
-			) ) {
+			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), idComponent );
+
+			if ( !addIdProperties( relation, idComponent, null, mapper, false, audited ) ) {
 				return null;
 			}
 
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
-			if ( !addIdProperties(
-					origIdMapping,
-					idComponent,
-					null,
-					null,
-					true,
-					audited
-			) ) {
+			if ( !addIdProperties( identifier, idComponent, null, null, true, audited ) ) {
 				return null;
 			}
 		}
 		else {
 			// Single id
-			mapper = new SingleIdMapper( pc.getServiceRegistry() );
+			mapper = new SingleIdMapper( persistentClass.getServiceRegistry() );
 
 			// Last but one parameter: ids are always insertable
-			mainGenerator.getBasicMetadataGenerator().addBasic(
-					relIdMapping,
+			basicMetadataGenerator.addBasic(
+					relation,
 					getIdPersistentPropertyAuditingData( idProp ),
 					idProp.getValue(),
 					mapper,
@@ -263,8 +240,8 @@ public final class IdMetadataGenerator {
 			);
 
 			// null mapper - the mapping where already added the first time, now we only want to generate the xml
-			mainGenerator.getBasicMetadataGenerator().addBasic(
-					origIdMapping,
+			basicMetadataGenerator.addBasic(
+					identifier,
 					getIdPersistentPropertyAuditingData( idProp ),
 					idProp.getValue(),
 					null,
@@ -273,59 +250,60 @@ public final class IdMetadataGenerator {
 			);
 		}
 
-		origIdMapping.addAttribute( "name", mainGenerator.getVerEntCfg().getOriginalIdPropName() );
-
 		// Adding a relation to the revision entity (effectively: the "revision number" property)
-		mainGenerator.addRevisionInfoRelation( origIdMapping );
+		addRevisionInfoRelationToIdentifier( identifier );
 
-		return new IdMappingData( mapper, origIdMapping, relIdMapping );
+		return new IdMappingData( mapper, identifier, relation );
 	}
 
 	private PropertyData getIdPropertyData(Property property) {
 		return new PropertyData(
-				property.getName(), property.getName(), property.getPropertyAccessorName(),
-				ModificationStore.FULL
+				property.getName(),
+				property.getName(),
+				property.getPropertyAccessorName()
 		);
 	}
 
 	private PropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {
-		return new PropertyAuditingData(
-				property.getName(), property.getPropertyAccessorName(),
-				ModificationStore.FULL, RelationTargetAuditMode.AUDITED, null, null, false
-		);
+		return new PropertyAuditingData( property.getName(), property.getPropertyAccessorName(), false );
 	}
 
-	@SuppressWarnings({"unchecked"})
-	boolean addManyToOne(
-			Element parent,
+	public boolean addManyToOne(
+			AttributeContainer attributeContainer,
 			PropertyAuditingData propertyAuditingData,
 			Value value,
 			SimpleMapperBuilder mapper) {
 		final Type type = value.getType();
 
 		// A null mapper occurs when adding to composite-id element
-		final Element manyToOneElement = parent.addElement( mapper != null ? "many-to-one" : "key-many-to-one" );
-		manyToOneElement.addAttribute( "name", propertyAuditingData.getName() );
-		manyToOneElement.addAttribute( "class", type.getName() );
+		final ManyToOneAttribute attribute = new ManyToOneAttribute(
+				propertyAuditingData.getName(),
+				"",
+				true,
+				true,
+				mapper == null,
+				type.getName()
+		);
 
 		// HHH-11107
 		// Use FK hbm magic value 'none' to skip making foreign key constraints between the Envers
 		// schema and the base table schema when a @ManyToOne is present in an identifier.
-		manyToOneElement.addAttribute( "foreign-key", "none" );
+		attribute.setForeignKey( "none" );
 
-		MetadataTools.addColumns( manyToOneElement, value.getColumnIterator() );
+		attribute.addColumnsFromValue( value );
+		attributeContainer.addAttribute( attribute );
 
 		return true;
 	}
 
-	boolean addBasic(
-			Element parent,
+	public boolean addBasic(
+			AttributeContainer attributeContainer,
 			PropertyAuditingData propertyAuditingData,
 			Value value,
 			SimpleIdMapperBuilder mapper,
 			boolean key) {
-		return mainGenerator.getBasicMetadataGenerator().addBasic(
-				parent,
+		return basicMetadataGenerator.addBasic(
+				attributeContainer,
 				propertyAuditingData,
 				value,
 				mapper,

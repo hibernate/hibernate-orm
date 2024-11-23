@@ -6,7 +6,7 @@
 
     <cache alias="ready-cache">
         <key-type>java.lang.Long</key-type>
-        <value-type>org.hibernate.test.cache.jcache.config.Product</value-type>
+        <value-type>org.hibernate.orm.test.jcache.domain.Product</value-type>
         <heap unit="entries">100</heap>
     </cache>
 

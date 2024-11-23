@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.spi;
 
@@ -22,21 +20,21 @@ public interface TableInformation {
 	 *
 	 * @return The qualified table name
 	 */
-	public QualifiedTableName getName();
+	QualifiedTableName getName();
 
 	/**
 	 * Does this information describe a physical table as opposed to a view, etc?
 	 *
 	 * @return {@code true} if this is a physical table; {@code false} otherwise.
 	 */
-	public boolean isPhysicalTable();
+	boolean isPhysicalTable();
 
 	/**
 	 * Get the comments/remarks defined for the table.
 	 *
 	 * @return The table comments
 	 */
-	public String getComment();
+	String getComment();
 
 	/**
 	 * Retrieve the named ColumnInformation
@@ -45,21 +43,21 @@ public interface TableInformation {
 	 *
 	 * @return The matching column information.  May return {@code null}
 	 */
-	public ColumnInformation getColumn(Identifier columnIdentifier);
+	ColumnInformation getColumn(Identifier columnIdentifier);
 
 	/**
 	 * Retrieve information about the table's primary key, if one is defined (aka, may return {@code null}).
 	 *
 	 * @return The primary key information, or {@code null} if the table did not define a primary key.
 	 */
-	public PrimaryKeyInformation getPrimaryKey();
+	PrimaryKeyInformation getPrimaryKey();
 
 	/**
 	 * Obtain an iterable over all the table's defined foreign keys.
 	 *
 	 * @return The iterable.
 	 */
-	public Iterable<ForeignKeyInformation> getForeignKeys();
+	Iterable<ForeignKeyInformation> getForeignKeys();
 
 	/**
 	 * Retrieve the named ForeignKeyInformation
@@ -68,14 +66,14 @@ public interface TableInformation {
 	 *
 	 * @return The matching foreign key information.  May return {@code null}
 	 */
-	public ForeignKeyInformation getForeignKey(Identifier keyName);
+	ForeignKeyInformation getForeignKey(Identifier keyName);
 
 	/**
 	 * Obtain an iterable over all the table's defined indexes.
 	 *
 	 * @return The iterable.
 	 */
-	public Iterable<IndexInformation> getIndexes();
+	Iterable<IndexInformation> getIndexes();
 
 	/**
 	 * Retrieve the named IndexInformation
@@ -84,7 +82,7 @@ public interface TableInformation {
 	 *
 	 * @return The matching index information.  May return {@code null}
 	 */
-	public IndexInformation getIndex(Identifier indexName);
+	IndexInformation getIndex(Identifier indexName);
 
-	public void addColumn(ColumnInformation columnIdentifier);
+	void addColumn(ColumnInformation columnIdentifier);
 }

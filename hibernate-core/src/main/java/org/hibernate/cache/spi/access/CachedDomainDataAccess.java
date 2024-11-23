@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.access;
 
-import java.io.Serializable;
-import javax.persistence.Cache;
+import jakarta.persistence.Cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -18,13 +15,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * Navigable of the user's domain model in a transactionally ACID manner.
  *
  * @apiNote Note that the following methods are not considered "transactional"
- * in this sense : {@link #contains}, {@link #lockRegion}, {@link #unlockRegion},
- * {@link #evict}, {@link #evictAll}.  The semantics of these methods come
- * from JPA's {@link Cache} contract.
+ * in this sense: {@link #contains}, {@link #lockRegion}, {@link #unlockRegion},
+ * {@link #evict}, {@link #evictAll}. The semantics of these methods come from
+ * JPA's {@link Cache} contract.
  *
- * @implSpec The "non transactional" methods noted in the `@apiNote` should
- * be implemented to ignore any locking.  In other words, if {@link #evict}
- * is called that item should be forcibly removed from the cache regardless of
+ * @implSpec The "non-transactional" methods noted in the {@code @apiNote}
+ * should be implemented to ignore any locking. That is, when {@link #evict}
+ * is called, the item should be forcibly removed from the cache regardless of
  * whether anything has locked it.
  *
  * @author Steve Ebersole
@@ -100,7 +97,7 @@ public interface CachedDomainDataAccess {
 	/**
 	 * We are going to attempt to update/delete the keyed object. This
 	 * method is used by "asynchronous" concurrency strategies.
-	 * <p/>
+	 * <p>
 	 * The returned object must be passed back to {@link #unlockItem}, to release the
 	 * lock. Concurrency strategies which do not support client-visible
 	 * locks may silently return null.
@@ -143,7 +140,6 @@ public interface CachedDomainDataAccess {
 	 * Remove all data for this accessed type
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
-	 * @param session
 	 */
 	void removeAll(SharedSessionContractImplementor session);
 
@@ -154,7 +150,7 @@ public interface CachedDomainDataAccess {
 
 	/**
 	 * Determine whether this region contains data for the given key.
-	 * <p/>
+	 * <p>
 	 * The semantic here is whether the cache contains data visible for the
 	 * current call context.  This should be viewed as a "best effort", meaning
 	 * blocking should be avoided if possible.
@@ -189,10 +185,10 @@ public interface CachedDomainDataAccess {
 	 * Forcibly evict an item from the cache immediately without regard for transaction
 	 * isolation and/or locking.  This behavior is exactly Hibernate legacy behavior, but
 	 * it is also required by JPA - so we cannot remove it.
-	 * <p/>
-	 * Used from JPA's {@link javax.persistence.Cache#evict(Class, Object)}, as well as the
-	 * Hibernate extension {@link org.hibernate.Cache#evictEntityData(Class, Serializable)}
-	 * and {@link org.hibernate.Cache#evictEntityData(String, Serializable)}
+	 * <p>
+	 * Used from JPA's {@link jakarta.persistence.Cache#evict(Class, Object)}, as well as the
+	 * Hibernate extension {@link org.hibernate.Cache#evictEntityData(Class, Object)}
+	 * and {@link org.hibernate.Cache#evictEntityData(String, Object)}
 	 *
 	 * @param key The key of the item to remove
 	 *
@@ -204,7 +200,7 @@ public interface CachedDomainDataAccess {
 	 * Forcibly evict all items from the cache immediately without regard for transaction
 	 * isolation.  This behavior is exactly Hibernate legacy behavior, but it is also required
 	 * by JPA - so we cannot remove it.
-	 * <p/>
+	 * <p>
 	 * Used from our JPA impl of {@link Cache#evictAll()} as well as the Hibernate
 	 * extensions {@link org.hibernate.Cache#evictEntityData(Class)},
 	 * {@link org.hibernate.Cache#evictEntityData(String)} and

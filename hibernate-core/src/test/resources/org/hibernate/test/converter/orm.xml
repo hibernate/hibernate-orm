@@ -9,5 +9,5 @@
 <entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
                  version="2.1">
     <package>org.hibernate.test.type</package>
-    <converter class="org.hibernate.test.converter.StringClobConverter" auto-apply="true"/>
+    <converter class="org.hibernate.orm.test.mapping.converted.converter.StringClobConverter" auto-apply="true"/>
 </entity-mappings>

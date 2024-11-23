@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Collections;
+import java.lang.invoke.MethodHandles;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -23,20 +20,23 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.pretty.MessageHelper;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.emptySet;
+import static org.hibernate.pretty.MessageHelper.infoString;
+
 /**
  * Tracks unresolved entity insert actions.
- *
+ * <p>
  * An entity insert action is unresolved if the entity
  * to be inserted has at least one non-nullable association with
  * an unsaved transient entity, and the foreign key points to that
  * unsaved transient entity.
- *
+ * <p>
  * These references must be resolved before an insert action can be
  * executed.
  *
@@ -44,8 +44,9 @@ import org.jboss.logging.Logger;
  */
 public class UnresolvedEntityInsertActions {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-				CoreMessageLogger.class,
-				UnresolvedEntityInsertActions.class.getName()
+			MethodHandles.lookup(),
+			CoreMessageLogger.class,
+			UnresolvedEntityInsertActions.class.getName()
 	);
 
 	private static final int INIT_SIZE = 5;
@@ -88,14 +89,14 @@ public class UnresolvedEntityInsertActions {
 	}
 
 	/**
-	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved
+	 * Throws {@link PropertyValueException} if there are any unresolved
 	 * entity insert actions that depend on non-nullable associations with
 	 * a transient entity. This method should be called on completion of
 	 * an operation (after all cascades are completed) that saves an entity.
 	 *
-	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity
-	 * insert actions; {@link org.hibernate.PropertyValueException#getEntityName()}
-	 * and {@link org.hibernate.PropertyValueException#getPropertyName()} will
+	 * @throws PropertyValueException if there are any unresolved entity
+	 * insert actions; {@link PropertyValueException#getEntityName()}
+	 * and {@link PropertyValueException#getPropertyName()} will
 	 * return the entity name and property value for the first unresolved
 	 * entity insert action.
 	 */
@@ -129,12 +130,16 @@ public class UnresolvedEntityInsertActions {
 		for ( Map.Entry<Object,Set<AbstractEntityInsertAction>> entry : dependentActionsByTransientEntity.entrySet() ) {
 			final Object transientEntity = entry.getKey();
 			final String transientEntityName = session.guessEntityName( transientEntity );
-			final Serializable transientEntityId = session.getFactory().getMetamodel().entityPersister( transientEntityName ).getIdentifier( transientEntity, session );
-			final String transientEntityString = MessageHelper.infoString( transientEntityName, transientEntityId );
+			final Object transientEntityId = session.getFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( transientEntityName )
+					.getIdentifier( transientEntity, session );
+			final String transientEntityString = infoString( transientEntityName, transientEntityId );
 			final Set<String> dependentEntityStrings = new TreeSet<>();
 			final Set<String> nonNullableTransientPropertyPaths = new TreeSet<>();
 			for ( AbstractEntityInsertAction dependentAction : entry.getValue() ) {
-				dependentEntityStrings.add( MessageHelper.infoString( dependentAction.getEntityName(), dependentAction.getId() ) );
+				dependentEntityStrings.add( infoString( dependentAction.getEntityName(), dependentAction.getId() ) );
 				for ( String path : dependenciesByAction.get( dependentAction ).getNonNullableTransientPropertyPaths( transientEntity ) ) {
 					final String fullPath = dependentAction.getEntityName() + '.' + path;
 					nonNullableTransientPropertyPaths.add( fullPath );
@@ -157,12 +162,11 @@ public class UnresolvedEntityInsertActions {
 		return dependenciesByAction.isEmpty();
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	private void addDependenciesByTransientEntity(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
 		for ( Object transientEntity : dependencies.getNonNullableTransientEntities() ) {
 			Set<AbstractEntityInsertAction> dependentActions = dependentActionsByTransientEntity.get( transientEntity );
 			if ( dependentActions == null ) {
-				dependentActions = new IdentitySet();
+				dependentActions = new IdentitySet<>();
 				dependentActionsByTransientEntity.put( transientEntity, dependentActions );
 			}
 			dependentActions.add( insert );
@@ -179,7 +183,6 @@ public class UnresolvedEntityInsertActions {
 	 *
 	 * @throws IllegalArgumentException if {@code managedEntity} did not have managed or read-only status.
 	 */
-	@SuppressWarnings({ "unchecked" })
 	public Set<AbstractEntityInsertAction> resolveDependentActions(Object managedEntity, SessionImplementor session) {
 		final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( managedEntity );
 		if ( entityEntry.getStatus() != Status.MANAGED && entityEntry.getStatus() != Status.READ_ONLY ) {
@@ -194,51 +197,52 @@ public class UnresolvedEntityInsertActions {
 			if ( traceEnabled ) {
 				LOG.tracev(
 						"No unresolved entity inserts that depended on [{0}]",
-						MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() )
+						infoString( entityEntry.getEntityName(), entityEntry.getId() )
 				);
 			}
-			// NOTE EARLY EXIT!
-			return Collections.emptySet();
+			return emptySet();
 		}
-		final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet(  );
-		if ( traceEnabled  ) {
-			LOG.tracev(
-					"Unresolved inserts before resolving [{0}]: [{1}]",
-					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
-					toString()
-			);
-		}
-		for ( AbstractEntityInsertAction dependentAction : dependentActions ) {
-			if ( traceEnabled ) {
+		else {
+			final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet<>(  );
+			if ( traceEnabled  ) {
 				LOG.tracev(
-						"Resolving insert [{0}] dependency on [{1}]",
-						MessageHelper.infoString( dependentAction.getEntityName(), dependentAction.getId() ),
-						MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() )
+						"Unresolved inserts before resolving [{0}]: [{1}]",
+						infoString( entityEntry.getEntityName(), entityEntry.getId() ),
+						toString()
 				);
 			}
-			final NonNullableTransientDependencies dependencies = dependenciesByAction.get( dependentAction );
-			dependencies.resolveNonNullableTransientEntity( managedEntity );
-			if ( dependencies.isEmpty() ) {
+			for ( AbstractEntityInsertAction dependentAction : dependentActions ) {
 				if ( traceEnabled ) {
 					LOG.tracev(
-							"Resolving insert [{0}] (only depended on [{1}])",
-							dependentAction,
-							MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() )
+							"Resolving insert [{0}] dependency on [{1}]",
+							infoString( dependentAction.getEntityName(), dependentAction.getId() ),
+							infoString( entityEntry.getEntityName(), entityEntry.getId() )
 					);
 				}
-				// dependentAction only depended on managedEntity..
-				dependenciesByAction.remove( dependentAction );
-				resolvedActions.add( dependentAction );
+				final NonNullableTransientDependencies dependencies = dependenciesByAction.get( dependentAction );
+				dependencies.resolveNonNullableTransientEntity( managedEntity );
+				if ( dependencies.isEmpty() ) {
+					if ( traceEnabled ) {
+						LOG.tracev(
+								"Resolving insert [{0}] (only depended on [{1}])",
+								dependentAction,
+								infoString( entityEntry.getEntityName(), entityEntry.getId() )
+						);
+					}
+					// dependentAction only depended on managedEntity..
+					dependenciesByAction.remove( dependentAction );
+					resolvedActions.add( dependentAction );
+				}
 			}
+			if ( traceEnabled  ) {
+				LOG.tracev(
+						"Unresolved inserts after resolving [{0}]: [{1}]",
+						infoString( entityEntry.getEntityName(), entityEntry.getId() ),
+						toString()
+				);
+			}
+			return resolvedActions;
 		}
-		if ( traceEnabled  ) {
-			LOG.tracev(
-					"Unresolved inserts after resolving [{0}]: [{1}]",
-					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
-					toString()
-			);
-		}
-		return resolvedActions;
 	}
 
 	/**
@@ -292,7 +296,7 @@ public class UnresolvedEntityInsertActions {
 	 */
 	public static UnresolvedEntityInsertActions deserialize(
 			ObjectInputStream ois,
-			SessionImplementor session) throws IOException, ClassNotFoundException {
+			EventSource session) throws IOException, ClassNotFoundException {
 
 		final UnresolvedEntityInsertActions rtn = new UnresolvedEntityInsertActions();
 

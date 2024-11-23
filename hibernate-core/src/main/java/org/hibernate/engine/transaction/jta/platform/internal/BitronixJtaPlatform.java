@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.lang.reflect.Method;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
@@ -22,8 +20,10 @@ public class BitronixJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			Class transactionManagerServicesClass = serviceRegistry().getService( ClassLoaderService.class ).classForName( TM_CLASS_NAME );
-			final Method getTransactionManagerMethod = transactionManagerServicesClass.getMethod( "getTransactionManager" );
+			final Method getTransactionManagerMethod =
+					serviceRegistry().requireService( ClassLoaderService.class )
+							.classForName( TM_CLASS_NAME )
+							.getMethod( "getTransactionManager" );
 			return (TransactionManager) getTransactionManagerMethod.invoke( null );
 		}
 		catch (Exception e) {

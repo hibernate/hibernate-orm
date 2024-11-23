@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.criteria.internal;
 
@@ -21,9 +19,9 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
  * the corresponding entity name. The effect alias is either the alias that has been
  * specified at creation time of this expression or if that alias is null, the base
  * alias is used. This calculation is done in the
- * {@link AuditCriterion#addToQuery(EnversService, AuditReaderImplementor, Map, String, QueryBuilder, Parameters)}
+ * {@link AuditCriterion#addToQuery(EnversService, AuditReaderImplementor, Map, Map, String, QueryBuilder, Parameters)}
  * implementation and then delegated for the concrete work to the template method
- * {@link #addToQuery(EnversService, AuditReaderImplementor, String, String, QueryBuilder, Parameters)}.
+ * {@link #addToQuery(EnversService, AuditReaderImplementor, String, String, String, QueryBuilder, Parameters)}
  *
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  */
@@ -40,12 +38,19 @@ abstract class AbstractAtomicExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor versionsReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String baseAlias,
 			QueryBuilder qb,
 			Parameters parameters) {
 		final String effectiveAlias = alias == null ? baseAlias : alias;
 		final String entityName = aliasToEntityNameMap.get( effectiveAlias );
-		addToQuery(enversService, versionsReader, entityName, effectiveAlias, qb, parameters);
+		final String componentPrefix = CriteriaTools.determineComponentPropertyPrefix(
+				enversService,
+				aliasToEntityNameMap,
+				aliasToComponentPropertyNameMap,
+				effectiveAlias
+		);
+		addToQuery(enversService, versionsReader, entityName, effectiveAlias, componentPrefix, qb, parameters);
 	}
 
 	protected abstract void addToQuery(
@@ -53,6 +58,7 @@ abstract class AbstractAtomicExpression implements AuditCriterion {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters);
 

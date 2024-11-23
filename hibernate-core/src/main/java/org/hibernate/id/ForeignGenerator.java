@@ -1,41 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
-import org.hibernate.TransientObjectException;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.PropertyPath;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.generator.GeneratorCreationContext;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 
 /**
- * <b>foreign</b><br>
- * <br>
- * An <tt>Identifier</tt> generator that uses the value of the id property of an
- * associated object<br>
- * <br>
- * One mapping parameter is required: property.
+ * The legacy id generator named {@code foreign}.
+ * <p>
+ * An {@code Identifier} generator that uses the value of the id property of an
+ * associated object.
+ * <p>
+ * One mapping parameter is required: {@value PROPERTY}.
  *
  * @author Gavin King
+ *
+ * @deprecated This remains around as an implementation detail of {@code hbm.xml} mappings.
  */
-public class ForeignGenerator implements IdentifierGenerator, Configurable {
-	private static final CoreMessageLogger LOG = messageLogger( ForeignGenerator.class );
+@Deprecated(since = "6", forRemoval = true)
+public class ForeignGenerator implements IdentifierGenerator {
+
+	/**
+	 * The parameter which specifies the property holding a reference to the associated object.
+	 */
+	public static final String PROPERTY = "property";
 
 	private String entityName;
 	private String propertyName;
@@ -70,68 +65,21 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 
 
 	@Override
-	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		propertyName = params.getProperty( "property" );
-		entityName = params.getProperty( ENTITY_NAME );
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+		propertyName = parameters.getProperty( PROPERTY );
+		entityName = parameters.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {
 			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
 		}
 	}
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor sessionImplementor, Object object) {
-		final EntityPersister persister = sessionImplementor.getFactory().getMetamodel().entityPersister( entityName );
-		Object associatedObject = persister.getPropertyValue( object, propertyName );
-		if ( associatedObject == null ) {
-			throw new IdentifierGenerationException(
-					"attempted to assign id from null one-to-one property [" + getRole() + "]"
-			);
-		}
+	public Object generate(SharedSessionContractImplementor sessionImplementor, Object object) {
+		return getForeignId( entityName, propertyName, sessionImplementor, object );
+	}
 
-		final EntityType foreignValueSourceType;
-		final Type propertyType = persister.getPropertyType( propertyName );
-		if ( propertyType.isEntityType() ) {
-			// the normal case
-			foreignValueSourceType = (EntityType) propertyType;
-		}
-		else {
-			// try identifier mapper
-			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
-		}
-
-		Serializable id;
-		try {
-			id = ForeignKeys.getEntityIdentifierIfNotUnsaved(
-					foreignValueSourceType.getAssociatedEntityName(),
-					associatedObject,
-					sessionImplementor
-			);
-		}
-		catch (TransientObjectException toe) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
-						"ForeignGenerator detected a transient entity [%s]",
-						foreignValueSourceType.getAssociatedEntityName()
-				);
-			}
-			if (sessionImplementor instanceof Session) {
-				id = ((Session) sessionImplementor)
-						.save(foreignValueSourceType.getAssociatedEntityName(), associatedObject);
-			}
-			else if (sessionImplementor instanceof StatelessSession) {
-				id = ((StatelessSession) sessionImplementor)
-						.insert(foreignValueSourceType.getAssociatedEntityName(), associatedObject);
-			}
-			else {
-				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
-			}
-		}
-
-		if ( sessionImplementor instanceof Session && ((Session) sessionImplementor).contains( entityName, object ) ) {
-			//abort the save (the object is already saved by a circular cascade)
-			return IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
-			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
-		}
-		return id;
+	@Override
+	public boolean allowAssignedIdentifiers() {
+		return true;
 	}
 }

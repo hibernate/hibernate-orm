@@ -1,17 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPropertiesType;
 import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -57,7 +52,7 @@ public class EmbeddableSourceVirtualImpl extends AbstractHbmSourceNode implement
 		this.attributeRoleBase = container.getAttributeRoleBase();
 		this.attributePathBase = container.getAttributePathBase();
 
-		this.attributeSources = new ArrayList<AttributeSource>();
+		this.attributeSources = new ArrayList<>();
 		AttributesHelper.processAttributes(
 				mappingDocument,
 				new AttributesHelper.Callback() {
@@ -89,11 +84,6 @@ public class EmbeddableSourceVirtualImpl extends AbstractHbmSourceNode implement
 	@Override
 	public String getParentReferenceAttributeName() {
 		return null;
-	}
-
-	@Override
-	public Map<EntityMode,String> getTuplizerClassMap() {
-		return Collections.emptyMap();
 	}
 
 	@Override

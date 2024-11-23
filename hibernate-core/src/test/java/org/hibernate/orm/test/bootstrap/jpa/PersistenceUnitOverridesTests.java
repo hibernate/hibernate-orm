@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.jpa;
 
@@ -10,37 +8,37 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.hql.internal.ast.HqlSqlWalker;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jdbc.DataSourceStub;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.util.jpa.DelegatingPersistenceUnitInfo;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.spi.PersistenceProvider;
+import jakarta.persistence.spi.PersistenceUnitInfo;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -52,6 +50,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialect( H2Dialect.class )
 public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 	@Test
@@ -94,7 +93,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final DataSource integrationDataSource = new DataSourceStub( "integrationDataSource" );
 
 		final HibernatePersistenceProvider provider = new HibernatePersistenceProvider();
-		puInfo.getProperties().setProperty( AvailableSettings.HQL_BULK_ID_STRATEGY, MultiTableBulkIdStrategyStub.class.getName() );
+		// todo (6.0) : fix for Oracle see HHH-13432
+//		puInfo.getProperties().setProperty( AvailableSettings.HQL_BULK_ID_STRATEGY, MultiTableBulkIdStrategyStub.class.getName() );
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				puInfo,
@@ -280,7 +280,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final Map integrationOverrides = new HashMap();
 		//noinspection unchecked
 		integrationOverrides.put( AvailableSettings.JPA_JTA_DATASOURCE, integrationDataSource );
-		integrationOverrides.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
+		// todo (6.0) : fix for Oracle see HHH-13432
+//		integrationOverrides.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
@@ -308,7 +309,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13640" )
+	@JiraKey( value = "HHH-13640" )
 	public void testIntegrationOverridesOfPersistenceXmlDataSource() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -326,7 +327,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final DataSource override = new DataSourceStub( "integrationDataSource" );
 		final Map<String,Object> integrationSettings = new HashMap<>();
 		integrationSettings.put( AvailableSettings.JPA_NON_JTA_DATASOURCE, override );
-		integrationSettings.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
+		// todo (6.0) : fix for Oracle see HHH-13432
+//		integrationSettings.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -354,7 +356,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13640" )
+	@JiraKey( value = "HHH-13640" )
 	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfo() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -367,11 +369,51 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final Map<String,Object> integrationSettings = new HashMap<>();
+		final Map<String,Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 		integrationSettings.put( AvailableSettings.JPA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
+		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
+
+		final PersistenceProvider provider = new HibernatePersistenceProvider();
+
+		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+				info,
+				integrationSettings
+		);
+
+		try {
+			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
+			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
+					ConnectionProvider.class );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	@Test
+	@JiraKey( value = "HHH-13640" )
+	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfoUsingJakarta() {
+
+		// mimics a DataSource defined in the persistence.xml
+		final DataSourceStub dataSource = new DataSourceStub( "puDataSource" );
+		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
+
+			@Override
+			public DataSource getNonJtaDataSource() {
+				return dataSource;
+			}
+		};
+
+		final Map<String,Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_URL, ConnectionProviderBuilder.URL );
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_USER, ConnectionProviderBuilder.USER );
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
+		integrationSettings.put( DriverManagerConnectionProviderImpl.INIT_SQL, "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -396,7 +438,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override
@@ -407,7 +449,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final Map integrationSettings = Collections.emptyMap();
+		final Map integrationSettings = ServiceRegistryUtil.createBaseSettings();
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,
@@ -437,7 +479,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override
@@ -448,10 +490,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
-		final Map integrationSettings = Collections.singletonMap(
-				AvailableSettings.DIALECT,
-				IntegrationDialect.class.getName()
-		);
+		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
+		integrationSettings.put( AvailableSettings.DIALECT, IntegrationDialect.class.getName() );
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				info,
@@ -469,8 +509,9 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			);
 
 			final EntityPersister entityMapping = emf.unwrap( SessionFactoryImplementor.class )
-					.getMetamodel()
-					.entityPersister( MappedEntity.class );
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( MappedEntity.class );
 			assertThat( entityMapping, notNullValue() );
 			assertThat(
 					entityMapping.getCacheAccessStrategy().getAccessType(),
@@ -483,10 +524,17 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	public static class PersistenceUnitDialect extends Dialect {
+		@Override
+		public DatabaseVersion getVersion() {
+			return SimpleDatabaseVersion.ZERO_VERSION;
+		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static class IntegrationDialect extends Dialect {
+		@Override
+		public DatabaseVersion getVersion() {
+			return SimpleDatabaseVersion.ZERO_VERSION;
+		}
 	}
 
 	@Entity
@@ -512,33 +560,34 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		}
 	}
 
-	public static class MultiTableBulkIdStrategyStub implements MultiTableBulkIdStrategy {
-
-		@Override
-		public void prepare(
-				JdbcServices jdbcServices,
-				JdbcConnectionAccess connectionAccess,
-				MetadataImplementor metadata,
-				SessionFactoryOptions sessionFactoryOptions) {
-
-		}
-
-		@Override
-		public void release(
-				JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess) {
-
-		}
-
-		@Override
-		public UpdateHandler buildUpdateHandler(
-				SessionFactoryImplementor factory, HqlSqlWalker walker) {
-			return null;
-		}
-
-		@Override
-		public DeleteHandler buildDeleteHandler(
-				SessionFactoryImplementor factory, HqlSqlWalker walker) {
-			return null;
-		}
-	}
+//	public static class MultiTableBulkIdStrategyStub implements MultiTableBulkIdStrategy {
+//
+//		@Override
+//		public void prepare(
+//				JdbcServices jdbcServices,
+//				JdbcConnectionAccess connectionAccess,
+//				MetadataImplementor metadata,
+//				SessionFactoryOptions sessionFactoryOptions,
+//				SqlStringGenerationContext sqlStringGenerationContext) {
+//
+//		}
+//
+//		@Override
+//		public void release(
+//				JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess) {
+//
+//		}
+//
+//		@Override
+//		public UpdateHandler buildUpdateHandler(
+//				SessionFactoryImplementor factory, HqlSqlWalker walker) {
+//			return null;
+//		}
+//
+//		@Override
+//		public DeleteHandler buildDeleteHandler(
+//				SessionFactoryImplementor factory, HqlSqlWalker walker) {
+//			return null;
+//		}
+//	}
 }

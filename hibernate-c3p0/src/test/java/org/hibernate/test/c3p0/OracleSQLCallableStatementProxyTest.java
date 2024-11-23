@@ -1,22 +1,28 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.test.c3p0;
 
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.Id;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.SqlResultSetMappings;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.StoredProcedureParameter;
 
-import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,15 +33,15 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(Oracle8iDialect.class)
-@TestForIssue( jiraKey = "HHH-10256" )
+@RequiresDialect(OracleDialect.class)
+@JiraKey(value = "HHH-10256")
 public class OracleSQLCallableStatementProxyTest extends
 		BaseCoreFunctionalTestCase {
 
 	protected void configure(Configuration configuration) {
 		configuration.setProperty(
 				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
-				C3P0ConnectionProvider.class.getName()
+				C3P0ConnectionProvider.class
 		);
 	}
 
@@ -95,19 +101,19 @@ public class OracleSQLCallableStatementProxyTest extends
 	public void testStoredProcedureOutParameter() {
 		doInHibernate( this::sessionFactory, session -> {
 			List<Object[]> persons = session
-					.createNamedQuery(
-							"getPerson")
+					.createNamedStoredProcedureQuery( "getPerson" )
 					.setParameter(1, 1L)
 					.getResultList();
 			assertEquals(1, persons.size());
 		} );
 	}
 
-	@NamedNativeQuery(
+	@NamedStoredProcedureQuery(
 			name = "getPerson",
-			query = "{ ? = call fn_person( ? ) }",
-			callable = true,
-			resultSetMapping = "person"
+			procedureName = "fn_person",
+			resultSetMappings = "person",
+			hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true"),
+			parameters = @StoredProcedureParameter(type = Long.class)
 	)
 	@SqlResultSetMappings({
 		@SqlResultSetMapping(
@@ -125,7 +131,7 @@ public class OracleSQLCallableStatementProxyTest extends
 		),
 	})
 	@Entity(name = "Person")
-	@javax.persistence.Table(name = "person")
+	@jakarta.persistence.Table(name = "person")
 	public static class Person {
 
 		@Id

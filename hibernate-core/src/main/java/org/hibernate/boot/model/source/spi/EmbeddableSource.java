@@ -1,31 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
-import java.util.Map;
-
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.JavaTypeDescriptor;
 
 /**
  * Represents the binding source for an "embeddable" (in JPA terms)
  * or "composite" (in legacy Hibernate terms).
- * <p/>
+ * <p>
  * Note that this really models the JPA concept of an Embedded, more
  * than the Embeddable.
  *
  * @author Steve Ebersole
  */
 public interface EmbeddableSource extends AttributeSourceContainer {
-	public JavaTypeDescriptor getTypeDescriptor();
+	JavaTypeDescriptor getTypeDescriptor();
 
-	public String getParentReferenceAttributeName();
-
-	public Map<EntityMode,String> getTuplizerClassMap();
+	String getParentReferenceAttributeName();
 
 	/**
 	 * Indicates whether this embeddable/component is dynamic (represented as a Map),
@@ -35,7 +28,7 @@ public interface EmbeddableSource extends AttributeSourceContainer {
 	 * {@code false} indicates there is a dedicated class for representing the
 	 * composition.
 	 */
-	public boolean isDynamic();
+	boolean isDynamic();
 
-	public boolean isUnique();
+	boolean isUnique();
 }

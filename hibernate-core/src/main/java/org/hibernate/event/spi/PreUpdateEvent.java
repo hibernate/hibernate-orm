@@ -1,40 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
-
-import java.io.Serializable;
 
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Represents a <tt>pre-update</tt> event, which occurs just prior to
+ * Represents a {@code pre-update} event, which occurs just prior to
  * performing the update of an entity in the database.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
-	private Object[] state;
-	private Object[] oldState;
+	private final Object[] state;
+	private final Object[] oldState;
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *
 	 * @param entity The entity to be updated.
 	 * @param id The id of the entity to use for updating.
 	 * @param state The state to be updated.
 	 * @param oldState The state of the entity at the time it was loaded from
-	 * the database.
+	 *                 the database.
 	 * @param persister The entity's persister.
 	 * @param source The session from which the event originated.
 	 */
 	public PreUpdateEvent(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] state,
 			Object[] oldState,
 			EntityPersister persister,

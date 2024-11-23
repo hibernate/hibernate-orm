@@ -1,6 +1,8 @@
 [[fetching]]
 == Fetching
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/fetching
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-fetching: {core-project-dir}/src/test/java/org/hibernate/orm/test/fetching
 :extrasdir: extras
 
 Fetching, essentially, is the process of grabbing data from the database and making it available to the application.
@@ -42,8 +44,14 @@ _static_::
 _dynamic_ (sometimes referred to as runtime)::
 	The dynamic definition is really use-case centric. There are multiple ways to define dynamic fetching:
     fetch profiles::: defined in mappings, but can be enabled/disabled on the `Session`.
-    HQL / JPQL::: both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
-    entity graphs::: starting in Hibernate 4.2 (JPA 2.1), this is also an option.
+    HQL / JPQL::: both Hibernate and Jakarta Persistence Criteria queries have the ability to specify fetching, specific to said query.
+    entity graphs::: using Jakarta Persistence EntityGraphs
+
+[NOTE]
+====
+`fetch profile` and `entity graph` are mutually exclusive. When both are present, `entity graph` would take effect
+and `fetch profile` would be ignored.
+====
 
 [[fetching-direct-vs-query]]
 === Direct fetching vs. entity queries
@@ -53,9 +61,9 @@ To see the difference between direct fetching and entity queries in regard to ea
 [[fetching-direct-vs-query-domain-model-example]]
 .Domain model
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-domain-model-example]
+include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-domain-model-example]
 ----
 ====
 
@@ -66,9 +74,9 @@ When issuing a direct entity fetch, Hibernate executed the following SQL query:
 [[fetching-direct-vs-query-direct-fetching-example]]
 .Direct fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-direct-fetching-example]
+include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-direct-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -77,16 +85,16 @@ include::{extrasdir}/fetching-direct-vs-query-direct-fetching-example.sql[]
 ----
 ====
 
-The `LEFT JOIN` clause is added to the generated SQL query because this association is required to be fetched eagerly.
+The `LEFT OUTER JOIN` clause is added to the generated SQL query because this association is required to be fetched eagerly.
 
 On the other hand, if you are using an entity query that does not contain a `JOIN FETCH` directive to the `Department` association:
 
 [[fetching-direct-vs-query-entity-query-example]]
 .Entity query fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-entity-query-example]
+include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-entity-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -101,7 +109,7 @@ so Hibernate requires a secondary select to ensure that the EAGER association is
 [IMPORTANT]
 ====
 If you forget to JOIN FETCH all EAGER associations, Hibernate is going to issue a secondary select for each and every one of those
-which, in turn, can lead to N+1 query issues.
+which, in turn, can lead to N + 1 query issue.
 
 For this reason, you should prefer LAZY associations.
 ====
@@ -109,14 +117,14 @@ For this reason, you should prefer LAZY associations.
 [[fetching-strategies]]
 === Applying fetch strategies
 
-Let's consider these topics as it relates to a simple domain model and a few use cases.
+Let's consider these topics as it relates to a sample domain model and a few use cases.
 
 [[fetching-strategies-domain-model-example]]
 .Sample domain model
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-domain-model-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-domain-model-example]
 ----
 ====
 
@@ -124,9 +132,9 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-domain-model-exa
 ====
 The Hibernate recommendation is to statically mark all associations lazy and to use dynamic fetching strategies for eagerness.
 
-This is unfortunately at odds with the JPA specification which defines that all one-to-one and many-to-one associations should be eagerly fetched by default.
+This is unfortunately at odds with the Jakarta Persistence specification which defines that all one-to-one and many-to-one associations should be eagerly fetched by default.
 
-Hibernate, as a JPA provider, honors that default.
+Hibernate, as a Jakarta Persistence provider, honors that default.
 ====
 
 [[fetching-strategies-no-fetching]]
@@ -138,23 +146,23 @@ Let's assume that login only requires access to the `Employee` information, not 
 [[fetching-strategies-no-fetching-example]]
 .No fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-no-fetching-example]
 ----
 ====
 
 In this example, the application gets the `Employee` data.
-However, because all associations from `Employee` are declared as LAZY (JPA defines the default for collections as LAZY) no other data is fetched.
+However, because all associations from `Employee` are declared as LAZY (Jakarta Persistence defines the default for collections as LAZY) no other data is fetched.
 
 If the login process does not need access to the `Employee` information specifically, another fetching optimization here would be to limit the width of the query results.
 
 [[fetching-strategies-no-fetching-scalar-example]]
 .No fetching (scalar) example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-scalar-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-no-fetching-scalar-example]
 ----
 ====
 
@@ -167,28 +175,28 @@ Certainly access to the `Employee` is needed, as is the collection of `Projects`
 [[fetching-strategies-dynamic-fetching-jpql-example]]
 .Dynamic JPQL fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-jpql-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-jpql-example]
 ----
 ====
 
 [[fetching-strategies-dynamic-fetching-criteria-example]]
 .Dynamic query fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-criteria-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-criteria-example]
 ----
 ====
 
-In this example we have an `Employee` and their `Projects` loaded in a single query shown both as an HQL query and a JPA Criteria query.
+In this example we have an `Employee` and their `Projects` loaded in a single query shown both as an HQL query and a Jakarta Persistence Criteria query.
 In both cases, this resolves to exactly one database query to get all that information.
 
 [[fetching-strategies-dynamic-fetching-entity-graph]]
-=== Dynamic fetching via JPA entity graph
+=== Dynamic fetching via Jakarta Persistence entity graph
 
-JPA 2.1 introduced ``entity graph`` so the application developer has more control over fetch plans. It has two modes to choose from:
+Jakarta Persistence also supports a feature called EntityGraphs to provide the application developer has more control over fetch plans. It has two modes to choose from:
 
 fetch graph:::
 In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, and all attributes not specified will *ALWAYS* be treated as FetchType.LAZY.
@@ -196,18 +204,18 @@ In this case, all attributes specified in the entity graph will be treated as Fe
 load graph:::
 In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, but attributes not specified use their static mapping specification.
 
-Below is an `fetch graph` dynamic fetching example:
+Below is a `fetch graph` dynamic fetching example:
 [[fetching-strategies-dynamic-fetching-entity-graph-example]]
 .Fetch graph example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-mapping-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-mapping-example]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-example]
 ----
 ====
 
@@ -223,7 +231,7 @@ An EntityGraph is the root of a "load plan" and must correspond to an EntityType
 
 
 [[fetching-strategies-dynamic-fetching-entity-subgraph]]
-==== JPA (key) subgraphs
+==== Jakarta Persistence (key) subgraphs
 
 A sub-graph is used to control the fetching of sub-attributes of the AttributeNode it is applied to.
 It is generally defined via the {jpaJavadocUrlPrefix}NamedSubgraph.html[`@NamedSubgraph`] annotation.
@@ -234,9 +242,9 @@ and we'd like to fetch the `department` for the `Employee` child association.
 [[fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example]]
 .Fetch graph with a subgraph mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example]
 ----
 ====
 
@@ -245,9 +253,9 @@ When fetching this entity graph, Hibernate generates the following SQL query:
 [[fetching-strategies-dynamic-fetching-entity-subgraph-example]]
 .Fetch graph with a subgraph mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-example]
 ----
 
 [source, SQL, indent=0]
@@ -269,7 +277,7 @@ attribute's key is defined as either:
 
 
 [[fetching-strategies-dynamic-fetching-entity-subgraph-subtype]]
-==== JPA SubGraph sub-typing
+==== Jakarta Persistence SubGraph sub-typing
 
 SubGraphs can also be sub-type specific.  Given an attribute whose value is an inheritance hierarchy,
 we can refer to attributes of a specific sub-type using the forms of sub-graph definition that accept
@@ -277,26 +285,26 @@ the sub-type Class.
 
 
 [[fetching-strategies-dynamic-fetching-entity-graph-parsing]]
-==== Creating and applying JPA graphs from text representations
+==== Creating and applying Jakarta Persistence graphs from text representations
 
-Hibernate allows the creation of JPA fetch/load graphs by parsing a textual representation
+Hibernate allows the creation of Jakarta Persistence fetch/load graphs by parsing a textual representation
 of the graph.  Generally speaking, the textual representation of a graph is a comma-separated
 list of attribute names, optionally including any sub-graph specifications.
-`org.hibernate.graph.EntityGraphParser` is the starting point for such parsing operations.
+`org.hibernate.graph.GraphParser` is the starting point for such parsing operations.
 
 [NOTE]
 ====
-Parsing a textual representation of a graph is not (yet) a part of the JPA specification. So the
+Parsing a textual representation of a graph is not (yet) a part of the Jakarta Persistence specification. So the
 syntax described here is specific to Hibernate. We do hope to eventually make this syntax part of
-the JPA specification proper.
+the Jakarta Persistence specification proper.
 ====
 
 
 .Parsing a simple graph
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-example-1]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-example-1]
 ----
 ====
 
@@ -309,17 +317,17 @@ to the end of the attribute name.
 
 .Parsing an entity key graph
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-1]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-1]
 ----
 ====
 
 .Parsing a map key graph
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2]
 ----
 ====
 
@@ -328,7 +336,7 @@ Parsing can also handle sub-type specific sub-graphs.  For example, given an ent
 type is the `LegalEntity` base type we might have:
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 responsibleParty(Corporation: ceo)
 ----
@@ -337,22 +345,22 @@ responsibleParty(Corporation: ceo)
 We can even duplicate the attribute names to apply different sub-type sub-graphs:
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 responsibleParty(taxIdNumber), responsibleParty(Corporation: ceo), responsibleParty(NonProfit: sector)
 ----
 ====
 
-The duplicated attribute names are handled according to the JPA specification which says that duplicate
+The duplicated attribute names are handled according to the Jakarta Persistence specification which says that duplicate
 specification of the attribute node results in the originally registered AttributeNode to be re-used
 effectively merging the 2 AttributeNode specifications together.  In other words, the above specification
 creates a single AttributeNode with 3 distinct SubGraphs.  It is functionally the same as calling:
 
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 Class<Invoice> invoiceClass = ...;
-javax.persistence.EntityGraph<Invoice> invoiceGraph = entityManager.createEntityGraph( invoiceClass );
+jakarta.persistence.EntityGraph<Invoice> invoiceGraph = entityManager.createEntityGraph( invoiceClass );
 invoiceGraph.addAttributeNode( "responsibleParty" );
 invoiceGraph.addSubgraph( "responsibleParty" ).addAttributeNode( "taxIdNumber" );
 invoiceGraph.addSubgraph( "responsibleParty", Corporation.class ).addAttributeNode( "ceo" );
@@ -361,16 +369,16 @@ invoiceGraph.addSubgraph( "responsibleParty", NonProfit.class ).addAttributeNode
 ====
 
 [[fetching-strategies-dynamic-fetching-entity-graph-merging]]
-==== Combining multiple JPA entity graphs into one
+==== Combining multiple Jakarta Persistence entity graphs into one
 
 Multiple entity graphs can be combined into a single "super graph" that acts as a union. Graph from
 the previous example can also be built by combining separate aspect graphs into one, such as:
 
 .Combining multiple graphs into one
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
 ----
 ====
 
@@ -385,14 +393,14 @@ So we would leverage a fetch profile.
 [[fetching-strategies-dynamic-fetching-profile-example]]
 .Fetch profile example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-mapping-example]
+include::{example-dir-fetching}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-mapping-example]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-example]
+include::{example-dir-fetching}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-example]
 ----
 ====
 
@@ -411,22 +419,22 @@ Considering the following entity mapping:
 [[fetching-batch-mapping-example]]
 .`@BatchSize` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchFetchingTest.java[tags=fetching-batch-mapping-example]
+include::{example-dir-fetching}/BatchFetchingTest.java[tags=fetching-batch-mapping-example]
 ----
 ====
 
 Considering that we have previously fetched several `Department` entities,
 and now we need to initialize the `employees` entity collection for each particular `Department`,
-the `@BatchSize` annotations allows us to load multiple `Employee` entities in a single database roundtrip.
+the `@BatchSize` annotations allows us to load multiple `Employee` entities in a single database round trip.
 
 [[fetching-batch-fetching-example]]
 .`@BatchSize` fetching example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchFetchingTest.java[tags=fetching-batch-fetching-example]
+include::{example-dir-fetching}/BatchFetchingTest.java[tags=fetching-batch-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -439,27 +447,33 @@ As you can see in the example above, there are only two SQL statements used to f
 
 [TIP]
 ====
-Without `@BatchSize`, you'd run into a N+1 query issue, so,
+Without `@BatchSize`, you'd run into a N + 1 query issue, so,
 instead of 2 SQL statements, there would be 10 queries needed for fetching the `Employee` child entities.
 
-However, although `@BatchSize` is better than running into an N+1 query issue,
+However, although `@BatchSize` is better than running into an N + 1 query issue,
 most of the time, a DTO projection or a `JOIN FETCH` is a much better alternative since
 it allows you to fetch all the required data with a single query.
+====
+
+[NOTE]
+====
+When `LockModeType` is different from `NONE` Hibernate will not execute a batch fetching so uninitialized entity proxies will not be initialized.
+
+This because the lock mode is different from the one of the proxies in the batch fetch queue.
 ====
 
 [[fetching-fetch-annotation]]
 === The `@Fetch` annotation mapping
 
-Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
+Besides the `FetchType.LAZY` or `FetchType.EAGER` Jakarta Persistence annotations,
 you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following ``FetchMode``s:
 
 SELECT::
-	The association is going to be fetched lazily using a secondary select for each individual entity,
-	collection, or join load.
-	It's equivalent to JPA `FetchType.LAZY` fetching strategy.
+	The association is going to be fetched using a secondary select for each individual entity,
+	collection, or join load. This mode can be used for either `FetchType.EAGER` or `FetchType.LAZY`.
 JOIN::
-	Use an outer join to load the related entities, collections or joins when using direct fetching.
-	It's equivalent to JPA `FetchType.EAGER` fetching strategy.
+	Use an outer join to load the related entities, collections or joins when using direct fetching. This mode
+	can only be used for `FetchType.EAGER`.
 SUBSELECT::
 	Available for collections only. When accessing a non-initialized collection,
 	this fetch mode will trigger loading all elements of all collections of the same role for all owners associated
@@ -473,9 +487,9 @@ To demonstrate how `FetchMode.SELECT` works, consider the following entity mappi
 [[fetching-strategies-fetch-mode-select-mapping-example]]
 .`FetchMode.SELECT` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-mapping-example]
+include::{example-dir-fetching}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-mapping-example]
 ----
 ====
 
@@ -486,9 +500,9 @@ collection using a secondary `SELECT` statement upon accessing the child collect
 [[fetching-strategies-fetch-mode-select-example]]
 .`FetchMode.SELECT` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-example]
+include::{example-dir-fetching}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-example]
 ----
 
 [source, SQL, indent=0]
@@ -498,7 +512,7 @@ include::{extrasdir}/fetching-strategies-fetch-mode-select-example.sql[]
 ====
 
 The more `Department` entities are fetched by the first query, the more secondary `SELECT` statements are executed to initialize the `employees` collections.
-Therefore, `FetchMode.SELECT` can lead to N+1 query issues.
+Therefore, `FetchMode.SELECT` can lead to N + 1 query issue.
 
 [[fetching-fetchmode-subselect]]
 === `FetchMode.SUBSELECT`
@@ -509,25 +523,25 @@ To demonstrate how `FetchMode.SUBSELECT` works, we are going to modify the <<fet
 [[fetching-strategies-fetch-mode-subselect-mapping-example]]
 .`FetchMode.SUBSELECT` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-mapping-example]
+include::{example-dir-fetching}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-mapping-example]
 ----
 ====
 
 Now, we are going to fetch all `Department` entities that match a given filtering predicate
 and then navigate their `employees` collections.
 
-Hibernate is going to avoid the N+1 query issue by generating a single SQL statement to initialize all `employees` collections
+Hibernate is going to avoid the N + 1 query issue by generating a single SQL statement to initialize all `employees` collections
 for all `Department` entities that were previously fetched.
-Instead of using passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
+Instead of passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
 
 [[fetching-strategies-fetch-mode-subselect-example]]
 .`FetchMode.SUBSELECT` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-example]
+include::{example-dir-fetching}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-example]
 ----
 
 [source, SQL, indent=0]
@@ -545,9 +559,9 @@ To demonstrate how `FetchMode.JOIN` works, we are going to modify the <<fetching
 [[fetching-strategies-fetch-mode-join-mapping-example]]
 .`FetchMode.JOIN` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-mapping-example]
+include::{example-dir-fetching}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-mapping-example]
 ----
 ====
 
@@ -571,9 +585,9 @@ Hibernate is going to avoid the secondary query by issuing an OUTER JOIN for the
 [[fetching-strategies-fetch-mode-join-example]]
 .`FetchMode.JOIN` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-example]
+include::{example-dir-fetching}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-example]
 ----
 
 [source, SQL, indent=0]
@@ -583,72 +597,3 @@ include::{extrasdir}/fetching-strategies-fetch-mode-join-example.sql[]
 ====
 
 This time, there was no secondary query because the child collection was loaded along with the parent entity.
-
-[[fetching-LazyCollection]]
-=== `@LazyCollection`
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollection.html[`@LazyCollection`] annotation is used to specify the lazy fetching behavior of a given collection.
-The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/LazyCollectionOption.html[LazyCollectionOption]` enumeration:
-
-`TRUE`:: Load it when the state is requested.
-`FALSE`:: Eagerly load it.
-`EXTRA`:: Prefer extra queries over full collection loading.
-
-The `TRUE` and `FALSE` values are deprecated since you should be using the JPA {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
-
-The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
-Each element is fetched individually using a secondary query.
-
-[[fetching-LazyCollection-domain-model-example]]
-.`LazyCollectionOption.EXTRA` mapping example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-domain-model-example]
-----
-====
-
-[NOTE]
-====
-`LazyCollectionOption.EXTRA` only works for ordered collections,
-either List(s) that are annotated with @OrderColumn or Map(s).
-
-For bags (e.g. regular List(s) of entities that do not preserve any certain ordering),
-the `@LazyCollection(LazyCollectionOption.EXTRA)` behaves like any other `FetchType.LAZY` collection
-(the collection is fetched entirely upon being accessed for the first time).
-====
-
-Now, considering we have the following entities:
-
-[[fetching-LazyCollection-persist-example]]
-.`LazyCollectionOption.EXTRA` Domain Model example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-persist-example]
-----
-====
-
-When fetching the `employee` collection entries by their position in the `List`,
-Hibernate generates the following SQL statements:
-
-[[fetching-LazyCollection-select-example]]
-.`LazyCollectionOption.EXTRA` fetching example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-select-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/fetching-LazyCollection-select-example.sql[]
-----
-====
-
-[WARNING]
-====
-Therefore, the child entities were fetched one after the other without triggering a full collection initialization.
-
-For this reason, caution is advised since accessing all elements using `LazyCollectionOption.EXTRA` can lead to N+1 query issues.
-====

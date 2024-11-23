@@ -1,16 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.lang.reflect.Method;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
+import org.hibernate.internal.util.NullnessUtil;
 
 import org.jboss.logging.Logger;
 
@@ -46,7 +45,7 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 			throw new JtaPlatformException( "Could not locate WebSphere TransactionManager access class" );
 		}
 
-		this.transactionManagerAccessClass = tmAccessClass;
+		this.transactionManagerAccessClass = NullnessUtil.castNonNull( tmAccessClass );
 		this.webSphereEnvironment = webSphereEnvironment;
 	}
 
@@ -56,7 +55,7 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked"})
 	protected TransactionManager locateTransactionManager() {
 		try {
 			final Method method = transactionManagerAccessClass.getMethod( "getTransactionManager" );

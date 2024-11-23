@@ -1,12 +1,14 @@
 [[dynamic-model]]
 === Dynamic Model
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/dynamic
-:mappingdir: ../../../../../test/resources/org/hibernate/userguide/mapping/dynamic
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-dynamic: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/dynamic
+:example-dir-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/mapping/dynamic
 :extrasdir: extras
 
 [IMPORTANT]
 ====
-JPA only acknowledges the entity model mapping so, if you are concerned about JPA provider portability, it's best to stick to the strict POJO model.
+Jakarta Persistence only acknowledges the POJO entity model mapping so, if you are concerned about Jakarta Persistence provider portability, it's best to stick to the strict POJO model.
 On the other hand, Hibernate can work with both POJO entities and dynamic entity models.
 ====
 
@@ -26,7 +28,7 @@ Entity modes can now be mixed within a domain model; a dynamic entity might refe
 ====
 [source,xml]
 ----
-include::{mappingdir}/Book.hbm.xml[tag=mapping-model-dynamic-example, indent=0]
+include::{example-dir-resources}/Book.hbm.xml[tag=mapping-model-dynamic-example, indent=0]
 ----
 ====
 
@@ -37,7 +39,7 @@ After you defined your entity mapping, you need to instruct Hibernate to use the
 ====
 [source,java]
 ----
-include::{sourcedir}/DynamicEntityTest.java[tag=mapping-model-dynamic-setting-example, indent=0]
+include::{example-dir-dynamic}/DynamicEntityTest.java[tag=mapping-model-dynamic-setting-example, indent=0]
 ----
 ====
 
@@ -49,7 +51,7 @@ Hibernate is going to generate the following SQL statement:
 ====
 [source,java]
 ----
-include::{sourcedir}/DynamicEntityTest.java[tag=mapping-model-dynamic-example, indent=0]
+include::{example-dir-dynamic}/DynamicEntityTest.java[tag=mapping-model-dynamic-example, indent=0]
 ----
 
 [source,sql]

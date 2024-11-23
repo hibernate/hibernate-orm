@@ -7,20 +7,28 @@
 
 description = 'Hibernate\'s entity version (audit/history) support'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'hibernate-matrix-testing'
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
+apply plugin: 'org.hibernate.matrix-test'
 
 dependencies {
-    compile( project( ':hibernate-core' ) ) {
-        // Exclude access to this to avoid future use.
-        exclude group: "org.javassist", module: "javassist"
-    }
+    api project( ':hibernate-core' )
 
-    provided( libraries.ant )
-    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
+    implementation libs.hibernateModels
+    implementation jakartaLibs.jaxbApi
+    implementation jakartaLibs.jaxb
+    implementation libs.jandex
+    implementation libs.hibernateModels
 
-    testCompile( project( ':hibernate-testing' ) )
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
+    compileOnly libs.ant
+
+    annotationProcessor project( ':hibernate-processor' )
+    compileOnly jakartaLibs.annotation
+
+    testImplementation project( ':hibernate-testing' )
+}
+
+test {
+    include '**/**'
 }
 
 sourceSets {
@@ -38,28 +46,31 @@ sourceSets {
     }
 }
 
-jar {
-    manifest {
-        attributes(
-                // BND Plugin instructions (for OSGi):
-                'Import-Package': [
-                        // TODO: Shouldn't have to explicitly list the JPA packages, but
-                        // the plugin generates them with [1.0,2) versions.
-                        "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.criteria;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.metamodel;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
-                        // optionals
-                        'javax.naming;resolution:=optional',
-                        'org.apache.tools.ant;resolution:=optional',
-                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-                        // use it.  Without this, the plugin generates [1.2,2).
-                        'javax.transaction;version="[1.1,2)"',
-                        // Also import every package referenced in the code
-                        '*'
-                ].join( ',' )
-        )
+configurations {
+    tests {
+        description = 'Configuration for the produced test jar'
     }
+}
+
+tasks.withType( Test.class ).each { test ->
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
+        // Parallel test runs when running with in-memory databases
+        test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
+    }
+}
+
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set( 'test' )
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
 }
 
 tasks."matrix_mariadb" {

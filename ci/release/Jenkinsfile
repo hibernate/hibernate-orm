@@ -1,0 +1,271 @@
+#! /usr/bin/groovy
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+/*
+ * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
+ */
+@Library('hibernate-jenkins-pipeline-helpers') _
+
+import org.hibernate.jenkins.pipeline.helpers.version.Version
+
+// --------------------------------------------
+// Global build configuration
+env.PROJECT = "orm"
+env.JIRA_KEY = "HHH"
+def RELEASE_ON_PUSH = false // Set to `true` *only* on branches where you want a release on each push.
+
+print "INFO: env.PROJECT = ${env.PROJECT}"
+print "INFO: env.JIRA_KEY = ${env.JIRA_KEY}"
+print "INFO: RELEASE_ON_PUSH = ${RELEASE_ON_PUSH}"
+
+// --------------------------------------------
+// Build conditions
+
+// Avoid running the pipeline on branch indexing
+if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
+	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
+
+def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
+
+// Only do automatic release on branches where we opted in
+if ( !manualRelease && !RELEASE_ON_PUSH ) {
+	print "INFO: Build skipped because automated releases are disabled on this branch. See constant RELEASE_ON_PUSH in ci/release/Jenkinsfile"
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
+
+// --------------------------------------------
+// Reusable methods
+
+def checkoutReleaseScripts() {
+	dir('.release/scripts') {
+		checkout scmGit(branches: [[name: '*/main']], extensions: [],
+				userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com',
+									 url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
+	}
+}
+
+// --------------------------------------------
+// Pipeline
+
+pipeline {
+	agent {
+		label 'Worker&&Containers'
+	}
+	tools {
+		jdk 'OpenJDK 17 Latest'
+	}
+	options {
+		buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '10')
+		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
+		disableConcurrentBuilds(abortPrevious: false)
+		preserveStashes()
+	}
+	parameters {
+		string(
+				name: 'RELEASE_VERSION',
+				defaultValue: '',
+				description: 'The version to be released, e.g. 6.2.1.Final. Mandatory for manual releases, to prevent mistakes.',
+				trim: true
+		)
+		string(
+				name: 'DEVELOPMENT_VERSION',
+				defaultValue: '',
+				description: 'The next version to be used after the release, e.g. 6.2.2-SNAPSHOT. If not set, determined automatically from the release version.',
+				trim: true
+		)
+		booleanParam(
+				name: 'RELEASE_DRY_RUN',
+				defaultValue: false,
+				description: 'If true, just simulate the release, without pushing any commits or tags, and without uploading any artifacts or documentation.'
+		)
+	}
+	stages {
+		stage('Release check') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+
+					def currentVersion = Version.parseDevelopmentVersion( sh(
+							script: ".release/scripts/determine-current-version.sh ${env.PROJECT}",
+							returnStdout: true
+					).trim() )
+					echo "Workspace version: ${currentVersion}"
+
+					def releaseVersion
+					def developmentVersion
+
+					if ( manualRelease ) {
+						echo "Release was requested manually"
+
+						if ( !params.RELEASE_VERSION ) {
+						        throw new IllegalArgumentException( 'Missing value for parameter RELEASE_VERSION. This parameter must be set explicitly to prevent mistakes.' )
+						}
+						releaseVersion = Version.parseReleaseVersion( params.RELEASE_VERSION )
+
+						if ( !releaseVersion.toString().startsWith( currentVersion.family + '.' ) ) {
+							throw new IllegalArgumentException( "RELEASE_VERSION = $releaseVersion, which is different from the family of CURRENT_VERSION = $currentVersion. Did you make a mistake?" )
+						}
+					}
+					else {
+						echo "Release was triggered automatically"
+
+						// Avoid doing an automatic release for commits from a release
+						def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true)
+						def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true)
+						if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
+							print "INFO: Automatic release skipped because last commits were for the previous release"
+							currentBuild.result = 'ABORTED'
+							return
+						}
+
+						releaseVersion = Version.parseReleaseVersion( sh(
+								script: ".release/scripts/determine-release-version.sh ${currentVersion}",
+								returnStdout: true
+						).trim() )
+					}
+					echo "Release version: ${releaseVersion}"
+
+					if ( !params.DEVELOPMENT_VERSION ) {
+						developmentVersion = Version.parseDevelopmentVersion( sh(
+								script: ".release/scripts/determine-development-version.sh ${releaseVersion}",
+								returnStdout: true
+						).trim() )
+					}
+					else {
+						developmentVersion = Version.parseDevelopmentVersion( params.DEVELOPMENT_VERSION )
+					}
+					echo "Development version: ${developmentVersion}"
+
+					env.RELEASE_VERSION = releaseVersion.toString()
+					env.DEVELOPMENT_VERSION = developmentVersion.toString()
+
+// 					def matchingFiles = findFiles(glob: "/release_notes.md")
+// 					env.SCRIPT_OPTIONS = " --notes=${matchingFiles[0]}"
+					if ( params.RELEASE_DRY_RUN ) {
+					    env.SCRIPT_OPTIONS += " -d"
+					}
+
+					// Determine version id to check if Jira version exists
+					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"
+				}
+			}
+		}
+		stage('Release prepare') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
+						withCredentials([
+							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
+							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
+							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
+							string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE')
+						]) {
+							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
+								// set release version
+								// update changelog from JIRA
+								// tags the version
+								// changes the version to the provided development version
+								withEnv([
+										"BRANCH=${env.GIT_BRANCH}",
+										"DISABLE_REMOTE_GRADLE_CACHE=true",
+										// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
+										"GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
+								]) {
+									sh ".release/scripts/prepare-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		stage('Publish release') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
+						withCredentials([
+							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
+							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
+							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
+							string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE'),
+							gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+						]) {
+							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
+								// performs documentation upload and Sonatype release
+								// push to github
+								withEnv([
+										"DISABLE_REMOTE_GRADLE_CACHE=true"
+								]) {
+									sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		stage('Website release') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+
+					configFileProvider([
+							configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"),
+							configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")
+					]) {
+						withCredentials([
+								gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+						]) {
+							sshagent( ['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net'] ) {
+								dir( '.release/hibernate.org' ) {
+									checkout scmGit(
+											branches: [[name: '*/production']],
+											extensions: [],
+											userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate.org.git']]
+									)
+									sh "../scripts/website-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		stage('GitHub release') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+					withCredentials([string(credentialsId: 'Hibernate-CI.github.com', variable: 'GITHUB_API_TOKEN')]) {
+						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION}"
+					}
+				}
+			}
+		}
+	}
+ 	post {
+ 		always {
+ 			configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
+ 				notifyBuildResult maintainers: (String) readYaml(file: env.JOB_CONFIGURATION_FILE).notification?.email?.recipients
+ 			}
+ 		}
+ 	}
+}

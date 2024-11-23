@@ -1,50 +1,64 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.io.Serializable;
 
 /**
- * NOTE : Consider this an incubating API, likely to change as wider usage indicates changes that need to be made
+ * Implemented by custom listeners that respond to low-level events
+ * involving interactions between the {@link Session} and the database
+ * or second-level cache.
+ * <p>
+ * A {@code SessionEventListener} class applying to all newly-created
+ * sessions may be registered using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#AUTO_SESSION_EVENTS_LISTENER}.
+ * A new instance of the class will be created for each new session.
+ * <p>
+ * <em>This an incubating API, subject to change.</em>
+ *
+ * @see org.hibernate.cfg.AvailableSettings#AUTO_SESSION_EVENTS_LISTENER
+ * @see SessionBuilder#eventListeners(SessionEventListener...)
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SessionEventListener extends Serializable {
-	public void transactionCompletion(boolean successful);
+	default void transactionCompletion(boolean successful) {}
 
-	public void jdbcConnectionAcquisitionStart();
-	public void jdbcConnectionAcquisitionEnd();
+	default void jdbcConnectionAcquisitionStart() {}
+	default void jdbcConnectionAcquisitionEnd() {}
 
-	public void jdbcConnectionReleaseStart();
-	public void jdbcConnectionReleaseEnd();
+	default void jdbcConnectionReleaseStart() {}
+	default void jdbcConnectionReleaseEnd() {}
 
-	public void jdbcPrepareStatementStart();
-	public void jdbcPrepareStatementEnd();
+	default void jdbcPrepareStatementStart() {}
+	default void jdbcPrepareStatementEnd() {}
 
-	public void jdbcExecuteStatementStart();
-	public void jdbcExecuteStatementEnd();
+	default void jdbcExecuteStatementStart() {}
+	default void jdbcExecuteStatementEnd() {}
 
-	public void jdbcExecuteBatchStart();
-	public void jdbcExecuteBatchEnd();
+	default void jdbcExecuteBatchStart() {}
+	default void jdbcExecuteBatchEnd() {}
 
-	public void cachePutStart();
-	public void cachePutEnd();
+	default void cachePutStart() {}
+	default void cachePutEnd() {}
 
-	public void cacheGetStart();
-	public void cacheGetEnd(boolean hit);
+	default void cacheGetStart() {}
+	default void cacheGetEnd(boolean hit) {}
 
-	public void flushStart();
-	public void flushEnd(int numberOfEntities, int numberOfCollections);
+	default void flushStart() {}
+	default void flushEnd(int numberOfEntities, int numberOfCollections) {}
 
-	public void partialFlushStart();
-	public void partialFlushEnd(int numberOfEntities, int numberOfCollections);
+	default void prePartialFlushStart(){}
+	default void prePartialFlushEnd(){}
 
-	public void dirtyCalculationStart();
-	public void dirtyCalculationEnd(boolean dirty);
+	default void partialFlushStart() {}
+	default void partialFlushEnd(int numberOfEntities, int numberOfCollections) {}
 
-	public void end();
+	default void dirtyCalculationStart() {}
+	default void dirtyCalculationEnd(boolean dirty) {}
+
+	default void end() {}
 }

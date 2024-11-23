@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial;
 
@@ -20,8 +18,10 @@ public class HibernateSpatialConfigurationSettings implements Serializable {
 	 * The canonical class name of the Oracle ConnectionFinder implementation that will be used by the
 	 * Oracle spatial dialects
 	 */
-
 	public static final String CONNECTION_FINDER = "hibernate.spatial.connection_finder";
+
+	public static final String ORACLE_OGC_STRICT = "hibernate.spatial.oracle_ogc_strict";
+
 	/**
 	 * SRID to use for the DB2 Spatial Dialects.
 	 */
@@ -30,6 +30,5 @@ public class HibernateSpatialConfigurationSettings implements Serializable {
 	private HibernateSpatialConfigurationSettings() {
 		//prevent this object from being instantiated
 	}
-
 
 }

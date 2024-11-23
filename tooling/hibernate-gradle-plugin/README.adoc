@@ -1,0 +1,118 @@
+= Hibernate ORM Gradle Plugin
+
+A Gradle plugin for introducing Hibernate tasks and capabilities into a build.
+
+
+== Set up
+
+[source,groovy]
+----
+plugins {
+  id 'org.hibernate.orm'
+}
+
+// HibernateOrmSpec
+hibernate {
+    ...
+}
+----
+
+
+== DSL
+
+The `hibernate` DSL extension is the main entry into configuring the plugin
+
+[source,groovy]
+----
+hibernate {
+}
+----
+
+It defines configuration options:
+
+useSameVersion:: Specifies whether to have the plugin inject an `implementation` dependency on `hibernate-core`, implicitly using
+    the same version as the plugin.  The default is true.  If you'd prefer to use a different version, set this to false and define
+    the dependency on `hibernate-core` as you normally would.
+sourceSet:: The source-set containing the project's domain model.  Only one source-set is supported, although all languages (Java, Kotlin, etc)
+    within that source-set are considered.
+
+It additionally defines 3 nested DSL extensions related to:
+
+* <<enhance>>
+* <<jpa-metamodel>>
+* <<hbm-xml>>
+
+
+[[enhance]]
+== Bytecode Enhancement
+
+The plugin can perform build-time enhancement of the domain classes.  This is controlled
+by the `enhancement` portion of the `hibernate` DSL extension.
+
+To enable enhancement, reference the DSL extension:
+
+[source,groovy]
+----
+hibernate {
+    enhancement
+}
+----
+
+Enhancement has a few options to control what enhancements take place.  All the options default to `false`:
+
+[source,groovy]
+----
+hibernate {
+  enhancement {
+    lazyInitialization = true
+    dirtyTracking = true
+    associationManagement = true
+    extendedEnhancement = false
+  }
+}
+----
+
+
+[[jpa-metamodel]]
+== JPA Static Metamodel generation
+
+The plugin can also generate the JPA static metamodel classes based on the application's domain model.  To enable
+the generation, simply refer to the DSL extension:
+
+[source,groovy]
+----
+hibernate {
+    jpaMetamodel
+}
+----
+
+The generation accepts a number of options:
+
+[source,groovy]
+----
+hibernate {
+    jpaMetamodel {
+        // directory where the generated metamodel source files should be written
+        //      - defaults to `${buildDir}/generated/sources/jpaMetamodel
+        generationOutputDirectory = "some/other/dir"
+
+        // directory where the compiled generated metamodel classes should be written
+        //      - defaults to `${buildDir}/classes/java/jpaMetamodel
+        compileOutputDirectory = "special/classes/dir"
+
+        // should the `jakarta.annotation.Generated` annotation be applied?
+        //      - defaults to true
+        applyGeneratedAnnotation = true
+
+        // error suppressions to be added to the generated source files
+        //      - default is ["raw", "deprecation"]
+        suppressions = ...
+    }
+}
+----
+
+
+[[hbm-xml]]
+== Legacy `hbm.xml` Transformation
+
+Coming soon...

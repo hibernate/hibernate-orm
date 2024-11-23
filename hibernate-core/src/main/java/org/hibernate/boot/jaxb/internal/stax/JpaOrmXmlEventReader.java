@@ -1,14 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
@@ -22,11 +18,11 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
-import org.hibernate.boot.xsd.LocalXsdResolver;
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.boot.xsd.XsdHelper;
 
 /**
- * A JPA {@code orm.xml} specific StAX EVentReader to handle a few oddities.
+ * StAX EVentReader which handles a few oddities specific to JPA {@code orm.xml}
  *
  * Mainly we handle the namespace change.
  *
@@ -40,11 +36,6 @@ import org.hibernate.boot.xsd.MappingXsdSupport;
  * @author Hardy Ferentschik
  */
 public class JpaOrmXmlEventReader extends EventReaderDelegate {
-
-	private static final List<String> NAMESPACE_URIS_TO_MAP = Collections.singletonList(
-			// JPA 1.0 and 2.0 namespace uri
-			"http://java.sun.com/xml/ns/persistence/orm"
-	);
 
 	private static final String ROOT_ELEMENT_NAME = "entity-mappings";
 	private static final String VERSION_ATTRIBUTE_NAME = "version";
@@ -83,8 +74,8 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	}
 
 	private StartElement wrap(StartElement startElement) {
-		List<Attribute> newElementAttributeList = mapAttributes( startElement );
-		List<Namespace> newNamespaceList = mapNamespaces( startElement );
+		final List<Attribute> newElementAttributeList = mapAttributes( startElement );
+		final List<Namespace> newNamespaceList = mapNamespaces( startElement );
 
 		// Transfer the location info from the incoming event to the event factory
 		// so that the event we ask it to generate for us has the same location info
@@ -99,7 +90,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	private List<Attribute> mapAttributes(StartElement startElement) {
 		final List<Attribute> mappedAttributes = new ArrayList<>();
 
-		Iterator<Attribute> existingAttributesIterator = existingXmlAttributesIterator( startElement );
+		final Iterator<Attribute> existingAttributesIterator = existingXmlAttributesIterator( startElement );
 		while ( existingAttributesIterator.hasNext() ) {
 			final Attribute originalAttribute = existingAttributesIterator.next();
 			final Attribute attributeToUse = mapAttribute( startElement, originalAttribute );
@@ -127,11 +118,11 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 			if ( VERSION_ATTRIBUTE_NAME.equals( originalAttribute.getName().getLocalPart() ) ) {
 				final String specifiedVersion = originalAttribute.getValue();
 
-				if ( !LocalXsdResolver.isValidJpaVersion( specifiedVersion ) ) {
+				if ( ! XsdHelper.isValidJpaVersion( specifiedVersion ) ) {
 					throw new BadVersionException( specifiedVersion );
 				}
 
-				return xmlEventFactory.createAttribute( VERSION_ATTRIBUTE_NAME, LocalXsdResolver.latestJpaVerison() );
+				return xmlEventFactory.createAttribute( VERSION_ATTRIBUTE_NAME, MappingXsdSupport.latestJpaDescriptor().getVersion() );
 			}
 		}
 
@@ -143,13 +134,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	}
 
 	private List<Namespace> mapNamespaces(Iterator<Namespace> originalNamespaceIterator ) {
-		final List<Namespace> mappedNamespaces = new ArrayList<Namespace>();
-
-//		final String elementNamespacePrefix = startElement.getName().getPrefix();
-//		if ( EMPTY_NAMESPACE_PREFIX.equals( elementNamespacePrefix ) ) {
-//			// add the default namespace mapping
-//			mappedNamespaces.add( xmlEventFactory.createNamespace( LocalSchema.ORM.getNamespaceUri() ) );
-//		}
+		final List<Namespace> mappedNamespaces = new ArrayList<>();
 
 		while ( originalNamespaceIterator.hasNext() ) {
 			final Namespace originalNamespace  = originalNamespaceIterator.next();
@@ -170,9 +155,12 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	}
 
 	private Namespace mapNamespace(Namespace originalNamespace) {
-		if ( NAMESPACE_URIS_TO_MAP.contains( originalNamespace.getNamespaceURI() ) ) {
+		if ( XsdHelper.shouldBeMappedToLatestJpaDescriptor( originalNamespace.getNamespaceURI() ) ) {
 			// this is a namespace "to map" so map it
-			return xmlEventFactory.createNamespace( originalNamespace.getPrefix(), MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri() );
+			return xmlEventFactory.createNamespace(
+					originalNamespace.getPrefix(),
+					MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri()
+			);
 		}
 
 		return originalNamespace;

@@ -21,6 +21,13 @@
     </Element>
 
     <Element>
+        <id>22</id>
+        <type>POINT</type>
+        <sdo>SDO_GEOMETRY(2001, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,1,1), SDO_ORDINATE_ARRAY(5.0, 5.0))</sdo>
+        <wkt>SRID=4326;POINT(5 5)</wkt>
+    </Element>
+
+    <Element>
         <id>2</id>
         <type>POINT</type>
         <sdo>SDO_GEOMETRY(2001, 4326, SDO_POINT_TYPE(52.25, 2.53, NULL), NULL, NULL)</sdo>
@@ -57,7 +64,8 @@
     <Element>
         <id>12</id>
         <type>MULTILINESTRING</type>
-        <wkt>SRID=4326;MULTILINESTRING((10.0 5.0, 20.0 15.0, 30.3 22.4, 10 30.0), (40.0 20.0, 42.0 18.0, 43.0 16.0, 40 14.0))
+        <wkt>SRID=4326;MULTILINESTRING((10.0 5.0, 20.0 15.0, 30.3 22.4, 10 30.0), (40.0 20.0, 42.0 18.0, 43.0 16.0, 40
+            14.0))
         </wkt>
         <sdo>SDO_GEOMETRY(2006, 4326, NULL, SDO_ELEM_INFO_ARRAY(1,2,1,9,2,1),
             SDO_ORDINATE_ARRAY(10.0,5.0,20.0,15.0,30.3,22.4,10,30.0,40.0,20.0,42.0,18.0,43.0,16.0,40,14.0))

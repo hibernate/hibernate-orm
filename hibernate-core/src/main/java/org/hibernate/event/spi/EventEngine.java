@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -21,11 +18,8 @@ import org.hibernate.event.service.internal.EventListenerRegistryImpl;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.event.internal.CallbackRegistryImplementor;
 import org.hibernate.jpa.event.internal.CallbacksFactory;
-import org.hibernate.jpa.event.spi.CallbackBuilder;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.service.spi.Stoppable;
 
 /**
@@ -34,47 +28,19 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class EventEngine {
-	@SuppressWarnings("rawtypes")
-	private final Map<String,EventType> registeredEventTypes;
+
+	private final Map<String,EventType<?>> registeredEventTypes;
 	private final EventListenerRegistry listenerRegistry;
 
-	private final CallbackRegistryImplementor callbackRegistry;
-	private final CallbackBuilder callbackBuilder;
+	private final CallbackRegistry callbackRegistry;
 
-	public EventEngine(
-			MetadataImplementor mappings,
-			SessionFactoryImplementor sessionFactory) {
+	public EventEngine(MetadataImplementor mappings, SessionFactoryImplementor sessionFactory) {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// resolve (JPA) callback handlers
 
-		this.callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory.getSessionFactoryOptions() );
-		this.callbackBuilder = CallbacksFactory.buildCallbackBuilder(
-				sessionFactory.getSessionFactoryOptions(),
-				sessionFactory.getServiceRegistry(),
-				mappings.getMetadataBuildingOptions().getReflectionManager()
-		);
-
-		for ( PersistentClass persistentClass : mappings.getEntityBindings() ) {
-			if ( persistentClass.getClassName() == null ) {
-				// we can have dynamic (non-java class) mapping
-				continue;
-			}
-
-			this.callbackBuilder.buildCallbacksForEntity( persistentClass.getMappedClass(), callbackRegistry );
-
-			for ( Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator(); propertyIterator.hasNext(); ) {
-				final Property property = propertyIterator.next();
-
-				if ( property.getType().isComponentType() ) {
-					this.callbackBuilder.buildCallbacksForEmbeddable(
-							property,
-							persistentClass.getMappedClass(),
-							callbackRegistry
-					);
-				}
-			}
-		}
+		callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory.getSessionFactoryOptions(),
+				sessionFactory.getServiceRegistry(), mappings.getEntityBindings() );
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,14 +51,14 @@ public class EventEngine {
 				sessionFactory.getSessionFactoryOptions().isJpaBootstrap()
 		);
 
-		final Map<String,EventType> eventTypes = new HashMap<>();
+		final Map<String,EventType<?>> eventTypes = new HashMap<>();
 		EventType.registerStandardTypes( eventTypes );
 
 		final EventEngineContributions contributionManager = new EventEngineContributions() {
 			@Override
 			public <T> EventType<T> findEventType(String name) {
 				//noinspection unchecked
-				return eventTypes.get( name );
+				return (EventType<T>) eventTypes.get( name );
 			}
 
 			@Override
@@ -131,13 +97,12 @@ public class EventEngine {
 				return eventType;
 			}
 
-			@Override
-			public <T> EventType<T> contributeEventType(String name, Class<T> listenerRole, T... defaultListeners) {
+			@Override @SafeVarargs
+			public final <T> EventType<T> contributeEventType(String name, Class<T> listenerRole, T... defaultListeners) {
 				final EventType<T> eventType = contributeEventType( name, listenerRole );
 
 				if ( defaultListeners != null ) {
-					final EventListenerGroup<T> listenerGroup = listenerRegistryBuilder.getListenerGroup( eventType );
-					listenerGroup.appendListeners( defaultListeners );
+					listenerRegistryBuilder.getListenerGroup( eventType ).appendListeners( defaultListeners );
 				}
 
 				return eventType;
@@ -155,9 +120,10 @@ public class EventEngine {
 			}
 		};
 
-		final Collection<EventEngineContributor> discoveredContributors = sessionFactory.getServiceRegistry()
-				.getService( ClassLoaderService.class )
-				.loadJavaServices( EventEngineContributor.class );
+		final Collection<EventEngineContributor> discoveredContributors =
+				sessionFactory.getServiceRegistry()
+						.requireService( ClassLoaderService.class )
+						.loadJavaServices( EventEngineContributor.class );
 		if ( CollectionHelper.isNotEmpty( discoveredContributors ) ) {
 			for ( EventEngineContributor contributor : discoveredContributors ) {
 				contributor.contribute( contributionManager );
@@ -169,20 +135,19 @@ public class EventEngine {
 	}
 
 	public Collection<EventType<?>> getRegisteredEventTypes() {
-		//noinspection unchecked,rawtypes
-		return (Collection) registeredEventTypes.values();
+		return registeredEventTypes.values();
 	}
 
 	public <T> EventType<T> findRegisteredEventType(String name) {
 		//noinspection unchecked
-		return registeredEventTypes.get( name );
+		return (EventType<T>) registeredEventTypes.get( name );
 	}
 
 	public EventListenerRegistry getListenerRegistry() {
 		return listenerRegistry;
 	}
 
-	public CallbackRegistryImplementor getCallbackRegistry() {
+	public CallbackRegistry getCallbackRegistry() {
 		return callbackRegistry;
 	}
 
@@ -192,7 +157,5 @@ public class EventEngine {
 		}
 
 		callbackRegistry.release();
-
-		callbackBuilder.release();
 	}
 }

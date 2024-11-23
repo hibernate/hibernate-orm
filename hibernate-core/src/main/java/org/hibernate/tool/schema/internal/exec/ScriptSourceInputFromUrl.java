@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -12,24 +10,20 @@ import java.io.Reader;
 import java.net.URL;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 import org.jboss.logging.Logger;
 
 /**
- * ScriptSourceInput implementation for URL references.  A reader is opened here and then explicitly closed on
- * {@link #release}.
+ * ScriptSourceInput implementation for URL references.
  *
  * @author Christian Beikov
  * @author Steve Ebersole
  */
-public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput implements ScriptSourceInput {
+public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
 
 	private final URL url;
 	private final String charsetName;
-
-	private Reader reader;
 
 	/**
 	 * Constructs a ScriptSourceInputFromUrl instance
@@ -43,41 +37,37 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput implemen
 	}
 
 	@Override
-	protected Reader reader() {
-		if ( reader == null ) {
-			throw new SchemaManagementException( "Illegal state - reader is null - not prepared" );
-		}
-		return reader;
+	public String getScriptDescription() {
+		return url.toExternalForm();
 	}
 
 	@Override
-	public void prepare() {
-		super.prepare();
+	protected Reader prepareReader() {
 		try {
-			this.reader = charsetName != null ?
-				new InputStreamReader( url.openStream(), charsetName ) :
-				new InputStreamReader( url.openStream() );
+			return charsetName != null
+					? new InputStreamReader( url.openStream(), charsetName )
+					: new InputStreamReader( url.openStream() );
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException(
-					"Unable to open specified script source url [" + url + "] for reading"
+					"Unable to open specified script source url [" + url + "] for reading (" + charsetName + ")"
 			);
 		}
 	}
 
 	@Override
-	protected String getScriptDescription() {
-		return url.toExternalForm();
-	}
-
-	@Override
-	public void release() {
+	protected void releaseReader(Reader reader) {
 		try {
-			reader().close();
+			reader.close();
 		}
 		catch (IOException e) {
 			log.warn( "Unable to close file reader for generation script source" );
 		}
+	}
+
+	@Override
+	public boolean containsScript(URL url) {
+		return this.url.equals( url );
 	}
 
 	@Override

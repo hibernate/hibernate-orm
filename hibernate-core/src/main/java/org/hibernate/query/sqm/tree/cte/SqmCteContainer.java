@@ -1,0 +1,21 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.tree.cte;
+
+import java.util.Collection;
+
+import org.hibernate.query.criteria.JpaCteContainer;
+import org.hibernate.query.sqm.tree.SqmNode;
+
+/**
+ * @author Christian Beikov
+ */
+public interface SqmCteContainer extends SqmNode, JpaCteContainer {
+
+	Collection<SqmCteStatement<?>> getCteStatements();
+
+	SqmCteStatement<?> getCteStatement(String cteLabel);
+
+}

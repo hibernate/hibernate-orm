@@ -66,7 +66,7 @@ Hibernate was changed slightly, once the implications of this were better unders
 The underlying issue is that the actual semantics of the application itself changes in these cases.
 ====
 
-Starting with version 3.2.3, Hibernate comes with a set of http://in.relation.to/2082.lace[enhanced] identifier generators targeting portability in a much different way.
+Starting with version 3.2.3, Hibernate comes with a set of https://in.relation.to/2082.lace[enhanced] identifier generators targeting portability in a much different way.
 
 [NOTE]
 ====
@@ -82,38 +82,27 @@ For example, the `org.hibernate.id.enhanced.SequenceStyleGenerator` mimics the b
 [[portability-functions]]
 === Database functions
 
+HQL now provides a large set of functions which are portable between databases.
+You can find them listed in <<hql-exp-functions,the chapter describing the query language>>.
+There's even a way for a program to contribute its own <<hql-user-defined-functions,function definitions>>.
+
 [WARNING]
-====
-When it comes to database functions, Hibernate could benefit from an improvement.
-
-In terms of portability concerns, the function handling currently works pretty well in HQL, however, it is quite lacking in all other aspects.
-====
-
-SQL functions can be referenced in many ways by users.
-However, not all databases support the same set of functions.
-Hibernate provides a means of mapping a _logical_ function name to a delegate which knows how to render that particular function, perhaps even using a totally different physical function call.
-
-[IMPORTANT]
-====
-Technically the SQL function registration is handled through the `org.hibernate.dialect.function.SQLFunctionRegistry` class which is intended to allow users to provide custom function definitions without having to provide a custom dialect.
-This specific behavior is not fully completed as of yet.
-
-It is sort of implemented such that users can programmatically register functions with the `org.hibernate.cfg.Configuration` and those functions will be recognized for HQL.
-====
+Of course, SQL functions occurring in handwritten SQL fragments or queries usually aren't very portable.
 
 [[portability-types]]
 === Type mappings
 
-TODO: document the following as well
+TODO
 
 [[portability-types-lobs]]
 ==== BLOB/CLOB mappings
 
+TODO
 
 [[portability-types-bool]]
 ==== Boolean mappings
 
-JPA portability
+==== Jakarta Persistence portability
 
 * HQL/JPQL differences
 * naming strategies

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
@@ -15,19 +13,19 @@ package org.hibernate.boot.model.source.spi;
 public interface PluralAttributeElementSourceManyToMany
 		extends PluralAttributeElementSourceAssociation, RelationalValueSourceContainer,
 				ForeignKeyContributingSource, Orderable {
-	public String getReferencedEntityName();
+	String getReferencedEntityName();
 
-	public String getReferencedEntityAttributeName();
+	String getReferencedEntityAttributeName();
 
-	public boolean isIgnoreNotFound();
+	boolean isIgnoreNotFound();
 
-	public String getExplicitForeignKeyName();
+	String getExplicitForeignKeyName();
 
-	public boolean isUnique();
+	boolean isUnique();
 
-	public FilterSource[] getFilterSources();
+	FilterSource[] getFilterSources();
 
-	public String getWhere();
+	String getWhere();
 
-	public FetchCharacteristics getFetchCharacteristics();
+	FetchCharacteristics getFetchCharacteristics();
 }

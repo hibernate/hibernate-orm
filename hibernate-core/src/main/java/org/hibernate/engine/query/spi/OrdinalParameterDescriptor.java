@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.Type;
+import org.hibernate.query.BindableType;
 
 /**
  * Descriptor regarding an ordinal parameter.
@@ -15,7 +13,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public class OrdinalParameterDescriptor extends AbstractParameterDescriptor {
+public class OrdinalParameterDescriptor<T> extends AbstractParameterDescriptor<T> {
 	private final int label;
 	private final int valuePosition;
 
@@ -25,7 +23,7 @@ public class OrdinalParameterDescriptor extends AbstractParameterDescriptor {
 	public OrdinalParameterDescriptor(
 			int label,
 			int valuePosition,
-			Type expectedType,
+			BindableType<T> expectedType,
 			int[] sourceLocations) {
 		super( sourceLocations, expectedType );
 		this.label = label;
@@ -40,4 +38,6 @@ public class OrdinalParameterDescriptor extends AbstractParameterDescriptor {
 	public int getValuePosition() {
 		return valuePosition;
 	}
+
+
 }

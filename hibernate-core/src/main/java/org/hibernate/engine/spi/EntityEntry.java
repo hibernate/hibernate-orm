@@ -1,29 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
- * We need an entry to tell us all about the current state of an object with respect to its persistent state
+ * Information about the current state of a managed entity instance with respect
+ * to its persistent state.
  *
- * Implementation Warning: Hibernate needs to instantiate a high amount of instances of this class,
- * therefore we need to take care of its impact on memory consumption.
+ * @implNote Hibernate instantiates very many of instances of this type,
+ *           and so we need to take care of its impact on memory consumption.
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  */
 public interface EntityEntry {
 	LockMode getLockMode();
@@ -34,13 +36,13 @@ public interface EntityEntry {
 
 	void setStatus(Status status);
 
-	Serializable getId();
+	Object getId();
 
 	Object[] getLoadedState();
 
 	Object getLoadedValue(String propertyName);
 
-	void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection collection);
+	void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection<?> collection);
 
 	Object[] getDeletedState();
 
@@ -50,12 +52,15 @@ public interface EntityEntry {
 
 	Object getVersion();
 
+	void postInsert(Object version);
+
 	EntityPersister getPersister();
 
 	/**
-	 * Get the EntityKey based on this EntityEntry.
-	 * @return the EntityKey
-	 * @throws  IllegalStateException if getId() is null
+	 * Get the {@link EntityKey} for this entry.
+	 *
+	 * @return the {@link EntityKey}
+	 * @throws IllegalStateException if {@link #getId()} is null
 	 */
 	EntityKey getEntityKey();
 
@@ -67,8 +72,8 @@ public interface EntityEntry {
 
 	/**
 	 * Handle updating the internal state of the entry after actually performing
-	 * the database update.  Specifically we update the snapshot information and
-	 * escalate the lock mode
+	 * the database update. Specifically, we update the snapshot information and
+	 * escalate the lock mode.
 	 *
 	 * @param entity The entity instance
 	 * @param updatedState The state calculated after the update (becomes the
@@ -79,42 +84,45 @@ public interface EntityEntry {
 
 	/**
 	 * After actually deleting a row, record the fact that the instance no longer
-	 * exists in the database
+	 * exists in the database.
 	 */
 	void postDelete();
 
 	/**
-	 * After actually inserting a row, record the fact that the instance exists on the
-	 * database (needed for identity-column key generation)
+	 * After actually inserting a row, record the fact that the instance exists
+	 * in the database (needed for identity column key generation).
 	 */
 	void postInsert(Object[] insertedState);
 
 	boolean isNullifiable(boolean earlyInsert, SharedSessionContractImplementor session);
 
 	/**
-	 * Not sure this is the best method name, but the general idea here is to return {@code true} if the entity can
-	 * possibly be dirty.  This can only be the case if it is in a modifiable state (not read-only/deleted) and it
-	 * either has mutable properties or field-interception is not telling us it is dirty.  Clear as mud? :/
-	 *
-	 * A name like canPossiblyBeDirty might be better
+	 * Returns {@code true} if the entity can possibly be dirty. This can only
+	 * be the case if it is in a modifiable state (not read-only nor deleted)
+	 * and it either has mutable properties or field-interception is not telling
+	 * us that it is dirty.
 	 *
 	 * @param entity The entity to test
 	 *
-	 * @return {@code true} indicates that the entity could possibly be dirty and that dirty check
-	 * should happen; {@code false} indicates there is no way the entity can be dirty
+	 * @return {@code true} indicates that the entity could possibly be dirty
+	 *         and that the dirty-check should happen;
+	 *         {@code false} indicates there is no way the entity can be dirty
 	 */
 	boolean requiresDirtyCheck(Object entity);
 
 	/**
 	 * Can the entity be modified?
-	 *
-	 * The entity is modifiable if all of the following are true:
+	 * <p>
+	 * The entity is modifiable if all the following are true:
 	 * <ul>
-	 * <li>the entity class is mutable</li>
-	 * <li>the entity is not read-only</li>
-	 * <li>if the current status is Status.DELETED, then the entity was not read-only when it was deleted</li>
+	 * <li>the entity class is mutable,
+	 * <li>the entity is not read-only, and
+	 * <li>if the current status is {@link Status#DELETED},
+	 *     then the entity was not read-only when it was deleted.
 	 * </ul>
-	 * @return true, if the entity is modifiable; false, otherwise,
+	 *
+	 * @return {@code true}, if the entity is modifiable;
+	 *         {@code false}, otherwise,
 	 */
 	boolean isModifiableEntity();
 
@@ -124,16 +132,27 @@ public interface EntityEntry {
 
 	void setReadOnly(boolean readOnly, Object entity);
 
+	/**
+	 * Has a bit set for every attribute position that is potentially lazy.
+	 * When {@code null}, no knowledge is available and every attribute must be assumed potentially lazy.
+	 */
+	@Internal
+	@Nullable ImmutableBitSet getMaybeLazySet();
+
+	@Internal
+	void setMaybeLazySet(@Nullable ImmutableBitSet maybeLazySet);
+
 	@Override
 	String toString();
 
 	/**
 	 * Custom serialization routine used during serialization of a
-	 * Session/PersistenceContext for increased performance.
+	 * {@code Session}/{@code PersistenceContext} for increased
+	 * performance.
 	 *
 	 * @param oos The stream to which we should write the serial data.
 	 *
-	 * @throws java.io.IOException If a stream error occurs
+	 * @throws IOException If a stream error occurs
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException;
 

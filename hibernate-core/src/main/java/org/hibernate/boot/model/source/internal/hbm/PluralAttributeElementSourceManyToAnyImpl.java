@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -79,7 +77,7 @@ public class PluralAttributeElementSourceManyToAnyImpl
 		this.discriminatorSource = new AnyDiscriminatorSource() {
 			private final HibernateTypeSource discriminatorTypeSource = new HibernateTypeSourceImpl( jaxbManyToAnyMapping.getMetaType() );
 			private final RelationalValueSource discriminatorRelationalValueSource = relationalValueSources.get( 0 );
-			private final Map<String,String> discriminatorValueMapping = new HashMap<String, String>();
+			private final Map<String,String> discriminatorValueMapping = new HashMap<>();
 			{
 				for ( JaxbHbmAnyValueMappingType valueMapping : jaxbManyToAnyMapping.getMetaValue() ) {
 					discriminatorValueMapping.put(

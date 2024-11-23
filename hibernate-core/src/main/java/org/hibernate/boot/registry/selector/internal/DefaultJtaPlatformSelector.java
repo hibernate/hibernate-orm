@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.selector.internal;
 
@@ -116,9 +114,6 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 	/**
 	 * Special case: we have several old fully qualified classnames which need to
 	 * be remapped to their new names for backwards compatibility reasons.
-	 * @param name
-	 * @param defaultJtaPlatformSelector
-	 * @return
 	 */
 	private static Class<? extends JtaPlatform> caseLegacy(
 			final String name,

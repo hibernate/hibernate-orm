@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.testing;
 
 import java.sql.Connection;
@@ -18,6 +15,7 @@ import java.sql.SQLException;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@Deprecated
 public interface NativeSQLStatement {
 
 	/**
@@ -29,7 +27,7 @@ public interface NativeSQLStatement {
 	 *
 	 * @throws SQLException
 	 */
-	public PreparedStatement prepare(Connection connection) throws SQLException;
+	PreparedStatement prepare(Connection connection) throws SQLException;
 
-	public String toString();
+	String toString();
 }

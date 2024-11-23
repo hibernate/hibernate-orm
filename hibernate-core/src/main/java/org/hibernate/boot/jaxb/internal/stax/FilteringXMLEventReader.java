@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
@@ -17,9 +15,9 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
 /**
- * Base class for {@link javax.xml.stream.XMLEventReader}s that want to modify or remove events from the reader stream.
- * If a {@link javax.xml.stream.events.StartElement} event is removed the subclass's {@link #filterEvent(javax.xml.stream.events.XMLEvent, boolean)} will
- * not see any events until after the matching {@link javax.xml.stream.events.EndElement} event.
+ * Base class for {@link XMLEventReader}s that want to modify or remove events from the reader stream.
+ * If a {@link StartElement} event is removed the subclass's {@link #filterEvent(XMLEvent, boolean)} will
+ * not see any events until after the matching {@link EndElement} event.
  *
  * Note, copied from the uPortal project by permission of author.  See
  * https://github.com/Jasig/uPortal/blob/master/uportal-war/src/main/java/org/jasig/portal/xml/stream/FilteringXMLEventReader.java
@@ -27,7 +25,7 @@ import javax.xml.stream.events.XMLEvent;
  * @author Eric Dalquist
  */
 public abstract class FilteringXMLEventReader extends BaseXMLEventReader {
-	private final Deque<QName> prunedElements = new LinkedList<QName>();
+	private final Deque<QName> prunedElements = new LinkedList<>();
 	private XMLEvent peekedEvent;
 
 	public FilteringXMLEventReader(XMLEventReader reader) {

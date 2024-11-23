@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.boot.model.Caching;
 import org.hibernate.boot.model.CustomSql;
 
 /**
@@ -17,52 +14,52 @@ public interface PluralAttributeSource
 				FetchableAttributeSource,
 				CascadeStyleSource {
 
-	public PluralAttributeNature getNature();
+	PluralAttributeNature getNature();
 
-	public CollectionIdSource getCollectionIdSource();
+	CollectionIdSource getCollectionIdSource();
 
-	public PluralAttributeKeySource getKeySource();
+	PluralAttributeKeySource getKeySource();
 
-	public PluralAttributeElementSource getElementSource();
+	PluralAttributeElementSource getElementSource();
 
-	public FilterSource[] getFilterSources();
+	FilterSource[] getFilterSources();
 
-	public TableSpecificationSource getCollectionTableSpecificationSource();
+	TableSpecificationSource getCollectionTableSpecificationSource();
 
-	public String getCollectionTableComment();
+	String getCollectionTableComment();
 
-	public String getCollectionTableCheck();
+	String getCollectionTableCheck();
 
 	/**
 	 * Obtain any additional table names on which to synchronize (auto flushing) this entity.
 	 *
 	 * @return Additional synchronized table names or 0 sized String array, never return null.
 	 */
-	public String[] getSynchronizedTableNames();
+	String[] getSynchronizedTableNames();
 
-	public Caching getCaching();
+	Caching getCaching();
 
-	public String getCustomPersisterClassName();
+	String getCustomPersisterClassName();
 
-	public String getWhere();
+	String getWhere();
 
-	public boolean isInverse();
+	boolean isInverse();
 
-	public boolean isMutable();
+	boolean isMutable();
 
-	public String getCustomLoaderName();
+	String getCustomLoaderName();
 
-	public CustomSql getCustomSqlInsert();
+	CustomSql getCustomSqlInsert();
 
-	public CustomSql getCustomSqlUpdate();
+	CustomSql getCustomSqlUpdate();
 
-	public CustomSql getCustomSqlDelete();
+	CustomSql getCustomSqlDelete();
 
-	public CustomSql getCustomSqlDeleteAll();
+	CustomSql getCustomSqlDeleteAll();
 
-	public String getMappedBy();
+	String getMappedBy();
 
-	public boolean usesJoinTable();
+	boolean usesJoinTable();
 
 	@Override
 	FetchCharacteristicsPluralAttribute getFetchCharacteristics();

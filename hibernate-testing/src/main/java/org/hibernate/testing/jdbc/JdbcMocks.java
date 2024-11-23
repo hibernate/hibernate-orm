@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jdbc;
 
@@ -15,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole
@@ -37,7 +34,7 @@ public class JdbcMocks {
 		private boolean supportsBatchUpdates = true;
 		private boolean dataDefinitionIgnoredInTransactions = false;
 		private boolean dataDefinitionCausesTransactionCommit = false;
-		private String sqlKeywords = String.join( ",", AnsiSqlKeywords.INSTANCE.sql2003() );
+		private String sqlKeywords = String.join( ",", new AnsiSqlKeywords().sql2003() );
 		private int sqlStateType = DatabaseMetaData.sqlStateXOpen;
 		private boolean locatorsUpdateCopy = false;
 		private boolean storesLowerCaseIdentifiers = true;
@@ -334,6 +331,14 @@ public class JdbcMocks {
 			}
 		}
 		return false;
+	}
+
+	public static class PreparedStatementHandler implements InvocationHandler {
+
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			return null;
+		}
 	}
 
 	public static class EmptyResultSetHandler implements InvocationHandler {

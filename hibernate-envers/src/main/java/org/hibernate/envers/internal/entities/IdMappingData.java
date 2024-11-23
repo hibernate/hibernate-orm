@@ -1,40 +1,37 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities;
 
+import org.hibernate.envers.boot.model.Identifier;
+import org.hibernate.envers.boot.model.IdentifierRelation;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
-
-import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class IdMappingData {
 	private final IdMapper idMapper;
-	// Mapping which will be used to generate the entity
-	private final Element xmlMapping;
-	// Mapping which will be used to generate references to the entity in related entities
-	private final Element xmlRelationMapping;
+	private final Identifier identifier;
+	private final IdentifierRelation relation;
 
-	public IdMappingData(IdMapper idMapper, Element xmlMapping, Element xmlRelationMapping) {
-		this.idMapper = idMapper;
-		this.xmlMapping = xmlMapping;
-		this.xmlRelationMapping = xmlRelationMapping;
+	public IdMappingData(IdMapper mapper, Identifier identifier, IdentifierRelation relation) {
+		this.idMapper = mapper;
+		this.identifier = identifier;
+		this.relation = relation;
 	}
 
 	public IdMapper getIdMapper() {
 		return idMapper;
 	}
 
-	public Element getXmlMapping() {
-		return xmlMapping;
+	public Identifier getIdentifier() {
+		return identifier;
 	}
 
-	public Element getXmlRelationMapping() {
-		return xmlRelationMapping;
+	public IdentifierRelation getRelation() {
+		return relation;
 	}
 }

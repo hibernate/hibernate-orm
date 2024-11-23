@@ -1,0 +1,106 @@
+= Logging design
+
+== "System"-specific Loggers
+
+The basic idea here is to group log messages into a more logical hierarchy of Logger names for
+the purpose of filtering.
+
+E.g. "org.hibernate.orm.model.mapping" is one such system we define for the purpose of
+grouping hierarchy of loggers names related to specific aspects of the mapping model:
+
+----
+* org.hibernate.orm.model.mapping
+|- * org.hibernate.orm.model.mapping.creation
+\- * org.hibernate.orm.model.mapping....
+----
+
+Just like with normal log filtering, here we'd use these system names in the underlying logger config.
+
+E.g., in our test-suite we've found the following log4j pattern to be great for these systems:
+
+----
+...
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}(%C{1}:%L) - %m%n
+
+log4j.logger.org.hibernate.orm.model.mapping.creation=trace
+...
+----
+
+An example of output:
+
+----
+09:45:34,713 DEBUG creation(MappingModelCreationProcess:76) - Starting generic post-init callbacks
+09:45:34,713 DEBUG creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : EmbeddableMappingType builder : org.hibernate.type.EmbeddedComponentType@69b2f8e5
+09:45:34,714 DEBUG creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : Static fetchable list builder : org.hibernate.test.ecid.CompositeIdAssociationsWithEmbeddedCompositeIdTest$Parent
+----
+
+The pattern could use `%c` rather than `%c{1}`.  That approach is much nicer for these system-based names.  However,
+that would be verbose with the more normal pattern of using class name for logger name.
+
+As an example output:
+
+----
+09:45:34,713 DEBUG org.hibernate.orm.model.mapping.creation(MappingModelCreationProcess:76) - Starting generic post-init callbacks
+09:45:34,713 DEBUG org.hibernate.orm.model.mapping.creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : EmbeddableMappingType builder : org.hibernate.type.EmbeddedComponentType@69b2f8e5
+09:45:34,714 DEBUG org.hibernate.orm.model.mapping.creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : Static fetchable list builder : org.hibernate.test.ecid.CompositeIdAssociationsWithEmbeddedCompositeIdTest$Parent
+----
+
+Typically, a class would be created for each system to hold a shared reference to a singleton Logger instance as
+well as some helper info such as whether DEBUG or TRACE are enabled.  E.g.:
+
+[source,java]
+----
+@MessageLogger( projectCode = "HHH" )
+@ValidIdRange( min = 90005701, max = 90005800 )
+public interface MappingModelCreationLogger extends BasicLogger {
+	String LOGGER_NAME = "org.hibernate.orm.model.mapping.creation";
+
+	MappingModelCreationLogger LOGGER = Logger.getMessageLogger( MappingModelCreationLogger.class, LOGGER_NAME );
+
+	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
+}
+----
+
+== Sub-system logging registry
+
+[width="50%",cols=">s,>s,^2m",options="header"]
+|===
+|Channel (category)
+|Id Range (?)
+|Purpose
+
+
+|[[connections-pooling]]org.hibernate.orm.connections.pooling
+|<<ConnectionInfoLogger>>
+|Logging related to connections and connection pooling
+
+|org.hibernate.orm.boot
+|n/a
+|Logging related to bootstrapping of a SessionFactory / EntityManagerFactory
+
+|===
+
+
+== MessageLogger id registry
+
+[width="50%",cols=">s,>s,^2m,^2m",options="header"]
+|===
+|`ValidIdRange#min`
+|`ValidIdRange#max`
+|Logger
+|Sub-system (?)
+
+
+|[[ConnectionInfoLogger]]10001001
+|10001500
+|org.hibernate.internal.log.ConnectionInfoLogger
+| <<connections-pooling>>
+
+|1
+|2
+|org.hibernate.TheLogger
+|n/a
+
+|===

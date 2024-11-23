@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.classloading.spi;
 
@@ -12,6 +10,8 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.boot.ResourceLocator;
+import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Stoppable;
 
@@ -20,7 +20,7 @@ import org.hibernate.service.spi.Stoppable;
  *
  * @author Steve Ebersole
  */
-public interface ClassLoaderService extends Service, Stoppable {
+public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocator, Service, Stoppable {
 	/**
 	 * Locate a class by name.
 	 *
@@ -32,6 +32,21 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 * @throws ClassLoadingException Indicates the class could not be found
 	 */
 	<T> Class<T> classForName(String className);
+
+	@SuppressWarnings("unchecked")
+	default <T> Class<T> classForTypeName(String className) {
+		return (Class<T>) switch ( className ) {
+			case "boolean" -> boolean.class;
+			case "byte" -> byte.class;
+			case "char" -> char.class;
+			case "short" -> short.class;
+			case "int" -> int.class;
+			case "float" -> float.class;
+			case "long" -> long.class;
+			case "double" -> double.class;
+			default -> classForName( className );
+		};
+	}
 
 	/**
 	 * Locate a resource by name (classpath lookup).
@@ -62,31 +77,26 @@ public interface ClassLoaderService extends Service, Stoppable {
 
 	/**
 	 * Discovers and instantiates implementations of the named service contract.
-	 * <p/>
-	 * NOTE : the terms service here is used differently than {@link Service}.  Instead here we are talking about
-	 * services as defined by {@link java.util.ServiceLoader}.
+	 *
+	 * @apiNote The term "service" here does not refer to a {@link Service}.
+	 *          Here it refers to a Java {@link java.util.ServiceLoader}.
 	 *
 	 * @param serviceContract The java type defining the service contract
 	 * @param <S> The type of the service contract
-	 *     
+	 *
 	 * @return The ordered set of discovered services.
+	 *
+	 * @see org.hibernate.service.JavaServiceLoadable
 	 */
 	<S> Collection<S> loadJavaServices(Class<S> serviceContract);
 
-	<T> T generateProxy(InvocationHandler handler, Class... interfaces);
+	<T> T generateProxy(InvocationHandler handler, Class<?>... interfaces);
 
 	/**
-	 * Loading a Package from the classloader. In case it's not found or an
-	 * internal error (such as @see {@link LinkageError} occurs, we
-	 * return null rather than throwing an exception.
-	 * This is significantly different than loading a Class, as in all
-	 * currently known usages, being unable to load the Package will
-	 * only result in ignoring annotations on it - which is totally
-	 * fine when the object doesn't exist.
-	 * In case of other errors, implementations are expected to log
-	 * a warning but it's still not treated as a fatal error.
-	 * @param packageName
-	 * @return the matching Package, or null.
+	 * Loading a Package from the ClassLoader.
+	 *
+	 * @return The Package.  {@code null} if no such Package is found, or if the
+	 * ClassLoader call leads to an exception ({@link LinkageError}, e.g.).
 	 */
 	Package packageForNameOrNull(String packageName);
 

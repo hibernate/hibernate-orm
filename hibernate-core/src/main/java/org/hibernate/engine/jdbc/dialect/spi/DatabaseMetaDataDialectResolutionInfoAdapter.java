@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.spi;
 
@@ -10,9 +8,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 /**
- * An implementation of DialectResolutionInfo that delegates calls to a wrapped {@link DatabaseMetaData}.
- * <p/>
- * All {@link SQLException}s resulting from calls on the DatabaseMetaData are converted to the Hibernate
+ * An implementation of {@link DialectResolutionInfo} that delegates calls to a wrapped {@link DatabaseMetaData}.
+ * <p>
+ * All {@link SQLException}s resulting from calls on the {@link DatabaseMetaData} are converted to the Hibernate
  * {@link org.hibernate.JDBCException} hierarchy.
  *
  * @author Steve Ebersole
@@ -28,6 +26,16 @@ public class DatabaseMetaDataDialectResolutionInfoAdapter implements DialectReso
 	public String getDatabaseName() {
 		try {
 			return databaseMetaData.getDatabaseProductName();
+		}
+		catch (SQLException e) {
+			throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+		}
+	}
+
+	@Override
+	public String getDatabaseVersion() {
+		try {
+			return databaseMetaData.getDatabaseProductVersion();
 		}
 		catch (SQLException e) {
 			throw BasicSQLExceptionConverter.INSTANCE.convert( e );
@@ -76,5 +84,25 @@ public class DatabaseMetaDataDialectResolutionInfoAdapter implements DialectReso
 	@Override
 	public int getDriverMinorVersion() {
 		return interpretVersion( databaseMetaData.getDriverMinorVersion() );
+	}
+
+	@Override
+	public String getSQLKeywords() {
+		try {
+			return databaseMetaData.getSQLKeywords();
+		}
+		catch (SQLException e) {
+			throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+		}
+	}
+
+	@Override
+	public DatabaseMetaData getDatabaseMetadata() {
+		return databaseMetaData;
+	}
+
+	@Override
+	public String toString() {
+		return getMajor() + "." + getMinor();
 	}
 }

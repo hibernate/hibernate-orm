@@ -1,22 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.mapper.AbstractMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * The base abstract class implementation for identifier mappers.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public abstract class AbstractIdMapper implements IdMapper {
+public abstract class AbstractIdMapper extends AbstractMapper implements IdMapper {
 	private final ServiceRegistry serviceRegistry;
 
 	public AbstractIdMapper(ServiceRegistry serviceRegistry) {
@@ -56,6 +58,29 @@ public abstract class AbstractIdMapper implements IdMapper {
 
 	@Override
 	public void addIdsEqualToQuery(Parameters parameters, String prefix1, IdMapper mapper2, String prefix2) {
+		final List<QueryParameterData> paramDatas1 = mapToQueryParametersFromId( null );
+		final List<QueryParameterData> paramDatas2 = mapper2.mapToQueryParametersFromId( null );
+
+		final Parameters parametersToUse = getParametersToUse( parameters, paramDatas1 );
+
+		final Iterator<QueryParameterData> paramDataIter1 = paramDatas1.iterator();
+		final Iterator<QueryParameterData> paramDataIter2 = paramDatas2.iterator();
+		while ( paramDataIter1.hasNext() ) {
+			final QueryParameterData paramData1 = paramDataIter1.next();
+			final QueryParameterData paramData2 = paramDataIter2.next();
+
+			parametersToUse.addWhere(
+					paramData1.getProperty( prefix1 ),
+					false,
+					"=",
+					paramData2.getProperty( prefix2 ),
+					false
+			);
+		}
+	}
+
+	@Override
+	public void addNullableIdsEqualToQuery(Parameters parameters, String prefix1, IdMapper mapper2, String prefix2) {
 		final List<QueryParameterData> paramDatas1 = mapToQueryParametersFromId( null );
 		final List<QueryParameterData> paramDatas2 = mapper2.mapToQueryParametersFromId( null );
 
@@ -137,6 +162,20 @@ public abstract class AbstractIdMapper implements IdMapper {
 					paramData2.getQueryParameterName()
 			);
 		}
+	}
+
+	public abstract void mapToEntityFromEntity(Object objectTo, Object objectFrom);
+
+	protected <T> T getValueFromObject(PropertyData propertyData, Object object) {
+		return getValueFromObject( propertyData, object, getServiceRegistry() );
+	}
+
+	protected void setValueOnObject(PropertyData propertyData, Object object, Object value) {
+		setValueOnObject( propertyData, object, value, getServiceRegistry() );
+	}
+
+	protected void getAndSetValue(PropertyData propertyData, Object source, Object destination) {
+		getAndSetValue( propertyData, source, destination, getServiceRegistry() );
 	}
 
 	private void handleNullValue(Parameters parameters, String alias, String propertyName, boolean equals) {

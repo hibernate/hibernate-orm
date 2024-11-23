@@ -1,0 +1,25 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.xml.column.transform</package>
+    <entity class="Item" metadata-complete="true" access="FIELD">
+        <table name="items"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <basic name="cost">
+                <column>
+                    <read>cost / 100.00</read>
+                    <write>? * 100.00</write>
+                </column>
+                <jdbc-type-code>2</jdbc-type-code>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

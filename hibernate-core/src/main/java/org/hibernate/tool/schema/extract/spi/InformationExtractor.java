@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.spi;
 
@@ -16,7 +14,7 @@ import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
  * from {@link java.sql.DatabaseMetaData} since on many databases there are better ways to get information from
  * the meta schema.
  *
- * NOTE : Concepts here taken largely from the {@code MetaDataDialect} class in Hibernate Tools.
+ * @apiNote Concepts here taken largely from the {@code MetaDataDialect} class in Hibernate Tools.
  *
  * @author Steve Ebersole
  */
@@ -33,7 +31,7 @@ public interface InformationExtractor {
 	boolean catalogExists(Identifier catalog);
 
 	/**
-	 * The the given schema exist yet?
+	 * Does the given schema exist yet?
 	 *
 	 * @param catalog The name of the catalog to look in.
 	 * @param schema The name of the schema to look for.

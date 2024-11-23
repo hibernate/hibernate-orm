@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.internal;
 
@@ -28,29 +26,30 @@ import org.hibernate.persister.spi.UnknownPersisterException;
 public class StandardPersisterClassResolver implements PersisterClassResolver {
 
 	@Override
-	public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata) {
-		// todo : make sure this is based on an attribute kept on the metamodel in the new code, not the concrete PersistentClass impl found!
-		if ( RootClass.class.isInstance( metadata ) ) {
-			if ( metadata.hasSubclasses() ) {
+	public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass model) {
+		// todo : make sure this is based on an attribute kept on the metamodel in the new code,
+		//        not the concrete PersistentClass impl found!
+		if ( model instanceof RootClass ) {
+			if ( model.hasSubclasses() ) {
 				//If the class has children, we need to find of which kind
-				metadata = (PersistentClass) metadata.getDirectSubclasses().next();
+				model = model.getDirectSubclasses().get(0);
 			}
 			else {
 				return singleTableEntityPersister();
 			}
 		}
-		if ( JoinedSubclass.class.isInstance( metadata ) ) {
+		if ( model instanceof JoinedSubclass ) {
 			return joinedSubclassEntityPersister();
 		}
-		else if ( UnionSubclass.class.isInstance( metadata ) ) {
+		else if ( model instanceof UnionSubclass ) {
 			return unionSubclassEntityPersister();
 		}
-		else if ( SingleTableSubclass.class.isInstance( metadata ) ) {
+		else if ( model instanceof SingleTableSubclass ) {
 			return singleTableEntityPersister();
 		}
 		else {
 			throw new UnknownPersisterException(
-					"Could not determine persister implementation for entity [" + metadata.getEntityName() + "]"
+					"Could not determine persister implementation for entity [" + model.getEntityName() + "]"
 			);
 		}
 	}

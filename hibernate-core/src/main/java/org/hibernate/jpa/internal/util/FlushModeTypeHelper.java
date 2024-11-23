@@ -1,23 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
 
 
 import java.util.Locale;
-import javax.persistence.FlushModeType;
+import jakarta.persistence.FlushModeType;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.MappingException;
 
 import org.jboss.logging.Logger;
 
 /**
- * Helper to deal with {@link FlushModeType} <-> {@link org.hibernate.FlushMode} conversions.
+ * Helper to deal with conversions between {@link FlushModeType} and {@link FlushMode}.
  *
  * @author Steve Ebersole
  */
@@ -28,51 +26,73 @@ public class FlushModeTypeHelper {
 	}
 
 	public static FlushModeType getFlushModeType(FlushMode flushMode) {
-		if ( flushMode == FlushMode.ALWAYS ) {
-			log.debug( "Interpreting Hibernate FlushMode#ALWAYS to JPA FlushModeType#AUTO; may cause problems if relying on FlushMode#ALWAYS-specific behavior" );
-			return FlushModeType.AUTO;
+		if ( flushMode == null ) {
+			return null;
 		}
-		else if ( flushMode == FlushMode.MANUAL ) {
-			log.debug( "Interpreting Hibernate FlushMode#MANUAL to JPA FlushModeType#COMMIT; may cause problems if relying on FlushMode#MANUAL-specific behavior" );
-			return FlushModeType.COMMIT;
-		}
-		else if ( flushMode == FlushMode.COMMIT ) {
-			return FlushModeType.COMMIT;
-		}
-		else if ( flushMode == FlushMode.AUTO ) {
-			return FlushModeType.AUTO;
-		}
+		return switch (flushMode) {
+			case ALWAYS -> {
+				log.debug("Interpreting Hibernate FlushMode.ALWAYS as JPA FlushModeType.AUTO (may cause problems if relying on FlushMode.ALWAYS-specific behavior)");
+				yield FlushModeType.AUTO;
+			}
+			case MANUAL -> {
+				log.debug("Interpreting Hibernate FlushMode.MANUAL as JPA FlushModeType.COMMIT (may cause problems if relying on FlushMode.MANUAL-specific behavior)");
+				yield FlushModeType.COMMIT;
+			}
+			case COMMIT -> FlushModeType.COMMIT;
+			case AUTO -> FlushModeType.AUTO;
+		};
+	}
 
-		throw new AssertionFailure( "unhandled FlushMode " + flushMode );
+	public static QueryFlushMode getForcedFlushMode(FlushMode flushMode) {
+		if ( flushMode == null ) {
+			return QueryFlushMode.DEFAULT;
+		}
+		return switch (flushMode) {
+			case ALWAYS -> QueryFlushMode.FLUSH;
+			case COMMIT, MANUAL -> QueryFlushMode.NO_FLUSH;
+			case AUTO ->
+				// this is not precisely correctly correct, but good enough
+					QueryFlushMode.DEFAULT;
+		};
 	}
 
 	public static FlushMode getFlushMode(FlushModeType flushModeType) {
-		if ( flushModeType == FlushModeType.AUTO ) {
-			return FlushMode.AUTO;
+		if ( flushModeType == null ) {
+			return null;
 		}
-		else if ( flushModeType == FlushModeType.COMMIT ) {
-			return FlushMode.COMMIT;
-		}
+		return switch (flushModeType) {
+			case AUTO -> FlushMode.AUTO;
+			case COMMIT -> FlushMode.COMMIT;
+		};
+	}
 
-		throw new AssertionFailure( "unhandled FlushModeType " + flushModeType );
+	public static FlushMode getFlushMode(QueryFlushMode queryFlushMode) {
+		if ( queryFlushMode == null ) {
+			return null;
+		}
+		return switch (queryFlushMode) {
+			case FLUSH -> FlushMode.ALWAYS;
+			case NO_FLUSH -> FlushMode.MANUAL;
+			default -> null;
+		};
 	}
 
 	public static FlushMode interpretFlushMode(Object value) {
 		if ( value == null ) {
 			return FlushMode.AUTO;
 		}
-		if ( FlushMode.class.isInstance( value ) ) {
-			return (FlushMode) value;
+		if ( value instanceof FlushMode flushMode ) {
+			return flushMode;
 		}
-		else if ( FlushModeType.class.isInstance( value ) ) {
-			return getFlushMode( (FlushModeType) value );
+		else if ( value instanceof FlushModeType flushModeType ) {
+			return getFlushMode( flushModeType );
 		}
-		else if ( String.class.isInstance( value ) ) {
-			return interpretExternalSetting( (String) value );
+		else if ( value instanceof String string ) {
+			return interpretExternalSetting( string );
 		}
-
-		throw new IllegalArgumentException( "Unknown FlushMode source : " + value );
-
+		else {
+			throw new IllegalArgumentException( "Unknown FlushMode source : " + value );
+		}
 	}
 
 	public static FlushMode interpretExternalSetting(String externalName) {
@@ -81,11 +101,11 @@ public class FlushModeTypeHelper {
 		}
 
 		try {
-			log.debug( "Attempting to interpret external setting [" + externalName + "] as FlushMode name" );
+			log.debugf( "Attempting to interpret external setting [%s] as FlushMode name", externalName );
 			return FlushMode.valueOf( externalName.toUpperCase( Locale.ROOT) );
 		}
 		catch ( IllegalArgumentException e ) {
-			log.debug( "Attempting to interpret external setting [" + externalName + "] as FlushModeType name" );
+			log.debugf( "Attempting to interpret external setting [%s] as FlushModeType name", externalName );
 		}
 
 		try {

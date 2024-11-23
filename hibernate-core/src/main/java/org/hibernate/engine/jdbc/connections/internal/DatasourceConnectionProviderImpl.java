@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
@@ -12,21 +10,28 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
 
+import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
+
 /**
- * A {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} that manages connections from an underlying {@link DataSource}.
- * <p/>
+ * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
+ * <p>
  * The {@link DataSource} to use may be specified by either:<ul>
- * <li>injection via {@link #setDataSource}</li>
- * <li>declaring the {@link DataSource} instance using the {@link Environment#DATASOURCE} config property</li>
- * <li>declaring the JNDI name under which the {@link DataSource} can be found via {@link Environment#DATASOURCE} config property</li>
+ * <li>injection using {@link #setDataSource},
+ * <li>passing the {@link DataSource} instance using {@value JdbcSettings#DATASOURCE},
+ *     {@value JdbcSettings#JAKARTA_JTA_DATASOURCE}, or {@value JdbcSettings#JAKARTA_NON_JTA_DATASOURCE}, or
+ * <li>declaring the JNDI name under which the {@link DataSource} is found via {@value JdbcSettings#DATASOURCE},
+ *     {@value JdbcSettings#JAKARTA_JTA_DATASOURCE}, or {@value JdbcSettings#JAKARTA_NON_JTA_DATASOURCE}.
  * </ul>
  *
  * @author Gavin King
@@ -38,6 +43,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	private String pass;
 	private boolean useCredentials;
 	private JndiService jndiService;
+	private String dataSourceJndiName;
 
 	private boolean available;
 
@@ -50,23 +56,23 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@InjectService( required = false )
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public void setJndiService(JndiService jndiService) {
 		this.jndiService = jndiService;
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
-		return ConnectionProvider.class.equals( unwrapType ) ||
-				DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ||
-				DataSource.class.isAssignableFrom( unwrapType );
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
+		return ConnectionProvider.class.equals( unwrapType )
+			|| DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType )
+			|| DataSource.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+		if ( ConnectionProvider.class.equals( unwrapType )
+				|| DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
 		}
 		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
@@ -78,32 +84,33 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@Override
-	public void configure(Map configValues) {
-		if ( this.dataSource == null ) {
-			final Object dataSource = configValues.get( Environment.DATASOURCE );
-			if ( DataSource.class.isInstance( dataSource ) ) {
-				this.dataSource = (DataSource) dataSource;
+	public void configure(Map<String, Object> configValues) {
+		if ( dataSource == null ) {
+			final Object dataSourceSetting = configValues.get( DATASOURCE );
+			if ( dataSourceSetting instanceof DataSource ) {
+				dataSource = (DataSource) dataSourceSetting;
 			}
 			else {
-				final String dataSourceJndiName = (String) dataSource;
+				final String dataSourceJndiName = (String) dataSourceSetting;
 				if ( dataSourceJndiName == null ) {
 					throw new HibernateException(
-							"DataSource to use was not injected nor specified by [" + Environment.DATASOURCE
+							"DataSource to use was not injected nor specified by [" + DATASOURCE
 									+ "] configuration property"
 					);
 				}
+				this.dataSourceJndiName = dataSourceJndiName;
 				if ( jndiService == null ) {
 					throw new HibernateException( "Unable to locate JndiService to lookup Datasource" );
 				}
-				this.dataSource = (DataSource) jndiService.locate( dataSourceJndiName );
+				dataSource = (DataSource) jndiService.locate( dataSourceJndiName );
 			}
 		}
-		if ( this.dataSource == null ) {
+		if ( dataSource == null ) {
 			throw new HibernateException( "Unable to determine appropriate DataSource to use" );
 		}
 
-		user = (String) configValues.get( Environment.USER );
-		pass = (String) configValues.get( Environment.PASS );
+		user = (String) configValues.get( AvailableSettings.USER );
+		pass = (String) configValues.get( AvailableSettings.PASS );
 		useCredentials = user != null || pass != null;
 		available = true;
 	}
@@ -117,7 +124,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public Connection getConnection() throws SQLException {
 		if ( !available ) {
-			throw new HibernateException( "Provider is closed!" );
+			throw new HibernateException( "Provider is closed" );
 		}
 		return useCredentials ? dataSource.getConnection( user, pass ) : dataSource.getConnection();
 	}
@@ -130,5 +137,25 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return true;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				null,
+				null,
+				dialect.getVersion(),
+				null,
+				null,
+				null,
+				null
+		) {
+			@Override
+			public String toInfoString() {
+				return dataSourceJndiName != null
+						? "\tDatasource JNDI name [" + dataSourceJndiName + "]"
+						: "\tProvided DataSource";
+			}
+		};
 	}
 }

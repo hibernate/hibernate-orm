@@ -1,22 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Implementation of FilterImpl.  FilterImpl implements the user's
@@ -28,9 +30,13 @@ public class FilterImpl implements Filter, Serializable {
 	public static final String MARKER = "$FILTER_PLACEHOLDER$";
 
 	private transient FilterDefinition definition;
-	private String filterName;
-	private Map<String,Object> parameters = new HashMap<>();
-	
+	private final String filterName;
+	//Lazily initialized!
+	//Note that ordering is important for cache keys
+	private @Nullable TreeMap<String,Object> parameters;
+	private final boolean autoEnabled;
+	private final boolean applyToLoadByKey;
+
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
 		validate();
@@ -44,6 +50,8 @@ public class FilterImpl implements Filter, Serializable {
 	public FilterImpl(FilterDefinition configuration) {
 		this.definition = configuration;
 		filterName = definition.getFilterName();
+		this.autoEnabled = definition.isAutoEnabled();
+		this.applyToLoadByKey = definition.isAppliedToLoadByKey();
 	}
 
 	public FilterDefinition getFilterDefinition() {
@@ -58,9 +66,29 @@ public class FilterImpl implements Filter, Serializable {
 	public String getName() {
 		return definition.getFilterName();
 	}
-	
+
+	/**
+	 * Get a flag that defines if the filter should be enabled by default.
+	 *
+	 * @return The flag value.
+	 */
+	public boolean isAutoEnabled() {
+		return autoEnabled;
+	}
+
+
+	/**
+	 * Get a flag that defines if the filter should be applied
+	 * on direct fetches or not.
+	 *
+	 * @return The flag value.
+	 */
+	public boolean isAppliedToLoadByKey() {
+		return applyToLoadByKey;
+	}
+
 	public Map<String,?> getParameters() {
-		return parameters;
+		return parameters == null ? Collections.emptyMap() : Collections.unmodifiableMap( parameters );
 	}
 
 	/**
@@ -73,16 +101,21 @@ public class FilterImpl implements Filter, Serializable {
 	 * of the passed value did not match the configured type.
 	 */
 	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
+		final Object argument = definition.processArgument( value );
+
 		// Make sure this is a defined parameter and check the incoming value type
-		// TODO: what should be the actual exception type here?
-		Type type = definition.getParameterType( name );
+		final JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
-			throw new IllegalArgumentException( "Undefined filter parameter [" + name + "]" );
+			throw new IllegalArgumentException( "Undefined filter parameter '" + name + "'" );
 		}
-		if ( value != null && !type.getReturnedClass().isAssignableFrom( value.getClass() ) ) {
-			throw new IllegalArgumentException( "Incorrect type for parameter [" + name + "]" );
+		if ( argument != null && !type.getJavaTypeDescriptor().isInstance( argument ) ) {
+			throw new IllegalArgumentException( "Argument assigned to filter parameter '" + name
+					+ "' is not of type '" + type.getJavaTypeDescriptor().getTypeName() + "'" );
 		}
-		parameters.put( name, value );
+		if ( parameters == null ) {
+			parameters = new TreeMap<>();
+		}
+		parameters.put( name, argument );
 		return this;
 	}
 
@@ -94,20 +127,24 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Collection values) throws HibernateException  {
+	public Filter setParameterList(String name, Collection<?> values) throws HibernateException  {
 		// Make sure this is a defined parameter and check the incoming value type
 		if ( values == null ) {
-			throw new IllegalArgumentException( "Collection must be not null!" );
+			throw new IllegalArgumentException( "Collection must be not null" );
 		}
-		Type type = definition.getParameterType( name );
+		final JdbcMapping type = definition.getParameterJdbcMapping( name );
 		if ( type == null ) {
-			throw new HibernateException( "Undefined filter parameter [" + name + "]" );
+			throw new HibernateException( "Undefined filter parameter '" + name + "'" );
 		}
 		if ( !values.isEmpty() ) {
-			Class elementClass = values.iterator().next().getClass();
-			if ( !type.getReturnedClass().isAssignableFrom( elementClass ) ) {
-				throw new HibernateException( "Incorrect type for parameter [" + name + "]" );
+			final Object element = values.iterator().next();
+			if ( !type.getJavaTypeDescriptor().isInstance( element ) ) {
+				throw new IllegalArgumentException( "Argument assigned to filter parameter '" + name
+						+ "' is not of type '" + type.getJavaTypeDescriptor().getTypeName() + "'" );
 			}
+		}
+		if ( parameters == null ) {
+			parameters = new TreeMap<>();
 		}
 		parameters.put( name, values );
 		return this;
@@ -132,7 +169,11 @@ public class FilterImpl implements Filter, Serializable {
 	 * @return The value of the named parameter.
 	 */
 	public Object getParameter(String name) {
-		return parameters.get( name );
+		return parameters == null ? null : parameters.get( name );
+	}
+
+	public Supplier<?> getParameterResolver(String name) {
+		return definition.getParameterResolver(name);
 	}
 
 	/**
@@ -142,15 +183,35 @@ public class FilterImpl implements Filter, Serializable {
 	 * @throws HibernateException If the state is not currently valid.
 	 */
 	public void validate() throws HibernateException {
-		// for each of the defined parameters, make sure its value
-		// has been set
-
+		// for each of the defined parameters, make sure its argument
+		// has been set or a resolver has been implemented and specified
 		for ( final String parameterName : definition.getParameterNames() ) {
-			if ( parameters.get( parameterName ) == null ) {
-				throw new HibernateException(
-						"Filter [" + getName() + "] parameter [" + parameterName + "] value not set"
-				);
+			if ( !hasArgument(parameterName) && !hasResolver(parameterName)) {
+				throw new HibernateException( "Filter parameter '" + getName()
+						+ "' has neither an argument nor a resolver" );
 			}
+		}
+	}
+
+	private boolean hasResolver(String parameterName) {
+		final Supplier<?> resolver = getParameterResolver(parameterName);
+		return resolver != null
+			&& !resolver.getClass().isInterface();
+	}
+
+	private boolean hasArgument(String parameterName) {
+		return parameters != null && parameters.containsKey(parameterName);
+	}
+
+	@Override
+	public Object getParameterValue(String paramName) {
+		final Object value = getParameter( paramName );
+		if ( value != null ) {
+			return value;
+		}
+		else {
+			final Supplier<?> filterParamResolver = getParameterResolver( paramName );
+			return filterParamResolver == null ? null : filterParamResolver.get();
 		}
 	}
 }

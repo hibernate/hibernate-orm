@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.MappingException;
+import org.hibernate.envers.boot.EnversMappingException;
 
 /**
  * A register of all audit entity names used so far.
@@ -35,7 +33,7 @@ public class AuditEntityNameRegister {
 	 */
 	public void register(String auditEntityName) {
 		if ( auditEntityNames.contains( auditEntityName ) ) {
-			throw new MappingException( "The audit entity name '" + auditEntityName + "' is already registered." );
+			throw new EnversMappingException( "The audit entity name '" + auditEntityName + "' is already registered." );
 		}
 
 		auditEntityNames.add( auditEntityName );

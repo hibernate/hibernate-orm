@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.event.spi;
 
@@ -17,6 +15,7 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
+import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
@@ -152,7 +151,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			final boolean isInverse = collectionEntry.getLoadedPersister().isInverse();
 			final boolean isOneToMany = collectionEntry.getLoadedPersister() instanceof OneToManyPersister;
 			if ( isInverse || isOneToMany ) {
-				return getEnversService().getGlobalConfiguration().isGenerateRevisionsForCollections();
+				return getEnversService().getConfig().isGenerateRevisionsForCollections();
 			}
 			return true;
 		}
@@ -197,17 +196,17 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			AbstractCollectionEvent event,
 			RelationDescription rd) {
 		// First computing the relation changes
-		final List<PersistentCollectionChangeData> collectionChanges = getEnversService()
+		final ExtendedPropertyMapper propertyMapper = getEnversService()
 				.getEntitiesConfigurations()
 				.get( collectionEntityName )
-				.getPropertyMapper()
-				.mapCollectionChanges(
-						event.getSession(),
-						referencingPropertyName,
-						newColl,
-						oldColl,
-						event.getAffectedOwnerIdOrNull()
-				);
+				.getPropertyMapper();
+		final List<PersistentCollectionChangeData> collectionChanges = propertyMapper.mapCollectionChanges(
+				event.getSession(),
+				referencingPropertyName,
+				newColl,
+				oldColl,
+				event.getAffectedOwnerIdOrNull()
+		);
 
 		// Getting the id mapper for the related entity, as the work units generated will correspond to the related
 		// entities.
@@ -219,7 +218,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			final Object relatedObj = changeData.getChangedElement();
 			final Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity( relatedObj );
 			final RevisionType revType = (RevisionType) changeData.getData().get(
-					getEnversService().getAuditEntitiesConfiguration().getRevisionTypePropName()
+					getEnversService().getConfig().getRevisionTypePropertyName()
 			);
 
 			// This can be different from relatedEntityName, in case of inheritance (the real entity may be a subclass
@@ -271,7 +270,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			PersistentCollectionChangeWorkUnit workUnit,
 			RelationDescription rd) {
 		// Checking if this is enabled in configuration ...
-		if ( !getEnversService().getGlobalConfiguration().isGenerateRevisionsForCollections() ) {
+		if ( !getEnversService().getConfig().isGenerateRevisionsForCollections() ) {
 			return;
 		}
 

@@ -1,30 +1,46 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.spatial.dialect.hana;
 
-import static java.lang.String.format;
-
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import jakarta.persistence.Query;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.integration.TestSpatialFunctions;
+import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.spatial.testing.dialects.hana.HANAExpectationsFactory;
+
 import org.hibernate.testing.RequiresDialect;
-import org.jboss.logging.Logger;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKBWriter;
 import org.locationtech.jts.io.WKTWriter;
 
+import static java.lang.String.format;
+//TODO - see what tests are still needed, when we update/fix the HANA spatial support
 @RequiresDialect(value = HANASpatialDialect.class, comment = "This test tests the HANA spatial functions not covered by Hibernate Spatial", jiraKey = "HHH-12426")
-public class TestHANASpatialFunctions extends TestSpatialFunctions {
+@Ignore
+@Deprecated
+public class TestHANASpatialFunctions extends SpatialFunctionalTestCase {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			HSMessageLogger.class,
-			TestHANASpatialFunctions.class.getName() );
+			TestHANASpatialFunctions.class.getName()
+	);
 
 	protected HANAExpectationsFactory hanaExpectationsFactory;
 
@@ -52,8 +68,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void alphashape(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getAlphaShape( 1 );
 		String hql = format(
-				"SELECT id, alphashape(geom, 1) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Point', 'ST_MultiPoint')",
-				pckg );
+				Locale.ENGLISH,
+				"SELECT id, alphashape(geom, 1) FROM %s where geometrytype(geom) in ('ST_Point', 'ST_MultiPoint')",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -70,8 +88,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void area(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getArea();
 		String hql = format(
-				"SELECT id, area(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Polygon', 'ST_MultiPolygon')",
-				pckg );
+				"SELECT id, area(geom) FROM %s where geometrytype(geom) in ('ST_Polygon', 'ST_MultiPolygon')",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -87,7 +106,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void asewkb(String pckg) throws SQLException {
 		Map<Integer, byte[]> dbexpected = hanaExpectationsFactory.getAsEWKB();
-		String hql = format( "SELECT id, asewkb(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+		String hql = format( "SELECT id, asewkb(geom) FROM %s", entityName( pckg ) );
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -103,7 +122,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void asewkt(String pckg) throws SQLException {
 		Map<Integer, String> dbexpected = hanaExpectationsFactory.getAsEWKT();
-		String hql = format( "SELECT id, asewkt(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+		String hql = format( "SELECT id, asewkt(geom) FROM %s", entityName( pckg ) );
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -119,7 +138,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void asgeojson(String pckg) throws SQLException {
 		Map<Integer, String> dbexpected = hanaExpectationsFactory.getAsGeoJSON();
-		String hql = format( "SELECT id, asgeojson(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+		String hql = format( "SELECT id, asgeojson(geom) FROM %s", entityName( pckg ) );
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -135,7 +154,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void assvg(String pckg) throws SQLException {
 		Map<Integer, String> dbexpected = hanaExpectationsFactory.getAsSVG();
-		String hql = format( "SELECT id, assvg(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+		String hql = format( "SELECT id, assvg(geom) FROM %s", entityName( pckg ) );
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -151,7 +170,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void assvgaggr(String pckg) throws SQLException {
 		Map<Integer, String> dbexpected = hanaExpectationsFactory.getAsSVGAggr();
-		String hql = format( "SELECT cast(count(g) as int), assvgaggr(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g", pckg );
+		String hql = format(
+				"SELECT cast(count(g) as int), assvgaggr(geom) FROM %s g",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -167,7 +189,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void aswkb(String pckg) throws SQLException {
 		Map<Integer, byte[]> dbexpected = hanaExpectationsFactory.getAsWKB();
-		String hql = format( "SELECT id, aswkb(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+		String hql = format( "SELECT id, aswkb(geom) FROM %s", entityName( pckg ) );
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -183,7 +205,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void aswkt(String pckg) throws SQLException {
 		Map<Integer, String> dbexpected = hanaExpectationsFactory.getAsWKT();
-		String hql = format( "SELECT id, aswkt(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+		String hql = format( "SELECT id, aswkt(geom) FROM %s", entityName( pckg ) );
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -199,7 +221,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void convexhullaggr(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getConvexHullAggr();
-		String hql = format( "SELECT cast(count(g) as int), convexhullaggr(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g", pckg );
+		String hql = format(
+				"SELECT cast(count(g) as int), convexhullaggr(geom) FROM %s g",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -215,7 +240,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void centroid(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getCentroid();
-		String hql = format( "SELECT id, centroid(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g where geometrytype(geom) = 'ST_Polygon'", pckg );
+		String hql = format(
+				"SELECT id, centroid(geom) FROM %s g where geometrytype(geom) = 'ST_Polygon'",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -231,7 +259,7 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void coorddim(String pckg) throws SQLException {
 		Map<Integer, Integer> dbexpected = hanaExpectationsFactory.getCoordDim();
-		String hql = format( "SELECT id, coorddim(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
+		String hql = format( "SELECT id, coorddim(geom) FROM %s", entityName( pckg ) );
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -248,8 +276,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void coveredby(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getCoveredBy( expectationsFactory.getTestPolygon() );
 		String hql = format(
-				"SELECT id, coveredby(geom, :filter) FROM org.hibernate.spatial.integration.%s.GeomEntity where coveredby(geom, :filter) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, coveredby(geom, :filter) FROM %s where coveredby(geom, :filter) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -267,8 +297,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void covers(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getCovers( expectationsFactory.getTestPolygon() );
 		String hql = format(
-				"SELECT id, covers(geom, :filter) FROM org.hibernate.spatial.integration.%s.GeomEntity where covers(geom, :filter) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, covers(geom, :filter) FROM %s where covers(geom, :filter) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -285,8 +317,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void endpoint(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getEndPoint();
-		String hql = format( "SELECT id, endpoint(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g where geometrytype(geom) = 'ST_LineString'",
-				pckg );
+		String hql = format(
+				"SELECT id, endpoint(geom) FROM %s g where geometrytype(geom) = 'ST_LineString'",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -302,7 +336,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void envelopeaggr(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getEnvelopeAggr();
-		String hql = format( "SELECT cast(count(g) as int), envelopeaggr(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g", pckg );
+		String hql = format(
+				"SELECT cast(count(g) as int), envelopeaggr(geom) FROM %s g",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -318,8 +355,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void exteriorring(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getExteriorRing();
-		String hql = format( "SELECT id, exteriorring(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g where geometrytype(geom) = 'ST_Polygon'",
-				pckg );
+		String hql = format(
+				"SELECT id, exteriorring(geom) FROM %s g where geometrytype(geom) = 'ST_Polygon'",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -337,8 +376,11 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 		WKBWriter writer = new WKBWriter( 2, true );
 		byte[] ewkb = writer.write( expectationsFactory.getTestPolygon() );
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getGeomFromEWKB( ewkb );
-		String hql = format( "SELECT 1, cast(geomfromewkb(:param) as %s) FROM org.hibernate.spatial.integration.%s.GeomEntity g",
-				getGeometryTypeFromPackage( pckg ), pckg );
+		String hql = format(
+				"SELECT 1, cast(geomfromewkb(:param) as %s) FROM %s g",
+				getGeometryTypeFromPackage( pckg ),
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "param", ewkb );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -357,8 +399,11 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 		WKTWriter writer = new WKTWriter();
 		String ewkt = "SRID=" + expectationsFactory.getTestSrid() + ";" + writer.write( expectationsFactory.getTestPolygon() );
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getGeomFromEWKT( ewkt );
-		String hql = format( "SELECT 1, cast(geomfromewkt(:param) as %s) FROM org.hibernate.spatial.integration.%s.GeomEntity g",
-				getGeometryTypeFromPackage( pckg ), pckg );
+		String hql = format(
+				"SELECT 1, cast(geomfromewkt(:param) as %s) FROM %s g",
+				getGeometryTypeFromPackage( pckg ),
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "param", ewkt );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -376,8 +421,11 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void geomfromtext(String pckg) throws SQLException {
 		String text = expectationsFactory.getTestPolygon().toText();
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getGeomFromText( text );
-		String hql = format( "SELECT 1, cast(geomfromtext(:param) as %s) FROM org.hibernate.spatial.integration.%s.GeomEntity g",
-				getGeometryTypeFromPackage( pckg ), pckg );
+		String hql = format(
+				"SELECT 1, cast(geomfromtext(:param) as %s) FROM %s g",
+				getGeometryTypeFromPackage( pckg ),
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "param", text );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -396,8 +444,11 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 		WKBWriter writer = new WKBWriter( 2, false );
 		byte[] wkb = writer.write( expectationsFactory.getTestPolygon() );
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getGeomFromWKB( wkb );
-		String hql = format( "SELECT 1, cast(geomfromwkb(:param) as %s) FROM org.hibernate.spatial.integration.%s.GeomEntity g",
-				getGeometryTypeFromPackage( pckg ), pckg );
+		String hql = format(
+				"SELECT 1, cast(geomfromwkb(:param) as %s) FROM %s g",
+				getGeometryTypeFromPackage( pckg ),
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "param", wkb );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -416,8 +467,11 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 		WKTWriter writer = new WKTWriter();
 		String wkt = writer.write( expectationsFactory.getTestPolygon() );
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getGeomFromWKT( wkt );
-		String hql = format( "SELECT 1, cast(geomfromwkt(:param) as %s) FROM org.hibernate.spatial.integration.%s.GeomEntity g",
-				getGeometryTypeFromPackage( pckg ), pckg );
+		String hql = format(
+				"SELECT 1, cast(geomfromwkt(:param) as %s) FROM %s g",
+				getGeometryTypeFromPackage( pckg ),
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "param", wkt );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -435,8 +489,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void geometryn(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getGeometryN( 1 );
 		String hql = format(
-				"SELECT id, cast(geometryn(geom, :n) as %s) FROM org.hibernate.spatial.integration.%s.GeomEntity g where geometrytype(geom) = 'ST_GeometryCollection'",
-				getGeometryTypeFromPackage( pckg ), pckg );
+				"SELECT id, cast(geometryn(geom, :n) as %s) FROM %s g where geometrytype(geom) = 'ST_GeometryCollection'",
+				getGeometryTypeFromPackage( pckg ),
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "n", 1 );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -454,8 +510,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void interiorringn(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getInteriorRingN( 1 );
 		String hql = format(
-				"SELECT id, cast(interiorringn(geom, :n) as %s) FROM org.hibernate.spatial.integration.%s.GeomEntity g where geometrytype(geom) = 'ST_Polygon'",
-				getGeometryTypeFromPackage( pckg ), pckg );
+				"SELECT id, cast(interiorringn(geom, :n) as %s) FROM %s g where geometrytype(geom) = 'ST_Polygon'",
+				getGeometryTypeFromPackage( pckg ),
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "n", 1 );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -472,7 +530,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void intersectionaggr(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getIntersectionAggr();
-		String hql = format( "SELECT cast(count(g) as int), intersectionaggr(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g", pckg );
+		String hql = format(
+				"SELECT cast(count(g) as int), intersectionaggr(geom) FROM %s g",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -487,11 +548,15 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	}
 
 	public void intersectsrect(String pckg) throws SQLException {
-		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getIntersectsRect( (Point) expectationsFactory.getTestPoint().reverse(),
-				expectationsFactory.getTestPoint() );
+		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getIntersectsRect(
+				(Point) expectationsFactory.getTestPoint().reverse(),
+				expectationsFactory.getTestPoint()
+		);
 		String hql = format(
-				"SELECT id, intersectsrect(geom, :pmin, :pmax) FROM org.hibernate.spatial.integration.%s.GeomEntity where intersectsrect(geom, :pmin, :pmax) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, intersectsrect(geom, :pmin, :pmax) FROM %s where intersectsrect(geom, :pmin, :pmax) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		Map<String, Object> params = createQueryParams( "pmin", expectationsFactory.getTestPoint().reverse() );
 		params.put( "pmax", expectationsFactory.getTestPoint() );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
@@ -510,8 +575,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void is3d(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getIs3D();
 		String hql = format(
-				"SELECT id, is3d(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where is3d(geom) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, is3d(geom) FROM %s where is3d(geom) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -528,8 +595,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void isclosed(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getIsClosed();
 		String hql = format(
-				"SELECT id, isclosed(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_LineString', 'ST_MultiLineString') and isclosed(geom) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, isclosed(geom) FROM %s where geometrytype(geom) in ('ST_LineString', 'ST_MultiLineString') and isclosed(geom) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -546,8 +615,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void ismeasured(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getIsMeasured();
 		String hql = format(
-				"SELECT id, ismeasured(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where ismeasured(geom) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, ismeasured(geom) FROM %s where ismeasured(geom) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -564,8 +635,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void isring(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getIsRing();
 		String hql = format(
-				"SELECT id, isring(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_LineString') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, isring(geom) FROM %s where geometrytype(geom) in ('ST_LineString') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -582,8 +655,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void isvalid(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getIsValid();
 		String hql = format(
-				"SELECT id, isvalid(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where isvalid(geom) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, isvalid(geom) FROM %s where isvalid(geom) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -600,8 +675,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void length(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getLength();
 		String hql = format(
-				"SELECT id, length(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_LineString', 'ST_MultiLineString') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, length(geom) FROM %s where geometrytype(geom) in ('ST_LineString', 'ST_MultiLineString') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -618,8 +695,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void m(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getM();
 		String hql = format(
-				"SELECT id, m(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, m(geom) FROM %s where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -636,8 +715,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void mmax(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getMMax();
 		String hql = format(
-				"SELECT id, mmax(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, mmax(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -654,8 +734,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void mmin(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getMMin();
 		String hql = format(
-				"SELECT id, mmin(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, mmin(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -672,8 +753,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void numgeometries(String pckg) throws SQLException {
 		Map<Integer, Integer> dbexpected = hanaExpectationsFactory.getNumGeometries();
 		String hql = format(
-				"SELECT id, numgeometries(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_GeometryCollection') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, numgeometries(geom) FROM %s where geometrytype(geom) in ('ST_GeometryCollection') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -690,8 +773,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void numinteriorring(String pckg) throws SQLException {
 		Map<Integer, Integer> dbexpected = hanaExpectationsFactory.getNumInteriorRing();
 		String hql = format(
-				"SELECT id, numinteriorring(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Polygon') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, numinteriorring(geom) FROM %s where geometrytype(geom) in ('ST_Polygon') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -708,8 +793,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void numinteriorrings(String pckg) throws SQLException {
 		Map<Integer, Integer> dbexpected = hanaExpectationsFactory.getNumInteriorRings();
 		String hql = format(
-				"SELECT id, numinteriorrings(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Polygon') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, numinteriorrings(geom) FROM %s where geometrytype(geom) in ('ST_Polygon') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -726,8 +813,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void numpoints(String pckg) throws SQLException {
 		Map<Integer, Integer> dbexpected = hanaExpectationsFactory.getNumPoints();
 		String hql = format(
-				"SELECT id, numpoints(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_LineString') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, numpoints(geom) FROM %s where geometrytype(geom) in ('ST_LineString') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -744,8 +833,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void orderingequals(String pckg) throws SQLException {
 		Map<Integer, Boolean> dbexpected = hanaExpectationsFactory.getOrderingEquals( expectationsFactory.getTestPolygon() );
 		String hql = format(
-				"SELECT id, orderingequals(geom, :filter) FROM org.hibernate.spatial.integration.%s.GeomEntity where orderingequals(geom, :filter) = true and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, orderingequals(geom, :filter) FROM %s where orderingequals(geom, :filter) = true and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
@@ -763,8 +854,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void perimeter(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getPerimeter();
 		String hql = format(
-				"SELECT id, perimeter(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Polygon', 'ST_MultiPolygon') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, perimeter(geom) FROM %s where geometrytype(geom) in ('ST_Polygon', 'ST_MultiPolygon') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -781,8 +874,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void pointonsurface(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getPointOnSurface();
 		String hql = format(
-				"SELECT id, pointonsurface(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Polygon', 'ST_MultiPolygon') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, pointonsurface(geom) FROM %s where geometrytype(geom) in ('ST_Polygon', 'ST_MultiPolygon') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -799,18 +894,22 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void pointn(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getPointN( 1 );
 		String hql = format(
-				"SELECT id, pointn(geom, :n) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_LineString') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, pointn(geom, :n) FROM %s where geometrytype(geom) in ('ST_LineString') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		Map<String, Object> params = createQueryParams( "n", 1 );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
-	@Test(expected = SQLException.class) // ST_GEOMETRY columns are not supported
+	// ST_GEOMETRY columns are not supported
+	@Test(expected = SQLException.class)
 	public void test_snaptogrid_on_jts() throws SQLException {
 		snaptogrid( JTS );
 	}
 
-	@Test(expected = SQLException.class) // ST_GEOMETRY columns are not supported
+	// ST_GEOMETRY columns are not supported
+	@Test(expected = SQLException.class)
 	public void test_snaptogrid_on_geolatte() throws SQLException {
 		snaptogrid( GEOLATTE );
 	}
@@ -818,8 +917,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void snaptogrid(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getSnapToGrid();
 		String hql = format(
-				"SELECT id, snaptogrid(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, snaptogrid(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -835,8 +935,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void startpoint(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getStartPoint();
-		String hql = format( "SELECT id, startpoint(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g where geometrytype(geom) = 'ST_LineString'",
-				pckg );
+		String hql = format(
+				"SELECT id, startpoint(geom) FROM %s g where geometrytype(geom) = 'ST_LineString'",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -852,7 +954,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	public void unionaggr(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getUnionAggr();
-		String hql = format( "SELECT cast(count(g) as int), unionaggr(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity g", pckg );
+		String hql = format(
+				"SELECT cast(count(g) as int), unionaggr(geom) FROM %s g",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -869,8 +974,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void x(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getX();
 		String hql = format(
-				"SELECT id, x(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, x(geom) FROM %s where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -887,8 +994,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void xmax(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getXMax();
 		String hql = format(
-				"SELECT id, xmax(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, xmax(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -905,8 +1013,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void xmin(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getXMin();
 		String hql = format(
-				"SELECT id, xmin(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, xmin(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -923,8 +1032,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void y(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getY();
 		String hql = format(
-				"SELECT id, y(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, y(geom) FROM %s where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -941,8 +1052,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void ymax(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getYMax();
 		String hql = format(
-				"SELECT id, ymax(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, ymax(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -959,8 +1071,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void ymin(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getYMin();
 		String hql = format(
-				"SELECT id, ymin(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, ymin(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -977,8 +1090,10 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void z(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getZ();
 		String hql = format(
-				"SELECT id, z(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, z(geom) FROM %s where geometrytype(geom) in ('ST_Point') and srid(geom) = %d",
+				entityName( pckg ),
+				expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -995,8 +1110,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void zmax(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getZMax();
 		String hql = format(
-				"SELECT id, zmax(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, zmax(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -1013,8 +1129,9 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void zmin(String pckg) throws SQLException {
 		Map<Integer, Double> dbexpected = hanaExpectationsFactory.getZMin();
 		String hql = format(
-				"SELECT id, zmin(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = %d",
-				pckg, expectationsFactory.getTestSrid() );
+				"SELECT id, zmin(geom) FROM %s where srid(geom) = %d",
+				entityName( pckg ), expectationsFactory.getTestSrid()
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
@@ -1031,15 +1148,17 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 	public void nestedfunction(String pckg) throws SQLException {
 		Map<Integer, Geometry> dbexpected = hanaExpectationsFactory.getNestedFunctionInner( expectationsFactory.getTestPolygon() );
 		String hql = format(
-				"SELECT id, geom FROM org.hibernate.spatial.integration.%s.GeomEntity g where dwithin(geom, srid(:filter, 0), 1) = true",
-				pckg );
+				"SELECT id, geom FROM %s g where dwithin(geom, srid(:filter, 0), 1) = true",
+				entityName( pckg )
+		);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
-		
+
 		dbexpected = hanaExpectationsFactory.getNestedFunctionOuter( expectationsFactory.getTestPolygon() );
 		hql = format(
-				"SELECT id, geom FROM org.hibernate.spatial.integration.%s.GeomEntity g where dwithin(:filter, srid(geom, 0), 1) = true",
-				pckg );
+				"SELECT id, geom FROM %s g where dwithin(:filter, srid(geom, 0), 1) = true",
+				entityName( pckg )
+		);
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
@@ -1059,4 +1178,49 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 		params.put( filterParamName, value );
 		return params;
 	}
+
+	public <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql, String geometryType) {
+		retrieveHQLResultsAndCompare( dbexpected, hql, null, geometryType );
+	}
+
+	protected <T> void retrieveHQLResultsAndCompare(
+			Map<Integer, T> dbexpected,
+			String hql,
+			Map<String, Object> params,
+			String geometryType) {
+		Map<Integer, T> hsreceived = new HashMap<Integer, T>();
+		doInSession( hql, hsreceived, params );
+		compare( dbexpected, hsreceived, geometryType );
+	}
+
+
+	private <T> void doInSession(String hql, Map<Integer, T> result, Map<String, Object> params) {
+		Session session = null;
+		Transaction tx = null;
+		try {
+			session = openSession();
+			tx = session.beginTransaction();
+			Query query = session.createQuery( hql );
+			setParameters( params, query );
+			addQueryResults( result, query );
+		}
+		finally {
+			if ( tx != null ) {
+				tx.rollback();
+			}
+			if ( session != null ) {
+				session.close();
+			}
+		}
+	}
+
+	private void setParameters(Map<String, Object> params, Query query) {
+		if ( params == null ) {
+			return;
+		}
+		for ( Map.Entry<String, Object> entry : params.entrySet() ) {
+			query.setParameter( entry.getKey(), entry.getValue() );
+		}
+	}
+
 }

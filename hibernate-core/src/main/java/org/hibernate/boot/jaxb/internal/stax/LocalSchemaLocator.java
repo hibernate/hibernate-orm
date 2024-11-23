@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
@@ -18,18 +16,16 @@ import org.jboss.logging.Logger;
 
 /**
  * Helper for resolving XML Schema references locally.
- * <p/>
- * Note that *by design* we always use our ClassLoader to perform the lookups here.
+ *
+ * @implNote *By design* we always use our ClassLoader to perform the lookups here.
  *
  * @author Steve Ebersole
  */
 public class LocalSchemaLocator {
 	private static final Logger log = Logger.getLogger( LocalSchemaLocator.class );
 
-	/**
-	 * Disallow direct instantiation
-	 */
 	private LocalSchemaLocator() {
+		// Disallow direct instantiation
 	}
 
 	/**
@@ -37,7 +33,6 @@ public class LocalSchemaLocator {
 	 *
 	 * @param schemaResourceName The local resource name to the schema
 	 *
-	 * @return
 	 */
 	public static URL resolveLocalSchemaUrl(String schemaResourceName) {
 		URL url = LocalSchemaLocator.class.getClassLoader().getResource( schemaResourceName );

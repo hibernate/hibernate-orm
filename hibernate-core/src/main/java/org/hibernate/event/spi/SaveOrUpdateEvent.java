@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.engine.spi.EntityEntry;
 
-/** 
+/**
  * An event class for saveOrUpdate()
  *
  * @author Steve Ebersole
@@ -18,18 +14,18 @@ import org.hibernate.engine.spi.EntityEntry;
 public class SaveOrUpdateEvent extends AbstractEvent {
 
 	private Object object;
-	private Serializable requestedId;
+	private Object requestedId;
 	private String entityName;
 	private Object entity;
 	private EntityEntry entry;
-	private Serializable resultId;
+	private Object resultId;
 
 	public SaveOrUpdateEvent(String entityName, Object original, EventSource source) {
 		this(original, source);
 		this.entityName = entityName;
 	}
 
-	public SaveOrUpdateEvent(String entityName, Object original, Serializable id, EventSource source) {
+	public SaveOrUpdateEvent(String entityName, Object original, Object id, EventSource source) {
 		this(entityName, original, source);
 		this.requestedId = id;
 		if ( requestedId == null ) {
@@ -57,11 +53,11 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 		this.object = object;
 	}
 
-	public Serializable getRequestedId() {
+	public Object getRequestedId() {
 		return requestedId;
 	}
 
-	public void setRequestedId(Serializable requestedId) {
+	public void setRequestedId(Object requestedId) {
 		this.requestedId = requestedId;
 	}
 
@@ -76,24 +72,24 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 	public Object getEntity() {
 		return entity;
 	}
-	
+
 	public void setEntity(Object entity) {
 		this.entity = entity;
 	}
-	
+
 	public EntityEntry getEntry() {
 		return entry;
 	}
-	
+
 	public void setEntry(EntityEntry entry) {
 		this.entry = entry;
 	}
 
-	public Serializable getResultId() {
+	public Object getResultId() {
 		return resultId;
 	}
 
-	public void setResultId(Serializable resultId) {
+	public void setResultId(Object resultId) {
 		this.resultId = resultId;
 	}
 }

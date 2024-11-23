@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.strategy.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.boot.model.PersistentEntity;
+import org.hibernate.envers.configuration.Configuration;
 
-import org.dom4j.Element;
 
 /**
  * Describes an audit mapping context.
@@ -18,28 +16,41 @@ import org.dom4j.Element;
  */
 @Incubating
 public class MappingContext {
-	private Element auditEntityMapping;
-	private Element revisionEntityMapping;
-	private AuditEntitiesConfiguration auditEntityConfiguration;
-
+	private final PersistentEntity mapping;
+	private final Configuration configuration;
+	private final String revisionInfoPropertyType;
+	private final String revisionInfoExplicitTypeName;
+	private final boolean revisionEndTimestampOnly;
 	public MappingContext(
-			Element auditEntityMapping,
-			Element revisionEntityMapping,
-			AuditEntitiesConfiguration auditEntitiesConfiguration) {
-		this.auditEntityMapping = auditEntityMapping;
-		this.revisionEntityMapping = revisionEntityMapping;
-		this.auditEntityConfiguration = auditEntitiesConfiguration;
+			PersistentEntity mapping,
+			Configuration configuration,
+			String revisionInfoPropertyType,
+			String revisionInfoExplicitTypeName,
+			boolean revisionEndTimestampOnly) {
+		this.mapping = mapping;
+		this.configuration = configuration;
+		this.revisionInfoPropertyType = revisionInfoPropertyType;
+		this.revisionInfoExplicitTypeName = revisionInfoExplicitTypeName;
+		this.revisionEndTimestampOnly = revisionEndTimestampOnly;
 	}
 
-	public Element getAuditEntityMapping() {
-		return auditEntityMapping;
+	public PersistentEntity getEntityMapping() {
+		return mapping;
 	}
 
-	public Element getRevisionEntityMapping() {
-		return revisionEntityMapping;
+	public Configuration getConfiguration() {
+		return configuration;
 	}
 
-	public AuditEntitiesConfiguration getAuditEntityConfiguration() {
-		return auditEntityConfiguration;
+	public String getRevisionInfoPropertyType() {
+		return revisionInfoPropertyType;
+	}
+
+	public String getRevisionInfoExplicitTypeName() {
+		return revisionInfoExplicitTypeName;
+	}
+
+	public boolean isRevisionEndTimestampOnly() {
+		return revisionEndTimestampOnly;
 	}
 }

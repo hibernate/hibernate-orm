@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
 
@@ -19,7 +17,7 @@ import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.jboss.logging.Logger;
 
 /**
- * Default implementation
+ * Default implementation of {@link SchemaNameResolver}.
  *
  * @author Steve Ebersole
  */
@@ -42,14 +40,14 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 		try {
 			final Class<? extends Connection> jdbcConnectionClass = connection.getClass();
 			final Method getSchemaMethod = jdbcConnectionClass.getMethod( "getSchema" );
-			if ( getSchemaMethod != null && getSchemaMethod.getReturnType().equals( String.class ) ) {
+			if ( getSchemaMethod.getReturnType().equals( String.class ) ) {
 				try {
 					// If the JDBC driver does not implement the Java 7 spec, but the JRE is Java 7
 					// then the getSchemaMethod is not null but the call to getSchema() throws an java.lang.AbstractMethodError
 					connection.getSchema();
 					return new SchemaNameResolverJava17Delegate();
 				}
-				catch (java.lang.AbstractMethodError e) {
+				catch (AbstractMethodError e) {
 					log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
 					return SchemaNameResolverFallbackDelegate.INSTANCE;
 				}
@@ -59,10 +57,10 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 				return SchemaNameResolverFallbackDelegate.INSTANCE;
 			}
 		}
-		catch (Exception ignore) {
+		catch (Exception e) {
 			log.debugf(
-					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: "
-							+ ignore.getMessage() );
+					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: %s",
+					e.getMessage() );
 			return SchemaNameResolverFallbackDelegate.INSTANCE;
 		}
 	}

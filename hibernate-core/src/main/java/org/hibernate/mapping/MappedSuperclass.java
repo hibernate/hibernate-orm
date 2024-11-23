@@ -1,44 +1,37 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Comparator;
 import java.util.List;
 
 /**
- * Represents a @MappedSuperclass.
- * A @MappedSuperclass can be a superclass of an @Entity (root or not)
- *
- * This class primary goal is to give a representation to @MappedSuperclass
- * in the metamodel in order to reflect them in the JPA 2 metamodel.
- *
- * Do not use outside this use case.
- *
- * 
- * A proper redesign will be evaluated in Hibernate 4
- *
- * Implementation details:
- * properties are copies of their closest sub-persistentClass versions
+ * A mapping model object representing a {@linkplain jakarta.persistence.MappedSuperclass mapped superclass}
+ * of an entity class. A mapped superclass is not itself an entity, but it may declare persistent
+ * attributes which are inherited by entity subclasses.
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass {
+public class MappedSuperclass implements IdentifiableTypeClass {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
-	private final List declaredProperties;
-	private Class mappedClass;
+	private final List<Property> declaredProperties;
+	private final Table implicitTable;
+	private Class<?> mappedClass;
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
 
-	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
+	public MappedSuperclass(
+			MappedSuperclass superMappedSuperclass,
+			PersistentClass superPersistentClass,
+			Table implicitTable) {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
-		this.declaredProperties = new ArrayList();
+		this.implicitTable = implicitTable;
+		this.declaredProperties = new ArrayList<>();
 	}
 
 	/**
@@ -70,28 +63,27 @@ public class MappedSuperclass {
 		return superPersistentClass;
 	}
 
-	public Iterator getDeclaredPropertyIterator() {
-		return declaredProperties.iterator();
+	public List<Property> getDeclaredProperties() {
+		return declaredProperties;
 	}
 
 	public void addDeclaredProperty(Property p) {
 		//Do not add duplicate properties
 		//TODO is it efficient enough?
 		String name = p.getName();
-		Iterator it = declaredProperties.iterator();
-		while (it.hasNext()) {
-			if ( name.equals( ((Property)it.next()).getName() ) ) {
+		for (Property declaredProperty : declaredProperties) {
+			if ( name.equals( declaredProperty.getName() ) ) {
 				return;
 			}
 		}
 		declaredProperties.add(p);
 	}
 
-	public Class getMappedClass() {
+	public Class<?> getMappedClass() {
 		return mappedClass;
 	}
 
-	public void setMappedClass(Class mappedClass) {
+	public void setMappedClass(Class<?> mappedClass) {
 		this.mappedClass = mappedClass;
 	}
 
@@ -171,11 +163,8 @@ public class MappedSuperclass {
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public boolean hasProperty(String name) {
-		final Iterator itr = getDeclaredPropertyIterator();
-		while ( itr.hasNext() ) {
-			final Property property = (Property) itr.next();
+		for ( Property property : getDeclaredProperties() ) {
 			if ( property.getName().equals( name ) ) {
 				return true;
 			}
@@ -192,7 +181,6 @@ public class MappedSuperclass {
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
-	@SuppressWarnings({"WeakerAccess", "RedundantIfStatement"})
 	public boolean isPropertyDefinedInHierarchy(String name) {
 		if ( hasProperty( name ) ) {
 			return true;
@@ -209,5 +197,54 @@ public class MappedSuperclass {
 		}
 
 		return false;
+	}
+
+	public void prepareForMappingModel() {
+		declaredProperties.sort( Comparator.comparing( Property::getName ) );
+	}
+
+	@Override
+	public Table findTable(String name) {
+		return null;
+	}
+
+	@Override
+	public Table getTable(String name) {
+		return null;
+	}
+
+	@Override
+	public Join findSecondaryTable(String name) {
+		return null;
+	}
+
+	@Override
+	public Join getSecondaryTable(String name) {
+		return null;
+	}
+
+	@Override
+	public IdentifiableTypeClass getSuperType() {
+		if ( superPersistentClass != null ) {
+			return superPersistentClass;
+		}
+		return superMappedSuperclass;
+	}
+
+	@Override
+	public List<IdentifiableTypeClass> getSubTypes() {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public Table getImplicitTable() {
+		return implicitTable;
+	}
+
+	@Override
+	public void applyProperty(Property property) {
+		assert property.getValue().getTable() != null;
+		assert property.getValue().getTable().equals( getImplicitTable() );
+		addDeclaredProperty( property );
 	}
 }

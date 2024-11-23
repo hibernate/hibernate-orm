@@ -1,19 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.sql.Connection;
 
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
 /**
- * Represents a consolidation of all stateless session creation options into a builder style delegate.
+ * Allows creation of a new {@link StatelessSession} with specific options.
  *
  * @author Steve Ebersole
+ *
+ * @see SessionFactory#withStatelessOptions()
  */
-public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
+public interface StatelessSessionBuilder {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -28,7 +30,7 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection(Connection connection);
+	StatelessSessionBuilder connection(Connection connection);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -36,20 +38,27 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 * @param tenantIdentifier The tenant identifier.
 	 *
 	 * @return {@code this}, for method chaining
+	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
-	T tenantIdentifier(String tenantIdentifier);
+	@Deprecated(forRemoval = true)
+	StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	/**
-	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
-	 * when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
+	 * Define the tenant identifier to be associated with the opened session.
 	 *
-	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise
-	 * <p>
-	 * The default value is {@code true}
+	 * @param tenantIdentifier The tenant identifier.
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.4
+	 */
+	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	/**
+	 * Applies the given {@link StatementInspector} to the stateless session.
+	 *
+	 * @param statementInspector The StatementInspector to use.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
-	}
+	StatelessSessionBuilder statementInspector(StatementInspector statementInspector);
 }

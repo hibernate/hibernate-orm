@@ -1,6 +1,8 @@
 [[multitenacy]]
 == Multitenancy
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/multitenancy
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-multitenancy: {core-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
 :extrasdir: extras
 
 [[multitenacy-intro]]
@@ -47,7 +49,7 @@ Using this approach, we would have a distinct JDBC Connection pool per-tenant wh
 Using this approach, we would have a single JDBC Connection pool for use to service all tenants, but before using the Connection, it would be altered to reference the schema named by the "tenant identifier" associated with the currently logged in user.
 
 [[multitenacy-discriminator]]
-=== Partitioned (discriminator) data
+==== Partitioned (discriminator) data
 
 image:images/multitenancy/multitenacy_discriminator.png[]
 
@@ -67,36 +69,42 @@ The API is really just defined by passing the tenant identifier as part of openi
 [[multitenacy-hibernate-session-example]]
 .Specifying tenant identifier from `SessionFactory`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-session-example]
+include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-session-example]
 ----
 ====
 
-Additionally, when specifying the configuration, an `org.hibernate.MultiTenancyStrategy` should be named using the `hibernate.multiTenancy` setting.
-Hibernate will perform validations based on the type of strategy you specify.
-The strategy here correlates with the isolation approach discussed above.
+[[multitenacy-hibernate-TenantId]]
+==== @TenantId
 
-NONE::
-  (the default) No multitenancy is expected.
-  In fact, it is considered an error if a tenant identifier is specified when opening a session using this strategy.
-SCHEMA::
-  Correlates to the separate schema approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  Additionally, a `MultiTenantConnectionProvider` must be specified.
-DATABASE::
-  Correlates to the separate database approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  Additionally, a `MultiTenantConnectionProvider` must be specified.
-DISCRIMINATOR::
-  Correlates to the partitioned (discriminator) approach.
-  It is an error to attempt to open a session without a tenant identifier using this strategy.
-  This strategy is not yet implemented and you can follow its progress via the https://hibernate.atlassian.net/browse/HHH-6054[HHH-6054 Jira issue].
+For the partitioned data approach, each entity representing partitioned data must declare a field
+annotated `@TenantId`.
+
+[[multitenacy-hibernate-TenantId-example]]
+.A `@TenantId` usage example
+====
+[source, java, indent=0]
+----
+@Entity
+public class Account {
+
+    @Id @GeneratedValue Long id;
+
+    @TenantId String tenantId;
+
+    ...
+}
+----
+====
+
+The `@TenantId` field is automatically populated by Hibernate when an instance is made
+persistent.
 
 [[multitenacy-hibernate-MultiTenantConnectionProvider]]
 ==== MultiTenantConnectionProvider
 
-When using either the DATABASE or SCHEMA approach, Hibernate needs to be able to obtain Connections in a tenant-specific manner.
+When using either the separate database or separate schema approach, Hibernate needs to be able to obtain connections in a tenant-specific manner.
 
 That is the role of the `MultiTenantConnectionProvider` contract.
 Application developers will need to provide an implementation of this contract. 
@@ -110,6 +118,7 @@ The `MultiTenantConnectionProvider` to use can be specified in a number of ways:
 
 * Use the `hibernate.multi_tenant_connection_provider` setting.
 It could name a `MultiTenantConnectionProvider` instance, a `MultiTenantConnectionProvider` implementation class reference or a `MultiTenantConnectionProvider` implementation class name.
+* Provided by the configured `BeanContainer`.
 * Passed directly to the `org.hibernate.boot.registry.StandardServiceRegistryBuilder`.
 * If none of the above options match, but the settings do specify a `hibernate.connection.datasource` value,
 Hibernate will assume it should use the specific `DataSourceBasedMultiTenantConnectionProviderImpl` implementation which works on a number of pretty reasonable assumptions when running inside of an app server and using one `javax.sql.DataSource` per tenant.
@@ -120,9 +129,9 @@ The following example portrays a `MultiTenantConnectionProvider` implementation 
 [[multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]]
 .A `MultiTenantConnectionProvider` implementation
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ConfigurableMultiTenantConnectionProvider.java[tags=multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]
+include::{example-dir-multitenancy}/ConfigurableMultiTenantConnectionProvider.java[tags=multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]
 ----
 ====
 
@@ -131,9 +140,9 @@ The `ConfigurableMultiTenantConnectionProvider` can be set up as follows:
 [[multitenacy-hibernate-MultiTenantConnectionProvider-example]]
 .A `MultiTenantConnectionProvider` usage example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-MultiTenantConnectionProvider-example]
+include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-MultiTenantConnectionProvider-example]
 ----
 ====
 
@@ -142,9 +151,9 @@ When using multitenancy, it's possible to save an entity with the same identifie
 [[multitenacy-hibernate-same-entity-example]]
 .An example of saving entities with the same identifier across different tenants
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-hibernate-same-entity-example]
+include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-hibernate-same-entity-example]
 ----
 ====
 
@@ -153,7 +162,7 @@ include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-
 
 `org.hibernate.context.spi.CurrentTenantIdentifierResolver` is a contract for Hibernate to be able to resolve what the application considers the current tenant identifier.
 The implementation to use can be either passed directly to `Configuration` via its `setCurrentTenantIdentifierResolver` method,
-or be specified via the `hibernate.tenant_identifier_resolver` setting.
+or be specified via the `hibernate.tenant_identifier_resolver` setting, or be provided by the configured `BeanContainer`.
 
 There are two situations where `CurrentTenantIdentifierResolver` is used:
 
@@ -177,8 +186,6 @@ The key used to cache data encodes the tenant identifier.
 [NOTE]
 ====
 Currently, schema export will not really work with multitenancy.
-
-The JPA expert group is in the process of defining multitenancy support for an upcoming version of the specification.
 ====
 
 [[multitenacy-hibernate-session-configuration]]
@@ -190,9 +197,9 @@ For instance, each tenant could specify a different time zone configuration.
 [[multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]]
 .Registering the tenant-specific time zone information
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]
 ----
 ====
 
@@ -201,17 +208,17 @@ The `registerConnectionProvider` method is used to define the tenant-specific co
 [[multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]]
 .The `registerConnectionProvider` method used for defining the tenant-specific context
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]
 ----
 ====
 
 For our example, the tenant-specific context is held in the `connectionProviderMap` and `timeZoneTenantMap`.
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-context-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-context-example]
 ----
 
 Now, when building the Hibernate `Session`, aside from passing the tenant identifier,
@@ -220,9 +227,9 @@ we could also configure the `Session` to use the tenant-specific time zone.
 [[multitenacy-hibernate-timezone-configuration-session-example]]
 .The Hibernate `Session` can be configured using the tenant-specific context
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-session-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-session-example]
 ----
 ====
 
@@ -233,9 +240,9 @@ even if the currently running JVM uses a different time zone.
 [[multitenacy-hibernate-applying-timezone-configuration-example]]
 .The `useTenantTimeZone` allows you to persist a `Timestamp` in the provided time zone
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-applying-timezone-configuration-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-applying-timezone-configuration-example]
 ----
 ====
 
@@ -246,9 +253,9 @@ test output.
 [[multitenacy-hibernate-not-applying-timezone-configuration-example]]
 .With the `useTenantTimeZone` property set to `false`, the `Timestamp` is fetched in the tenant-specific time zone
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-not-applying-timezone-configuration-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-not-applying-timezone-configuration-example]
 ----
 
 [source, SQL,indent=0]

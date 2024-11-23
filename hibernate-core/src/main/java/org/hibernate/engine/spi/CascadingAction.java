@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -20,7 +18,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface CascadingAction {
+public interface CascadingAction<T> {
 
 	/**
 	 * Cascade the action to the child object.
@@ -31,13 +29,12 @@ public interface CascadingAction {
 	 * @param anything Anything ;)  Typically some form of cascade-local cache
 	 * which is specific to each CascadingAction type
 	 * @param isCascadeDeleteEnabled Are cascading deletes enabled.
-	 * @throws HibernateException
 	 */
 	void cascade(
 			EventSource session,
 			Object child,
 			String entityName,
-			Object anything,
+			T anything,
 			boolean isCascadeDeleteEnabled) throws HibernateException;
 
 	/**
@@ -49,7 +46,7 @@ public interface CascadingAction {
 	 * @param collection The collection instance.
 	 * @return The children iterator.
 	 */
-	Iterator getCascadableChildrenIterator(
+	Iterator<?> getCascadableChildrenIterator(
 			EventSource session,
 			CollectionType collectionType,
 			Object collection);
@@ -66,8 +63,13 @@ public interface CascadingAction {
 	 * Does the specified cascading action require verification of no cascade validity?
 	 *
 	 * @return True if this action requires no-cascade verification; false otherwise.
+	 *
+	 * @deprecated No longer used
 	 */
-	boolean requiresNoCascadeChecking();
+	@Deprecated(since = "6.6", forRemoval = true)
+	default boolean requiresNoCascadeChecking() {
+		return false;
+	}
 
 	/**
 	 * Called (in the case of {@link #requiresNoCascadeChecking} returning true) to validate
@@ -78,8 +80,11 @@ public interface CascadingAction {
 	 * @param persister The entity persister for the owner
 	 * @param propertyType The property type
 	 * @param propertyIndex The index of the property within the owner.
+	 *
+	 * @deprecated No longer used
 	 */
-	void noCascade(EventSource session, Object parent, EntityPersister persister, Type propertyType, int propertyIndex);
+	@Deprecated(since = "6.6", forRemoval = true)
+	default void noCascade(EventSource session, Object parent, EntityPersister persister, Type propertyType, int propertyIndex) {}
 
 	/**
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.

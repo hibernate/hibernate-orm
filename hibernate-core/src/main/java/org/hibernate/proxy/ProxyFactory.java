@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -15,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.CompositeType;
 
 /**
- * Contract for run-time, proxy-based lazy initialization proxies.
+ * Contract for runtime, proxy-based lazy initialization proxies.
  *
  * @author Gavin King
  */
@@ -23,7 +20,7 @@ public interface ProxyFactory {
 
 	/**
 	 * Called immediately after instantiation of this factory.
-	 * <p/>
+	 * <p>
 	 * Essentially equivalent to constructor injection, but contracted
 	 * here via interface.
 	 *
@@ -38,17 +35,17 @@ public interface ProxyFactory {
 	 * @param setIdentifierMethod Reference to the identifier setter method;
 	 * invocation on this method should not force initialization
 	 * @param componentIdType For composite identifier types, a reference to
-	 * the {@link org.hibernate.type.CompositeType type} of the identifier
+	 * the {@linkplain CompositeType type} of the identifier
 	 * property; again accessing the id should generally not cause
-	 * initialization - but need to bear in mind <key-many-to-one/>
+	 * initialization - but need to bear in mind &lt;key-many-to-one/&gt;
 	 * mappings.
 	 * @throws HibernateException Indicates a problem completing post
 	 * instantiation initialization.
 	 */
 	void postInstantiate(
 			String entityName,
-			Class persistentClass,
-			Set<Class> interfaces,
+			Class<?> persistentClass,
+			Set<Class<?>> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType) throws HibernateException;
@@ -63,6 +60,5 @@ public interface ProxyFactory {
 	 * @throws HibernateException Indicates problems generating the requested
 	 * proxy.
 	 */
-	HibernateProxy getProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
-
+	HibernateProxy getProxy(Object id, SharedSessionContractImplementor session) throws HibernateException;
 }

@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -18,11 +17,10 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Standard initiator for the standard {@link DialectResolver} service
+ * Standard initiator for the {@link DialectResolver} service
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("deprecation")
 public class DialectResolverInitiator implements StandardServiceInitiator<DialectResolver> {
 	/**
 	 * Singleton access
@@ -35,28 +33,28 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 	}
 
 	@Override
-	public DialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final DialectResolverSet resolver = new DialectResolverSet();
+	public DialectResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+		final DialectResolverSet resolverSet = new DialectResolverSet();
 
-		applyCustomerResolvers( resolver, registry, configurationValues );
-		resolver.addResolver( new StandardDialectResolver() );
+		applyCustomerResolvers( resolverSet, registry, configurationValues );
+		resolverSet.addResolver( new StandardDialectResolver() );
 
-		return resolver;
+		return resolverSet;
 	}
 
 	private void applyCustomerResolvers(
-			DialectResolverSet resolver,
+			DialectResolverSet resolverSet,
 			ServiceRegistryImplementor registry,
-			Map configurationValues) {
+			Map<?,?> configurationValues) {
 		final String resolverImplNames = (String) configurationValues.get( AvailableSettings.DIALECT_RESOLVERS );
 
+		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 		if ( StringHelper.isNotEmpty( resolverImplNames ) ) {
-			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 			for ( String resolverImplName : StringHelper.split( ", \n\r\f\t", resolverImplNames ) ) {
 				try {
-					resolver.addResolver(
-							(DialectResolver) classLoaderService.classForName( resolverImplName ).newInstance()
-					);
+					final DialectResolver dialectResolver = (DialectResolver)
+							classLoaderService.classForName( resolverImplName ).newInstance();
+					resolverSet.addResolver( dialectResolver );
 				}
 				catch (HibernateException e) {
 					throw e;
@@ -66,5 +64,8 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 				}
 			}
 		}
+
+		final Collection<DialectResolver> resolvers = classLoaderService.loadJavaServices( DialectResolver.class );
+		resolverSet.addDiscoveredResolvers( resolvers );
 	}
 }

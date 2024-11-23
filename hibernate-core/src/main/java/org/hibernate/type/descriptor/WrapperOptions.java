@@ -1,56 +1,94 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
 
-import java.sql.Timestamp;
-import java.util.Calendar;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 import java.util.TimeZone;
 
-import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
 /**
- * Gives binding (nullSafeSet) and extracting (nullSafeGet) code access to options.
- *
- * @todo Definitely could use a better name
+ * Options for {@linkplain ValueBinder#bind(java.sql.PreparedStatement, Object, int, WrapperOptions)
+ * binding values to} and {@linkplain ValueExtractor#extract(java.sql.ResultSet, int, WrapperOptions)
+ * extracting values from} JDBC prepared statements and result sets.
  *
  * @author Steve Ebersole
+ *
+ * @see ValueBinder
+ * @see ValueExtractor
  */
 public interface WrapperOptions {
+
 	/**
-	 * Should streams be used for binding LOB values.
+	 * Access to the current session.
+	 */
+	SharedSessionContractImplementor getSession();
+
+	/**
+	 * Access to the current session factory.
+	 */
+	SessionFactoryImplementor getSessionFactory();
+
+	/**
+	 * Access to the current dialect.
+	 */
+	default Dialect getDialect() {
+		return getSessionFactory().getJdbcServices().getDialect();
+	}
+
+	/**
+	 * Determines whether streams should be used for binding LOB values.
 	 *
 	 * @return {@code true}/{@code false}
+	 *
+	 * @see org.hibernate.dialect.Dialect#useInputStreamToInsertBlob()
 	 */
-	public boolean useStreamForLobBinding();
+	boolean useStreamForLobBinding();
 
 	/**
-	 * Obtain access to the {@link LobCreator}
+	 * The JDBC {@link java.sql.Types type code} used to bind a null boolean value.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
+	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
+	 */
+	int getPreferredSqlTypeCodeForBoolean();
+
+	/**
+	 * Obtain access to the {@link LobCreator}.
 	 *
 	 * @return The LOB creator
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#NON_CONTEXTUAL_LOB_CREATION
+	 * @see org.hibernate.dialect.Dialect#getDefaultNonContextualLobCreation()
 	 */
-	public LobCreator getLobCreator();
+	LobCreator getLobCreator();
 
 	/**
-	 * Allow remapping of descriptors for dealing with sql type.
+	 * The JDBC {@link TimeZone} used when writing a value of type {@link java.sql.Time}
+	 * or {@link java.sql.Timestamp} to a JDBC {@link java.sql.PreparedStatement}, or
+	 * when reading from a JDBC {@link java.sql.ResultSet}.
+	 * <ul>
+	 * <li>When {@code getJdbcTimeZone()} is null, the method
+	 *     {@link java.sql.PreparedStatement#setTimestamp(int, java.sql.Timestamp)} is
+	 *     called to write a timestamp, and
+	 *     {@link java.sql.ResultSet#getTimestamp(int)} is called to read a timestamp.
+	 * <li>But when not null, the method
+	 *     {@link java.sql.PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)}
+	 *     is called to write a timestamp, and
+	 *     {@link java.sql.ResultSet#getTimestamp(int, java.util.Calendar)} is called to
+	 *     read a timestamp.
+	 * </ul>
+	 * <p>
+	 * Thus, the storage {@link TimeZone} can differ from the default JVM TimeZone given
+	 * by {@link TimeZone#getDefault()}.
 	 *
-	 * @param sqlTypeDescriptor The known descriptor
+	 * @return the JDBC {@link TimeZone}, or null if no JDBC timezone was explicitly set
 	 *
-	 * @return The remapped descriptor.  May be the same as the known descriptor indicating no remapping.
+	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
 	 */
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor);
-
-	/**
-	 * The JDBC {@link TimeZone} used when persisting Timestamp and DateTime properties into the database.
-	 * This setting is used when storing timestamps using the {@link java.sql.PreparedStatement#setTimestamp(int, Timestamp, Calendar)} method.
-	 *
-	 * This way, the storage {@link TimeZone} can differ from the default JVM TimeZone given by {@link TimeZone#getDefault()}.
-	 *
-	 * @return JDBC {@link TimeZone}
-	 */
-	public TimeZone getJdbcTimeZone();
+	TimeZone getJdbcTimeZone();
 }

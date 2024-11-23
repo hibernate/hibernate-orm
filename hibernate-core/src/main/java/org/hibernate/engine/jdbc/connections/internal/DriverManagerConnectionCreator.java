@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
@@ -14,7 +12,8 @@ import java.util.Properties;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * A specialized ConnectionCreator which uses {@link DriverManager#getConnection} to generate Connections
+ * A specialized {@link ConnectionCreator} which uses {@link DriverManager#getConnection(String, Properties)}
+ * to obtain JDBC connections.
  *
  * @author Steve Ebersole
  */
@@ -24,8 +23,9 @@ public class DriverManagerConnectionCreator extends BasicConnectionCreator {
 			String url,
 			Properties connectionProps,
 			Boolean autocommit,
-			Integer isolation) {
-		super( serviceRegistry, url, connectionProps, autocommit, isolation );
+			Integer isolation,
+			String initSql) {
+		super( serviceRegistry, url, connectionProps, autocommit, isolation, initSql );
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class DriverManagerConnectionCreator extends BasicConnectionCreator {
 			return DriverManager.getConnection( url, connectionProps );
 		}
 		catch (SQLException e) {
-			throw convertSqlException( "Error calling DriverManager#getConnection", e );
+			throw convertSqlException( "Error calling JDBC 'DriverManager.getConnection()'", e );
 		}
 	}
 }

@@ -1,20 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.model.CustomSql;
-import org.hibernate.boot.model.TruthValue;
 
 /**
  * Contract describing source of information related to mapping an entity.
@@ -39,13 +34,6 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	String getXmlNodeName();
 
 	/**
-	 * Obtain the named custom tuplizer classes to be used.
-	 *
-	 * @return The custom tuplizer class names
-	 */
-	Map<EntityMode,String> getTuplizerClassMap();
-
-	/**
 	 * Obtain the name of a custom persister class to be used.
 	 *
 	 * @return The custom persister class name
@@ -60,7 +48,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	boolean isLazy();
 
 	/**
-	 * For {@link #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
+	 * For {@linkplain #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
 	 *
 	 * @return The proxy interface name
 	 */
@@ -69,13 +57,13 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	/**
 	 * Obtain the batch-size to be applied when initializing proxies of this entity.
 	 *
-	 * @return returns the the batch-size.
+	 * @return returns the batch-size.
 	 */
 	int getBatchSize();
 
 	/**
 	 * Is the entity abstract?
-	 * <p/>
+	 * <p>
 	 * The implication is whether the entity maps to a database table.
 	 *
 	 * @return {@code true} indicates the entity is abstract; {@code false} non-abstract; {@code null}
@@ -157,7 +145,4 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	List<JaxbHbmNamedQueryType> getNamedQueries();
 
 	List<JaxbHbmNamedNativeQueryType> getNamedNativeQueries();
-
-	TruthValue quoteIdentifiersLocalToEntity();
-
 }

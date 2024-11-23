@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
@@ -19,6 +17,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
@@ -38,10 +37,12 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	private final MiddleComponentData indexComponentData;
 
 	public ListCollectionMapper(
+			Configuration configuration,
 			CommonCollectionMapperData commonCollectionMapperData,
-			MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
+			MiddleComponentData elementComponentData,
+			MiddleComponentData indexComponentData,
 			boolean revisionTypeInId) {
-		super( commonCollectionMapperData, List.class, ListProxy.class, false, revisionTypeInId );
+		super( configuration, commonCollectionMapperData, List.class, ListProxy.class, false, revisionTypeInId );
 		this.elementComponentData = elementComponentData;
 		this.indexComponentData = indexComponentData;
 	}
@@ -66,7 +67,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected Collection getNewCollectionContent(PersistentCollection newCollection) {
 		if ( newCollection == null ) {
 			return null;
@@ -77,7 +78,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected Collection getOldCollectionContent(Serializable oldCollection) {
 		if ( oldCollection == null ) {
 			return null;
@@ -88,7 +89,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected void mapToMapFromObject(
 			SessionImplementor session,
 			Map<String, Object> idData,
@@ -126,7 +127,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 			SessionImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 
 		final CollectionPersister collectionPersister = resolveCollectionPersister( session, newColl );

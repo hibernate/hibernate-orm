@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * A BasicType adapter targeting partial portability to 6.0's type
  * system changes.  In 6.0 the notion of a BasicType is just a
- * combination of JavaTypeDescriptor/SqlTypeDescriptor.
+ * combination of JavaType/JdbcType.
  *
  * @author Steve Ebersole
  */
@@ -22,14 +20,14 @@ public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBa
 	private final String[] registrationKeys;
 
 	public StandardBasicTypeTemplate(
-			SqlTypeDescriptor sqlTypeDescriptor,
-			JavaTypeDescriptor<J> javaTypeDescriptor,
+			JdbcType jdbcType,
+			JavaType<J> javaType,
 			String... registrationKeys) {
-		super( sqlTypeDescriptor, javaTypeDescriptor );
+		super( jdbcType, javaType );
 		this.registrationKeys = registrationKeys;
 
-		this.name = javaTypeDescriptor.getJavaType() == null ? "(map-mode)" : javaTypeDescriptor.getJavaType().getName()
-				+ " -> " + sqlTypeDescriptor.getSqlType();
+		this.name = javaType.getJavaType() == null ? "(map-mode)" : javaType.getTypeName()
+				+ " -> " + jdbcType.getDefaultSqlTypeCode();
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
@@ -11,32 +9,29 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_CLASS_ARRAY;
 
 public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 
-	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyFactory.class );
-
 	private final ByteBuddyProxyHelper byteBuddyProxyHelper;
 
-	private Class persistentClass;
+	private Class<?> persistentClass;
 	private String entityName;
-	private Class[] interfaces;
+	private Class<?>[] interfaces;
 	private Method getIdentifierMethod;
 	private Method setIdentifierMethod;
 	private CompositeType componentIdType;
 	private boolean overridesEquals;
 
-	private Class proxyClass;
+	private Class<?> proxyClass;
 
 	public ByteBuddyProxyFactory(ByteBuddyProxyHelper byteBuddyProxyHelper) {
 		this.byteBuddyProxyHelper = byteBuddyProxyHelper;
@@ -45,8 +40,8 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 	@Override
 	public void postInstantiate(
 			String entityName,
-			Class persistentClass,
-			Set<Class> interfaces,
+			Class<?> persistentClass,
+			Set<Class<?>> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType) throws HibernateException {
@@ -61,17 +56,13 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 		this.proxyClass = byteBuddyProxyHelper.buildProxy( persistentClass, this.interfaces );
 	}
 
-	private Class[] toArray(Set<Class> interfaces) {
-		if ( interfaces == null ) {
-			return ArrayHelper.EMPTY_CLASS_ARRAY;
-		}
-
-		return interfaces.toArray( new Class[interfaces.size()] );
+	private Class<?>[] toArray(Set<Class<?>> interfaces) {
+		return interfaces == null ? EMPTY_CLASS_ARRAY : interfaces.toArray(EMPTY_CLASS_ARRAY);
 	}
 
 	@Override
 	public HibernateProxy getProxy(
-			Serializable id,
+			Object id,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final ByteBuddyInterceptor interceptor = new ByteBuddyInterceptor(
 				entityName,
@@ -85,21 +76,42 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 				overridesEquals
 		);
 
-		try {
-			final HibernateProxy proxy = (HibernateProxy) proxyClass.getConstructor().newInstance();
-			( (ProxyConfiguration) proxy ).$$_hibernate_set_interceptor( interceptor );
+		final HibernateProxy instance = getHibernateProxy();
+		final ProxyConfiguration proxyConfiguration = instance.asProxyConfiguration();
+		if ( proxyConfiguration == null ) {
+			throw new HibernateException( "Produced proxy does not correctly implement ProxyConfiguration" );
+		}
+		proxyConfiguration.$$_hibernate_set_interceptor( interceptor );
+		return instance;
+	}
 
-			return proxy;
+	private HibernateProxy getHibernateProxy() {
+		final PrimeAmongSecondarySupertypes internal = getHibernateProxyInternal();
+		final HibernateProxy hibernateProxy = internal.asHibernateProxy();
+		if ( hibernateProxy == null ) {
+			throw new HibernateException( "Produced proxy does not correctly implement HibernateProxy" );
+		}
+		return hibernateProxy;
+	}
+
+	/**
+	 * This technically returns a HibernateProxy, but declaring that type as the return
+	 * type for the newInstance() action triggers an implicit case of type pollution.
+	 * We therefore declare it as PrimeAmongSecondarySupertypes, and require the
+	 * invoker to perform the narrowing
+	 */
+	private PrimeAmongSecondarySupertypes getHibernateProxyInternal() throws HibernateException {
+		try {
+			return (PrimeAmongSecondarySupertypes) proxyClass.getConstructor().newInstance();
 		}
 		catch (NoSuchMethodException e) {
-			String logMessage = LOG.bytecodeEnhancementFailedBecauseOfDefaultConstructor( entityName );
-			LOG.error( logMessage, e );
-			throw new HibernateException( logMessage, e );
+			throw new HibernateException(
+					"Bytecode enhancement failed because no public, protected or package-private default constructor was found for entity '"
+							+ entityName + "' (private constructors don't work with runtime proxies)", e );
 		}
 		catch (Throwable t) {
-			String logMessage = LOG.bytecodeEnhancementFailed( entityName );
-			LOG.error( logMessage, t );
-			throw new HibernateException( logMessage, t );
+			throw new HibernateException( "Bytecode enhancement failed for entity '" + entityName + "'", t );
 		}
 	}
+
 }

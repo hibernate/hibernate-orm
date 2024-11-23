@@ -1,16 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.spi;
 
-import javax.persistence.AttributeConverter;
-
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 
 import com.fasterxml.classmate.ResolvedType;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Boot-time descriptor of a JPA AttributeConverter
@@ -18,10 +15,12 @@ import com.fasterxml.classmate.ResolvedType;
  * @author Steve Ebersole
  */
 public interface ConverterDescriptor {
+	String TYPE_NAME_PREFIX = "converted::";
+
 	/**
 	 * The AttributeConverter class
 	 */
-	Class<? extends AttributeConverter> getAttributeConverterClass();
+	Class<? extends AttributeConverter<?,?>> getAttributeConverterClass();
 
 	/**
 	 * The resolved Classmate type descriptor for the conversion's domain type
@@ -43,5 +42,12 @@ public interface ConverterDescriptor {
 	/**
 	 * Factory for the runtime representation of the converter
 	 */
-	JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context);
+	JpaAttributeConverter<?,?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context);
+
+	/**
+	 * Can this converter be overridden by other competing converters?
+	 */
+	default boolean overrideable() {
+		return false;
+	}
 }

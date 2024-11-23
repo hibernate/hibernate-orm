@@ -1,25 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import java.io.Serializable;
-import javax.transaction.SystemException;
+import jakarta.transaction.SystemException;
 
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * A pluggable strategy for defining how the {@link javax.transaction.Synchronization} registered by Hibernate handles
+ * A pluggable strategy for defining how the {@link jakarta.transaction.Synchronization} registered by Hibernate handles
  * exceptions.
  *
  * @author Steve Ebersole
  */
 public interface ExceptionMapper extends Serializable {
 	/**
-	 * Map a JTA {@link javax.transaction.SystemException} to the appropriate runtime-based exception.
+	 * Map a JTA {@link jakarta.transaction.SystemException} to the appropriate runtime-based exception.
 	 *
 	 * @param message The message to use for the returned exception
 	 * @param systemException The causal exception

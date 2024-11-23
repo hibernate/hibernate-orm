@@ -1,0 +1,51 @@
+File classesFolder = new File(basedir, "target/classes");
+if (!classesFolder.exists()) {
+    throw new FileNotFoundException("Folder should exist: " + classesFolder);
+}
+
+File hibCoreJar = new File(localRepositoryPath, hibernateCoreJarPath);
+if (!hibCoreJar.exists()) {
+    throw new FileNotFoundException("Hibernate Core jar should exist: " + hibCoreJar);
+}
+
+URL[] urls = new URL[2];
+urls[0] = classesFolder.toURI().toURL();
+urls[1] = hibCoreJar.toURI().toURL();
+
+ClassLoader loader = new URLClassLoader(urls);
+
+Class barClass = loader.loadClass("org.foo.Bar");
+if (barClass == null) {
+    throw new ClassNotFoundException("Class 'org.foo.Bar' should be loaded");
+}
+Class fooClass = loader.loadClass("org.foo.Foo");
+if (fooClass == null) {
+    throw new FileNotFoundException("Class 'org.foo.Foo' should be loaded");
+}
+Class bazClass = loader.loadClass("org.foo.Baz");
+if (bazClass == null) {
+    throw new FileNotFoundException("Class 'org.foo.Baz' should be loaded");
+}
+
+Object m = barClass.getMethod("$$_hibernate_getEntityInstance", new Class[]{});
+if (m == null) {
+    throw new NoSuchMethodException("Method 'org.foo.Baz#$$_hibernate_getEntityInstance' does not exist");
+} else {
+    System.out.println("Class '" + barClass.getName() + "' was enhanced succesfully!");
+}
+
+try {
+    m = fooClass.getMethod("$$_hibernate_getEntityInstance", new Class[]{});
+    // we need to fail here because the class 'org.foo.Foo' should not be enhanced
+    throw new RuntimeException("Class '" + fooClass + "' should not be enhanced!");
+} catch (NoSuchMethodException e) {
+    System.out.println("Class '" + fooClass.getName() + "' was correctly left unchanged.");
+}
+
+try {
+    m = bazClass.getMethod("$$_hibernate_getEntityInstance", new Class[]{});
+    // we need to fail here because the class 'org.foo.Baz' should not be enhanced
+    throw new RuntimeException("Class '" + bazClass + "' should not be enhanced!");
+} catch (NoSuchMethodException e) {
+    System.out.println("Class '" + bazClass.getName() + "' was correctly left unchanged.");
+}

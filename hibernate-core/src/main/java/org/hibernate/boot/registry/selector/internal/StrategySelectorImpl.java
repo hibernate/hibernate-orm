@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.selector.internal;
 
@@ -13,7 +11,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -25,7 +22,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.jboss.logging.Logger;
 
 /**
- * Standard implementation of the StrategySelector contract.
+ * Standard implementation of the {@link StrategySelector} contract.
  *
  * @author Steve Ebersole
  */
@@ -73,11 +70,10 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public <T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation) {
-		Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
-		if ( namedStrategyImplementorMap == null ) {
-			namedStrategyImplementorMap = new ConcurrentHashMap<>();
-			namedStrategyImplementorByStrategyMap.put( strategy, namedStrategyImplementorMap );
-		}
+		final Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.computeIfAbsent(
+				strategy,
+				aClass -> new ConcurrentHashMap<>()
+		);
 
 		final Class old = namedStrategyImplementorMap.put( name, implementation );
 		if ( old == null ) {
@@ -165,7 +161,6 @@ public class StrategySelectorImpl implements StrategySelector {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T resolveDefaultableStrategy(Class<T> strategy, Object strategyReference, final T defaultValue) {
 		return resolveDefaultableStrategy(
 				strategy,
@@ -232,7 +227,7 @@ public class StrategySelectorImpl implements StrategySelector {
 		}
 
 		final Class<? extends T> implementationClass;
-		if ( Class.class.isInstance( strategyReference ) ) {
+		if ( strategyReference instanceof Class ) {
 			implementationClass = (Class<T>) strategyReference;
 		}
 		else {

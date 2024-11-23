@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Set;
 
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.ColumnSource;
 import org.hibernate.boot.model.source.spi.JdbcDataType;
 import org.hibernate.boot.model.source.spi.SizeSource;
@@ -26,8 +23,8 @@ class ColumnAttributeSourceImpl
 	private final String tableName;
 	private final String columnName;
 	private final SizeSource sizeSource;
-	private final TruthValue nullable;
-	private final TruthValue unique;
+	private final Boolean nullable;
+	private final Boolean unique;
 	private final Set<String> indexConstraintNames;
 	private final Set<String> ukConstraintNames;
 
@@ -36,8 +33,8 @@ class ColumnAttributeSourceImpl
 			String tableName,
 			String columnName,
 			SizeSource sizeSource,
-			TruthValue nullable,
-			TruthValue unique,
+			Boolean nullable,
+			Boolean unique,
 			Set<String> indexConstraintNames,
 			Set<String> ukConstraintNames) {
 		super( mappingDocument );
@@ -66,7 +63,7 @@ class ColumnAttributeSourceImpl
 	}
 
 	@Override
-	public TruthValue isNullable() {
+	public Boolean isNullable() {
 		return nullable;
 	}
 
@@ -102,7 +99,7 @@ class ColumnAttributeSourceImpl
 
 	@Override
 	public boolean isUnique() {
-		return unique == TruthValue.TRUE;
+		return unique == Boolean.TRUE;
 	}
 
 	@Override

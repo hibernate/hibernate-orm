@@ -1,19 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
-
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.
- * <p/>
+ * <p>
  * All locking provided implementations assume the underlying database supports
  * (and that the connection is in) at least read-committed transaction isolation.
  * The most glaring exclusion to this is HSQLDB which only offers support for
@@ -39,6 +35,6 @@ public interface LockingStrategy {
 	 * the requested lock.
 	 * @throws LockingStrategyException Indicates a failure in the lock attempt
 	 */
-	void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
+	void lock(Object id, Object version, Object object, int timeout, EventSource session)
 			throws StaleObjectStateException, LockingStrategyException;
 }

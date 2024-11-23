@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * The base contract for determining transient status versus detached status.
@@ -21,7 +21,7 @@ public interface UnsavedValueStrategy {
 	 * indicates the value does not corresponds to unsaved data (aka, detached state); {@code null} indicates that
 	 * this strategy was not able to determine conclusively.
 	 */
-	public Boolean isUnsaved(Object test);
+	@Nullable Boolean isUnsaved(@Nullable Object test);
 
 	/**
 	 * Get a default value meant to indicate transience.
@@ -30,5 +30,5 @@ public interface UnsavedValueStrategy {
 	 *
 	 * @return The default transience value.
 	 */
-	public Object getDefaultValue(Object currentValue);
+	@Nullable Object getDefaultValue(@Nullable Object currentValue);
 }

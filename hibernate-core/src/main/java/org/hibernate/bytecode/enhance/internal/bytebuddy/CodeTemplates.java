@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
@@ -11,7 +9,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Collection;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.NoopCollectionTracker;
@@ -22,9 +19,9 @@ import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CompositeOwner;
-import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.field.FieldDescription;
@@ -35,6 +32,8 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.implementation.bytecode.member.MethodInvocation;
 import net.bytebuddy.implementation.bytecode.member.MethodVariableAccess;
 import net.bytebuddy.jar.asm.Opcodes;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeTracker;
 
 class CodeTemplates {
 
@@ -82,7 +81,7 @@ class CodeTemplates {
 				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME, readOnly = false) DirtyTracker $$_hibernate_tracker,
 				@Advice.FieldValue(value = EnhancerConstants.TRACKER_COLLECTION_NAME, readOnly = false) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( $$_hibernate_collectionTracker == null ) {
-				returned = ( $$_hibernate_tracker == null ) ? new String[0] : $$_hibernate_tracker.get();
+				returned = ( $$_hibernate_tracker == null ) ? ArrayHelper.EMPTY_STRING_ARRAY : $$_hibernate_tracker.get();
 			}
 			else {
 				if ( $$_hibernate_tracker == null ) {
@@ -99,7 +98,7 @@ class CodeTemplates {
 		static void $$_hibernate_getDirtyAttributes(
 				@Advice.Return(readOnly = false) String[] returned,
 				@Advice.FieldValue(value = EnhancerConstants.TRACKER_FIELD_NAME) DirtyTracker $$_hibernate_tracker) {
-			returned = $$_hibernate_tracker == null ? new String[0] : $$_hibernate_tracker.get();
+			returned = $$_hibernate_tracker == null ? ArrayHelper.EMPTY_STRING_ARRAY : $$_hibernate_tracker.get();
 		}
 	}
 
@@ -177,7 +176,7 @@ class CodeTemplates {
 				}
 				else if ( collection != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
-					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection) collection ).wasInitialized() )
+					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection<?>) collection ).wasInitialized() )
 							&& size != collection.size() ) {
 						returned = true;
 					}
@@ -223,7 +222,7 @@ class CodeTemplates {
 				}
 				else if ( collection != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
-					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection) collection ).wasInitialized() )
+					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection<?>) collection ).wasInitialized() )
 							&& size != collection.size() ) {
 						tracker.add( fieldName );
 					}
@@ -246,7 +245,7 @@ class CodeTemplates {
 				}
 				else if ( map != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
-					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection) map ).wasInitialized() )
+					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection<?>) map ).wasInitialized() )
 							&& size != map.size() ) {
 						tracker.add( fieldName );
 					}
@@ -263,8 +262,7 @@ class CodeTemplates {
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( collection == null || collection instanceof PersistentCollection && !( (PersistentCollection) collection )
-						.wasInitialized() ) {
+				if ( collection == null || collection instanceof PersistentCollection && !( (PersistentCollection<?>) collection ).wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, -1 );
 				}
 				else {
@@ -282,8 +280,7 @@ class CodeTemplates {
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
 			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( map == null || map instanceof PersistentCollection && !( (PersistentCollection) map )
-						.wasInitialized() ) {
+				if ( map == null || map instanceof PersistentCollection && !( (PersistentCollection<?>) map ).wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, -1 );
 				}
 				else {
@@ -320,14 +317,14 @@ class CodeTemplates {
 		@Advice.OnMethodEnter
 		static void enter(@FieldName String fieldName, @FieldValue Object field) {
 			if ( field != null ) {
-				( (CompositeTracker) field ).$$_hibernate_clearOwner( fieldName );
+				asCompositeTracker( field ).$$_hibernate_clearOwner( fieldName );
 			}
 		}
 
 		@Advice.OnMethodExit
 		static void exit(@Advice.This CompositeOwner self, @FieldName String fieldName, @FieldValue Object field) {
 			if ( field != null ) {
-				( (CompositeTracker) field ).$$_hibernate_setOwner( fieldName, self );
+				asCompositeTracker( field ).$$_hibernate_setOwner( fieldName, self );
 			}
 			self.$$_hibernate_trackChange( fieldName );
 		}
@@ -355,20 +352,30 @@ class CodeTemplates {
 
 	static class OneToOneHandler {
 		@Advice.OnMethodEnter
-		static void enter(@FieldValue Object field, @Advice.Argument(0) Object argument, @MappedBy String mappedBy) {
-			if ( field != null && Hibernate.isPropertyInitialized( field, mappedBy ) && argument != null ) {
-				setterNull( field, null );
+		static void enter(@FieldValue Object field, @Advice.Argument(0) Object argument, @InverseSide boolean inverseSide) {
+			if ( getterSelf() != null ) {
+				// We copy the old value, then set the field to null which we must do before
+				// unsetting the inverse attribute, as we'd otherwise run into a stack overflow situation
+				// The field is writable, so setting it to null here is actually a field write.
+				Object fieldCopy = field;
+				field = null;
+				setterNull( fieldCopy, null );
 			}
 		}
 
 		@Advice.OnMethodExit
-		static void exit(@Advice.This Object self, @Advice.Argument(0) Object argument, @MappedBy String mappedBy) {
-			if ( argument != null && Hibernate.isPropertyInitialized( argument, mappedBy ) && getter( argument ) != self ) {
+		static void exit(@Advice.This Object self, @Advice.Argument(0) Object argument, @InverseSide boolean inverseSide) {
+			if ( argument != null && getter( argument ) != self ) {
 				setterSelf( argument, self );
 			}
 		}
 
 		static Object getter(Object target) {
+			// is replaced by the actual method call
+			throw new AssertionError();
+		}
+
+		static Object getterSelf() {
 			// is replaced by the actual method call
 			throw new AssertionError();
 		}
@@ -386,30 +393,35 @@ class CodeTemplates {
 
 	static class OneToManyOnCollectionHandler {
 		@Advice.OnMethodEnter
-		static void enter(@FieldValue Collection<?> field, @Advice.Argument(0) Collection<?> argument, @MappedBy String mappedBy) {
-			if ( field != null && Hibernate.isPropertyInitialized( field, mappedBy ) ) {
+		static void enter(@FieldValue Collection<?> field, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide) {
+			if ( getterSelf() != null ) {
 				Object[] array = field.toArray();
-				for ( Object array1 : array ) {
-					if ( argument == null || !argument.contains( array1 ) ) {
-						setterNull( array1, null );
+				for ( int i = 0; i < array.length; i++ ) {
+					if ( argument == null || !argument.contains( array[i] ) ) {
+						setterNull( array[i], null );
 					}
 				}
 			}
 		}
 
 		@Advice.OnMethodExit
-		static void exit(@Advice.This Object self, @Advice.Argument(0) Collection<?> argument, @MappedBy String mappedBy) {
-			if ( argument != null && Hibernate.isPropertyInitialized( argument, mappedBy ) ) {
+		static void exit(@Advice.This Object self, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide) {
+			if ( argument != null ) {
 				Object[] array = argument.toArray();
-				for ( Object array1 : array ) {
-					if ( Hibernate.isPropertyInitialized( array1, mappedBy ) && getter( array1 ) != self ) {
-						setterSelf( array1, self );
+				for ( int i = 0; i < array.length; i++ ) {
+					if ( getter( array[i] ) != self ) {
+						setterSelf( array[i], self );
 					}
 				}
 			}
 		}
 
 		static Object getter(Object target) {
+			// is replaced by the actual method call
+			throw new AssertionError();
+		}
+
+		static Object getterSelf() {
 			// is replaced by the actual method call
 			throw new AssertionError();
 		}
@@ -427,24 +439,24 @@ class CodeTemplates {
 
 	static class OneToManyOnMapHandler {
 		@Advice.OnMethodEnter
-		static void enter(@FieldValue Map<?, ?> field, @Advice.Argument(0) Map<?, ?> argument, @MappedBy String mappedBy) {
-			if ( field != null && Hibernate.isPropertyInitialized( field, mappedBy ) ) {
+		static void enter(@FieldValue Map<?, ?> field, @Advice.Argument(0) Map<?, ?> argument, @InverseSide boolean inverseSide) {
+			if ( getterSelf() != null ) {
 				Object[] array = field.values().toArray();
-				for ( Object array1 : array ) {
-					if ( argument == null || !argument.values().contains( array1 ) ) {
-						setterNull( array1, null );
+				for ( int i = 0; i < array.length; i++ ) {
+					if ( argument == null || !argument.containsValue( array[i] ) ) {
+						setterNull( array[i], null );
 					}
 				}
 			}
 		}
 
 		@Advice.OnMethodExit
-		static void exit(@Advice.This Object self, @Advice.Argument(0) Map<?, ?> argument, @MappedBy String mappedBy) {
-			if ( argument != null && Hibernate.isPropertyInitialized( argument, mappedBy ) ) {
+		static void exit(@Advice.This Object self, @Advice.Argument(0) Map<?, ?> argument, @InverseSide boolean inverseSide) {
+			if ( argument != null ) {
 				Object[] array = argument.values().toArray();
-				for ( Object array1 : array ) {
-					if ( Hibernate.isPropertyInitialized( array1, mappedBy ) && getter( array1 ) != self ) {
-						setterSelf( array1, self );
+				for ( int i = 0; i < array.length; i++ ) {
+					if ( getter( array[i] ) != self ) {
+						setterSelf( array[i], self );
 					}
 				}
 			}
@@ -452,6 +464,11 @@ class CodeTemplates {
 
 		static Object getter(Object target) {
 			// is replaced with the actual getter call during instrumentation.
+			throw new AssertionError();
+		}
+
+		static Object getterSelf() {
+			// is replaced by the actual method call
 			throw new AssertionError();
 		}
 
@@ -468,8 +485,8 @@ class CodeTemplates {
 
 	static class ManyToOneHandler {
 		@Advice.OnMethodEnter
-		static void enter(@Advice.This Object self, @FieldValue Object field, @MappedBy String mappedBy) {
-			if ( field != null && Hibernate.isPropertyInitialized( field, mappedBy ) ) {
+		static void enter(@Advice.This Object self, @FieldValue Object field, @BidirectionalAttribute String inverseAttribute) {
+			if ( getterSelf() != null ) {
 				Collection<?> c = getter( field );
 				if ( c != null ) {
 					c.remove( self );
@@ -478,8 +495,8 @@ class CodeTemplates {
 		}
 
 		@Advice.OnMethodExit
-		static void exit(@Advice.This Object self, @Advice.Argument(0) Object argument, @MappedBy String mappedBy) {
-			if ( argument != null && Hibernate.isPropertyInitialized( argument, mappedBy ) ) {
+		static void exit(@Advice.This Object self, @Advice.Argument(0) Object argument, @BidirectionalAttribute String inverseAttribute) {
+			if ( argument != null ) {
 				Collection<Object> c = getter( argument );
 				if ( c != null && !c.contains( self ) ) {
 					c.add( self );
@@ -491,37 +508,45 @@ class CodeTemplates {
 			// is replaced by the actual method call
 			throw new AssertionError();
 		}
+
+		static Object getterSelf() {
+			// is replaced by the actual method call
+			throw new AssertionError();
+		}
 	}
 
 	static class ManyToManyHandler {
 		@Advice.OnMethodEnter
-		static void enter(@Advice.This Object self, @FieldValue Collection<?> field, @Advice.Argument(0) Collection<?> argument, @MappedBy String mappedBy) {
-			if ( field != null && Hibernate.isPropertyInitialized( field, mappedBy ) ) {
+		static void enter(@Advice.This Object self, @FieldValue Collection<?> field, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide, @BidirectionalAttribute String bidirectionalAttribute) {
+			if ( getterSelf() != null ) {
 				Object[] array = field.toArray();
-				for ( Object array1 : array ) {
-					if ( argument == null || !argument.contains( array1 ) ) {
-						getter( array1 ).remove( self );
+				for ( int i = 0; i < array.length; i++ ) {
+					if ( argument == null || !argument.contains( array[i] ) ) {
+						getter( array[i] ).remove( self );
 					}
 				}
 			}
 		}
 
 		@Advice.OnMethodExit
-		static void exit(@Advice.This Object self, @Advice.Argument(0) Collection<?> argument, @MappedBy String mappedBy) {
-			if ( argument != null && Hibernate.isPropertyInitialized( argument, mappedBy ) ) {
+		static void exit(@Advice.This Object self, @Advice.Argument(0) Collection<?> argument, @InverseSide boolean inverseSide, @BidirectionalAttribute String bidirectionalAttribute) {
+			if ( argument != null ) {
 				Object[] array = argument.toArray();
 				for ( Object array1 : array ) {
-					if ( Hibernate.isPropertyInitialized( array1, mappedBy ) ) {
-						Collection<Object> c = getter( array1 );
-						if ( c != self && c != null ) {
-							c.add( self );
-						}
+					Collection<Object> c = getter( array1 );
+					if ( c != null && !c.contains( self ) ) {
+						c.add( self );
 					}
 				}
 			}
 		}
 
 		static Collection<Object> getter(Object self) {
+			// is replaced by the actual method call
+			throw new AssertionError();
+		}
+
+		static Object getterSelf() {
 			// is replaced by the actual method call
 			throw new AssertionError();
 		}
@@ -538,22 +563,33 @@ class CodeTemplates {
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
-	@interface MappedBy {
+	@interface InverseSide {
+
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@interface BidirectionalAttribute {
 
 	}
 
 	// mapping to get private field from superclass by calling the enhanced reader, for use when field is not visible
 	static class GetterMapping implements Advice.OffsetMapping {
 
+		private final TypeDescription.Generic returnType;
 		private final FieldDescription persistentField;
 
 		GetterMapping(FieldDescription persistentField) {
+			this( persistentField, persistentField.getType() );
+		}
+
+		GetterMapping(FieldDescription persistentField, TypeDescription.Generic returnType) {
 			this.persistentField = persistentField;
+			this.returnType = returnType;
 		}
 
 		@Override public Target resolve(TypeDescription instrumentedType, MethodDescription instrumentedMethod, Assigner assigner, Advice.ArgumentHandler argumentHandler, Sort sort) {
-			MethodDescription.Token signature = new MethodDescription.Token( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(), Opcodes.ACC_PUBLIC, persistentField.getType() );
-			MethodDescription method = new MethodDescription.Latent( instrumentedType.getSuperClass().asErasure(), signature );
+			MethodDescription.Token signature = new MethodDescription.Token( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName() , Opcodes.ACC_PUBLIC, returnType );
+			MethodDescription method = new MethodDescription.Latent( persistentField.getDeclaringType().asErasure(), signature );
 
 			return new Target.AbstractReadOnlyAdapter() {
 				@Override

@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.xml;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
@@ -20,15 +19,15 @@ import org.xml.sax.InputSource;
 /**
  * An {@link EntityResolver} implementation which attempts to resolve
  * various systemId URLs to local classpath look ups<ol>
- * <li>Any systemId URL beginning with <tt>http://www.hibernate.org/dtd/</tt> is
+ * <li>Any systemId URL beginning with {@code http://www.hibernate.org/dtd/} is
  * searched for as a classpath resource in the classloader which loaded the
  * Hibernate classes.</li>
- * <li>Any systemId URL using <tt>classpath</tt> as the scheme (i.e. starting
- * with <tt>classpath://</tt> is searched for as a classpath resource using first
+ * <li>Any systemId URL using {@code classpath} as the scheme (i.e. starting
+ * with {@code classpath://} is searched for as a classpath resource using first
  * the current thread context classloader and then the classloader which loaded
  * the Hibernate classes.
  * </ol>
- * <p/>
+ * <p>
  * Any entity references which cannot be resolved in relation to the above
  * rules result in returning null, which should force the SAX reader to
  * handle the entity reference in its default manner.
@@ -44,7 +43,7 @@ import org.xml.sax.InputSource;
 @Deprecated
 public class DTDEntityResolver implements EntityResolver, Serializable {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DTDEntityResolver.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DTDEntityResolver.class.getName() );
 
 	private static final String HIBERNATE_NAMESPACE = "http://www.hibernate.org/dtd/";
 	private static final String OLD_HIBERNATE_NAMESPACE = "http://hibernate.sourceforge.net/";
@@ -71,7 +70,7 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 					LOG.debugf( "Unable to locate [%s] on classpath", systemId );
 				}
 				else {
-					LOG.debugf( "Located [%s] in classpath", systemId );
+					LOG.debugf( "Located [%s] on classpath", systemId );
 					source = new InputSource( stream );
 					source.setPublicId( publicId );
 					source.setSystemId( systemId );
@@ -87,12 +86,12 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 		InputStream dtdStream = resolveInHibernateNamespace( path );
 		if ( dtdStream == null ) {
 			LOG.debugf( "Unable to locate [%s] on classpath", systemId );
-			if ( systemId.substring( namespace.length() ).indexOf( "2.0" ) > -1 ) {
+			if ( systemId.substring( namespace.length() ).contains("2.0") ) {
 				LOG.usingOldDtd();
 			}
 		}
 		else {
-			LOG.debugf( "Located [%s] in classpath", systemId );
+			LOG.debugf( "Located [%s] on classpath", systemId );
 			source = new InputSource( dtdStream );
 			source.setPublicId( publicId );
 			source.setSystemId( systemId );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
@@ -28,6 +26,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 
 	private final URL url;
 	private final String charsetName;
+	private final boolean append;
 
 	private Writer writer;
 
@@ -36,10 +35,23 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 	 *
 	 * @param url The url to read from
 	 * @param charsetName The charset name
+	 * @param append If true, then bytes will be written to the end of the file rather than the beginning
 	 */
-	public ScriptTargetOutputToUrl(URL url, String charsetName) {
+	public ScriptTargetOutputToUrl(URL url, String charsetName, boolean append) {
 		this.url = url;
 		this.charsetName = charsetName;
+		this.append = append;
+	}
+
+	/**
+	 * Constructs a ScriptTargetOutputToUrl instance
+	 * the bytes will be written to the end of the file rather than the beginning
+	 *
+	 * @param url The url to read from
+	 * @param charsetName The charset name
+	 */
+	public ScriptTargetOutputToUrl(URL url, String charsetName) {
+		this( url, charsetName, true );
 	}
 
 	@Override
@@ -53,7 +65,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 	@Override
 	public void prepare() {
 		super.prepare();
-		this.writer = toWriter( url, charsetName );
+		this.writer = toWriter( url, charsetName, append );
 	}
 
 	@Override
@@ -62,17 +74,17 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 			writer().close();
 		}
 		catch (IOException e) {
-			throw new SchemaManagementException( "Unable to close file writer : " + e.toString() );
+			throw new SchemaManagementException( "Unable to close file writer : " + e );
 		}
 	}
 
 
-	private static Writer toWriter( URL url, String charsetName ) {
+	private static Writer toWriter( URL url, String charsetName, boolean append ) {
 		log.debug( "Attempting to resolve writer for URL : " + url );
 		// technically only "strings corresponding to file URLs" are supported, which I take to mean URLs whose
 		// protocol is "file"
 		try {
-			return ScriptTargetOutputToFile.toFileWriter( new File( url.toURI() ), charsetName );
+			return ScriptTargetOutputToFile.toFileWriter( new File( url.toURI() ), charsetName, append );
 		}
 		catch (URISyntaxException e) {
 			throw new SchemaManagementException(

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.cfg.internal;
 
@@ -12,7 +10,7 @@ import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -46,7 +44,7 @@ public class CollectionDataCachingConfigImpl
 		if ( !isVersioned() ) {
 			return null;
 		}
-		return ( (VersionType) collectionDescriptor.getOwner().getVersion().getType() ).getComparator();
+		return ( (BasicType<?>) collectionDescriptor.getOwner().getVersion().getType() ).getJavaTypeDescriptor().getComparator();
 	}
 
 	@Override

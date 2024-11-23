@@ -1,3 +1,4 @@
+[appendix]
 [[appendix-legacy-native-queries]]
 == Legacy Hibernate Native Queries
 
@@ -24,7 +25,7 @@ In this case, you do _not_ need to call `addEntity()` anymore.
 
 .Execution of a named query
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 List people = session
     .getNamedQuery( "persons" )
@@ -106,7 +107,7 @@ You can, alternatively, use the resultset mapping information in your hbm files 
 
 .Programmatically specifying the result mapping information
 ====
-[source, JAVA, indent=0]
+[source, java,, indent=0]
 ----
 List cats = session
     .createSQLQuery( "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id" )
@@ -169,7 +170,7 @@ If your mapping has a discriminator you must use `<return-discriminator>` to spe
 Hibernate provides support for queries via stored procedures and functions.
 Most of the following documentation is equivalent for both.
 The stored procedure/function must return a resultset as the first out-parameter to be able to work with Hibernate.
-An example of such a stored function in Oracle 9 and higher is as follows:
+An example of such a stored function in Oracle 19c and higher is as follows:
 
 [source,xml]
 ----

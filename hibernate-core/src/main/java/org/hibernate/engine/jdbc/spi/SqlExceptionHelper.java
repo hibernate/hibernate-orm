@@ -1,22 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
-import org.hibernate.exception.internal.SQLStateConverter;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -24,12 +24,13 @@ import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
 /**
- * Helper for handling SQLExceptions in various manners.
+ * Helper for handling {@link SQLException}s in various manners.
  *
  * @author Steve Ebersole
  */
 public class SqlExceptionHelper {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SqlExceptionHelper.class.getName()
 	);
@@ -38,12 +39,8 @@ public class SqlExceptionHelper {
 	private static final String DEFAULT_WARNING_MSG = "SQL Warning";
 	private final boolean logWarnings;
 
-	private static final SQLExceptionConverter DEFAULT_CONVERTER = new SQLStateConverter(
-			new ViolatedConstraintNameExtracter() {
-				public String extractConstraintName(SQLException e) {
-					return null;
-				}
-			}
+	private static final SQLExceptionConverter DEFAULT_CONVERTER = new StandardSQLExceptionConverter(
+			new SQLStateConversionDelegate( () -> e -> null )
 	);
 
 	private SQLExceptionConverter sqlExceptionConverter;
@@ -76,13 +73,11 @@ public class SqlExceptionHelper {
 
 	/**
 	 * Inject the exception converter to use.
-	 * <p/>
-	 * NOTE : <tt>null</tt> is allowed and signifies to use the default.
 	 *
-	 * @param sqlExceptionConverter The converter to use.
+	 * @param sqlExceptionConverter the converter to use, or {@code null} if the default converter should be used
 	 */
 	public void setSqlExceptionConverter(SQLExceptionConverter sqlExceptionConverter) {
-		this.sqlExceptionConverter = ( sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter );
+		this.sqlExceptionConverter = sqlExceptionConverter == null ? DEFAULT_CONVERTER : sqlExceptionConverter;
 	}
 
 	// SQLException ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,7 +105,20 @@ public class SqlExceptionHelper {
 	 */
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
 		logExceptions( sqlException, message + " [" + sql + "]" );
-		return sqlExceptionConverter.convert( sqlException, message, sql );
+		return sqlExceptionConverter.convert( sqlException, message + " [" + sqlException.getMessage() + "]", sql );
+	}
+
+	/**
+	 * Convert an SQLException using the current converter, doing some logging first.
+	 *
+	 * @param sqlException The exception to convert
+	 * @param messageSupplier An error message supplier.
+	 * @param sql The SQL being executed when the exception occurred
+	 *
+	 * @return The converted exception
+	 */
+	public JDBCException convert(SQLException sqlException, Supplier<String> messageSupplier, String sql) {
+		return convert( sqlException, messageSupplier.get(), sql );
 	}
 
 	/**
@@ -150,7 +158,7 @@ public class SqlExceptionHelper {
 	// SQLWarning ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Contract for handling {@link SQLWarning warnings}
+	 * Contract for handling {@linkplain SQLWarning warnings}
 	 */
 	public interface WarningHandler {
 		/**
@@ -161,8 +169,8 @@ public class SqlExceptionHelper {
 		boolean doProcess();
 
 		/**
-		 * Prepare for processing of a {@link SQLWarning warning} stack.
-		 * <p/>
+		 * Prepare for processing of a {@linkplain SQLWarning warning} stack.
+		 * <p>
 		 * Note that the warning here is also the first passed to {@link #handleWarning}
 		 *
 		 * @param warning The first warning in the stack.
@@ -178,7 +186,7 @@ public class SqlExceptionHelper {
 	}
 
 	/**
-	 * Basic support for {@link WarningHandler} implementations which handle {@link SQLWarning warnings}
+	 * Basic support for {@link WarningHandler} implementations which handle {@linkplain SQLWarning warnings}
 	 */
 	public abstract static class WarningHandlerLoggingSupport implements WarningHandler {
 		@Override
@@ -190,7 +198,7 @@ public class SqlExceptionHelper {
 		}
 
 		/**
-		 * Delegate to log common details of a {@link SQLWarning warning}
+		 * Delegate to log common details of a {@linkplain SQLWarning warning}
 		 *
 		 * @param description A description of the warning
 		 * @param message The warning message
@@ -260,7 +268,7 @@ public class SqlExceptionHelper {
 
 	/**
 	 * Standard (legacy) behavior for logging warnings associated with a JDBC {@link Connection} and clearing them.
-	 * <p/>
+	 * <p>
 	 * Calls {@link #handleAndClearWarnings(Connection, WarningHandler)} using {@link #STANDARD_WARNING_HANDLER}
 	 *
 	 * @param connection The JDBC connection potentially containing warnings

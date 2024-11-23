@@ -1,169 +1,102 @@
 [[basic]]
-=== Basic types
-:modeldir: ../../../../../main/java/org/hibernate/userguide/model
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
-:resourcedir: ../../../../../test/resources/org/hibernate/userguide/
-:converter-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/test/converter
+=== Basic values
+:root-project-dir: ../../../../../../..
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {core-project-dir}/src/test
+:example-dir-basic-mapping: {core-test-base}/java/org/hibernate/orm/test/mapping
+:example-dir-resources: {core-test-base}/resources/org/hibernate/orm/test/
+:example-dir-generated: {core-test-base}/java/org/hibernate/orm/test/mapping/generated
+:example-dir-converter: {core-test-base}/java/org/hibernate/orm/test/mapping/converted/converter
 :extrasdir: extras
 
-Basic value types usually map a single database column, to a single, non-aggregated Java type.
-Hibernate provides a number of built-in basic types, which follow the natural mappings recommended by the JDBC specifications.
+A basic type is a mapping between a Java type and a single database column.
 
-Internally Hibernate uses a registry of basic types when it needs to resolve a specific `org.hibernate.type.Type`.
+Hibernate can map many standard Java types (`Integer`, `String`, etc.) as basic
+types.  The mapping for many come from tables B-3 and B-4 in the JDBC specification<<jdbc>>.
+Others (`URL` as `VARCHAR`, e.g.) simply make sense.
 
-[[basic-provided]]
-==== Hibernate-provided BasicTypes
+Additionally, Hibernate provides multiple, flexible ways to indicate how the Java type
+should be mapped to the database.
 
-.Standard BasicTypes
-[cols="<.^,<.^,<.^,<.^",options="header",]
-|=======================================================================================================================================================================================================================================================================================
-|Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|StringType |VARCHAR |java.lang.String |string, java.lang.String
-|MaterializedClob |CLOB |java.lang.String |materialized_clob
-|TextType |LONGVARCHAR |java.lang.String |text
-|CharacterType |CHAR |char, java.lang.Character |character, char, java.lang.Character
-|BooleanType |BOOLEAN |boolean, java.lang.Boolean |boolean, java.lang.Boolean
-|NumericBooleanType |INTEGER, 0 is false, 1 is true |boolean, java.lang.Boolean |numeric_boolean
-|YesNoType |CHAR, 'N'/'n' is false, 'Y'/'y' is true. The uppercase value is written to the database. |boolean, java.lang.Boolean |yes_no
-|TrueFalseType |CHAR, 'F'/'f' is false, 'T'/'t' is true. The uppercase value is written to the database. |boolean, java.lang.Boolean |true_false
-|ByteType |TINYINT |byte, java.lang.Byte |byte, java.lang.Byte
-|ShortType |SMALLINT |short, java.lang.Short |short, java.lang.Short
-|IntegerType |INTEGER |int, java.lang.Integer |integer, int, java.lang.Integer
-|LongType |BIGINT |long, java.lang.Long |long, java.lang.Long
-|FloatType |FLOAT |float, java.lang.Float |float, java.lang.Float
-|DoubleType |DOUBLE |double, java.lang.Double |double, java.lang.Double
-|BigIntegerType |NUMERIC |java.math.BigInteger |big_integer, java.math.BigInteger
-|BigDecimalType |NUMERIC |java.math.BigDecimal |big_decimal, java.math.bigDecimal
-|TimestampType |TIMESTAMP |java.util.Date |timestamp, java.sql.Timestamp, java.util.Date
-|DbTimestampType |TIMESTAMP |java.util.Date |dbtimestamp
-|TimeType |TIME |java.util.Date |time, java.sql.Time
-|DateType |DATE |java.util.Date |date, java.sql.Date
-|CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar, java.util.GregorianCalendar
-|CalendarDateType |DATE |java.util.Calendar |calendar_date
-|CalendarTimeType |TIME |java.util.Calendar |calendar_time
-|CurrencyType |VARCHAR |java.util.Currency |currency, java.util.Currency
-|LocaleType |VARCHAR |java.util.Locale |locale, java.util.Locale
-|TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone |timezone, java.util.TimeZone
-|UrlType |VARCHAR |java.net.URL |url, java.net.URL
-|ClassType |VARCHAR (class FQN) |java.lang.Class |class, java.lang.Class
-|BlobType |BLOB |java.sql.Blob |blob, java.sql.Blob
-|ClobType |CLOB |java.sql.Clob |clob, java.sql.Clob
-|BinaryType |VARBINARY |byte[] |binary, byte[]
-|MaterializedBlobType |BLOB |byte[] |materialized_blob
-|ImageType |LONGVARBINARY |byte[] |image
-|WrapperBinaryType |VARBINARY |java.lang.Byte[] |wrapper-binary, Byte[], java.lang.Byte[]
-|CharArrayType |VARCHAR |char[] |characters, char[]
-|CharacterArrayType |VARCHAR |java.lang.Character[] |wrapper-characters, Character[], java.lang.Character[]
-|UUIDBinaryType |BINARY |java.util.UUID |uuid-binary, java.util.UUID
-|UUIDCharType |CHAR, can also read VARCHAR |java.util.UUID |uuid-char
-|PostgresUUIDType |PostgreSQL UUID, through Types#OTHER, which complies to the PostgreSQL JDBC driver definition |java.util.UUID |pg-uuid
-|SerializableType |VARBINARY |implementors of java.lang.Serializable |Unlike the other value types, multiple instances of this type are registered. It is registered once under java.io.Serializable, and registered under the specific java.io.Serializable implementation class names.
-|StringNVarcharType |NVARCHAR |java.lang.String |nstring
-|NTextType |LONGNVARCHAR |java.lang.String |ntext
-|NClobType |NCLOB |java.sql.NClob |nclob, java.sql.NClob
-|MaterializedNClobType |NCLOB |java.lang.String |materialized_nclob
-|PrimitiveCharacterArrayNClobType |NCHAR |char[] |N/A
-|CharacterNCharType |NCHAR |java.lang.Character |ncharacter
-|CharacterArrayNClobType |NCLOB |java.lang.Character[] |N/A
-|RowVersionType |VARBINARY |byte[] |row_version
-|ObjectType |VARCHAR |implementors of java.lang.Serializable | object, java.lang.Object
-|=======================================================================================================================================================================================================================================================================================
 
-.Java 8 BasicTypes
-[cols="<.^,<.^,<.^,<.^",options="header",]
-|=================================================================================================
-|Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|DurationType |BIGINT |java.time.Duration |Duration, java.time.Duration
-|InstantType |TIMESTAMP |java.time.Instant |Instant, java.time.Instant
-|LocalDateTimeType |TIMESTAMP |java.time.LocalDateTime |LocalDateTime, java.time.LocalDateTime
-|LocalDateType |DATE |java.time.LocalDate |LocalDate, java.time.LocalDate
-|LocalTimeType |TIME |java.time.LocalTime |LocalTime, java.time.LocalTime
-|OffsetDateTimeType |TIMESTAMP |java.time.OffsetDateTime |OffsetDateTime, java.time.OffsetDateTime
-|OffsetTimeType |TIME |java.time.OffsetTime |OffsetTime, java.time.OffsetTime
-|ZonedDateTimeType |TIMESTAMP |java.time.ZonedDateTime |ZonedDateTime, java.time.ZonedDateTime
-|=================================================================================================
-
-.Hibernate Spatial BasicTypes
-[cols="<.^,<.^,<.^,<.^",options="header",]
-|=================================================================================================
-|Hibernate type (org.hibernate.spatial package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, and the class names of Geometry and its subclasses
-|GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, and the class names of Geometry and its subclasses
-|=================================================================================================
-
-[NOTE]
+[TIP]
 ====
-To use the Hibernate Spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use an `org.hibernate.spatial.SpatialDialect` implementation.
+The Jakarta Persistence specification strictly limits the Java types that can be marked as basic to the following:
 
-See the <<chapters/query/spatial/Spatial.adoc#spatial,Spatial>> chapter for more details.
+|===
+| Category | Package | Types
+
+| Java primitive types | | `boolean`, `int`, `double`, etc.
+| Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc.
+| Strings | `java.lang` | `String`
+| Arbitrary-precision numeric types | `java.math` | `BigInteger` and `BigDecimal`
+| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, `OffsetDateTime`, `Instant`
+| Deprecated date/time types | `java.util` | `Date` and `Calendar`
+| Deprecated date/time types from | `java.sql` | `Date`, `Time`, `Timestamp`
+| Byte and character arrays | | `byte[]` or `Byte[]`, `char[]` or `Character[]`
+| Java enumerated types | | Any `enum`
+| Serializable types | | Any type that implements ``java.io.Serializable``footnote:[Jakarta Persistence's support for Serializable types is to directly serialize their state to the database]
+|===
+
+If provider portability is a concern, you should stick to just these basic types.
+
+Java Persistence 2.1 introduced the `jakarta.persistence.AttributeConverter` providing support for handling
+types beyond those defined in the specification. See <<basic-jpa-convert>> for more on this topic.
 ====
 
-These mappings are managed by a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
-That is the purpose of the "BasicTypeRegistry key(s)" column in the previous tables.
 
-[[basic-annotation]]
-==== The `@Basic` annotation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Strictly speaking, a basic type is denoted by the `javax.persistence.Basic` annotation.
-Generally speaking, the `@Basic` annotation can be ignored, as it is assumed by default.
-Both of the following examples are ultimately the same.
+[[basic-basic-annotation]]
+==== @Basic
+
+Strictly speaking, a basic type is denoted by the `jakarta.persistence.Basic` annotation.
+
+Generally, the `@Basic` annotation can be ignored as it is assumed by default.  Both of the following
+examples are ultimately the same.
 
 [[basic-annotation-explicit-example]]
-.`@Basic` declared explicitly
+.`@Basic` explicit
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ExplicitBasicTypeTest.java[tags=basic-annotation-explicit-example]
+include::{example-dir-basic-mapping}/basic/ExplicitBasicTypeTest.java[tags=basic-annotation-explicit-example]
 ----
 ====
 
 [[basic-annotation-implicit-example]]
-.`@Basic` being implicitly implied
+.`@Basic` implied
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ImplicitBasicTypeTest.java[tags=basic-annotation-implicit-example]
+include::{example-dir-basic-mapping}/basic/ImplicitBasicTypeTest.java[tags=basic-annotation-implicit-example]
 ----
-====
-
-[TIP]
-====
-The JPA specification strictly limits the Java types that can be marked as basic to the following listing:
-
-* Java primitive types (`boolean`, `int`, etc)
-* wrappers for the primitive types (`java.lang.Boolean`, `java.lang.Integer`, etc)
-* `java.lang.String`
-* `java.math.BigInteger`
-* `java.math.BigDecimal`
-* `java.util.Date`
-* `java.util.Calendar`
-* `java.sql.Date`
-* `java.sql.Time`
-* `java.sql.Timestamp`
-* `byte[]` or `Byte[]`
-* `char[]` or `Character[]`
-* `enums`
-* any other type that implements `Serializable` (JPA's "support" for `Serializable` types is to directly serialize their state to the database).
-
-If provider portability is a concern, you should stick to just these basic types.
-
-Note that JPA 2.1 introduced the `javax.persistence.AttributeConverter` contract to help alleviate some of these concerns. See <<basic-jpa-convert>> for more on this topic.
 ====
 
 The `@Basic` annotation defines 2 attributes.
 
-`optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.
-JPA defines this as "a hint", which essentially means that its effect is specifically required.
-As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be `NULLABLE`.
+`optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.  Jakarta Persistence defines
+    this as "a hint", which means the provider is free to ignore it.  Jakarta Persistence also says that it will be
+    ignored if the type is primitive.  As long as the type is not primitive, Hibernate will honor this
+    value.  Works in conjunction with `@Column#nullable` - see <<basic-column-annotation>>.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
-JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value is fetched when the attribute is accessed.
-Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
-See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enhancement>> for additional information on fetching and on bytecode enhancement.
+    `EAGER` indicates that the value will be fetched as part of loading the owner.  `LAZY` values are
+    fetched only when the value is accessed.  Jakarta Persistence requires providers to support `EAGER`, while support for
+    `LAZY` is optional meaning that a provider is free to not support it.  Hibernate supports lazy loading
+    of basic values as long as you are using its <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancement>>
+    support.
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-column-annotation]]
-==== The `@Column` annotation
+==== @Column
 
-JPA defines rules for implicitly determining the name of tables and columns.
+Jakarta Persistence defines rules for implicitly determining the name of tables and columns.
 For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming strategies>>.
 
 For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
@@ -172,277 +105,158 @@ If that implicit naming rule does not meet your requirements, you can explicitly
 [[basic-annotation-explicit-column-example]]
 .Explicit column naming
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ExplicitColumnNamingTest.java[tags=basic-annotation-explicit-column-example]
+include::{example-dir-basic-mapping}/basic/ExplicitColumnNamingTest.java[tags=basic-annotation-explicit-column-example]
 ----
 ====
 
-Here we use `@Column` to explicitly map the `description` attribute to the `NOTES` column, as opposed to the implicit column name `description`.
+Here we use `@Column` to explicitly map the `description` attribute to the `NOTES` column, as opposed to the
+implicit column name `description`.  See <<naming>> for additional details.
 
 The `@Column` annotation defines other mapping information as well. See its Javadocs for details.
 
-[[basic-registry]]
-==== BasicTypeRegistry
 
-We said before that a Hibernate type is not a Java type, nor an SQL type, but that it understands both and performs the marshalling between them.
-But looking at the basic type mappings from the previous examples,
-how did Hibernate know to use its `org.hibernate.type.StringType` for mapping for `java.lang.String` attributes,
-or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attributes?
 
-The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (an `org.hibernate.type.Type` specialization) instances keyed by a name.
 
-We will see later, in the <<basic-type-annotation>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
-But first, let's explore how implicit resolution works and how applications can adjust the implicit resolution.
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-formula-annotation]]
+==== @Formula
+
+`@Formula` allows mapping any database computed value as a virtual read-only column.
 
 [NOTE]
 ====
-A thorough discussion of `BasicTypeRegistry` and all the different ways to contribute types is beyond the scope of this documentation.
-
-Please see the http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] for complete details.
+* The `@Formula` annotation takes a native SQL clause which may affect database portability.
+* `@Formula` is a Hibernate-specific mapping construct and not covered by Jakarta Persistence.  Applications interested in portability should avoid its use.
 ====
 
-As an example, take a String attribute such as we saw before with Product#sku.
-Since there was no explicit type mapping, Hibernate looks to the `BasicTypeRegistry` to find the registered mapping for `java.lang.String`.
-This goes back to the "BasicTypeRegistry key(s)" column we saw in the tables at the start of this chapter.
-
-As a baseline within `BasicTypeRegistry`, Hibernate follows the recommended mappings of JDBC for Java types.
-JDBC recommends mapping Strings to VARCHAR, which is the exact mapping that `StringType` handles.
-So that is the baseline mapping within `BasicTypeRegistry` for Strings.
-
-Applications can also extend (add new `BasicType` registrations) or override (replace an existing `BasicType` registration) using one of the
-`MetadataBuilder#applyBasicType` methods or the `MetadataBuilder#applyTypes` method during bootstrap.
-For more details, see <<basic-custom-type>> section.
-
-[[basic-type-annotation]]
-==== Explicit BasicTypes
-
-Sometimes you want a particular attribute to be handled differently.
-Occasionally Hibernate will implicitly pick a `BasicType` that you do not want (and for some reason you do not want to adjust the `BasicTypeRegistry`).
-
-In these cases, you must explicitly tell Hibernate the `BasicType` to use, via the `org.hibernate.annotations.Type` annotation.
-
-[[basic-type-annotation-example]]
-.Using `@org.hibernate.annotations.Type`
+[[mapping-column-formula-example]]
+.`@Formula` mapping usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ExplicitTypeTest.java[tags=basic-type-annotation-example]
+include::{example-dir-basic-mapping}/basic/FormulaTest.java[tags=mapping-column-formula-example]
 ----
 ====
 
-This tells Hibernate to store the Strings as nationalized data.
-This is just for illustration purposes; for better ways to indicate nationalized character data see <<basic-nationalized>> section.
+When loading the `Account` entity, Hibernate is going to calculate the `interest` property using the configured `@Formula`:
 
-Additionally, the description is to be handled as a LOB. Again, for better ways to indicate LOBs see <<basic-lob>> section.
-
-The `org.hibernate.annotations.Type#type` attribute can name any of the following:
-
-* Fully qualified name of any `org.hibernate.type.Type` implementation
-* Any key registered with `BasicTypeRegistry`
-* The name of any known _type definitions_
-
-[[basic-custom-type]]
-==== Custom BasicTypes
-
-Hibernate makes it relatively easy for developers to create their own basic type mappings type.
-For example, you might want to persist properties of type `java.util.BigInteger` to `VARCHAR` columns, or support completely new types.
-
-There are two approaches to developing a custom type:
-
-- implementing a `BasicType` and registering it
-- implementing a `UserType` which doesn't require type registration
-
-As a means of illustrating the different approaches, let's consider a use case where we need to support a `java.util.BitSet` mapping that's stored as a VARCHAR.
-
-[[basic-custom-type-BasicType]]
-===== Implementing a `BasicType`
-
-The first approach is to directly implement the `BasicType` interface.
-
-[NOTE]
+[[mapping-column-formula-persistence-example]]
+.Persisting an entity with a `@Formula` mapping
 ====
-Because the `BasicType` interface has a lot of methods to implement, if the value is stored in a single database column, it's much more convenient to extend the `AbstractStandardBasicType` or the `AbstractSingleColumnStandardBasicType` Hibernate classes.
-====
-
-First, we need to extend the `AbstractSingleColumnStandardBasicType` like this:
-
-[[basic-custom-type-BitSetType-example]]
-.Custom `BasicType` implementation
-====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/BitSetType.java[tags=basic-custom-type-BitSetType-example]
-----
-====
-
-The `AbstractSingleColumnStandardBasicType` requires an `sqlTypeDescriptor` and a `javaTypeDescriptor`.
-The `sqlTypeDescriptor` is `VarcharTypeDescriptor.INSTANCE` because the database column is a VARCHAR.
-On the Java side, we need to use a `BitSetTypeDescriptor` instance which can be implemented like this:
-
-[[basic-custom-type-BitSetTypeDescriptor-example]]
-.Custom `AbstractTypeDescriptor` implementation
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetTypeDescriptor.java[tags=basic-custom-type-BitSetTypeDescriptor-example]
-----
-====
-
-The `unwrap` method is used when passing a `BitSet` as a `PreparedStatement` bind parameter, while the `wrap` method is used to transform the JDBC column value object (e.g. `String` in our case) to the actual mapping object type (e.g. `BitSet` in this example).
-
-The `BasicType` must be registered, and this can be done at bootstrapping time:
-
-[[basic-custom-type-register-BasicType-example]]
-.Register a Custom `BasicType` implementation
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-register-BasicType-example]
+include::{example-dir-basic-mapping}/basic/FormulaTest.java[tags=mapping-column-formula-persistence-example]
 ----
 
-or using the `MetadataBuilder`
-
-[source, JAVA, indent=0]
+[source, SQL, indent=0]
 ----
-include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-BasicType-example]
-----
-====
-
-With the new `BitSetType` being registered as `bitset`, the entity mapping looks like this:
-
-[[basic-custom-type-BitSetType-mapping-example]]
-.Custom `BasicType` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-mapping-example]
-----
-====
-
-Alternatively, you can use the `@TypeDef` and skip the registration phase:
-
-[[basic-custom-type-BitSetTypeDef-mapping-example]]
-.Using `@TypeDef` to register a custom Type
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetTypeDefTest.java[tags=basic-custom-type-BitSetTypeDef-mapping-example]
-----
-====
-
-To validate this new `BasicType` implementation, we can test it as follows:
-
-[[basic-custom-type-BitSetType-persistence-example]]
-.Persisting the custom `BasicType`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-persistence-example]
-----
-====
-
-When executing this unit test, Hibernate generates the following SQL statements:
-
-[[basic-custom-type-BitSetType-persistence-sql-example]]
-.Persisting the custom `BasicType`
-====
-[source, JAVA, indent=0]
-----
-include::{extrasdir}/basic/basic-custom-type-BitSetType-persistence-sql-example.sql[]
-----
-====
-
-As you can see, the `BitSetType` takes care of the _Java-to-SQL_ and _SQL-to-Java_ type conversion.
-
-[[basic-custom-type-UserType]]
-===== Implementing a `UserType`
-
-The second approach is to implement the `UserType` interface.
-
-[[basic-custom-type-BitSetUserType-example]]
-.Custom `UserType` implementation
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetUserType.java[tags=basic-custom-type-BitSetUserType-example]
-----
-====
-
-The entity mapping looks as follows:
-
-[[basic-custom-type-BitSetUserType-mapping-example]]
-.Custom `UserType` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetUserTypeTest.java[tags=basic-custom-type-BitSetUserType-mapping-example]
-----
-====
-
-In this example, the `UserType` is registered under the `bitset` name, and this is done like this:
-
-[[basic-custom-type-register-UserType-example]]
-.Register a Custom `UserType` implementation
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetUserTypeTest.java[tags=basic-custom-type-register-UserType-example]
-----
-
-or using the `MetadataBuilder`
-
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-UserType-example]
+include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 ----
 ====
 
 [NOTE]
 ====
-Like `BasicType`, you can also register the `UserType` using a simple name.
-
-Without registering a name, the `UserType` mapping requires the fully qualified class name:
-
-[source, JAVA, indent=0]
-----
-@Type( type = "org.hibernate.userguide.mapping.basic.BitSetUserType" )
-----
+The SQL fragment defined by the `@Formula` annotation can be as complex as you want, and it can even include sub-selects.
 ====
 
-When running the previous test case against the `BitSetUserType` entity mapping, Hibernate executed the following SQL statements:
 
-[[basic-custom-type-BitSetUserType-persistence-sql-example]]
-.Persisting the custom `BasicType`
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-mapping]]
+==== Mapping basic values
+
+To deal with values of basic type, Hibernate needs to understand a few things about the mapping:
+
+* The capabilities of the Java type.  For example:
+** How to compare values
+** How to calculate a hash-code
+** How to coerce values of this type to another type
+* The JDBC type it should use
+** How to bind values to JDBC statements
+** How to extract from JDBC results
+* Any conversion it should perform on the value to/from the database
+* The mutability of the value - whether the internal state can change like `java.util.Date` or is immutable like `java.lang.String`
+
+This section covers how Hibernate determines these pieces and how to influence that determination process.
+
+[NOTE]
 ====
-[source, JAVA, indent=0]
-----
-include::{extrasdir}/basic/basic-custom-type-BitSetUserType-persistence-sql-example.sql[]
-----
+The following sections focus on approaches introduced in version 6 to influence how Hibernate will
+map basic value to the database.
+
+This includes removal of the following deprecated legacy annotations:
+
+* `@TypeDef`
+* `@TypeDefs`
+* `@CollectionId#type`
+* `@AnyMetaDef#metaType`
+* `@AnyMetaDef#idType`
+
+See the 6.0 migration guide for discussions about migrating uses of these annotations
+
+The new annotations added as part of 6.0 support composing mappings in annotations
+through "meta-annotations".
 ====
+
+
+Looking at <<basic-annotation-implicit-example, this example>>, how does Hibernate know what mapping
+to use for these attributes?  The annotations do not really provide much information.
+
+This is an illustration of Hibernate's implicit basic-type resolution, which is a series of checks to determine
+the appropriate mapping to use.  Describing the complete process for implicit resolution is beyond the scope
+of this documentationfootnote:[For details see `org.hibernate.mapping.BasicValue#resolve()`].
+
+This is primarily driven by the Java type defined for the basic type, which can generally
+be determined through reflection.  Is the Java type an enum?  Is it temporal?  These answers
+can indicate certain mappings be used.
+
+The fallback is to map the value to the "recommended" JDBC type.
+
+Worst case, if the Java type is `Serializable` Hibernate will try to handle it via binary serialization.
+
+For cases where the Java type is not a standard type or if some specialized handling is desired, Hibernate
+provides 2 main approaches to influence this mapping resolution:
+
+* A compositional approach using a combination of one-or-more annotations to describe specific
+    aspects of the mapping.  This approach is covered in <<basic-mapping-composition>>.
+* The `UserType` contract, which is covered in <<basic-mapping-custom>>
+
+These 2 approaches should be considered mutually exclusive.  A custom UserType will always
+take precedence over compositional annotations.
+
+The next few sections look at common, standard Java types and discusses various ways to map them.
+See <<basic-bitset>> for examples of mapping `BitSet` as a basic type using all of these approaches.
+
+
+
 
 [[basic-enums]]
-==== Mapping enums
+==== Enums
 
 Hibernate supports the mapping of Java enums as basic value types in a number of different ways.
 
 [[basic-enums-Enumerated]]
 ===== `@Enumerated`
 
-The original JPA-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated` for map keys annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
+The original Jakarta Persistence-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated`
+annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated
+by `jakarta.persistence.EnumType`:
 
-`ORDINAL`::
-	stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
-`STRING`::
-	stored according to the enum value's name, as indicated by `java.lang.Enum#name`
+`ORDINAL`:: stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
+`STRING`:: stored according to the enum value's name, as indicated by `java.lang.Enum#name`
 
 Assuming the following enumeration:
 
 .`PhoneType` enumeration
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
+include::{example-dir-model}/PhoneType.java[tags=hql-examples-domain-model-example]
 ----
 ====
 
@@ -455,9 +269,9 @@ In the ORDINAL example, the `phone_type` column is defined as a (nullable) INTEG
 [[basic-enums-Enumerated-ordinal-example]]
 .`@Enumerated(ORDINAL)` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-example]
+include::{example-dir-basic-mapping}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-example]
 ----
 ====
 
@@ -466,9 +280,9 @@ When persisting this entity, Hibernate generates the following SQL statement:
 [[basic-enums-Enumerated-ordinal-persistence-example]]
 .Persisting an entity with an `@Enumerated(ORDINAL)` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-persistence-example]
+include::{example-dir-basic-mapping}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-persistence-example]
 ----
 
 [source, SQL, indent=0]
@@ -486,9 +300,9 @@ In the STRING example, the `phone_type` column is defined as a (nullable) VARCHA
 [[basic-enums-Enumerated-string-example]]
 .`@Enumerated(STRING)` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-Enumerated-string-example]
+include::{example-dir-basic-mapping}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-Enumerated-string-example]
 ----
 ====
 
@@ -504,27 +318,27 @@ include::{extrasdir}/basic/basic-enums-Enumerated-string-persistence-example.sql
 ====
 
 [[basic-enums-attribute-converter]]
-===== AttributeConverter
+===== Using AttributeConverter
 
 Let's consider the following `Gender` enum which stores its values using the `'M'` and `'F'` codes.
 
 [[basic-enums-converter-example]]
 .Enum with a custom constructor
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/Gender.java[tags=basic-enums-converter-example]
+include::{example-dir-basic-mapping}/basic/Gender.java[tags=basic-enums-converter-example]
 ----
 ====
 
-You can map enums in a JPA compliant way using a JPA 2.1 AttributeConverter.
+You can map enums in a Jakarta Persistence compliant way using a Jakarta Persistence AttributeConverter.
 
 [[basic-enums-attribute-converter-example]]
 .Enum mapping with `AttributeConverter` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/EnumerationConverterTest.java[tags=basic-enums-attribute-converter-example]
+include::{example-dir-basic-mapping}/basic/EnumerationConverterTest.java[tags=basic-enums-attribute-converter-example]
 ----
 ====
 
@@ -538,123 +352,12 @@ For additional details on using AttributeConverters, see <<basic-jpa-convert>> s
 
 [NOTE]
 ====
-JPA explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
+Jakarta Persistence explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
 
 So, when using the `AttributeConverter` approach, be sure not to mark the attribute as `@Enumerated`.
 ====
 
-[[basic-attribute-converter-query-parameter]]
-====== Using the AttributeConverter entity property as a query parameter
 
-Assuming you have the following entity:
-
-[[basic-attribute-converter-query-parameter-entity-example]]
-.`Photo` entity with `AttributeConverter`
-====
-[source, JAVA, indent=0]
-----
-include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-entity-example]
-----
-====
-
-And the `Caption` class looks as follows:
-
-[[basic-attribute-converter-query-parameter-object-example]]
-.`Caption` Java object
-====
-[source, JAVA, indent=0]
-----
-include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-object-example]
-----
-====
-
-And we have an `AttributeConverter` to handle the `Caption` Java object:
-
-[[basic-attribute-converter-query-parameter-converter-example]]
-.`Caption` Java object AttributeConverter
-====
-[source, JAVA, indent=0]
-----
-include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-example]
-----
-====
-
-Traditionally, you could only use the DB data `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
-
-[[basic-attribute-converter-query-parameter-converter-dbdata-example]]
-.Filtering by the `Caption` property using the DB data representation
-====
-[source, JAVA, indent=0]
-----
-include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-dbdata-example]
-----
-====
-
-In order to use the Java object `Caption` representation, you have to get the associated Hibernate `Type`.
-
-[[basic-attribute-converter-query-parameter-converter-object-example]]
-.Filtering by the `Caption` property using the Java Object representation
-====
-[source, JAVA, indent=0]
-----
-include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-object-example]
-----
-====
-
-By passing the associated Hibernate `Type`, you can use the `Caption` object when binding the query parameter value.
-
-[[basic-hbm-attribute-converter]]
-====== Mapping an AttributeConverter using HBM mappings
-
-When using HBM mappings, you can still make use of the JPA `AttributeConverter` because Hibernate supports
-such mapping via the `type` attribute as demonstrated by the following example.
-
-Let's consider we have an application-specific `Money` type:
-
-[[basic-hbm-attribute-converter-mapping-money-example]]
-.Application-specific `Money` type
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/converter/hbm/Money.java[tags=basic-hbm-attribute-converter-mapping-money-example]
-----
-====
-
-Now, we want to use the `Money` type when mapping the `Account` entity:
-
-[[basic-hbm-attribute-converter-mapping-account-example]]
-.`Account` entity using the `Money` type
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/converter/hbm/Account.java[tags=basic-hbm-attribute-converter-mapping-account-example]
-----
-====
-
-Since Hibernate has no knowledge how to persist the `Money` type, we could use a JPA `AttributeConverter`
-to transform the `Money` type as a `Long`. For this purpose, we are going to use the following
-`MoneyConverter` utility:
-
-[[basic-hbm-attribute-converter-mapping-moneyconverter-example]]
-.`MoneyConverter` implementing the JPA `AttributeConverter` interface
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/converter/hbm/MoneyConverter.java[tags=basic-hbm-attribute-converter-mapping-moneyconverter-example]
-----
-====
-
-To map the `MoneyConverter` using HBM configuration files you need to use the `converted::` prefix in the `type`
-attribute of the `property` element.
-
-[[basic-hbm-attribute-converter-mapping-xml-config-example]]
-.HBM mapping for `AttributeConverter`
-====
-[source, JAVA, indent=0]
-----
-include::{resourcedir}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
-----
-====
 
 [[basic-enums-custom-type]]
 ===== Custom type
@@ -665,13 +368,13 @@ Let's again revisit the Gender enum example, this time using a custom Type to st
 [[basic-enums-custom-type-example]]
 .Enum mapping with custom Type example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/EnumerationCustomTypeTest.java[tags=basic-enums-custom-type-example, indent=0]
+include::{example-dir-basic-mapping}/basic/EnumerationCustomTypeTest.java[tags=basic-enums-custom-type-example, indent=0]
 
-include::{sourcedir}/basic/GenderType.java[tags=basic-enums-custom-type-example, indent=0]
+include::{example-dir-basic-mapping}/basic/GenderType.java[tags=basic-enums-custom-type-example, indent=0]
 
-include::{sourcedir}/basic/GenderJavaTypeDescriptor.java[tags=basic-enums-custom-type-example, indent=0]
+include::{example-dir-basic-mapping}/basic/GenderJavaType.java[tags=basic-enums-custom-type-example, indent=0]
 ----
 ====
 
@@ -681,35 +384,355 @@ Again, the gender column is defined as a CHAR type and would hold:
 `'M'`:: For the `MALE` enum
 `'F'`:: For the `FEMALE` enum
 
-For additional details on using custom types, see <<basic-custom-type>> section.
+For additional details on using custom types, see <<basic-mapping-custom>> section.
 
-[[basic-lob]]
-==== Mapping LOBs
 
-Mapping LOBs (database Large Objects) come in 2 forms, those using the JDBC locator types and those materializing the LOB data.
 
-JDBC LOB locators exist to allow efficient access to the LOB data.
-They allow the JDBC driver to stream parts of the LOB data as needed, potentially freeing up memory space.
-However, they can be unnatural to deal with and have certain limitations.
-For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
 
-The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB data efficiently) for a more natural programming paradigm using familiar Java types such as `String` or `byte[]`, etc for these LOBs.
+[[basic-boolean]]
+==== Boolean
 
-Materialized deals with the entire LOB contents in memory, whereas LOB locators (in theory) allow streaming parts of the LOB contents into memory as needed.
+By default, `Boolean` attributes map to `BOOLEAN` columns, at least when the database has a
+dedicated `BOOLEAN` type. On databases which don't, Hibernate uses whatever else is available:
+`BIT`, `TINYINT`, or `SMALLINT`.
 
-The JDBC LOB locator types include:
+[[basic-boolean-example-implicit]]
+.Implicit boolean mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/BooleanMappingTests.java[tags=basic-boolean-example-implicit]
+----
+====
 
-* `java.sql.Blob`
-* `java.sql.Clob`
-* `java.sql.NClob`
+However, it is quite common to find boolean values encoded as a character or as an integer.
+Such cases are exactly the intention of `AttributeConverter`.  For convenience, Hibernate
+provides 3 built-in converters for the common boolean mapping cases:
 
-Mapping materialized forms of these LOB values would use more familiar Java types such as `String`, `char[]`, `byte[]`, etc.
-The trade-off for _more familiar_ is usually performance.
+- `YesNoConverter` encodes a boolean value as `'Y'` or `'N'`,
+- `TrueFalseConverter` encodes a boolean value as `'T'` or `'F'`, and
+- `NumericBooleanConverter` encodes the value as an integer, `1` for true, and `0` for false.
+
+[[basic-boolean-example-converted]]
+.Using `AttributeConverter`
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-yes-no]
+
+include::{example-dir-basic-mapping}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-t-f]
+
+include::{example-dir-basic-mapping}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-numeric]
+----
+====
+
+If the boolean value is defined in the database as something other than `BOOLEAN`, character or integer,
+the value can also be mapped using a custom `AttributeConverter` - see <<basic-jpa-convert>>.
+
+A `UserType` may also be used - see <<basic-mapping-custom>>
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-byte]]
+==== Byte
+
+By default, Hibernate maps values of `Byte` / `byte` to the `TINYINT` JDBC type.
+
+[[basic-byte-example]]
+.Mapping Byte
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/ByteMappingTests.java[tags=basic-byte-example-implicit]
+----
+====
+
+
+See <<basic-bytearray>> for mapping arrays of bytes.
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-short]]
+==== Short
+
+By default, Hibernate maps values of `Short` / `short` to the `SMALLINT` JDBC type.
+
+[[basic-short-example]]
+.Mapping Short
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/ShortMappingTests.java[tags=basic-short-example-implicit]
+----
+====
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-integer]]
+==== Integer
+
+By default, Hibernate maps values of `Integer` / `int` to the `INTEGER` JDBC type.
+
+[[basic-integer-example]]
+.Mapping Integer
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/IntegerMappingTests.java[tags=basic-integer-example-implicit]
+----
+====
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-long]]
+==== Long
+
+By default, Hibernate maps values of `Long` / `long` to the `BIGINT` JDBC type.
+
+[[basic-long-example]]
+.Mapping Long
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/LongMappingTests.java[tags=basic-long-example-implicit]
+----
+====
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-biginteger]]
+==== BigInteger
+
+By default, Hibernate maps values of `BigInteger` to the `NUMERIC` JDBC type.
+
+[[basic-bitinteger-example]]
+.Mapping BigInteger
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/BigIntegerMappingTests.java[tags=basic-biginteger-example-implicit]
+----
+====
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-double]]
+==== Double
+
+By default, Hibernate maps values of `Double` to the `DOUBLE`, `FLOAT`, `REAL` or
+`NUMERIC` JDBC type depending on the capabilities of the database
+
+[[basic-double-example]]
+.Mapping Double
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/DoubleMappingTests.java[tags=basic-double-example-implicit]
+----
+====
+
+A specific type can be influenced using any of the JDBC type influencers covered in
+<<basic-mapping-composition-jdbc>> section.
+
+If `@JdbcTypeCode` is used, the Dialect is still consulted to make sure the database
+supports the requested type.  If not, an appropriate type is selected
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-float]]
+==== Float
+
+By default, Hibernate maps values of `Float` to the `FLOAT`, `REAL` or
+`NUMERIC` JDBC type depending on the capabilities of the database.
+
+[[basic-float-example]]
+.Mapping Float
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/FloatMappingTests.java[tags=basic-float-example-implicit]
+----
+====
+
+A specific type can be influenced using any of the JDBC type influencers covered in
+<<basic-mapping>> section.
+
+If `@JdbcTypeCode` is used, the Dialect is still consulted to make sure the database
+supports the requested type.  If not, an appropriate type is selected
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-bigdecimal]]
+==== BigDecimal
+
+By default, Hibernate maps values of `BigDecimal` to the `NUMERIC` JDBC type.
+
+[[basic-bigdecimal-example]]
+.Mapping BigDecimal
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/BigDecimalMappingTests.java[tags=basic-bigdecimal-example-implicit]
+----
+====
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-character]]
+==== Character
+
+By default, Hibernate maps `Character` to the `CHAR` JDBC type.
+
+[[basic-character-example]]
+.Mapping Character
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/CharacterMappingTests.java[tags=basic-character-example-implicit]
+----
+====
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-String]]
+==== String
+
+By default, Hibernate maps `String` to the `VARCHAR` JDBC type.
+
+[[basic-string-example]]
+.Mapping String
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/StringMappingTests.java[tags=basic-string-example]
+----
+====
+
+Optionally, you may specify the maximum length of the string using `@Column(length=...)`,
+or using the `@Size` annotation from Hibernate Validator.
+For very large strings, you can use one of the constant values defined by the class
+`org.hibernate.Length`, for example:
+
+[source, java, indent=0]
+----
+@Column(length=Length.LONG)
+private String text;
+----
+
+Alternatively, you may explicitly specify the JDBC type `LONGVARCHAR`, which is treated
+as a `VARCHAR` mapping with default `length=Length.LONG` when no `length` is explicitly
+specified:
+
+[source, java, indent=0]
+----
+@JdbcTypeCode(Types.LONGVARCHAR)
+private String text;
+----
+
+If you use Hibernate for schema generation, Hibernate will generate DDL with a column type
+that is large enough to accommodate the maximum length you've specified.
+
+[TIP]
+====
+If the maximum length you specify is too long to fit in the largest `VARCHAR` column supported
+by your database, Hibernate's schema exporter will automatically upgrade the column type to
+`TEXT`, `CLOB`, or whatever is the equivalent type for your database.
+Please _don't_ (ab)use JPA's `@Lob` annotation just because you want a `TEXT` column.
+The purpose of the `@Lob` annotation is not to control DDL generation!
+====
+
+See <<basic-lob>> for details on mapping to a database CLOB.
+
+For databases which support nationalized character sets, you can also store strings as
+nationalized data.
+
+[[basic-nstring-example]]
+.Mapping String as nationalized
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/StringNationalizedMappingTests.java[tags=basic-nstring-example]
+----
+====
+
+See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-chararray]]
+==== Character arrays
+
+By default, Hibernate maps `char[]` to the `VARCHAR` JDBC type.
+Since `Character[]` can contain null elements, it is mapped as <<basic-mapping-array,basic array type>> instead.
+Prior to Hibernate 6.2, also `Character[]` mapped to `VARCHAR`, yet disallowed `null` elements.
+To continue mapping `Character[]` to the `VARCHAR` JDBC type, or for LOBs mapping to the `CLOB` JDBC type,
+it is necessary to annotate the persistent attribute with `@JavaType( CharacterArrayJavaType.class )`.
+
+[[basic-string-example-implicit]]
+.Mapping Character
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/CharacterArrayMappingTests.java[tags=basic-chararray-example]
+----
+====
+
+See <<basic-lob>> for details on mapping as database LOB.
+
+For databases which support nationalized character sets, you can also store character arrays as
+nationalized data.
+
+[[basic-nchararray-example]]
+.Mapping character arrays as nationalized
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/CharacterArrayNationalizedMappingTests.java[tags=basic-nchararray-example]
+----
+====
+
+See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-clob]]
-===== Mapping CLOB
+==== Clob / NClob
 
-For a first look, let's assume we have a `CLOB` column that we would like to map (`NCLOB` character `LOB` data will be covered in <<basic-nationalized>> section).
+[NOTE]
+====
+Be sure to check out <<basic-lob>> which covers basics of LOB handling and <<basic-nationalized>> which covers basics
+of nationalized data handling.
+====
+
+By default, Hibernate will map the `java.sql.Clob` Java type to `CLOB` and `java.sql.NClob` to `NCLOB`.
 
 Considering we have the following database table:
 
@@ -722,14 +745,14 @@ include::{extrasdir}/basic/basic-clob-sql-example.sql[]
 ----
 ====
 
-Let's first map this using the `@Lob` JPA annotation and the `java.sql.Clob` type:
+Let's first map this using the `@Lob` Jakarta Persistence annotation and the `java.sql.Clob` type:
 
 [[basic-clob-example]]
 .`CLOB` mapped to `java.sql.Clob`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ClobTest.java[tags=basic-clob-example]
+include::{example-dir-basic-mapping}/basic/ClobTest.java[tags=basic-clob-example]
 ----
 ====
 
@@ -738,9 +761,9 @@ To persist such an entity, you have to create a `Clob` using the `ClobProxy` Hib
 [[basic-clob-persist-example]]
 .Persisting a `java.sql.Clob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ClobTest.java[tags=basic-clob-persist-example]
+include::{example-dir-basic-mapping}/basic/ClobTest.java[tags=basic-clob-persist-example]
 ----
 ====
 
@@ -749,9 +772,9 @@ To retrieve the `Clob` content, you need to transform the underlying `java.io.Re
 [[basic-clob-find-example]]
 .Returning a `java.sql.Clob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ClobTest.java[tags=basic-clob-find-example]
+include::{example-dir-basic-mapping}/basic/ClobTest.java[tags=basic-clob-find-example]
 ----
 ====
 
@@ -760,34 +783,148 @@ We could also map the CLOB in a materialized form. This way, we can either use a
 [[basic-clob-string-example]]
 .`CLOB` mapped to `String`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ClobStringTest.java[tags=basic-clob-string-example]
+include::{example-dir-basic-mapping}/basic/ClobStringTest.java[tags=basic-clob-string-example]
 ----
 ====
 
-[NOTE]
-====
-How JDBC deals with `LOB` data varies from driver to driver, and Hibernate tries to handle all these variances on your behalf.
-
-However, some drivers are trickier (e.g. PostgreSQL), and, in such cases, you may have to do some extra steps to get LOBs working. Such discussions are beyond the scope of this guide.
-====
-
-We might even want the materialized data as a char array (although this might not be a very good idea).
+We might even want the materialized data as a char array.
 
 [[basic-clob-char-array-example]]
 .CLOB - materialized `char[]` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ClobCharArrayTest.java[tags=basic-clob-char-array-example]
+include::{example-dir-basic-mapping}/basic/ClobCharArrayTest.java[tags=basic-clob-char-array-example]
 ----
 ====
 
-[[basic-blob]]
-===== Mapping BLOB
+Just like with `CLOB`, Hibernate can also deal with `NCLOB` SQL data types:
 
-`BLOB` data is mapped in a similar fashion.
+[[basic-nclob-sql-example]]
+.`NCLOB` - SQL
+====
+[source, java, indent=0]
+----
+include::{extrasdir}/basic/basic-nclob-sql-example.sql[]
+----
+====
+
+Hibernate can map the `NCLOB` to a `java.sql.NClob`
+
+[[basic-nclob-example]]
+.`NCLOB` mapped to `java.sql.NClob`
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/NClobTest.java[tags=basic-nclob-example]
+----
+====
+
+To persist such an entity, you have to create an `NClob` using the `NClobProxy` Hibernate utility:
+
+[[basic-nclob-persist-example]]
+.Persisting a `java.sql.NClob` entity
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/NClobTest.java[tags=basic-nclob-persist-example]
+----
+====
+
+To retrieve the `NClob` content, you need to transform the underlying `java.io.Reader`:
+
+[[basic-nclob-find-example]]
+.Returning a `java.sql.NClob` entity
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/NClobTest.java[tags=basic-nclob-find-example]
+----
+====
+
+We could also map the `NCLOB` in a materialized form. This way, we can either use a `String` or a `char[]`.
+
+[[basic-nclob-string-example]]
+.`NCLOB` mapped to `String`
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/NClobStringTest.java[tags=basic-nclob-string-example]
+----
+====
+
+We might even want the materialized data as a char array.
+
+[[basic-nclob-char-array-example]]
+.NCLOB - materialized `char[]` mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/NClobCharArrayTest.java[tags=basic-nclob-char-array-example]
+----
+====
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-bytearray]]
+==== Byte array
+
+By default, Hibernate maps `byte[]` to the `VARBINARY` JDBC type.
+Since `Byte[]` can contain null elements, it is mapped as <<basic-mapping-array,basic array type>> instead.
+Prior to Hibernate 6.2, also `Byte[]` mapped to `VARBINARY`, yet disallowed `null` elements.
+To continue mapping `Byte[]` to the `VARBINARY` JDBC type, or for LOBs mapping to the `BLOB` JDBC type,
+it is necessary to annotate the persistent attribute with `@JavaType( ByteArrayJavaType.class )`.
+
+[[basic-bytearray-example]]
+.Mapping arrays of bytes
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/ByteArrayMappingTests.java[tags=basic-bytearray-example]
+----
+====
+
+Just like with strings, you may specify the maximum length using `@Column(length=...)`
+or the `@Size` annotation from Hibernate Validator.
+For very large arrays, you can use the constants defined by `org.hibernate.Length`.
+Alternatively `@JdbcTypeCode(Types.LONGVARBINARY)` is treated as a `VARBINARY` mapping
+with default `length=Length.LONG` when no length is explicitly specified.
+
+If you use Hibernate for schema generation, Hibernate will generate DDL with a column type
+that is large enough to accommodate the maximum length you've specified.
+
+[TIP]
+====
+If the maximum length you specify is too long to fit in the largest `VARBINARY` column
+supported by your database, Hibernate's schema exporter will automatically upgrade the
+column type to `IMAGE`, `BLOB`, or whatever is the equivalent type for your database.
+Please _don't_ (ab)use JPA's `@Lob` annotation for DDL customization.
+====
+
+
+See <<basic-lob>> for details on mapping to a database BLOB.
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-blob]]
+==== Blob
+
+
+[NOTE]
+====
+Be sure to check out <<basic-lob>> which covers basics of LOB handling.
+====
+
+By default, Hibernate will map the `java.sql.Blob` Java type to `BLOB`.
 
 Considering we have the following database table:
 
@@ -805,9 +942,9 @@ Let's first map this using the JDBC `java.sql.Blob` type.
 [[basic-blob-example]]
 .`BLOB` mapped to `java.sql.Blob`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-example]
+include::{example-dir-basic-mapping}/basic/BlobTest.java[tags=basic-blob-example]
 ----
 ====
 
@@ -816,9 +953,9 @@ To persist such an entity, you have to create a `Blob` using the `BlobProxy` Hib
 [[basic-blob-persist-example]]
 .Persisting a `java.sql.Blob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-persist-example]
+include::{example-dir-basic-mapping}/basic/BlobTest.java[tags=basic-blob-persist-example]
 ----
 ====
 
@@ -827,9 +964,9 @@ To retrieve the `Blob` content, you need to transform the underlying `java.io.In
 [[basic-blob-find-example]]
 .Returning a `java.sql.Blob` entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/BlobTest.java[tags=basic-blob-find-example]
+include::{example-dir-basic-mapping}/basic/BlobTest.java[tags=basic-blob-find-example]
 ----
 ====
 
@@ -838,29 +975,688 @@ We could also map the BLOB in a materialized form (e.g. `byte[]`).
 [[basic-blob-byte-array-example]]
 .`BLOB` mapped to `byte[]`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/BlobByteArrayTest.java[tags=basic-blob-byte-array-example]
+include::{example-dir-basic-mapping}/basic/BlobByteArrayTest.java[tags=basic-blob-byte-array-example]
 ----
 ====
 
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== Duration
+
+By default, Hibernate maps `Duration` to the `NUMERIC` SQL type.
+
+TIP: It's possible to map `Duration` to the `INTERVAL_SECOND` SQL type using `@JdbcTypeCode(INTERVAL_SECOND)` or by setting `hibernate.type.preferred_duration_jdbc_type=INTERVAL_SECOND`
+
+[[basic-duration-example]]
+.Mapping Duration
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/DurationMappingTests.java[tags=basic-duration-example]
+----
+====
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== Instant
+
+`Instant` is mapped to the `TIMESTAMP_UTC` SQL type.
+
+
+[[basic-instant-example]]
+.Mapping Instant
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/InstantMappingTests.java[tags=basic-instant-example]
+----
+====
+
+See <<basic-temporal>> for basics of temporal mapping
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== LocalDate
+
+`LocalDate` is mapped to the `DATE` JDBC type.
+
+[[basic-localDate-example]]
+.Mapping LocalDate
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/LocalDateMappingTests.java[tags=basic-localDate-example]
+----
+====
+
+See <<basic-temporal>> for basics of temporal mapping
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== LocalDateTime
+
+`LocalDateTime` is mapped to the `TIMESTAMP` JDBC type.
+
+[[basic-localDateTime-example]]
+.Mapping LocalDateTime
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/LocalDateTimeMappingTests.java[tags=basic-localDateTime-example]
+----
+====
+
+See <<basic-temporal>> for basics of temporal mapping
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== LocalTime
+
+`LocalTime` is mapped to the `TIME` JDBC type.
+
+[[basic-localTime-example]]
+.Mapping LocalTime
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/LocalTimeMappingTests.java[tags=basic-localTime-example]
+----
+====
+
+See <<basic-temporal>> for basics of temporal mapping
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== OffsetDateTime
+
+`OffsetDateTime` is mapped to the `TIMESTAMP` or `TIMESTAMP_WITH_TIMEZONE` JDBC type
+depending on the database.
+
+
+[[basic-OffsetDateTime-example]]
+.Mapping OffsetDateTime
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/OffsetDateTimeMappingTests.java[tags=basic-OffsetDateTime-example]
+----
+====
+
+
+See <<basic-temporal>> for basics of temporal mapping
+See <<basic-datetime-time-zone>> for basics of time-zone handling
+
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== OffsetTime
+
+`OffsetTime` is mapped to the `TIME` or `TIME_WITH_TIMEZONE` JDBC type
+depending on the database.
+
+
+[[basic-OffsetTime-example]]
+.Mapping OffsetTime
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/OffsetTimeMappingTests.java[tags=basic-offsetTime-example]
+----
+====
+
+See <<basic-temporal>> for basics of temporal mapping
+See <<basic-datetime-time-zone>> for basics of time-zone handling
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== TimeZone
+
+`TimeZone` is mapped to `VARCHAR` JDBC type.
+
+[[basic-TimeZone-example]]
+.Mapping OffsetTime
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/TimeZoneMappingTests.java[tags=basic-timeZone-example]
+----
+====
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== ZonedDateTime
+
+
+`ZonedDateTime` is mapped to the `TIMESTAMP` or `TIMESTAMP_WITH_TIMEZONE` JDBC type
+depending on the database.
+
+
+[[basic-ZonedDateTime-example]]
+.Mapping ZonedDateTime
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/ZonedDateTimeMappingTests.java[tags=basic-ZonedDateTime-example]
+----
+====
+
+See <<basic-temporal>> for basics of temporal mapping
+See <<basic-datetime-time-zone>> for basics of time-zone handling
+
+
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== ZoneOffset
+
+`ZoneOffset` is mapped to `VARCHAR` JDBC type.
+
+[[basic-ZoneOffset-example]]
+.Mapping ZoneOffset
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/ZoneOffsetMappingTests.java[tags=basic-ZoneOffset-example]
+----
+====
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== Calendar
+
+See <<basic-temporal>> for basics of temporal mapping
+See <<basic-datetime-time-zone>> for basics of time-zone handling
+
+
+
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== Date
+
+See <<basic-temporal>> for basics of temporal mapping
+See <<basic-datetime-time-zone>> for basics of time-zone handling
+
+
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== Time
+
+See <<basic-temporal>> for basics of temporal mapping
+See <<basic-datetime-time-zone>> for basics of time-zone handling
+
+
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== Timestamp
+
+See <<basic-temporal>> for basics of temporal mapping
+See <<basic-datetime-time-zone>> for basics of time-zone handling
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==== Class
+
+Hibernate maps `Class` references to `VARCHAR` JDBC type
+
+[[basic-Class-example]]
+.Mapping Class
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/ClassMappingTests.java[tags=basic-Class-example]
+----
+====
+
+
+
+==== Currency
+
+Hibernate maps `Currency` references to `VARCHAR` JDBC type
+
+[[basic-Currency-example]]
+.Mapping Currency
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/CurrencyMappingTests.java[tags=basic-Currency-example]
+----
+====
+
+
+
+==== Locale
+
+Hibernate maps `Locale` references to `VARCHAR` JDBC type
+
+[[basic-Locale-example]]
+.Mapping Locale
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/LocaleMappingTests.java[tags=basic-Locale-example]
+----
+====
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-uuid]]
+==== UUID
+
+Hibernate allows mapping UUID values in a number of ways.  By default, Hibernate will
+store UUID values in the native form by using the SQL type `UUID` or in binary form with the `BINARY` JDBC type
+if the database does not have a native UUID type.
+
+
+[NOTE]
+====
+The default uses the binary representation because it uses a more efficient column storage.
+
+However, many applications prefer the readability of the character-based column storage.
+
+To switch the default mapping, set the `*hibernate.type.preferred_uuid_jdbc_type*` configuration to `CHAR`.
+====
+
+===== UUID as binary
+
+As mentioned, the default mapping for UUID attributes.
+Maps the UUID to a `byte[]` using `java.util.UUID#getMostSignificantBits` and `java.util.UUID#getLeastSignificantBits` and stores that as `BINARY` data.
+
+Chosen as the default simply because it is generally more efficient from a storage perspective.
+
+===== UUID as (var)char
+
+Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fromString` and stores that as `CHAR` or `VARCHAR` data.
+
+===== UUID as identifier
+
+Hibernate supports using UUID values as identifiers, and they can even be generated on the user's behalf.
+For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifiers_>>.
+
+
+==== InetAddress
+
+By default, Hibernate will map `InetAddress` to the `INET` SQL type and fallback to `BINARY` if necessary.
+
+[[basic-inet-address-example]]
+.Mapping InetAddress
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/InetAddressMappingTests.java[tags=basic-inet-address-example]
+----
+====
+
+[[basic-mapping-json]]
+==== JSON mapping
+
+Hibernate will only use the `JSON` type if explicitly configured through `@JdbcTypeCode( SqlTypes.JSON )`.
+The JSON library used for serialization/deserialization is detected automatically,
+but can be overridden by setting `hibernate.type.json_format_mapper`
+as can be read in the <<appendices/Configurations.adoc#misc-options,Configurations>> section.
+
+[[basic-json-example]]
+.Mapping JSON
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/JsonMappingTests.java[tags=basic-json-example]
+----
+====
+
+[[basic-mapping-xml]]
+==== XML mapping
+
+Hibernate will only use the `XML` type if explicitly configured through `@JdbcTypeCode( SqlTypes.SQLXML )`.
+The XML library used for serialization/deserialization is detected automatically,
+but can be overridden by setting `hibernate.type.xml_format_mapper`
+as can be read in the <<appendices/Configurations.adoc#misc-options,Configurations>> section.
+
+[[basic-xml-example]]
+.Mapping XML
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/XmlMappingTests.java[tags=basic-xml-example]
+----
+====
+
+[[basic-mapping-array]]
+==== Basic array mapping
+
+Basic arrays, other than `byte[]`/Byte[] and `char[]`/`Character[]`, map to the type code `SqlTypes.ARRAY` by default,
+which maps to the SQL standard `array` type if possible,
+as determined via the new methods `getArrayTypeName` and `supportsStandardArrays` of `org.hibernate.dialect.Dialect`.
+If SQL standard array types are not available, data will be modeled as `SqlTypes.JSON`, `SqlTypes.XML` or `SqlTypes.VARBINARY`,
+depending on the database support as determined via the new method `org.hibernate.dialect.Dialect.getPreferredSqlTypeCodeForArray`.
+
+[[basic-array-example]]
+.Mapping basic arrays
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/BasicArrayMappingTests.java[tags=basic-array-example]
+----
+====
+
+[[basic-mapping-collection]]
+==== Basic collection mapping
+
+Basic collections (only subtypes of `Collection`), which are not annotated with `@ElementCollection`,
+map to the type code `SqlTypes.ARRAY` by default, which maps to the SQL standard `array` type if possible,
+as determined via the new methods `getArrayTypeName` and `supportsStandardArrays` of `org.hibernate.dialect.Dialect`.
+If SQL standard array types are not available, data will be modeled as `SqlTypes.JSON`, `SqlTypes.XML` or `SqlTypes.VARBINARY`,
+depending on the database support as determined via the new method `org.hibernate.dialect.Dialect.getPreferredSqlTypeCodeForArray`.
+
+[[basic-collection-example]]
+.Mapping basic collections
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/BasicCollectionMappingTests.java[tags=basic-collection-example]
+----
+====
+
+
+[[basic-mapping-composition]]
+==== Compositional basic mapping
+
+The compositional approach allows defining how the mapping should work in terms of influencing
+individual parts that make up a basic-value mapping. This section will look at these individual
+parts and the specifics of influencing each.
+
+
+
+[[basic-mapping-composition-java]]
+===== JavaType
+
+Hibernate needs to understand certain aspects of the Java type to handle values properly and efficiently.
+Hibernate understands these capabilities through its `org.hibernate.type.descriptor.java.JavaType` contract.
+Hibernate provides built-in support for many JDK types (`Integer`, `String`, e.g.), but also supports the ability
+for the application to change the handling for any of the standard `JavaType` registrations as well as
+add in handling for non-standard types. Hibernate provides multiple ways for the application to influence
+the `JavaType` descriptor to use.
+
+The resolution can be influenced locally using the `@JavaType` annotation on a particular mapping.  The
+indicated descriptor will be used just for that mapping.  There are also forms of `@JavaType` for influencing
+the keys of a Map (`@MapKeyJavaType`), the index of a List or array (`@ListIndexJavaType`), the identifier
+of an ID-BAG mapping (`@CollectionIdJavaType`) as well as the discriminator (`@AnyDiscriminator`) and
+key (`@AnyKeyJavaClass`, `@AnyKeyJavaType`) of an ANY mapping.
+
+The resolution can also be influenced globally by registering the appropriate `JavaType` descriptor with the
+`JavaTypeRegistry`.  This approach is able to both "override" the handling for certain Java types or
+to register new types.  See <<basic-mapping-registries>> for discussion of `JavaTypeRegistry`.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-jdbc]]
+===== JdbcType
+
+Hibernate also needs to understand aspects of the JDBC type it should use (how it should bind values,
+how it should extract values, etc.) which is the role of its `org.hibernate.type.descriptor.jdbc.JdbcType`
+contract. Hibernate provides multiple ways for the application to influence the `JdbcType` descriptor to use.
+
+Locally, the resolution can be influenced using either the `@JdbcType` or `@JdbcTypeCode` annotations.  There
+are also annotations for influencing the `JdbcType` in relation to Map keys (`@MapKeyJdbcType`, `@MapKeyJdbcTypeCode`),
+the index of a List or array (`@ListIndexJdbcType`, `@ListIndexJdbcTypeCode`), the identifier of an ID-BAG mapping
+(`@CollectionIdJdbcType`, `@CollectionIdJdbcTypeCode`) as well as the key of an ANY mapping (`@AnyKeyJdbcType`,
+`@AnyKeyJdbcTypeCode`).  The `@JdbcType` specifies a specific `JdbcType` implementation to use while `@JdbcTypeCode`
+specifies a "code" that is then resolved against the `JdbcTypeRegistry`.
+
+[TIP]
+====
+The "type code" relative to a `JdbcType` generally maps to the corresponding value in `java.sql.Types`.
+registers entries in the `JdbcTypeRegistry` for all the standard `java.sql.Types` codes (aside from OTHER, which
+is special).  See <<basic-mapping-registries>> for more discussion.
+====
+
+Customizing the `JdbcTypeRegistry` can be accomplished through `@JdbcTypeRegistration` and
+`TypeContributor`.  See <<basic-mapping-registries>> for discussion of `JavaTypeRegistry`.
+See <<basic-type-contributor>> for discussion of `TypeContributor`.
+
+See the `@JdbcTypeCode` Javadoc for details.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-mutability]]
+===== MutabilityPlan
+
+`MutabilityPlan` is the means by which Hibernate understands how to deal with the domain value in terms
+of its internal mutability as well as related concerns such as making copies.  While it seems like a minor
+concern, it can have a major impact on performance.  See <<basic-jpa-convert-mutability>> for one case where
+this can manifest.  See also <<basic-bitset>> for another discussion.
+
+The `MutabilityPlan` for a mapping can be influenced by any of the following annotations:
+
+* `@Mutability`
+* `@Immutable`
+* `@MapKeyMutability`
+* `@CollectionIdMutability`
+
+Hibernate checks the following places for `@Mutability` and `@Immutable`, in order of precedence:
+
+. Local to the mapping
+. On the associated `AttributeConverter` implementation class (if one)
+. On the value's Java type
+
+In most cases, the fallback defined by `JavaType#getMutabilityPlan` is the proper strategy.
+
+Hibernate uses `MutabilityPlan` to:
+
+1. Check whether a value is considered dirty
+2. Make deep copies
+3. Marshal values to and from the second-level cache
+
+Generally speaking, immutable values perform better in all of these cases
+
+1. To check for dirtiness, Hibernate just needs to check object identity (`==`) as opposed
+    to equality (`Object#equals`).
+2. The same value instance can be used as the deep copy of itself.
+3. The same value can be used from the second-level cache as well as the value we put into the
+    second-level cache.
+
+If a particular Java type is considered mutable (a `Date` e.g.), `@Immutable` or a immutable-specific
+`MutabilityPlan` implementation can be specified to have Hibernate treat the value as immutable.  This
+also acts as a contract from the application that the internal state of these objects is not changed
+by the application. Specifying that a mutable type is immutable and then changing the internal state
+will lead to problems; so only do this if the application unequivocally does not change the internal
+state.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-conversion]]
+===== BasicValueConverter
+
+`BasicValueConverter` is roughly analogous to `AttributeConverter` in that it describes a conversion to
+happen when reading or writing values of a basic-valued model part.  In fact, internally Hibernate wraps
+an applied `AttributeConverter` in a `BasicValueConverter`.  It also applies implicit `BasicValueConverter`
+converters in certain cases such as enum handling, etc.
+
+Hibernate does not provide an explicit facility to influence these conversions beyond `AttributeConverter`.
+See <<basic-jpa-convert>>.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-resolution]]
+===== Resolving the composition
+
+Using this composition approach, Hibernate will need to resolve certain parts of this mapping.  Often
+this involves "filling in the blanks" as it will be configured for just parts of the mapping.  This section
+outlines how this resolution happens.
+
+[NOTE]
+====
+This is a complicated process and is only covered at a high level for the most common cases here.
+
+For the full specifics, consult the source code for `org.hibernate.mapping.BasicValue#buildResolution`
+====
+
+First, we look for a custom type.  If found, this takes predence.  See <<basic-mapping-custom>> for details
+
+If an `AttributeConverter` is applied, we use it as the basis for the resolution
+
+. If `@JavaType` is also used, that specific `JavaType` is used for the converter's "domain type".  Otherwise,
+    the Java type defined by the converter as its "domain type" is resolved against the `JavaTypeRegistry`
+. If `@JdbcType` or `@JdbcTypeCode` is used, the indicated `JdbcType` is used and the converted "relational Java
+    type" is determined by `JdbcType#getJdbcRecommendedJavaTypeMapping`.  Otherwise, the Java type defined by the
+    converter as its relational type is used and the `JdbcType` is determined by `JdbcType#getRecommendedJdbcType`
+. The `MutabilityPlan` can be specified using `@Mutability` or `@Immutable` on the `AttributeConverter` implementation,
+    the basic value mapping or the Java type used as the domain-type.  Otherwise, `JdbcType#getJdbcRecommendedJavaTypeMapping`
+    for the conversion's domain-type is used to determine the mutability-plan.
+
+Next we try to resolve the `JavaType` to use for the mapping.  We check for an explicit `@JavaType` and use the specified
+`JavaType` if found.  Next any "implicit" indication is checked; for example, the index for a List has the implicit Java type
+of `Integer`.  Next, we use reflection if possible. If we are unable to determine the `JavaType` to use through the preceeding
+steps, we try to resolve an explicitly specified `JdbcType` to use and, if found, use its
+`JdbcType#getJdbcRecommendedJavaTypeMapping` as the mapping's `JavaType`.  If we are not able to determine the
+`JavaType` by this point, an error is thrown.
+
+The `JavaType` resolved earlier is then inspected for a number of special cases.
+
+. For enum values, we check for an explicit `@Enumerated` and create an enumeration mapping.  Note that this resolution
+    still uses any explicit `JdbcType` indicators
+. For temporal values, we check for `@Temporal` and create an enumeration mapping.  Note that this resolution
+    still uses any explicit `JdbcType` indicators; this includes `@JdbcType` and `@JdbcTypeCode`, as well as
+    `@TimeZoneStorage` and `@TimeZoneColumn` if appropriate.
+
+The fallback at this point is to use the `JavaType` and `JdbcType` determined in earlier steps to create a
+JDBC-mapping (which encapsulates the `JavaType` and `JdbcType`) and combines it with the resolved `MutabilityPlan`
+
+
+When using the compositional approach, there are other ways to influence the resolution as covered
+in <<basic-enums>>, <<basic-temporal>>, <<basic-lob>> and <<basic-nationalized>>
+
+
+
+See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
+
+
+[[basic-mapping-custom]]
+==== Custom type mapping
+
+Another approach is to supply the implementation of the `org.hibernate.usertype.UserType` contract using `@Type`.
+
+There are also corresponding, specialized forms of `@Type` for specific model parts:
+
+* When mapping a Map, `@Type` describes the Map value while `@MapKeyType` describe the Map key
+* When mapping an id-bag, `@Type` describes the elements while `@CollectionIdType` describes the collection-id
+* For other collection mappings, `@Type` describes the elements
+* For discriminated association mappings (`@Any` and `@ManyToAny`), `@Type` describes the discriminator value
+
+`@Type` allows for more complex mapping concerns; but, <<basic-jpa-convert,AttributeConverter>> and
+<<basic-mapping-composition>> should generally be preferred as simpler solutions
+
 [[basic-nationalized]]
-==== Mapping Nationalized Character Data
+==== Handling nationalized character data
 
-JDBC 4 added the ability to explicitly handle nationalized character data.
-To this end, it added specific nationalized character data types:
+How nationalized character data is handled and stored depends on the underlying database.
 
-* `NCHAR`
-* `NVARCHAR`
-* `LONGNVARCHAR`
-* `NCLOB`
+Most databases support storing nationalized character data through the standardized SQL
+NCHAR, NVARCHAR, LONGNVARCHAR and NCLOB variants.
+
+Others support storing nationalized data as part of CHAR, VARCHAR, LONGVARCHAR
+and CLOB.  Generally these databases do not support NCHAR, NVARCHAR, LONGNVARCHAR
+and NCLOB, even as aliased types.
+
+Ultimately Hibernate understands this through `Dialect#getNationalizationSupport()`
+
+To ensure nationalized character data gets stored and accessed correctly, `@Nationalized`
+can be used locally or `hibernate.use_nationalized_character_data` can be set globally.
+
+[NOTE]
+====
+`@Nationalized` and `hibernate.use_nationalized_character_data` can be used regardless
+of the specific database support for nationalized data and allows the application to
+work portably across databases with varying support.
+====
+
+[IMPORTANT]
+====
+For databases with no `NCLOB` data type, attributes of type `java.sql.NClob` are simply
+unsupported. Use `java.sql.Clob` (which `NClob` extends) or a materialized mapping like
+`String` or `char[]` instead.
+
+See also <<basic-lob>> regarding similar limitation for databases which do not support
+explicit `CLOB` data-type.
+====
 
 Considering we have the following database table:
 
 [[basic-nationalized-sql-example]]
 .`NVARCHAR` - SQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{extrasdir}/basic/basic-nationalized-sql-example.sql[]
 ----
@@ -871,245 +1667,126 @@ To map a specific attribute to a nationalized variant data type, Hibernate defin
 [[basic-nationalized-example]]
 .`NVARCHAR` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example]
-----
-====
-
-Just like with `CLOB`, Hibernate can also deal with `NCLOB` SQL data types:
-
-[[basic-nclob-sql-example]]
-.`NCLOB` - SQL
-====
-[source, JAVA, indent=0]
-----
-include::{extrasdir}/basic/basic-nclob-sql-example.sql[]
+include::{example-dir-basic-mapping}/basic/NationalizedTest.java[tags=basic-nationalized-example]
 ----
 ====
 
-Hibernate can map the `NCLOB` to a `java.sql.NClob`
 
-[[basic-nclob-example]]
-.`NCLOB` mapped to `java.sql.NClob`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-example]
-----
-====
 
-To persist such an entity, you have to create an `NClob` using the `NClobProxy` Hibernate utility:
 
-[[basic-nclob-persist-example]]
-.Persisting a `java.sql.NClob` entity
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-persist-example]
-----
-====
+[[basic-lob]]
+==== Handling LOB data
 
-To retrieve the `NClob` content, you need to transform the underlying `java.io.Reader`:
-
-[[basic-nclob-find-example]]
-.Returning a `java.sql.NClob` entity
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/NClobTest.java[tags=basic-nclob-find-example]
-----
-====
-
-We could also map the `NCLOB` in a materialized form. This way, we can either use a `String` or a `char[]`.
-
-[[basic-nclob-string-example]]
-.`NCLOB` mapped to `String`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/NClobStringTest.java[tags=basic-nclob-string-example]
-----
-====
-
-We might even want the materialized data as a char array.
-
-[[basic-nclob-char-array-example]]
-.NCLOB - materialized `char[]` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/NClobCharArrayTest.java[tags=basic-nclob-char-array-example]
-----
-====
+The `@Lob` annotation specifies that character or binary data should be written to the database
+using the special JDBC APIs for handling database LOB (Large OBject) types.
 
 [NOTE]
 ====
-If your application and database use nationalization, you may instead want to enable nationalized character data as the default.
+How JDBC deals with `LOB` data varies from driver to driver. Hibernate tries to take care of all
+these differences, and protect you as much as possible from inconsistent driver behavior.
+Sadly, Hibernate is only partially successful at achieving this goal.
 
-You can do this via the `hibernate.use_nationalized_character_data` setting or by calling `MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during bootstrap.
+Some database drivers (i.e. PostgreSQL) are especially problematic and in such cases you might
+have to do some extra work to get LOBs functioning. But that's beyond the scope of this guide.
 ====
-
-[[basic-uuid]]
-==== Mapping UUID Values
-
-Hibernate also allows you to map UUID values, again in a number of ways.
-
-[NOTE]
-====
-The default UUID mapping is the binary one because it uses a more efficient column storage.
-
-However, many applications prefer the readability of the character-based column storage.
-To switch the default mapping, simply call `MetadataBuilder.applyBasicType( UUIDCharType.INSTANCE, UUID.class.getName() )`.
-====
-
-==== UUID as binary
-
-As mentioned, the default mapping for UUID attributes.
-Maps the UUID to a `byte[]` using `java.util.UUID#getMostSignificantBits` and `java.util.UUID#getLeastSignificantBits` and stores that as `BINARY` data.
-
-Chosen as the default simply because it is generally more efficient from a storage perspective.
-
-==== UUID as (var)char
-
-Maps the UUID to a String using `java.util.UUID#toString` and `java.util.UUID#fromString` and stores that as `CHAR` or `VARCHAR` data.
-
-==== PostgreSQL-specific UUID
 
 [IMPORTANT]
 ====
-When using one of the PostgreSQL Dialects, the PostgreSQL-specific UUID Hibernate type becomes the default UUID mapping.
+For databases with no `CLOB` type, attributes of type `java.sql.Clob` are simply unsupported.
+Use a materialized type like `String` or `char[]` instead.
 ====
 
-Maps the UUID using the PostgreSQL-specific UUID data type.
-The PostgreSQL JDBC driver chooses to map its UUID type to the `OTHER` code.
-Note that this can cause difficulty as the driver chooses to map many different data types to `OTHER`.
+There's two ways a LOB may be represented in the Java domain model:
 
-==== UUID as identifier
+- using a special JDBC-defined _LOB locator type_, or
+- using a regular "materialized" type like `String`, `char[]`, or `byte[]`.
 
-Hibernate supports using UUID values as identifiers, and they can even be generated on the user's behalf.
-For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifiers_>>.
+===== LOB Locator
 
-[[basic-datetime]]
-==== Mapping Date/Time Values
+The JDBC LOB locator types are:
 
-Hibernate allows various Java Date/Time classes to be mapped as persistent domain model entity properties.
-The SQL standard defines three Date/Time types:
+* `java.sql.Blob`
+* `java.sql.Clob`
+* `java.sql.NClob`
 
-DATE:: Represents a calendar date by storing years, months and days. The JDBC equivalent is `java.sql.Date`
-TIME:: Represents the time of a day and it stores hours, minutes and seconds. The JDBC equivalent is `java.sql.Time`
-TIMESTAMP:: It stores both a DATE and a TIME plus nanoseconds. The JDBC equivalent is `java.sql.Timestamp`
+These types represent references to off-table LOB data.
+In principle, they allow JDBC drivers to support more efficient access to the LOB data.
+Some drivers stream parts of the LOB data as needed, potentially consuming less memory.
 
-[NOTE]
+However, `java.sql.Blob` and `java.sql.Clob` can be unnatural to deal with and suffer
+certain limitations.
+For example, it's not portable to access a LOB locator after the end of the transaction
+in which it was obtained.
+
+===== Materialized LOB
+
+Alternatively, Hibernate lets you access LOB data via the familiar Java types `String`,
+`char[]`, and `byte[]`. But of course this requires materializing the entire contents
+of the LOB in memory when the object is first retrieved. Whether this performance cost
+is acceptable depends on many factors, including the vagaries of the JDBC driver.
+
+[TIP]
 ====
-To avoid dependencies on the `java.sql` package, it's common to use the `java.util` or `java.time` Date/Time classes instead of the `java.sql.Timestamp` and `java.sql.Time` ones.
-====
-
-While the `java.sql` classes define a direct association to the SQL Date/Time data types,
-the `java.util` or `java.time` properties need to explicitly mark the SQL type correlation with the `@Temporal` annotation.
-This way, a `java.util.Date` or a `java.util.Calendar` can be mapped to either an SQL `DATE`, `TIME` or `TIMESTAMP` type.
-
-Considering the following entity:
-
-[[basic-datetime-temporal-date-example]]
-.`java.util.Date` mapped as `DATE`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/DateWithTemporalDateTest.java[tags=basic-datetime-temporal-date-example]
-----
+You don't need to use a `@Lob` mapping for every database column of type `BLOB` or `CLOB`.
+The `@Lob` annotation is a special-purpose tool that should only be used when a default
+basic mapping to `String` would result in unacceptable performance characteristics.
 ====
 
-When persisting such entity:
 
-[[basic-datetime-temporal-date-persist-example]]
-.Persisting a `java.util.Date` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/DateWithTemporalDateTest.java[tags=basic-datetime-temporal-date-persist-example]
-----
-====
 
-Hibernate generates the following INSERT statement:
 
-====
-[source, sql, indent=0]
-----
-include::{extrasdir}/basic/basic-datetime-temporal-date-persist-example.sql[]
-----
-====
+[[basic-temporal]]
+==== Handling temporal data
 
-Only the year, month and the day fields were saved into the database.
+Hibernate supports mapping temporal values in numerous ways, though ultimately these strategies
+boil down to the 3 main Date/Time types defined by the SQL specification:
 
-If we change the `@Temporal` type to `TIME`:
+DATE:: Represents a calendar date by storing years, months and days.
+TIME:: Represents the time of a day by storing hours, minutes and seconds.
+TIMESTAMP:: Represents both a DATE and a TIME plus nanoseconds.
+TIMESTAMP WITH TIME ZONE:: Represents both a DATE and a TIME plus nanoseconds and zone id or offset.
 
-[[basic-datetime-temporal-time-example]]
-.`java.util.Date` mapped as `TIME`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/DateWithTemporalTimeTest.java[tags=basic-datetime-temporal-time-example]
-----
-====
-
-Hibernate will issue an INSERT statement containing the hour, minutes and seconds.
-
-====
-[source, sql, indent=0]
-----
-include::{extrasdir}/basic/basic-datetime-temporal-time-persist-example.sql[]
-----
-====
-
-When the `@Temporal` type is set to `TIMESTAMP`:
-
-[[basic-datetime-temporal-timestamp-example]]
-.`java.util.Date` mapped as `TIMESTAMP`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/DateWithTemporalTimestampTest.java[tags=basic-datetime-temporal-timestamp-example]
-----
-====
-
-Hibernate will include both the `DATE`, the `TIME` and the nanoseconds in the INSERT statement:
-
-====
-[source, sql, indent=0]
-----
-include::{extrasdir}/basic/basic-datetime-temporal-timestamp-persist-example.sql[]
-----
-====
-
-[NOTE]
-====
-Just like the `java.util.Date`, the `java.util.Calendar` requires the `@Temporal` annotation in order to know what JDBC data type to be chosen: `DATE`, `TIME` or `TIMESTAMP`.
-
-If the `java.util.Date` marks a point in time, the `java.util.Calendar` takes into consideration the default Time Zone.
-====
-
-[[basic-datetime-java8]]
-===== Mapping Java 8 Date/Time Values
-
-Java 8 came with a new Date/Time API, offering support for instant dates, intervals, local and zoned Date/Time immutable instances, bundled in the `java.time` package.
-
-The mapping between the standard SQL Date/Time types and the supported Java 8 Date/Time class types looks as follows;
+The mapping of `java.time` temporal types to the specific SQL Date/Time types is implied as follows:
 
 DATE:: `java.time.LocalDate`
 TIME:: `java.time.LocalTime`, `java.time.OffsetTime`
 TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDateTime` and `java.time.ZonedDateTime`
+TIMESTAMP WITH TIME ZONE:: `java.time.OffsetDateTime`, `java.time.ZonedDateTime`
+
+Although Hibernate recommends the use of the `java.time` package for representing temporal values,
+it does support using `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, `java.util.Date` and
+`java.util.Calendar`.
+
+The mappings for `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` are implicit:
+
+DATE:: `java.sql.Date`
+TIME:: `java.sql.Time`
+TIMESTAMP:: `java.sql.Timestamp`
+
 
 [IMPORTANT]
 ====
-Because the mapping between the Java 8 Date/Time classes and the SQL types is implicit, there is not need to specify the `@Temporal` annotation.
+Applying `@Temporal` to `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` or any of the `java.time` types
+is considered an exception
+====
 
-Setting it on the `java.time` classes throws the following exception:
+When using `java.util.Date` or `java.util.Calendar`, Hibernate assumes `TIMESTAMP`.  To alter that,
+use `@Temporal`.
 
+[[basic-temporal-java-util-example]]
+.Mapping java.util.Date
+====
+[source, java, indent=0]
 ----
-org.hibernate.AnnotationException: @Temporal should only be set on a java.util.Date or java.util.Calendar property
+include::{example-dir-basic-mapping}/basic/DatePrecisionTests.java[tags=basic-temporal-example]
 ----
 ====
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-datetime-time-zone]]
 ===== Using a specific time zone
@@ -1162,11 +1839,58 @@ Session session = sessionFactory()
 With this configuration property in place, Hibernate is going to call the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
 https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-java.util.Calendar-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x, Calendar cal)`], where the `java.util.Calendar` references the time zone provided via the `hibernate.jdbc.time_zone` property.
 
-[[basic-jpa-convert]]
-==== JPA 2.1 AttributeConverters
+[[basic-timestamp-with-time-zone]]
+===== Handling time zoned temporal data
 
-Although Hibernate has long been offering <<basic-custom-type,custom types>>, as a JPA 2.1 provider,
-it also supports `AttributeConverter` as well.
+By default, Hibernate will convert and normalize `OffsetDateTime` and `ZonedDateTime` to `java.sql.Timestamp` in UTC.
+This behavior can be altered by configuring the `hibernate.timezone.default_storage` property
+
+[source,java]
+----
+settings.put(
+    AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
+    TimeZoneStorageType.AUTO
+);
+----
+
+Other possible storage types are `AUTO`, `COLUMN`, `NATIVE` and `NORMALIZE` (the default).
+With `COLUMN`, Hibernate will save the time zone information into a dedicated column,
+whereas `NATIVE` will require the support of database for a `TIMESTAMP WITH TIME ZONE` data type
+that retains the time zone information.
+`NORMALIZE` doesn't store time zone information and will simply convert the timestamp to UTC.
+Hibernate understands what a database/dialect supports through `Dialect#getTimeZoneSupport`
+and will abort with a boot error if the `NATIVE` is used in conjunction with a database that doesn't support this.
+For `AUTO`, Hibernate tries to use `NATIVE` if possible and falls back to `COLUMN` otherwise.
+
+==== `@TimeZoneStorage`
+
+Hibernate supports defining the storage to use for time zone information for individual properties
+via the `@TimeZoneStorage` and `@TimeZoneColumn` annotations.
+The storage type can be specified via the `@TimeZoneStorage` by specifying a `org.hibernate.annotations.TimeZoneStorageType`.
+The default storage type is `AUTO` which will ensure that the time zone information is retained.
+The `@TimeZoneColumn` annotation can be used in conjunction with `AUTO` or `COLUMN` and allows to define
+the column details for the time zone information storage.
+
+[NOTE]
+====
+Storing the zone offset might be problematic for future timestamps as zone rules can change.
+Due to this, storing the offset is only safe for past timestamps, and we advise sticking to the `NORMALIZE` strategy by default.
+====
+
+.`@TimeZoneColumn` usage
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/TimeZoneStorageMappingTests.java[tags=time-zone-column-examples-mapping-example]
+----
+====
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-jpa-convert]]
+==== AttributeConverters
 
 With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
 
@@ -1175,9 +1899,9 @@ In the following example, the `java.time.Period` is going to be mapped to a `VAR
 [[basic-jpa-convert-period-string-converter-example]]
 .`java.time.Period` custom `AttributeConverter`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/converter/PeriodStringConverter.java[tags=basic-jpa-convert-period-string-converter-example]
+include::{example-dir-basic-mapping}/converter/PeriodStringConverter.java[tags=basic-jpa-convert-period-string-converter-example]
 ----
 ====
 
@@ -1186,9 +1910,9 @@ To make use of this custom converter, the `@Convert` annotation must decorate th
 [[basic-jpa-convert-period-string-converter-mapping-example]]
 .Entity using the custom `java.time.Period` `AttributeConverter` mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
+include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
 ----
 ====
 
@@ -1203,6 +1927,9 @@ include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example
 ----
 ====
 
+An `AttributeConverter` can be applied globally for (`@Converter( autoApply=true )`) or locally.
+
+
 [[basic-jpa-convert-type]]
 ===== `AttributeConverter` Java and JDBC types
 
@@ -1211,58 +1938,136 @@ Hibernate will fallback to a `java.io.Serializable` type.
 
 If the Java type is not known to Hibernate, you will encounter the following message:
 
-> HHH000481: Encountered Java type for which we could not locate a JavaTypeDescriptor and which does not appear to implement equals and/or hashCode.
+> HHH000481: Encountered Java type for which we could not locate a JavaType and which does not appear to implement equals and/or hashCode.
 > This can lead to significant performance problems when performing equality/dirty checking involving this Java type.
-> Consider registering a custom JavaTypeDescriptor or at least implementing equals/hashCode.
+> Consider registering a custom JavaType or at least implementing equals/hashCode.
 
-Whether a Java type is "known" means it has an entry in the `JavaTypeDescriptorRegistry`.
-While by default Hibernate loads many JDK types into the `JavaTypeDescriptorRegistry`, an application can also expand the `JavaTypeDescriptorRegistry` by
-adding new `JavaTypeDescriptor` entries.
+A Java type is "known" if it has an entry in the `JavaTypeRegistry`.  While Hibernate does load many JDK types into
+the `JavaTypeRegistry`, an application can also expand the `JavaTypeRegistry` by adding new `JavaType`
+entries as discussed in <<basic-mapping-composition>> and <<basic-type-contributor>>.
 
-This way, Hibernate will also know how to handle a specific Java Object type at the JDBC level.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[[basic-hbm-attribute-converter]]
+===== Mapping an AttributeConverter using HBM mappings
+
+When using HBM mappings, you can still make use of the Jakarta Persistence `AttributeConverter` because Hibernate supports
+such mapping via the `type` attribute as demonstrated by the following example.
+
+Let's consider we have an application-specific `Money` type:
+
+[[basic-hbm-attribute-converter-mapping-money-example]]
+.Application-specific `Money` type
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/converter/hbm/Money.java[tags=basic-hbm-attribute-converter-mapping-money-example]
+----
+====
+
+Now, we want to use the `Money` type when mapping the `Account` entity:
+
+[[basic-hbm-attribute-converter-mapping-account-example]]
+.`Account` entity using the `Money` type
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/converter/hbm/Account.java[tags=basic-hbm-attribute-converter-mapping-account-example]
+----
+====
+
+Since Hibernate has no knowledge how to persist the `Money` type, we could use a Jakarta Persistence `AttributeConverter`
+to transform the `Money` type as a `Long`. For this purpose, we are going to use the following
+`MoneyConverter` utility:
+
+[[basic-hbm-attribute-converter-mapping-moneyconverter-example]]
+.`MoneyConverter` implementing the Jakarta Persistence `AttributeConverter` interface
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/converter/hbm/MoneyConverter.java[tags=basic-hbm-attribute-converter-mapping-moneyconverter-example]
+----
+====
+
+To map the `MoneyConverter` using HBM configuration files you need to use the `converted::` prefix in the `type`
+attribute of the `property` element.
+
+[[basic-hbm-attribute-converter-mapping-xml-config-example]]
+.HBM mapping for `AttributeConverter`
+====
+[source, java, indent=0]
+----
+include::{example-dir-resources}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
+----
+====
+
+
+
 
 [[basic-jpa-convert-mutability]]
-===== JPA 2.1 `AttributeConverter` Mutability Plan
+===== `AttributeConverter` Mutability Plan
 
-A basic type that's converted by a JPA `AttributeConverter` is immutable if the underlying Java type is immutable
+A basic type that's converted by a Jakarta Persistence `AttributeConverter` is immutable if the underlying Java type is immutable
 and is mutable if the associated attribute type is mutable as well.
 
-Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaTypeDescriptor.html#getMutabilityPlan--[`JavaTypeDescriptor#getMutabilityPlan`]
+Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaType.html#getMutabilityPlan--[`JavaType#getMutabilityPlan`]
 of the associated entity attribute type.
+
+This can be adjusted by using `@Immutable` or `@Mutability` on any of:
+
+1. the basic value
+2. the `AttributeConverter` class
+3. the basic value type
+
+See <<basic-mapping>> for additional details.
+
 
 ====== Immutable types
 
-If the entity attribute is a `String`, a primitive wrapper (e.g. `Integer`, `Long`) an Enum type, or any other immutable `Object` type,
+If the entity attribute is a `String`, a primitive wrapper (e.g. `Integer`, `Long`), an Enum type, or any other immutable `Object` type,
 then you can only change the entity attribute value by reassigning it to a new value.
 
 Considering we have the same `Period` entity attribute as illustrated in the <<basic-jpa-convert>> section:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
+include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-mapping-example]
 ----
 
 The only way to change the `span` attribute is to reassign it to a different value:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-immutability-plan-example]
+include::{example-dir-basic-mapping}/converter/PeriodStringTest.java[tags=basic-jpa-convert-period-string-converter-immutability-plan-example]
 ----
 
 ====== Mutable types
 
 On the other hand, consider the following example where the `Money` type is a mutable.
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mapping-example]
+include::{example-dir-basic-mapping}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mapping-example]
 ----
 
-A mutable `Object` allows you to modify its internal structure, and Hibernate dirty checking mechanism is going to propagate the change to the database:
+A mutable `Object` allows you to modify its internal structure, and Hibernate's dirty checking mechanism is going to propagate the change to the database:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mutability-plan-example]
+include::{example-dir-basic-mapping}/converter/MoneyConverterTest.java[tags=basic-jpa-convert-money-converter-mutability-plan-example]
 ----
 
 [TIP]
@@ -1273,30 +2078,295 @@ treating these as immutable (when they really are) is more efficient.
 For this reason, prefer immutable types over mutable ones whenever possible.
 ====
 
+
+
+[[basic-attribute-converter-query-parameter]]
+====== Using the AttributeConverter entity property as a query parameter
+
+Assuming you have the following entity:
+
+[[basic-attribute-converter-query-parameter-entity-example]]
+.`Photo` entity with `AttributeConverter`
+====
+[source, java, indent=0]
+----
+include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-entity-example]
+----
+====
+
+And the `Caption` class looks as follows:
+
+[[basic-attribute-converter-query-parameter-object-example]]
+.`Caption` Java object
+====
+[source, java, indent=0]
+----
+include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-object-example]
+----
+====
+
+And we have an `AttributeConverter` to handle the `Caption` Java object:
+
+[[basic-attribute-converter-query-parameter-converter-example]]
+.`Caption` Java object AttributeConverter
+====
+[source, java, indent=0]
+----
+include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-example]
+----
+====
+
+Traditionally, you could only use the DB data `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
+
+[[basic-attribute-converter-query-parameter-converter-dbdata-example]]
+.Filtering by the `Caption` property using the DB data representation
+====
+[source, java, indent=0]
+----
+include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-dbdata-example]
+----
+====
+
+In order to use the Java object `Caption` representation, you have to get the associated Hibernate `Type`.
+
+[[basic-attribute-converter-query-parameter-converter-object-example]]
+.Filtering by the `Caption` property using the Java Object representation
+====
+[source, java, indent=0]
+----
+include::{example-dir-converter}/ConverterTest.java[tags=basic-attribute-converter-query-parameter-converter-object-example]
+----
+====
+
+By passing the associated Hibernate `Type`, you can use the `Caption` object when binding the query parameter value.
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-mapping-registries]]
+==== Registries
+
+We've covered `JavaTypeRegistry` and `JdbcTypeRegistry` a few times now, mainly in regards to mapping resolution
+as discussed in <<basic-mapping-composition-resolution>>.  But they each also serve additional important roles.
+
+The `JavaTypeRegistry` is a registry of `JavaType` references keyed by Java type.  In addition to mapping resolution,
+this registry is used to handle `Class` references exposed in various APIs such as `Query` parameter types.
+`JavaType` references can be registered through `@JavaTypeRegistration`.
+
+The `JdbcTypeRegistry` is a registry of `JdbcType` references keyed by an integer code.  As discussed in
+<<basic-mapping-composition-jdbc>>, these type-codes typically match with the corresponding code from
+`java.sql.Types`, but that is not a requirement - integers other than those defined by `java.sql.Types` can
+be used.  This might be useful for mapping JDBC User Data Types (UDTs) or other specialized database-specific
+types (PostgreSQL's UUID type, e.g.).  In addition to its use in mapping resolution, this registry is also used
+as the primary source for resolving "discovered" values in a JDBC `ResultSet`.  `JdbcType` references can be
+registered through `@JdbcTypeRegistration`.
+
+See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration` for
+registration.
+
+
+[[basic-type-contributor]]
+==== TypeContributor
+
+`org.hibernate.boot.model.TypeContributor` is a contract for overriding or extending parts of the Hibernate type
+system.
+
+There are many ways to integrate a `TypeContributor`.  The most common is to define the `TypeContributor` as
+a Java service (see `java.util.ServiceLoader`).
+
+`TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaType`,
+`JdbcType` and `BasicType` references.
+
+
+[[IMPORTANT]]
+====
+While `TypeContributor` still exposes the ability to register `BasicType` references, this is considered
+deprecated.  As of 6.0, these `BasicType` registrations are only used while interpreting `hbm.xml` mappings,
+which are themselves considered deprecated.  Use <<basic-mapping-custom>> or <<basic-mapping-composition>> instead.
+====
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-bitset]]
+==== Case Study : BitSet
+
+We've covered many ways to specify basic value mappings so far.  This section will look at mapping the
+`java.util.BitSet` type by applying the different techniques covered so far.
+
+[[basic-bitset-example-implicit]]
+.Implicit BitSet mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetImplicitTests.java[tags=basic-bitset-example-implicit]
+----
+====
+
+As mentioned previously, the worst-case fallback for Hibernate mapping a basic type
+which implements `Serializable` is to simply serialize it to the database.  BitSet
+does implement `Serializable`, so by default Hibernate would handle this mapping by serialization.
+
+That is not an ideal mapping.  In the following sections we will look at approaches to change
+various aspects of how the BitSet gets mapped to the database.
+
+
+[[basic-bitset-converter]]
+===== Using `AttributeConverter`
+
+We've seen uses of `AttributeConverter` previously.
+
+This works well in most cases and is portable across Jakarta Persistence providers.
+
+[[basic-bitset-example-converter]]
+.BitSet AttributeConverter
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetConverterTests.java[tags=basic-bitset-example-convert]
+
+include::{example-dir-basic-mapping}/basic/bitset/BitSetConverterTests.java[tags=basic-bitset-example-converter]
+----
+====
+
+[NOTE]
+====
+The `@Convert` annotation was used for illustration.  Generally such a converter would be auto-applied instead
+
+See <<basic-jpa-convert>> for details.
+====
+
+This greatly improves the reading and writing performance of dealing with these
+BitSet values because the `AttributeConverter` does that more efficiently using
+a simple externalizable form of the BitSet rather than serializing and deserializing
+the values.
+
+See also <<basic-jpa-convert-mutability>>.
+
+
+[[basic-bitset-java-type]]
+===== Using a custom `JavaTypeDescriptor`
+
+As covered in <<basic-mapping-explicit>>, we will define a `JavaType`
+for `BitSet` that maps values to `VARCHAR` for storage by default.
+
+[[basic-bitset-example-java-type]]
+.BitSet JavaTypeDescriptor
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetJavaType.java[tags=basic-bitset-example-java-type]
+----
+====
+
+
+We can either apply that type locally using `@JavaType`
+
+[[basic-bitset-example-java-type-local]]
+.@JavaType
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetJavaTypeTests.java[tags=basic-bitset-example-java-type-local,indent=0]
+----
+====
+
+Or we can apply it globally using `@JavaTypeRegistration`.  This allows the registered `JavaType`
+to be used as the default whenever we encounter the `BitSet` type
+
+[[basic-bitset-example-java-type-global]]
+.@JavaTypeRegistration
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetJavaTypeRegistrationTests.java[tags=basic-bitset-example-java-type-global,indent=0]
+----
+====
+
+
+[[basic-bitset-jdbc-type]]
+===== Selecting different `JdbcTypeDescriptor`
+
+Our custom `BitSetJavaType` maps `BitSet` values to `VARCHAR` by default.  That was a better option
+than direct serialization.  But as `BitSet` is ultimately binary data we would probably really want to
+map this to `VARBINARY` type instead.  One way to do that would be to change `BitSetJavaType#getRecommendedJdbcType`
+to instead return `VARBINARY` descriptor.  Another option would be to use a local `@JdbcType` or `@JdbcTypeCode`.
+
+The following examples for specifying the `JdbcType` assume our `BitSetJavaType`
+is globally registered.
+
+We will again store the values as `VARBINARY` in the database.  The difference now however is that
+the coercion methods `#wrap` and `#unwrap` will be used to prepare the value rather than relying on
+serialization.
+
+
+[[basic-bitset-example-jdbc-type-code]]
+.@JdbcTypeCode
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetJdbcTypeCodeTests.java[tags=basic-bitset-example-jdbc-type-code,indent=0]
+----
+====
+
+In this example, `@JdbcTypeCode` has been used to indicate that the `JdbcType` registered for JDBC's
+`VARBINARY` type should be used.
+
+
+[[basic-bitset-example-jdbc-type-local]]
+.@JdbcType
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetJdbcTypeTests.java[tags=basic-bitset-example-jdbc-type-local,indent=0]
+----
+====
+
+In this example, `@JdbcType` has been used to specify our custom `BitSetJdbcType` descriptor locally for
+this attribute.
+
+We could instead replace how Hibernate deals with all `VARBINARY` handling with our custom impl using
+`@JdbcTypeRegistration`
+
+[[basic-bitset-example-jdbc-type-global]]
+.@JdbcType
+====
+[source, java, indent=0]
+----
+include::{example-dir-basic-mapping}/basic/bitset/BitSetJdbcTypeRegistrationTests.java[tags=basic-bitset-example-jdbc-type-global,indent=0]
+----
+====
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 [[mapping-quoted-identifiers]]
 ==== SQL quoted identifiers
 
 You can force Hibernate to quote an identifier in the generated SQL by enclosing the table or column name in backticks in the mapping document.
-While traditionally, Hibernate used backticks for escaping SQL reserved keywords, JPA uses double quotes instead.
+While traditionally, Hibernate used backticks for escaping SQL reserved keywords, Jakarta Persistence uses double quotes instead.
 
 Once the reserved keywords are escaped, Hibernate will use the correct quotation style for the SQL `Dialect`.
 This is usually double quotes, but SQL Server uses brackets and MySQL uses backticks.
 
 [[basic-quoting-example]]
-.Hibernate legacy quoting
+.Hibernate quoting
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/QuotingTest.java[tags=basic-quoting-example]
+include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-example]
 ----
 ====
 
 [[basic-jpa-quoting-example]]
-.JPA quoting
+.Jakarta Persistence quoting
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
+include::{example-dir-basic-mapping}/basic/JpaQuotingTest.java[tags=basic-jpa-quoting-example]
 ----
 ====
 
@@ -1307,9 +2377,9 @@ When saving the following `Product entity`, Hibernate generates the following SQ
 [[basic-quoting-persistence-example]]
 .Persisting a quoted column name
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/QuotingTest.java[tags=basic-quoting-persistence-example, indent=0]
+include::{example-dir-basic-mapping}/basic/QuotingTest.java[tags=basic-quoting-persistence-example, indent=0]
 ----
 
 [source, SQL, indent=0]
@@ -1336,11 +2406,11 @@ Hibernate can also quote all identifiers (e.g. table, columns) using the followi
 This way, we don't need to manually quote any identifier:
 
 [[basic-auto-quoting-example]]
-.JPA quoting
+.Jakarta Persistence quoting
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/AutoQuotingTest.java[tags=basic-auto-quoting-example]
+include::{example-dir-basic-mapping}/basic/AutoQuotingTest.java[tags=basic-auto-quoting-example]
 ----
 ====
 
@@ -1357,282 +2427,187 @@ As you can see, both the table name and all the column have been quoted.
 
 For more about quoting-related configuration properties, check out the <<appendices/Configurations.adoc#configurations-mapping,Mapping configurations>> section as well.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 [[mapping-generated]]
 ==== Generated properties
 
-Generated properties are properties that have their values generated by the database.
-Typically, Hibernate applications needed to `refresh` objects that contain any properties for which the database was generating values.
-Marking properties as generated, however, lets the application delegate this responsibility to Hibernate.
-When Hibernate issues an SQL INSERT or UPDATE for an entity that has defined generated properties, it immediately issues a select to retrieve the generated values.
+NOTE:: This section talks about generating values for non-identifier attributes.  For discussion of generated identifier values, see <<identifiers-generators>>.
 
-Properties marked as generated must additionally be _non-insertable_ and _non-updateable_.
-Only `@Version` and `@Basic` types can be marked as generated.
+Generated attributes have their values generated as part of performing a SQL INSERT or UPDATE.  Applications can generate these
+values in any number of ways (SQL DEFAULT value, trigger, etc).  Typically, the application needs to refresh objects that
+contain any properties for which the database was generating values, which is a major drawback.
 
-`NEVER` (the default):: the given property value is not generated within the database.
-`INSERT`:: the given property value is generated on insert but is not regenerated on subsequent updates. Properties like _creationTimestamp_ fall into this category.
-`ALWAYS`:: the property value is generated both on insert and update.
+Applications can also delegate generation to Hibernate, in which case Hibernate will manage the value generation
+and (potentialfootnote:[Only in-DB generation requires the refresh]) state refresh itself.
 
-To mark a property as generated, use The Hibernate specific `@Generated` annotation.
-
-[[mapping-generated-Generated]]
-===== `@Generated` annotation
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Generated.html[`@Generated`] annotation is used so that Hibernate can fetch the currently annotated property after the entity has been persisted or updated.
-For this reason, the `@Generated` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value.
-
-Considering the following entity:
-
-[[mapping-generated-Generated-example]]
-.`@Generated` mapping example
+[IMPORTANT]
 ====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/GeneratedTest.java[tags=mapping-generated-Generated-example]
-----
+Only `@Basic` and `@Version` attributes can be marked as generated.
+
+Generated attributes must additionally be _non-insertable_ and _non-updateable_.
 ====
 
-When the `Person` entity is persisted, Hibernate is going to fetch the calculated `fullName` column from the database,
-which concatenates the first, middle, and last name.
+Hibernate supports both in-VM and in-DB generation.  A generation that uses the current JVM timestamp as the
+generated value is an example of an in-VM strategy.  A generation that uses the database's `current_timestamp`
+function is an example of an in-DB strategy.
 
-[[mapping-generated-Generated-persist-example]]
-.`@Generated` persist example
+Hibernate supports the following timing (when) for generation:
+
+`NEVER` (the default):: the given attribute value is not generated
+`INSERT`:: the attribute value is generated on insert but is not regenerated on subsequent updates
+`ALWAYS`:: the attribute value is generated both on insert and update.
+
+Hibernate supports multiple ways to mark an attribute as generated:
+
+* Using the dedicated generators provided by Hibernate
+    * `@CurrentTimestamp` - <<mapping-generated-CurrentTimestamp>>
+    * `@CreationTimestamp` - <<mapping-generated-CreationTimestamp>>
+    * `@UpdateTimestamp` - <<mapping-generated-UpdateTimestamp>>
+    * `@Generated` - <<mapping-generated-Generated>>
+* Using a custom generation strategy - <<mapping-generated-custom>>
+
+
+[[mapping-generated-CurrentTimestamp]]
+===== `@CurrentTimestamp`
+
+The `@CurrentTimestamp` annotation is an in-DB strategy that can be configured for either INSERT or ALWAYS timing.
+It uses the database's `current_timestamp` function as the generated value
+
+[[mapping-generated-provided-CurrentTimestamp-ex1]]
+.`@UpdateTimestamp` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/generated/GeneratedTest.java[tags=mapping-generated-Generated-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-generated-Generated-persist-example.sql[]
-----
-====
-
-The same goes when the `Person` entity is updated.
-Hibernate is going to fetch the calculated `fullName` column from the database after the entity is modified.
-
-[[mapping-generated-Generated-update-example]]
-.`@Generated` update example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/GeneratedTest.java[tags=mapping-generated-Generated-update-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-generated-Generated-update-example.sql[]
+include::{example-dir-generated}/CurrentTimestampAnnotationTests.java[tags=mapping-generated-CurrentTimestamp-ex1]
 ----
 ====
 
-[[mapping-generated-GeneratorType]]
-===== `@GeneratorType` annotation
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratorType.html[`@GeneratorType`] annotation is used so that
-you can provide a custom generator to set the value of the currently annotated property.
-
-For this reason, the `@GeneratorType` annotation accepts a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GenerationTime.html[`GenerationTime`] enum value
-and a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerator.html[`ValueGenerator`] class type.
-
-Considering the following entity:
-
-[[mapping-generated-GeneratorType-example]]
-.`@GeneratorType` mapping example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-GeneratorType-example]
-----
-====
-
-When the `Person` entity is persisted, Hibernate is going to populate the `createdBy` column with the currently logged user.
-
-[[mapping-generated-GeneratorType-persist-example]]
-.`@Generated` persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-GeneratorType-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-generated-GeneratorType-persist-example.sql[]
-----
-====
-
-The same goes when the `Person` entity is updated.
-Hibernate is going to populate the `updatedBy` column with the currently logged user.
-
-[[mapping-generated-GeneratorType-update-example]]
-.`@Generated` update example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/GeneratorTypeTest.java[tags=mapping-generated-GeneratorType-update-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-generated-GeneratorType-update-example.sql[]
-----
-====
 
 [[mapping-generated-CreationTimestamp]]
-===== `@CreationTimestamp` annotation
+===== `@CreationTimestamp`
 
-The `@CreationTimestamp` annotation instructs Hibernate to set the annotated entity attribute with the current timestamp value of the JVM
-when the entity is being persisted.
+The `@CreationTimestamp` annotation is an in-VM `INSERT` strategy.  Hibernate will use
+the current timestamp of the JVM as the insert value for the attribute.
 
-The supported property types are:
-
-- `java.util.Date`
-- `java.util.Calendar`
-- `java.sql.Date`
-- `java.sql.Time`
-- `java.sql.Timestamp`
+Supports most temporal types (`java.time.Instant`, `java.util.Date`, `java.util.Calendar`, etc)
 
 [[mapping-generated-CreationTimestamp-example]]
 .`@CreationTimestamp` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/generated/CreationTimestampTest.java[tags=mapping-generated-CreationTimestamp-example]
+include::{example-dir-basic-mapping}/generated/CreationTimestampTest.java[tags=mapping-generated-provided-creation-ex1]
 ----
 ====
 
-When the `Event` entity is persisted, Hibernate is going to populate the underlying `timestamp` column with the current JVM timestamp value:
+While inserting the `Event`, Hibernate will populate the underlying `timestamp` column with the current JVM timestamp value
 
-[[mapping-generated-CreationTimestamp-persist-example]]
-.`@CreationTimestamp` persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/CreationTimestampTest.java[tags=mapping-generated-CreationTimestamp-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-generated-CreationTimestamp-persist-example.sql[]
-----
-====
 
 [[mapping-generated-UpdateTimestamp]]
 ===== `@UpdateTimestamp` annotation
 
-The `@UpdateTimestamp` annotation instructs Hibernate to set the annotated entity attribute with the current timestamp value of the JVM
-when the entity is being persisted.
+The `@UpdateTimestamp` annotation is an in-VM `INSERT` strategy.  Hibernate will use
+the current timestamp of the JVM as the insert and update value for the attribute.
 
-The supported property types are:
+Supports most temporal types (`java.time.Instant`, `java.util.Date`, `java.util.Calendar`, etc)
 
-- `java.util.Date`
-- `java.util.Calendar`
-- `java.sql.Date`
-- `java.sql.Time`
-- `java.sql.Timestamp`
 
-[[mapping-generated-UpdateTimestamp-example]]
+[[mapping-generated-provided-update-ex1]]
 .`@UpdateTimestamp` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-example]
-----
-====
-
-When the `Bid` entity is persisted, Hibernate is going to populate the underlying `updated_on` column with the current JVM timestamp value:
-
-[[mapping-generated-UpdateTimestamp-persist-example]]
-.`@UpdateTimestamp` persist example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-generated-UpdateTimestamp-persist-example.sql[]
+include::{example-dir-basic-mapping}/generated/UpdateTimestampTest.java[tags=mapping-generated-provided-update-ex1]
 ----
 ====
 
-When updating the `Bid` entity, Hibernate is going to modify the `updated_on` column with the current JVM timestamp value:
 
-[[mapping-generated-UpdateTimestamp-update-example]]
-.`@UpdateTimestamp` update example
+
+[[mapping-generated-Generated]]
+===== `@Generated` annotation
+
+The `@Generated` annotation is an in-DB strategy that can be configured for either INSERT or ALWAYS timing
+
+This is the legacy mapping for in-DB generated values.
+
+
+[[mapping-generated-provided-Generated]]
+.`@Generated` mapping example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/generated/UpdateTimestampTest.java[tags=mapping-generated-UpdateTimestamp-update-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-generated-UpdateTimestamp-update-example.sql[]
-----
-====
-
-[[mapping-generated-ValueGenerationType]]
-===== `@ValueGenerationType` meta-annotation
-
-Hibernate 4.3 introduced the `@ValueGenerationType` meta-annotation, which is a new approach to declaring generated attributes or customizing generators.
-
-`@Generated` has been retrofitted to use the `@ValueGenerationType` meta-annotation.
-But `@ValueGenerationType` exposes more features than what `@Generated` currently supports, and,
-to leverage some of those features, you'd simply wire up a new generator annotation.
-
-As you'll see in the following examples, the `@ValueGenerationType` meta-annotation is used when declaring the custom annotation used to mark the entity properties that need a specific generation strategy.
-The actual generation logic must be added to the class that implements the `AnnotationValueGeneration` interface.
-
-[[mapping-database-generated-value]]
-====== Database-generated values
-
-For example, let's say we want the timestamps to be generated by calls to the standard ANSI SQL function `current_timestamp` (rather than triggers or DEFAULT values):
-
-[[mapping-database-generated-value-example]]
-.A `ValueGenerationType` mapping for database generation
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/DatabaseValueGenerationTest.java[tags=mapping-database-generated-value-example]
+include::{example-dir-basic-mapping}/generated/GeneratedTest.java[tags=mapping-generated-provided-generated]
 ----
 ====
 
-When persisting an `Event` entity, Hibernate generates the following SQL statement:
 
+
+[[mapping-generated-custom]]
+===== Custom generation strategy
+
+Hibernate also supports value generation via a pluggable API using `@ValueGenerationType` and `AnnotationBasedGenerator`
+allowing users to define any generation strategy they wish.
+
+Let's look at an example of generating UUID values.  First the attribute mapping
+
+[[mapping-generated-custom-ex1]]
+.Custom generation mapping example
 ====
-[source, SQL, indent=0]
+[source, java, indent=0]
 ----
-include::{extrasdir}/basic/mapping-database-generated-value-example.sql[]
-----
-====
-
-As you can see, the `current_timestamp` value was used for assigning the `timestamp` column value.
-
-[[mapping-in-memory-generated-value]]
-====== In-memory-generated values
-
-If the timestamp value needs to be generated in-memory, the following mapping must be used instead:
-
-[[mapping-in-memory-generated-value-example]]
-.A `ValueGenerationType` mapping for in-memory value generation
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/generated/InMemoryValueGenerationTest.java[tags=mapping-in-memory-generated-value-example]
+include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-generated-custom-ex1]
 ----
 ====
 
-When persisting an `Event` entity, Hibernate generates the following SQL statement:
+This example makes use of an annotation named `@GeneratedUuidValue` - but where is that annotation defined?  This is a custom
+annotations provided by the application.
 
+[[mapping-generated-custom-ex2]]
+.Custom generation mapping example
 ====
-[source, SQL, indent=0]
+[source, java, indent=0]
 ----
-include::{extrasdir}/basic/mapping-in-memory-generated-value-example.sql[]
+include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-generated-custom-ex2]
 ----
 ====
 
-As you can see, the `new Date()` object value was used for assigning the `timestamp` column value.
+The `@ValueGenerationType( generatedBy = UuidValueGeneration.class )` here is the important piece; it tells
+Hibernate how to generate values for the attribute - here it will use the specified `UuidValueGeneration` class
+
+[[mapping-generated-custom-ex3]]
+.Custom generation mapping example
+====
+[source, java, indent=0]
+----
+include::{example-dir-generated}/temporals/GeneratedUuidTests.java[tags=mapping-generated-custom-ex3]
+----
+====
+
+See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`]
+and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/generator/AnnotationValueGeneration.html[`AnnotationBasedGenerator`]
+for details of each contract
+
+
+
 
 [[mapping-column-read-and-write]]
 ==== Column transformers: read and write expressions
@@ -1643,9 +2618,9 @@ For example, if your database provides a set of data encryption functions, you c
 [[mapping-column-read-and-write-example]]
 .`@ColumnTransformer` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/../fetching/FetchingTest.java[tags=mapping-column-read-and-write-example]
+include::{example-dir-basic-mapping}/../fetching/FetchingTest.java[tags=mapping-column-read-and-write-example]
 ----
 ====
 
@@ -1654,14 +2629,14 @@ If a property uses more than one column, you must use the `forColumn` attribute 
 [[mapping-column-read-and-write-composite-type-example]]
 .`@ColumnTransformer` `forColumn` attribute usage
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-example]
+include::{example-dir-basic-mapping}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-example]
 ----
 ====
 
 Hibernate applies the custom expressions automatically whenever the property is referenced in a query.
-This functionality is similar to a derived-property <<mapping-column-formula>> with two differences:
+This functionality is similar to a derived-property <<basic-formula-annotation>> with two differences:
 
 * The property is backed by one or more columns that are exported as part of automatic schema generation.
 * The property is read-write, not read-only.
@@ -1671,9 +2646,9 @@ The `write` expression, if specified, must contain exactly one '?' placeholder f
 [[mapping-column-read-and-write-composite-type-persistence-example]]
 .Persisting an entity with a `@ColumnTransformer` and a composite type
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-persistence-example]
+include::{example-dir-basic-mapping}/basic/ColumnTransformerTest.java[tags=mapping-column-read-and-write-composite-type-persistence-example]
 ----
 
 [source, SQL, indent=0]
@@ -1682,43 +2657,8 @@ include::{extrasdir}/basic/mapping-column-read-and-write-composite-type-persiste
 ----
 ====
 
-[[mapping-column-formula]]
-==== `@Formula`
 
-Sometimes, you want the Database to do some computation for you rather than in the JVM, you might also create some kind of virtual column.
-You can use a SQL fragment (aka formula) instead of mapping a property into a column. This kind of property is read-only (its value is calculated by your formula fragment)
 
-[NOTE]
-====
-You should be aware that the `@Formula` annotation takes a native SQL clause which may affect database portability.
-====
 
-[[mapping-column-formula-example]]
-.`@Formula` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FormulaTest.java[tags=mapping-column-formula-example]
-----
-====
 
-When loading the `Account` entity, Hibernate is going to calculate the `interest` property using the configured `@Formula`:
 
-[[mapping-column-formula-persistence-example]]
-.Persisting an entity with a `@Formula` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/FormulaTest.java[tags=mapping-column-formula-persistence-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
-----
-====
-
-[NOTE]
-====
-The SQL fragment defined by the `@Formula` annotation can be as complex as you want, and it can even include subselects.
-====

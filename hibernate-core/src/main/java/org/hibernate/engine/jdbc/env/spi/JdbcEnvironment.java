@@ -1,20 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.service.Service;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 
 /**
  * Initial look at this concept we keep talking about with merging information from {@link java.sql.DatabaseMetaData}
- * and {@link org.hibernate.dialect.Dialect}
+ * and {@link Dialect}
  *
  * @author Steve Ebersole
  */
@@ -26,6 +24,8 @@ public interface JdbcEnvironment extends Service {
 	 */
 	Dialect getDialect();
 
+	SqlAstTranslatorFactory getSqlAstTranslatorFactory();
+
 	/**
 	 * Access to the bits of information we pulled off the JDBC {@link java.sql.DatabaseMetaData} (that did not get
 	 * "interpreted" into the helpers/delegates available here).
@@ -36,7 +36,7 @@ public interface JdbcEnvironment extends Service {
 
 	/**
 	 * Get the current database catalog.  Typically will come from either {@link java.sql.Connection#getCatalog()}
-	 * or {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * or {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
 	 * @return The current catalog.
 	 */
@@ -44,8 +44,8 @@ public interface JdbcEnvironment extends Service {
 
 	/**
 	 * Get the current database catalog.  Typically will come from either
-	 * {@link SchemaNameResolver#resolveSchemaName(java.sql.Connection, org.hibernate.dialect.Dialect)} or
-	 * {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * {@link SchemaNameResolver#resolveSchemaName(java.sql.Connection, Dialect)} or
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
 	 * @return The current schema
 	 */
@@ -55,12 +55,14 @@ public interface JdbcEnvironment extends Service {
 	 * Obtain support for formatting qualified object names.
 	 *
 	 * @return Qualified name support.
+	 * @deprecated Use a provided {@link org.hibernate.boot.model.relational.SqlStringGenerationContext} instead.
 	 */
+	@Deprecated
 	QualifiedObjectNameFormatter getQualifiedObjectNameFormatter();
 
 	/**
 	 * Obtain the helper for dealing with identifiers in this environment.
-	 * <p/>
+	 * <p>
 	 * Note that the Identifiers returned from this IdentifierHelper already account for
 	 * auto-quoting :) yaay!
 	 *
@@ -88,13 +90,4 @@ public interface JdbcEnvironment extends Service {
 	 * @return The LobCreator builder.
 	 */
 	LobCreatorBuilder getLobCreatorBuilder();
-
-	/**
-	 * Find type information for the type identified by the given "JDBC type code".
-	 *
-	 * @param jdbcTypeCode The JDBC type code.
-	 *
-	 * @return The corresponding type info.
-	 */
-	TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode);
 }

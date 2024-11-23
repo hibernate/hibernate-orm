@@ -1,17 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.annotations.ResultCheckStyle;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.jdbc.Expectation;
+
+import java.util.function.Supplier;
+
 /**
- * For persistence operations (INSERT, UPDATE, DELETE) what style of determining
- * results (success/failure) is to be used.
+ * For persistence operations (INSERT, UPDATE, DELETE) what style of
+ * determining results (success/failure) is to be used.
+ *
+ * @apiNote  This enumeration is mainly for internal use, since it
+ *           is isomorphic to {@link ResultCheckStyle}. In the
+ *           future, it would be nice to replace them both with a
+ *           new {@code org.hibernate.ResultCheck} enum.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use an {@link org.hibernate.jdbc.Expectation} class
  */
+@Deprecated(since = "6.5", forRemoval = true)
 public enum ExecuteUpdateResultCheckStyle {
 	/**
 	 * Do not perform checking.  Either user simply does not want checking, or is
@@ -19,15 +32,15 @@ public enum ExecuteUpdateResultCheckStyle {
 	 * checks are being performed explicitly and failures are handled through
 	 * propagation of {@link java.sql.SQLException}s.
 	 */
-	NONE( "none" ),
+	NONE,
 
 	/**
-	 * Perform row-count checking.  Row counts are the int values returned by both
+	 * Perform row count checking.  Row counts are the int values returned by both
 	 * {@link java.sql.PreparedStatement#executeUpdate()} and
 	 * {@link java.sql.Statement#executeBatch()}.  These values are checked
 	 * against some expected count.
 	 */
-	COUNT( "rowcount" ),
+	COUNT,
 
 	/**
 	 * Essentially the same as {@link #COUNT} except that the row count actually
@@ -35,39 +48,51 @@ public enum ExecuteUpdateResultCheckStyle {
 	 * {@link java.sql.CallableStatement}.  This style explicitly prohibits
 	 * statement batching from being used...
 	 */
-	PARAM( "param" );
-
-	private final String name;
-
-	private ExecuteUpdateResultCheckStyle(String name) {
-		this.name = name;
-	}
+	PARAM;
 
 	public String externalName() {
-		return name;
+		return switch ( this ) {
+			case NONE -> "none";
+			case COUNT -> "rowcount";
+			case PARAM -> "param";
+		};
 	}
 
-	public static ExecuteUpdateResultCheckStyle fromExternalName(String name) {
-		if ( name.equalsIgnoreCase( NONE.name ) ) {
-			return NONE;
-		}
-		else if ( name.equalsIgnoreCase( COUNT.name ) ) {
-			return COUNT;
-		}
-		else if ( name.equalsIgnoreCase( PARAM.name ) ) {
-			return PARAM;
-		}
-		else {
-			return null;
-		}
+	public static ExecuteUpdateResultCheckStyle fromResultCheckStyle(ResultCheckStyle style) {
+		return switch ( style ) {
+			case NONE -> NONE;
+			case COUNT -> COUNT;
+			case PARAM -> PARAM;
+		};
 	}
 
-	public static ExecuteUpdateResultCheckStyle determineDefault(String customSql, boolean callable) {
-		if ( customSql == null ) {
-			return COUNT;
+	public static @Nullable ExecuteUpdateResultCheckStyle fromExternalName(String name) {
+		for ( ExecuteUpdateResultCheckStyle style : values() ) {
+			if ( style.externalName().equalsIgnoreCase(name) ) {
+				return style;
+			}
 		}
-		else {
-			return callable ? PARAM : COUNT;
-		}
+		return null;
+	}
+
+	public static @Nullable Supplier<? extends Expectation> expectationConstructor(
+			@Nullable ExecuteUpdateResultCheckStyle style) {
+		return style == null ? null : style.expectationConstructor();
+	}
+
+	public Supplier<? extends Expectation> expectationConstructor() {
+		return switch ( this ) {
+			case NONE -> Expectation.None::new;
+			case COUNT -> Expectation.RowCount::new;
+			case PARAM -> Expectation.OutParameter::new;
+		};
+	}
+
+	public Class<? extends Expectation> expectationClass() {
+		return switch ( this ) {
+			case NONE -> Expectation.None.class;
+			case COUNT -> Expectation.RowCount.class;
+			case PARAM -> Expectation.OutParameter.class;
+		};
 	}
 }

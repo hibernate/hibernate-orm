@@ -1,6 +1,5 @@
 [[statistics]]
 == Statistics
-:stat-sourcedir: ../../../../../../../hibernate-core/src/main/java/org/hibernate/stat
 
 Hibernate can gather all sorts of statistics which can help you get a better insight into what Hibernate does behind the scenes.
 
@@ -74,7 +73,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 [[statistics-concurrency-control]]
 ==== Concurrency Control statistics methods
 
-`getOptimisticFailureCount`:: The number of Hibernate ``StaleObjectStateException``s or JPA ``OptimisticLockException``s that occurred.
+`getOptimisticFailureCount`:: The number of Hibernate ``StaleObjectStateException``s or Jakarta Persistence ``OptimisticEntityLockException``s that occurred.
 
 [[statistics-entity]]
 ==== Entity statistics methods
@@ -149,7 +148,7 @@ you'd risk running out of memory.
 Therefore, to restrict the number of queries the Hibernate statistics can hold, the `hibernate.statistics.query_max_size` property was added.
 By default, the maximum number of queries retained is *5000*, but you can increase this value via the `hibernate.statistics.query_max_size` property.
 
-So, if your application makes heavy use of the JPA Criteria API or if you simply have a very large number of queries, you might want to
+So, if your application makes heavy use of the Jakarta Persistence Criteria API or if you simply have a very large number of queries, you might want to
 raise the maximum number of queries that are being stored by the `Statistics` instance.
 
 If the maximum number of queries has been reached, Hibernate uses a https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)[Least recently used (LRU)] policy

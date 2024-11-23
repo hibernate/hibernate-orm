@@ -1,7 +1,9 @@
 [[batch]]
 == Batching
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/batch
-:bulkid-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/test/bulkid
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-doc-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
+:example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
 :extrasdir: extras
 
 [[batch-jdbcbatch]]
@@ -44,9 +46,9 @@ Since version 5.2, Hibernate allows overriding the global JDBC batch size given 
 [[batch-session-jdbc-batch-size-example]]
 .Hibernate specific JDBC batch size configuration on a per `Session` basis
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-session-jdbc-batch-size-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-jdbc-batch-size-example]
 ----
 ====
 
@@ -58,19 +60,19 @@ The following example shows an anti-pattern for batch inserts.
 [[batch-session-batch-example]]
 .Naive way to insert 100 000 entities with Hibernate
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-session-batch-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-example]
 ----
 ====
 
 There are several problems associated with this example:
 
-. Hibernate caches all the newly inserted `Customer` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
+. Hibernate caches all the newly inserted `Person` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
   If the maximum memory allocated to the JVM is rather low, this example could fail with an `OutOfMemoryException`.
   The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
 . long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
-. JDBC batching is not enabled by default, so every insert statement requires a database roundtrip.
+. JDBC batching is not enabled by default, so every insert statement requires a database round trip.
   To enable JDBC batching, set the `hibernate.jdbc.batch_size` property to an integer between 10 and 50.
 
 [IMPORTANT]
@@ -86,9 +88,9 @@ When you make new objects persistent, employ methods `flush()` and `clear()` to 
 [[batch-session-batch-insert-example]]
 .Flushing and clearing the `Session`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-session-batch-insert-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-insert-example]
 ----
 ====
 
@@ -101,9 +103,9 @@ In addition, use method `scroll()` to take advantage of server-side cursors for 
 [[batch-session-scroll-example]]
 .Using `scroll()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-session-scroll-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-scroll-example]
 ----
 ====
 
@@ -116,40 +118,52 @@ However, it is good practice to close the `ScrollableResults` explicitly.
 
 ==== StatelessSession
 
-`StatelessSession` is a command-oriented API provided by Hibernate.
-Use it to stream data to and from the database in the form of detached objects.
-A `StatelessSession` has no persistence context associated with it and does not provide many of the higher-level lifecycle semantics.
+`StatelessSession` is an alternative to `Session` and provides:
 
-Some of the things not provided by a `StatelessSession` include:
+- a command-oriented API
+- with no associated persistence context.
 
-* a first-level cache
-* interaction with any second-level or query cache
-* transactional write-behind or automatic dirty checking
+Thus, a stateless session is a slightly lower-level abstraction that's closer to the underlying JDBC activity:
 
-Limitations of `StatelessSession`:
+* there's no first-level cache,
+* the stateless session does not interact with any second-level or query cache, and
+* there's no transactional write-behind or automatic dirty checking.
 
-* Operations performed using a stateless session never cascade to associated instances.
-* Collections are ignored by a stateless session.
-* Lazy loading of associations is not supported.
-* Operations performed via a stateless session bypass Hibernate's event model and interceptors.
-* Due to the lack of a first-level cache, Stateless sessions are vulnerable to data aliasing effects.
-* A stateless session is a lower-level abstraction that is much closer to the underlying JDBC.
+Instead, persistence operations occur synchronously when a method of `StatelessSession` is invoked, and entities returned by a stateless session are always detached.
+
+[TIP]
+====
+A stateless session may be used to stream data to and from the database in the form of detached objects.
+With a stateless session, there's no need to explicitly manage the size of the first-level cache by explicitly clearing the persistence context.
+====
+
+The `StatelessSession` API comes with certain limitations:
+
+* operations performed using a stateless session never cascade to associated instances,
+* collections are ignored by a stateless session,
+* lazy loading of associations is not transparent, and is only available via an explicit operation named `fetch()`, and
+* operations performed via a stateless session bypass Hibernate's event model and interceptors.
+
+IMPORTANT: Due to the lack of a first-level cache, stateless sessions are vulnerable to data aliasing effects.
 
 [[batch-stateless-session-example]]
 .Using a  `StatelessSession`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-stateless-session-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-stateless-session-example]
 ----
 ====
 
-The `Customer` instances returned by the query are immediately detached.
+The `Person` instances returned by the query are immediately detached.
 They are never associated with any persistence context.
 
+[NOTE]
+====
 The `insert()`, `update()`, and `delete()` operations defined by the `StatelessSession` interface operate directly on database rows.
 They cause the corresponding SQL operations to be executed immediately.
 They have different semantics from the `save()`, `saveOrUpdate()`, and `delete()` operations defined by the `Session` interface.
+====
 
 [[batch-bulk-hql]]
 === Hibernate Query Language for DML
@@ -165,7 +179,7 @@ Both the Hibernate native Query Language and JPQL (Java Persistence Query Langua
 [[batch-bulk-hql-update-delete-example]]
 .Pseudo-syntax for UPDATE and DELETE statements using HQL
 ====
-[source, JAVA, indent=0]
+[source, SQL, indent=0]
 ----
 UPDATE FROM EntityName e WHERE e.name = ?
 
@@ -191,18 +205,18 @@ You can use sub-queries in the `WHERE` clause, and the sub-queries themselves ca
 [[batch-bulk-jpql-update-example]]
 .Executing a JPQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-bulk-jpql-update-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-update-example]
 ----
 ====
 
 [[batch-bulk-hql-update-example]]
 .Executing an HQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-update-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-example]
 ----
 ====
 
@@ -212,9 +226,9 @@ You can use a versioned update to force Hibernate to reset the version or timest
 [[batch-bulk-hql-update-version-example]]
 .Updating the version of timestamp
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-update-version-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-version-example]
 ----
 ====
 
@@ -222,24 +236,24 @@ include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-update-version-example]
 ====
 If you use the `VERSIONED` statement, you cannot use custom version types that implement the `org.hibernate.usertype.UserVersionType`.
 
-This feature is only available in HQL since it's not standardized by JPA.
+This feature is only available in HQL since it's not standardized by Jakarta Persistence.
 ====
 
 [[batch-bulk-jpql-delete-example]]
 .A JPQL `DELETE` statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-bulk-jpql-delete-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-delete-example]
 ----
 ====
 
 [[batch-bulk-hql-delete-example]]
 .An HQL `DELETE` statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-delete-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-delete-example]
 ----
 ====
 
@@ -250,57 +264,73 @@ In the example of joined-subclass, a `DELETE` against one of the subclasses may 
 
 ==== HQL syntax for INSERT
 
-.Pseudo-syntax for INSERT statements
+.Pseudo-syntax for INSERT-SELECT statements
 ====
-[source, JAVA, indent=0]
+[source, SQL, indent=0]
 ----
 INSERT INTO EntityName
 	properties_list
-SELECT properties_list
+SELECT select_list
 FROM ...
 ----
 ====
 
-Only the `INSERT INTO ... SELECT ...` form is supported.
-You cannot specify explicit values to insert.
+Alternatively one can also declare individual values
+
+.Pseudo-syntax for INSERT-VALUES statements
+====
+[source, SQL, indent=0]
+----
+INSERT INTO EntityName
+	properties_list
+VALUES values_list
+----
+====
 
 The `properties_list` is analogous to the column specification in the `SQL` `INSERT` statement.
-For entities involved in mapped inheritance, you can only use properties directly defined on that given class-level in the `properties_list`.
-Superclass properties are not allowed and subclass properties are irrelevant.
-In other words, `INSERT` statements are inherently non-polymorphic.
+Note that `INSERT` statements are inherently non-polymorphic, so it is not possible to use an `EntityName`
+which is abstract or refer to subclass properties.
 
 The SELECT statement can be any valid HQL select query, but the return types must match the types expected by the INSERT.
 Hibernate verifies the return types during query compilation, instead of expecting the database to check it.
 Problems might result from Hibernate types which are equivalent, rather than equal.
-One such example is a mismatch between a property defined as an `org.hibernate.type.DateType` and a property defined as an `org.hibernate.type.TimestampType`,
+One such example is a mismatch between a property defined as an `org.hibernate.type.StandardBasicTypes.DATE` and a property defined as an `org.hibernate.type.StandardBasicTypes.TIMESTAMP`,
 even though the database may not make a distinction, or may be capable of handling the conversion.
 
-If id property is not specified in the `properties_list`,
-Hibernate generates a value automatically.
+If id property is not specified in the `properties_list`, Hibernate generates a value automatically.
 Automatic generation is only available if you use ID generators which operate on the database.
-Otherwise, Hibernate throws an exception during parsing.
-Available in-database generators are `org.hibernate.id.SequenceGenerator` and its subclasses, and objects which implement `org.hibernate.id.PostInsertIdentifierGenerator`.
+Otherwise, Hibernate throws an exception during parsing.  Available in-database generators implement
+`org.hibernate.id.PostInsertIdentifierGenerator`.
 
 For properties mapped as either version or timestamp, the insert statement gives you two options.
 You can either specify the property in the properties_list, in which case its value is taken from the corresponding select expressions or omit it from the properties_list,
-in which case the seed value defined by the org.hibernate.type.VersionType is used.
+in which case the seed value defined by the `org.hibernate.type.descriptor.java.VersionJavaType` is used.
 
 [[batch-bulk-hql-insert-example]]
 .HQL INSERT statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-insert-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-insert-example]
 ----
 ====
 
-This section is only a brief overview of HQL. For more information, see <<chapters/query/hql/HQL.adoc#hql,HQL>>.
+This section is only a brief overview of HQL. For more information, see <<chapters/query/hql/QueryLanguage.adoc#query-language,Hibernate Query Language>>.
 
 [[batch-bulk-hql-strategies]]
-==== Bulk-id strategies
+==== Bulk mutation strategies
 
-This article is about the https://hibernate.atlassian.net/browse/HHH-11262[HHH-11262] JIRA issue which now allows the bulk-id
-strategies to work even when you cannot create temporary tables.
+When a bulk mutation involves multiple tables, Hibernate has to issue individual DML statements to the respective tables.
+Since the mutation itself could have an effect on the conditions used in the statement, it's generally not possible
+to simply execute parts of the DML statement against the respective tables. Instead, Hibernate has to temporarily remember
+which rows will be affected, and execute the DML statements based on these rows.
+
+Usually, Hibernate will make use of local or global temporary tables to remember the primary keys of the rows.
+For some databases, currently only PostgreSQL and DB2, a more advanced strategy (`CteMutationStrategy`) is used,
+which makes use of DML in CTE support to execute the whole operation in one SQL statement.
+
+The chosen strategy, unless overridden through the `hibernate.query.mutation_strategy` setting, is based on the
+Dialect support through `org.hibernate.dialect.Dialect.getFallbackSqmMutationStrategy`.
 
 [[batch-bulk-hql-strategies-class-diagram]]
 ===== Class diagram
@@ -312,22 +342,22 @@ image:images/domain/bulkid/temp_table_class_diagram.png[Entity class diagram]
 The `Person` entity is the base class of this entity inheritance model, and is mapped as follows:
 
 [[batch-bulk-hql-temp-table-base-class-example]]
-.Bulk-id base class entity
+.Bulk mutation base class entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{bulkid-sourcedir}/AbstractBulkCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
+include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
 ----
 ====
 
 Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
 
 [[batch-bulk-hql-temp-table-sub-classes-example]]
-.Bulk-id subclass entities
+.Bulk mutation subclass entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{bulkid-sourcedir}/AbstractBulkCompositeIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
+include::{example-dir-bulkid}/AbstractMutationStrategyIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
 ----
 ====
 
@@ -337,11 +367,11 @@ include::{bulkid-sourcedir}/AbstractBulkCompositeIdTest.java[tags=batch-bulk-hql
 Now, when you try to execute a bulk entity delete query:
 
 [[batch-bulk-hql-temp-table-delete-query-example]]
-.Bulk-id delete query example
+.Bulk mutation delete query example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{bulkid-sourcedir}/AbstractBulkCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
+include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -350,35 +380,44 @@ include::{extrasdir}/batch-bulk-hql-temp-table-delete-query-example.sql[]
 ----
 ====
 
-`HT_Person` is a temporary table that Hibernate creates to hold all the entity identifiers that are to be updated or deleted by the bulk id operation.
+`HT_Person` is a temporary table that Hibernate creates to hold all the entity identifiers that are to be updated or deleted by the bulk operation.
 The temporary table can be either global or local, depending on the underlying database capabilities.
 
 [[batch-bulk-hql-strategies-non-temporary-table]]
-===== Non-temporary table bulk-id strategies
+===== Non-temporary table bulk mutation strategies
 
-As the https://hibernate.atlassian.net/browse/HHH-11262[HHH-11262] issue describes, there are use cases when the application developer cannot use temporary tables because
-the database user lacks this privilege.
+The strategies outlined above depend on the creation of temporary tables, which Hibernate creates on startup if they don't already exist. At present this process is not integrated in the schema management tooling, and this requires that the user have the required permissions to alter the database schema.
 
-In this case, we defined several options which you can choose depending on your database capabilities:
+If the Hibernate session user lacks these permissions, you will need to either:
 
-- `InlineIdsInClauseBulkIdStrategy`
-- `InlineIdsSubSelectValueListBulkIdStrategy`
-- `InlineIdsOrClauseBulkIdStrategy`
-- `CteValuesListBulkIdStrategy`
+ * alter your schema through a different user with more permissions, to add a global temporary table named HTE_<root entity table name>, which contains all columns of all tables involved in the entity hierarchy. +
+This will allow insert, update and delete in HQL for multi-table entities.
 
-[[batch-bulk-hql-strategies-InlineIdsInClauseBulkIdStrategy]]
-====== `InlineIdsInClauseBulkIdStrategy`
-
-To use this strategy, you need to configure the following configuration property:
+* OR configure Hibernate ORM to use the (badly-performing) inline strategy (for _mutations_ only!):
 
 [source,xml]
 ----
-<property name="hibernate.hql.bulk_id_strategy"
-          value="org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy"
+<property name="hibernate.query.mutation_strategy"
+          value="org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy"
 />
 ----
 
-Now, when running the previous test case, Hibernate generates the following SQL statements:
+[IMPORTANT]
+====
+We strongly recommend the use of the first option, i.e. manually adding the temporary tables, because the inline strategy is set to be removed in a future release. Also, there is no equivalent strategy for inserts.
+
+Additionally, automatic creation of temporary tables should be deactivated. This is done by setting the
+
+`hibernate.query.mutation_strategy.global_temporary.create_tables` and `hibernate.query.mutation_strategy.global_temporary.drop_tables`
+
+*or*
+
+`hibernate.query.mutation_strategy.persistent.create_tables` and `hibernate.query.mutation_strategy.persistent.drop_tables`
+
+properties (depending on the default strategy for the dialect) to `false`
+====
+
+With the inline strategy, when running the previous test case, Hibernate generates the following SQL statements:
 
 [[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
 .`InlineIdsInClauseBulkIdStrategy` delete entity query example
@@ -390,111 +429,4 @@ include::{extrasdir}/batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query
 ====
 
 So, the entity identifiers are selected first and used for each particular update or delete statement.
-
-[TIP]
-====
-The IN clause row value expression has long been supported by Oracle, PostgreSQL, and nowadays by MySQL 5.7.
-However, SQL Server 2014 does not support it, so you'll have to use a different strategy.
-====
-
-[[batch-bulk-hql-strategies-InlineIdsSubSelectValueListBulkIdStrategy]]
-====== `InlineIdsSubSelectValueListBulkIdStrategy`
-
-To use this strategy, you need to configure the following configuration property:
-
-[source,xml]
-----
-<property name="hibernate.hql.bulk_id_strategy"
-          value="org.hibernate.hql.spi.id.inline.InlineIdsSubSelectValueListBulkIdStrategy"
-/>
-----
-
-Now, when running the previous test case, Hibernate generates the following SQL statements:
-
-[[batch-bulk-hql-InlineIdsSubSelectValueListBulkIdStrategy-delete-query-example]]
-.`InlineIdsSubSelectValueListBulkIdStrategy` delete entity query example
-====
-[source, SQL, indent=0]
-----
-include::{extrasdir}/batch-bulk-hql-InlineIdsSubSelectValueListBulkIdStrategy-delete-query-example.sql[]
-----
-====
-
-[TIP]
-====
-The underlying database must support the `VALUES` list clause, like PostgreSQL or SQL Server 2008.
-However, this strategy requires the IN-clause row value expression for composite identifiers, and for this reason, you can only use the `InlineIdsSubSelectValueListBulkIdStrategy` strategy with PostgreSQL.
-====
-
-[[batch-bulk-hql-strategies-InlineIdsOrClauseBulkIdStrategy]]
-====== `InlineIdsOrClauseBulkIdStrategy`
-
-To use this strategy, you need to configure the following configuration property:
-
-[source,xml]
-----
-<property name="hibernate.hql.bulk_id_strategy"
-          value="org.hibernate.hql.spi.id.inline.InlineIdsOrClauseBulkIdStrategy"
-/>
-----
-
-Now, when running the previous test case, Hibernate generates the following SQL statements:
-
-[[batch-bulk-hql-InlineIdsOrClauseBulkIdStrategy-delete-query-example]]
-.`InlineIdsOrClauseBulkIdStrategy` delete entity query example
-====
-[source, SQL, indent=0]
-----
-include::{extrasdir}/batch-bulk-hql-InlineIdsOrClauseBulkIdStrategy-delete-query-example.sql[]
-----
-====
-
-[TIP]
-====
-The `InlineIdsOrClauseBulkIdStrategy` strategy has the advantage of being supported by all the major relational database systems (e.g. Oracle, SQL Server, MySQL, and PostgreSQL).
-====
-
-[[batch-bulk-hql-strategies-CteValuesListBulkIdStrategy]]
-====== `CteValuesListBulkIdStrategy`
-
-To use this strategy, you need to configure the following configuration property:
-
-[source,xml]
-----
-<property name="hibernate.hql.bulk_id_strategy"
-          value="org.hibernate.hql.spi.id.inline.CteValuesListBulkIdStrategy"
-/>
-----
-
-Now, when running the previous test case, Hibernate generates the following SQL statements:
-
-[[batch-bulk-hql-CteValuesListBulkIdStrategy-delete-query-example]]
-.`CteValuesListBulkIdStrategy` delete entity query example
-====
-[source, SQL, indent=0]
-----
-include::{extrasdir}/batch-bulk-hql-CteValuesListBulkIdStrategy-delete-query-example.sql[]
-----
-====
-
-[TIP]
-====
-The underlying database must support CTE (Common Table Expressions) that can be referenced from non-query statements as well. For instance, PostgreSQL supports this feature since version 9.1 and SQL Server offers support for it since version 2005.
-
-The underlying database must also support the VALUES list clause, like PostgreSQL or SQL Server 2008.
-
-However, this strategy requires the IN-clause row value expression for composite identifiers, so you can only use this strategy with PostgreSQL.
-====
-
-If you can use temporary tables, that's probably the best choice.
-However, if you are not allowed to create temporary tables, you must pick one of these four strategies that works with your underlying database.
-Before making up your mind, you should benchmark which one works best for your current workload.
-For instance, http://blog.2ndquadrant.com/postgresql-ctes-are-optimization-fences/[CTE are optimization fences in PostgreSQL], so make sure you measure before making a decision.
-
-If you're using Oracle or MySQL 5.7, you can choose either `InlineIdsOrClauseBulkIdStrategy` or `InlineIdsInClauseBulkIdStrategy`.
-For older version of MySQL, then you can only use `InlineIdsOrClauseBulkIdStrategy`.
-
-If you're using SQL Server, `InlineIdsOrClauseBulkIdStrategy` is the only option for you.
-
-If you're using PostgreSQL, then you  have the luxury of choosing any of these four strategies.
 

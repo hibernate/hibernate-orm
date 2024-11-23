@@ -1,25 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -29,19 +23,20 @@ import org.hibernate.pretty.MessageHelper;
  *
  * @author Gavin King
  */
-public abstract class CollectionAction implements Executable, Serializable, Comparable {
-	private transient CollectionPersister persister;
-	private transient SharedSessionContractImplementor session;
-	private final PersistentCollection collection;
+public abstract class CollectionAction implements ComparableExecutable {
 
-	private final Serializable key;
+	private transient CollectionPersister persister;
+	private transient EventSource session;
+	private final PersistentCollection<?> collection;
+
+	private final Object key;
 	private final String collectionRole;
 
 	protected CollectionAction(
 			final CollectionPersister persister,
-			final PersistentCollection collection, 
-			final Serializable key, 
-			final SharedSessionContractImplementor session) {
+			final PersistentCollection<?> collection,
+			final Object key,
+			final EventSource session) {
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
@@ -49,7 +44,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		this.collection = collection;
 	}
 
-	protected PersistentCollection getCollection() {
+	protected PersistentCollection<?> getCollection() {
 		return collection;
 	}
 
@@ -58,7 +53,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	 *
 	 * @param session The session being deserialized
 	 */
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
@@ -66,7 +61,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
+			this.persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( collectionRole );
 		}
 	}
 
@@ -102,7 +97,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return persister.getCollectionSpaces();
 	}
 
@@ -110,20 +105,30 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return persister;
 	}
 
-	protected final Serializable getKey() {
-		Serializable finalKey = key;
+	protected final Object getKey() {
+		Object finalKey = key;
 		if ( key instanceof DelayedPostInsertIdentifier ) {
 			// need to look it up from the persistence-context
 			finalKey = session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId();
-			if ( finalKey == key ) {
+//			if ( finalKey == key ) {
 				// we may be screwed here since the collection action is about to execute
 				// and we do not know the final owner key value
-			}
+//			}
 		}
 		return finalKey;
 	}
 
-	protected final SharedSessionContractImplementor getSession() {
+	@Override
+	public String getPrimarySortClassifier() {
+		return collectionRole;
+	}
+
+	@Override
+	public Object getSecondarySortIndex() {
+		return key;
+	}
+
+	protected final EventSource getSession() {
 		return session;
 	}
 
@@ -131,7 +136,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		if ( persister.hasCache() ) {
 			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
-					key, 
+					key,
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
@@ -146,26 +151,27 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		final CollectionAction action = (CollectionAction) other;
-
+	public int compareTo(ComparableExecutable o) {
 		// sort first by role name
-		final int roleComparison = collectionRole.compareTo( action.collectionRole );
+		final int roleComparison = collectionRole.compareTo( o.getPrimarySortClassifier() );
 		if ( roleComparison != 0 ) {
 			return roleComparison;
 		}
 		else {
 			//then by fk
-			return persister.getKeyType().compare( key, action.key );
+			return persister.getAttributeMapping().getKeyDescriptor().compare( key, o.getSecondarySortIndex() );
+//			//noinspection unchecked
+//			final JavaType<Object> javaType = (JavaType<Object>) persister.getAttributeMapping().getKeyDescriptor().getJavaType();
+//			return javaType.getComparator().compare( key, action.key );
 		}
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
-		private final Serializable key;
+		private final Object key;
 		private final CollectionPersister persister;
 		private final SoftLock lock;
 
-		private CacheCleanupProcess(Serializable key, CollectionPersister persister, SoftLock lock) {
+		private CacheCleanupProcess(Object key, CollectionPersister persister, SoftLock lock) {
 			this.key = key;
 			this.persister = persister;
 			this.lock = lock;
@@ -184,15 +190,16 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 	}
 
-	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
-		return getSession()
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( eventType );
+	protected EventSource eventSource() {
+		return getSession();
 	}
 
-	protected EventSource eventSource() {
-		return (EventSource) getSession();
+	/**
+	 * Convenience method for all subclasses.
+	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 */
+	protected FastSessionServices getFastSessionServices() {
+		return session.getFactory().getFastSessionServices();
 	}
+
 }

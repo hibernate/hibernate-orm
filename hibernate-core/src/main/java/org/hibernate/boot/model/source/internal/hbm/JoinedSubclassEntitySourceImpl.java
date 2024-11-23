@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -62,7 +60,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 				}
 		);
 
-		this.primaryKeyJoinColumnSources = new ArrayList<ColumnSource>( valueSources.size() );
+		this.primaryKeyJoinColumnSources = new ArrayList<>( valueSources.size() );
 		for ( RelationalValueSource valueSource : valueSources ) {
 			primaryKeyJoinColumnSources.add( ColumnSource.class.cast( valueSource ) ) ;
 		}
@@ -77,7 +75,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 	public String getExplicitForeignKeyName() {
 		return jaxbKeyMapping.getForeignKey();
 	}
-	
+
 	@Override
 	public boolean createForeignKeyConstraint() {
 		// TODO: Can HBM do something like JPA's @ForeignKey(NO_CONSTRAINT)?
@@ -91,7 +89,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 
 	@Override
 	public String getDiscriminatorMatchValue() {
-		return JaxbHbmJoinedSubclassEntityType.class.isInstance( jaxbEntityMapping() )
+		return jaxbEntityMapping() instanceof JaxbHbmJoinedSubclassEntityType
 				? ( (JaxbHbmJoinedSubclassEntityType) jaxbEntityMapping() ).getDiscriminatorValue()
 				: null;
 	}

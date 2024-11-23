@@ -1,0 +1,42 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.metamodel.mapping;
+
+import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.type.descriptor.java.VersionJavaType;
+
+/**
+ * Describes the mapping of an entity's version
+ *
+ * @see jakarta.persistence.Version
+ */
+public interface EntityVersionMapping extends BasicValuedModelPart {
+	/**
+	 * The attribute marked as the version
+	 */
+	BasicAttributeMapping getVersionAttribute();
+
+	/**
+	 * The strategy for distinguishing between detached and transient
+	 * state based on the version mapping.
+	 *
+	 * @see EntityIdentifierMapping#getUnsavedStrategy()
+	 */
+	VersionValue getUnsavedStrategy();
+
+	@Override
+	VersionJavaType<?> getJavaType();
+
+	@Override
+	default VersionJavaType<?> getExpressibleJavaType() {
+		return (VersionJavaType<?>) getMappedType().getMappedJavaType();
+	}
+
+	@Override
+	default AttributeMapping asAttributeMapping() {
+		return getVersionAttribute();
+	}
+}

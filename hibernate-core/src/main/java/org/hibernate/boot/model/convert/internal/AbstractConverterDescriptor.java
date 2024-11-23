@@ -1,58 +1,44 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.internal;
 
 import java.util.List;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import com.fasterxml.classmate.ResolvedType;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractConverterDescriptor implements ConverterDescriptor {
-	private final Class<? extends AttributeConverter> converterClass;
+	private final Class<? extends AttributeConverter<?,?>> converterClass;
 
 	private final ResolvedType domainType;
 	private final ResolvedType jdbcType;
 
 	private final AutoApplicableConverterDescriptor autoApplicableDescriptor;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractConverterDescriptor(
-			Class<? extends AttributeConverter> converterClass,
+			Class<? extends AttributeConverter<?,?>> converterClass,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
 		this.converterClass = converterClass;
 
-		final ResolvedType converterType = classmateContext.getTypeResolver().resolve( converterClass );
-		final List<ResolvedType> converterParamTypes = converterType.typeParametersFor( AttributeConverter.class );
-		if ( converterParamTypes == null ) {
-			throw new AnnotationException(
-					"Could not extract type parameter information from AttributeConverter implementation ["
-							+ converterClass.getName() + "]"
-			);
-		}
-		else if ( converterParamTypes.size() != 2 ) {
-			throw new AnnotationException(
-					"Unexpected type parameter information for AttributeConverter implementation [" +
-							converterClass.getName() + "]; expected 2 parameter types, but found " + converterParamTypes.size()
-			);
-		}
+		final List<ResolvedType> converterParamTypes = resolveConverterClassParamTypes( converterClass, classmateContext );
 
 		this.domainType = converterParamTypes.get( 0 );
 		this.jdbcType = converterParamTypes.get( 1 );
@@ -81,7 +67,7 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	}
 
 	@Override
-	public Class<? extends AttributeConverter> getAttributeConverterClass() {
+	public Class<? extends AttributeConverter<?,?>> getAttributeConverterClass() {
 		return converterClass;
 	}
 
@@ -101,15 +87,22 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+	public JpaAttributeConverter<?,?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+		final JavaType<?> converterJtd = context
+				.getJavaTypeRegistry()
+				.getDescriptor( getAttributeConverterClass() );
+
+		final Class<?> domainJavaType = getDomainValueResolvedType().getErasedType();
+		final Class<?> jdbcJavaType = getRelationalValueResolvedType().getErasedType();
+
 		return new JpaAttributeConverterImpl(
 				createManagedBean( context ),
-				context.getJavaTypeDescriptorRegistry().getDescriptor( getAttributeConverterClass() ),
-				context.getJavaTypeDescriptorRegistry().getDescriptor( getDomainValueResolvedType().getErasedType() ),
-				context.getJavaTypeDescriptorRegistry().getDescriptor( getRelationalValueResolvedType().getErasedType() )
+				converterJtd,
+				domainJavaType,
+				jdbcJavaType,
+				context
 		);
 	}
 
-	protected abstract ManagedBean<? extends AttributeConverter> createManagedBean(JpaAttributeConverterCreationContext context);
+	protected abstract ManagedBean<? extends AttributeConverter<?, ?>> createManagedBean(JpaAttributeConverterCreationContext context);
 }

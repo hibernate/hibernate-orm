@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.cfgxml.spi;
 
@@ -24,28 +22,25 @@ import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgEventListenerType;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgMappingReferenceType;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.secure.spi.GrantedPermission;
-import org.hibernate.secure.spi.JaccPermissionDeclarations;
 
 import org.jboss.logging.Logger;
 
 /**
  * Models the information gleaned from parsing a {@code cfg.xml} file.
- * <p/>
- * A LoadedConfig is built via {@link #consume}.  An aggregated representation
- * can be maintained through calls to {@link #merge}
+ * <p>
+ * A {@link LoadedConfig} is built via {@link #consume}. An aggregated
+ * representation can be maintained through calls to {@link #merge}.
  */
 public class LoadedConfig {
 	private static final Logger log = Logger.getLogger( LoadedConfig.class );
 
 	private String sessionFactoryName;
 
-	private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
+	private final Map<String,Object> configurationValues = new ConcurrentHashMap<>( 16, 0.75f, 1 );
 
-	private Map<String,JaccPermissionDeclarations> jaccPermissionsByContextId;
 	private List<CacheRegionDefinition> cacheRegionDefinitions;
 	private List<MappingReference> mappingReferences;
-	private Map<EventType,Set<String>> eventListenerMap;
+	private Map<EventType<?>,Set<String>> eventListenerMap;
 
 	public LoadedConfig(String sessionFactoryName) {
 		this.sessionFactoryName = sessionFactoryName;
@@ -55,28 +50,20 @@ public class LoadedConfig {
 		return sessionFactoryName;
 	}
 
-	public Map getConfigurationValues() {
+	public Map<String,Object> getConfigurationValues() {
 		return configurationValues;
 	}
 
-	public Map<String, JaccPermissionDeclarations> getJaccPermissionsByContextId() {
-		return jaccPermissionsByContextId;
-	}
-
-	public JaccPermissionDeclarations getJaccPermissions(String jaccContextId) {
-		return jaccPermissionsByContextId.get( jaccContextId );
-	}
-
 	public List<CacheRegionDefinition> getCacheRegionDefinitions() {
-		return cacheRegionDefinitions == null ? Collections.<CacheRegionDefinition>emptyList() : cacheRegionDefinitions;
+		return cacheRegionDefinitions == null ? Collections.emptyList() : cacheRegionDefinitions;
 	}
 
 	public List<MappingReference> getMappingReferences() {
-		return mappingReferences == null ? Collections.<MappingReference>emptyList() : mappingReferences;
+		return mappingReferences == null ? Collections.emptyList() : mappingReferences;
 	}
 
-	public Map<EventType, Set<String>> getEventListenerMap() {
-		return eventListenerMap == null ? Collections.<EventType, Set<String>>emptyMap() : eventListenerMap;
+	public Map<EventType<?>, Set<String>> getEventListenerMap() {
+		return eventListenerMap == null ? Collections.emptyMap() : eventListenerMap;
 	}
 
 	/**
@@ -102,25 +89,9 @@ public class LoadedConfig {
 			cfg.addCacheRegionDefinition( parseCacheRegionDefinition( cacheDeclaration ) );
 		}
 
-		if ( jaxbCfg.getSecurity() != null ) {
-			for ( JaxbCfgHibernateConfiguration.JaxbCfgSecurity.JaxbCfgGrant grant : jaxbCfg.getSecurity().getGrant() ) {
-				final JaccPermissionDeclarations jaccPermissions = cfg.getOrCreateJaccPermissions(
-						jaxbCfg.getSecurity()
-								.getContext()
-				);
-				jaccPermissions.addPermissionDeclaration(
-						new GrantedPermission(
-								grant.getRole(),
-								grant.getEntityName(),
-								grant.getActions()
-						)
-				);
-			}
-		}
-
 		if ( !jaxbCfg.getSessionFactory().getListener().isEmpty() ) {
 			for ( JaxbCfgEventListenerType listener : jaxbCfg.getSessionFactory().getListener() ) {
-				final EventType eventType = EventType.resolveEventTypeByName( listener.getType().value() );
+				final EventType<?> eventType = EventType.resolveEventTypeByName( listener.getType().value() );
 				cfg.addEventListener( eventType, listener.getClazz() );
 			}
 		}
@@ -132,7 +103,7 @@ public class LoadedConfig {
 				}
 
 				final String eventTypeName = listenerGroup.getType().value();
-				final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+				final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
 
 				for ( JaxbCfgEventListenerType listener : listenerGroup.getListener() ) {
 					if ( listener.getType() != null ) {
@@ -154,7 +125,6 @@ public class LoadedConfig {
 		return value.trim();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void addConfigurationValue(String propertyName, String value) {
 		value = trim( value );
 		configurationValues.put( propertyName, value );
@@ -166,14 +136,14 @@ public class LoadedConfig {
 
 	private void addMappingReference(MappingReference mappingReference) {
 		if ( mappingReferences == null ) {
-			mappingReferences =  new ArrayList<MappingReference>();
+			mappingReferences =  new ArrayList<>();
 		}
 
 		mappingReferences.add( mappingReference );
 	}
 
 	private static CacheRegionDefinition parseCacheRegionDefinition(Object cacheDeclaration) {
-		if ( JaxbCfgEntityCacheType.class.isInstance( cacheDeclaration ) ) {
+		if ( cacheDeclaration instanceof JaxbCfgEntityCacheType ) {
 			final JaxbCfgEntityCacheType jaxbClassCache = (JaxbCfgEntityCacheType) cacheDeclaration;
 			return new CacheRegionDefinition(
 					CacheRegionDefinition.CacheRegionType.ENTITY,
@@ -197,37 +167,23 @@ public class LoadedConfig {
 
 	public void addCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
 		if ( cacheRegionDefinitions == null ) {
-			cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
+			cacheRegionDefinitions = new ArrayList<>();
 		}
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
 
-	public void addEventListener(EventType eventType, String listenerClass) {
+	public void addEventListener(EventType<?> eventType, String listenerClass) {
 		if ( eventListenerMap == null ) {
-			eventListenerMap = new HashMap<EventType, Set<String>>();
+			eventListenerMap = new HashMap<>();
 		}
 
 		Set<String> listenerClasses = eventListenerMap.get( eventType );
 		if ( listenerClasses == null ) {
-			listenerClasses = new HashSet<String>();
+			listenerClasses = new HashSet<>();
 			eventListenerMap.put( eventType, listenerClasses );
 		}
 
 		listenerClasses.add( listenerClass );
-	}
-
-	public JaccPermissionDeclarations getOrCreateJaccPermissions(String contextId) {
-		if ( jaccPermissionsByContextId == null ) {
-			jaccPermissionsByContextId = new HashMap<String, JaccPermissionDeclarations>();
-		}
-
-		JaccPermissionDeclarations jaccPermission = jaccPermissionsByContextId.get( contextId );
-		if ( jaccPermission == null ) {
-			jaccPermission = new JaccPermissionDeclarations( contextId );
-		}
-		jaccPermissionsByContextId.put( contextId, jaccPermission );
-
-		return jaccPermission;
 	}
 
 	/**
@@ -254,12 +210,10 @@ public class LoadedConfig {
 		addConfigurationValues( incoming.getConfigurationValues() );
 		addMappingReferences( incoming.getMappingReferences() );
 		addCacheRegionDefinitions( incoming.getCacheRegionDefinitions() );
-		addJaccPermissions( incoming.getJaccPermissionsByContextId() );
 		addEventListeners( incoming.getEventListenerMap() );
 	}
 
-	@SuppressWarnings("unchecked")
-	protected void addConfigurationValues(Map configurationValues) {
+	protected void addConfigurationValues(Map<String,Object> configurationValues) {
 		if ( configurationValues == null ) {
 			return;
 		}
@@ -273,7 +227,7 @@ public class LoadedConfig {
 		}
 
 		if ( this.mappingReferences == null ) {
-			this.mappingReferences =  new ArrayList<MappingReference>();
+			this.mappingReferences =  new ArrayList<>();
 		}
 		this.mappingReferences.addAll( mappingReferences );
 	}
@@ -284,44 +238,24 @@ public class LoadedConfig {
 		}
 
 		if ( this.cacheRegionDefinitions == null ) {
-			this.cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
+			this.cacheRegionDefinitions = new ArrayList<>();
 		}
 		this.cacheRegionDefinitions.addAll( cacheRegionDefinitions );
 	}
 
-	private void addJaccPermissions(Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId) {
-		if ( jaccPermissionsByContextId == null ) {
-			return;
-		}
-
-		if ( this.jaccPermissionsByContextId == null ) {
-			this.jaccPermissionsByContextId = new HashMap<String, JaccPermissionDeclarations>();
-		}
-
-		for ( Map.Entry<String, JaccPermissionDeclarations> incomingEntry : jaccPermissionsByContextId.entrySet() ) {
-			JaccPermissionDeclarations permissions = jaccPermissionsByContextId.get( incomingEntry.getKey() );
-			if ( permissions == null ) {
-				permissions = new JaccPermissionDeclarations( incomingEntry.getKey() );
-				this.jaccPermissionsByContextId.put( incomingEntry.getKey(), permissions );
-			}
-
-			permissions.addPermissionDeclarations( incomingEntry.getValue().getPermissionDeclarations() );
-		}
-	}
-
-	private void addEventListeners(Map<EventType, Set<String>> eventListenerMap) {
+	private void addEventListeners(Map<EventType<?>, Set<String>> eventListenerMap) {
 		if ( eventListenerMap == null ) {
 			return;
 		}
 
 		if ( this.eventListenerMap == null ) {
-			this.eventListenerMap = new HashMap<EventType, Set<String>>();
+			this.eventListenerMap = new HashMap<>();
 		}
 
-		for ( Map.Entry<EventType, Set<String>> incomingEntry : eventListenerMap.entrySet() ) {
+		for ( Map.Entry<EventType<?>, Set<String>> incomingEntry : eventListenerMap.entrySet() ) {
 			Set<String> listenerClasses = this.eventListenerMap.get( incomingEntry.getKey() );
 			if ( listenerClasses == null ) {
-				listenerClasses = new HashSet<String>();
+				listenerClasses = new HashSet<>();
 				this.eventListenerMap.put( incomingEntry.getKey(), listenerClasses );
 			}
 			listenerClasses.addAll( incomingEntry.getValue() );

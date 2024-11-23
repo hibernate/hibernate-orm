@@ -1,20 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**
@@ -24,30 +17,19 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  */
 public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
+	protected abstract Reader prepareReader();
 
-	protected abstract Reader reader();
-
-	@Override
-	public void prepare() {
-		log.executingImportScript( getScriptDescription() );
-	}
-
-	protected abstract String getScriptDescription();
+	protected abstract void releaseReader(Reader reader);
 
 	@Override
-	public List<String> read(ImportSqlCommandExtractor commandExtractor) {
-		final String[] commands = commandExtractor.extractCommands( reader() );
-		if ( commands == null ) {
-			return Collections.emptyList();
+	public List<String> extract(Function<Reader, List<String>> extractor) {
+		final Reader inputReader = prepareReader();
+
+		try {
+			return extractor.apply( inputReader );
 		}
-		else {
-			return Arrays.asList( commands );
+		finally {
+			releaseReader( inputReader );
 		}
-	}
-
-	@Override
-	public void release() {
-		// by default there is nothing to do
 	}
 }

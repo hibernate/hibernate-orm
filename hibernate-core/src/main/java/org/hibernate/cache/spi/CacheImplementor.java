@@ -1,17 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
 import java.io.Serializable;
-import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -22,15 +21,16 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 
 /**
- * SPI contract for Hibernate's second-level cache engine
+ * An SPI supported by any Hibernate {@linkplain Service service} that provides an
+ * implementation of the {@link Cache} API. Extends {@code Cache} with operations
+ * called internally by Hibernate.
  *
  * @since 4.1
  *
  * @author Strong Liu
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
-public interface CacheImplementor extends Service, Cache, org.hibernate.engine.spi.CacheImplementor, Serializable {
+public interface CacheImplementor extends Service, Cache, Serializable {
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 
@@ -86,7 +86,7 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	QueryResultsCache getDefaultQueryResultsCache();
 
 	/**
-	 * Get query cache by <tt>region name</tt> or create a new one if none exist.
+	 * Get query cache by {@code region name} or create a new one if none exist.
 	 *
 	 * If the region name is null, then default query cache region will be returned.
 	 *
@@ -107,7 +107,10 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 
 	/**
 	 * Clean up the default query cache
+	 *
+	 * @deprecated only because it's currently never called
 	 */
+	@Deprecated
 	default void evictQueries() throws HibernateException {
 		QueryResultsCache cache = getDefaultQueryResultsCache();
 		if ( cache != null ) {
@@ -120,32 +123,19 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 */
 	void close();
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations (5.3)
-
-	/**
-	 * Get the *qualified* names of all regions caching entity and collection data.
-	 *
-	 * @return All cache region names
-	 *
-	 * @deprecated (since 5.3) Use {@link CacheImplementor#getCacheRegionNames()} instead
-	 */
-	@Deprecated
-	String[] getSecondLevelCacheRegionNames();
-
 	/**
 	 * Find the cache data access strategy for an entity.  Will
 	 * return {@code null} when the entity is not configured for caching.
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * @implSpec It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getCacheAccessStrategy()} instead
+	 * @apiNote Use {@link EntityPersister#getCacheAccessStrategy()} instead
 	 */
-	@Deprecated
+	@Internal
+	@Remove
 	EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName);
 
 	/**
@@ -155,106 +145,25 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * @implSpec It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
+	 * @apiNote  Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
-	@Deprecated
+	@Internal
+	@Remove
 	NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName);
 
 	/**
 	 * Find the cache data access strategy for the given collection.  Will
 	 * return {@code null} when the collection is not configured for caching.
 	 *
-	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * @implSpec It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
+	 * @apiNote  Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
-	@Deprecated
+	@Internal
+	@Remove
 	CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole);
-
-
-	/**
-	 * Get {@code UpdateTimestampsCache} instance managed by the {@code SessionFactory}.
-	 *
-	 * @deprecated Use {@link #getTimestampsCache} instead
-	 */
-	@Deprecated
-	default UpdateTimestampsCache getUpdateTimestampsCache() {
-		return getTimestampsCache();
-	}
-
-	/**
-	 * Get the default {@code QueryCache}.
-	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
-	 */
-	@Deprecated
-	default QueryCache getQueryCache() {
-		return getDefaultQueryResultsCache();
-	}
-
-	/**
-	 * Get the default {@code QueryCache}.
-	 *
-	 * @deprecated Use {@link #getDefaultQueryResultsCache} instead.
-	 */
-	@Deprecated
-	default QueryCache getDefaultQueryCache() {
-		return getDefaultQueryResultsCache();
-	}
-
-	/**
-	 * @deprecated Use {@link #getQueryResultsCache(String)} instead, but using unqualified name
-	 */
-	@Deprecated
-	default QueryCache getQueryCache(String regionName) throws HibernateException {
-		return getQueryResultsCache( unqualifyRegionName( regionName ) );
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Some new (default) support methods for the above deprecations
-	//		- themselves deprecated
-
-	/**
-	 * @deprecated (since 5.3) No replacement - added just to continue some backwards compatibility
-	 * in supporting the newly deprecated methods expecting a qualified (prefix +) region name
-	 */
-	@Deprecated
-	default String unqualifyRegionName(String name) {
-		if ( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix() == null ) {
-			return name;
-		}
-
-		if ( !name.startsWith( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix() ) ) {
-			throw new IllegalArgumentException(
-					String.format(
-							Locale.ROOT,
-							"Legacy methods for accessing cache information expect a qualified (prefix) region name - " +
-									"but passed name [%s] was not qualified by the configured prefix [%s]",
-							name,
-							getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix()
-					)
-			);
-		}
-
-		return name.substring( getSessionFactory().getSessionFactoryOptions().getCacheRegionPrefix().length() + 1 );
-	}
-
-	/**
-	 * @deprecated No replacement - added just for support of the newly deprecated methods expecting a qualified region name
-	 */
-	@Deprecated
-	default Region getRegionByLegacyName(String legacyName) {
-		return getRegion( unqualifyRegionName( legacyName ) );
-	}
-
-	/**
-	 * @deprecated No replacement - added just for support of the newly deprecated methods expecting a qualified region name
-	 */
-	@Deprecated
-	Set<NaturalIdDataAccess> getNaturalIdAccessesInRegion(String legacyQualifiedRegionName);
 }

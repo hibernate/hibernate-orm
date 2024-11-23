@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
@@ -17,7 +16,7 @@ import org.hibernate.LockOptions;
 public class LockEvent extends AbstractEvent {
 
 	private Object object;
-	private LockOptions lockOptions;
+	private final LockOptions lockOptions;
 	private String entityName;
 
 	public LockEvent(String entityName, Object original, LockMode lockMode, EventSource source) {
@@ -33,7 +32,7 @@ public class LockEvent extends AbstractEvent {
 	public LockEvent(Object object, LockMode lockMode, EventSource source) {
 		super(source);
 		this.object = object;
-		this.lockOptions = new LockOptions().setLockMode(lockMode);
+		this.lockOptions = lockMode.toLockOptions();
 	}
 
 	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
@@ -58,24 +57,12 @@ public class LockEvent extends AbstractEvent {
 		return lockOptions.getLockMode();
 	}
 
-	public void setLockMode(LockMode lockMode) {
-		this.lockOptions.setLockMode(lockMode);
-	}
-
-	public void setLockTimeout(int timeout) {
-		this.lockOptions.setTimeOut(timeout);
-	}
-
 	public int getLockTimeout() {
-		return this.lockOptions.getTimeOut();
-	}
-
-	public void setLockScope(boolean cascade) {
-		this.lockOptions.setScope(cascade);
+		return lockOptions.getTimeOut();
 	}
 
 	public boolean getLockScope() {
-		return this.lockOptions.getScope();
+		return lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
 	}
 
 	public String getEntityName() {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
 
@@ -13,28 +11,54 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.type.Type;
 
 public final class ArrayHelper {
 
-	public static boolean contains(Object[] array, Object object) {
+	public static <T> boolean contains(T[] array, T object) {
 		return indexOf( array, object ) > -1;
 	}
 
-	public static int indexOf(Object[] array, Object object) {
+	public static <T> boolean containsAll(T[] array, T[] elements) {
+		for ( T element : elements ) {
+			if ( !contains( array, element ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static boolean contains(int[] array, int value) {
 		for ( int i = 0; i < array.length; i++ ) {
-			if ( array[i].equals( object ) ) {
+			if ( array[i] == value ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static int indexOf(Object[] array, Object object) {
+		return indexOf( array, array.length, object );
+	}
+
+	public static int indexOf(Object[] array, int end, Object object) {
+		for ( int i = 0; i < end; i++ ) {
+			if ( object.equals( array[i] ) ) {
 				return i;
 			}
 		}
 		return -1;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
 		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
 		Arrays.fill( array, value );
@@ -74,58 +98,62 @@ public final class ArrayHelper {
 		return array;
 	}
 
-	public static String[] toStringArray(Collection coll) {
-		return (String[]) coll.toArray( new String[coll.size()] );
+	public static String[] toStringArray(Collection<String> coll) {
+		return coll.toArray( EMPTY_STRING_ARRAY );
 	}
 
-	public static String[][] to2DStringArray(Collection coll) {
-		return (String[][]) coll.toArray( new String[coll.size()][] );
+	public static Object[] toObjectArray(Collection<Object> coll) {
+		return coll.toArray( EMPTY_OBJECT_ARRAY );
 	}
 
-	public static int[][] to2DIntArray(Collection coll) {
-		return (int[][]) coll.toArray( new int[coll.size()][] );
+	public static String[][] to2DStringArray(Collection<String[]> coll) {
+		return coll.toArray( new String[0][] );
 	}
 
-	public static Type[] toTypeArray(Collection coll) {
-		return (Type[]) coll.toArray( new Type[coll.size()] );
+	public static int[][] to2DIntArray(Collection<int[]> coll) {
+		return coll.toArray( new int[0][] );
 	}
 
-	public static int[] toIntArray(Collection coll) {
-		Iterator iter = coll.iterator();
+	public static Type[] toTypeArray(Collection<Type> coll) {
+		return coll.toArray( EMPTY_TYPE_ARRAY );
+	}
+
+	public static int[] toIntArray(Collection<Integer> coll) {
+		Iterator<Integer> iter = coll.iterator();
 		int[] arr = new int[coll.size()];
 		int i = 0;
 		while ( iter.hasNext() ) {
-			arr[i++] = (Integer) iter.next();
+			arr[i++] = iter.next();
 		}
 		return arr;
 	}
 
-	public static boolean[] toBooleanArray(Collection coll) {
-		Iterator iter = coll.iterator();
+	public static boolean[] toBooleanArray(Collection<Boolean> coll) {
+		Iterator<Boolean> iter = coll.iterator();
 		boolean[] arr = new boolean[coll.size()];
 		int i = 0;
 		while ( iter.hasNext() ) {
-			arr[i++] = (Boolean) iter.next();
+			arr[i++] = iter.next();
 		}
 		return arr;
 	}
 
 	public static Object[] typecast(Object[] array, Object[] to) {
-		return java.util.Arrays.asList( array ).toArray( to );
+		return Arrays.asList( array ).toArray( to );
 	}
 
 	//Arrays.asList doesn't do primitive arrays
-	public static List toList(Object array) {
-		if ( array instanceof Object[] ) {
-			return Arrays.asList( (Object[]) array ); //faster?
-		}
-		int size = Array.getLength( array );
-		ArrayList list = new ArrayList( size );
-		for ( int i = 0; i < size; i++ ) {
-			list.add( Array.get( array, i ) );
-		}
-		return list;
-	}
+//	public static List toList(Object array) {
+//		if ( array instanceof Object[] ) {
+//			return Arrays.asList( (Object[]) array ); //faster?
+//		}
+//		int size = Array.getLength( array );
+//		ArrayList<Object> list = new ArrayList<>( size );
+//		for ( int i = 0; i < size; i++ ) {
+//			list.add( Array.get( array, i ) );
+//		}
+//		return list;
+//	}
 
 	public static String[] slice(String[] strings, int begin, int length) {
 		String[] result = new String[length];
@@ -139,8 +167,8 @@ public final class ArrayHelper {
 		return result;
 	}
 
-	public static List toList(Iterator iter) {
-		List list = new ArrayList();
+	public static <T> List<T> toList(Iterator<T> iter) {
+		List<T> list = new ArrayList<>();
 		while ( iter.hasNext() ) {
 			list.add( iter.next() );
 		}
@@ -173,7 +201,7 @@ public final class ArrayHelper {
 		return result;
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public static <T> T[] join(T[] x, T... y) {
 		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
 		System.arraycopy( x, 0, result, 0, x.length );
@@ -237,6 +265,24 @@ public final class ArrayHelper {
 		return true;
 	}
 
+	public static boolean isAnyTrue(boolean... values) {
+		for ( boolean value : values ) {
+			if ( value ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean[] negate(boolean[] valueNullness) {
+		boolean[] result = new boolean[valueNullness.length];
+		for (int i = 0; i < valueNullness.length; i++) {
+			result[i] = !valueNullness[i];
+		}
+		return result;
+	}
+
+
 	public static <T> void addAll(Collection<T> collection, T[] array) {
 		collection.addAll( Arrays.asList( array ) );
 	}
@@ -248,6 +294,39 @@ public final class ArrayHelper {
 	public static final Object[] EMPTY_OBJECT_ARRAY = {};
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
 	public static final byte[] EMPTY_BYTE_ARRAY = {};
+
+	/**
+	 * Calculate the batch partitions needed to handle the {@code mappedBatchSize}.
+	 *
+	 * @param mappedBatchSize The {@link org.hibernate.annotations.BatchSize batch-size}.  Internally
+	 * this is capped at {@code 256}
+	 *
+	 * @implNote The max batch size is capped at {@code 256}
+	 *
+	 * @return The upper bound for the partitions
+	 */
+	public static int[] calculateBatchPartitions(int mappedBatchSize) {
+		final SortedSet<Integer> partitionSizes = new TreeSet<>( Integer::compareTo );
+		int batchSize = Math.min( mappedBatchSize, 256 );
+		while ( batchSize > 1 ) {
+			partitionSizes.add( batchSize );
+			batchSize = calculateNextBatchPartitionLimit( batchSize );
+		}
+
+		return ArrayHelper.toIntArray( partitionSizes );
+	}
+
+	private static int calculateNextBatchPartitionLimit(int batchSize) {
+		if ( batchSize <= 10 ) {
+			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
+		}
+		else if ( batchSize / 2 < 10 ) {
+			return 10;
+		}
+		else {
+			return batchSize / 2;
+		}
+	}
 
 	public static int[] getBatchSizes(int maxBatchSize) {
 		int batchSize = maxBatchSize;
@@ -277,8 +356,8 @@ public final class ArrayHelper {
 		}
 	}
 
-	private static int SEED = 23;
-	private static int PRIME_NUMER = 37;
+	private static final int SEED = 23;
+	private static final int PRIME_NUMBER = 37;
 
 	/**
 	 * calculate the array hash (only the first level)
@@ -314,82 +393,7 @@ public final class ArrayHelper {
 	}
 
 	private static int hash(int seed, int i) {
-		return PRIME_NUMER * seed + i;
-	}
-
-	/**
-	 * Compare 2 arrays only at the first level
-	 *
-	 * @deprecated Use {@link java.util.Arrays#equals(Object[], Object[])} instead
-	 */
-	@Deprecated
-	public static boolean isEquals(Object[] o1, Object[] o2) {
-		if ( o1 == o2 ) {
-			return true;
-		}
-		if ( o1 == null || o2 == null ) {
-			return false;
-		}
-		int length = o1.length;
-		if ( length != o2.length ) {
-			return false;
-		}
-		for ( int index = 0; index < length; index++ ) {
-			if ( !o1[index].equals( o2[index] ) ) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Compare 2 arrays only at the first level
-	 *
-	 * @deprecated Use {@link java.util.Arrays#equals(char[], char[])} instead
-	 */
-	@Deprecated
-	public static boolean isEquals(char[] o1, char[] o2) {
-		if ( o1 == o2 ) {
-			return true;
-		}
-		if ( o1 == null || o2 == null ) {
-			return false;
-		}
-		int length = o1.length;
-		if ( length != o2.length ) {
-			return false;
-		}
-		for ( int index = 0; index < length; index++ ) {
-			if ( !( o1[index] == o2[index] ) ) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Compare 2 arrays only at the first level
-	 *
-	 * @deprecated Use {@link java.util.Arrays#equals(byte[], byte[])} instead
-	 */
-	@Deprecated
-	public static boolean isEquals(byte[] b1, byte[] b2) {
-		if ( b1 == b2 ) {
-			return true;
-		}
-		if ( b1 == null || b2 == null ) {
-			return false;
-		}
-		int length = b1.length;
-		if ( length != b2.length ) {
-			return false;
-		}
-		for ( int index = 0; index < length; index++ ) {
-			if ( !( b1[index] == b2[index] ) ) {
-				return false;
-			}
-		}
-		return true;
+		return PRIME_NUMBER * seed + i;
 	}
 
 	public static Serializable[] extractNonNull(Serializable[] array) {
@@ -410,6 +414,16 @@ public final class ArrayHelper {
 	public static int countNonNull(Serializable[] array) {
 		int i = 0;
 		for ( Serializable element : array ) {
+			if ( element != null ) {
+				i++;
+			}
+		}
+		return i;
+	}
+
+	public static int countNonNull(Object[] array) {
+		int i = 0;
+		for ( Object element : array ) {
 			if ( element != null ) {
 				i++;
 			}
@@ -445,18 +459,30 @@ public final class ArrayHelper {
 		return outputArray;
 	}
 
-	@AllowSysOut
-	public static void main(String... args) {
-		int[] batchSizes = ArrayHelper.getBatchSizes( 32 );
+	public static <T> List<T> toExpandableList(T[] values) {
+		if ( values == null ) {
+			return new ArrayList<>();
+		}
+		return Arrays.asList( values );
+	}
 
-		System.out.println( "Forward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		for ( int i = 0; i < batchSizes.length; i++ ) {
-			System.out.println( "[" + i + "] -> " + batchSizes[i] );
+	public static boolean isEmpty(Object[] array) {
+		return array == null || array.length == 0;
+	}
+
+	public static <T> void forEach(T[] array, Consumer<T> consumer) {
+		if ( array == null ) {
+			return;
 		}
 
-		System.out.println( "Backward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		for ( int i = batchSizes.length - 1; i >= 0; i-- ) {
-			System.out.println( "[" + i + "] -> " + batchSizes[i] );
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < array.length; i++ ) {
+			consumer.accept( array[ i ] );
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T[] newInstance(Class<T> elementType, int length) {
+		return (T[]) Array.newInstance( elementType, length );
 	}
 }

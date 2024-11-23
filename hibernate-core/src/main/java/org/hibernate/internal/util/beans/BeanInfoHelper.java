@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.beans;
 import java.beans.BeanInfo;
@@ -16,12 +14,12 @@ import java.lang.reflect.InvocationTargetException;
  * @author Steve Ebersole
  */
 public class BeanInfoHelper {
-	public static interface BeanInfoDelegate {
-		public void processBeanInfo(BeanInfo beanInfo) throws Exception;
+	public interface BeanInfoDelegate {
+		void processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
-	public static interface ReturningBeanInfoDelegate<T> {
-		public T processBeanInfo(BeanInfo beanInfo) throws Exception;
+	public interface ReturningBeanInfoDelegate<T> {
+		T processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
 	private final Class beanClass;
@@ -44,7 +42,7 @@ public class BeanInfoHelper {
 		visitBeanInfo( beanClass, stopClass, delegate );
 	}
 
-	public static void visitBeanInfo(Class beanClass, BeanInfoDelegate delegate) {
+	public static void visitBeanInfo(Class<?> beanClass, BeanInfoDelegate delegate) {
 		visitBeanInfo( beanClass, Object.class, delegate );
 	}
 

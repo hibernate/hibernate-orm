@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
@@ -13,16 +11,16 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
- * An implementation of the {@link ConnectionProvider} interface that simply throws an exception when a connection
- * is requested, the assumption being that the application is responsible for handing the connection to use to
- * the session
+ * An implementation of the {@link ConnectionProvider} interface that simply throws an
+ * exception when a connection is requested, the assumption being that the application
+ * is responsible for handing the connection to use to the session.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 	@Override
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) ||
 				UserSuppliedConnectionProviderImpl.class.isAssignableFrom( unwrapType );
 	}
@@ -45,7 +43,7 @@ public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
+	public void closeConnection(Connection connection) throws SQLException {
 		throw new UnsupportedOperationException( "The application must supply JDBC connections" );
 	}
 

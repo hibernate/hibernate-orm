@@ -1,149 +1,380 @@
 [[collections]]
 === Collections
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/collections
+:majorMinorVersion: 6.2
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {core-project-dir}/src/test/java
+:example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
+:docs-base: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}
+:javadoc-base: {docs-base}/javadoc
+:java-javadoc-base: https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 :extrasdir: extras/collections
 
-Naturally Hibernate also allows persisting collections.
-These persistent collections can contain almost any other Hibernate type, including basic types, custom types, embeddables, and references to other entities.
-In this context, the distinction between value and reference semantics is very important. 
-An object in a collection might be handled with _value_ semantics (its lifecycle being fully dependant on the collection owner),
-or it might be a reference to another entity with its own lifecycle.
-In the latter case, only the _link_ between the two objects is considered to be a state held by the collection.
+Hibernate supports mapping collections (`java.util.Collection` and `java.util.Map` subtypes)
+in a variety of ways.
 
-The owner of the collection is always an entity, even if the collection is defined by an embeddable type.
-Collections form one/many-to-many associations between types so there can be:
+Hibernate even allows mapping a collection as `@Basic`, but that should generally be avoided.
+See <<collections-as-basic>> for details of such a mapping.
 
-- value type collections
-- embeddable type collections
-- entity collections
+This section is limited to discussing `@ElementCollection`, `@OneToMany` and `@ManyToMany`.
 
-Hibernate uses its own collection implementations which are enriched with lazy-loading, caching or state change detection semantics.
-For this reason, persistent collections must be declared as an interface type.
-The actual interface might be `java.util.Collection`, `java.util.List`, `java.util.Set`, `java.util.Map`, `java.util.SortedSet`, `java.util.SortedMap` or even other object types (meaning you will have to write an implementation of `org.hibernate.usertype.UserCollectionType`).
-
-As the following example demonstrates, it's important to use the interface type and not the collection implementation, as declared in the entity mapping.
-
-[[collections-collection-proxy-example]]
-.Hibernate uses its own collection implementations
-====
-[source,java]
-----
-include::{sourcedir}/BasicTypeElementCollectionTest.java[tags=collections-collection-proxy-entity-example,indent=0]
-
-include::{sourcedir}/BasicTypeElementCollectionTest.java[tags=collections-collection-proxy-usage-example,indent=0]
-----
-====
-
-[NOTE]
-====
-It is important that collections be defined using the appropriate Java Collections Framework interface rather than a specific implementation.
-
-From a theoretical perspective, this just follows good design principles.
-From a practical perspective, Hibernate (like other persistence providers) will use their own collection implementations which conform to the Java Collections Framework interfaces.
-====
-
-The persistent collections injected by Hibernate behave like `ArrayList`, `HashSet`, `TreeSet`, `HashMap` or `TreeMap`, depending on the interface type.
-
-[[collections-synopsis]]
-==== Collections as a value type
-
-Value and embeddable type collections have a similar behavior to basic types since they are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced.
-If a collection is passed from one persistent object to another, its elements might be moved from one table to another.
 
 [IMPORTANT]
 ====
 Two entities cannot share a reference to the same collection instance.
-Collection-valued properties do not support null value semantics because Hibernate does not distinguish between a null collection reference and an empty collection.
+
+Collection-valued properties do not support null value semantics.
+
+Collections cannot be nested, meaning Hibernate does not support mapping `List<List<?>>`, for example.
+
+Embeddables which are used as a collection element, Map value or Map key may not themselves define collections
 ====
 
-[[collections-value]]
-==== Collections of value types
 
-Collections of value type include basic and embeddable types.
-Collections cannot be nested, and, when used in collections, embeddable types are not allowed to define other collections.
+[[collections-semantics]]
+==== Collection Semantics
 
-For collections of value types, JPA 2.0 defines the `@ElementCollection` annotation.
-The lifecycle of the value-type collection is entirely controlled by its owning entity.
+The semantics of a collection describes how to handle the collection, including
 
-Considering the previous example mapping, when clearing the phone collection, Hibernate deletes all the associated phones.
-When adding a new element to the value type collection, Hibernate issues a new insert statement.
+* the collection subtype to use - `java.util.List`, `java.util.Set`, `java.util.SortedSet`, etc.
+* how to access elements of the collection
+* how to create instances of the collection - both "raw" and "<<collection-wrapper,wrapper>>" forms.
 
-[[collections-value-type-collection-lifecycle-example]]
-.Value type collection lifecycle
+
+Hibernate supports the following semantics:
+
+ARRAY:: Object and primitive arrays.  See <<collections-array>>.
+BAG:: A collection that may contain duplicate entries and has no defined ordering.  See <<collections-bag>>.
+ID_BAG:: A bag that defines a per-element identifier to uniquely identify elements in the collection.  See <<collections-bag>>.
+LIST:: Follows the semantics defined by `java.util.List`.  See <<collections-list>>.
+SET:: Follows the semantics defined by `java.util.Set`.  See <<collections-set>>.
+ORDERED_SET:: A set that is ordered by a SQL fragment defined on its mapping.  See <<collections-set>>.
+SORTED_SET:: A set that is sorted according to a `Comparator` defined on its mapping.  See <<collections-set>>.
+MAP:: Follows the semantics defined by `java.util.Map`.  See <<collections-map>>.
+ORDERED_MAP:: A map that is ordered by keys according to a SQL fragment defined on its mapping.  See <<collections-map>>.
+SORTED_MAP:: A map that is sorted by keys according to a `Comparator` defined on its mapping.  See <<collections-map>>.
+
+By default, Hibernate interprets the defined type of the plural attribute and makes an
+interpretation as to which classification it fits in to, using the following checks:
+
+1. if an array -> ARRAY
+2. if a `List` -> LIST
+3. if a `SortedSet` -> SORTED_SET
+4. if a `Set` -> SET
+5. if a `SortedMap` -> SORTED_MAP
+6. if a `Map` -> MAP
+7. else `Collection` -> BAG
+
+
+
+[[collection-list]]
+==== Mapping Lists
+
+`java.util.List` defines a collection of ordered, non-unique elements.
+
+
+[[collection-list-ex]]
+.Basic List Mapping
 ====
-[source,java]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BasicTypeElementCollectionTest.java[tags=collections-value-type-collection-lifecycle-example,indent=0]
-----
-
-[source,sql]
-----
-include::{extrasdir}/collections-value-type-collection-lifecycle-example.sql[]
-----
-====
-
-If removing all elements or adding new ones is rather straightforward, removing a certain entry actually requires reconstructing the whole collection from scratch.
-
-[[collections-value-type-collection-remove-example]]
-.Removing collection elements
-====
-[source,java]
-----
-include::{sourcedir}/BasicTypeElementCollectionTest.java[tags=collections-value-type-collection-remove-example,indent=0]
-----
-
-[source,sql]
-----
-include::{extrasdir}/collections-value-type-collection-remove-example.sql[]
-----
-====
-
-Depending on the number of elements, this behavior might not be efficient, if many elements need to be deleted and reinserted back into the database table.
-A workaround is to use an `@OrderColumn`, which, although not as efficient as when using the actual link table primary key, might improve the efficiency of the remove operations.
-
-[[collections-value-type-collection-order-column-remove-example]]
-.Removing collection elements using @OrderColumn
-====
-[source,java]
-----
-include::{sourcedir}/BasicTypeOrderColumnElementCollectionTest.java[tags=collections-value-type-collection-order-column-remove-entity-example,indent=0]
-
-include::{sourcedir}/BasicTypeOrderColumnElementCollectionTest.java[tags=collections-value-type-collection-order-column-remove-example,indent=0]
-----
-
-[source,sql]
-----
-include::{extrasdir}/collections-value-type-collection-order-column-remove-example.sql[]
+include::{example-dir-collection}/classification/list/EntityWithList.java[tags=collections-list-ex]
 ----
 ====
+
+Contrary to natural expectations, the ordering of a list is by default not maintained.
+To maintain the order, it is necessary to explicitly use the `jakarta.persistence.OrderColumn` annotation.
+
+[[NOTE]]
+====
+Starting in 6.0, Hibernate allows to configure the default semantics of `List` without `@OrderColumn`
+via the `hibernate.mapping.default_list_semantics` setting.
+To switch to the more natural LIST semantics with an implicit order-column, set the setting to `LIST`.
+Beware that default LIST semantics only affects owned collection mappings.
+Unowned mappings like `@ManyToMany(mappedBy = "...")` and `@OneToMany(mappedBy = "...")` do not retain the element
+order by default, and explicitly annotating `@OrderColumn` for `@ManyToMany(mappedBy = "...")` mappings is illegal.
+
+To retain the order of elements of a `@OneToMany(mappedBy = "...")` the `@OrderColumn` annotation must be applied
+explicitly. In addition to that, it is important that both sides of the relationship, the `@OneToMany(mappedBy = "...")`
+and the `@ManyToOne`, must be kept in sync. Otherwise, the element position will not be updated accordingly.
+
+The default column name that stores the index is derived from the attribute name, by suffixing `_ORDER`.
+====
+
+[[collection-list-ordercolumn-ex]]
+.@OrderColumn
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/list/EntityWithOrderColumnList.java[tags=collections-list-ordercolumn-ex]
+----
+====
+
+Now, a column named `name_index` will be used.
+
+Hibernate stores index values into the order-column based on the element's position in the list
+with no adjustment.  The element at `names[0]` is stored with `name_index=0` and so on.  That is to say
+that the list index is considered 0-based just as list indexes themselves are 0-based.  Some legacy
+schemas might map the position as 1-based, or any base really.  Hibernate also defines support for such
+cases using its `@ListIndexBase` annotation.
+
+[[collection-list-indexbase-ex]]
+.@ListIndexBase
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/list/EntityWithIndexBasedList.java[tags=collections-list-indexbase-ex]
+----
+====
+
+
+
+
+
+
+[[collections-set]]
+==== Mapping Sets
+
+`java.util.Set` defines a collection of unique, though unordered elements.  Hibernate supports
+mapping sets according to the requirements of the `java.util.Set`.
+
+[[collection-set-ex]]
+.Basic Set Mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/set/EntityWithSet.java[tags=collections-set-ex]
+----
+====
+
+Hibernate also has the ability to map sorted and ordered sets.  A sorted set orders its
+elements in memory via an associated `Comparator`; an ordered set is ordered via
+SQL when the set is loaded.
+
+TIP:: An ordered set does not perform any sorting in-memory.  If an element is added
+after the collection is loaded, the collection would need to be refreshed to re-order
+the elements.  For this reason, ordered sets are not recommended - if the application
+needs ordering of the set elements, a sorted set should be preferred.  For this reason,
+it is not covered in the User Guide.  See the javadocs for `jakarta.persistence.OrderBy`
+or `org.hibernate.annotations.SQLOrder` for details.
+
+There are 2 options for sorting a set - naturally or using an explicit comparator.
+
+A set is naturally sorted using the natural sort comparator for its elements.  Generally
+this implies that the element type is `Comparable`.  E.g.
+
+
+
+[[collection-sortedset-natural-ex]]
+.@SortNatural
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/Name.java[tags=collections-name-ex]
+
+include::{example-dir-collection}/classification/set/EntityWithNaturallySortedSet.java[tags=collections-sortedset-natural-ex]
+----
+====
+
+Because `Name` is defined as `Comparable`, its `#compare` method will be used to sort the elements in this
+set.
+
+But Hibernate also allows sorting based on a specific `Comparator` implementation.  Here, e.g., we map
+the `Names` as sorted by a `NameComparator`:
+
+[[collection-sortedset-comparator-ex]]
+.@SortComparator
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/NameComparator.java[tags=collections-name-comparator-ex]
+
+include::{example-dir-collection}/classification/set/EntityWithSortedSet.java[tags=collections-sortedset-comparator-ex]
+----
+====
+
+Here, instead of `Name#compare` being use for the sorting, the explicit `NameComparator` will be used
+instead.
+
+
+
+
+
+
+[[collections-map]]
+==== Mapping Maps
+
+A `java.util.Map` is a collection of key/value pairs.
+
+[[collection-map-ex]]
+.Simple MAP mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/map/EntityWithMap.java[tags=collections-map-ex]
+----
+====
+
+Hibernate has the ability to map sorted and ordered maps - the ordering and sorting applies
+to the Map key.  As we saw with Sets, the use of ordered Maps is generally discouraged.
+
+Maps may be sorted naturally -
+
+[[collection-sortedmap-natural-ex]]
+.Naturally sorted MAP mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/map/EntityWithNaturallySortedMap.java[tags=example]
+----
+====
+
+or via a Comparator -
+
+[[collection-sortedmap-ex]]
+.Comparator sorted MAP mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/map/EntityWithSortedMap.java[tags=example]
+----
+====
+
+
+
+[[collections-bag]]
+==== Mapping Collections
+
+Without any other mapping influencers, `java.util.Collection` is interpreted using BAG
+semantics which means a collection that may contain duplicate entries and has no defined
+ordering.
 
 [NOTE]
 ====
-The `@OrderColumn` column works best when removing from the tail of the collection, as it only requires a single delete statement.
-Removing from the head or the middle of the collection requires deleting the extra elements and updating the remaining ones to preserve element order.
+Jakarta Persistence does not define support for BAG (nor ID_BAG) classification per-se.  The
+specification does allow mapping of `java.util.Collection` attributes, but how such attributes
+are handled is largely undefined.
 ====
 
-Embeddable type collections behave the same way as value type collections.
-Adding embeddables to the collection triggers the associated insert statements and removing elements from the collection will generate delete statements.
+[[collection-bag-ex]]
+.Simple BAG mapping
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/bag/EntityWithBagAsCollection.java[tags=collections-bag-ex]
+----
+====
 
-[[collections-embeddable-type-collection-lifecycle-example]]
-.Embeddable type collections
+Some apps map BAG collections using `java.util.List` instead.  Hibernate provides 2 ways to handle
+lists as bags.  First an explicit annotation
+
+[[collection-bag-list-ex]]
+.@Bag
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/classification/bag/EntityWithBagAsList.java[tags=collections-bag-list-ex]
+----
+====
+
+Specifically, the usage of `@Bag` forces the classification as BAG.  Even though the `names` attribute is defined
+as `List`, Hibernate will treat it using the BAG semantics.
+
+Additionally, as discussed in <<collection-list>>, the `hibernate.mapping.default_list_semantics` setting
+is available to have Hibernate interpret a `List` with no `@OrderColumn` and no `@ListIndexBase` as a BAG.
+
+
+An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
+table.  `@CollectionId` is the annotation to configure this identifier
+
+
+// todo (6.0) - finish
+
+
+
+
+[[collections-array]]
+==== Mapping Arrays
+
+Hibernate is able to map Object and primitive arrays as collections.  Mapping an array is essentially
+the same as mapping a <<collection-list,list>>.
+
+There is a major limitation of mapping arrays to be aware of - the array cannot be lazy using
+<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<bytecode-enhancement-guide,bytecode enhancement>>
+of its owner.
+
+Note that Jakarta Persistence does not define support for arrays as plural attributes; according to the specification,
+these would be mapped as binary data.
+
+
+
+
+
+
+[[collections-elemental]]
+==== @ElementCollection
+
+Element collections may contain values of either basic or embeddable types.  They have a similar
+lifecycle to basic/embedded attributes in that their persistence is completely managed as part of
+the owner - they are created when referenced from an owner and automatically deleted when
+unreferenced.  The specifics of how this lifecycle manifests in terms of database calls depends
+on the <<collections-semantics,semantics>> of the mapping.
+
+This section will discuss these lifecycle aspects using the example of mapping a collection
+of phone numbers.  The examples use embeddable values, but the same aspects apply to collections
+of basic values as well.
+
+The embeddable used in the examples is a `PhoneNumber` -
+
+[[ex-collection-elemental]]
+.PhoneNumber
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableTypeElementCollectionTest.java[tags=collections-embeddable-type-collection-lifecycle-entity-example,indent=0]
+include::{example-dir-collection}/nature/elemental/Phone.java[tags=ex-collection-elemental-model,indent=0]
+----
+====
 
-include::{sourcedir}/EmbeddableTypeElementCollectionTest.java[tags=collections-embeddable-type-collection-lifecycle-example,indent=0]
+
+First, a BAG mapping -
+
+[[ex-collection-elemental-bag]]
+.Elemental BAG mapping
+====
+[source,java]
+----
+include::{example-dir-collection}/nature/elemental/ElementalBagTest.java[tags=ex-collection-elemental-model,indent=0]
+----
+====
+
+
+[[ex-collection-elemental-bag-lifecycle]]
+.Elemental BAG lifecycle
+====
+[source,java]
+----
+include::{example-dir-collection}/nature/elemental/ElementalBagTest.java[tags=ex-collection-elemental-lifecycle,indent=0]
 ----
 
 [source,sql]
 ----
-include::{extrasdir}/collections-embeddable-type-collection-lifecycle-example.sql[]
+include::{extrasdir}/elemental-bag-lifecycle-example.sql[]
 ----
 ====
 
-[[collections-entity]]
-==== Collections of entities
+
+// todo (6.0) - finish
+
+
+
+
+
+
+
+
+
+[[collection-nature-entity]]
+===== Collections of entities
 
 If value type collections can only form a one-to-many association between an owner entity and multiple basic or embeddable types,
 entity collections can represent both <<chapters/domain/associations.adoc#associations-one-to-many,@OneToMany>> and <<chapters/domain/associations.adoc#associations-many-to-many,@ManyToMany>> associations.
@@ -156,17 +387,115 @@ Unidirectional associations are very similar to value type collections since onl
 Bidirectional associations are more tricky since, even if sides need to be in-sync at all times, only one side is responsible for managing the association.
 A bidirectional association has an _owning_ side and an _inverse (mappedBy)_ side.
 
-Another way of categorizing entity collections is by the underlying collection type, and so we can have:
+// todo (6.0) - finish
 
-* bags
-* indexed lists
-* sets
-* sorted sets
-* maps
-* sorted maps
-* arrays
 
-In the following sections, we will go through all these collection types and discuss both unidirectional and bidirectional associations.
+
+
+
+
+
+[[collection-type-ann]]
+==== @CollectionType
+
+The `@CollectionType` annotation provides the ability to use a custom
+link:{javadoc-base}/org/hibernate/usertype/UserCollectionType.html[`UserCollectionType`]
+implementation to influence how the collection for a plural attribute behaves.
+
+As an example, consider a requirement for a collection with the semantics of a "unique list" - a
+cross between the ordered-ness of a `List` and the uniqueness of a `Set`.  First the entity:
+
+
+[[collection-type-ann-ex]]
+.@CollectionType
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/semantics/TheEntityWithUniqueList.java[tags=ex-collections-custom-type-model]
+----
+====
+
+The mapping says to use the `UniqueListType` class for the mapping of the plural attribute.
+
+[[collection-type-usertype-ex]]
+.UniqueListType
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/semantics/UniqueListType.java[tags=collections-custom-type-ex]
+----
+====
+
+Most custom `UserCollectionType` implementations will want their own `PersistentCollection` implementation.
+
+[[collection-type-usertype-wrapper-ex]]
+.UniqueListWrapper
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/semantics/UniqueListWrapper.java[tags=collections-custom-semantics-ex]
+----
+====
+
+`UniqueListWrapper` is the `PersistentCollection` implementation for the "unique list" semantic.  See <<collection-wrapper>> for more details.
+
+
+
+[[collection-type-reg-ann]]
+==== @CollectionTypeRegistration
+
+For cases where an application wants to apply the same custom type to all
+plural attributes of a given classification, Hibernate also provides the
+`@CollectionTypeRegistration`:
+
+[[collection-type-usertype-registration-ex]]
+.UniqueListType Registration
+====
+[source, java, indent=0]
+----
+include::{example-dir-collection}/semantics/TheEntityWithUniqueListRegistration.java[tags=ex-collections-custom-type-model]
+----
+====
+
+This example behaves exactly as in <<collection-type-ann-ex>>.
+
+
+[[collection-wrapper]]
+==== Wrappers
+
+As mentioned in <<collections-semantics>>, Hibernate provides its own implementations
+of the Java collection types.  These are called wrappers as they wrap an underlying
+collection and provide support for things like lazy loading, queueing add/remove
+operations while detached, etc.  Hibernate defines the following `PersistentCollection`
+implementations for each of its collection classifications -
+
+* `PersistentArrayHolder`
+* `PersistentBag`
+* `PersistentIdentifierBag`
+* `PersistentList`
+* `PersistentMap`
+* `PersistentSet`
+* `PersistentSortedMap`
+* `PersistentSortedSet`
+
+ORDERED_SET uses `PersistentSet` for its wrapper and ORDERED_MAP uses `PersistentMap`.
+
+The collections they wrap are called "raw" collections, which are generally the standard
+Java implementations (`java.util.ArrayList`, etc)
+
+
+
+
+
+
+
+[NOTE]
+----
+Original content below
+----
+
+
+[[collections-entity]]
 
 [[collections-bag]]
 ==== Bags
@@ -184,7 +513,7 @@ Behind the scenes, Hibernate requires an association table to manage the parent-
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-example,indent=0]
+include::{example-dir-collection}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-example,indent=0]
 ----
 
 [source,sql]
@@ -207,7 +536,7 @@ By marking the parent side with the `CascadeType.ALL` attribute, the unidirectio
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-lifecycle-example,indent=0]
+include::{example-dir-collection}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -236,7 +565,7 @@ The `@ManyToOne` side is the owning side of the bidirectional bag association, w
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-example,indent=0]
+include::{example-dir-collection}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-example,indent=0]
 ----
 
 [source,sql]
@@ -250,7 +579,7 @@ include::{extrasdir}/collections-bidirectional-bag-example.sql[]
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-lifecycle-example,indent=0]
+include::{example-dir-collection}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -264,7 +593,7 @@ include::{extrasdir}/collections-bidirectional-bag-lifecycle-example.sql[]
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalBagOrphanRemovalTest.java[tags=collections-bidirectional-bag-orphan-removal-example,indent=0]
+include::{example-dir-collection}/BidirectionalBagOrphanRemovalTest.java[tags=collections-bidirectional-bag-orphan-removal-example,indent=0]
 ----
 
 [source,sql]
@@ -294,7 +623,7 @@ When using the `@OrderBy` annotation, the mapping looks as follows:
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalOrderedByListTest.java[tags=collections-unidirectional-ordered-list-order-by-example,indent=0]
+include::{example-dir-collection}/UnidirectionalOrderedByListTest.java[tags=collections-unidirectional-ordered-list-order-by-example,indent=0]
 ----
 ====
 
@@ -326,7 +655,7 @@ Another ordering option is to use the `@OrderColumn` annotation:
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalOrderColumnListTest.java[tags=collections-unidirectional-ordered-list-order-column-example,indent=0]
+include::{example-dir-collection}/UnidirectionalOrderColumnListTest.java[tags=collections-unidirectional-ordered-list-order-column-example,indent=0]
 ----
 
 [source,sql]
@@ -359,7 +688,7 @@ The mapping is similar with the <<collections-bidirectional-bag>> example, just 
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalOrderByListTest.java[tags=collections-bidirectional-ordered-list-order-by-example,indent=0]
+include::{example-dir-collection}/BidirectionalOrderByListTest.java[tags=collections-bidirectional-ordered-list-order-by-example,indent=0]
 ----
 ====
 
@@ -372,7 +701,7 @@ When using the `@OrderColumn` annotation, the `order_id` column is going to be e
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalOrderColumnListTest.java[tags=collections-bidirectional-ordered-list-order-column-example,indent=0]
+include::{example-dir-collection}/BidirectionalOrderColumnListTest.java[tags=collections-bidirectional-ordered-list-order-column-example,indent=0]
 ----
 
 [source,sql]
@@ -393,7 +722,7 @@ You can customize the ordinal of the underlying ordered list by using the https:
 ====
 [source,java]
 ----
-include::{sourcedir}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-mapping-example,indent=0]
+include::{example-dir-collection}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-mapping-example,indent=0]
 ----
 ====
 
@@ -404,7 +733,7 @@ When inserting two `Phone` records, Hibernate is going to start the List index f
 ====
 [source,java]
 ----
-include::{sourcedir}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-persist-example,indent=0]
+include::{example-dir-collection}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -416,7 +745,7 @@ include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-exampl
 [[collections-customizing-ordered-by-sql-clause]]
 ===== Customizing ORDER BY SQL clause
 
-While the JPA
+While the Jakarta Persistence
 {jpaJavadocUrlPrefix}OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
 when fetching the current annotated collection, the Hibernate specific
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.
@@ -429,7 +758,7 @@ by the number of characters of the `name` attribute.
 ====
 [source,java]
 ----
-include::{sourcedir}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-mapping-example,indent=0]
+include::{example-dir-collection}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-mapping-example,indent=0]
 ----
 ====
 
@@ -440,7 +769,7 @@ When fetching the `articles` collection, Hibernate uses the ORDER BY SQL clause 
 ====
 [source,java]
 ----
-include::{sourcedir}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-fetching-example,indent=0]
+include::{example-dir-collection}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-fetching-example,indent=0]
 ----
 
 [source,sql]
@@ -464,7 +793,7 @@ The unidirectional set uses a link table to hold the parent-child associations a
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalSetTest.java[tags=collections-unidirectional-set-example,indent=0]
+include::{example-dir-collection}/UnidirectionalSetTest.java[tags=collections-unidirectional-set-example,indent=0]
 ----
 ====
 
@@ -489,7 +818,7 @@ The lifecycle is just like with bidirectional bags except for the duplicates whi
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalSetTest.java[tags=collections-bidirectional-set-example,indent=0]
+include::{example-dir-collection}/BidirectionalSetTest.java[tags=collections-bidirectional-set-example,indent=0]
 ----
 ====
 
@@ -502,14 +831,14 @@ According to the `SortedSet` contract, all elements must implement the `Comparab
 [[collections-unidirectional-sorted-set]]
 ===== Unidirectional sorted sets
 
-A `SortedSet` that relies on the natural sorting order given by the child element `Comparable` implementation logic must be annotated with the `@SortNatural` Hibernate annotation.
+A `SortedSet` that relies on the natural sorting order given by the child element `Comparable` implementation logic might be annotated with the `@SortNatural` Hibernate annotation.
 
 [[collections-unidirectional-sorted-set-natural-comparator-example]]
 .Unidirectional natural sorted set
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalSortedSetTest.java[tags=collections-unidirectional-sorted-set-natural-comparator-example,indent=0]
+include::{example-dir-collection}/UnidirectionalSortedSetTest.java[tags=collections-unidirectional-sorted-set-natural-comparator-example,indent=0]
 ----
 ====
 
@@ -522,7 +851,7 @@ To provide a custom sorting logic, Hibernate also provides a `@SortComparator` a
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalComparatorSortedSetTest.java[tags=collections-unidirectional-sorted-set-custom-comparator-example,indent=0]
+include::{example-dir-collection}/UnidirectionalComparatorSortedSetTest.java[tags=collections-unidirectional-sorted-set-custom-comparator-example,indent=0]
 ----
 ====
 
@@ -536,10 +865,16 @@ The `@SortNatural` and `@SortComparator` work the same for bidirectional sorted 
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalSortedSetTest.java[tags=collections-bidirectional-sorted-set-example,indent=0]
+include::{example-dir-collection}/BidirectionalSortedSetTest.java[tags=collections-bidirectional-sorted-set-example,indent=0]
 
-include::{sourcedir}/UnidirectionalComparatorSortedSetTest.java[lines=75..77,indent=0]
+include::{example-dir-collection}/UnidirectionalComparatorSortedSetTest.java[lines=75..77,indent=0]
 ----
+====
+
+[NOTE]
+====
+Before v6, `@SortNatural` must be used if collection element's natural ordering is relied upon for sorting.
+Starting from v6, we can omit `@SortNatural` as it will take effect by default.
 ====
 
 [[collections-map]]
@@ -565,7 +900,7 @@ A map of value type must use the `@ElementCollection` annotation, just like valu
 ====
 [source,java]
 ----
-include::{sourcedir}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-example,indent=0]
+include::{example-dir-collection}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-example,indent=0]
 ----
 
 [source,sql]
@@ -581,7 +916,7 @@ Adding entries to the map generates the following SQL statements:
 ====
 [source,java]
 ----
-include::{sourcedir}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-add-example,indent=0]
+include::{example-dir-collection}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-add-example,indent=0]
 ----
 
 [source,sql]
@@ -619,18 +954,10 @@ Since we want to map all the calls by their associated `java.util.Date`, not by 
 ====
 [source,java]
 ----
-include::{sourcedir}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
+include::{example-dir-collection}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
 ----
 ====
 
-The associated `TimestampEpochType` looks as follows:
-
-----
-include::{sourcedir}/type/TimestampEpochType.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
-----
-
-The `TimestampEpochType` allows us to map a Unix timestamp since epoch to a `java.util.Date`.
-But, without the `@MapKeyType` Hibernate annotation, it would not be possible to customize the `Map` key type.
 
 [[collections-map-key-class]]
 ===== Maps having an interface type as the key
@@ -642,7 +969,7 @@ Considering you have the following `PhoneNumber` interface with an implementatio
 ====
 [source,java]
 ----
-include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-type-mapping-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-type-mapping-example,indent=0]
 ----
 ====
 
@@ -654,7 +981,7 @@ If you want to use the `PhoneNumber` interface as a `java.util.Map` key, then yo
 ====
 [source,java]
 ----
-include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-mapping-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-mapping-example,indent=0]
 ----
 
 [source,sql]
@@ -671,7 +998,7 @@ Hibernate generates the following SQL statements:
 ====
 [source,java]
 ----
-include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-persist-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -688,7 +1015,7 @@ Hibernate generates the following SQL statements:
 ====
 [source,java]
 ----
-include::{sourcedir}/MapKeyClassTest.java[tags=collections-map-key-class-fetch-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-fetch-example,indent=0]
 ----
 
 [source,sql]
@@ -715,7 +1042,7 @@ The `@MapKey` annotation is used to define the entity attribute used as a key of
 ====
 [source,java]
 ----
-include::{sourcedir}/UnidirectionalMapTest.java[tags=collections-map-unidirectional-example,indent=0]
+include::{example-dir-collection}/UnidirectionalMapTest.java[tags=collections-map-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -736,7 +1063,7 @@ In the following example, you can see that `@MapKeyEnumerated` was used so that 
 ====
 [source,java]
 ----
-include::{sourcedir}/BidirectionalMapTest.java[tags=collections-map-bidirectional-example,indent=0]
+include::{example-dir-collection}/BidirectionalMapTest.java[tags=collections-map-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -751,119 +1078,69 @@ include::{extrasdir}/collections-map-bidirectional-example.sql[]
 When discussing arrays, it is important to understand the distinction between SQL array types and Java arrays that are mapped as part of the application's domain model.
 
 Not all databases implement the SQL-99 ARRAY type and, for this reason,
-Hibernate doesn't support native database array types.
+the SQL type used by Hibernate for arrays varies depending on the database support.
 
-Hibernate does support the mapping of arrays in the Java domain model - conceptually the same as mapping a List.
-However, it is important to realize that it is impossible for Hibernate to offer lazy-loading for arrays of entities and, for this reason,
-it is strongly recommended to map a "collection" of entities using a List rather than an array.
+NOTE: It is impossible for Hibernate to offer lazy-loading for arrays of entities and, for this reason,
+it is strongly recommended to map a "collection" of entities using a List or Set rather than an array.
 
-[[collections-array-binary]]
-==== Arrays as binary
+[[collections-array-as-basic]]
+==== [[collections-array-binary]] Arrays as basic value type
 
-By default, Hibernate will choose a BINARY type, as supported by the current `Dialect`.
+By default, Hibernate will choose a type for the array based on `Dialect.getPreferredSqlTypeCodeForArray()`.
+Prior to Hibernate 6.1, the default was to always use the BINARY type, as supported by the current `Dialect`,
+but now, Hibernate will leverage the native array data types if possible.
 
-[[collections-array-binary-example]]
-.Arrays stored as binary
+[[collections-array-binary-example]] To force the BINARY type, the persistent attribute has to be annotated with `@JdbcTypeCode(SqlTypes.VARBINARY)`.
+
+[[collections-array-as-basic-example]]
+.Arrays stored as SQL array
 ====
 [source,java]
 ----
-include::{sourcedir}/ArrayTest.java[tags=collections-array-binary-example,indent=0]
+include::{example-dir-collection}/ArrayTest.java[tags=collections-array-as-basic-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{extrasdir}/collections-array-binary-example.sql[]
+include::{extrasdir}/collections-array-as-basic-example.sql[]
 ----
-====
-
-[NOTE]
-====
-If you want to map arrays such as `String[]` or `int[]` to database-specific array types like PostgreSQL `integer[]` or `text[]`,
-you need to write a custom Hibernate Type.
-
-Check out https://vladmihalcea.com/how-to-map-java-and-sql-arrays-with-jpa-and-hibernate/[this article] for an example of how to write
-such a custom Hibernate Type.
 ====
 
 [[collections-as-basic]]
 ==== Collections as basic value type
 
-Notice how all the previous examples explicitly mark the collection attribute as either `ElementCollection`, `OneToMany` or `ManyToMany`.
-Collections not marked as such require a custom Hibernate `Type` and the collection elements must be stored in a single database column.
+Notice how all the previous examples explicitly mark the collection attribute as either `@ElementCollection`,
+`@OneToMany` or `@ManyToMany`.
 
-This is sometimes beneficial. Consider a use-case such as a `VARCHAR` column that represents a delimited list/set of Strings.
+Attributes of collection or array type without any of those annotations are considered basic types and by
+default mapped like basic arrays as depicted in the <<collections-array-as-basic,previous section>>.
 
-[[collections-comma-delimited-collection-example]]
-.Comma delimited collection
+[[collections-as-basic-example]]
+.Collections stored as SQL array
 ====
 [source,java]
 ----
-include::{sourcedir}/BasicTypeCollectionTest.java[tags=collections-comma-delimited-collection-example,indent=0]
-
-include::{sourcedir}/type/CommaDelimitedStringsJavaTypeDescriptor.java[tags=collections-comma-delimited-collection-example,indent=0]
-
-include::{sourcedir}/type/CommaDelimitedStringsType.java[tags=collections-comma-delimited-collection-example,indent=0]
-----
-====
-
-The developer can use the comma-delimited collection like any other collection we've discussed so far and Hibernate will take care of the type transformation part.
-The collection itself behaves like any other basic value type, as its lifecycle is bound to its owner entity.
-
-[[collections-comma-delimited-collection-lifecycle-example]]
-.Comma delimited collection lifecycle
-====
-[source,java]
-----
-include::{sourcedir}/BasicTypeCollectionTest.java[tags=collections-comma-delimited-collection-lifecycle-example,indent=0]
+include::{example-dir-collection}/CollectionTest.java[tags=collections-as-basic-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{extrasdir}/collections-comma-delimited-collection-lifecycle-example.sql[]
+include::{extrasdir}/collections-array-as-basic-example.sql[]
 ----
 ====
 
-See the Hibernate Integrations Guide for more details on developing custom value type mappings.
+Prior to Hibernate 6.1, it was common to use an <<basic-jpa-convert,AttributeConverter>> to map the elements
+into e.g. a comma separated list which is still a viable option. Just note that it is not required anymore.
 
-[[collections-custom]]
-==== Custom collection types
-
-If you wish to use other collection types than `List`, `Set` or `Map`, like `Queue` for instance,
-you have to use a custom collection type, as illustrated by the following example:
-
-[[collections-custom-collection-mapping-example]]
-.Custom collection mapping example
+[[ex-collections-comma-delimited-list]]
+.Comma delimited collection
 ====
 [source,java]
 ----
-include::{sourcedir}/QueueTest.java[tags=collections-custom-collection-mapping-example,indent=0]
+include::{example-dir-collection}/asbasic/CommaDelimitedStringsConverter.java[tags=ex-csv-converter,indent=0]
 
-include::{sourcedir}/type/QueueType.java[tags=collections-custom-collection-mapping-example,indent=0]
-
-include::{sourcedir}/type/PersistentQueue.java[tags=collections-custom-collection-mapping-example,indent=0]
+include::{example-dir-collection}/asbasic/CommaDelimitedStringsConverterTests.java[tags=ex-csv-converter-model,indent=0]
 ----
 ====
 
-[NOTE]
-====
-The reason why the `Queue` interface is not used for the entity attribute is because Hibernate only allows the following types:
 
-- `java.util.List`
-- `java.util.Set`
-- `java.util.Map`
-- `java.util.SortedSet`
-- `java.util.SortedMap`
-
-However, the custom collection type can still be customized as long as the base type is one of the aforementioned persistent types.
-====
-
-This way, the `Phone` collection can be used as a `java.util.Queue`:
-
-[[collections-custom-collection-example]]
-.Custom collection example
-====
-[source,java]
-----
-include::{sourcedir}/QueueTest.java[tags=collections-custom-collection-example,indent=0]
-----
-====

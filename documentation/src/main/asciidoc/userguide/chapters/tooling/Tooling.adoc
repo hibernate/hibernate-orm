@@ -1,0 +1,25 @@
+[[tooling]]
+== Build Tool Integration
+:root-project-dir: ../../../../../../..
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+
+Hibernate provides build-time services available as plugins for
+
+* <<tooling-gradle,Gradle>>
+* <<tooling-maven,Maven>>
+* <<tooling-ant,Ant>>
+
+These services include
+
+* <<tooling-enhancement,Bytecode enhancement>>
+* <<tooling-modelgen,Static Metamodel generation>>
+* <<tooling-schema,Schema management>>
+
+include::enhancement.adoc[]
+include::modelgen.adoc[]
+include::schema.adoc[]
+
+include::gradle.adoc[]
+include::maven.adoc[]
+include::ant.adoc[]

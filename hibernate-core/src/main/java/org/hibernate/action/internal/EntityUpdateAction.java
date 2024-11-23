@@ -1,58 +1,63 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.TypeHelper;
+
+import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
  * The action for performing entity updates.
  */
 public class EntityUpdateAction extends EntityAction {
+
 	private final Object[] state;
 	private final Object[] previousState;
 	private final Object previousVersion;
 	private final int[] dirtyFields;
 	private final boolean hasDirtyCollection;
 	private final Object rowId;
-	private final Object[] previousNaturalIdValues;
+
+	private final NaturalIdMapping naturalIdMapping;
+	private final Object previousNaturalIdValues;
+
 	private Object nextVersion;
 	private Object cacheEntry;
 	private SoftLock lock;
 
 	/**
 	 * Constructs an EntityUpdateAction
-	 *
-	 * @param id The entity identifier
+	 *  @param id The entity identifier
 	 * @param state The current (extracted) entity state
 	 * @param dirtyProperties The indexes (in reference to state) properties with dirty state
 	 * @param hasDirtyCollection Were any collections dirty?
@@ -65,7 +70,7 @@ public class EntityUpdateAction extends EntityAction {
 	 * @param session The session
 	 */
 	public EntityUpdateAction(
-			final Serializable id,
+			final Object id,
 			final Object[] state,
 			final int[] dirtyProperties,
 			final boolean hasDirtyCollection,
@@ -75,7 +80,7 @@ public class EntityUpdateAction extends EntityAction {
 			final Object instance,
 			final Object rowId,
 			final EntityPersister persister,
-			final SharedSessionContractImplementor session) {
+			final EventSource session) {
 		super( session, id, instance, persister );
 		this.state = state;
 		this.previousState = previousState;
@@ -85,138 +90,159 @@ public class EntityUpdateAction extends EntityAction {
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
 
-		this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, previousState, session, id );
-		session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
-				persister,
-				id,
-				state,
-				previousNaturalIdValues,
-				CachedNaturalIdValueSource.UPDATE
-		);
+		this.naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping == null ) {
+			previousNaturalIdValues = null;
+		}
+		else {
+			previousNaturalIdValues = determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
+			session.getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
+					id,
+					naturalIdMapping.extractNaturalIdFromEntityState( state ),
+					persister,
+					CachedNaturalIdValueSource.UPDATE
+			);
+		}
 	}
 
-	private Object[] determinePreviousNaturalIdValues(
+	private static Object determinePreviousNaturalIdValues(
 			EntityPersister persister,
+			NaturalIdMapping naturalIdMapping,
+			Object id,
 			Object[] previousState,
-			SharedSessionContractImplementor session,
-			Serializable id) {
-		if ( ! persister.hasNaturalIdentifier() ) {
-			return null;
-		}
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		if ( previousState != null ) {
-			return persistenceContext.getNaturalIdHelper().extractNaturalIdValues( previousState, persister );
-		}
-
-		return persistenceContext.getNaturalIdSnapshot( id, persister );
+			SharedSessionContractImplementor session) {
+		return previousState == null
+				? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
+				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
-	public Object[] getState() {
+	protected Object[] getState() {
 		return state;
 	}
 
-	public Object[] getPreviousState() {
+	protected Object[] getPreviousState() {
 		return previousState;
 	}
 
-	public Object getPreviousVersion() {
-		return previousVersion;
-	}
-
-	public Object getNextVersion() {
+	protected Object getNextVersion() {
 		return nextVersion;
 	}
 
-	public void setNextVersion(Object nextVersion) {
-		this.nextVersion = nextVersion;
-	}
-
-	public int[] getDirtyFields() {
+	protected int[] getDirtyFields() {
 		return dirtyFields;
 	}
-
-	public boolean hasDirtyCollection() {
+	protected boolean hasDirtyCollection() {
 		return hasDirtyCollection;
+	}
+
+	protected NaturalIdMapping getNaturalIdMapping() {
+		return naturalIdMapping;
+	}
+
+	protected Object getPreviousNaturalIdValues() {
+		return previousNaturalIdValues;
 	}
 
 	public Object getRowId() {
 		return rowId;
 	}
 
-	public Object[] getPreviousNaturalIdValues() {
-		return previousNaturalIdValues;
-	}
-
-	protected Object getCacheEntry() {
-		return cacheEntry;
+	protected void setLock(SoftLock lock) {
+		this.lock = lock;
 	}
 
 	protected void setCacheEntry(Object cacheEntry) {
 		this.cacheEntry = cacheEntry;
 	}
 
-	protected SoftLock getLock() {
-		return lock;
-	}
-
-	protected void setLock(SoftLock lock) {
-		this.lock = lock;
-	}
-
 	@Override
 	public void execute() throws HibernateException {
-		final Serializable id = getId();
-		final EntityPersister persister = getPersister();
-		final SharedSessionContractImplementor session = getSession();
-		final Object instance = getInstance();
-
-		final boolean veto = preUpdate();
-
-		final SessionFactoryImplementor factory = session.getFactory();
-		Object previousVersion = this.previousVersion;
-		if ( persister.isVersionPropertyGenerated() ) {
-			// we need to grab the version value from the entity, otherwise
-			// we have issues with generated-version entities that may have
-			// multiple actions queued during the same flush
-			previousVersion = persister.getVersion( instance );
-		}
-
-		final Object ck;
-		if ( persister.canWriteToCache() ) {
-			final EntityDataAccess cache = persister.getCacheAccessStrategy();
-			ck = cache.generateCacheKey(
+		if ( !preUpdate() ) {
+			final EntityPersister persister = getPersister();
+			final SharedSessionContractImplementor session = getSession();
+			final Object id = getId();
+			final Object instance = getInstance();
+			final Object previousVersion = getPreviousVersion();
+			final Object ck = lockCacheItem( previousVersion );
+			final GeneratedValues generatedValues = persister.getUpdateCoordinator().update(
+					instance,
 					id,
-					persister,
-					factory,
-					session.getTenantIdentifier()
-			);
-			lock = cache.lockItem( session, ck, previousVersion );
-		}
-		else {
-			ck = null;
-		}
-
-		if ( !veto ) {
-			persister.update(
-					id,
+					rowId,
 					state,
+					previousVersion,
+					previousState,
 					dirtyFields,
 					hasDirtyCollection,
-					previousState,
-					previousVersion,
-					instance,
-					rowId,
 					session
 			);
-		}
+			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
+			if ( entry == null ) {
+				throw new AssertionFailure( "possible non thread safe access to session" );
+			}
+			handleGeneratedProperties( entry, generatedValues );
+			handleDeleted( entry );
+			updateCacheItem( previousVersion, ck, entry );
+			handleNaturalIdResolutions( persister, session, id );
+			postUpdate();
 
-		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
-		if ( entry == null ) {
-			throw new AssertionFailure( "possible nonthreadsafe access to session" );
+			final StatisticsImplementor statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateEntity( getPersister().getEntityName() );
+			}
 		}
+	}
 
-		if ( entry.getStatus()==Status.MANAGED || persister.isVersionPropertyGenerated() ) {
+	protected void handleNaturalIdResolutions(EntityPersister persister, SharedSessionContractImplementor session, Object id) {
+		if ( naturalIdMapping != null ) {
+			session.getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
+					id,
+					naturalIdMapping.extractNaturalIdFromEntityState( state ),
+					previousNaturalIdValues,
+					persister,
+					CachedNaturalIdValueSource.UPDATE
+			);
+		}
+	}
+
+	protected void updateCacheItem(Object previousVersion, Object ck, EntityEntry entry) {
+		final EntityPersister persister = getPersister();
+		if ( persister.canWriteToCache() ) {
+			final SharedSessionContractImplementor session = getSession();
+			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
+				persister.getCacheAccessStrategy().remove( session, ck );
+			}
+			else if ( session.getCacheMode().isPutEnabled() ) {
+				//TODO: inefficient if that cache is just going to ignore the updated state!
+				final CacheEntry ce = persister.buildCacheEntry( getInstance(), state, nextVersion, getSession() );
+				cacheEntry = persister.getCacheEntryStructure().structure( ce );
+				final boolean put = updateCache( persister, previousVersion, ck );
+
+				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							getPersister().getCacheAccessStrategy().getRegion().getName()
+					);
+				}
+			}
+		}
+	}
+
+	private static boolean isCacheInvalidationRequired(
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		// the cache has to be invalidated when CacheMode is equal to GET or IGNORE
+		return persister.isCacheInvalidationRequired()
+			|| session.getCacheMode() == CacheMode.GET
+			|| session.getCacheMode() == CacheMode.IGNORE;
+	}
+
+	private void handleGeneratedProperties(EntityEntry entry, GeneratedValues generatedValues) {
+		final EntityPersister persister = getPersister();
+		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {
+			final SharedSessionContractImplementor session = getSession();
+			final Object instance = getInstance();
+			final Object id = getId();
 			// get the updated snapshot of the entity state by cloning current state;
 			// it is safe to copy in place, since by this time no-one else (should have)
 			// has a reference  to the array
@@ -230,88 +256,121 @@ public class EntityUpdateAction extends EntityAction {
 			if ( persister.hasUpdateGeneratedProperties() ) {
 				// this entity defines property generation, so process those generated
 				// values...
-				persister.processUpdateGeneratedProperties( id, instance, state, session );
-				if ( persister.isVersionPropertyGenerated() ) {
-					nextVersion = Versioning.getVersion( state, persister );
-				}
+				persister.processUpdateGeneratedProperties( id, instance, state, generatedValues, session );
 			}
 			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
 			// update state and the new version (if one).
+			if ( persister.isVersionPropertyGenerated() ) {
+				nextVersion = getVersion( state, persister );
+			}
 			entry.postUpdate( instance, state, nextVersion );
-		}
-
-		final StatisticsImplementor statistics = factory.getStatistics();
-		if ( persister.canWriteToCache() ) {
-			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
-				persister.getCacheAccessStrategy().remove( session, ck);
-			}
-			else if ( session.getCacheMode().isPutEnabled() ) {
-				//TODO: inefficient if that cache is just going to ignore the updated state!
-				final CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
-				cacheEntry = persister.getCacheEntryStructure().structure( ce );
-
-				final boolean put = cacheUpdate( persister, previousVersion, ck );
-				if ( put && statistics.isStatisticsEnabled() ) {
-					statistics.entityCachePut(
-							StatsHelper.INSTANCE.getRootEntityRole( persister ),
-							getPersister().getCacheAccessStrategy().getRegion().getName()
-					);
-				}
-			}
-		}
-
-		session.getPersistenceContextInternal().getNaturalIdHelper().manageSharedNaturalIdCrossReference(
-				persister,
-				id,
-				state,
-				previousNaturalIdValues,
-				CachedNaturalIdValueSource.UPDATE
-		);
-
-		postUpdate();
-
-		if ( statistics.isStatisticsEnabled() && !veto ) {
-			statistics.updateEntity( getPersister().getEntityName() );
+			entry.setMaybeLazySet( null );
 		}
 	}
 
-	protected boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void handleDeleted(EntityEntry entry) {
+		if ( entry.getStatus() == Status.DELETED ) {
+			final EntityMetamodel entityMetamodel = getPersister().getEntityMetamodel();
+			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()
+					&& entityMetamodel.getOptimisticLockStyle().isAllOrDirty();
+			if ( isImpliedOptimisticLocking && entry.getLoadedState() != null ) {
+				// The entity will be deleted and because we are going to create a delete statement
+				// that uses all the state values in the where clause, the entry state needs to be
+				// updated otherwise the statement execution will not delete any row (see HHH-15218).
+				entry.postUpdate( getInstance(), state, nextVersion );
+			}
+		}
+	}
+
+	protected Object getPreviousVersion() {
+		final EntityPersister persister = getPersister();
+		if ( persister.isVersionPropertyGenerated() ) {
+			// we need to grab the version value from the entity, otherwise
+			// we have issues with generated-version entities that may have
+			// multiple actions queued during the same flush
+			return persister.getVersion( getInstance() );
+		}
+		else {
+			return previousVersion;
+		}
+	}
+
+	protected Object lockCacheItem(Object previousVersion) {
+		final EntityPersister persister = getPersister();
+		if ( persister.canWriteToCache() ) {
+			final SharedSessionContractImplementor session = getSession();
+			final EntityDataAccess cache = persister.getCacheAccessStrategy();
+			final Object ck = cache.generateCacheKey(
+					getId(),
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
+			lock = cache.lockItem( session, ck, previousVersion );
+			return ck;
+		}
+		else {
+			return null;
+		}
+	}
+
+	protected boolean updateCache(EntityPersister persister, Object previousVersion, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
+		boolean update = false;
 		try {
 			session.getEventListenerManager().cachePutStart();
-			return persister.getCacheAccessStrategy().update( session, ck, cacheEntry, nextVersion, previousVersion );
+			update = cacheAccessStrategy.update( session, ck, cacheEntry, nextVersion, previousVersion );
+			return update;
 		}
 		finally {
+			eventManager.completeCachePutEvent(
+					cachePutEvent,
+					session,
+					cacheAccessStrategy,
+					getPersister(),
+					update,
+					EventManager.CacheActionDescription.ENTITY_UPDATE
+			);
 			session.getEventListenerManager().cachePutEnd();
 		}
 	}
 
 	protected boolean preUpdate() {
-		boolean veto = false;
-		final EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
+		final EventListenerGroup<PreUpdateEventListener> listenerGroup
+				= getFastSessionServices().eventListenerGroup_PRE_UPDATE;
 		if ( listenerGroup.isEmpty() ) {
+			return false;
+		}
+		else {
+			final PreUpdateEvent event = new PreUpdateEvent(
+					getInstance(),
+					getId(),
+					state,
+					previousState,
+					getPersister(),
+					eventSource()
+			);
+			boolean veto = false;
+			for ( PreUpdateEventListener listener : listenerGroup.listeners() ) {
+				veto |= listener.onPreUpdate( event );
+			}
 			return veto;
 		}
-		final PreUpdateEvent event = new PreUpdateEvent(
-				getInstance(),
-				getId(),
-				state,
-				previousState,
-				getPersister(),
-				eventSource()
-		);
-		for ( PreUpdateEventListener listener : listenerGroup.listeners() ) {
-			veto |= listener.onPreUpdate( event );
-		}
-		return veto;
 	}
 
 	protected void postUpdate() {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostUpdateEvent event = new PostUpdateEvent(
+		getFastSessionServices().eventListenerGroup_POST_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent, PostUpdateEventListener::onPostUpdate );
+	}
+
+	private PostUpdateEvent newPostUpdateEvent() {
+		return new PostUpdateEvent(
 				getInstance(),
 				getId(),
 				state,
@@ -320,55 +379,43 @@ public class EntityUpdateAction extends EntityAction {
 				getPersister(),
 				eventSource()
 		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostUpdate( event );
-		}
 	}
 
 	protected void postCommitUpdate(boolean success) {
-		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
+		getFastSessionServices().eventListenerGroup_POST_COMMIT_UPDATE
+				.fireLazyEventOnEachListener( this::newPostUpdateEvent,
+						success ? PostUpdateEventListener::onPostUpdate : this::onPostCommitFailure );
+	}
+
+	private void onPostCommitFailure(PostUpdateEventListener listener, PostUpdateEvent event) {
+		if ( listener instanceof PostCommitUpdateEventListener ) {
+			((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
 		}
-		final PostUpdateEvent event = new PostUpdateEvent(
-				getInstance(),
-				getId(),
-				state,
-				previousState,
-				dirtyFields,
-				getPersister(),
-				eventSource()
-		);
-		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitUpdateEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostUpdate( event );
-				}
-				else {
-					((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostUpdate( event );
-			}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostUpdate( event );
 		}
 	}
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostUpdateEventListener> group = listenerGroup( EventType.POST_COMMIT_UPDATE );
+		final EventListenerGroup<PostUpdateEventListener> group
+				= getFastSessionServices().eventListenerGroup_POST_COMMIT_UPDATE;
 		for ( PostUpdateEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws CacheException {
+		updateCacheIfNecessary( success, session );
+		postCommitUpdate( success );
+	}
+
+	private void updateCacheIfNecessary(boolean success, SharedSessionContractImplementor session) {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
@@ -380,38 +427,50 @@ public class EntityUpdateAction extends EntityAction {
 					session.getTenantIdentifier()
 
 			);
-
-			if ( success &&
-					cacheEntry != null &&
-					!persister.isCacheInvalidationRequired() &&
-					session.getCacheMode().isPutEnabled() ) {
-				final boolean put = cacheAfterUpdate( cache, ck );
-
-				final StatisticsImplementor statistics = factory.getStatistics();
-				if ( put && statistics.isStatisticsEnabled() ) {
-					statistics.entityCachePut(
-							StatsHelper.INSTANCE.getRootEntityRole( persister ),
-							cache.getRegion().getName()
-					);
-				}
+			if ( cacheUpdateRequired( success, persister, session ) ) {
+				cacheAfterUpdate( cache, ck, session);
 			}
 			else {
 				cache.unlockItem( session, ck, lock );
 			}
 		}
-		postCommitUpdate( success );
 	}
 
-	protected boolean cacheAfterUpdate(EntityDataAccess cache, Object ck) {
-		final SharedSessionContractImplementor session = getSession();
-		SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+	private boolean cacheUpdateRequired(boolean success, EntityPersister persister, SharedSessionContractImplementor session) {
+		return success
+			&& cacheEntry != null
+			&& !persister.isCacheInvalidationRequired()
+			&& session.getCacheMode().isPutEnabled();
+	}
+
+	protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
+		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		boolean put = false;
 		try {
 			eventListenerManager.cachePutStart();
-			return cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
+			put = cache.afterUpdate( session, ck, cacheEntry, nextVersion, previousVersion, lock );
 		}
 		finally {
+			eventManager.completeCachePutEvent(
+					cachePutEvent,
+					session,
+					cache,
+					getPersister(),
+					put,
+					EventManager.CacheActionDescription.ENTITY_AFTER_UPDATE
+			);
+			final StatisticsImplementor statistics = session.getFactory().getStatistics();
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.entityCachePut(
+						StatsHelper.getRootEntityRole( getPersister() ),
+						cache.getRegion().getName()
+				);
+			}
 			eventListenerManager.cachePutEnd();
 		}
+
 	}
 
 }

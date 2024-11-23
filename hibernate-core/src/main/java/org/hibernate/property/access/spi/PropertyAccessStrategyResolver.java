@@ -1,33 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
 
-import org.hibernate.EntityMode;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.service.Service;
 
 /**
- * Contract for resolving the PropertyAccessStrategy to use.
- * <p/>
- * todo : moving forward I'd prefer this not be a service, but instead a strategy on the MetadataBuildingContext or MetadataBuildingOptions
+ * Contract for resolving the {@link PropertyAccessStrategy} to use.
  *
  * @author Steve Ebersole
  */
+//TODO: moving forward I'd prefer this not be a service, but instead a
+//      strategy on the MetadataBuildingContext or MetadataBuildingOptions
 public interface PropertyAccessStrategyResolver extends Service {
 	/**
 	 * Resolve the PropertyAccessStrategy to use
 	 *
 	 * @param containerClass The java class of the entity
 	 * @param explicitAccessStrategyName The access strategy name explicitly specified, if any.
-	 * @param entityMode The entity mode in effect for the property, used to interpret different default strategies.
+	 * @param representationMode The entity mode in effect for the property, used to interpret different default strategies.
 	 *
 	 * @return The resolved PropertyAccessStrategy
 	 */
 	PropertyAccessStrategy resolvePropertyAccessStrategy(
-			Class containerClass,
+			Class<?> containerClass,
 			String explicitAccessStrategyName,
-			EntityMode entityMode);
+			RepresentationMode representationMode);
 }

@@ -1,6 +1,9 @@
 [[events]]
-== Interceptors and events
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/events
+== Interceptors and Events
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-event: {core-project-dir}/src/test/java/org/hibernate/orm/test/events
+:example-dir-event-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/events
 :extrasdir: extras
 
 It is useful for the application to react to certain events that occur inside Hibernate.
@@ -17,15 +20,10 @@ The following example shows an `Interceptor` implementation that automatically l
 
 [[events-interceptors-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-example]
+include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-example]
 ----
-====
-
-[NOTE]
-====
-You can either implement `Interceptor` directly or extend the `org.hibernate.EmptyInterceptor` base class.
 ====
 
 An Interceptor can be either `Session`-scoped or `SessionFactory`-scoped.
@@ -34,9 +32,9 @@ A Session-scoped interceptor is specified when a session is opened.
 
 [[events-interceptors-session-scope-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-scope-example]
+include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-scope-example]
 ----
 ====
 
@@ -47,9 +45,9 @@ Ensure that you do not store session-specific states since multiple sessions wil
 
 [[events-interceptors-session-factory-scope-example]]
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/InterceptorTest.java[tags=events-interceptors-session-factory-scope-example]
+include::{example-dir-event}/InterceptorTest.java[tags=events-interceptors-session-factory-scope-example]
 ----
 ====
 
@@ -79,9 +77,14 @@ Here is an example of a custom load event listener:
 [[events-interceptors-load-listener-example]]
 .Custom `LoadListener` example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-example]
+include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part1]
+----
+
+[source, java, indent=0]
+----
+include::{example-dir-event}/ListenerTest.java[tags=events-interceptors-load-listener-example-part2]
 ----
 ====
 
@@ -97,33 +100,11 @@ Or, the `Interceptor#onLoad()` is called by the `DefaultPreLoadEventListener`.
 When doing this, you should probably extend the default listeners because otherwise, you'd have to take care of all the low-level entity state transition logic.
 For example, if you replace the `DefaultPreLoadEventListener` with your own implementation, then, only if you call the `Interceptor#onLoad()` method explicitly, you can mix the custom load event listener with a custom Hibernate interceptor.
 
-[[events-declarative-security]]
-=== Hibernate declarative security
-
-Usually, declarative security in Hibernate applications is managed in a session facade layer.
-Hibernate allows certain actions to be authorized via JACC and JAAS.
-This is an optional functionality that is built on top of the event architecture.
-
-First, you must configure the appropriate event listeners, to enable the use of JACC authorization.
-Again, see <<chapters/bootstrap/Bootstrap.adoc#bootstrap-event-listener-registration,Event Listener Registration>> for the details.
-
-Below is an example of an appropriate `org.hibernate.integrator.spi.Integrator` implementation for this purpose.
-
-[[events-declarative-security-jacc-example]]
-.JACC listener registration example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/ListenerTest.java[tags=events-declarative-security-jacc-example]
-----
-====
-
-You must also decide how to configure your JACC provider. Consult your JACC provider documentation.
 
 [[events-jpa-callbacks]]
-=== JPA Callbacks
+=== Jakarta Persistence Callbacks
 
-JPA also defines a more limited set of callbacks through annotations.
+Jakarta Persistence also defines a more limited set of callbacks through annotations.
 
 .Callback annotations
 [cols=",",options="header",]
@@ -144,14 +125,14 @@ There are two available approaches defined for specifying callback handling:
 * The second is to use a separate entity listener class.
 An entity listener is a stateless class with a no-arg constructor.
 The callback annotations are placed on a method of this class instead of the entity class.
-The entity listener class is then associated with the entity using the `javax.persistence.EntityListeners` annotation
+The entity listener class is then associated with the entity using the `jakarta.persistence.EntityListeners` annotation
 
 [[events-jpa-callbacks-example]]
-.Example of specifying JPA callbacks
+.Example of specifying Jakarta Persistence callbacks
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/ListenerTest.java[tags=events-jpa-callbacks-example]
+include::{example-dir-event}/ListenerTest.java[tags=events-jpa-callbacks-example]
 ----
 ====
 
@@ -168,12 +149,12 @@ If the callback method does throw a `RuntimeException`, then the current transac
 A callback method must not invoke `EntityManager` or `Query` methods!
 
 It is possible that multiple callback methods are defined for a particular lifecycle event.
-When that is the case, the defined order of execution is well defined by the JPA spec (specifically section 3.5.4):
+When that is the case, the defined order of execution is well defined by the Jakarta Persistence spec (specifically section 3.5.4):
 
-* Any default listeners associated with the entity are invoked first, in the order they were specified in the XML. See the `javax.persistence.ExcludeDefaultListeners` annotation.
+* Any default listeners associated with the entity are invoked first, in the order they were specified in the XML. See the `jakarta.persistence.ExcludeDefaultListeners` annotation.
 * Next, entity listener class callbacks associated with the entity hierarchy are invoked, in the order they are defined in the `EntityListeners`.
 If multiple classes in the entity hierarchy define entity listeners, the listeners defined for a superclass are invoked before the listeners defined for its subclasses.
-See the ``javax.persistence.ExcludeSuperclassListener``'s annotation.
+See the ``jakarta.persistence.ExcludeSuperclassListener``'s annotation.
 * Lastly, callback methods defined on the entity hierarchy are invoked.
 If a callback type is annotated on both an entity and one or more of its superclasses without method overriding, both would be called, the most general superclass first.
 An entity class is also allowed to override a callback method defined in a superclass in which case the super callback would not get invoked; the overriding method would get invoked provided it is annotated.
@@ -181,33 +162,33 @@ An entity class is also allowed to override a callback method defined in a super
 [[events-default-listener]]
 === Default entity listeners
 
-The JPA specification allows you to define a default entity listener which is going to be applied for every entity in that particular system.
+The Jakarta Persistence specification allows you to define a default entity listener which is going to be applied for every entity in that particular system.
 Default entity listeners can only be defined in XML mapping files.
 
 [[events-default-listener-mapping-example]]
 .Default event listener mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DefaultEntityListener.java[tags=events-default-listener-mapping-example]
+include::{example-dir-event}/DefaultEntityListener.java[tags=events-default-listener-mapping-example]
 ----
 
 [source, XML, indent=0]
 ----
-include::{sourcedir}/DefaultEntityListener-orm.xml[tags=events-default-listener-mapping-example]
+include::{example-dir-event-resources}/DefaultEntityListener-orm.xml[tags=events-default-listener-mapping-example]
 ----
 ====
 
 Considering that all entities extend the `BaseEntity` class:
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/BaseEntity.java[tags=events-default-listener-mapping-example]
+include::{example-dir-event}/BaseEntity.java[tags=events-default-listener-mapping-example]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener-mapping-example]
+include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-mapping-example]
 ----
 
 When persisting a `Person` or `Book` entity, the `createdOn` is going to be set by the `onPersist` method of the `DefaultEntityListener`.
@@ -215,9 +196,9 @@ When persisting a `Person` or `Book` entity, the `createdOn` is going to be set 
 [[events-default-listener-persist-example]]
 .Default event listener persist event
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener-persist-example]
+include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -231,9 +212,9 @@ When updating a `Person` or `Book` entity, the `updatedOn` is going to be set by
 [[events-default-listener-update-example]]
 .Default event listener update event
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-default-listener-update-example]
+include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-default-listener-update-example]
 ----
 
 [source, SQL, indent=0]
@@ -248,7 +229,7 @@ include::{extrasdir}/events-default-listener-update-example.sql[]
 If you already registered a default entity listener, but you don't want to apply it to a particular entity,
 you can use the
 {jpaJavadocUrlPrefix}ExcludeDefaultListeners.html[`@ExcludeDefaultListeners`] and
-{jpaJavadocUrlPrefix}ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`] JPA annotations.
+{jpaJavadocUrlPrefix}ExcludeSuperclassListeners.html[`@ExcludeSuperclassListeners`] Jakarta Persistence annotations.
 
 `@ExcludeDefaultListeners` instructs the current class to ignore the default entity listeners for the current entity
 while `@ExcludeSuperclassListeners` is used to ignore the default entity listeners propagated to the `BaseEntity` super-class.
@@ -256,9 +237,9 @@ while `@ExcludeSuperclassListeners` is used to ignore the default entity listene
 [[events-exclude-default-listener-mapping-example]]
 .Exclude default event listener mapping
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-mapping-example]
+include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-mapping-example]
 ----
 ====
 
@@ -269,9 +250,9 @@ because the `Publisher` entity was marked with the `@ExcludeDefaultListeners` an
 [[events-exclude-default-listener-persist-example]]
 .Excluding default event listener events
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
-include::{sourcedir}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-persist-example]
+include::{example-dir-event}/DefaultEntityListenerTest.java[tags=events-exclude-default-listener-persist-example]
 ----
 
 [source, SQL, indent=0]

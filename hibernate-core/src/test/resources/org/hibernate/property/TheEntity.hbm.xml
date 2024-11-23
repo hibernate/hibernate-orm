@@ -6,7 +6,7 @@
   ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
   -->
 <hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
-    <class name="org.hibernate.property.GetAndIsVariantGetterTest$TheEntity">
+    <class name="org.hibernate.orm.test.property.GetAndIsVariantGetterTest$TheEntity">
         <id name="id"/>
     </class>
 </hibernate-mapping>

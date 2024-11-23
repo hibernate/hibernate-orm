@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +17,11 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
+
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
+ * @author Chris Cranford
  */
 public class EntityInstantiator {
 	private final EnversService enversService;
@@ -58,10 +57,7 @@ public class EntityInstantiator {
 
 		// First mapping the primary key
 		final IdMapper idMapper = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
-		final Map originalId = (Map) versionsEntity.get(
-				enversService.getAuditEntitiesConfiguration()
-						.getOriginalIdPropName()
-		);
+		final Map originalId = (Map) versionsEntity.get( enversService.getConfig().getOriginalIdPropertyName() );
 
 		// Fixes HHH-4751 issue (@IdClass with @ManyToOne relation mapping inside)
 		// Note that identifiers are always audited
@@ -77,10 +73,11 @@ public class EntityInstantiator {
 
 		// If it is not in the cache, creating a new entity instance
 		Object ret = versionsReader.getSessionImplementor()
-					.getFactory()
-					.getEntityPersister( entityName )
-					.getEntityTuplizer()
-					.instantiate();
+				.getFactory()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName )
+				.getRepresentationStrategy().getInstantiator()
+				.instantiate( versionsReader.getSessionImplementor().getSessionFactory() );
 
 		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
 		// relation is present (which is eagerly loaded).
@@ -102,16 +99,15 @@ public class EntityInstantiator {
 		return ret;
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	private void replaceNonAuditIdProxies(Map versionsEntity, Number revision) {
-		final Map originalId = (Map) versionsEntity.get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
+		final Map originalId = (Map) versionsEntity.get( enversService.getConfig().getOriginalIdPropertyName() );
 		for ( Object key : originalId.keySet() ) {
 			final Object value = originalId.get( key );
-			if ( value instanceof HibernateProxy ) {
-				final HibernateProxy hibernateProxy = (HibernateProxy) value;
-				final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
-				final String entityName = initializer.getEntityName();
-				final Serializable entityId = initializer.getIdentifier();
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+			if ( lazyInitializer != null ) {
+				final String entityName = lazyInitializer.getEntityName();
+				final Object entityId = lazyInitializer.getInternalIdentifier();
 				if ( enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
 					final String entityClassName = enversService.getEntitiesConfigurations().get( entityName ).getEntityClassName();
 					final Class entityClass = ReflectionTools.loadClass(
@@ -125,7 +121,7 @@ public class EntityInstantiator {
 							revision,
 							RevisionType.DEL.equals(
 									versionsEntity.get(
-											enversService.getAuditEntitiesConfiguration().getRevisionTypePropName()
+											enversService.getConfig().getRevisionTypePropertyName()
 									)
 							),
 							enversService
@@ -134,8 +130,8 @@ public class EntityInstantiator {
 							key,
 							versionsReader.getSessionImplementor()
 									.getFactory()
-									.getMetamodel()
-									.entityPersister( entityName )
+									.getMappingMetamodel().
+									getEntityDescriptor( entityName )
 									.createProxy( entityId, delegate )
 					);
 				}
@@ -143,7 +139,7 @@ public class EntityInstantiator {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	public void addInstancesFromVersionsEntities(
 			String entityName,
 			Collection addTo,

@@ -1,102 +1,118 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.Internal;
+import org.hibernate.boot.internal.ForeignKeyNameSource;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.collections.JoinedList;
 
 /**
  * @author Gavin King
  */
-@SuppressWarnings("unchecked")
 public class DenormalizedTable extends Table {
 
 	private final Table includedTable;
+	private List<Column> reorderedColumns;
 
-	public DenormalizedTable(Table includedTable) {
-		this.includedTable = includedTable;
-		includedTable.setHasDenormalizedTables();
-	}
-
-	public DenormalizedTable(Namespace namespace, Identifier physicalTableName, boolean isAbstract, Table includedTable) {
-		super( namespace, physicalTableName, isAbstract );
+	public DenormalizedTable(
+			String contributor,
+			Namespace namespace,
+			Identifier physicalTableName,
+			boolean isAbstract,
+			Table includedTable) {
+		super( contributor, namespace, physicalTableName, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
 	public DenormalizedTable(
+			String contributor,
 			Namespace namespace,
 			Identifier physicalTableName,
 			String subselectFragment,
 			boolean isAbstract,
 			Table includedTable) {
-		super( namespace, physicalTableName, subselectFragment, isAbstract );
+		super( contributor, namespace, physicalTableName, subselectFragment, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
-	public DenormalizedTable(Namespace namespace, String subselect, boolean isAbstract, Table includedTable) {
-		super( namespace, subselect, isAbstract );
+	public DenormalizedTable(
+			String contributor,
+			Namespace namespace,
+			String subselect,
+			boolean isAbstract,
+			Table includedTable) {
+		super( contributor, namespace, subselect, isAbstract );
 		this.includedTable = includedTable;
 		includedTable.setHasDenormalizedTables();
 	}
 
 	@Override
-	public void createForeignKeys() {
-		includedTable.createForeignKeys();
-		Iterator iter = includedTable.getForeignKeyIterator();
-		while ( iter.hasNext() ) {
-			ForeignKey fk = (ForeignKey) iter.next();
+	public void createForeignKeys(MetadataBuildingContext context) {
+		includedTable.createForeignKeys( context );
+		for ( ForeignKey foreignKey : includedTable.getForeignKeys().values() ) {
+			final PersistentClass referencedClass =
+					foreignKey.resolveReferencedClass( context.getMetadataCollector() );
+			// the ForeignKeys created in the first pass did not have their referenced table initialized
+			if ( foreignKey.getReferencedTable() == null ) {
+				foreignKey.setReferencedTable( referencedClass.getTable() );
+			}
+
+			final ForeignKey denormalizedForeignKey = createDenormalizedForeignKey( foreignKey );
 			createForeignKey(
-					Constraint.generateName(
-							fk.generatedConstraintNamePrefix(),
-							this,
-							fk.getColumns()
-					),
-					fk.getColumns(),
-					fk.getReferencedEntityName(),
-					fk.getKeyDefinition(),
-					fk.getReferencedColumns()
+					context.getBuildingOptions()
+							.getImplicitNamingStrategy()
+							.determineForeignKeyName( new ForeignKeyNameSource( denormalizedForeignKey, this, context ) )
+							.render( context.getMetadataCollector().getDatabase().getDialect() ),
+					foreignKey.getColumns(),
+					foreignKey.getReferencedEntityName(),
+					foreignKey.getKeyDefinition(),
+					foreignKey.getOptions(),
+					foreignKey.getReferencedColumns()
 			);
 		}
+	}
+
+	private ForeignKey createDenormalizedForeignKey(ForeignKey includedTableFk) {
+		final ForeignKey denormalizedForeignKey = new ForeignKey(this);
+		denormalizedForeignKey.setReferencedEntityName( includedTableFk.getReferencedEntityName() );
+		denormalizedForeignKey.setKeyDefinition( includedTableFk.getKeyDefinition() );
+		denormalizedForeignKey.setOptions( includedTableFk.getOptions() );
+		denormalizedForeignKey.setReferencedTable( includedTableFk.getReferencedTable() );
+		denormalizedForeignKey.addReferencedColumns( includedTableFk.getReferencedColumns() );
+		for ( Column keyColumn : includedTableFk.getColumns() ) {
+			denormalizedForeignKey.addColumn( keyColumn );
+		}
+		return denormalizedForeignKey;
 	}
 
 	@Override
 	public Column getColumn(Column column) {
 		Column superColumn = super.getColumn( column );
-		if ( superColumn != null ) {
-			return superColumn;
-		}
-		else {
-			return includedTable.getColumn( column );
-		}
+		return superColumn != null ? superColumn : includedTable.getColumn(column);
 	}
 
 	public Column getColumn(Identifier name) {
 		Column superColumn = super.getColumn( name );
-		if ( superColumn != null ) {
-			return superColumn;
-		}
-		else {
-			return includedTable.getColumn( name );
-		}
+		return superColumn != null ? superColumn : includedTable.getColumn(name);
 	}
 
 	@Override
-	public Iterator getColumnIterator() {
-		return new JoinedIterator(
-				includedTable.getColumnIterator(),
-				super.getColumnIterator()
-		);
+	public Collection<Column> getColumns() {
+		if ( reorderedColumns != null ) {
+			return reorderedColumns;
+		}
+		return new JoinedList<>( new ArrayList<>( includedTable.getColumns() ), new ArrayList<>( super.getColumns() ) );
 	}
 
 	@Override
@@ -109,37 +125,17 @@ public class DenormalizedTable extends Table {
 		return includedTable.getPrimaryKey();
 	}
 
-	@Override
-	public Iterator getUniqueKeyIterator() {
-		if ( !includedTable.isPhysicalTable() ) {
-			Iterator iter = includedTable.getUniqueKeyIterator();
-			while ( iter.hasNext() ) {
-				UniqueKey uk = (UniqueKey) iter.next();
-				createUniqueKey( uk.getColumns() );
-			}
-		}
-		return getUniqueKeys().values().iterator();
-	}
-
-	@Override
-	public Iterator getIndexIterator() {
-		List indexes = new ArrayList();
-		Iterator iter = includedTable.getIndexIterator();
-		while ( iter.hasNext() ) {
-			Index parentIndex = (Index) iter.next();
-			Index index = new Index();
-			index.setName( getName() + parentIndex.getName() );
-			index.setTable( this );
-			index.addColumns( parentIndex.getColumnIterator() );
-			indexes.add( index );
-		}
-		return new JoinedIterator(
-				indexes.iterator(),
-				super.getIndexIterator()
-		);
-	}
-
 	public Table getIncludedTable() {
 		return includedTable;
+	}
+
+	@Internal
+	@Override
+	public void reorderColumns(List<Column> columns) {
+		assert includedTable.getColumns().size() + super.getColumns().size() == columns.size()
+				&& columns.containsAll( includedTable.getColumns() )
+				&& columns.containsAll( super.getColumns() )
+				&& reorderedColumns == null;
+		this.reorderedColumns = columns;
 	}
 }

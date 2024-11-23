@@ -1,12 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.revisioninfo;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Session;
@@ -27,23 +28,23 @@ public class RevisionInfoQueryCreator {
 
 	private final String revisionInfoEntityName;
 	private final String revisionInfoIdName;
-	private final String revisionInfoTimestampName;
-	private final boolean timestampAsDate;
+	private final RevisionTimestampValueResolver timestampValueResolver;
 
 	public RevisionInfoQueryCreator(
-			String revisionInfoEntityName, String revisionInfoIdName,
-			String revisionInfoTimestampName, boolean timestampAsDate) {
+			String revisionInfoEntityName,
+			String revisionInfoIdName,
+			RevisionTimestampValueResolver timestampValueResolver) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
 		this.revisionInfoIdName = revisionInfoIdName;
-		this.revisionInfoTimestampName = revisionInfoTimestampName;
-		this.timestampAsDate = timestampAsDate;
+		this.timestampValueResolver = timestampValueResolver;
 	}
 
 	public Query<?> getRevisionDateQuery(Session session, Number revision) {
 		return session.createQuery(
 				String.format(
+						Locale.ENGLISH,
 						REVISION_DATE_QUERY,
-						revisionInfoTimestampName,
+						timestampValueResolver.getName(),
 						revisionInfoEntityName,
 						revisionInfoIdName
 				)
@@ -53,17 +54,42 @@ public class RevisionInfoQueryCreator {
 	public Query<?> getRevisionNumberForDateQuery(Session session, Date date) {
 		return session.createQuery(
 				String.format(
+						Locale.ENGLISH,
 						REVISION_NUMBER_FOR_DATE_QUERY,
 						revisionInfoIdName,
 						revisionInfoEntityName,
-						revisionInfoTimestampName
+						timestampValueResolver.getName()
 				)
-		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampAsDate ? date : date.getTime() );
+		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampValueResolver.resolveByValue( date ) );
+	}
+
+	public Query<?> getRevisionNumberForDateQuery(Session session, LocalDateTime localDateTime) {
+		return session.createQuery(
+				String.format(
+						Locale.ENGLISH,
+						REVISION_NUMBER_FOR_DATE_QUERY,
+						revisionInfoIdName,
+						revisionInfoEntityName,
+						timestampValueResolver.getName()
+				)
+		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampValueResolver.resolveByValue( localDateTime ) );
+	}
+
+	public Query<?> getRevisionNumberForDateQuery(Session session, Instant instant) {
+		return session.createQuery(
+				String.format(
+						Locale.ENGLISH,
+						REVISION_NUMBER_FOR_DATE_QUERY,
+						revisionInfoIdName,
+						revisionInfoEntityName,
+						timestampValueResolver.getName()
+				)
+		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampValueResolver.resolveByValue( instant ) );
 	}
 
 	public Query<?> getRevisionsQuery(Session session, Set<Number> revisions) {
 		return session.createQuery(
-				String.format( REVISIONS_QUERY, revisionInfoEntityName, revisionInfoIdName )
+				String.format( Locale.ENGLISH, REVISIONS_QUERY, revisionInfoEntityName, revisionInfoIdName )
 		).setParameter( REVISIONS_QUERY_PARAMETER, revisions );
 	}
 }

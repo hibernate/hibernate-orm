@@ -1,0 +1,28 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.annotations.embeddables;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+/**
+ * @author Chris Pheby
+ */
+public class DollarValue implements Serializable {
+
+	private static final long serialVersionUID = -416056386419355705L;
+
+	private BigDecimal amount;
+
+	public DollarValue() {};
+
+	public DollarValue(BigDecimal amount) {
+		this.amount = amount;
+	}
+
+	public BigDecimal getAmount() {
+		return amount;
+	}
+}

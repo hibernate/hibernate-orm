@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import static net.bytebuddy.matcher.ElementMatchers.anyOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -16,9 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.Embedded;
-
-import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
@@ -27,8 +23,10 @@ import org.hibernate.internal.CoreMessageLogger;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
+import net.bytebuddy.asm.ModifierAdjustment;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.modifier.ModifierContributor;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -41,13 +39,47 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher.Junction;
+import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
+import net.bytebuddy.utility.OpenedClassReader;
 
 final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
+	private static final ModifierContributor.ForField REMOVE_PRIVATE_FINAL_MODIFIER = new ModifierContributor.ForField() {
+		@Override
+		public int getMask() {
+			return EMPTY_MASK; // Do not add any modifier
+		}
+
+		@Override
+		public int getRange() {
+			return Opcodes.ACC_FINAL | Opcodes.ACC_PRIVATE; // Remove the "final" and "private" modifier
+		}
+
+		@Override
+		public boolean isDefault() {
+			return false;
+		}
+	};
+	private static final ModifierContributor.ForMethod REMOVE_PRIVATE_MODIFIER = new ModifierContributor.ForMethod() {
+		@Override
+		public int getMask() {
+			return EMPTY_MASK; // Do not add any modifier
+		}
+
+		@Override
+		public int getRange() {
+			return Opcodes.ACC_PRIVATE; // Remove the "private" modifier
+		}
+
+		@Override
+		public boolean isDefault() {
+			return false;
+		}
+	};
 
 	private final TypeDescription managedCtClass;
 
@@ -68,11 +100,21 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		this.enhancedFields = enhancedFields;
 	}
 
+	public AnnotatedFieldDescription[] getEnhancedFields() {
+		return enhancedFields;
+	}
+
 	public static PersistentAttributeTransformer collectPersistentFields(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
 			TypePool classPool) {
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
+		// HHH-10646 Add fields inherited from @MappedSuperclass
+		// HHH-10981 There is no need to do it for @MappedSuperclass
+		// HHH-15505 This needs to be done first so that fields with the same name in the mappedsuperclass and entity are handled correctly
+		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			persistentFieldList.addAll( collectInheritPersistentFields( managedCtClass, enhancementContext ) );
+		}
 		for ( FieldDescription ctField : managedCtClass.getDeclaredFields() ) {
 			// skip static fields and skip fields added by enhancement and  outer reference in inner classes
 			if ( ctField.getName().startsWith( "$$_hibernate_" ) || "this$0".equals( ctField.getName() ) ) {
@@ -83,14 +125,15 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				persistentFieldList.add( annotatedField );
 			}
 		}
-		// HHH-10646 Add fields inherited from @MappedSuperclass
-		// HHH-10981 There is no need to do it for @MappedSuperclass
-		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
-			persistentFieldList.addAll( collectInheritPersistentFields( managedCtClass, enhancementContext ) );
-		}
 
 		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
-		log.debugf( "Persistent fields for entity %s: %s", managedCtClass.getName(), Arrays.toString( orderedFields ) );
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Persistent fields for entity %s: %s",
+					managedCtClass.getName(),
+					Arrays.toString( orderedFields )
+			);
+		}
 		return new PersistentAttributeTransformer( managedCtClass, enhancementContext, classPool, orderedFields );
 	}
 
@@ -102,7 +145,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 		TypeDefinition managedCtSuperclass = managedCtClass.getSuperClass();
 
-		if ( enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
+		// If managedCtSuperclass is null, managedCtClass can be either interface or module-info.
+		// Interfaces are already filtered-out, and module-info does not have any fields to enhance
+		// so we can safely return empty list.
+		if ( managedCtSuperclass == null || enhancementContext.isEntityClass( managedCtSuperclass.asErasure() ) ) {
 			return Collections.emptyList();
 		}
 		else if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass.asErasure() ) ) {
@@ -138,7 +184,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		return new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-				if ( isEnhanced( owner, name, desc ) ) {
+				AnnotatedFieldDescription enhancedField = getEnhancedField( owner, name, desc );
+				if ( enhancedField != null ) {
 					switch ( opcode ) {
 						case Opcodes.GETFIELD:
 							methodVisitor.visitMethodInsn(
@@ -150,6 +197,11 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							);
 							return;
 						case Opcodes.PUTFIELD:
+							if ( enhancedField.getFieldDescription().isFinal() ) {
+								// Final fields will only be written to from the constructor,
+								// so there's no point trying to replace final field writes with a method call.
+								break;
+							}
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
@@ -165,42 +217,70 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		};
 	}
 
-	private boolean isEnhanced(String owner, String name, String desc) {
+	private AnnotatedFieldDescription getEnhancedField(String owner, String name, String desc) {
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
 			if ( enhancedField.getName().equals( name )
 					&& enhancedField.getDescriptor().equals( desc )
 					&& enhancedField.getDeclaringType().asErasure().getInternalName().equals( owner ) ) {
-				return true;
+				return enhancedField;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder) {
 		boolean compositeOwner = false;
 
+		// Remove the private modifier from the constructor, which allows to create a better InstantiationOptimizer
+		builder = builder.visit(
+				new ModifierAdjustment().withConstructorModifiers(
+						ElementMatchers.isDefaultConstructor(),
+						REMOVE_PRIVATE_MODIFIER
+				)
+		);
+
 		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, this ) );
+		// Remove the final modifier from all enhanced fields, because:
+		// 1. We sometimes need to write to final fields when they are lazy.
+		// 2. Those fields are already written to by Hibernate ORM through reflection anyway.
+		// 3. The compiler already makes sure that final fields are not written to from the user's source code.
+		List<FieldDescription.InDefinedShape> enhancedFieldsAsDefined = new ArrayList<>();
+		for ( AnnotatedFieldDescription f : enhancedFields ) {
+			enhancedFieldsAsDefined.add( f.asDefined() );
+		}
+		// Replace the private modifier with package-private for all enhanced fields,
+		// because our AccessOptimizer needs to get/set fields and can't use field reader/writer,
+		// as reader/writer methods have different semantics
+		builder = builder.visit(
+				new ModifierAdjustment().withFieldModifiers(
+						anyOf( enhancedFieldsAsDefined ),
+						REMOVE_PRIVATE_FINAL_MODIFIER
+				)
+		);
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
 			builder = builder
 					.defineMethod(
 							EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + enhancedField.getName(),
-							enhancedField.getType().asErasure(),
+							enhancedField.asDefined().getType().asErasure(),
 							Visibility.PUBLIC
 					)
-					.intercept( fieldReader( enhancedField )
-					)
-					.defineMethod(
-							EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
-							TypeDescription.VOID,
-							Visibility.PUBLIC
-					)
-					.withParameters( enhancedField.getType().asErasure() )
-					.intercept( fieldWriter( enhancedField ) );
+					.intercept( fieldReader( enhancedField ) );
+			// Final fields will only be written to from the constructor,
+			// so there's no point trying to replace final field writes with a method call.
+			if ( !enhancedField.getFieldDescription().isFinal() ) {
+				builder = builder
+						.defineMethod(
+								EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
+								TypeDescription.VOID,
+								Visibility.PUBLIC
+						)
+						.withParameters( enhancedField.asDefined().getType().asErasure() )
+						.intercept( fieldWriter( enhancedField ) );
+			}
 
 			if ( !compositeOwner
 					&& !enhancementContext.isMappedSuperclassClass( managedCtClass )
-					&& enhancedField.hasAnnotation( Embedded.class )
-					&& enhancementContext.isCompositeClass( enhancedField.getType().asErasure() )
+					&& enhancementContext.isCompositeField( enhancedField )
 					&& enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 				compositeOwner = true;
 			}
@@ -293,10 +373,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
 					EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( persistentField.getType().asErasure().getDescriptor() ) ),
+					Type.getMethodDescriptor( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ) ),
 					false
 			);
-			methodVisitor.visitInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.IRETURN ) );
+			methodVisitor.visitInsn( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ).getOpcode( Opcodes.IRETURN ) );
 			return new Size( persistentField.getType().getStackSize().getSize(), instrumentedMethod.getStackSize() );
 		}
 	}
@@ -319,12 +399,12 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				MethodDescription instrumentedMethod
 		) {
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			methodVisitor.visitVarInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
+			methodVisitor.visitVarInsn( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
 					EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.getType().asErasure().getDescriptor() ) ),
+					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ) ),
 					false
 			);
 			methodVisitor.visitInsn( Opcodes.RETURN );

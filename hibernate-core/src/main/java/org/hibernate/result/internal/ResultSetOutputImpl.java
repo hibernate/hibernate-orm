@@ -1,16 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.result.internal;
 
-import java.sql.ResultSet;
 import java.util.List;
 import java.util.function.Supplier;
-
-import javax.enterprise.inject.spi.Producer;
 
 import org.hibernate.result.ResultSetOutput;
 
@@ -20,13 +15,13 @@ import org.hibernate.result.ResultSetOutput;
  * @author Steve Ebersole
  */
 class ResultSetOutputImpl implements ResultSetOutput {
-	private final Supplier<List> resultSetSupplier;
+	private final Supplier<List<?>> resultSetSupplier;
 
-	public ResultSetOutputImpl(List results) {
+	public ResultSetOutputImpl(List<?> results) {
 		this.resultSetSupplier = () -> results;
 	}
 
-	public ResultSetOutputImpl(Supplier<List> resultSetSupplier) {
+	public ResultSetOutputImpl(Supplier<List<?>> resultSetSupplier) {
 		this.resultSetSupplier = resultSetSupplier;
 	}
 
@@ -36,14 +31,13 @@ class ResultSetOutputImpl implements ResultSetOutput {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public List getResultList() {
+	public List<?> getResultList() {
 		return resultSetSupplier.get();
 	}
 
 	@Override
 	public Object getSingleResult() {
-		final List results = getResultList();
+		final List<?> results = getResultList();
 		if ( results == null || results.isEmpty() ) {
 			return null;
 		}

@@ -1,18 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.context.internal;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.transaction.Synchronization;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.Transaction;
+import jakarta.transaction.TransactionManager;
 
-import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.context.spi.AbstractCurrentSessionContext;
@@ -21,23 +20,24 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.internal.CoreMessageLogger;
 
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link org.hibernate.context.spi.CurrentSessionContext} which scopes the notion
  * of a current session to a JTA transaction.  Because JTA gives us a nice tie-in to clean up after
- * ourselves, this implementation will generate Sessions as needed provided a JTA transaction is in
+ * ourselves, this implementation will generate Sessions as needed, provided a JTA transaction is in
  * effect.  If a session is not already associated with the current JTA transaction at the time
- * {@link #currentSession()} is called, a new session will be opened and it will be associated with that
- * JTA transaction.
- *
+ * {@link #currentSession()} is called, a new session is opened and is associated with the JTA
+ * transaction.
+ * <p>
  * Note that the sessions returned from this method are automatically configured with both the
- * {@link org.hibernate.cfg.Environment#FLUSH_BEFORE_COMPLETION auto-flush} and
- * {@link org.hibernate.cfg.Environment#AUTO_CLOSE_SESSION auto-close} attributes set to true, meaning
- * that the Session will be automatically flushed and closed as part of the lifecycle for the JTA
- * transaction to which it is associated.  Additionally, it will also be configured to aggressively
+ * properties {@value org.hibernate.cfg.Environment#FLUSH_BEFORE_COMPLETION} and
+ * {@value org.hibernate.cfg.Environment#AUTO_CLOSE_SESSION} set to true,
+ * meaning that the session will be automatically flushed and closed as part of the lifecycle of the
+ * JTA transaction with which it is associated.  Additionally, it will be configured to aggressively
  * release JDBC connections after each statement is executed.  These settings are governed by the
- * {@link #isAutoFlushEnabled()}, {@link #isAutoCloseEnabled()}, and {@link #getConnectionReleaseMode()}
+ * {@link #isAutoFlushEnabled()}, {@link #isAutoCloseEnabled()}, and {@link #getConnectionHandlingMode()}
  * methods; these are provided (along with the {@link #buildOrObtainSession()} method) for easier
  * subclassing for custom JTA-based session tracking logic (like maybe long-session semantics).
  *
@@ -45,11 +45,12 @@ import org.jboss.logging.Logger;
  */
 public class JTASessionContext extends AbstractCurrentSessionContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JTASessionContext.class.getName()
 	);
 
-	private transient Map<Object, Session> currentSessionMap = new ConcurrentHashMap<Object, Session>();
+	private transient final Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructs a JTASessionContext
@@ -62,7 +63,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 
 	@Override
 	public Session currentSession() throws HibernateException {
-		final JtaPlatform jtaPlatform = factory().getServiceRegistry().getService( JtaPlatform.class );
+		final JtaPlatform jtaPlatform = factory().getServiceRegistry().requireService( JtaPlatform.class );
 		final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
 		if ( transactionManager == null ) {
 			throw new HibernateException( "No TransactionManagerLookup specified" );
@@ -102,8 +103,8 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 				try {
 					currentSession.close();
 				}
-				catch ( Throwable ignore ) {
-					LOG.debug( "Unable to release generated current-session on failed synch registration", ignore );
+				catch ( Throwable e ) {
+					LOG.debug( "Unable to release generated current-session on failed synchronization registration", e );
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}
@@ -118,7 +119,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	}
 
 	/**
-	 * Builds a {@link org.hibernate.context.internal.JTASessionContext.CleanupSync} capable of cleaning up the the current session map as an after transaction
+	 * Builds a {@link CleanupSync} capable of cleaning up the current session map as an after transaction
 	 * callback.
 	 *
 	 * @param transactionIdentifier The transaction identifier under which the current session is registered.
@@ -138,15 +139,15 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	protected Session buildOrObtainSession() {
 		return baseSessionBuilder()
 				.autoClose( isAutoCloseEnabled() )
-				.connectionReleaseMode( getConnectionReleaseMode() )
-				.flushBeforeCompletion( isAutoFlushEnabled() )
+				.connectionHandlingMode( getConnectionHandlingMode() )
+				.flushMode( isAutoFlushEnabled() ? FlushMode.AUTO : FlushMode.MANUAL )
 				.openSession();
 	}
 
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be closed by transaction completion.
+	 * @return Whether the session should be closed by transaction completion.
 	 */
 	protected boolean isAutoCloseEnabled() {
 		return true;
@@ -155,7 +156,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be flushed prior transaction completion.
+	 * @return Whether the session should be flushed prior transaction completion.
 	 */
 	protected boolean isAutoFlushEnabled() {
 		return true;
@@ -166,16 +167,16 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	 *
 	 * @return The connection release mode for any built sessions.
 	 */
-	protected ConnectionReleaseMode getConnectionReleaseMode() {
-		return ConnectionReleaseMode.AFTER_STATEMENT;
+	protected PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 	}
 
 	/**
 	 * JTA transaction sync used for cleanup of the internal session map.
 	 */
 	protected static class CleanupSync implements Synchronization {
-		private Object transactionIdentifier;
-		private JTASessionContext context;
+		private final Object transactionIdentifier;
+		private final JTASessionContext context;
 
 		public CleanupSync(Object transactionIdentifier, JTASessionContext context) {
 			this.transactionIdentifier = transactionIdentifier;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers;
 
@@ -18,7 +16,6 @@ import java.lang.annotation.Target;
  * the many side. Then, Envers won't use a join table to audit this relation, but will store changes as in a normal
  * bi-directional relation.
  * </p>
- * <p/>
  * <p>
  * This annotation is <b>experimental</b> and may change in future releases.
  * </p>
@@ -36,9 +33,8 @@ public @interface AuditMappedBy {
 
 	/**
 	 * Name of the property in the related entity which maps to the position column. Should be specified only
-	 * for indexed collection, when @{@link org.hibernate.annotations.IndexColumn} or
-	 * {@link javax.persistence.OrderColumn} is used on the collection.  The property should be mapped with
-	 * {@code @Column(insertable=false, updatable=false)}.
+	 * for indexed collection, when {@link jakarta.persistence.OrderColumn} is used on the collection.  The
+	 * property should be mapped with {@code @Column(insertable=false, updatable=false)}.
 	 */
 	String positionMappedBy() default "";
 }

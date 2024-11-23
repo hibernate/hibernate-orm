@@ -9,8 +9,8 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <joined-subclass
-            name="org.hibernate.query.hhh12076.EwtAssessmentExtension"
-            extends="org.hibernate.query.hhh12076.SettlementExtension"
+            name="org.hibernate.orm.test.query.hhh12076.EwtAssessmentExtension"
+            extends="org.hibernate.orm.test.query.hhh12076.SettlementExtension"
             table="claim_settlement_ext_i3_ewt"
             lazy="false">
 

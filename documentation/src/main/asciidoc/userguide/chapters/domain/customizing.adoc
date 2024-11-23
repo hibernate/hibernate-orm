@@ -1,0 +1,35 @@
+[[domain-customizing]]
+=== Customizing the domain model
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-attributebinder: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
+:extrasdir: extras
+
+For cases where Hibernate does not provide a built-in way to configure the domain
+model mapping based on requirements, it provides a very broad and flexible
+way to adjust the mapping model through its "boot-time model" (defined in
+the `org.hibernate.mapping` package) using its `@AttributeBinderType` meta
+annotation and corresponding `AttributeBinder` contract.
+
+An example:
+
+[[domain-customizing-example]]
+.AttributeBinder example
+====
+[source,java]
+----
+include::{example-dir-attributebinder}/YesNo.java[tag=attribute-binder-example, indent=0]
+
+include::{example-dir-attributebinder}/YesNoBinder.java[tag=attribute-binder-example, indent=0]
+----
+====
+
+The important thing to take away here is that both `@YesNo` and `YesNoBinder` are custom, user-written
+code.  Hibernate has no inherent understanding of what a `@YesNo` does or is.  It only understands that
+it has the `@AttributeBinderType` meta-annotation and knows how to apply that through the corresponding
+`YesNoBinder`.
+
+Notice also that `@AttributeBinderType` provides a type-safe way to perform configuration because
+the `AttributeBinder` (`YesNoBinder`) is handed the custom annotation (`@YesNo`) to grab its configured
+attributes.  `@YesNo` does not provide any attributes, but it easily could.  Whatever  `YesNoBinder`
+supports.

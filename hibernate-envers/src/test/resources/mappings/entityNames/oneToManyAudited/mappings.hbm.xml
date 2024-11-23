@@ -8,7 +8,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-	<class name="org.hibernate.envers.test.integration.entityNames.oneToManyAudited.Person" entity-name="Personaje">
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.oneToManyAudited.Person" entity-name="Personaje">
 		
 		<id name="id" column="ID_PERSON" type="long" >
 			<generator class="native" />
@@ -21,7 +21,7 @@
 			
 	</class>
 	
-	<class name="org.hibernate.envers.test.integration.entityNames.oneToManyAudited.Car" >
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.oneToManyAudited.Car" >
 
 		<id name="id" column="ID_CAR" type="long">
 			<generator class="native" />
@@ -29,14 +29,14 @@
 
 		<property name="number" type="int" column="int" not-null="true" />
 
-		<bag name="owners" cascade="save-update">
+		<bag name="owners" cascade="persist, merge">
 			<key column="ID_GARAGE" not-null="true" update="false" />
 			<one-to-many entity-name="Personaje"/>
 		</bag>
 		
 	</class>	
 	
-<!--	<class name="org.hibernate.envers.test.integration.entityNames.oneToManyAudited.Garage" >-->
+<!--	<class name="org.hibernate.orm.test.envers.integration.entityNames.oneToManyAudited.Garage" >-->
 <!---->
 <!--		<id name="id" column="ID_GARAGE" type="long">-->
 <!--			<generator class="native" />-->
@@ -46,7 +46,7 @@
 <!---->
 <!--		<bag name="cars" cascade="save-update">-->
 <!--			<key column="ID_GARAGE" not-null="true" update="false" />-->
-<!--			<one-to-many class="org.hibernate.envers.test.integration.entityNames.oneToManyAudited.Car" />-->
+<!--			<one-to-many class="org.hibernate.orm.test.envers.integration.entityNames.oneToManyAudited.Car" />-->
 <!--		</bag>-->
 <!--		-->
 <!--	</class>		-->

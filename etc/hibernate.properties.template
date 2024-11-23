@@ -1,16 +1,3 @@
-######################
-### Query Language ###
-######################
-
-## define query language constants / function names
-
-hibernate.query.substitutions true 1, false 0, yes 'Y', no 'N'
-
-
-## Query translator factory class
-
-hibernate.query.factory_class @QUERY_TRANSLATOR_FACTORY@
-
 #################
 ### Platforms ###
 #################
@@ -67,7 +54,6 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.url jdbc:postgresql:template1
 #hibernate.connection.username pg
 #hibernate.connection.password
-#hibernate.query.substitutions yes 'Y', no 'N'
 
 
 ## DB2
@@ -80,7 +66,7 @@ hibernate.connection.url @DB_URL@
 
 ## TimesTen (not supported yet)
 
-#hibernate.dialect org.hibernate.dialect.TimesTenDialect
+#hibernate.dialect org.hibernate.community.dialect.TimesTenDialect
 #hibernate.connection.driver_class com.timesten.jdbc.TimesTenDriver
 #hibernate.connection.url jdbc:timesten:direct:test
 #hibernate.connection.username
@@ -88,7 +74,7 @@ hibernate.connection.url @DB_URL@
 
 ## DB2/400
 
-#hibernate.dialect org.hibernate.dialect.DB2400Dialect
+#hibernate.dialect org.hibernate.dialect.DB2iDialect
 #hibernate.connection.username user
 #hibernate.connection.password password
 
@@ -103,7 +89,7 @@ hibernate.connection.url @DB_URL@
 
 ## Derby (Not supported!)
 
-#hibernate.dialect org.hibernate.dialect.DerbyDialect
+#hibernate.dialect org.hibernate.community.dialect.DerbyDialect
 #hibernate.connection.driver_class org.apache.derby.jdbc.EmbeddedDriver
 #hibernate.connection.username
 #hibernate.connection.password
@@ -119,24 +105,13 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.url jdbc:sybase:Tds:co3061835-a:5000/tempdb
 
 
-## Mckoi SQL
+## SAP MaxDB
 
-#hibernate.dialect org.hibernate.dialect.MckoiDialect
-#hibernate.connection.driver_class com.mckoi.JDBCDriver
-#hibernate.connection.url jdbc:mckoi:///
-#hibernate.connection.url jdbc:mckoi:local://C:/mckoi1.00/db.conf
-#hibernate.connection.username admin
-#hibernate.connection.password nimda
-
-
-## SAP DB
-
-#hibernate.dialect org.hibernate.dialect.SAPDBDialect
+#hibernate.dialect org.hibernate.community.dialect.MaxDBDialect
 #hibernate.connection.driver_class com.sap.dbtech.jdbc.DriverSapDB
 #hibernate.connection.url jdbc:sapdb://localhost/TST
 #hibernate.connection.username TEST
 #hibernate.connection.password TEST
-#hibernate.query.substitutions yes 'Y', no 'N'
 
 
 ## MS SQL Server
@@ -165,37 +140,10 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.driver_class net.sourceforge.jtds.jdbc.Driver
 #hibernate.connection.url jdbc:jtds:sqlserver://1E1/test
 
-## Interbase
-
-#hibernate.dialect org.hibernate.dialect.InterbaseDialect
-#hibernate.connection.username sysdba
-#hibernate.connection.password masterkey
-
-## DO NOT specify hibernate.connection.sqlDialect
-
-## InterClient
-
-#hibernate.connection.driver_class interbase.interclient.Driver
-#hibernate.connection.url jdbc:interbase://localhost:3060/C:/firebird/test.gdb
-
-## Pure Java
-
-#hibernate.connection.driver_class org.firebirdsql.jdbc.FBDriver
-#hibernate.connection.url jdbc:firebirdsql:localhost/3050:/firebird/test.gdb
-
-
-## Pointbase
-
-#hibernate.dialect org.hibernate.dialect.PointbaseDialect
-#hibernate.connection.driver_class com.pointbase.jdbc.jdbcUniversalDriver
-#hibernate.connection.url jdbc:pointbase:embedded:sample
-#hibernate.connection.username PBPUBLIC
-#hibernate.connection.password PBPUBLIC
-
 
 ## Ingres
 
-#hibernate.dialect org.hibernate.dialect.IngresDialect 
+#hibernate.dialect org.hibernate.community.dialect.IngresDialect
 #hibernate.connection.driver_class ca.edbc.jdbc.EdbcDriver 
 #hibernate.connection.url jdbc:edbc://localhost:II7/database 
 #hibernate.connection.username user 
@@ -204,7 +152,7 @@ hibernate.connection.url @DB_URL@
 
 ## Mimer SQL
 
-#hibernate.dialect org.hibernate.dialect.MimerSQLDialect
+#hibernate.dialect org.hibernate.community.dialect.MimerSQLDialect
 #hibernate.connection.driver_class com.mimer.jdbc.Driver
 #hibernate.connection.url jdbc:mimer:multi1
 #hibernate.connection.username hibernate
@@ -213,7 +161,7 @@ hibernate.connection.url @DB_URL@
 
 ## HANA
 
-#hibernate.dialect org.hibernate.dialect.HANAColumnStoreDialect
+#hibernate.dialect org.hibernate.dialect.HANADialect
 #hibernate.connection.driver_class com.sap.db.jdbc.Driver
 #hibernate.connection.url jdbc:sap://localhost:30015
 #hibernate.connection.username HIBERNATE_TEST
@@ -366,11 +314,6 @@ hibernate.default_batch_fetch_size 8
 #hibernate.use_identifier_rollback true
 
 
-## enable bytecode reflection optimizer (disabled by default)
-
-#hibernate.bytecode.use_reflection_optimizer true
-
-
 
 #####################
 ### JDBC Settings ###
@@ -406,11 +349,6 @@ hibernate.jdbc.batch_versioned_data true
 #hibernate.jdbc.use_scrollable_resultset true
 
 
-## use streams when writing binary types to / from JDBC
-
-hibernate.jdbc.use_streams_for_binary true
-
-
 ## use JDBC 3 PreparedStatement.getGeneratedKeys() to get the identifier of an inserted row
 
 #hibernate.jdbc.use_get_generated_keys false
@@ -419,11 +357,6 @@ hibernate.jdbc.use_streams_for_binary true
 ## choose a custom JDBC batcher
 
 # hibernate.jdbc.factory_class
-
-
-## choose a custom SQL exception converter
-
-#hibernate.jdbc.sql_exception_converter
 
 
 

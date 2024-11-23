@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -26,9 +24,9 @@ public interface ExceptionConverter {
 	RuntimeException convertCommitException(RuntimeException e);
 
 	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA specification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
+	 * Converts a Hibernate-specific exception into a JPA-specified exception;
+	 * note that the JPA specification makes use of exceptions outside its
+	 * exception hierarchy, though they are all runtime exceptions.
 	 *
 	 * @param e The Hibernate exception.
 	 * @param lockOptions The lock options in effect at the time of exception (can be null)
@@ -38,9 +36,9 @@ public interface ExceptionConverter {
 	RuntimeException convert(HibernateException e, LockOptions lockOptions);
 
 	/**
-	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA specification makes use
-	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
-	 * <p/>
+	 * Converts a Hibernate-specific exception into a JPA-specified exception;
+	 * note that the JPA specification makes use of exceptions outside its
+	 * exception hierarchy, though they are all runtime exceptions.
 	 *
 	 * @param e The Hibernate exception.
 	 *

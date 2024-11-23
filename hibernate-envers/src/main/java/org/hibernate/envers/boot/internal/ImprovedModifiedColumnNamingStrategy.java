@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.internal;
 
+import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -16,8 +14,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
-
-import org.dom4j.Element;
 
 /**
  * A {@link ModifiedColumnNamingStrategy} that adds modified columns with the following rules:
@@ -34,9 +30,9 @@ import org.dom4j.Element;
 public class ImprovedModifiedColumnNamingStrategy extends LegacyModifiedColumnNamingStrategy {
 	@Override
 	public void addModifiedColumns(
-			GlobalConfiguration globalCfg,
+			Configuration configuration,
 			Value value,
-			Element parent,
+			AttributeContainer mapping,
 			PropertyAuditingData propertyAuditingData) {
 
 		boolean basicType = value.getType() instanceof BasicType;
@@ -44,24 +40,18 @@ public class ImprovedModifiedColumnNamingStrategy extends LegacyModifiedColumnNa
 
 		if ( basicType || toOneType ) {
 			if ( value.getColumnSpan() == 1 ) {
-				Selectable selectable = value.getColumnIterator().next();
+				Selectable selectable = value.getSelectables().get( 0 );
 				if ( selectable instanceof Column ) {
 					// This should not be applied for formulas
 					final String columnName;
 					if ( !propertyAuditingData.isModifiedFlagNameExplicitlySpecified() ) {
-						columnName = ( (Column) selectable ).getName() + globalCfg.getModifiedFlagSuffix();
+						columnName = ( (Column) selectable ).getName() + configuration.getModifiedFlagsSuffix();
 					}
 					else {
 						columnName = propertyAuditingData.getExplicitModifiedFlagName();
 					}
 
-					MetadataTools.addModifiedFlagPropertyWithColumn(
-							parent,
-							propertyAuditingData.getName(),
-							globalCfg.getModifiedFlagSuffix(),
-							propertyAuditingData.getModifiedFlagName(),
-							columnName
-					);
+					mapping.addAttribute( createModifiedFlagAttribute( propertyAuditingData, configuration, columnName ) );
 
 					return;
 				}
@@ -69,6 +59,6 @@ public class ImprovedModifiedColumnNamingStrategy extends LegacyModifiedColumnNa
 		}
 
 		// Default legacy behavior
-		super.addModifiedColumns( globalCfg, value, parent, propertyAuditingData );
+		super.addModifiedColumns( configuration, value, mapping, propertyAuditingData );
 	}
 }

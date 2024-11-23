@@ -1,25 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.predicate;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.spatial.SpatialFunction;
 
-import org.geolatte.geom.Envelope;
 import org.geolatte.geom.Geometry;
+
+import static org.hibernate.spatial.CommonSpatialFunction.ST_CONTAINS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_CROSSES;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_DISJOINT;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_EQUALS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_INTERSECTS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_OVERLAPS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_TOUCHES;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_WITHIN;
 
 /**
  * {@link JTSSpatialPredicates}, but for geolatte-geom.
  *
  * @author Daniel Shuy
+ * @deprecated Use {@link org.hibernate.spatial.criteria.GeolatteSpatialCriteriaBuilder GeolatteSpatialCriteriaBuilder} instead
  */
+@Deprecated(since = "6.2")
+@SuppressWarnings("rawtypes")
 public class GeolatteSpatialPredicates {
 
 	protected GeolatteSpatialPredicates() {
@@ -41,8 +51,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.equals.toString(), boolean.class,
-						geometry1, geometry2
+				criteriaBuilder.function( ST_EQUALS.name(), boolean.class, geometry1, geometry2
 				)
 		);
 	}
@@ -61,8 +70,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate eq(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return eq( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return eq( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -82,9 +91,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.within.toString(), boolean.class,
-						geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_WITHIN.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -102,8 +109,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate within(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return within( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return within( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -123,8 +130,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.contains.toString(), boolean.class,
-						geometry1, geometry2
+				criteriaBuilder.function( ST_CONTAINS.name(), boolean.class, geometry1, geometry2
 				)
 		);
 	}
@@ -143,8 +149,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate contains(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return contains( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return contains( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -164,8 +170,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.crosses.toString(), boolean.class,
-						geometry1, geometry2
+				criteriaBuilder.function( ST_CROSSES.name(), boolean.class, geometry1, geometry2
 				)
 		);
 	}
@@ -184,8 +189,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate crosses(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return crosses( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return crosses( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -205,9 +210,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.disjoint.toString(), boolean.class,
-						geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_DISJOINT.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -225,9 +228,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate disjoint(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return disjoint( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
-		);
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return disjoint( cb, geometry1, cb.value( geometry2 ) );
 	}
 
 	/**
@@ -246,9 +248,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.intersects.toString(), boolean.class,
-						geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_INTERSECTS.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -266,8 +266,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate intersects(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return intersects( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return intersects( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -287,9 +287,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.overlaps.toString(), boolean.class,
-						geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_OVERLAPS.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -307,8 +305,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate overlaps(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return overlaps( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return overlaps( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -328,9 +326,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.touches.toString(), boolean.class,
-						geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_TOUCHES.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -348,8 +344,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate touches(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return touches( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return touches( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -362,50 +358,56 @@ public class GeolatteSpatialPredicates {
 	 *
 	 * @return bounding box overlap predicate
 	 *
-	 * @see GeolatteFilterPredicate
-	 * @see JTSSpatialPredicates#filter(CriteriaBuilder, Expression, Expression)
 	 */
 	public static Predicate filter(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Expression<? extends Geometry> geometry2) {
-		return new GeolatteFilterPredicate( criteriaBuilder, geometry1, geometry2 );
+		return booleanExpressionToPredicate(
+				criteriaBuilder,
+				criteriaBuilder.function( SpatialFunction.filter.toString(), boolean.class, geometry1, geometry2 )
+		);
 	}
 
-	/**
-	 * Create a predicate for testing the arguments for bounding box overlap constraint.
-	 *
-	 * @param criteriaBuilder CriteriaBuilder
-	 * @param geometry1 geometry expression
-	 * @param geometry2 geometry value whose bounding box to use in the comparison
-	 *
-	 * @return bounding box overlap predicate
-	 *
-	 * @see GeolatteFilterPredicate
-	 * @see JTSSpatialPredicates#filter(CriteriaBuilder, Expression, org.locationtech.jts.geom.Geometry)
-	 */
-	public static Predicate filter(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
-			Geometry geometry2) {
-		return new GeolatteFilterPredicate( criteriaBuilder, geometry1, geometry2 );
-	}
-
-	/**
-	 * Create a predicate for testing the arguments for bounding box overlap constraint.
-	 *
-	 * @param criteriaBuilder CriteriaBuilder
-	 * @param geometry geometry expression
-	 * @param envelope envelope or bounding box to use in the comparison
-	 *
-	 * @return bounding box overlap predicate
-	 *
-	 * @see GeolatteFilterPredicate
-	 * @see JTSSpatialPredicates#filterByPolygon(CriteriaBuilder, Expression, org.locationtech.jts.geom.Envelope, int)
-	 */
-	public static Predicate filterByPolygon(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
-			Envelope envelope) {
-		return new GeolatteFilterPredicate( criteriaBuilder, geometry, envelope );
-	}
+//	/**
+//	 * Create a predicate for testing the arguments for bounding box overlap constraint.
+//	 *
+//	 * @param criteriaBuilder CriteriaBuilder
+//	 * @param geometry1 geometry expression
+//	 * @param geometry2 geometry value whose bounding box to use in the comparison
+//	 *
+//	 * @return bounding box overlap predicate
+//	 *
+//	 * @see GeolatteFilterPredicate
+//	 * @see JTSSpatialPredicates#filter(CriteriaBuilder, Expression, org.locationtech.jts.geom.Geometry)
+//	 */
+//	public static Predicate filter(
+//			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
+//			Geometry geometry2) {
+//		return booleanExpressionToPredicate(
+//				criteriaBuilder,
+//				criteriaBuilder.function( SpatialFunction.filter.toString(), Geometry.class,
+//										  geometry1, geometry2
+//				)
+//		);
+//	}
+//
+//	/**
+//	 * Create a predicate for testing the arguments for bounding box overlap constraint.
+//	 *
+//	 * @param criteriaBuilder CriteriaBuilder
+//	 * @param geometry geometry expression
+//	 * @param envelope envelope or bounding box to use in the comparison
+//	 *
+//	 * @return bounding box overlap predicate
+//	 *
+//	 * @see GeolatteFilterPredicate
+//	 * @see JTSSpatialPredicates#filterByPolygon(CriteriaBuilder, Expression, org.locationtech.jts.geom.Envelope, int)
+//	 */
+//	public static Predicate filterByPolygon(
+//			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
+//			Envelope envelope) {
+//		return new GeolatteFilterPredicate( criteriaBuilder, geometry, envelope );
+//	}
 
 	/**
 	 * Create a predicate for testing the arguments for "distance within" constraint.
@@ -424,8 +426,12 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2, Expression<Double> distance) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.dwithin.toString(), boolean.class,
-						geometry1, geometry2, distance
+				criteriaBuilder.function(
+						SpatialFunction.dwithin.toString(),
+						boolean.class,
+						geometry1,
+						geometry2,
+						distance
 				)
 		);
 	}
@@ -445,8 +451,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2, Expression<Double> distance) {
-		return distanceWithin( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 ), distance
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return distanceWithin( cb, geometry1, cb.value( geometry2 ), distance
 		);
 	}
 
@@ -465,8 +471,12 @@ public class GeolatteSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2, double distance) {
-		return distanceWithin( criteriaBuilder, geometry1,
-				criteriaBuilder.literal( geometry2 ), criteriaBuilder.literal( distance )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return distanceWithin(
+				cb,
+				geometry1,
+				cb.value( geometry2 ),
+				cb.value( distance )
 		);
 	}
 
@@ -485,8 +495,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Expression<? extends Geometry> geometry2, double distance) {
-		return distanceWithin( criteriaBuilder, geometry1, geometry2,
-				criteriaBuilder.literal( distance )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return distanceWithin( cb, geometry1, geometry2, cb.value( distance )
 		);
 	}
 
@@ -524,9 +534,8 @@ public class GeolatteSpatialPredicates {
 	public static Predicate havingSRID(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			int srid) {
-		return havingSRID( criteriaBuilder, geometry,
-				criteriaBuilder.literal( srid )
-		);
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return havingSRID( cb, geometry, cb.value( srid ) );
 	}
 
 	/**
@@ -542,9 +551,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate isEmpty(CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.isempty.toString(), boolean.class,
-						geometry
-				)
+				criteriaBuilder.function( SpatialFunction.isempty.toString(), boolean.class, geometry )
 		);
 	}
 

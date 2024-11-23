@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
@@ -22,21 +20,23 @@ public enum EntityIdentifierNature {
 
 	/**
 	 * What Hibernate used to term an "embedded composite identifier", which is not to be confused with the JPA
-	 * term embedded.  Resolved as a tuple of basic type values and mapped over multiple singular attributes.
-	 * Specifically a composite identifier where there is no single attribute representing the composite value.
-	 * Equivalent of:<ul>
+	 * term "embedded". Resolved as a tuple of basic type values and mapped over multiple singular attributes.
+	 * More precisely, a composite identifier where there is no single attribute representing the composite value.
+	 * <p>
+	 * Equivalent to:
+	 * <ul>
 	 *     <li>
-	 *         a {@code <composite-id/>} mapping without a specified {@code name} XML-attribute (which would name
-	 *         the single identifier attribute
+	 *         a {@code <composite-id/>} mapping <em>without</em> a specified {@code name} XML-attribute
+	 *         (which would name the single identifier attribute, if it were specified), or
 	 *     </li>
 	 *     <li>
-	 *         multiple {@code @Id} annotations
+	 *         multiple {@code @Id} annotations.
 	 *     </li>
 	 * </ul>
+	 * <p>
+	 * May or may not have a related "lookup identifier class" as indicated by an {@code @IdClass} annotation.
 	 *
-	 * NOTE : May or may not have a related "lookup identifier class" as indicated by a {@code @IdClass} annotation.
-	 *
-	 * @see javax.persistence.IdClass
+	 * @see jakarta.persistence.IdClass
 	 */
 	NON_AGGREGATED_COMPOSITE,
 
@@ -52,7 +52,7 @@ public enum EntityIdentifierNature {
 	 *     </li>
 	 * </ul>
 	 *
-	 * @see javax.persistence.EmbeddedId
+	 * @see jakarta.persistence.EmbeddedId
 	 */
 	AGGREGATED_COMPOSITE
 }

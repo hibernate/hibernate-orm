@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +22,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 import org.jboss.logging.Logger;
@@ -127,7 +125,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, EntityDataAccess> accessMap = new HashMap<>( entityCaching.size() );
+		final Map<NavigableRole, EntityDataAccess> accessMap = CollectionHelper.mapOfSize( entityCaching.size() );
 		for ( EntityDataCachingConfig entityAccessConfig : entityCaching ) {
 			accessMap.put(
 					entityAccessConfig.getNavigableRole(),
@@ -144,7 +142,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, NaturalIdDataAccess> accessMap = new HashMap<>( naturalIdCaching.size() );
+		final Map<NavigableRole, NaturalIdDataAccess> accessMap = CollectionHelper.mapOfSize( naturalIdCaching.size() );
 		for ( NaturalIdDataCachingConfig naturalIdAccessConfig : naturalIdCaching ) {
 			accessMap.put(
 					naturalIdAccessConfig.getNavigableRole(),
@@ -162,7 +160,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, CollectionDataAccess> accessMap = new HashMap<>( collectionCaching.size() );
+		final Map<NavigableRole, CollectionDataAccess> accessMap = CollectionHelper.mapOfSize( collectionCaching.size() );
 		for ( CollectionDataCachingConfig cachingConfig : collectionCaching ) {
 			accessMap.put(
 					cachingConfig.getNavigableRole(),
@@ -202,19 +200,19 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	protected void releaseDataAccess(EntityDataAccess cacheAccess) {
-		if ( Destructible.class.isInstance( cacheAccess ) ) {
+		if ( cacheAccess instanceof Destructible ) {
 			( (Destructible) cacheAccess ).destroy();
 		}
 	}
 
 	protected void releaseDataAccess(NaturalIdDataAccess cacheAccess) {
-		if ( Destructible.class.isInstance( cacheAccess ) ) {
+		if ( cacheAccess instanceof Destructible ) {
 			( (Destructible) cacheAccess ).destroy();
 		}
 	}
 
 	protected void releaseDataAccess(CollectionDataAccess cacheAccess) {
-		if ( Destructible.class.isInstance( cacheAccess ) ) {
+		if ( cacheAccess instanceof Destructible ) {
 			( (Destructible) cacheAccess ).destroy();
 		}
 	}

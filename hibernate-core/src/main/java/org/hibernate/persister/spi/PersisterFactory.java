@@ -1,17 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.spi;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -28,17 +26,13 @@ public interface PersisterFactory extends Service {
 	 * @param entityBinding The mapping information describing the entity
 	 * @param entityCacheAccessStrategy The cache access strategy for the entity region
 	 * @param naturalIdCacheAccessStrategy The cache access strategy for the entity's natural-id cross-ref region
-	 * @param creationContext Access to additional information needed to create an EntityPersister
-	 *
-	 * @return An appropriate entity persister instance.
-	 *
-	 * @throws HibernateException Indicates a problem building the persister.
+	 * @param creationContext Access to additional information needed to create the EntityPersister
 	 */
 	EntityPersister createEntityPersister(
 			PersistentClass entityBinding,
 			EntityDataAccess entityCacheAccessStrategy,
 			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			PersisterCreationContext creationContext) throws HibernateException;
+			RuntimeModelCreationContext creationContext);
 
 	/**
 	 * Create a collection persister instance.
@@ -46,14 +40,9 @@ public interface PersisterFactory extends Service {
 	 * @param collectionBinding The mapping information describing the collection
 	 * @param cacheAccessStrategy The cache access strategy for the collection region
 	 * @param creationContext Access to additional information needed to create an EntityPersister
-	 *
-	 * @return An appropriate collection persister instance.
-	 *
-	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws HibernateException;
-
+			RuntimeModelCreationContext creationContext);
 }

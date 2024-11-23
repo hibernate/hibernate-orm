@@ -1,0 +1,27 @@
+[[tooling-enhancement]]
+=== Bytecode Enhancement
+
+Hibernate performs bytecode enhancement through its `org.hibernate.bytecode.enhance.spi.Enhancer`
+contract.  These build time tools provide a way to incorporate configuration and execution of
+the enhancer into a build.
+
+See <<BytecodeEnhancement>> for discussion of the capabilities of an enhanced model.
+
+[NOTE]
+====
+At the moment, only annotated classes are supported for enhancement.
+====
+
+
+[[tooling-enhancement-runtime]]
+==== Runtime Bytecode Enhancement
+
+Hibernate can also perform run-time bytecode enhancement when used in Jakarta EE compliant
+containers through `jakarta.persistence.spi.ClassTransformer`.  See the documentation of
+your container for any additional details.  Run-time enhancement is controlled through
+3 true/false settings (all of which default to false):
+
+`hibernate.enhancer.enableDirtyTracking`:: Whether to enhance the model for dirty-tracking. This setting is deprecated for removal without a replacement.
+`hibernate.enhancer.enableLazyInitialization`:: Whether to enhance the model for lazy loading at the attribute level.  This allows
+even basic types to be fetched lazily.  It also allows definition of fetch groups (`LazyGroup`). This setting is deprecated for removal without a replacement.
+`hibernate.enhancer.enableAssociationManagement`:: Whether to automatically synchronize a bidirectional association when only one side is changed.

@@ -1,32 +1,34 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
+
+import org.hibernate.Length;
 
 import java.io.Serializable;
 
 /**
- * Models size restrictions/requirements on a column's datatype.
- * <p/>
- * IMPL NOTE: since we do not necessarily know the datatype up front, and therefore do not necessarily know
- * whether length or precision/scale sizing is needed, we simply account for both here.  Additionally LOB
- * definitions, by standard, are allowed a "multiplier" consisting of 'K' (Kb), 'M' (Mb) or 'G' (Gb).
+ * Models size restrictions/requirements on a column's data type.
+ *
+ * @implNote Since we do not necessarily know the data type up front, and therefore do not necessarily know
+ * whether length or precision/scale sizing is needed, we simply account for both here. Additionally, LOB
+ * sizes, by standard, are allowed a "multiplier": {@code K} (Kb), {@code M} (Mb), or {@code G} (Gb).
  *
  * @author Steve Ebersole
  */
 public class Size implements Serializable {
-	public static enum LobMultiplier {
+
+	@Deprecated( forRemoval = true )
+	public enum LobMultiplier {
 		NONE( 1 ),
 		K( NONE.factor * 1024 ),
 		M( K.factor * 1024 ),
 		G( M.factor * 1024 );
 
-		private long factor;
+		private final long factor;
 
-		private LobMultiplier(long factor) {
+		LobMultiplier(long factor) {
 			this.factor = factor;
 		}
 
@@ -35,14 +37,18 @@ public class Size implements Serializable {
 		}
 	}
 
-	public static final int DEFAULT_LENGTH = 255;
+	public static final long DEFAULT_LENGTH = Length.DEFAULT;
+	public static final long LONG_LENGTH = Length.LONG;
+	public static final long DEFAULT_LOB_LENGTH = Length.LOB_DEFAULT;
 	public static final int DEFAULT_PRECISION = 19;
 	public static final int DEFAULT_SCALE = 2;
 
-	private long length = DEFAULT_LENGTH;
-	private int precision = DEFAULT_PRECISION;
-	private int scale = DEFAULT_SCALE;
-	private LobMultiplier lobMultiplier = LobMultiplier.NONE;
+	private Integer precision;
+	private Integer scale;
+
+	private Long length;
+	private Integer arrayLength;
+	private LobMultiplier lobMultiplier;
 
 	public Size() {
 	}
@@ -54,20 +60,41 @@ public class Size implements Serializable {
 	 * @param scale numeric scale
 	 * @param length type length
 	 * @param lobMultiplier LOB length multiplier
+	 * @deprecated in favor of {@link Size#Size(Integer, Integer, Long)}
 	 */
-	public Size(int precision, int scale, long length, LobMultiplier lobMultiplier) {
+	@Deprecated( forRemoval = true )
+	public Size(Integer precision, Integer scale, Long length, LobMultiplier lobMultiplier) {
 		this.precision = precision;
 		this.scale = scale;
 		this.length = length;
 		this.lobMultiplier = lobMultiplier;
 	}
 
+	/**
+	 * @deprecated in favor of {@link Size#Size(Integer, Integer, Long)}
+	 */
+	@Deprecated( forRemoval = true )
+	public Size(Integer precision, Integer scale, Integer length, LobMultiplier lobMultiplier) {
+		this.precision = precision;
+		this.scale = scale;
+		this.length = length == null ?  null : length.longValue();
+		this.lobMultiplier = lobMultiplier;
+	}
+
+	public Size(Integer precision, Integer scale, Long length) {
+		this( precision, scale, length, Size.LobMultiplier.NONE );
+	}
+
+	public static Size nil() {
+		return new Size();
+	}
+
 	public static Size precision(int precision) {
-		return new Size( precision, -1, -1, null );
+		return new Size( precision, -1, -1L, null );
 	}
 
 	public static Size precision(int precision, int scale) {
-		return new Size( precision, scale, -1, null );
+		return new Size( precision, scale, -1L, null );
 	}
 
 	public static Size length(long length) {
@@ -78,18 +105,23 @@ public class Size implements Serializable {
 		return new Size( -1, -1, length, lobMultiplier );
 	}
 
-	public int getPrecision() {
+	public Integer getPrecision() {
 		return precision;
 	}
 
-	public int getScale() {
+	public Integer getScale() {
 		return scale;
 	}
 
-	public long getLength() {
+	public Long getLength() {
 		return length;
 	}
 
+	public Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Deprecated( forRemoval = true )
 	public LobMultiplier getLobMultiplier() {
 		return lobMultiplier;
 	}
@@ -100,19 +132,29 @@ public class Size implements Serializable {
 		this.length = size.length;
 	}
 
-	public void setPrecision(int precision) {
+	public Size setPrecision(Integer precision) {
 		this.precision = precision;
+		return this;
 	}
 
-	public void setScale(int scale) {
+	public Size setScale(Integer scale) {
 		this.scale = scale;
+		return this;
 	}
 
-	public void setLength(long length) {
+	public Size setLength(Long length) {
 		this.length = length;
+		return this;
 	}
 
-	public void setLobMultiplier(LobMultiplier lobMultiplier) {
+	public Size setArrayLength(Integer arrayLength) {
+		this.arrayLength = arrayLength;
+		return this;
+	}
+
+	@Deprecated( forRemoval = true )
+	public Size setLobMultiplier(LobMultiplier lobMultiplier) {
 		this.lobMultiplier = lobMultiplier;
+		return this;
 	}
 }

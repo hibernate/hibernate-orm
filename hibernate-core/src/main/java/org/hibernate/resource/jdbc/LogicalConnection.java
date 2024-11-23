@@ -1,48 +1,55 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc;
 
 import java.sql.Connection;
 
 /**
- * Models the logical notion of a JDBC Connection.  We may release/re-acquire physical JDBC connections under the
- * covers, but this logically represents the overall access to the JDBC Connection.
+ * Represents a continuous logical connection to the database to the database via JDBC.
+ * <p>
+ * Under the covers, a physical JDBC {@link Connection} might be acquired and then released multiple times,
+ * but those details are hidden from clients.
  *
  * @author Steve Ebersole
  */
 public interface LogicalConnection {
 	/**
-	 * Is this (logical) JDBC Connection still open/active.  In other words, has {@link #close} not been called yet?
+	 * Is this (logical) JDBC connection still open/active?
+	 * <p>
+	 * That is, has {@link #close} not yet been called?
 	 *
-	 * @return {@code true} if still open ({@link #close} has not been called yet); {@code false} if not open
-	 * ({@link #close} has been called).
+	 * @return {@code true} if still open, since {@link #close} has not yet been called;
+	 *         {@code false} if not open, since {@link #close} was called.
 	 */
 	boolean isOpen();
 
 	/**
-	 * Closes the JdbcSession, making it inactive and forcing release of any held resources
+	 * Closes the logical connection, making it inactive and forcing release of any held resources.
 	 *
-	 * @return Legacy :(  Returns the JDBC Connection *if* the user passed in a Connection originally.
+	 * @return the JDBC {@code Connection} if the user passed in a {@code Connection} originally
+	 *
+	 * @apiNote The return type accommodates legacy functionality for user-supplied connections.
 	 */
 	Connection close();
 
 	/**
-	 * Is this JdbcSession currently physically connected (meaning does it currently hold a JDBC Connection)?
+	 * Is this logical connection currently physically connected?
+	 * <p>
+	 * That is, does it currently hold a physical JDBC {@link Connection}?
 	 *
-	 * @return {@code true} if the JdbcSession currently hold a JDBC Connection; {@code false} if it does not.
+	 * @return {@code true} if currently holding a JDBC {@code Connection};
+	 *         {@code false} if not.
 	 */
 	boolean isPhysicallyConnected();
 
 	/**
-	 * Provides access to the registry of JDBC resources associated with this LogicalConnection.
+	 * Provides access to the registry of JDBC resources associated with this logical connection.
 	 *
 	 * @return The JDBC resource registry.
 	 *
-	 * @throws org.hibernate.ResourceClosedException if the LogicalConnection is closed
+	 * @throws org.hibernate.ResourceClosedException if the {@code LogicalConnection} is closed
 	 */
 	ResourceRegistry getResourceRegistry();
 

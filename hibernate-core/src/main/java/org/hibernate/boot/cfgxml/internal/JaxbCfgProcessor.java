@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.cfgxml.internal;
 
@@ -18,12 +16,12 @@ import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.ValidationEventLocator;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.bind.ValidationEvent;
+import jakarta.xml.bind.ValidationEventHandler;
+import jakarta.xml.bind.ValidationEventLocator;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
@@ -74,7 +72,7 @@ public class JaxbCfgProcessor {
 			}
 		}
 		catch ( XMLStreamException e ) {
-			throw new HibernateException( "Unable to create stax reader", e );
+			throw new HibernateException( "Unable to create StAX reader", e );
 		}
 	}
 
@@ -87,14 +85,12 @@ public class JaxbCfgProcessor {
 		return staxFactory;
 	}
 
-	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
 		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}
 
-	@SuppressWarnings( { "unchecked" })
 	private JaxbCfgHibernateConfiguration unmarshal(XMLEventReader staxEventReader, final Origin origin) {
 		XMLEvent event;
 		try {
@@ -105,7 +101,7 @@ public class JaxbCfgProcessor {
 			}
 		}
 		catch ( Exception e ) {
-			throw new HibernateException( "Error accessing stax stream", e );
+			throw new HibernateException( "Error accessing StAX stream", e );
 		}
 
 		if ( event == null ) {
@@ -165,10 +161,7 @@ public class JaxbCfgProcessor {
 				SchemaFactory schemaFactory = SchemaFactory.newInstance( schemaLanguage );
 				return schemaFactory.newSchema( source );
 			}
-			catch ( SAXException e ) {
-				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
-			}
-			catch ( IOException e ) {
+			catch ( SAXException | IOException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
 			}
 			finally {
@@ -228,7 +221,7 @@ public class JaxbCfgProcessor {
 
 		private StartElement withNamespace(StartElement startElement) {
 			// otherwise, wrap the start element event to provide a default namespace mapping
-			final List<Namespace> namespaces = new ArrayList<Namespace>();
+			final List<Namespace> namespaces = new ArrayList<>();
 			namespaces.add( xmlEventFactory.createNamespace( "", namespaceUri ) );
 			Iterator<?> originalNamespaces = startElement.getNamespaces();
 			while ( originalNamespaces.hasNext() ) {

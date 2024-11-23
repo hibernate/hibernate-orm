@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,19 +12,26 @@ import java.util.Map;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.mapping.Component;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * An identifier mapper implementation for {@link jakarta.persistence.EmbeddedId} mappings.
+ *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
 	private PropertyData idPropertyData;
 
-	public EmbeddedIdMapper(PropertyData idPropertyData, Class compositeIdClass, ServiceRegistry serviceRegistry) {
-		super( compositeIdClass, serviceRegistry );
+	public EmbeddedIdMapper(PropertyData propertyData, Component component) {
+		super( component.getComponentClass(), component.getServiceRegistry() );
+		this.idPropertyData = propertyData;
+	}
 
+	private EmbeddedIdMapper(PropertyData idPropertyData, Class<?> compositeIdClass, ServiceRegistry serviceRegistry) {
+		super( compositeIdClass, serviceRegistry );
 		this.idPropertyData = idPropertyData;
 	}
 
@@ -44,22 +47,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 		if ( obj == null ) {
 			return;
 		}
-
-		final Object value = AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								obj.getClass(),
-								idPropertyData,
-								getServiceRegistry()
-						);
-						return getter.get( obj );
-					}
-				}
-		);
-
-		mapToMapFromId( data, value );
+		mapToMapFromId( data, getValueFromObject( idPropertyData, obj ) );
 	}
 
 	@Override
@@ -68,32 +56,24 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return false;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Boolean>() {
-					@Override
-					public Boolean run() {
-						final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+		final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+		try {
+			final Object subObj = instantiateCompositeId();
 
-						try {
-							final Object subObj = instantiateCompositeId();
+			boolean ret = true;
+			for ( IdMapper idMapper : ids.values() ) {
+				ret &= idMapper.mapToEntityFromMap( subObj, data );
+			}
 
-							boolean ret = true;
-							for ( IdMapper idMapper : ids.values() ) {
-								ret &= idMapper.mapToEntityFromMap( subObj, data );
-							}
+			if ( ret ) {
+				setter.set( obj, subObj );
+			}
 
-							if ( ret ) {
-								setter.set( obj, subObj, null );
-							}
-
-							return ret;
-						}
-						catch (Exception e) {
-							throw new AuditException( e );
-						}
-					}
-				}
-		);
+			return ret;
+		}
+		catch (Exception e) {
+			throw new AuditException( e );
+		}
 	}
 
 	@Override
@@ -114,19 +94,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return null;
 		}
 
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								data.getClass(),
-								idPropertyData,
-								getServiceRegistry()
-						);
-						return getter.get( data );
-					}
-				}
-		);
+		return getValueFromObject( idPropertyData, data );
 	}
 
 	@Override

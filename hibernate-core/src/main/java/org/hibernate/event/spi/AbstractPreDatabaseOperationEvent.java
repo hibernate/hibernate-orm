@@ -1,27 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
  * Represents an operation we are about to perform against the database.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractPreDatabaseOperationEvent
-		extends AbstractEvent
-		implements PermissionCheckEntityInformation {
+public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 
 	private final Object entity;
-	private final Serializable id;
+	private final Object id;
 	private final EntityPersister persister;
 
 	/**
@@ -35,7 +29,7 @@ public abstract class AbstractPreDatabaseOperationEvent
 	public AbstractPreDatabaseOperationEvent(
 			EventSource source,
 			Object entity,
-			Serializable id,
+			Object id,
 			EntityPersister persister) {
 		super( source );
 		this.entity = entity;
@@ -48,7 +42,6 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 *
 	 * @return The entity.
 	 */
-	@Override
 	public Object getEntity() {
 		return entity;
 	}
@@ -58,12 +51,12 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 *
 	 * @return The id.
 	 */
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
 
 	/**
-	 * The persister for the {@link #getEntity entity}.
+	 * The persister for the entity.
 	 *
 	 * @return The entity persister.
 	 */
@@ -72,29 +65,12 @@ public abstract class AbstractPreDatabaseOperationEvent
 	}
 
 	/**
-	 * Getter for property 'source'.  This is the session from which the event
-	 * originated.
-	 * <p/>
-	 * Some of the pre-* events had previous exposed the event source using
-	 * getSource() because they had not originally extended from
-	 * {@link AbstractEvent}.
+	 * The factory which owns the persister for the entity.
 	 *
-	 * @return Value for property 'source'.
-	 *
-	 * @deprecated Use {@link #getSession} instead
+	 * @return The factory
 	 */
-	@Deprecated
-	public EventSource getSource() {
-		return getSession();
-	}
-
 	@Override
-	public String getEntityName() {
-		return persister.getEntityName();
-	}
-
-	@Override
-	public Serializable getIdentifier() {
-		return id;
+	public SessionFactoryImplementor getFactory() {
+		return persister.getFactory();
 	}
 }

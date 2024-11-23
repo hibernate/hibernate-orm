@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -13,12 +11,9 @@ import java.util.TimeZone;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
-import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 
 /**
  * @author Steve Ebersole
@@ -30,6 +25,10 @@ public interface SessionCreationOptions {
 	boolean shouldAutoJoinTransactions();
 
 	FlushMode getInitialSessionFlushMode();
+
+	boolean isSubselectFetchEnabled();
+
+	int getDefaultBatchFetchSize();
 
 	boolean shouldAutoClose();
 
@@ -45,6 +44,8 @@ public interface SessionCreationOptions {
 
 	String getTenantIdentifier();
 
+	Object getTenantIdentifierValue();
+
 	TimeZone getJdbcTimeZone();
 
 	/**
@@ -56,22 +57,5 @@ public interface SessionCreationOptions {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecations
 
-	/**
-	 * Access to the SessionOwner, which defines the contract for things that can wrap a Session
-	 *
-	 * @return Always returns null.
-	 *
-	 * @deprecated (since 5,2) SessionOwner is no longer pertinent due to the
-	 * hibernate-entitymanager -> hibernate-core consolidation
-	 */
-	@Deprecated
-	SessionOwner getSessionOwner();
-
 	ExceptionMapper getExceptionMapper();
-
-	AfterCompletionAction getAfterCompletionAction();
-
-	ManagedFlushChecker getManagedFlushChecker();
-
-	boolean isQueryParametersValidationEnabled();
 }

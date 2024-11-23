@@ -1,19 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.EntityMode;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
 import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
 import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -25,7 +18,6 @@ import org.hibernate.boot.model.source.spi.EmbeddableSource;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.source.spi.NaturalIdMutability;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.internal.log.DeprecationLogger;
 
 /**
  * @author Steve Ebersole
@@ -41,8 +33,6 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 	private final boolean isDynamic;
 	private final boolean isUnique;
 
-	private final Map<EntityMode,String> tuplizerClassMap;
-
 	private final List<AttributeSource> attributeSources;
 
 	public EmbeddableSourceImpl(
@@ -57,7 +47,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 		super( mappingDocument );
 		this.attributeRoleBase = container.getAttributeRoleBase();
 		this.attributePathBase = container.getAttributePathBase();
-		if ( ToolingHintContainer.class.isInstance( jaxbEmbeddableMapping ) ) {
+		if ( jaxbEmbeddableMapping instanceof ToolingHintContainer ) {
 			this.toolingHintContext = Helper.collectToolingHints(
 					container.getToolingHintContextBaselineForEmbeddable(),
 					(ToolingHintContainer) jaxbEmbeddableMapping
@@ -81,24 +71,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 			}
 		};
 
-		if ( jaxbEmbeddableMapping.getTuplizer().isEmpty() ) {
-			tuplizerClassMap = Collections.emptyMap();
-		}
-		else {
-			if ( jaxbEmbeddableMapping.getTuplizer().size() > 1 ) {
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
-			}
-
-			tuplizerClassMap = new HashMap<EntityMode, String>(  );
-			for ( JaxbHbmTuplizerType tuplizerBinding : jaxbEmbeddableMapping.getTuplizer() ) {
-				tuplizerClassMap.put(
-						tuplizerBinding.getEntityMode(),
-						tuplizerBinding.getClazz()
-				);
-			}
-		}
-
-		this.attributeSources = new ArrayList<AttributeSource>();
+		this.attributeSources = new ArrayList<>();
 		AttributesHelper.processAttributes(
 				mappingDocument,
 				new AttributesHelper.Callback() {
@@ -126,11 +99,6 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 	@Override
 	public String getParentReferenceAttributeName() {
 		return jaxbEmbeddableMapping.getParent();
-	}
-
-	@Override
-	public Map<EntityMode,String> getTuplizerClassMap() {
-		return tuplizerClassMap;
 	}
 
 	@Override

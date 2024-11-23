@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.spi;
 
 /**
- * Models a JDBC {@link java.sql.Types DATATYPE}.  Mainly breaks down into 3 pieces of information:<ul>
+ * Models a JDBC {@linkplain java.sql.Types data type}.  Mainly breaks down into 3 pieces of information:<ul>
  *     <li>
  *         {@link #getTypeCode() type code} - The JDBC type code; generally matches a code from {@link java.sql.Types}
  *         though not necessarily.
@@ -20,7 +18,7 @@ package org.hibernate.boot.model.source.spi;
  *     </li>
  * </ul>
  *
- * @todo Would love to link this in with {@link org.hibernate.engine.jdbc.internal.TypeInfo}
+ * @todo Would love to link this in with {@link org.hibernate.engine.jdbc.spi.TypeInfo}
  *
  * @author Steve Ebersole
  */

@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 
-import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -19,42 +15,20 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * An EntityEntry implementation for mutable entities.
+ * An {@link EntityEntry} implementation for mutable entities.
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  */
 public final class MutableEntityEntry extends AbstractEntityEntry {
-	/**
-	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
-	 * Use the other constructor!
-	 */
-	@Deprecated
-	public MutableEntityEntry(
-			final Status status,
-			final Object[] loadedState,
-			final Object rowId,
-			final Serializable id,
-			final Object version,
-			final LockMode lockMode,
-			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final EntityMode entityMode,
-			final String tenantId,
-			final boolean disableVersionIncrement,
-			final PersistenceContext persistenceContext) {
-		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, persistenceContext
-		);
-	}
 
 	public MutableEntityEntry(
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
@@ -69,11 +43,10 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 	/**
 	 * This for is used during custom deserialization handling
 	 */
-	@SuppressWarnings( {"JavaDoc"})
 	private MutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
-			final Serializable id,
+			final Object id,
 			final Status status,
 			final Status previousStatus,
 			final Object[] loadedState,
@@ -97,7 +70,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 	 *
 	 * @return The deserialized EntityEntry
 	 *
-	 * @throws java.io.IOException If a stream error occurs
+	 * @throws IOException If a stream error occurs
 	 * @throws ClassNotFoundException If any of the classes declared in the stream
 	 * cannot be found
 	 */
@@ -108,7 +81,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 		return new MutableEntityEntry(
 				persistenceContext.getSession().getFactory(),
 				(String) ois.readObject(),
-				(Serializable) ois.readObject(),
+				ois.readObject(),
 				Status.valueOf( (String) ois.readObject() ),
 				( previousStatusString = (String) ois.readObject() ).length() == 0
 						? null

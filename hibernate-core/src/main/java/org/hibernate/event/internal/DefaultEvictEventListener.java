@@ -1,18 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
@@ -41,60 +38,66 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 *
 	 * @param event The evict event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
+	@Override
 	public void onEvict(EvictEvent event) throws HibernateException {
+		final EventSource source = event.getSession();
+		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
 		if ( object == null ) {
 			throw new NullPointerException( "null passed to Session.evict()" );
 		}
-
-		final EventSource source = event.getSession();
-		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-
-		if ( object instanceof HibernateProxy ) {
-			final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			final Serializable id = li.getIdentifier();
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			final Object id = lazyInitializer.getInternalIdentifier();
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
-
-			final EntityPersister persister = source.getFactory().getEntityPersister( li.getEntityName() );
+			final EntityPersister persister = source.getFactory()
+					.getMappingMetamodel()
+					.getEntityDescriptor( lazyInitializer.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
-			persistenceContext.removeProxy( key );
-
-			if ( !li.isUninitialized() ) {
-				final Object entity = persistenceContext.removeEntity( key );
+			final EntityHolder holder = persistenceContext.detachEntity( key );
+			// if the entity has been evicted then its holder is null
+			if ( holder != null && !lazyInitializer.isUninitialized() ) {
+				final Object entity = holder.getEntity();
 				if ( entity != null ) {
-					EntityEntry e = persistenceContext.removeEntry( entity );
-					doEvict( entity, key, e.getPersister(), event.getSession() );
+					EntityEntry entry = persistenceContext.removeEntry( entity );
+					doEvict( entity, key, entry.getPersister(), event.getSession() );
 				}
 			}
-			li.unsetSession();
+			lazyInitializer.unsetSession();
 		}
 		else {
-			EntityEntry e = persistenceContext.getEntry( object );
-			if ( e != null ) {
-				doEvict( object, e.getEntityKey(), e.getPersister(), source );
+			EntityEntry entry = persistenceContext.getEntry( object );
+			if ( entry != null ) {
+				doEvict( object, entry.getEntityKey(), entry.getPersister(), source );
 			}
 			else {
-				// see if the passed object is even an entity, and if not throw an exception
-				// 		this is different than legacy Hibernate behavior, but what JPA 2.1 is calling for
-				//		with EntityManager.detach
-				EntityPersister persister = null;
-				final String entityName = persistenceContext.getSession().guessEntityName( object );
-				if ( entityName != null ) {
-					try {
-						persister = persistenceContext.getSession().getFactory().getEntityPersister( entityName );
-					}
-					catch (Exception ignore) {
-					}
-				}
-				if ( persister == null ) {
-					throw new IllegalArgumentException( "Non-entity object instance passed to evict : " + object );
-				}
+				checkEntity( object, source );
 			}
 		}
+	}
+
+	/**
+	 * Make sure the passed object is even an entity, and if not throw an exception.
+	 * This is different to the legacy Hibernate behavior, but is what JPA 2.1
+	 * requires with EntityManager.detach().
+	 */
+	private static void checkEntity(Object object, EventSource source) {
+		String entityName = source.getSession().guessEntityName( object );
+		if ( entityName != null ) {
+			try {
+				EntityPersister persister = source.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
+				if ( persister != null ) {
+					return; //ALL GOOD
+				}
+			}
+			catch (Exception ignore) {
+			}
+		}
+		throw new IllegalArgumentException( "Non-entity object instance passed to evict: " + object);
 	}
 
 	protected void doEvict(
@@ -103,18 +106,13 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EntityPersister persister,
 			final EventSource session)
 			throws HibernateException {
-
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Evicting {0}", MessageHelper.infoString( persister ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.hasNaturalIdentifier() ) {
-			persistenceContext.getNaturalIdHelper().handleEviction(
-					object,
-					persister,
-					key.getIdentifier()
-			);
+			persistenceContext.getNaturalIdResolutions().handleEviction( key.getIdentifier(), object, persister );
 		}
 
 		// remove all collections for the entity from the session-level cache
@@ -127,8 +125,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// EntityEntry to take precedence
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
-		
-		persistenceContext.removeEntity( key );
+
+		persistenceContext.removeEntityHolder( key );
 		persistenceContext.removeEntry( object );
 
 		Cascade.cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session, persister, object );

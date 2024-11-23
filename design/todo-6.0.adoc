@@ -1,0 +1,4 @@
+== Todo tasks related to 6.0 development
+
+* Currently filtering tests to limit tests run during builds from Gradle.  This is done in `gradle/java-module.gradle` via a test.include filter
+* Tests for hibernate-orm-modules are run but failures are ignored

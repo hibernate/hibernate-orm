@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
@@ -12,8 +10,8 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
+import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
@@ -21,6 +19,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.query.Query;
+import org.hibernate.type.BasicType;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
@@ -32,40 +31,41 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * @author Chris Cranford
  */
 public abstract class AbstractRelationQueryGenerator implements RelationQueryGenerator {
-	protected final GlobalConfiguration globalCfg;
-	protected final AuditEntitiesConfiguration verEntCfg;
+	protected final Configuration configuration;
 	protected final AuditStrategy auditStrategy;
 	protected final MiddleIdData referencingIdData;
 	protected final boolean revisionTypeInId;
 	protected final String entityName;
-	protected final String orderBy;
+	protected final String orderByCollectionRole;
 
 	private String queryString;
 	private String queryRemovedString;
 
 	protected AbstractRelationQueryGenerator(
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			Configuration configuration,
 			String entityName,
 			MiddleIdData referencingIdData,
 			boolean revisionTypeInId,
-			String orderBy) {
-		this.globalCfg = globalCfg;
-		this.verEntCfg = verEntCfg;
+			String orderByCollectionRole) {
+		this.configuration = configuration;
 		this.entityName = entityName;
-		this.auditStrategy = auditStrategy;
+		this.auditStrategy = configuration.getAuditStrategy();
 		this.referencingIdData = referencingIdData;
 		this.revisionTypeInId = revisionTypeInId;
-		this.orderBy = orderBy;
+		this.orderByCollectionRole = orderByCollectionRole;
 	}
 
 	@Override
 	public Query getQuery(SharedSessionContractImplementor session, Object primaryKey, Number revision, boolean removed) {
 		final String queryString = getQueryString( session.getFactory(), removed );
 
+		final BasicType<?> revisionType = session.getFactory()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( RevisionTypeType.class );
+
 		final Query query = session.createQuery( queryString );
-		query.setParameter( DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL );
+		query.setParameter( DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL, revisionType );
 		query.setParameter( REVISION_PARAMETER, revision );
 
 		final IdMapper prefixIdMapper = referencingIdData.getPrefixedMapper();
@@ -102,9 +102,9 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 
 	protected String getRevisionTypePath() {
 		if ( revisionTypeInId ) {
-			return verEntCfg.getOriginalIdPropName() + "." + verEntCfg.getRevisionTypePropName();
+			return configuration.getOriginalIdPropertyName() + "." + configuration.getRevisionTypePropertyName();
 		}
-		return verEntCfg.getRevisionTypePropName();
+		return configuration.getRevisionTypePropertyName();
 	}
 
 	/**

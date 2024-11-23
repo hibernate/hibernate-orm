@@ -1,21 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.testing;
 
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.cockroachdb.CockroachDBTestSupport;
 import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
-import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
+import org.hibernate.spatial.testing.dialects.h2gis.H2GisTestSupport;
 import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
-import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
+import org.hibernate.spatial.testing.dialects.mariadb.MariaDBTestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL8TestSupport;
-import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisTestSupport;
 import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
@@ -25,9 +28,10 @@ import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Sep 30, 2010
  */
+@Deprecated
 public class TestSupportFactories {
 
-	private static TestSupportFactories instance = new TestSupportFactories();
+	private static final TestSupportFactories instance = new TestSupportFactories();
 
 	private TestSupportFactories() {
 	}
@@ -38,36 +42,37 @@ public class TestSupportFactories {
 
 	private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
 		String canonicalName = dialect.getClass().getCanonicalName();
-		if ( ( dialect instanceof SpatialDialect ) && PostgreSQL82Dialect.class.isAssignableFrom( dialect.getClass() ) ) {
+		if ( PostgreSQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			//this test works because all postgis dialects ultimately derive of the Postgresql82Dialect
 			return PostgisTestSupport.class;
 		}
-		if ( "org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals( canonicalName ) ) {
-			return GeoDBTestSupport.class;
-		}
-		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals( canonicalName ) ) {
-			return SQLServerTestSupport.class;
-		}
-		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2012SpatialDialect".equals( canonicalName ) ) {
-			return SQLServerTestSupport.class;
-		}
-		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.mysql.MySQL5InnoDBSpatialDialect".equals( canonicalName ) ) {
-			return MySQLTestSupport.class;
+
+		if ( MariaDBDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return MariaDBTestSupport.class;
 		}
 
-		if ( "org.hibernate.spatial.dialect.mysql.MySQL8SpatialDialect".equals( canonicalName ) ) {
+		if ( CockroachDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return CockroachDBTestSupport.class;
+		}
+
+
+		if ( MySQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			return MySQL8TestSupport.class;
 		}
 
-		if ( "org.hibernate.spatial.dialect.mysql.MySQL56SpatialDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect".equals( canonicalName ) ) {
-			return MySQL56TestSupport.class;
+		if ( H2Dialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return H2GisTestSupport.class;
 		}
-		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.oracle.OracleSpatialSDO10gDialect".equals( canonicalName ) ) {
+
+		if ( OracleDialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			return OracleSDOTestSupport.class;
 		}
+
+		if ( SQLServerDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return SQLServerTestSupport.class;
+		}
+
+
 		if ( "org.hibernate.spatial.dialect.hana.HANASpatialDialect".equals( canonicalName ) ) {
 			return HANATestSupport.class;
 		}

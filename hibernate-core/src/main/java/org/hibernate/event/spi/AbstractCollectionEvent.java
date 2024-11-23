@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
-
-import java.io.Serializable;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -20,28 +16,27 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public abstract class AbstractCollectionEvent extends AbstractEvent {
 
-	private final PersistentCollection collection;
+	private final PersistentCollection<?> collection;
 	private final Object affectedOwner;
-	private final Serializable affectedOwnerId;
+	private final Object affectedOwnerId;
 	private final String affectedOwnerEntityName;
 
 	/**
 	 * Constructs an AbstractCollectionEvent object.
-	 *
-	 * @param collection - the collection
+	 *  @param collection - the collection
 	 * @param source - the Session source
 	 * @param affectedOwner - the owner that is affected by this event;
-	 * can be null if unavailable
+ * can be null if unavailable
 	 * @param affectedOwnerId - the ID for the owner that is affected
-	 * by this event; can be null if unavailable
-	 * that is affected by this event; can be null if unavailable
+* by this event; can be null if unavailable
 	 */
-	public AbstractCollectionEvent( CollectionPersister collectionPersister,
-					PersistentCollection collection,
-					EventSource source,
-					Object affectedOwner,
-					Serializable affectedOwnerId) {
-		super(source);
+	public AbstractCollectionEvent(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			EventSource source,
+			Object affectedOwner,
+			Object affectedOwnerId) {
+		super( source );
 		this.collection = collection;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;
@@ -49,40 +44,49 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 				getAffectedOwnerEntityName( collectionPersister, affectedOwner, source );
 	}
 
-	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection collection, EventSource source ) {
+	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection<?> collection, EventSource source ) {
 		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
-		return ( ce == null ? null : ce.getLoadedPersister() );		
+		return ce == null ? null : ce.getLoadedPersister();
 	}
 
-	protected static Object getLoadedOwnerOrNull( PersistentCollection collection, EventSource source ) {
+	protected static Object getLoadedOwnerOrNull( PersistentCollection<?> collection, EventSource source ) {
 		return source.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
 	}
 
-	protected static Serializable getLoadedOwnerIdOrNull( PersistentCollection collection, EventSource source ) {
+	protected static Object getLoadedOwnerIdOrNull(PersistentCollection<?> collection, EventSource source ) {
 		return source.getPersistenceContextInternal().getLoadedCollectionOwnerIdOrNull( collection );
 	}
 
-	protected static Serializable getOwnerIdOrNull( Object owner, EventSource source ) {
+	protected static Object getOwnerIdOrNull(Object owner, EventSource source ) {
 		EntityEntry ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
-		return ( ownerEntry == null ? null : ownerEntry.getId() );
+		return ownerEntry == null ? null : ownerEntry.getId();
 	}
 
-	protected static String getAffectedOwnerEntityName(CollectionPersister collectionPersister, Object affectedOwner, EventSource source ) {
-
-		// collectionPersister should not be null, but we don't want to throw
-		// an exception if it is null
-		String entityName =
-				( collectionPersister == null ? null : collectionPersister.getOwnerEntityPersister().getEntityName() );
+	protected static String getAffectedOwnerEntityName(
+			CollectionPersister collectionPersister,
+			Object affectedOwner,
+			EventSource source ) {
 		if ( affectedOwner != null ) {
-			EntityEntry ee = source.getPersistenceContextInternal().getEntry( affectedOwner );
-			if ( ee != null && ee.getEntityName() != null) {
-				entityName = ee.getEntityName();
+			final EntityEntry entry =
+					source.getPersistenceContextInternal()
+							.getEntry( affectedOwner );
+			if ( entry != null && entry.getEntityName() != null ) {
+				return entry.getEntityName();
 			}
-		}	
-		return entityName;
+		}
+
+		if ( collectionPersister != null ) {
+			return collectionPersister.getOwnerEntityPersister().getEntityName();
+		}
+		else {
+			// collectionPersister should not be null,
+			// but we don't want to throw an exception
+			// if it is null
+			return null;
+		}
 	}
 
-	public PersistentCollection getCollection() {
+	public PersistentCollection<?> getCollection() {
 		return collection;
 	}
 
@@ -103,7 +107,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	 * from the collection's loaded key (e.g., a property-ref is used for the
 	 * collection and does not include the entity's ID)
 	 */
-	public Serializable getAffectedOwnerIdOrNull() {
+	public Object getAffectedOwnerIdOrNull() {
 		return affectedOwnerId;
 	}
 

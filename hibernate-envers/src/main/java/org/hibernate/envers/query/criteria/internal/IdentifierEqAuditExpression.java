@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.criteria.internal;
 
@@ -15,6 +13,7 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
  * A criterion that expresses that the id of an entity is equal or not equal to some specified value.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class IdentifierEqAuditExpression extends AbstractAtomicExpression {
 	private final Object id;
@@ -32,9 +31,10 @@ public class IdentifierEqAuditExpression extends AbstractAtomicExpression {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			String alias,
+			String componentPrefix,
 			QueryBuilder qb,
 			Parameters parameters) {
-		String prefix = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName();
+		String prefix = enversService.getConfig().getOriginalIdPropertyName();
 		enversService.getEntitiesConfigurations().get( entityName )
 				.getIdMapper()
 				.addIdEqualsToQuery( parameters, id, alias, prefix, equals );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -19,7 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Looks for the configuration property {@link AvailableSettings#MERGE_ENTITY_COPY_OBSERVER} and registers
+ * Looks for the configuration property {@value AvailableSettings#MERGE_ENTITY_COPY_OBSERVER} and registers
  * the matching {@link EntityCopyObserverFactory} based on the configuration value.
  * <p>
  * For known implementations some optimisations are possible, such as reusing a singleton for the stateless
@@ -32,17 +30,20 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyObserverFactoryInitiator.class );
 
 	@Override
-	public EntityCopyObserverFactory initiateService(final Map configurationValues, final ServiceRegistryImplementor registry) {
+	public EntityCopyObserverFactory initiateService(final Map<String, Object> configurationValues, final ServiceRegistryImplementor registry) {
 		final Object value = getConfigurationValue( configurationValues );
-		if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME ) || value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
+		if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME )
+				|| value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
 			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyNotAllowedObserver.SHORT_NAME );
 			return EntityCopyNotAllowedObserver.FACTORY_OF_SELF;
 		}
-		else if ( value.equals( EntityCopyAllowedObserver.SHORT_NAME ) || value.equals( EntityCopyAllowedObserver.class.getName() ) ) {
+		else if ( value.equals( EntityCopyAllowedObserver.SHORT_NAME )
+				|| value.equals( EntityCopyAllowedObserver.class.getName() ) ) {
 			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyAllowedObserver.SHORT_NAME );
 			return EntityCopyAllowedObserver.FACTORY_OF_SELF;
 		}
-		else if ( value.equals( EntityCopyAllowedLoggedObserver.SHORT_NAME ) || value.equals( EntityCopyAllowedLoggedObserver.class.getName() ) ) {
+		else if ( value.equals( EntityCopyAllowedLoggedObserver.SHORT_NAME )
+				|| value.equals( EntityCopyAllowedLoggedObserver.class.getName() ) ) {
 			LOG.debugf( "Configured EntityCopyObserver strategy: %s",  EntityCopyAllowedLoggedObserver.SHORT_NAME );
 			return EntityCopyAllowedLoggedObserver.FACTORY_OF_SELF;
 		}
@@ -50,23 +51,25 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 			//We load an "example instance" just to get its Class;
 			//this might look excessive, but it also happens to test eagerly (at boot) that we can actually construct these
 			//and that they are indeed of the right type.
-			EntityCopyObserver exampleInstance = registry.getService( StrategySelector.class ).resolveStrategy( EntityCopyObserver.class, value );
-			Class observerType = exampleInstance.getClass();
+			EntityCopyObserver exampleInstance =
+					registry.requireService( StrategySelector.class )
+							.resolveStrategy( EntityCopyObserver.class, value );
+			Class<?> observerType = exampleInstance.getClass();
 			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type %s", observerType.getName() );
 			return new EntityObserversFactoryFromClass( observerType );
 		}
 	}
 
-	private Object getConfigurationValue(final Map configurationValues) {
-		final Object o = configurationValues.get( AvailableSettings.MERGE_ENTITY_COPY_OBSERVER );
-		if ( o == null ) {
+	private Object getConfigurationValue(final Map<?,?> configurationValues) {
+		final Object value = configurationValues.get( AvailableSettings.MERGE_ENTITY_COPY_OBSERVER );
+		if ( value == null ) {
 			return EntityCopyNotAllowedObserver.SHORT_NAME; //default
 		}
-		else if ( o instanceof String ) {
-			return o.toString().trim();
+		else if ( value instanceof String ) {
+			return value.toString().trim();
 		}
 		else {
-			return o;
+			return value;
 		}
 	}
 
@@ -77,9 +80,9 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 
 	private static class EntityObserversFactoryFromClass implements EntityCopyObserverFactory {
 
-		private final Class value;
+		private final Class<?> value;
 
-		public EntityObserversFactoryFromClass(Class value) {
+		public EntityObserversFactoryFromClass(Class<?> value) {
 			this.value = value;
 		}
 

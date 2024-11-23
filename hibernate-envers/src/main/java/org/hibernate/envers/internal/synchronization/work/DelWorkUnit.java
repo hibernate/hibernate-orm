@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final Object[] state;
@@ -29,7 +27,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			SessionImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Serializable id,
+			Object id,
 			EntityPersister entityPersister,
 			Object[] state) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.DEL );
@@ -49,7 +47,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		final Map<String, Object> data = new HashMap<>();
 		fillDataWithId( data, revisionData );
 
-		if ( enversService.getGlobalConfiguration().isStoreDataAtDelete() ) {
+		if ( enversService.getConfig().isStoreDataAtDelete() ) {
 			enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
 					sessionImplementor,
 					data,

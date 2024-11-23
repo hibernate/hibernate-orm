@@ -1,18 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
-import java.util.Iterator;
+
+import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 
 /**
- * A subclass in a table-per-subclass mapping
+ * A mapping model object that represents a subclass in a "joined" or
+ * {@linkplain jakarta.persistence.InheritanceType#JOINED "table per subclass"}
+ * inheritance hierarchy.
+ *
  * @author Gavin King
  */
 public class JoinedSubclass extends Subclass implements TableOwner {
@@ -28,8 +30,8 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 	}
 
 	public void setTable(Table table) {
-		this.table=table;
-		getSuperclass().addSubclassTable(table);
+		this.table = table;
+		getSuperclass().addSubclassTable( table );
 	}
 
 	public KeyValue getKey() {
@@ -40,9 +42,9 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		this.key = key;
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
+	public void validate(Metadata mapping) throws MappingException {
 		super.validate(mapping);
-		if ( key!=null && !key.isValid(mapping) ) {
+		if ( key != null && !key.isValid( mapping ) ) {
 			throw new MappingException(
 					"subclass key mapping has wrong number of columns: " +
 					getEntityName() +
@@ -52,8 +54,8 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		}
 	}
 
-	public Iterator getReferenceablePropertyIterator() {
-		return getPropertyIterator();
+	public List<Property> getReferenceableProperties() {
+		return getProperties();
 	}
 
 	public Object accept(PersistentClassVisitor mv) {

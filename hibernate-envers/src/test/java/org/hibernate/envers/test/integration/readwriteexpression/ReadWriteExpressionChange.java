@@ -1,18 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.readwriteexpression;
 
-import java.math.BigDecimal;
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -46,13 +42,7 @@ public class ReadWriteExpressionChange extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().begin();
 		List resultList = em.createNativeQuery( "select size_in_cm from t_staff_AUD where id =" + id ).getResultList();
 		Assert.assertEquals( 1, resultList.size() );
-		Double sizeInCm = null;
-		if ( getDialect() instanceof Oracle8iDialect ) {
-			sizeInCm = ((BigDecimal) resultList.get( 0 )).doubleValue();
-		}
-		else {
-			sizeInCm = (Double) resultList.get( 0 );
-		}
+		Double sizeInCm = (Double) resultList.get( 0 );
 		em.getTransaction().commit();
 		Assert.assertEquals( HEIGHT_CENTIMETERS, sizeInCm.doubleValue(), 0.00000001 );
 	}

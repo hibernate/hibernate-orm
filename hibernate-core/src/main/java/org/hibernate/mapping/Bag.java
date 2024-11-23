@@ -1,38 +1,49 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
+import java.util.function.Supplier;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A bag permits duplicates, so it has no primary key
- * 
+ * A mapping model object representing a collection of type {@link java.util.Collection} which may
+ * contain duplicates. Since a bag permits duplicates, it has no primary key
+ *
  * @author Gavin King
  */
 public class Bag extends Collection {
-
 	/**
-	 * @deprecated Use {@link Bag#Bag(MetadataBuildingContext, PersistentClass)} instead.
+	 * hbm.xml binding
 	 */
-	@Deprecated
-	public Bag(MetadataImplementor metadata, PersistentClass owner) {
-		super( metadata, owner );
-	}
-
 	public Bag(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}
 
+	/**
+	 * Annotation binding
+	 */
+	public Bag(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, owner, buildingContext );
+	}
+
+	private Bag(Collection original) {
+		super( original );
+	}
+
+	@Override
+	public Bag copy() {
+		return new Bag( this );
+	}
+
 	public CollectionType getDefaultCollectionType() {
-		return getMetadata().getTypeResolver()
-				.getTypeFactory()
-				.bag( getRole(), getReferencedPropertyName() );
+		return new BagType( getRole(), getReferencedPropertyName() );
 	}
 
 	void createPrimaryKey() {

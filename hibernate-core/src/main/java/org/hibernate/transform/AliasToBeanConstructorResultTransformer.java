@@ -1,52 +1,49 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.transform;
-import java.lang.reflect.Constructor;
-import java.util.List;
 
-import org.hibernate.QueryException;
+import java.lang.reflect.Constructor;
+
+import org.hibernate.InstantiationException;
+import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * Wraps the tuples in a constructor call.
  *
- * todo : why Alias* in the name???
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
-public class AliasToBeanConstructorResultTransformer implements ResultTransformer {
+@Deprecated
+public class AliasToBeanConstructorResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
 
-	private final Constructor constructor;
+	private final Constructor<T> constructor;
 
 	/**
 	 * Instantiates a AliasToBeanConstructorResultTransformer.
 	 *
 	 * @param constructor The constructor in which to wrap the tuples.
 	 */
-	public AliasToBeanConstructorResultTransformer(Constructor constructor) {
+	public AliasToBeanConstructorResultTransformer(Constructor<T> constructor) {
 		this.constructor = constructor;
+	}
+
+	@Override
+	public Class<T> getTransformedType() {
+		return constructor.getDeclaringClass();
 	}
 
 	/**
 	 * Wrap the incoming tuples in a call to our configured constructor.
 	 */
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	public T transformTuple(Object[] tuple, String[] aliases) {
 		try {
 			return constructor.newInstance( tuple );
 		}
 		catch ( Exception e ) {
-			throw new QueryException(
-					"could not instantiate class [" + constructor.getDeclaringClass().getName() + "] from tuple",
-					e
-			);
+			throw new InstantiationException( "Could not instantiate class", constructor.getDeclaringClass(), e );
 		}
-	}
-
-	@Override
-	public List transformList(List collection) {
-		return collection;
 	}
 
 	/**
@@ -69,6 +66,6 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	@Override
 	public boolean equals(Object other) {
 		return other instanceof AliasToBeanConstructorResultTransformer
-				&& constructor.equals( ( ( AliasToBeanConstructorResultTransformer ) other ).constructor );
+			&& constructor.equals( ( (AliasToBeanConstructorResultTransformer<?>) other ).constructor );
 	}
 }

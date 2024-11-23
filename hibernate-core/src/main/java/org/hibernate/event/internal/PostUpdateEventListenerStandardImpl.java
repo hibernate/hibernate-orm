@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostUpdateEvent;
@@ -29,21 +26,19 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 
 	@Override
 	public void onPostUpdate(PostUpdateEvent event) {
-		Object entity = event.getEntity();
-		EventSource eventSource = event.getSession();
-		handlePostUpdate(entity, eventSource);
+		handlePostUpdate( event.getEntity(), event.getSession() );
 	}
 
 	private void handlePostUpdate(Object entity, EventSource source) {
-		EntityEntry entry = source.getPersistenceContextInternal().getEntry( entity );
 		// mimic the preUpdate filter
-		if ( Status.DELETED != entry.getStatus()) {
+		if ( source == null // it must be a StatelessSession
+				|| source.getPersistenceContextInternal().getEntry(entity).getStatus() != Status.DELETED ) {
 			callbackRegistry.postUpdate(entity);
 		}
 	}
 
 	@Override
-	public boolean requiresPostCommitHanding(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(EntityPersister persister) {
 		return callbackRegistry.hasRegisteredCallbacks( persister.getMappedClass(), CallbackType.POST_UPDATE );
 	}
 }

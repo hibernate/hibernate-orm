@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.component;
 
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
@@ -20,13 +18,14 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  * empty.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
-public final class MiddleMapKeyIdComponentMapper implements MiddleComponentMapper {
-	private final AuditEntitiesConfiguration verEntCfg;
+public final class MiddleMapKeyIdComponentMapper extends AbstractMiddleComponentMapper {
+	private final Configuration configuration;
 	private final IdMapper relatedIdMapper;
 
-	public MiddleMapKeyIdComponentMapper(AuditEntitiesConfiguration verEntCfg, IdMapper relatedIdMapper) {
-		this.verEntCfg = verEntCfg;
+	public MiddleMapKeyIdComponentMapper(Configuration configuration, IdMapper relatedIdMapper) {
+		this.configuration = configuration;
 		this.relatedIdMapper = relatedIdMapper;
 	}
 
@@ -34,7 +33,7 @@ public final class MiddleMapKeyIdComponentMapper implements MiddleComponentMappe
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator, Map<String, Object> data,
 			Object dataObject, Number revision) {
-		return relatedIdMapper.mapToIdFromMap( (Map) data.get( verEntCfg.getOriginalIdPropName() ) );
+		return relatedIdMapper.mapToIdFromMap( (Map) data.get( configuration.getOriginalIdPropertyName() ) );
 	}
 
 	@Override

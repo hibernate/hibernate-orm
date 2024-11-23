@@ -1,27 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.AttributeConverter;
-import javax.persistence.SharedCacheMode;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -29,113 +26,185 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.spi.ClassmateContext;
+import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
+import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeCustomType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializationException;
-import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.SharedCacheMode;
+
+
 /**
- * Represents one approach for bootstrapping Hibernate.  In fact, historically this was
- * <b>the</b> way to bootstrap Hibernate.
- * <p/>
- * The approach here is to define all configuration and mapping sources in one API
- * and to then build the {@link org.hibernate.SessionFactory} in one-shot.  The configuration
- * and mapping sources defined here are just held here until the SessionFactory is built.  This
- * is an important distinction from the legacy behavior of this class, where we would try to
- * incrementally build the mappings from sources as they were added.  The ramification of this
- * change in behavior is that users can add configuration and mapping sources here, but they can
- * no longer query the in-flight state of mappings ({@link org.hibernate.mapping.PersistentClass},
- * {@link org.hibernate.mapping.Collection}, etc) here.
- * <p/>
- * Note: Internally this class uses the new bootstrapping approach when asked to build the
- * SessionFactory.
+ * A convenience API making it easier to bootstrap an instance of Hibernate.
+ * <p>
+ * An instance of {@code Configuration} may be obtained simply by
+ * {@linkplain #Configuration() instantiation}, and may be used to aggregate:
+ * <ul>
+ * <li>{@linkplain #setProperty(String, String) configuration properties}
+ *     from various sources, and
+ * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
+ *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
+ * </ul>
+ * <p>
+ * Note that XML mappings may be expressed using the JPA {@code orm.xml}
+ * format, or in Hibernate's legacy {@code .hbm.xml} format.
+ * <p>
+ * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <pre>
+ *  SessionFactory factory = new Configuration()
+ *     // scan classes for mapping annotations
+ *     .addAnnotatedClass(Item.class)
+ *     .addAnnotatedClass(Bid.class)
+ *     .addAnnotatedClass(User.class)
+ *     // read package-level annotations of the named package
+ *     .addPackage("org.hibernate.auction")
+ *     // set a configuration property
+ *     .setProperty(AvailableSettings.DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .buildSessionFactory();
+ * </pre>
+ * <p>
+ * In addition, there are convenience methods for adding
+ * {@linkplain #addAttributeConverter attribute converters},
+ * {@linkplain #registerTypeContributor type contributors},
+ * {@linkplain #addEntityNameResolver entity name resolvers},
+ * {@linkplain #addSqlFunction SQL function descriptors}, and
+ * {@linkplain #addAuxiliaryDatabaseObject auxiliary database objects}, for
+ * setting {@linkplain #setImplicitNamingStrategy naming strategies} and a
+ * {@linkplain #setCurrentTenantIdentifierResolver tenant id resolver},
+ * and more.
+ * <p>
+ * Finally, an instance of {@link SessionFactoryBuilder} is obtained by
+ * calling {@link #buildSessionFactory()}.
+ * <p>
+ * Ultimately, this class simply delegates to {@link MetadataBuilder} and
+ * {@link StandardServiceRegistryBuilder} to actually do the hard work of
+ * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
+ * Programs may directly use the APIs defined under {@link org.hibernate.boot},
+ * as an alternative to using an instance of this class.
+ *
+ * @apiNote The {@link org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * is a new alternative to this venerable API, and extends the JPA-standard
+ * {@link jakarta.persistence.PersistenceConfiguration}.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
- * @see org.hibernate.SessionFactory
+ * @see SessionFactory
+ * @see AvailableSettings
+ * @see org.hibernate.boot
+ * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
-@SuppressWarnings( {"UnusedDeclaration"})
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
 
-	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
-
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
+	final private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
+	private final ClassmateContext classmateContext = new ClassmateContext();
 
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
 	private PhysicalNamingStrategy physicalNamingStrategy;
-	private List<BasicType> basicTypes = new ArrayList<BasicType>();
-	private List<TypeContributor> typeContributorRegistrations = new ArrayList<TypeContributor>();
-	private Map<String, NamedQueryDefinition> namedQueries;
-	private Map<String, NamedSQLQueryDefinition> namedSqlQueries;
-	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
-	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
+	private final List<BasicType<?>> basicTypes = new ArrayList<>();
+	private List<UserTypeRegistration> userTypeRegistrations;
+	private final List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
+	private final List<FunctionContributor> functionContributorRegistrations = new ArrayList<>();
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueries = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition<?>> namedSqlQueries = new HashMap<>();
+	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
+	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings = new HashMap<>();
+	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
 
-	private Map<String, SQLFunction> sqlFunctions;
+	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
+	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF
-	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
+	private Properties properties = new Properties();
+	private Interceptor interceptor = EmptyInterceptor.INSTANCE;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
-	private EntityTuplizerFactory entityTuplizerFactory;
-	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
-	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
-	private Properties properties;
+	private StatementInspector statementInspector;
+	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
+	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
+	private ColumnOrderingStrategy columnOrderingStrategy;
 	private SharedCacheMode sharedCacheMode;
 
+	/**
+	 * Create a new instance, using a default {@link BootstrapServiceRegistry}
+	 * and a newly instantiated {@link MetadataSources}.
+	 * <p>
+	 * This is the usual method of obtaining a {@code Configuration}.
+	 */
 	public Configuration() {
 		this( new BootstrapServiceRegistryBuilder().build() );
 	}
 
+	/**
+	 * Create a new instance, using the given {@link BootstrapServiceRegistry}
+	 * and a newly instantiated {@link MetadataSources}.
+	 */
 	public Configuration(BootstrapServiceRegistry serviceRegistry) {
-		this.bootstrapServiceRegistry = serviceRegistry;
-		this.metadataSources = new MetadataSources( serviceRegistry );
-		reset();
+		bootstrapServiceRegistry = serviceRegistry;
+		metadataSources = new MetadataSources( serviceRegistry, createMappingBinderAccess( serviceRegistry ) );
+		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
+	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
+		return new XmlMappingBinderAccess(
+				serviceRegistry,
+				(settingName) -> properties == null ? null : properties.get( settingName )
+		);
+	}
+
+	/**
+	 * Create a new instance, using the given {@link MetadataSources}, and a
+	 * {@link BootstrapServiceRegistry} obtained from the {@link MetadataSources}.
+	 */
 	public Configuration(MetadataSources metadataSources) {
-		this.bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
 		this.metadataSources = metadataSources;
-		reset();
+		bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
+		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 	private static BootstrapServiceRegistry getBootstrapRegistry(ServiceRegistry serviceRegistry) {
-		if ( BootstrapServiceRegistry.class.isInstance( serviceRegistry ) ) {
-			return (BootstrapServiceRegistry) serviceRegistry;
+		if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
+			return bootstrapServiceRegistry;
 		}
-		else if ( StandardServiceRegistry.class.isInstance( serviceRegistry ) ) {
-			final StandardServiceRegistry ssr = (StandardServiceRegistry) serviceRegistry;
+		else if ( serviceRegistry instanceof StandardServiceRegistry ssr ) {
 			return (BootstrapServiceRegistry) ssr.getParentServiceRegistry();
 		}
 
@@ -144,22 +213,6 @@ public class Configuration {
 						"and could not determine how to locate BootstrapServiceRegistry " +
 						"from Configuration instantiation"
 		);
-	}
-
-	protected void reset() {
-		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
-		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<String,NamedQueryDefinition>();
-		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
-		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
-		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
-		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinition>(  );
-
-		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
-		entityTuplizerFactory = new EntityTuplizerFactory();
-		interceptor = EmptyInterceptor.INSTANCE;
-		properties = new Properties(  );
-		properties.putAll( standardServiceRegistryBuilder.getSettings());
 	}
 
 
@@ -179,7 +232,7 @@ public class Configuration {
 	 *
 	 * @param properties The new set of properties
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setProperties(Properties properties) {
 		this.properties = properties;
@@ -204,7 +257,7 @@ public class Configuration {
 	 * @param propertyName The name of the property to set
 	 * @param value The new property value
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setProperty(String propertyName, String value) {
 		properties.setProperty( propertyName, value );
@@ -212,31 +265,114 @@ public class Configuration {
 	}
 
 	/**
+	 * Set a property to a boolean value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new boolean property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, boolean value) {
+		return setProperty( propertyName, Boolean.toString(value) );
+	}
+
+	/**
+	 * Set a property to a Java class name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The Java class
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Class<?> value) {
+		return setProperty( propertyName, value.getName() );
+	}
+
+	/**
+	 * Set a property to the name of a value of an enumerated type
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value A value of an enumerated type
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Enum<?> value) {
+		return setProperty( propertyName, value.name() );
+	}
+
+	/**
+	 * Set a property to an integer value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new integer property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, int value) {
+		return setProperty( propertyName, Integer.toString(value) );
+	}
+
+	/**
 	 * Add the given properties to ours.
 	 *
 	 * @param properties The properties to add.
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addProperties(Properties properties) {
 		this.properties.putAll( properties );
 		return this;
 	}
 
-	public void setImplicitNamingStrategy(ImplicitNamingStrategy implicitNamingStrategy) {
-		this.implicitNamingStrategy = implicitNamingStrategy;
-	}
-
-	public void setPhysicalNamingStrategy(PhysicalNamingStrategy physicalNamingStrategy) {
-		this.physicalNamingStrategy = physicalNamingStrategy;
+	/**
+	 * The {@link ImplicitNamingStrategy}, if any, to use in this configuration.
+	 */
+	public ImplicitNamingStrategy getImplicitNamingStrategy() {
+		return implicitNamingStrategy;
 	}
 
 	/**
-	 * Use the mappings and properties specified in an application resource named <tt>hibernate.cfg.xml</tt>.
+	 * Set an {@link ImplicitNamingStrategy} to use in this configuration.
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setImplicitNamingStrategy(ImplicitNamingStrategy implicitNamingStrategy) {
+		this.implicitNamingStrategy = implicitNamingStrategy;
+		return this;
+	}
+
+	/**
+	 * The {@link PhysicalNamingStrategy}, if any, to use in this configuration.
+	 */
+	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
+		return physicalNamingStrategy;
+	}
+
+	/**
+	 * Set a {@link PhysicalNamingStrategy} to use in this configuration.
 	 *
-	 * @throws HibernateException Generally indicates we cannot find <tt>hibernate.cfg.xml</tt>
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setPhysicalNamingStrategy(PhysicalNamingStrategy physicalNamingStrategy) {
+		this.physicalNamingStrategy = physicalNamingStrategy;
+		return this;
+	}
+
+	/**
+	 * Use the mappings and properties specified in an application resource named
+	 * {@code hibernate.cfg.xml}.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @throws HibernateException Generally indicates we cannot find {@code hibernate.cfg.xml}
 	 *
 	 * @see #configure(String)
 	 */
@@ -245,12 +381,13 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application resource. The format of the resource is
-	 * defined in <tt>hibernate-configuration-3.0.dtd</tt>.
+	 * Use the mappings and properties specified in the given application resource.
+	 * <p>
+	 * The format of the resource is defined by {@code hibernate-configuration-3.0.dtd}.
 	 *
 	 * @param resource The resource to use
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates we cannot find the named resource
 	 */
@@ -265,17 +402,19 @@ public class Configuration {
 	/**
 	 * Intended for internal testing use only!!!
 	 */
+	@Internal
 	public StandardServiceRegistryBuilder getStandardServiceRegistryBuilder() {
 		return standardServiceRegistryBuilder;
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given document. The format of the document is defined in
-	 * <tt>hibernate-configuration-3.0.dtd</tt>.
+	 * Use the mappings and properties specified in the given document.
+	 * <p>
+	 * The format of the document is defined by {@code hibernate-configuration-3.0.dtd}.
 	 *
 	 * @param url URL from which you wish to load the configuration
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates a problem access the url
 	 */
@@ -286,12 +425,13 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application file. The format of the file is defined in
-	 * <tt>hibernate-configuration-3.0.dtd</tt>.
+	 * Use the mappings and properties specified in the given application file.
+	 * <p>
+	 * The format of the file is defined by {@code hibernate-configuration-3.0.dtd}.
 	 *
 	 * @param configFile File from which you wish to load the configuration
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates a problem access the file
 	 */
@@ -301,41 +441,61 @@ public class Configuration {
 		return this;
 	}
 
-	/**
-	 * @deprecated No longer supported.
-	 */
-	@Deprecated
-	public Configuration configure(org.w3c.dom.Document document) throws HibernateException {
-		return this;
-	}
-
-
 	// MetadataSources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Add a {@link TypeContributor} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
 	public Configuration registerTypeContributor(TypeContributor typeContributor) {
 		typeContributorRegistrations.add( typeContributor );
 		return this;
 	}
 
 	/**
-	 * Allows registration of a type into the type registry.  The phrase 'override' in the method name simply
-	 * reminds that registration *potentially* replaces a previously registered type .
+	 * Add a {@link FunctionContributor} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration registerFunctionContributor(FunctionContributor functionContributor) {
+		functionContributorRegistrations.add( functionContributor );
+		return this;
+	}
+
+	/**
+	 * Register a {@linkplain BasicType type} into the type registry,
+	 * potentially replacing a previously registered type.
 	 *
 	 * @param type The type to register.
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public Configuration registerTypeOverride(BasicType type) {
+	public Configuration registerTypeOverride(BasicType<?> type) {
 		basicTypes.add( type );
 		return this;
 	}
 
-
-	public Configuration registerTypeOverride(UserType type, String[] keys) {
-		basicTypes.add( new CustomType( type, keys ) );
-		return this;
+	private interface UserTypeRegistration {
+		void registerType(MetadataBuilder metadataBuilder);
 	}
 
-	public Configuration registerTypeOverride(CompositeUserType type, String[] keys) {
-		basicTypes.add( new CompositeCustomType( type, keys ) );
+	/**
+	 * Register a {@linkplain UserType type} into the type registry,
+	 * potentially replacing a previously registered type.
+	 *
+	 * @param type The type to register.
+	 * @param keys The keys under which to register the type.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration registerTypeOverride(UserType<?> type, String[] keys) {
+		if ( userTypeRegistrations == null ) {
+			userTypeRegistrations = new ArrayList<>();
+		}
+		userTypeRegistrations.add(
+				metadataBuilder -> metadataBuilder.applyBasicType( type, keys )
+		);
 		return this;
 	}
 
@@ -343,21 +503,27 @@ public class Configuration {
 	 * Read mappings from a particular XML file
 	 *
 	 * @param xmlFile a path to a file
-	 * @return this (for method chaining purposes)
-	 * @throws org.hibernate.MappingException Indicates inability to locate or parse
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @throws MappingException Indicates inability to locate or parse
 	 * the specified mapping file.
-	 * @see #addFile(java.io.File)
+	 *
+	 * @see #addFile(File)
 	 */
 	public Configuration addFile(String xmlFile) throws MappingException {
 		metadataSources.addFile( xmlFile );
 		return this;
 	}
+
 	/**
-	 * Read mappings from a particular XML file
+	 * Read mappings from a particular XML file.
 	 *
 	 * @param xmlFile a path to a file
-	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates inability to locate the specified mapping file.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @throws MappingException Indicates inability to locate the specified mapping file
 	 */
 	public Configuration addFile(File xmlFile) throws MappingException {
 		metadataSources.addFile( xmlFile );
@@ -365,27 +531,43 @@ public class Configuration {
 	}
 
 	/**
-	 * @deprecated No longer supported.
+	 * An object capable of parsing XML mapping files that can then be passed
+	 * to {@link #addXmlMapping(Binding)}.
 	 */
-	@Deprecated
-	public void add(XmlDocument metadataXml) {
+	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
+		return metadataSources.getXmlMappingBinderAccess();
 	}
 
 	/**
-	 * Add a cached mapping file.  A cached file is a serialized representation
-	 * of the DOM structure of a particular mapping.  It is saved from a previous
-	 * call as a file with the name <tt>xmlFile + ".bin"</tt> where xmlFile is
-	 * the name of the original mapping file.
+	 * Read mappings that were parsed using {@link #getXmlMappingBinderAccess()}.
+	 *
+	 * @param binding the parsed mapping
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration addXmlMapping(Binding<?> binding) {
+		metadataSources.addXmlBinding( binding );
+		return this;
+	}
+
+	/**
+	 * Add a cacheable mapping file.
+	 * <p>
+	 * A cached file is a serialized representation of the DOM structure of a
+	 * particular mapping. It is saved from a previous call as a file with the
+	 * name {@code xmlFile + ".bin"} where {@code xmlFile} is the name of the
+	 * original mapping file.
 	 * </p>
-	 * If a cached <tt>xmlFile + ".bin"</tt> exists and is newer than
-	 * <tt>xmlFile</tt> the <tt>".bin"</tt> file will be read directly. Otherwise
-	 * xmlFile is read and then serialized to <tt>xmlFile + ".bin"</tt> for use
-	 * the next time.
+	 * If a cached {@code xmlFile + ".bin"} exists and is newer than {@code xmlFile},
+	 * the {@code ".bin"} file will be read directly. Otherwise, {@code xmlFile} is
+	 * read and then serialized to {@code xmlFile + ".bin"} for use the next time.
 	 *
 	 * @param xmlFile The cacheable mapping file to be added.
-	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates problems reading the cached file or processing
-	 * the non-cached file.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @throws MappingException Indicates problems reading the cached file or
+	 * processing the non-cached file.
 	 */
 	public Configuration addCacheableFile(File xmlFile) throws MappingException {
 		metadataSources.addCacheableFile( xmlFile );
@@ -394,18 +576,18 @@ public class Configuration {
 
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
-	 * <p/>
-	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
-	 * the cache version cannot be found or used for whatever reason
+	 * <p>
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail
+	 * immediately if the cache version cannot be found or used for whatever
+	 * reason.
 	 *
 	 * @param xmlFile The xml file, not the bin!
 	 *
-	 * @return The dom "deserialized" from the cached file.
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
-	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
-	public Configuration addCacheableFileStrictly(File xmlFile) throws SerializationException, FileNotFoundException {
+	public Configuration addCacheableFileStrictly(File xmlFile) throws SerializationException {
 		metadataSources.addCacheableFileStrictly( xmlFile );
 		return this;
 	}
@@ -413,32 +595,28 @@ public class Configuration {
 	/**
 	 * Add a cacheable mapping file.
 	 *
-	 * @param xmlFile The name of the file to be added.  This must be in a form
-	 * useable to simply construct a {@link java.io.File} instance.
-	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates problems reading the cached file or processing
-	 * the non-cached file.
-	 * @see #addCacheableFile(java.io.File)
+	 * @param xmlFile The name of the file to be added, in a form usable to
+	 *                simply construct a {@link File} instance
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @throws MappingException Indicates problems reading the cached file or
+	 * processing the non-cached file
+	 *
+	 * @see #addCacheableFile(File)
 	 */
 	public Configuration addCacheableFile(String xmlFile) throws MappingException {
 		metadataSources.addCacheableFile( xmlFile );
 		return this;
 	}
 
-
 	/**
-	 * @deprecated No longer supported
-	 */
-	@Deprecated
-	public Configuration addXML(String xml) throws MappingException {
-		return this;
-	}
-
-	/**
-	 * Read mappings from a <tt>URL</tt>
+	 * Read mappings from a {@code URL}.
 	 *
 	 * @param url The url for the mapping document to be read.
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the URL or processing
 	 * the mapping document.
 	 */
@@ -448,26 +626,12 @@ public class Configuration {
 	}
 
 	/**
-	 * Read mappings from a DOM <tt>Document</tt>
-	 *
-	 * @param doc The DOM document
-	 * @return this (for method chaining purposes)
-	 * @throws MappingException Indicates problems reading the DOM or processing
-	 * the mapping document.
-	 *
-	 * @deprecated Use addURL, addResource, addFile, etc. instead
-	 */
-	@Deprecated
-	public Configuration addDocument(org.w3c.dom.Document doc) throws MappingException {
-		metadataSources.addDocument( doc );
-		return this;
-	}
-
-	/**
-	 * Read mappings from an {@link java.io.InputStream}.
+	 * Read mappings from an {@link InputStream}.
 	 *
 	 * @param xmlInputStream The input stream containing a DOM.
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the stream, or
 	 * processing the contained mapping document.
 	 */
@@ -477,20 +641,14 @@ public class Configuration {
 	}
 
 	/**
-	 * @deprecated This form (accepting a ClassLoader) is no longer supported.  Instead, add the ClassLoader
-	 * to the ClassLoaderService on the ServiceRegistry associated with this Configuration
-	 */
-	@Deprecated
-	public Configuration addResource(String resourceName, ClassLoader classLoader) throws MappingException {
-		return addResource( resourceName );
-	}
-
-	/**
-	 * Read mappings as a application resourceName (i.e. classpath lookup)
-	 * trying different class loaders.
+	 * Read mappings as an application resource name, that is, using a
+	 * {@linkplain ClassLoader#getResource(String) classpath lookup}, trying
+	 * different class loaders in turn.
 	 *
 	 * @param resourceName The resource name
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
@@ -501,17 +659,27 @@ public class Configuration {
 
 	/**
 	 * Read a mapping as an application resource using the convention that a class
-	 * named <tt>foo.bar.Foo</tt> is mapped by a file <tt>foo/bar/Foo.hbm.xml</tt>
-	 * which can be resolved as a classpath resource.
+	 * named {@code foo.bar.Foo} is mapped by a file {@code foo/bar/Foo.hbm.xml}
+	 * which can be resolved as a {@linkplain ClassLoader#getResource(String)
+	 * classpath resource}.
 	 *
-	 * @param persistentClass The mapped class
-	 * @return this (for method chaining purposes)
+	 * @param entityClass The mapped class
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
-	public Configuration addClass(Class persistentClass) throws MappingException {
-		metadataSources.addClass( persistentClass );
-		return this;
+	public Configuration addClass(Class<?> entityClass) throws MappingException {
+		if ( entityClass == null ) {
+			throw new IllegalArgumentException( "The specified class cannot be null" );
+		}
+
+		if ( log.isDebugEnabled() ) {
+			log.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
+		}
+
+		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
 	}
 
 	/**
@@ -519,10 +687,9 @@ public class Configuration {
 	 *
 	 * @param annotatedClass The class containing annotations
 	 *
-	 * @return this (for method chaining)
+	 * @return {@code this} for method chaining
 	 */
-	@SuppressWarnings({ "unchecked" })
-	public Configuration addAnnotatedClass(Class annotatedClass) {
+	public Configuration addAnnotatedClass(Class<?> annotatedClass) {
 		metadataSources.addAnnotatedClass( annotatedClass );
 		return this;
 	}
@@ -532,7 +699,7 @@ public class Configuration {
 	 *
 	 * @param packageName java package name
 	 *
-	 * @return this (for method chaining)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
@@ -542,12 +709,15 @@ public class Configuration {
 	}
 
 	/**
-	 * Read all mappings from a jar file
-	 * <p/>
-	 * Assumes that any file named <tt>*.hbm.xml</tt> is a mapping document.
+	 * Read all {@code .hbm.xml} mappings from a {@code .jar} file.
+	 * <p>
+	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
+	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param jar a jar file
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the jar file or
 	 * processing the contained mapping documents.
 	 */
@@ -557,12 +727,15 @@ public class Configuration {
 	}
 
 	/**
-	 * Read all mapping documents from a directory tree.
-	 * <p/>
-	 * Assumes that any file named <tt>*.hbm.xml</tt> is a mapping document.
+	 * Read all {@code .hbm.xml} mapping documents from a directory tree.
+	 * <p>
+	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
+	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param dir The directory
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the jar file or
 	 * processing the contained mapping documents.
 	 */
@@ -584,25 +757,20 @@ public class Configuration {
 	}
 
 	/**
-	 * Set the current {@link Interceptor}
+	 * Set the current {@link Interceptor}.
 	 *
-	 * @param interceptor The {@link Interceptor} to use for the {@link #buildSessionFactory built}
-	 * {@link SessionFactory}.
+	 * @param interceptor The {@link Interceptor} to use
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setInterceptor(Interceptor interceptor) {
 		this.interceptor = interceptor;
 		return this;
 	}
 
-	public EntityTuplizerFactory getEntityTuplizerFactory() {
-		return entityTuplizerFactory;
-	}
-
 	/**
-	 * Retrieve the user-supplied delegate to handle non-existent entity
-	 * scenarios.  May be null.
+	 * Retrieve the user-supplied {@link EntityNotFoundDelegate}, or
+	 * {@code null} if no delegate has been specified.
 	 *
 	 * @return The user-supplied delegate
 	 */
@@ -611,98 +779,200 @@ public class Configuration {
 	}
 
 	/**
-	 * Specify a user-supplied delegate to be used to handle scenarios where an entity could not be
-	 * located by specified id.  This is mainly intended for EJB3 implementations to be able to
-	 * control how proxy initialization errors should be handled...
+	 * Specify a user-supplied {@link EntityNotFoundDelegate} to be
+	 * used to handle scenarios where an entity could not be located
+	 * by specified id.
 	 *
 	 * @param entityNotFoundDelegate The delegate to use
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void setEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
+	public Configuration setEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
 		this.entityNotFoundDelegate = entityNotFoundDelegate;
+		return this;
 	}
 
+	/**
+	 * The {@link SessionFactoryObserver}, if any, that was added to this configuration.
+	 */
 	public SessionFactoryObserver getSessionFactoryObserver() {
 		return sessionFactoryObserver;
 	}
 
-	public void setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
+	/**
+	 * Specify a {@link SessionFactoryObserver} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
 		this.sessionFactoryObserver = sessionFactoryObserver;
-	}
-
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
-		return currentTenantIdentifierResolver;
-	}
-
-	public void setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
-		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
+		return this;
 	}
 
 	/**
-	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
-	 * SessionFactory will be immutable, so changes made to this Configuration after building the
-	 * SessionFactory will not affect it.
+	 * The {@link StatementInspector}, if any, that was added to this configuration.
+	 */
+	public StatementInspector getStatementInspector() {
+		return statementInspector;
+	}
+
+	/**
+	 * Specify a {@link StatementInspector} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setStatementInspector(StatementInspector statementInspector) {
+		this.statementInspector = statementInspector;
+		return this;
+	}
+
+	/**
+	 * The {@link CurrentTenantIdentifierResolver}, if any, that was added to this configuration.
+	 */
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
+		return currentTenantIdentifierResolver;
+	}
+
+	/**
+	 * Specify a {@link CurrentTenantIdentifierResolver} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver) {
+		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
+		return this;
+	}
+
+	/**
+	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
+	 */
+	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
+		return customEntityDirtinessStrategy;
+	}
+
+	/**
+	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration setCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy customEntityDirtinessStrategy) {
+		this.customEntityDirtinessStrategy = customEntityDirtinessStrategy;
+		return this;
+	}
+
+	/**
+	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
+	 */
+	@Incubating
+	public ColumnOrderingStrategy getColumnOrderingStrategy() {
+		return columnOrderingStrategy;
+	}
+
+	/**
+	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	@Incubating
+	public Configuration setColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		this.columnOrderingStrategy = columnOrderingStrategy;
+		return this;
+	}
+
+	/**
+	 * Create a {@link SessionFactory} using the properties and mappings
+	 * in this configuration. The {@code SessionFactory} will be immutable,
+	 * so changes made to this {@code Configuration} after building the
+	 * factory will not affect it.
 	 *
 	 * @param serviceRegistry The registry of services to be used in creating this session factory.
 	 *
-	 * @return The built {@link SessionFactory}
+	 * @return The newly-built {@link SessionFactory}
 	 *
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		log.debug( "Building session factory using provided StandardServiceRegistry" );
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
+		final MetadataBuilder metadataBuilder =
+				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
+
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy( implicitNamingStrategy );
 		}
+
 		if ( physicalNamingStrategy != null ) {
 			metadataBuilder.applyPhysicalNamingStrategy( physicalNamingStrategy );
 		}
+
+		if ( columnOrderingStrategy != null ) {
+			metadataBuilder.applyColumnOrderingStrategy( columnOrderingStrategy );
+		}
+
 		if ( sharedCacheMode != null ) {
 			metadataBuilder.applySharedCacheMode( sharedCacheMode );
 		}
-		if ( !typeContributorRegistrations.isEmpty() ) {
-			for ( TypeContributor typeContributor : typeContributorRegistrations ) {
-				metadataBuilder.applyTypes( typeContributor );
-			}
+
+		for ( TypeContributor typeContributor : typeContributorRegistrations ) {
+			metadataBuilder.applyTypes( typeContributor );
 		}
-		if ( !basicTypes.isEmpty() ) {
-			for ( BasicType basicType : basicTypes ) {
-				metadataBuilder.applyBasicType( basicType );
-			}
+
+		for ( FunctionContributor functionContributor : functionContributorRegistrations ) {
+			metadataBuilder.applyFunctions( functionContributor );
 		}
-		if ( sqlFunctions != null ) {
-			for ( Map.Entry<String, SQLFunction> entry : sqlFunctions.entrySet() ) {
+
+		if ( userTypeRegistrations != null ) {
+			userTypeRegistrations.forEach( registration ->  registration.registerType( metadataBuilder ) );
+		}
+
+		for ( BasicType<?> basicType : basicTypes ) {
+			metadataBuilder.applyBasicType( basicType );
+		}
+
+		if ( customFunctionDescriptors != null ) {
+			for ( Map.Entry<String, SqmFunctionDescriptor> entry : customFunctionDescriptors.entrySet() ) {
 				metadataBuilder.applySqlFunction( entry.getKey(), entry.getValue() );
 			}
 		}
+
 		if ( auxiliaryDatabaseObjectList != null ) {
 			for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
 				metadataBuilder.applyAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 			}
 		}
-		if ( attributeConverterDefinitionsByClass != null ) {
-			for ( AttributeConverterDefinition attributeConverterDefinition : attributeConverterDefinitionsByClass.values() ) {
-				metadataBuilder.applyAttributeConverter( attributeConverterDefinition );
-			}
+
+		if ( attributeConverterDescriptorsByClass != null ) {
+			attributeConverterDescriptorsByClass.values().forEach( metadataBuilder::applyAttributeConverter );
 		}
 
 		final Metadata metadata = metadataBuilder.build();
-
 		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
 			sessionFactoryBuilder.applyInterceptor( interceptor );
 		}
-		if ( getSessionFactoryObserver() != null ) {
-			sessionFactoryBuilder.addSessionFactoryObservers( getSessionFactoryObserver() );
+
+		if ( entityNameResolvers != null ) {
+			sessionFactoryBuilder.addEntityNameResolver( entityNameResolvers.toArray(new EntityNameResolver[0]) );
 		}
-		if ( getEntityNotFoundDelegate() != null ) {
-			sessionFactoryBuilder.applyEntityNotFoundDelegate( getEntityNotFoundDelegate() );
+
+		if ( sessionFactoryObserver != null ) {
+			sessionFactoryBuilder.addSessionFactoryObservers( sessionFactoryObserver );
 		}
-		if ( getEntityTuplizerFactory() != null ) {
-			sessionFactoryBuilder.applyEntityTuplizerFactory( getEntityTuplizerFactory() );
+
+		if ( statementInspector != null ) {
+			sessionFactoryBuilder.applyStatementInspector( statementInspector );
 		}
-		if ( getCurrentTenantIdentifierResolver() != null ) {
-			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( getCurrentTenantIdentifierResolver() );
+
+		if ( entityNotFoundDelegate != null ) {
+			sessionFactoryBuilder.applyEntityNotFoundDelegate( entityNotFoundDelegate );
+		}
+
+		if ( currentTenantIdentifierResolver != null ) {
+			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
+		}
+
+		if ( customEntityDirtinessStrategy != null ) {
+			sessionFactoryBuilder.applyCustomEntityDirtinessStrategy( customEntityDirtinessStrategy );
 		}
 
 		return sessionFactoryBuilder.build();
@@ -710,123 +980,185 @@ public class Configuration {
 
 
 	/**
-	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
-	 * {@link SessionFactory} will be immutable, so changes made to {@code this} {@link Configuration} after
-	 * building the {@link SessionFactory} will not affect it.
+	 * Create a {@link SessionFactory} using the properties and mappings
+	 * in this configuration. The {@link SessionFactory} will be immutable,
+	 * so changes made to this {@link Configuration} after building the
+	 * factory will not affect it.
 	 *
-	 * @return The build {@link SessionFactory}
+	 * @return The newly-built {@link SessionFactory}
 	 *
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		log.debug( "Building session factory using internal StandardServiceRegistryBuilder" );
 		standardServiceRegistryBuilder.applySettings( properties );
-		return buildSessionFactory( standardServiceRegistryBuilder.build() );
-	}
-
-
-
-	public Map<String,SQLFunction> getSqlFunctions() {
-		return sqlFunctions;
-	}
-
-	public void addSqlFunction(String functionName, SQLFunction function) {
-		if ( sqlFunctions == null ) {
-			sqlFunctions = new HashMap<String, SQLFunction>();
+		StandardServiceRegistry serviceRegistry = standardServiceRegistryBuilder.build();
+		try {
+			return buildSessionFactory( serviceRegistry );
 		}
-		sqlFunctions.put( functionName, function );
+		catch (Throwable t) {
+			serviceRegistry.close();
+			throw t;
+		}
 	}
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
+	/**
+	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
+	 * this configuration.
+	 *
+	 * @apiNote For historical reasons, this method is misnamed.
+	 *          The function descriptor actually describes a function
+	 *          available in HQL, and it may or may not map directly
+	 *          to a function defined in SQL.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @see SqmFunctionDescriptor
+	 */
+	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
+		if ( customFunctionDescriptors == null ) {
+			customFunctionDescriptors = new HashMap<>();
+		}
+		customFunctionDescriptors.put( functionName, function );
+		return this;
+	}
+
+	/**
+	 * Adds an {@link AuxiliaryDatabaseObject} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
 		if ( auxiliaryDatabaseObjectList == null ) {
-			auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
+			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
 		auxiliaryDatabaseObjectList.add( object );
+		return this;
 	}
 
 	/**
-	 * Adds the AttributeConverter Class to this Configuration.
+	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
-	 * @param attributeConverterClass The AttributeConverter class.
-	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
-	 * by its "entity attribute" parameterized type?
+	 * @param attributeConverterClass The {@code AttributeConverter} class.
+	 * @param autoApply Should the {@code AttributeConverter} be auto applied to
+	 *                  property types as specified by its "entity attribute"
+	 *                  parameterized type?
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass, autoApply ) );
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
+		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
+		return this;
 	}
 
 	/**
-	 * Adds the AttributeConverter Class to this Configuration.
+	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
-	 * @param attributeConverterClass The AttributeConverter class.
+	 * @param attributeConverterClass The {@code AttributeConverter} class.
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverterClass ) );
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
+		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
+		return this;
 	}
 
 	/**
-	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
-	 * to programmatically add their own AttributeConverter instance.  HEM, instead, uses the
-	 * {@link #addAttributeConverter(Class, boolean)} form
+	 * Adds an {@link AttributeConverter} instance to this configuration.
+	 * This form is mainly intended for developers to programmatically add
+	 * their own {@code AttributeConverter} instance.
 	 *
-	 * @param attributeConverter The AttributeConverter instance.
+	 * @param attributeConverter The {@code AttributeConverter} instance.
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(AttributeConverter attributeConverter) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverter ) );
+	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
+		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, classmateContext ) );
+		return this;
 	}
 
 	/**
-	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
-	 * to programmatically add their own AttributeConverter instance.  HEM, instead, uses the
-	 * {@link #addAttributeConverter(Class, boolean)} form
+	 * Adds an {@link AttributeConverter} instance to this configuration.
+	 * This form is mainly intended for developers to programmatically add
+	 * their own {@code AttributeConverter} instance.
 	 *
-	 * @param attributeConverter The AttributeConverter instance.
-	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
-	 * by its "entity attribute" parameterized type?
+	 * @param attributeConverter The {@code AttributeConverter} instance.
+	 * @param autoApply Should the {@code AttributeConverter} be auto applied
+	 *                  to property types as specified by its "entity attribute"
+	 *                  parameterized type?
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void addAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		addAttributeConverter( AttributeConverterDefinition.from( attributeConverter, autoApply ) );
+	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
+		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, autoApply, classmateContext ) );
+		return this;
 	}
 
-	public void addAttributeConverter(AttributeConverterDefinition definition) {
-		if ( attributeConverterDefinitionsByClass == null ) {
-			attributeConverterDefinitionsByClass = new HashMap<Class, AttributeConverterDefinition>();
+	/**
+	 * Adds an {@link ConverterDescriptor} instance to this configuration.
+	 *
+	 * @param converterDescriptor The {@code ConverterDescriptor} instance.
+	 *
+	 * @return {@code this} for method chaining
+	 */
+	public Configuration addAttributeConverter(ConverterDescriptor converterDescriptor) {
+		if ( attributeConverterDescriptorsByClass == null ) {
+			attributeConverterDescriptorsByClass = new HashMap<>();
 		}
-		attributeConverterDefinitionsByClass.put( definition.getAttributeConverter().getClass(), definition );
+		attributeConverterDescriptorsByClass.put( converterDescriptor.getAttributeConverterClass(), converterDescriptor );
+		return this;
 	}
 
 	/**
-	 * Sets the SharedCacheMode to use.
+	 * Add an {@link EntityNameResolver} to this configuration.
 	 *
-	 * Note that at the moment, only {@link javax.persistence.SharedCacheMode#ALL} has
-	 * any effect in terms of {@code hbm.xml} binding.
+	 * @param entityNameResolver The {@code EntityNameResolver} instance.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.2
+	 */
+	public Configuration addEntityNameResolver(EntityNameResolver entityNameResolver) {
+		if ( entityNameResolvers == null ) {
+			entityNameResolvers = new ArrayList<>();
+		}
+		entityNameResolvers.add( entityNameResolver );
+		return this;
+	}
+
+	/**
+	 * Sets the {@link SharedCacheMode} to use.
+	 * <p>
+	 * Note that currently only {@link jakarta.persistence.SharedCacheMode#ALL}
+	 * has any effect on {@code hbm.xml} binding.
 	 *
 	 * @param sharedCacheMode The SharedCacheMode to use
+	 *
+	 * @return {@code this} for method chaining
 	 */
-	public void setSharedCacheMode(SharedCacheMode sharedCacheMode) {
+	public Configuration setSharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.sharedCacheMode = sharedCacheMode;
+		return this;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo : decide about these
 
-	public Map getNamedSQLQueries() {
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedSQLQueries() {
 		return namedSqlQueries;
 	}
 
-	public Map getSqlResultSetMappings() {
+	public Map<String, NamedResultSetMappingDescriptor> getSqlResultSetMappings() {
 		return sqlResultSetMappings;
 	}
 
 	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
-		return namedEntityGraphMap == null
-				? Collections.<NamedEntityGraphDefinition>emptyList()
-				: namedEntityGraphMap.values();
+		return namedEntityGraphMap.values();
 	}
 
 
-	public Map<String, NamedQueryDefinition> getNamedQueries() {
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueries() {
 		return namedQueries;
 	}
 
@@ -835,26 +1167,19 @@ public class Configuration {
 	}
 
 	/**
-	 * @deprecated Does nothing
-	 */
-	@Deprecated
-	public void buildMappings() {
-	}
-
-	/**
-	 * Adds the incoming properties to the internal properties structure, as long as the internal structure does not
-	 * already contain an entry for the given key.
+	 * Adds the incoming properties to the internal properties structure, as
+	 * long as the internal structure does not already contain an entry for
+	 * the given key.
 	 *
 	 * @param properties The properties to merge
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
-		for ( Map.Entry entry : properties.entrySet() ) {
-			if ( this.properties.containsKey( entry.getKey() ) ) {
-				continue;
+		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {
+			if ( !properties.containsKey( entry.getKey() ) ) {
+				properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
 			}
-			this.properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
 		}
 		return this;
 	}

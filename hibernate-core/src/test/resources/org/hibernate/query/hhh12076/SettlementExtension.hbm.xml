@@ -9,7 +9,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class
-            name="org.hibernate.query.hhh12076.SettlementExtension"
+            name="org.hibernate.orm.test.query.hhh12076.SettlementExtension"
             table="claim_settlement_ext"
             abstract="true"
             lazy="false">
@@ -31,7 +31,7 @@
 
         <many-to-one
                 name="settlement"
-                class="org.hibernate.query.hhh12076.Settlement"
+                class="org.hibernate.orm.test.query.hhh12076.Settlement"
                 fetch="select">
             <column name="settlement_id" not-null="true"/>
         </many-to-one>

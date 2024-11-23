@@ -1,21 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.naming;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.components.Component1;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.components.Component1;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeComponentTestEntity;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeTestAlternateEntity;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeTestEntity;
+import org.hibernate.orm.test.envers.integration.naming.VersionsJoinTableRangeTestEntitySuperClass;
 
 import org.junit.Test;
 
@@ -26,7 +28,7 @@ import org.junit.Test;
  * @author Erik-Berndt Scheper
  */
 public class VersionsJoinTableRangeComponentNamingTest extends
-													   BaseEnversJPAFunctionalTestCase {
+													BaseEnversJPAFunctionalTestCase {
 	private Integer vjrcte_id;
 	private Integer vjtrte_id;
 	private Integer vjtrtae_id1;
@@ -226,8 +228,8 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 		);
 		assert auditClass != null;
 
-		@SuppressWarnings({"unchecked"})
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
+		@SuppressWarnings("unchecked")
+		Iterator<Column> columns = auditClass.getTable().getColumns().iterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;
@@ -253,8 +255,8 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 		);
 		assert auditClass != null;
 
-		@SuppressWarnings({"unchecked"})
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
+		@SuppressWarnings("unchecked")
+		Iterator<Column> columns = auditClass.getTable().getColumns().iterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;
@@ -286,8 +288,8 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 		);
 		assert auditClass != null;
 
-		@SuppressWarnings({"unchecked"})
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
+		@SuppressWarnings("unchecked")
+		Iterator<Column> columns = auditClass.getTable().getColumns().iterator();
 
 		boolean auditColumn1Found = false;
 		boolean auditColumn2Found = false;

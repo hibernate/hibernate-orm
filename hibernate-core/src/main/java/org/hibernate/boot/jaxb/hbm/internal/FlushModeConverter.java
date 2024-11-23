@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.internal;
 
@@ -12,11 +10,11 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 
 /**
- * JAXB marshalling for the FlushMode enum
- * <p/>
- * NOTE : The XML schemas define the use of {@code "never"}, which corresponds
- * to the removed FlushMode#NEVER.  Here we will also handle mapping
- * FlushMode#NEVER to FlushMode#MANUAL
+ * JAXB marshalling for the {@link FlushMode} enum.
+ *
+ * @implNote The XML schemas define the use of {@code "never"}, which corresponds
+ *           to the removed {@code FlushMode#NEVER}. Here we will also remap
+ *           {@code FlushMode#NEVER} to {@link FlushMode#MANUAL}.
  *
  * @author Steve Ebersole
  */

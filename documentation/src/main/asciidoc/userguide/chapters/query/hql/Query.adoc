@@ -1,0 +1,641 @@
+[[hql]]
+== Java API for HQL and JPQL
+:root-project-dir: ../../../../../../../..
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-query: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
+:extrasdir: extras
+
+The Hibernate Query Language (HQL) and the Java Persistence Query Language (JPQL) are object-oriented query languages based on SQL and very similar in flavor to SQL.
+
+[NOTE]
+====
+When we use the term "HQL" here, we usually mean both modern HQL, along with the standard subset defined by the specification.
+====
+
+HQL is not the only way to write queries in Hibernate:
+
+- <<chapters/query/criteria/Criteria.adoc#criteria,criteria queries>> offer a Java-based API with greater compile-time typesafety, and
+- <<chapters/query/native/Native.adoc#criteria,native SQL queries>> are also possible.
+
+However, HQL is the most convenient option for most people most of the time.
+
+The actual query language itself is discussed the <<chapters/query/hql/QueryLanguage.adoc#query-language,next chapter>>.
+This chapter describes the Java APIs for executing HQL and JPQL queries.
+
+Most of this chapter is dedicated to discussing `org.hibernate.query.Query`, `jakarta.persistence.Query` and
+`jakarta.persistence.TypedQuery`.  These `Query` contracts mix the ability to perform selections as well mutations.
+Hibernate additionally offers the more targeted `SelectionQuery` and `MutationQuery` contracts.  See
+<<hql-SelectionQuery>> and <<hql-MutationQuery>> for additional details.
+
+
+[[hql-examples-domain-model]]
+=== Example domain model
+
+The code examples featured in this chapter, and the next, make use of the following annotated domain model.
+
+[[hql-examples-domain-model-example]]
+.Examples domain model
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/Person.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/AddressType.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/Partner.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/Phone.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/PhoneType.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/Call.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/Payment.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
+
+include::{example-dir-model}/WireTransferPayment.java[tags=hql-examples-domain-model-example]
+----
+====
+
+[[hql-getting-started]]
+=== Obtaining a `Query` object
+
+A query may be provided to Hibernate as either:
+
+* an _inline query_: the text of the query is passed as a string to the session at runtime, or
+* a _named query_: the query is specified in an annotation or XML file, and identified by name at runtime.
+
+A `Query` object is obtained from the `EntityManager` or Hibernate `Session` by calling `createQuery()` or `createNamedQuery()`.
+
+The API for actually executing the query is the same in both cases, as we're about to see <<query-execution,below>>.
+
+[[named-queries]]
+==== Declaring named queries
+
+Named queries may be defined using the Jakarta Persistence annotation `@NamedQuery`.
+
+[[jpa-read-only-entities-native-example]]
+.Declaring a named query with a query hint
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/Person.java[tags=jpa-read-only-entities-native-example]
+----
+====
+
+Alternatively, Hibernate offers an extended
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation
+which allows the specification of additional properties of the query, including flush mode, cacheability, and timeout interval, in a more typesafe way.
+
+[[jpql-api-hibernate-named-query-example]]
+.Declaring a named query using the typesafe annotation
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/Phone.java[tags=jpql-api-hibernate-named-query-example, indent=0]
+----
+//include::{sourcedir}/HQLTest.java[tags=jpql-api-hibernate-named-query-example, indent=0]
+====
+
+[TIP]
+====
+One big advantage to named queries is that they are parsed by Hibernate at startup time, and so some sorts of errors are reported much earlier.
+====
+
+[[query-api]]
+==== Flavors of the Query API
+
+To execute a query, you'll need an instance of the Jakarta Persistence `Query` interface, or, even better, of its subinterface `TypedQuery`.
+
+[[jpa-query-api]]
+===== Jakarta Persistence `Query` and `TypedQuery`
+
+The `EntityManager` offers various operations that return `Query` or `TypedQuery<T>`, including:
+
+- `EntityManager#createQuery()`, which accepts a query written in HQL, and
+- `EntityManager#createNamedQuery()`, which accepts the name of a named query.
+
+[TIP]
+====
+It's better to explicitly pass the query result type as a Java `Class<T>`.
+That way, you'll obtain a `TypedQuery<T>`, and avoid some later typecasting.
+====
+
+[[jpql-api-example]]
+.Obtaining a Jakarta Persistence `Query` or `TypedQuery` reference
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-example]
+----
+====
+
+[[jpql-api-named-query-example]]
+.Obtaining a Jakarta Persistence `Query` or `TypedQuery` reference for a named query
+====
+[source, java, indent=0]
+----
+include::{example-dir-model}/Person.java[tags=jpql-api-named-query-example, indent=0]
+
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-named-query-example, indent=0]
+----
+====
+
+[[hql-query-api]]
+===== Hibernate `Query`
+
+Hibernate's `Session` interface refines the return types of the operations of `EntityManager` which create query objects.
+
+`Session#createQuery()`,  `Session#createNamedQuery()`, and other similar operations all return an instance of the extension `org.hibernate.query.Query`.
+
+[IMPORTANT]
+====
+Some overloaded forms of these operations return a raw type, but in Hibernate 6 all of these have been deprecated, and the use of the raw type `Query` is now strongly discouraged.
+Programs should migrate to the use of the typesafe overloads which accept a `Class<T>` object and return a typed `Query<T>`.
+====
+
+Hibernate's `Query` interface offers additional operations not available via `TypedQuery`, as we'll see below.
+
+[[hql-api-example]]
+.Obtaining a Hibernate `Query`
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-example]
+----
+====
+
+[[hql-api-named-query-example]]
+.Obtaining a Hibernate `Query` for a named query
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-named-query-example]
+----
+====
+
+[[query-execution]]
+=== Executing HQL and JPQL queries
+
+Since `org.hibernate.query.Query` inherits `TypedQuery`, which in turn inherits `Query`, usage of the three interfaces is almost identical.
+
+[[jpql-query-parameters]]
+==== Binding arguments to query parameters
+
+A query may have named parameters or ordinal parameters:
+
+* named parameters are specified using the syntax `:name`, and
+* ordinal parameters are specified using the syntax `?1`, `?2`, etc.
+
+If the query has parameters, arguments must be bound to each parameter before the query is executed.
+
+[[jpql-api-parameter-example]]
+.Named parameter binding
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-parameter-example]
+----
+====
+
+JPQL-style ordinal parameters are numbered from `1`.
+Just like with named parameters, a ordinal parameter may appear multiple times in a query.
+
+[[jpql-api-ordinal-parameter-example]]
+.Ordinal parameter binding
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-ordinal-parameter-example]
+----
+====
+
+[NOTE]
+====
+It's not a good idea to mix named and ordinal parameters in a single query.
+====
+
+[[jpql-query-execution]]
+==== Executing the query
+
+The `Query` interface is used to control the execution of the query.
+
+* `Query#getResultList()` is useful when the query might return zero, or more than one result.
+* `Query#getSingleResult()` is only for cases where the query always returns exactly one result.
+  It throws an exception when zero or many results are returned by the database.
+* `Query#getResultStream()` allows results to be retrieved incrementally, using a database cursor.
+
+[[jpql-api-list-example]]
+.Executing a query using `getResultList()`
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-list-example]
+----
+====
+
+[[jpql-api-unique-result-example]]
+.Executing a query using `getSingleResult()`
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-single-result-example]
+----
+====
+
+[[jpql-api-stream-example]]
+.Executing a query using `getResultStream()`
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-stream-example]
+----
+====
+
+[NOTE]
+====
+The `getResultStream()` method isn't usually useful.
+It's almost always a bad idea to hold open a database cursor.
+====
+
+[[jpql-pagination]]
+==== Pagination and limits
+
+The very important methods `Query#setMaxResults()` and `Query#setFirstResult()` are used to limit the number of results and control pagination.
+
+[[jpql-api-basic-usage-example]]
+.Limits and pagination
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-basic-usage-example]
+----
+====
+
+[[jpql-query-hints]]
+==== Using query hints to control query execution
+
+When working with the Jakarta Persistence API, advanced control over query execution is possible via named query hints.
+For example, we may want to specify an execution timeout or control caching.
+
+[[jpql-api-hint-usage-example]]
+.`Query` execution using a query hint
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=jpql-api-hint-usage-example]
+----
+====
+
+Jakarta Persistence defines some standard hints with the prefix `jakarta.persistence`, but most hints are provider specific.
+Using provider-specific hints limits your program's portability to only a small degree.
+
+|===
+| Hint name | Interpretation | Equivalent Hibernate API
+
+| `jakarta.persistence.query.timeout` | The query timeout, in milliseconds. | `Query#setTimeout()`
+| `jakarta.persistence.fetchgraph` | An `EntityGraph` to be interpreted as a _fetchgraph_, as defined by the Jakarta Persistence specification.
+| See <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
+| `jakarta.persistence.loadgraph` | An `EntityGraph` to be interpreted as a _loadgraph_, as defined by the Jakarta Persistence specification.
+| See <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
+| `org.hibernate.cacheMode` | The `CacheMode` to use. | `Query#setCacheMode()`
+| `org.hibernate.cacheable` | `true` if the query is cacheable. | `Query#setCacheable()`
+| `org.hibernate.cacheRegion` | For a cacheable query, the name of a cache region to use. | `Query#setCacheRegion()`
+| `org.hibernate.comment` | A comment to apply to the generated SQL. | `Query#setComment()`
+| `org.hibernate.fetchSize` | The JDBC fetch size to use. | `Query#setFetchSize()`
+| `org.hibernate.flushMode` | The Hibernate-specific `FlushMode` to use.
+
+(Where possible, prefer `jakarta.persistence.Query#setFlushMode()`.)
+
+| `Query#setFlushMode()`
+| `org.hibernate.readOnly` | `true` if entities and collections loaded by this query should be marked as read-only.
+| `Query#setReadOnly()`
+|===
+
+[TIP]
+====
+For named queries, query hints may be specified using the `@QueryHint` annotation.
+====
+
+[[hql-api-execution]]
+==== Advanced control over query execution
+
+When working directly with a Hibernate `Session`, the interface `org.hibernate.Query` is used to control the execution of the query.
+
+Whereas we needed to specify some information using query hints when working with the Jakarta Persistence API, here we have typesafe setters:
+
+|===
+| `Query#setTimeout()` | Sets the JDBC-level query timeout.
+| `Query#setFetchSize()` | Sets the JDBC-level fetch size.
+| `Query#setCacheable()` and `setCacheRegion()` | Control query caching.
+| `Query#setCacheMode()` | Overrides the session-level cache mode.
+| `Query#setFlushMode()` | Overrides the session-level flush mode. Flushing is covered in detail in <<chapters/flushing/Flushing.adoc#flushing,Flushing>>.
+| `Query#setLockMode()` | Overrides the session-level flush mode. Locking is covered in detail in <<chapters/locking/Locking.adoc#locking,Locking>>.
+| `Query#setReadOnly()` | Overrides the session-level default for read-only state. The concept of read-only state is covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
+| `Query#setComment()` | Adds a comment to the generated SQL.
+| `Query#addQueryHint()` | Add a hint to the generated SQL.
+|===
+
+[IMPORTANT]
+====
+`addQueryHint()` allows specification of a hint intended for the database query planner.
+A hint is added directly to the generated SQL according to `Dialect#getQueryHintString()`.
+
+On the other hand, `setHint()` refers to the Jakarta Persistence notion of a query hint, a hint that targets the provider (Hibernate).
+This is a completely different concept.
+====
+
+For complete details, see the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Query.html[Query] Javadocs.
+
+[[hql-api-basic-usage-example]]
+.Advanced query control
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-basic-usage-example]
+----
+====
+
+[[hql-api-result-transformers]]
+==== Query result transformers
+
+A program may hook into the process of building the query results by providing a `org.hibernate.transform.ResultListTransformer` or `org.hibernate.transform.TupleTransformer`.
+
+See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/transform/ResultListTransformer.html[Javadocs] along with the built-in implementations for additional details.
+
+//[[hql-api-parameters]]
+//==== Binding arguments to parameters
+//
+//The last thing that needs to happen before we can execute the query is to bind the values for any parameters defined in the query.
+//`Query` defines many overloaded methods for this purpose.
+//The most generic form takes the value as well as the Hibernate Type.
+//
+//[[hql-api-parameter-example]]
+//.Hibernate name parameter binding
+//====
+//[source, java, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-example]
+//----
+//====
+//
+//Hibernate generally understands the expected type of the parameter given its context in the query.
+//In the previous example since we are using the parameter in a `LIKE` comparison against a String-typed attribute Hibernate would automatically infer the type; so the above could be simplified.
+//
+//[[hql-api-parameter-inferred-type-example]]
+//.Hibernate name parameter binding (inferred type)
+//====
+//[source, java, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-inferred-type-example]
+//----
+//====
+//
+//There are also short hand forms for binding common types such as strings, booleans, integers, etc.
+//
+//[[hql-api-parameter-short-form-example]]
+//.Hibernate name parameter binding (short forms)
+//====
+//[source, java, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-api-parameter-short-form-example]
+//----
+//====
+//
+//[IMPORTANT]
+//====
+//Traditionally, Hibernate used to support a JDBC ordinal parameter syntax form via a `?` symbol without a following ordinal.
+//
+//There was no way to relate two such ordinal parameters as being "the same" aside from binding the same value to each and, for this reason, this form is no longer supported.
+//
+//[source, java, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-api-ordinal-parameter-example]
+//----
+//====
+//
+//In terms of execution, Hibernate offers 4 different methods. The 2 most commonly used are
+//
+//* `Query#list` - executes the select query and returns back the list of results.
+//* `Query#uniqueResult` - executes the select query and returns the single result. If there were more than one result an exception is thrown.
+//
+//[[hql-api-list-example]]
+//.Hibernate `list()` result
+//====
+//[source, java, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-api-list-example]
+//----
+//====
+//
+//It is also possible to extract a single result from a `Query`.
+//
+//[[hql-api-unique-result-example]]
+//.Hibernate `uniqueResult()`
+//====
+//[source, java, indent=0]
+//----
+//include::{sourcedir}/HQLTest.java[tags=hql-api-unique-result-example]
+//----
+//====
+//
+//[NOTE]
+//====
+//If the unique result is used often and the attributes upon which it is based are unique, you may want to consider mapping a natural-id and using the natural-id loading API.
+//See the <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>> for more information on this topic.
+//====
+//
+
+[[hql-read-only-entities]]
+==== Querying for read-only entities
+
+As explained in <<chapters/domain/immutability.adoc#entity-immutability,entity immutability>>, fetching entities in read-only mode is more efficient than fetching entities whose state changes might need to be written to the database.
+Fortunately, even mutable entities may be fetched in read-only mode, with the benefit of reduced memory footprint and of a faster flushing process.
+
+Read-only entities are skipped by the dirty checking mechanism as illustrated by the following example:
+
+[[hql-read-only-entities-example]]
+.Read-only entities query example
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/hql-read-only-entities-example.sql[]
+----
+====
+
+In this example, no SQL `UPDATE` was executed.
+
+The method `Query#setReadOnly()` is an alternative to using a Jakarta Persistence query hint:
+
+[[hql-read-only-entities-native-example]]
+.Read-only entities native query example
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-read-only-entities-native-example]
+----
+====
+
+[[hql-api-incremental]]
+=== Scrolling and streaming results
+
+The `org.hibernate.Query` interface offers two specialized operations for reading query results incrementally, while maintaining an open JDBC `ResultSet` mapped to a server-side cursor.
+
+[[hql-api-scroll]]
+==== Scrollable result sets
+
+`Query#scroll()` returns a `org.hibernate.ScrollableResults` which wraps an underlying JDBC scrollable `ResultSet`.
+Depending on the specified `ScrollMode`, and on the capabilities of the JDBC driver, the `ScrollableResults` may allow navigation of the `ResultSet` in either direction.
+
+[[hql-api-scroll-example]]
+.Scrolling through a `ResultSet` containing entities
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-scroll-example]
+----
+====
+
+If a `ScrollableResults` is left unclosed by the application, Hibernate will automatically close the underlying resources when the transaction ends.
+However, it's much better to close the `ResultSet` as soon as possible.
+
+[IMPORTANT]
+====
+Since this method holds the JDBC `ResultSet` open, the program should always close a `ScrollableResults` either explicitly, by calling `close()`, or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
+====
+
+[NOTE]
+====
+If you plan to use `Query#scroll` with collection fetching, it's important that your query explicitly order the results so that the JDBC results contain the related rows sequentially.
+====
+
+[[jpql-api-stream]]
+==== Streamed result sets
+
+Similarly, `getResultStream()` is a specialized operation for reading query results incrementally, while maintaining an open JDBC `ResultSet` mapped to a server-side cursor.
+
+[IMPORTANT]
+====
+The `getResultStream()` method is not just a convenient way to obtain a Java `Stream`.
+For that, use `getResultList().stream()`.
+====
+
+[[hql-api-stream-projection-example]]
+.Hibernate `getResultStream()` with a projection result type
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-projection-example]
+----
+====
+
+[[hql-api-stream-example]]
+.Hibernate `getResultStream()` with an entity result type
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/HQLTest.java[tags=hql-api-stream-example]
+----
+====
+
+Hibernate will automatically close the underlying resources (the JDBC `ResultSet`) when the transaction ends.
+However, it's much better to close the `ResultSet` as soon as possible.
+
+[IMPORTANT]
+====
+The program should always close a `Stream` either explicitly, by calling `close()`, or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
+====
+
+[[hql-query-plan-cache]]
+=== Entity query plan cache
+
+Any entity query, be it JPQL or Criteria API, has to be parsed into an AST (Abstract Syntax Tree) so that Hibernate can generate the proper SQL statement. The entity query compilation takes time, and for this reason, Hibernate offers a query plan cache.
+
+When executing an entity query, Hibernate first checks the plan cache, and only if there's no plan available, a new one will be computed right away.
+
+The query plan cache can be configured via the following configuration properties:
+
+`hibernate.query.plan_cache_max_size`::
+This setting gives the maximum number of entries of the plan cache. The default value is 2048.
+`hibernate.query.plan_parameter_metadata_max_size`::
+The setting gives the maximum number of `ParameterMetadataImpl` instances maintained by the query plan cache. The `ParameterMetadataImpl` object encapsulates metadata about parameters encountered within a query. The default value is 128.
+
+Now, if you have many JPQL or Criteria API queries, it's a good idea to increase the query plan cache size so that the vast majority of executing entity queries can skip the compilation phase, therefore reducing execution time.
+
+To get a better understanding of the query plan cache effectiveness, Hibernate offers several statistics you can use. For more details, check out the <<chapters/statistics/Statistics.adoc#statistics-query-plan-cache,Query plan cache statistics>> section.
+
+
+[[hql-SelectionQuery]]
+=== SelectionQuery
+
+Hibernate's `SelectionQuery` contract is similar to `Query` but only exposes methods which are relevant to selection queries.  For example,
+it does not expose a `#executeUpdate` method.  This allows for earlier validation of the query as a selection.
+
+
+[[hql-examples-selection-query]]
+.Selection query validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-selection-query]
+
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-selection-query-query]
+----
+====
+
+`SelectionQuery` may also be used with named-queries
+
+[[hql-examples-named-selection-query]]
+.NamedQuery selection validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query]
+
+include::{example-dir-query}/SelectionQueryExampleTests.java[tags=example-hql-named-selection-query-query]
+----
+====
+
+
+
+
+[[hql-MutationQuery]]
+=== MutationQuery
+
+Along the same lines as `SelectionQuery`, `MutationQuery` is similar to `Query` but only exposes methods which are relevant to mutation queries.
+For example, in terms of execution, it only exposes `#executeUpdate` method.  This allows for earlier validation of the query as a mutation.
+
+[[hql-examples-mutation-query]]
+.Mutation query validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mutation-query]
+
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-mutation-query-query]
+----
+====
+
+
+`MutationQuery` may also be used with named-queries
+
+[[hql-examples-named-mutation-query]]
+.NamedQuery mutation validation
+====
+[source, java, indent=0]
+----
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query]
+
+include::{example-dir-query}/MutationQueryExampleTests.java[tags=example-hql-named-mutation-query-query]
+----
+====
+
+

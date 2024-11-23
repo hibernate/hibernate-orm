@@ -1,52 +1,68 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.spi;
 
-import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * Provides the JdbcSession implementation with contextual information it needs during its lifecycle.
+ * Provides the "JDBC session" with contextual information it needs during its lifecycle.
  *
  * @author Steve Ebersole
  */
 public interface JdbcSessionContext {
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#USE_SCROLLABLE_RESULTSET
+	 */
 	boolean isScrollableResultSetsEnabled();
+
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#USE_GET_GENERATED_KEYS
+	 */
 	boolean isGetGeneratedKeysEnabled();
-	int getFetchSize();
 
-	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_FETCH_SIZE
+	 */
+	Integer getFetchSizeOrNull();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
+	 */
 	boolean doesConnectionProviderDisableAutoCommit();
 
 	/**
-	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode} instead
+	 * @see org.hibernate.cfg.AvailableSettings#PREFER_USER_TRANSACTION
 	 */
-	@Deprecated
-	ConnectionReleaseMode getConnectionReleaseMode();
+	boolean isPreferUserTransaction();
 
 	/**
-	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode} instead
+	 * @see org.hibernate.cfg.AvailableSettings#JTA_TRACK_BY_THREAD
 	 */
-	@Deprecated
-	ConnectionAcquisitionMode getConnectionAcquisitionMode();
+	boolean isJtaTrackByThread();
+
+	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
 	StatementInspector getStatementInspector();
 
-	JdbcObserver getObserver();
+	JpaCompliance getJpaCompliance();
+
+	StatisticsImplementor getStatistics();
+
+	JdbcEventHandler getEventHandler();
+
+	JdbcServices getJdbcServices();
+
+	BatchBuilder getBatchBuilder();
 
 	/**
-	* Retrieve the session factory for this environment.
-	*
-	* @return The session factory
-	*/
-	SessionFactoryImplementor getSessionFactory();
-
-	ServiceRegistry getServiceRegistry();
+	 * @see org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner#isActive()
+	 *
+	 * @return {@code false} if the session factory was already destroyed
+	 */
+	boolean isActive();
 }

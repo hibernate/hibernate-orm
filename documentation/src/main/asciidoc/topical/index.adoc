@@ -1,45 +1,98 @@
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
 = Topical Guides
 :toc:
 
 Hibernate documentation is organized into several guides that cover specific topics.  This guide provides links to
-all the guides to give some direction on where to look for information.
+all the documentation to give some direction on where to look for information.
 
-NOTE: This is still very much a work in progress. <<helping,Help>> is definitely welcome!
+[TIP]
+====
+See the link:{doc-migration-guide-url}[Migration Guide] for details about migration to Hibernate {majorMinorVersion}.
+====
 
-== User Guides
 
-* For information on bootstrapping Hibernate
-** For bootstrapping a SessionFactory, see the <<bootstrap/NativeBootstrapping.adoc#,Native Bootstrapping Guide>>
-** For bootstrapping a Hibernate EntityManagerFactory (JPA), see the <<bootstrap/JpaBootstrapping.adoc#,JPA Bootstrapping Guide>>
-** For (semi-deprecated) bootstrapping of a SessionFactory using the legacy Configuration approach, see the <<bootstrap/LegacyBootstrapping.adoc#,Legacy Bootstrapping Guide>>
-* For information on generated (non-identifier) values, see the <<generated/GeneratedValues.adoc#,Generated Values Guide>>
-* For information on logging, see <<logging/Logging.adoc#,Logging Guide>>
-* For information on how to use the latest version of Hibernate ORM on WildFly, see <<wildfly/Wildfly.adoc#,Using Hibernate ORM on Wildfly>>
-* Others coming soon
+[[usage-guides]]
+== Usage Guides
 
+Hibernate publishes multiple usage guides -
+
+link:{doc-quick-start-url}[Quick Start]::
+    Tutorial style guide for quickly getting started with Hibernate.
+link:{doc-introduction-url}[Introduction to Hibernate]::
+    High-level look at the most used Hibernate features.
+link:{doc-query-language-url}[Guide to the Hibernate Query Language]::
+    Discussion of the Hibernate Query Language.
+link:{doc-user-guide-url}[User Guide]::
+    Detailed discussion of all features of Hibernate.  More of a reference manual.
+
+
+[[logging]]
+== Logging
+
+The link:{doc-logging-url}[Logging Guide] discusses logging in Hibernate.
+
+
+[[tooling]]
 == Tooling
 
-* See the <<metamodelgen/MetamodelGenerator.adoc#,Metamodel Generator Guide>> for details on generating a JPA "Static Metamodel"
-* see the <<bytecode/BytecodeEnhancement.adoc#,Bytecode Enhancement Guide>> for information on bytecode enhancement
-* Guide on the Gradle plugin coming soon
-* Guide on the Ant tasks coming soon
-* Guide on the Maven plugin coming soon
+See the link:{doc-user-guide-url}#tooling[Tooling Guide] for information on:
+
+* Bytecode enhancement
+* Static Metamodel Generation
+* Gradle, Maven, and Ant plugins
+* Schema management
 
 
 == Integrator Guides
-* The <<registries/ServiceRegistries.adoc#,Service Registries Guide>> discusses Hibernate Service and ServiceRegistry contracts.
-* Providers of custom `SessionFactory` implementations should see <<sessionfactory/CustomSessionFactory.adoc#,Custom SessionFactory and Session Implementations Guide>>
+* The <<registries/ServiceRegistries.adoc#registries-guide,Service Registries Guide>> discusses Hibernate Service and ServiceRegistry contracts.
 * Others coming soon
 
 
-[[helping]]
-== Helping
+[[support]]
+== Compatibility and Support
 
-* These "topical guides" are developed using Asciidoctor.  Meanwhile the legacy Hibernate reference manuals are
-written in  DocBook.  The conversion of knowledge into the "topical guide" format will take time and is an
-ongoing process.  A huge way to help would be to create topical guide(s) and pull over the relevant information
-from the corresponding reference information.  See the https://hibernate.atlassian.net/browse/HHH-8606[Jira task] for
-a list of ideas
-* Reporting/fixing problems.  Report any typos or inaccurate information to the
-https://hibernate.atlassian.net/browse/HHH[Hibernate ORM Jira] using the +documentation+ component.  Follow the same
-guidelines for contributing fixes and improvements as for contributing source code.
+Compatibility is defined as ...
+
+Support is defined as ...
+
+By default, all parts of Hibernate are considered supported and follow the general backwards compatibility https://hibernate.org/community/compatibility-policy/[policy].
+Various things influence the levels of support and backwards compatibility to expect in regard to parts of Hibernate.
+
+[[support-internal]]
+=== Internal
+
+Internal parts of Hibernate are simply that - internal implementation details that are not supported for use by applications.
+Use of internal contracts should be avoided as they are not supported and could be removed or changed at any time.
+
+Contracts considered internal are defined in one of 2 ways:
+
+1. The Java class (interface, etc.) is defined under a package named `internal`, either directly or as a sub-package
+2. Through the use of the `@Internal` annotation.
+
+See the definitive set of link:{report-internals-url}[internals].
+
+
+[[support-incubating]]
+=== Incubating
+
+Incubating contracts are generally new contracts which are still being actively designed, similar to
+"tech preview" features.
+Such contracts are subject to change and should be used with that understanding.
+
+See the definitive set of link:{report-incubating-url}[incubations].
+
+[[support-deprecation]]
+=== Deprecations
+
+1. `@Deprecated`
+2. `@Remove`
+
+See the definitive set of link:{report-deprecation-url}[deprecations].
+
+

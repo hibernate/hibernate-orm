@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal;
 
@@ -12,29 +10,35 @@ import org.hibernate.jpa.spi.JpaCompliance;
  * @author Andrea Boriero
  */
 public class JpaComplianceImpl implements JpaCompliance {
-	private boolean queryCompliance;
-	private boolean transactionCompliance;
-	private boolean listCompliance;
-	private boolean closedCompliance;
-	private boolean proxyCompliance;
-	private boolean cachingCompliance;
-	private boolean globalGeneratorNameScopeCompliance;
+	private final boolean orderByMappingCompliance;
+	private final boolean proxyCompliance;
+	private final boolean globalGeneratorNameScopeCompliance;
+	private final boolean queryCompliance;
+	private final boolean transactionCompliance;
+	private final boolean closedCompliance;
+	private final boolean cachingCompliance;
+	private final boolean loadByIdCompliance;
+	private final boolean cascadeCompliance;
 
-	private JpaComplianceImpl(
+	public JpaComplianceImpl(
+			boolean orderByMappingCompliance,
+			boolean proxyCompliance,
+			boolean globalGeneratorNameScopeCompliance,
 			boolean queryCompliance,
 			boolean transactionCompliance,
-			boolean listCompliance,
 			boolean closedCompliance,
-			boolean proxyCompliance,
 			boolean cachingCompliance,
-			boolean globalGeneratorNameScopeCompliance) {
+			boolean loadByIdCompliance,
+			boolean cascadeCompliance) {
 		this.queryCompliance = queryCompliance;
 		this.transactionCompliance = transactionCompliance;
-		this.listCompliance = listCompliance;
 		this.closedCompliance = closedCompliance;
 		this.proxyCompliance = proxyCompliance;
 		this.cachingCompliance = cachingCompliance;
 		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
+		this.orderByMappingCompliance = orderByMappingCompliance;
+		this.loadByIdCompliance = loadByIdCompliance;
+		this.cascadeCompliance = cascadeCompliance;
 	}
 
 	@Override
@@ -48,8 +52,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 	}
 
 	@Override
-	public boolean isJpaListComplianceEnabled() {
-		return listCompliance;
+	public boolean isJpaCascadeComplianceEnabled() {
+		return cascadeCompliance;
 	}
 
 	@Override
@@ -72,16 +76,43 @@ public class JpaComplianceImpl implements JpaCompliance {
 		return globalGeneratorNameScopeCompliance;
 	}
 
+	@Override
+	public boolean isJpaOrderByMappingComplianceEnabled() {
+		return orderByMappingCompliance;
+	}
+
+	@Override
+	public boolean isLoadByIdComplianceEnabled() {
+		return loadByIdCompliance;
+	}
+
 	public static class JpaComplianceBuilder {
 		private boolean queryCompliance;
-		private boolean transactionCompliance;
-		private boolean listCompliance;
-		private boolean closedCompliance;
+		private boolean orderByMappingCompliance;
 		private boolean proxyCompliance;
-		private boolean cachingCompliance;
 		private boolean globalGeneratorNameScopeCompliance;
+		private boolean cachingCompliance;
+		private boolean transactionCompliance;
+		private boolean closedCompliance;
+		private boolean loadByIdCompliance;
+		private boolean cascadeCompliance;
 
 		public JpaComplianceBuilder() {
+		}
+
+		public JpaComplianceBuilder setCascadeCompliance(boolean cascadeCompliance) {
+			this.cascadeCompliance = cascadeCompliance;
+			return this;
+		}
+
+		public JpaComplianceBuilder setOrderByMappingCompliance(boolean orderByMappingCompliance) {
+			this.orderByMappingCompliance = orderByMappingCompliance;
+			return this;
+		}
+
+		public JpaComplianceBuilder setProxyCompliance(boolean proxyCompliance) {
+			this.proxyCompliance = proxyCompliance;
+			return this;
 		}
 
 		public JpaComplianceBuilder setQueryCompliance(boolean queryCompliance) {
@@ -94,18 +125,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 			return this;
 		}
 
-		public JpaComplianceBuilder setListCompliance(boolean listCompliance) {
-			this.listCompliance = listCompliance;
-			return this;
-		}
-
 		public JpaComplianceBuilder setClosedCompliance(boolean closedCompliance) {
 			this.closedCompliance = closedCompliance;
-			return this;
-		}
-
-		public JpaComplianceBuilder setProxyCompliance(boolean proxyCompliance) {
-			this.proxyCompliance = proxyCompliance;
 			return this;
 		}
 
@@ -119,15 +140,22 @@ public class JpaComplianceImpl implements JpaCompliance {
 			return this;
 		}
 
+		public JpaComplianceBuilder setLoadByIdCompliance(boolean loadByIdCompliance) {
+			this.loadByIdCompliance = loadByIdCompliance;
+			return this;
+		}
+
 		JpaCompliance createJpaCompliance() {
 			return new JpaComplianceImpl(
+					orderByMappingCompliance,
+					proxyCompliance,
+					globalGeneratorNameScopeCompliance,
 					queryCompliance,
 					transactionCompliance,
-					listCompliance,
 					closedCompliance,
-					proxyCompliance,
 					cachingCompliance,
-					globalGeneratorNameScopeCompliance
+					loadByIdCompliance,
+					cascadeCompliance
 			);
 		}
 	}

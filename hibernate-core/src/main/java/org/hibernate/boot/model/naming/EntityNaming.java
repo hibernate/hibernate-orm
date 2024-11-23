@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
@@ -18,7 +16,7 @@ public interface EntityNaming {
 	 *
 	 * @return The entity class name.
 	 */
-	public String getClassName();
+	String getClassName();
 
 	/**
 	 * The Hibernate entity name.  This might be either:<ul>
@@ -28,13 +26,13 @@ public interface EntityNaming {
 	 *
 	 * @return The Hibernate entity name
 	 */
-	public String getEntityName();
+	String getEntityName();
 
 	/**
-	 * The JPA-specific entity name.  See {@link javax.persistence.Entity#name()} for details.
+	 * The JPA-specific entity name.  See {@link jakarta.persistence.Entity#name()} for details.
 	 *
 	 * @return The JPA entity name, if one was specified.  May return {@code null} if one
 	 * was not explicitly specified.
 	 */
-	public String getJpaEntityName();
+	String getJpaEntityName();
 }

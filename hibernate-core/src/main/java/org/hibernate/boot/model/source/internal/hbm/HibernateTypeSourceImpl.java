@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -38,7 +36,7 @@ public class HibernateTypeSourceImpl implements HibernateTypeSource, JavaTypeDes
 	}
 
 	public HibernateTypeSourceImpl(String name) {
-		this( name, Collections.<String, String>emptyMap() );
+		this( name, Collections.emptyMap() );
 	}
 
 	public HibernateTypeSourceImpl(String name, Map<String, String> parameters) {
@@ -74,7 +72,7 @@ public class HibernateTypeSourceImpl implements HibernateTypeSource, JavaTypeDes
 	public void resolveJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
 		if ( this.javaTypeDescriptor != null ) {
 			if ( this.javaTypeDescriptor != descriptor ) {
-				throw new IllegalStateException( "Attempt to resolve an already resolved JavaTypeDescriptor" );
+				throw new IllegalStateException( "Attempt to resolve an already resolved JavaType" );
 			}
 		}
 		this.javaTypeDescriptor = descriptor;

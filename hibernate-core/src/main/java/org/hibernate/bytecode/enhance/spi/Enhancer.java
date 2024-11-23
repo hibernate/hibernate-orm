@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi;
 
@@ -30,4 +28,17 @@ public interface Enhancer {
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
 	byte[] enhance(String className, byte[] originalBytes) throws EnhancementException;
+
+	/**
+	 * Discovers types prior to enhancement.
+	 *
+	 * It is possible to invoke this method concurrently.
+	 *
+	 * @param className The name of the class whose bytecode is being analyzed for type discovery.
+	 * @param originalBytes The class's original (pre-enhancement) byte code
+	 *
+	 * @throws EnhancementException Indicates a problem during type discovery
+	 * @since 6.3
+	 */
+	void discoverTypes(String className, byte[] originalBytes) throws EnhancementException;
 }

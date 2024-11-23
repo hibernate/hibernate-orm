@@ -1,33 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 
 /**
- * Represents a <tt>pre-delete</tt> event, which occurs just prior to
+ * Represents a {@code pre-delete} event, which occurs just prior to
  * performing the deletion of an entity from the database.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PreDeleteEvent
-		extends AbstractPreDatabaseOperationEvent
-		implements PermissionCheckEntityInformation {
+public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
 
 	private Object[] deletedState;
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *
 	 * @param entity The entity to be deleted.
 	 * @param id The id to use in the deletion.
 	 * @param deletedState The entity's state at deletion time.
@@ -36,7 +28,7 @@ public class PreDeleteEvent
 	 */
 	public PreDeleteEvent(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] deletedState,
 			EntityPersister persister,
 			EventSource source) {

@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -16,20 +14,20 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
 
 import org.jboss.logging.Logger;
 
 /**
- * A locking strategy where the locks are obtained through update statements.
- * <p/>
+ * A locking strategy where a lock is obtained via an update statement.
+ * <p>
  * This strategy is not valid for read style locks.
  *
  * @author Steve Ebersole
@@ -37,11 +35,12 @@ import org.jboss.logging.Logger;
  */
 public class UpdateLockingStrategy implements LockingStrategy {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			UpdateLockingStrategy.class.getName()
 	);
 
-	private final Lockable lockable;
+	private final EntityPersister lockable;
 	private final LockMode lockMode;
 	private final String sql;
 
@@ -52,10 +51,10 @@ public class UpdateLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public UpdateLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
-		if ( lockMode.lessThan( LockMode.UPGRADE ) ) {
+		if ( lockMode.lessThan( LockMode.WRITE ) ) {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
@@ -69,11 +68,11 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 	@Override
 	public void lock(
-			Serializable id,
+			Object id,
 			Object version,
 			Object object,
 			int timeout,
-			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
+			EventSource session) throws StaleObjectStateException, JDBCException {
 		final String lockableEntityName = lockable.getEntityName();
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockableEntityName + "]" );
@@ -85,7 +84,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 			try {
-				final VersionType lockableVersionType = lockable.getVersionType();
+				final BasicType<?> lockableVersionType = lockable.getVersionType();
 				lockableVersionType.nullSafeSet( st, version, 1, session );
 				int offset = 2;
 
@@ -97,7 +96,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 					lockableVersionType.nullSafeSet( st, version, offset, session );
 				}
 
-				final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st );
+				final int affected = jdbcCoordinator.getResultSetReturn().executeUpdate( st, sql );
 				if ( affected < 0 ) {
 					final StatisticsImplementor statistics = factory.getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
@@ -124,11 +123,11 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 	protected String generateLockString() {
 		final SessionFactoryImplementor factory = lockable.getFactory();
-		final Update update = new Update( factory.getDialect() );
+		final Update update = new Update( factory );
 		update.setTableName( lockable.getRootTableName() );
-		update.addPrimaryKeyColumns( lockable.getRootTableIdentifierColumnNames() );
-		update.setVersionColumnName( lockable.getVersionColumnName() );
-		update.addColumn( lockable.getVersionColumnName() );
+		update.addAssignment( lockable.getVersionColumnName() );
+		update.addRestriction( lockable.getRootTableIdentifierColumnNames() );
+		update.addRestriction( lockable.getVersionColumnName() );
 		if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( lockMode + " lock " + lockable.getEntityName() );
 		}

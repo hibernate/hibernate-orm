@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -15,7 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
@@ -30,8 +27,8 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
+import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -39,13 +36,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
+ * A {@link CacheImplementor} service used when the second-level cache is enabled.
+ *
  * @author Steve Ebersole
  * @author Strong Liu
  * @author Gail Badner
@@ -78,7 +77,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	public EnabledCaching(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 
-		this.regionFactory = getSessionFactory().getSessionFactoryOptions().getServiceRegistry().getService( RegionFactory.class );
+		this.regionFactory =
+				getSessionFactory().getSessionFactoryOptions().getServiceRegistry()
+						.requireService( RegionFactory.class );
 		this.regionFactory.start( sessionFactory.getSessionFactoryOptions(), sessionFactory.getProperties() );
 
 		if ( getSessionFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
@@ -130,7 +131,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			// Entity caching
 
 			for ( EntityDataCachingConfig entityAccessConfig : regionConfig.getEntityCaching() ) {
-				final EntityDataAccess entityDataAccess = entityAccessMap.put(
+				entityAccessMap.put(
 						entityAccessConfig.getNavigableRole(),
 						region.getEntityDataAccess( entityAccessConfig.getNavigableRole() )
 				);
@@ -169,7 +170,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			// Collection caching
 
 			for ( CollectionDataCachingConfig collectionAccessConfig : regionConfig.getCollectionCaching() ) {
-				final CollectionDataAccess collectionDataAccess = collectionAccessMap.put(
+				collectionAccessMap.put(
 						collectionAccessConfig.getNavigableRole(),
 						region.getCollectionDataAccess( collectionAccessConfig.getNavigableRole() )
 				);
@@ -220,30 +221,45 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Entity data
 
 	@Override
-	public boolean containsEntity(Class entityClass, Serializable identifier) {
+	public boolean containsEntity(Class<?> entityClass, Object identifier) {
 		return containsEntity( entityClass.getName(), identifier );
 	}
 
 	@Override
-	public boolean containsEntity(String entityName, Serializable identifier) {
-		final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( entityName );
+	public boolean containsEntity(String entityName, Object identifier) {
+		final EntityPersister entityDescriptor = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		final EntityDataAccess cacheAccess = entityDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
 			return false;
 		}
 
-		final Object key = cacheAccess.generateCacheKey( identifier, entityDescriptor, sessionFactory, null );
+		final Object idValue = entityDescriptor.getIdentifierMapping().getJavaType().coerce(
+				identifier,
+				sessionFactory::getTypeConfiguration
+		);
+		final Object key = cacheAccess.generateCacheKey(
+				idValue,
+				entityDescriptor.getRootEntityDescriptor().getEntityPersister(),
+				sessionFactory,
+				null
+		);
 		return cacheAccess.contains( key );
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass, Serializable identifier) {
+	public void evictEntityData(Class<?> entityClass, Object identifier) {
 		evictEntityData( entityClass.getName(), identifier );
 	}
 
 	@Override
-	public void evictEntityData(String entityName, Serializable identifier) {
-		final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( entityName );
+	public void evictEntityData(String entityName, Object identifier) {
+		final EntityPersister entityDescriptor = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 		final EntityDataAccess cacheAccess = entityDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
 			return;
@@ -261,20 +277,24 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass) {
+	public void evictEntityData(Class<?> entityClass) {
 		evictEntityData( entityClass.getName() );
 	}
 
 	@Override
 	public void evictEntityData(String entityName) {
-		evictEntityData( getSessionFactory().getMetamodel().entityPersister( entityName ) );
+		final EntityPersister entityDescriptor = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		evictEntityData( entityDescriptor );
 	}
 
 	protected void evictEntityData(EntityPersister entityDescriptor) {
 		EntityPersister rootEntityDescriptor = entityDescriptor;
 		if ( entityDescriptor.isInherited()
 				&& ! entityDescriptor.getEntityName().equals( entityDescriptor.getRootEntityName() ) ) {
-			rootEntityDescriptor = getSessionFactory().getMetamodel().entityPersister( entityDescriptor.getRootEntityName() );
+			rootEntityDescriptor = entityDescriptor.getRootEntityDescriptor().getEntityPersister();
 		}
 
 		evictEntityData(
@@ -297,7 +317,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictEntityData() {
-		sessionFactory.getMetamodel().entityPersisters().values().forEach( this::evictEntityData );
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+		mappingMetamodel.forEachEntityDescriptor( this::evictEntityData );
 	}
 
 
@@ -306,15 +329,17 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Natural-id data
 
 	@Override
-	public void evictNaturalIdData(Class entityClass) {
+	public void evictNaturalIdData(Class<?> entityClass) {
 		evictNaturalIdData( entityClass.getName() );
 	}
 
 	@Override
 	public void evictNaturalIdData(String entityName) {
-		evictNaturalIdData(
-				sessionFactory.getMetamodel().entityPersister( entityName )
-		);
+		final EntityPersister entityDescriptor = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
+		evictNaturalIdData( entityDescriptor );
 	}
 
 	private void evictNaturalIdData(EntityPersister rootEntityDescriptor) {
@@ -344,9 +369,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Collection data
 
 	@Override
-	public boolean containsCollection(String role, Serializable ownerIdentifier) {
-		final CollectionPersister collectionDescriptor = sessionFactory.getMetamodel()
-				.collectionPersister( role );
+	public boolean containsCollection(String role, Object ownerIdentifier) {
+
+		final CollectionPersister collectionDescriptor = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( role );
 
 		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
@@ -358,9 +386,11 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictCollectionData(String role, Serializable ownerIdentifier) {
-		final CollectionPersister collectionDescriptor = sessionFactory.getMetamodel()
-				.collectionPersister( role );
+	public void evictCollectionData(String role, Object ownerIdentifier) {
+		final CollectionPersister collectionDescriptor = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( role );
 
 		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
@@ -380,8 +410,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictCollectionData(String role) {
-		final CollectionPersister collectionDescriptor = sessionFactory.getMetamodel()
-				.collectionPersister( role );
+		final CollectionPersister collectionDescriptor = sessionFactory
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.getCollectionDescriptor( role );
 
 		evictCollectionData( collectionDescriptor );
 	}
@@ -491,6 +523,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			return null;
 		}
 
+		if ( regionName == null || regionName.equals( getDefaultQueryResultsCache().getRegion().getName() ) ) {
+			return getDefaultQueryResultsCache();
+		}
+
 		return namedQueryResultsCacheMap.get( regionName );
 	}
 
@@ -500,7 +536,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				this::makeQueryResultsRegion
 		);
 		final QueryResultsRegion queryResultsRegion;
-		if ( QueryResultsRegion.class.isInstance( region ) ) {
+		if ( region instanceof QueryResultsRegion ) {
 			queryResultsRegion = (QueryResultsRegion) region;
 		}
 		else {
@@ -569,13 +605,13 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	public boolean contains(Class cls, Object primaryKey) {
 		// JPA
-		return containsEntity( cls, (Serializable) primaryKey );
+		return containsEntity( cls, primaryKey );
 	}
 
 	@Override
 	public void evict(Class cls, Object primaryKey) {
 		// JPA call
-		evictEntityData( cls, (Serializable) primaryKey );
+		evictEntityData( cls, primaryKey );
 	}
 
 	@Override
@@ -590,29 +626,18 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecations
 
-	@Override
+	@Override @Deprecated
 	public EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName) {
 		return entityAccessMap.get( rootEntityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName) {
 		return naturalIdAccessMap.get( rootEntityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole) {
 		return collectionAccessMap.get( collectionRole );
-	}
-
-	@Override
-	public String[] getSecondLevelCacheRegionNames() {
-		return ArrayHelper.toStringArray( legacySecondLevelCacheNames );
-	}
-
-
-	@Override
-	public Set<NaturalIdDataAccess> getNaturalIdAccessesInRegion(String regionName) {
-		return legacyNaturalIdAccessesForRegion.get( regionName );
 	}
 }

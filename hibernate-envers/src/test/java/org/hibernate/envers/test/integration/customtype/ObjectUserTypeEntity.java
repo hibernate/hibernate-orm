@@ -1,20 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
 
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.CompositeType;
 import org.hibernate.envers.Audited;
+
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * Entity encapsulating {@link Object} property which concrete type may change during subsequent updates.
@@ -30,8 +29,10 @@ public class ObjectUserTypeEntity implements Serializable {
 
 	private String buildInType;
 
-	@Type(type = "org.hibernate.envers.test.integration.customtype.ObjectUserType")
-	@Columns(columns = {@Column(name = "OBJ_TYPE"), @Column(name = "OBJ_VALUE")})
+	@Audited
+	@CompositeType(ObjectUserType.class)
+	@AttributeOverride( name = "type", column = @Column(name = "OBJ_TYPE"))
+	@AttributeOverride( name = "object", column = @Column(name = "OBJ_VALUE"))
 	private Object userType;
 
 	public ObjectUserTypeEntity() {

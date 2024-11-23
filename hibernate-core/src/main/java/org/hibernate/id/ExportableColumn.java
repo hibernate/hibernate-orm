@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
@@ -21,19 +19,22 @@ import org.hibernate.mapping.ValueVisitor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.MappingContext;
 
 /**
  * @author Steve Ebersole
  */
 public class ExportableColumn extends Column {
 
-	public ExportableColumn(Database database, Table table, String name, BasicType type) {
+	public ExportableColumn(Database database, Table table, String name, BasicType<?> type) {
 		this(
 				database,
 				table,
 				name,
 				type,
-				database.getDialect().getTypeName( type.sqlTypes( null )[0] )
+				database.getTypeConfiguration()
+						.getDdlTypeRegistry()
+						.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
 		);
 	}
 
@@ -41,7 +42,7 @@ public class ExportableColumn extends Column {
 			Database database,
 			Table table,
 			String name,
-			BasicType type,
+			BasicType<?> type,
 			String dbTypeDeclaration) {
 		super( name );
 		setValue( new ValueImpl( this, table, type, database ) );
@@ -51,14 +52,19 @@ public class ExportableColumn extends Column {
 	public static class ValueImpl implements Value {
 		private final ExportableColumn column;
 		private final Table table;
-		private final BasicType type;
+		private final BasicType<?> type;
 		private final Database database;
 
-		public ValueImpl(ExportableColumn column, Table table, BasicType type, Database database) {
+		public ValueImpl(ExportableColumn column, Table table, BasicType<?> type, Database database) {
 			this.column = column;
 			this.table = table;
 			this.type = type;
 			this.database = database;
+		}
+
+		@Override
+		public Value copy() {
+			return new ValueImpl( column, table, type, database );
 		}
 
 		@Override
@@ -67,8 +73,13 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public Iterator<Selectable> getColumnIterator() {
-			return new ColumnIterator( column );
+		public List<Selectable> getSelectables() {
+			return List.of( column );
+		}
+
+		@Override
+		public List<Column> getColumns() {
+			return List.of( column );
 		}
 
 		@Override
@@ -102,17 +113,31 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public boolean[] getColumnUpdateability() {
-			return new boolean[] { true };
-		}
-
-		@Override
 		public boolean[] getColumnInsertability() {
-			return new boolean[] { true };
+			return ArrayHelper.TRUE;
 		}
 
 		@Override
-		public void createForeignKey() throws MappingException {
+		public boolean hasAnyInsertableColumns() {
+			return true;
+		}
+
+		@Override
+		public boolean[] getColumnUpdateability() {
+			return ArrayHelper.TRUE;
+		}
+
+		@Override
+		public boolean hasAnyUpdatableColumns() {
+			return true;
+		}
+
+		@Override
+		public void createForeignKey() {
+		}
+
+		@Override
+		public void createUniqueKey(MetadataBuildingContext context) {
 		}
 
 		@Override
@@ -121,7 +146,7 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public boolean isValid(Mapping mapping) throws MappingException {
+		public boolean isValid(MappingContext mappingContext) throws MappingException {
 			return false;
 		}
 
@@ -143,33 +168,16 @@ public class ExportableColumn extends Column {
 		public ServiceRegistry getServiceRegistry() {
 			return database.getServiceRegistry();
 		}
+
+		@Override
+		public boolean isColumnInsertable(int index) {
+			return true;
+		}
+
+		@Override
+		public boolean isColumnUpdateable(int index) {
+			return true;
+		}
 	}
 
-	public static class ColumnIterator implements Iterator<Selectable> {
-		private final ExportableColumn column;
-		private int count = 0;
-
-		public ColumnIterator(ExportableColumn column) {
-			this.column = column;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return count == 0;
-		}
-
-		@Override
-		public ExportableColumn next() {
-			if ( count > 0 ) {
-				throw new NoSuchElementException( "The single element has already been read" );
-			}
-			count++;
-			return column;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException( "Cannot remove" );
-		}
-	}
 }

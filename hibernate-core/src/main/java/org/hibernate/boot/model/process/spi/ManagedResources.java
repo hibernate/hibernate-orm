@@ -1,21 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.spi;
 
 import java.util.Collection;
+import java.util.Map;
 
-import org.hibernate.boot.AttributeConverterInfo;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 
 /**
  * Represents the result of the first step of the process of building {@link org.hibernate.boot.MetadataSources}
  * reference into a {@link org.hibernate.boot.Metadata} reference.
- * <p/>
+ * <p>
  * Essentially it represents the combination of:<ol>
  *     <li>domain classes, packages and mapping files defined via MetadataSources</li>
  *     <li>attribute converters defined via MetadataBuildingOptions</li>
@@ -32,7 +31,7 @@ public interface ManagedResources {
 	 *
 	 * @return The AttributeConverter definitions.
 	 */
-	Collection<AttributeConverterInfo> getAttributeConverterDefinitions();
+	Collection<ConverterDescriptor> getAttributeConverterDescriptors();
 
 	/**
 	 * Informational access to any entity and component classes in the user domain model known by Class
@@ -40,7 +39,7 @@ public interface ManagedResources {
 	 *
 	 * @return The list of entity/component classes known by Class reference.
 	 */
-	Collection<Class> getAnnotatedClassReferences();
+	Collection<Class<?>> getAnnotatedClassReferences();
 
 	/**
 	 * Informational access to any entity and component classes in the user domain model known by name.
@@ -64,5 +63,7 @@ public interface ManagedResources {
 	 *
 	 * @return The list of bindings for all known XML mapping files.
 	 */
-	Collection<Binding> getXmlMappingBindings();
+	Collection<Binding<JaxbBindableMappingDescriptor>> getXmlMappingBindings();
+
+	Map<String,Class<?>> getExtraQueryImports();
 }

@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later
+  ~ See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+    <resultset name="hbm-resultset-entity-complete">
+        <return entity-name="org.hibernate.orm.test.query.resultmapping.EntityWithEmbedded" alias="e">
+            <return-property name="id" column="hbm_id"/>
+            <return-property name="compoundName.firstPart" column="hbm_name_first"/>
+            <return-property name="compoundName.secondPart" column="hbm_name_second"/>
+        </return>
+    </resultset>
+
+    <resultset name="hbm-resultset-entity-partial">
+        <return entity-name="org.hibernate.orm.test.query.resultmapping.EntityWithEmbedded" alias="e">
+            <return-property name="compoundName.firstPart" column="hbm_name_first"/>
+            <return-property name="compoundName.secondPart" column="hbm_name_second"/>
+        </return>
+    </resultset>
+
+    <resultset name="hbm-resultset-scalar-complete">
+        <return-scalar column="hbm_id" />
+        <return-scalar column="hbm_name_first" />
+        <return-scalar column="hbm_name_second" />
+    </resultset>
+
+    <sql-query name="hbm-implicit-resultset">
+        select id as hbm_id,
+            name_first_part as hbm_name_first,
+            name_second_part as hbm_name_second
+            from entity_with_embedded
+        <return entity-name="org.hibernate.orm.test.query.resultmapping.EntityWithEmbedded" alias="e">
+            <return-property name="id" column="hbm_id"/>
+            <return-property name="compoundName.firstPart" column="hbm_name_first"/>
+            <return-property name="compoundName.secondPart" column="hbm_name_second"/>
+        </return>
+    </sql-query>
+
+</hibernate-mapping>

@@ -1,26 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.Type;
 
 /**
- * Represents a version property within the Hibernate runtime-metamodel.
- *
- * @author Steve Ebersole
+ * @deprecated Replaced by {@link org.hibernate.metamodel.mapping.EntityVersionMapping}
  */
+@Deprecated(forRemoval = true)
 public class VersionProperty extends AbstractNonIdentifierAttribute {
-	private final VersionValue unsavedValue;
-
 	/**
 	 * Constructs VersionProperty instances.
 	 *
@@ -31,7 +25,6 @@ public class VersionProperty extends AbstractNonIdentifierAttribute {
 	 * its owner.
 	 * @param attributeType The Hibernate Type of this property.
 	 * @param attributeInformation The basic attribute information.
-	 * @param unsavedValue The value which, if found as the value of
 	 * this (i.e., the version) property, represents new (i.e., un-saved)
 	 * instances of the owning entity.
 	 */
@@ -41,13 +34,7 @@ public class VersionProperty extends AbstractNonIdentifierAttribute {
 			int attributeNumber,
 			String attributeName,
 			Type attributeType,
-			BaselineAttributeInformation attributeInformation,
-			VersionValue unsavedValue) {
+			BaselineAttributeInformation attributeInformation) {
 		super( source, sessionFactory, attributeNumber, attributeName, attributeType, attributeInformation );
-		this.unsavedValue = unsavedValue;
-	}
-
-	public VersionValue getUnsavedValue() {
-		return unsavedValue;
 	}
 }

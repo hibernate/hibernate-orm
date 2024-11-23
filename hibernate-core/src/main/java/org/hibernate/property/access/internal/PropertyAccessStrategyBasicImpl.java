@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
@@ -23,7 +21,7 @@ public class PropertyAccessStrategyBasicImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategyBasicImpl INSTANCE = new PropertyAccessStrategyBasicImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, final String propertyName) {
-		return new PropertyAccessBasicImpl( this, containerJavaType, propertyName );
+	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
+		return new PropertyAccessBasicImpl( this, containerJavaType, propertyName, setterRequired );
 	}
 }

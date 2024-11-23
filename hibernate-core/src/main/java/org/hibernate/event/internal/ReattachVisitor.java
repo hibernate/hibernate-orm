@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRemoveAction;
@@ -15,6 +11,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -26,10 +23,10 @@ import org.hibernate.type.Type;
 public abstract class ReattachVisitor extends ProxyVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ReattachVisitor.class );
 
-	private final Serializable ownerIdentifier;
+	private final Object ownerIdentifier;
 	private final Object owner;
 
-	public ReattachVisitor(EventSource session, Serializable ownerIdentifier, Object owner) {
+	public ReattachVisitor(EventSource session, Object ownerIdentifier, Object owner) {
 		super( session );
 		this.ownerIdentifier = ownerIdentifier;
 		this.owner = owner;
@@ -40,7 +37,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The entity's identifier.
 	 */
-	final Serializable getOwnerIdentifier() {
+	final Object getOwnerIdentifier() {
 		return ownerIdentifier;
 	}
 
@@ -58,7 +55,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 */
 	@Override
 	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
-		Type[] types = componentType.getSubtypes();
+		final Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );
 		}
@@ -76,9 +73,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @param collectionKey The collection key (differs from owner-id in the case of property-refs).
 	 * @param source The session from which the request originated.
 	 *
-	 * @throws HibernateException
 	 */
-	void removeCollection(CollectionPersister role, Serializable collectionKey, EventSource source)
+	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
@@ -99,13 +95,12 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
-	final Serializable extractCollectionKeyFromOwner(CollectionPersister role) {
-		if ( role.getCollectionType().useLHSPrimaryKey() ) {
+	final Object extractCollectionKeyFromOwner(CollectionPersister role) {
+		final CollectionType collectionType = role.getCollectionType();
+		if ( collectionType.useLHSPrimaryKey() ) {
 			return ownerIdentifier;
 		}
-		return (Serializable) role.getOwnerEntityPersister().getPropertyValue(
-				owner,
-				role.getCollectionType().getLHSPropertyName()
-		);
+		return role.getOwnerEntityPersister()
+				.getPropertyValue( owner, collectionType.getLHSPropertyName() );
 	}
 }

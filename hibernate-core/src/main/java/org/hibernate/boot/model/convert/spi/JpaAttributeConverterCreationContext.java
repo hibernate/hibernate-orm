@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.spi;
 
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Access to information that implementors of
@@ -18,5 +17,9 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
  */
 public interface JpaAttributeConverterCreationContext {
 	ManagedBeanRegistry getManagedBeanRegistry();
-	JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry();
+	TypeConfiguration getTypeConfiguration();
+
+	default JavaTypeRegistry getJavaTypeRegistry() {
+		return getTypeConfiguration().getJavaTypeRegistry();
+	}
 }

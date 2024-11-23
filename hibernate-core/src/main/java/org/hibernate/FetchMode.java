@@ -1,50 +1,44 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
- * Represents an association fetching strategy. This is used
- * together with the <tt>Criteria</tt> API to specify runtime
- * fetching strategies.<br>
- * <br>
- * For HQL queries, use the <tt>FETCH</tt> keyword instead.
+ * Represents an association fetching strategy.
  *
- * @see Criteria#setFetchMode(java.lang.String, FetchMode)
+ * @apiNote This enumeration was previously used to override
+ * the fetching strategy specified by mapping annotations when
+ * using the old criteria query API. Now it is only used by
+ * SPIs and internal APIs.
+ *
+ * @see org.hibernate.annotations.FetchMode
  *
  * @author Gavin King
  */
+@Internal
 public enum FetchMode  {
+
 	/**
-	 * Default to the setting configured in the mapping file.
+	 * Use the default fetching strategy specified by the
+	 * {@linkplain org.hibernate.annotations.Fetch mapping
+	 * annotations}.
 	 */
 	DEFAULT,
 
 	/**
-	 * Fetch using an outer join. Equivalent to <tt>fetch="join"</tt>.
+	 * Fetch in the initial select, using an outer join.
+	 *
+	 * @see org.hibernate.annotations.FetchMode#JOIN
 	 */
 	JOIN,
-	/**
-	 * Fetch eagerly, using a separate select. Equivalent to
-	 * <tt>fetch="select"</tt>.
-	 */
-	SELECT;
 
 	/**
-	 * Fetch lazily. Equivalent to <tt>outer-join="false"</tt>.
+	 * Fetch using a separate subsequent select.
 	 *
-	 * @deprecated use <tt>FetchMode.SELECT</tt>
+	 * @see org.hibernate.annotations.FetchMode#SELECT
+	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
 	 */
-	@Deprecated
-	public static final FetchMode LAZY = SELECT;
-	/**
-	 * Fetch eagerly, using an outer join. Equivalent to <tt>outer-join="true"</tt>.
-	 *
-	 * @deprecated use <tt>FetchMode.JOIN</tt>
-	 */
-	@Deprecated
-	public static final FetchMode EAGER = JOIN;
+	SELECT
+
 }

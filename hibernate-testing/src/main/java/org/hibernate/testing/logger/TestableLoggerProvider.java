@@ -1,39 +1,39 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.logger;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.log4j.MDC;
-import org.apache.log4j.NDC;
 import org.jboss.logging.Logger;
+
+import org.apache.logging.log4j.ThreadContext;
 
 /**
  * A {@code LoggerProvider} for JBoss Logger.
  * See also META-INF/services/org.jboss.logging.LoggerProvider
  *
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
+ * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
 public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider {
 
 	//We LEAK Logger instances: good only for testing as we know the set of categories is limited in practice
-	private static final ConcurrentMap<String,Logger> reuseLoggerInstances = new ConcurrentHashMap<String,Logger>();
+	private static final ConcurrentMap<String,Logger> reuseLoggerInstances = new ConcurrentHashMap<>();
 
 	// Maintainer note:
 	// Except the next method, which is adjusted to return our own Log4DelegatingLogger
 	// this class is a verbatim copy of org.jboss.logging.Log4jLoggerProvider
 	// (which is a final class)
 
+	@Override
 	public Logger getLogger(final String name) {
 		Logger logger = reuseLoggerInstances.get( name );
 		if ( logger == null ) {
-			logger = new Log4DelegatingLogger( "".equals( name ) ? "ROOT" : name );
+			logger = new Log4J2DelegatingLogger( "".equals( name ) ? "ROOT" : name );
 			Logger previous = reuseLoggerInstances.putIfAbsent( name, logger );
 			if ( previous != null ) {
 				return previous;
@@ -44,57 +44,67 @@ public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider 
 
 	@Override
 	public void clearMdc() {
-		MDC.clear();
+		ThreadContext.clearMap();
 	}
 
-	public Object getMdc(String key) {
-		return MDC.get( key );
-	}
-
-	@SuppressWarnings("unchecked")
-	public Map<String, Object> getMdcMap() {
-		return MDC.getContext();
-	}
-
-	public Object putMdc(String key, Object val) {
+	@Override
+	public Object putMdc(String key, Object value) {
 		try {
-			return MDC.get( key );
+			return ThreadContext.get( key );
 		}
 		finally {
-			MDC.put( key, val );
+			ThreadContext.put( key, String.valueOf( value ) );
 		}
 	}
 
+	@Override
+	public Object getMdc(String key) {
+		return ThreadContext.get( key );
+	}
+
+	@Override
 	public void removeMdc(String key) {
-		MDC.remove( key );
+		ThreadContext.remove( key );
 	}
 
+	@Override
+	public Map<String, Object> getMdcMap() {
+		return new HashMap<>( ThreadContext.getImmutableContext() );
+	}
+
+	@Override
 	public void clearNdc() {
-		NDC.remove();
+		ThreadContext.clearStack();
 	}
 
+	@Override
 	public String getNdc() {
-		return NDC.get();
+		return ThreadContext.peek();
 	}
 
+	@Override
 	public int getNdcDepth() {
-		return NDC.getDepth();
+		return ThreadContext.getDepth();
 	}
 
-	public String peekNdc() {
-		return NDC.peek();
-	}
-
+	@Override
 	public String popNdc() {
-		return NDC.pop();
+		return ThreadContext.pop();
 	}
 
+	@Override
+	public String peekNdc() {
+		return ThreadContext.peek();
+	}
+
+	@Override
 	public void pushNdc(String message) {
-		NDC.push( message );
+		ThreadContext.push( message );
 	}
 
+	@Override
 	public void setNdcMaxDepth(int maxDepth) {
-		NDC.setMaxDepth( maxDepth );
+		ThreadContext.trim( maxDepth );
 	}
 
 }

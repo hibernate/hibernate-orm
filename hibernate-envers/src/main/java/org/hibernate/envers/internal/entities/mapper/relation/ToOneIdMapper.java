@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
@@ -19,10 +17,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.jboss.logging.Logger;
-
-import javax.persistence.PersistenceException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -63,19 +58,6 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		// bi-directional relation, we always store the "old", unchanged data, to prevent storing changes made
 		// to this field. It is the responsibility of the collection to properly update it if it really changed.
 		Object entity = nonInsertableFake ? oldObj : newObj;
-
-		// fix HHH-13760 - try to aggressively un-proxy this entity to help get the correct type of data later
-		// in mapToMapFromEntity. But it might fail while getImplementation() if object is deleted or other reasons.
-		// We catch the exception and fallback to call mapToMapFromEntity directly with the HibernateProxy entity
-		if ( lazyMapping && entity instanceof HibernateProxy ) {
-			try {
-				entity = ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
-			}
-			catch ( PersistenceException e ) {
-				log.debug( "Ignore PersistenceException while initializing the entity, " +
-					"and fallback to call mapToMapFromEntity directly" );
-			}
-		}
 
 		delegate.mapToMapFromEntity( newData, entity );
 
@@ -126,7 +108,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		// therefore resolve the identifier from the entity directly prior to simply then
 		// doing the identifier comparison.
 
-		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( referencedEntityName );
+		final EntityPersister persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( referencedEntityName );
 
 		Object resolvedNewObjectId = newObj;
 		if ( !persister.getIdentifierType().getReturnedClass().isInstance( newObj ) ) {
@@ -149,6 +131,17 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			Object primaryKey,
 			AuditReaderImplementor versionsReader,
 			Number revision) {
+		Object value = nullSafeMapToEntityFromMap( enversService, data, primaryKey, versionsReader, revision );
+		setPropertyValue( obj, value );
+	}
+
+	@Override
+	public Object nullSafeMapToEntityFromMap(
+			EnversService enversService,
+			Map data,
+			Object primaryKey,
+			AuditReaderImplementor versionsReader,
+			Number revision) {
 		final Object entityId = delegate.mapToIdFromMap( data );
 		Object value = null;
 		if ( entityId != null ) {
@@ -157,20 +150,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			}
 			else {
 				final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
-				boolean ignoreNotFound = false;
-				if ( !referencedEntity.isAudited() ) {
-					final String referencingEntityName = enversService.getEntitiesConfigurations().getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
-					if ( referencingEntityName == null && primaryKey == null ) {
-						// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
-						// an embeddable in an element-collection
-						// todo: perhaps the mapper should account for this instead?
-						ignoreNotFound = true;
-					}
-					else {
-						ignoreNotFound = enversService.getEntitiesConfigurations().getRelationDescription( referencingEntityName, getPropertyData().getName() ).isIgnoreNotFound();
-					}
-				}
-				if ( ignoreNotFound ) {
+				if ( isIgnoreNotFound( enversService, referencedEntity, data, primaryKey ) ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)
 					// EntityNotFoundException or ObjectNotFoundException. Assigning null reference.
 					value = ToOneEntityLoader.loadImmediate(
@@ -179,7 +159,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							referencedEntityName,
 							entityId,
 							revision,
-							RevisionType.DEL.equals( data.get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() ) ),
+							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
 							enversService
 					);
 				}
@@ -190,14 +170,13 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							referencedEntityName,
 							entityId,
 							revision,
-							RevisionType.DEL.equals( data.get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() ) ),
+							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
 							enversService
 					);
 				}
 			}
 		}
-
-		setPropertyValue( obj, value );
+		return value;
 	}
 
 	public void addMiddleEqualToQuery(
@@ -206,6 +185,27 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			String prefix1,
 			String idPrefix2,
 			String prefix2) {
-		delegate.addIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
+		delegate.addNullableIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
+	}
+
+	// todo: is referenced entity needed any longer?
+	private boolean isIgnoreNotFound(
+			EnversService enversService,
+			EntityInfo referencedEntity,
+			Map data,
+			Object primaryKey) {
+		final String referencingEntityName = enversService.getEntitiesConfigurations()
+				.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+
+		if ( referencingEntityName == null && primaryKey == null ) {
+			// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
+			// an embeddable in an element-collection
+			// todo: perhaps the mapper should account for this instead?
+			return true;
+		}
+
+		return enversService.getEntitiesConfigurations()
+				.getRelationDescription( referencingEntityName, getPropertyData().getName() )
+				.isIgnoreNotFound();
 	}
 }

@@ -1,22 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.query;
 
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.query.entities.Address;
-import org.hibernate.envers.test.integration.query.entities.Car;
-import org.hibernate.envers.test.integration.query.entities.Person;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.integration.query.entities.Address;
+import org.hibernate.orm.test.envers.integration.query.entities.Car;
+import org.hibernate.orm.test.envers.integration.query.entities.Person;
 
 import org.junit.Test;
 
@@ -138,10 +136,9 @@ public class AssociationToOneInnerJoinQueryTest extends BaseEnversJPAFunctionalT
 
 		List<Address> list2 = auditReader.createQuery().forEntitiesAtRevision( Car.class, 2 ).traverseRelation( "owner", JoinType.INNER )
 				.addOrder( AuditEntity.property( "age" ).asc() ).traverseRelation( "address", JoinType.INNER ).addProjection( AuditEntity.selectEntity( false ) ).getResultList();
-		assertEquals( "Unexpected number of results", 3, list2.size() );
+		assertEquals( "Unexpected number of results", 2, list2.size() );
 		assertEquals( "Unexpected address at index 0", address1.getId(), list2.get( 0 ).getId() );
-		assertEquals( "Unexpected address at index 1", address1.getId(), list2.get( 1 ).getId() );
-		assertEquals( "Unexpected address at index 2", address2.getId(), list2.get( 2 ).getId() );
+		assertEquals( "Unexpected address at index 1", address2.getId(), list2.get( 1 ).getId() );
 
 		List<Address> list3 = auditReader.createQuery().forEntitiesAtRevision( Car.class, 2 ).traverseRelation( "owner", JoinType.INNER ).traverseRelation( "address", JoinType.INNER )
 				.addProjection( AuditEntity.selectEntity( true ) ).addOrder( AuditEntity.property( "number" ).asc() ).getResultList();

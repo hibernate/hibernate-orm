@@ -1,19 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.procedure;
 
-import javax.persistence.ParameterMode;
-
 import org.hibernate.Incubating;
-import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.query.QueryParameter;
 
+import jakarta.persistence.ParameterMode;
+
 /**
- * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
+ * @apiNote Consider this contract (and its subcontracts) as incubating as we transition to 6.0 and SQM.
  *
  * @author Steve Ebersole
  */
@@ -27,23 +24,4 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 */
 	ParameterMode getMode();
 
-	/**
-	 * How will an unbound value be handled in terms of the JDBC parameter?
-	 *
-	 * @return {@code true} here indicates that NULL should be passed; {@code false} indicates
-	 * that it is ignored.
-	 *
-	 * @see ParameterRegistrationImplementor#isPassNullsEnabled()
-	 */
-	boolean isPassNullsEnabled();
-
-	/**
-	 * Controls how unbound values for this IN/INOUT parameter registration will be handled prior to
-	 * execution.  For details see {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls}
-	 *
-	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
-	 *
-	 * @see org.hibernate.procedure.ParameterRegistration#enablePassingNulls
-	 */
-	void enablePassingNulls(boolean enabled);
 }

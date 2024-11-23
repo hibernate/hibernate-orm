@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
 
@@ -12,19 +10,23 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.customtype.UnspecifiedEnumTypeEntity;
-import org.hibernate.type.IntegerType;
+import org.hibernate.envers.strategy.internal.DefaultAuditStrategy;
+import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.customtype.UnspecifiedEnumTypeEntity;
+import org.hibernate.type.StandardBasicTypes;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.envers.RequiresAuditStrategy;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7780")
+@JiraKey(value = "HHH-7780")
+@RequiresAuditStrategy(DefaultAuditStrategy.class)
 public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	private Long id = null;
 
@@ -34,11 +36,12 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
+	protected void addSettings(Map<String,Object> settings) {
 		super.addSettings( settings );
 
 		settings.put( AvailableSettings.SHOW_SQL, "true" );
 		settings.put( AvailableSettings.FORMAT_SQL, "true" );
+		settings.put( AvailableSettings.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Test
@@ -59,10 +62,10 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		// Revision 2
 		session.getTransaction().begin();
-		entity = (UnspecifiedEnumTypeEntity) session.get( UnspecifiedEnumTypeEntity.class, entity.getId() );
+		entity = session.get( UnspecifiedEnumTypeEntity.class, entity.getId() );
 		entity.setEnum1( UnspecifiedEnumTypeEntity.E1.Y );
 		entity.setEnum2( UnspecifiedEnumTypeEntity.E2.B );
-		session.update( entity );
+		session.merge( entity );
 		session.getTransaction().commit();
 
 		session.close();
@@ -104,9 +107,9 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 
 		@SuppressWarnings("unchecked")
 		List<Object[]> values = session
-				.createNativeQuery( "SELECT enum1 e1, enum2 e2 FROM ENUM_ENTITY_AUD ORDER BY rev ASC" )
-				.addScalar( "e1", IntegerType.INSTANCE )
-				.addScalar( "e2", IntegerType.INSTANCE )
+				.createNativeQuery( "SELECT enum1 e1, enum2 e2 FROM ENUM_ENTITY_AUD ORDER BY REV ASC" )
+				.addScalar( "e1", StandardBasicTypes.INTEGER )
+				.addScalar( "e2", StandardBasicTypes.INTEGER )
 				.list();
 		session.close();
 

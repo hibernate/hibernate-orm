@@ -1,26 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
 
+import io.micrometer.common.lang.NonNullApi;
+import io.micrometer.common.lang.NonNullFields;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.TimeGauge;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import io.micrometer.core.lang.NonNullApi;
-import io.micrometer.core.lang.NonNullFields;
-import io.micrometer.core.lang.Nullable;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.stat.Statistics;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
@@ -38,8 +34,7 @@ public class HibernateMetrics implements MeterBinder {
 	private final String cacheFactoryPrefix;
 	private final Iterable<Tag> tags;
 
-	@Nullable
-	private final Statistics statistics;
+	private final @Nullable Statistics statistics;
 
 	/**
 	 * Create {@code HibernateMetrics} and bind to the specified meter registry.
@@ -342,27 +337,10 @@ public class HibernateMetrics implements MeterBinder {
 		// In 5.3, getDomainDataRegionStatistics (a new method) will throw an IllegalArgumentException
 		// if the region can't be resolved.
 		try {
-			return statistics.getDomainDataRegionStatistics( regionName ) != null;
+			return statistics != null && statistics.getDomainDataRegionStatistics( regionName ) != null;
 		}
 		catch (IllegalArgumentException e) {
 			return false;
-		}
-	}
-
-	/**
-	 * Unwrap the {@link SessionFactory} from {@link EntityManagerFactory}.
-	 *
-	 * @param entityManagerFactory {@link EntityManagerFactory} to unwrap
-	 *
-	 * @return unwrapped {@link SessionFactory}
-	 */
-	@Nullable
-	private SessionFactory unwrap(EntityManagerFactory entityManagerFactory) {
-		try {
-			return entityManagerFactory.unwrap( SessionFactory.class );
-		}
-		catch (PersistenceException ex) {
-			return null;
 		}
 	}
 

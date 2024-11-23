@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.internal;
 
@@ -27,18 +25,17 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
-	public PersisterClassResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public PersisterClassResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
 			return new StandardPersisterClassResolver();
 		}
 
-		if ( PersisterClassResolver.class.isInstance( customImpl ) ) {
+		if ( customImpl instanceof PersisterClassResolver ) {
 			return (PersisterClassResolver) customImpl;
 		}
 
-		final Class<? extends PersisterClassResolver> customImplClass = Class.class.isInstance( customImpl )
+		final Class<? extends PersisterClassResolver> customImplClass = customImpl instanceof Class
 				? (Class<? extends PersisterClassResolver>) customImpl
 				: locate( registry, customImpl.toString() );
 
@@ -51,6 +48,6 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 	}
 
 	private Class<? extends PersisterClassResolver> locate(ServiceRegistryImplementor registry, String className) {
-		return registry.getService( ClassLoaderService.class ).classForName( className );
+		return registry.requireService( ClassLoaderService.class ).classForName( className );
 	}
 }

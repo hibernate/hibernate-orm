@@ -1,18 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
-
-import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Handles fetching of the underlying entity for a proxy
+ * Handles fetching of the underlying entity for a proxy.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -22,6 +18,8 @@ public interface LazyInitializer {
 	 * Initialize the proxy, fetching the target entity if necessary.
 	 *
 	 * @throws HibernateException Indicates a problem initializing the proxy.
+	 *
+	 * @see org.hibernate.Hibernate#initialize(Object)
 	 */
 	void initialize() throws HibernateException;
 
@@ -30,14 +28,26 @@ public interface LazyInitializer {
 	 *
 	 * @return The identifier value.
 	 */
-	Serializable getIdentifier();
+	default Object getInternalIdentifier() {
+		return getIdentifier();
+	}
+
+	/**
+	 * Retrieve the identifier value for the entity our owning proxy represents,
+	 * without initializing the proxy.
+	 * <p>
+	 * When JPA proxy compliance is enabled the proxy is initialized.
+	 *
+	 * @return The identifier value.
+	 */
+	Object getIdentifier();
 
 	/**
 	 * Set the identifier value for the entity our owning proxy represents.
 	 *
 	 * @param id The identifier value.
 	 */
-	void setIdentifier(Serializable id);
+	void setIdentifier(Object id);
 
 	/**
 	 * The entity-name of the entity our owning proxy represents.
@@ -51,12 +61,14 @@ public interface LazyInitializer {
 	 *
 	 * @return The actual entity class.
 	 */
-	Class getPersistentClass();
+	Class<?> getPersistentClass();
 
 	/**
 	 * Is the proxy uninitialized?
 	 *
 	 * @return True if uninitialized; false otherwise.
+	 *
+	 * @see org.hibernate.Hibernate#isInitialized(Object)
 	 */
 	boolean isUninitialized();
 
@@ -87,6 +99,22 @@ public interface LazyInitializer {
 	void setImplementation(Object target);
 
 	/**
+	 * Get the actual class of the entity, possibly initializing the entity if it has subclasses.
+	 *
+	 * @return The actual entity class.
+	 * @since 6.3
+	 */
+	Class<?> getImplementationClass();
+
+	/**
+	 * Get the actual name of the entity, possibly initializing the entity if it has subclasses.
+	 *
+	 * @return The actual entity name.
+	 * @since 6.3
+	 */
+	String getImplementationEntityName();
+
+	/**
 	 * Is the proxy's read-only/modifiable setting available?
 	 * @return true, if the setting is available
 	 *         false, if the proxy is detached or its associated session is closed
@@ -95,17 +123,17 @@ public interface LazyInitializer {
 
 	/**
 	 * Is the proxy read-only?
-	 *
+	 * <p>
 	 * The read-only/modifiable setting is not available when the proxy is
 	 * detached or its associated session is closed.
-	 *
+	 * <p>
 	 * To check if the read-only/modifiable setting is available:
 	 *
 	 * @return true, if this proxy is read-only; false, otherwise
 	 * @throws org.hibernate.TransientObjectException if the proxy is detached (getSession() == null)
 	 * @throws org.hibernate.SessionException if the proxy is associated with a session that is closed
 	 *
-	 * @see org.hibernate.proxy.LazyInitializer#isReadOnlySettingAvailable()
+	 * @see LazyInitializer#isReadOnlySettingAvailable()
 	 * @see org.hibernate.Session#isReadOnly(Object entityOrProxy)
 	 */
 	boolean isReadOnly();
@@ -117,7 +145,7 @@ public interface LazyInitializer {
 	 * proxy is initialized, its implementation will have the same read-only/
 	 * modifiable setting as the proxy. In read-only mode, no snapshot is
 	 * maintained and the instance is never dirty checked.
-	 *
+	 * <p>
 	 * If the associated proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
 	 *
@@ -139,7 +167,7 @@ public interface LazyInitializer {
 
 	/**
 	 * Associate the proxy with the given session.
-	 * <p/>
+	 * <p>
 	 * Care should be given to make certain that the proxy is added to the session's persistence context as well
 	 * to maintain the symmetry of the association.  That must be done separately as this method simply sets an
 	 * internal reference.  We do also check that if there is already an associated session that the proxy
@@ -154,7 +182,7 @@ public interface LazyInitializer {
 	/**
 	 * Unset this initializer's reference to session.  It is assumed that the caller is also taking care or
 	 * cleaning up the owning proxy's reference in the persistence context.
-	 * <p/>
+	 * <p>
 	 * Generally speaking this is intended to be called only during {@link org.hibernate.Session#evict} and
 	 * {@link org.hibernate.Session#clear} processing; most other use-cases should call {@link #setSession} instead.
 	 */

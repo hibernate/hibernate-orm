@@ -1,28 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.action.spi.Executable;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * Base class for actions relating to insert/update/delete of an entity
@@ -31,14 +22,13 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public abstract class EntityAction
-		implements Executable, Serializable, Comparable, AfterTransactionCompletionProcess {
-	private static final Logger LOG = Logger.getLogger(EntityAction.class);
+		implements ComparableExecutable, AfterTransactionCompletionProcess {
 
 	private final String entityName;
-	private final Serializable id;
+	private final Object id;
 
 	private transient Object instance;
-	private transient SharedSessionContractImplementor session;
+	private transient EventSource session;
 	private transient EntityPersister persister;
 
 	private transient boolean veto;
@@ -51,7 +41,11 @@ public abstract class EntityAction
 	 * @param instance The entity instance
 	 * @param persister The entity persister
 	 */
-	protected EntityAction(SharedSessionContractImplementor session, Serializable id, Object instance, EntityPersister persister) {
+	protected EntityAction(
+			EventSource session,
+			Object id,
+			Object instance,
+			EntityPersister persister) {
 		this.entityName = persister.getEntityName();
 		this.id = id;
 		this.instance = instance;
@@ -74,9 +68,7 @@ public abstract class EntityAction
 
 	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
-		return needsAfterTransactionCompletion()
-				? this
-				: null;
+		return needsAfterTransactionCompletion() ? this : null;
 	}
 
 	protected abstract boolean hasPostCommitEventListeners();
@@ -99,19 +91,17 @@ public abstract class EntityAction
 	 *
 	 * @return The entity id
 	 */
-	public final Serializable getId() {
+	public final Object getId() {
 		if ( id instanceof DelayedPostInsertIdentifier ) {
 			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
-			final Serializable eeId = entry == null ? null : entry.getId();
+			final Object eeId = entry == null ? null : entry.getId();
 			return eeId instanceof DelayedPostInsertIdentifier ? null : eeId;
 		}
 		return id;
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return DelayedPostInsertIdentifier.class.isInstance( id )
-				? DelayedPostInsertIdentifier.class.cast( id )
-				: null;
+		return id instanceof DelayedPostInsertIdentifier ? (DelayedPostInsertIdentifier) id : null;
 	}
 
 	/**
@@ -128,7 +118,7 @@ public abstract class EntityAction
 	 *
 	 * @return The session from which this action originated.
 	 */
-	public final SharedSessionContractImplementor getSession() {
+	public final EventSource getSession() {
 		return session;
 	}
 
@@ -142,7 +132,7 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public final Serializable[] getPropertySpaces() {
+	public final String[] getPropertySpaces() {
 		return persister.getPropertySpaces();
 	}
 
@@ -157,17 +147,23 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		final EntityAction action = (EntityAction) other;
+	public int compareTo(ComparableExecutable o) {
 		//sort first by entity name
-		final int roleComparison = entityName.compareTo( action.entityName );
-		if ( roleComparison != 0 ) {
-			return roleComparison;
-		}
-		else {
-			//then by id
-			return persister.getIdentifierType().compare( id, action.id );
-		}
+		final int roleComparison = entityName.compareTo( o.getPrimarySortClassifier() );
+		return roleComparison != 0
+				? roleComparison
+				//then by id
+				: persister.getIdentifierType().compare( id, o.getSecondarySortIndex(), session.getSessionFactory() );
+	}
+
+	@Override
+	public String getPrimarySortClassifier() {
+		return entityName;
+	}
+
+	@Override
+	public Object getSecondarySortIndex() {
+		return id;
 	}
 
 	/**
@@ -176,7 +172,7 @@ public abstract class EntityAction
 	 * @param session The session being deserialized
 	 */
 	@Override
-	public void afterDeserialize(SharedSessionContractImplementor session) {
+	public void afterDeserialize(EventSource session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
@@ -184,20 +180,21 @@ public abstract class EntityAction
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMetamodel().entityPersister( entityName );
+			this.persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
 		}
 	}
 
-	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
-		return getSession()
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( eventType );
+	protected EventSource eventSource() {
+		return getSession();
 	}
 
-	protected EventSource eventSource() {
-		return (EventSource) getSession();
+	/**
+	 * Convenience method for all subclasses.
+	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 */
+	protected FastSessionServices getFastSessionServices() {
+		return session.getFactory().getFastSessionServices();
 	}
+
 }

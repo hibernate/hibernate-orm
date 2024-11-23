@@ -1,20 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.internal.MergedSettings;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.PersistenceUnitTransactionType;
 
 /**
  * Entry into the bootstrap process.
@@ -62,9 +64,8 @@ public final class Bootstrap {
 			String persistenceUnitName,
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
-		;
 		return new EntityManagerFactoryBuilderImpl(
-				PersistenceXmlParser.parse( persistenceXmlUrl, transactionType, integration ).get( persistenceUnitName ),
+				PersistenceXmlParser.create( integration ).parse( List.of( persistenceXmlUrl ), transactionType ).get( persistenceUnitName ),
 				integration
 		);
 	}
@@ -81,6 +82,17 @@ public final class Bootstrap {
 			Map integration,
 			ClassLoaderService providedClassLoaderService) {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoaderService );
+	}
+
+	/**
+	 * For tests only
+	 */
+	@Internal
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map integration,
+			Consumer<MergedSettings> mergedSettingsBaseline) {
+		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, mergedSettingsBaseline );
 	}
 
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
@@ -101,5 +113,16 @@ public final class Bootstrap {
 			Map integration,
 			ClassLoaderService providedClassLoaderService) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoaderService );
+	}
+
+	/**
+	 * For tests only
+	 */
+	@Internal
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitInfo persistenceUnitInfo,
+			Map integration,
+			Consumer<MergedSettings> mergedSettingsBaseline) {
+		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, mergedSettingsBaseline );
 	}
 }

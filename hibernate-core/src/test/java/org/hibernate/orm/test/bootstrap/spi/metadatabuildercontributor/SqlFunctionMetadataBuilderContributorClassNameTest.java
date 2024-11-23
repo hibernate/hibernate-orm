@@ -1,0 +1,24 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.bootstrap.spi.metadatabuildercontributor;
+
+import org.hibernate.dialect.H2Dialect;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
+
+/**
+ * @author Vlad Mihalcea
+ */
+@RequiresDialect(H2Dialect.class)
+@JiraKey( value = "HHH-12589" )
+public class SqlFunctionMetadataBuilderContributorClassNameTest
+		extends AbstractSqlFunctionMetadataBuilderContributorTest {
+
+	@Override
+	protected Object matadataBuilderContributor() {
+		return SqlFunctionMetadataBuilderContributor.class.getName();
+	}
+}

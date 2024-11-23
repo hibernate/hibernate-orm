@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools;
 
@@ -10,8 +8,6 @@ import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.exception.AuditException;
@@ -47,14 +43,30 @@ public abstract class ReflectionTools {
 	}
 
 	public static Getter getGetter(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
-		return getGetter( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
+		if ( propertyData.getPropertyAccessStrategy() == null ) {
+			return getGetter( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
+		}
+		else {
+			final String propertyName = propertyData.getName();
+			final Pair<Class, String> key = Pair.make( cls, propertyName );
+			Getter value = GETTER_CACHE.get( key );
+			if ( value == null ) {
+				value = propertyData.getPropertyAccessStrategy().buildPropertyAccess(
+						cls,
+						propertyData.getBeanName(), false
+				).getGetter();
+				// It's ok if two getters are generated concurrently
+				GETTER_CACHE.put( key, value );
+			}
+			return value;
+		}
 	}
 
 	public static Getter getGetter(Class cls, String propertyName, String accessorType, ServiceRegistry serviceRegistry) {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
 		Getter value = GETTER_CACHE.get( key );
 		if ( value == null ) {
-			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName ).getGetter();
+			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName, true ).getGetter();
 			// It's ok if two getters are generated concurrently
 			GETTER_CACHE.put( key, value );
 		}
@@ -70,7 +82,7 @@ public abstract class ReflectionTools {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
 		Setter value = SETTER_CACHE.get( key );
 		if ( value == null ) {
-			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName ).getSetter();
+			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName, true ).getSetter();
 			// It's ok if two setters are generated concurrently
 			SETTER_CACHE.put( key, value );
 		}
@@ -112,36 +124,6 @@ public abstract class ReflectionTools {
 						cls.getName()
 				)
 		);
-	}
-
-	/**
-	 * @param clazz Source class.
-	 * @param propertyName Property name.
-	 *
-	 * @return Property object or {@code null} if none with expected name has been found.
-	 */
-	public static XProperty getProperty(XClass clazz, String propertyName) {
-		XProperty property = getProperty( clazz, propertyName, "field" );
-		if ( property == null ) {
-			property = getProperty( clazz, propertyName, "property" );
-		}
-		return property;
-	}
-
-	/**
-	 * @param clazz Source class.
-	 * @param propertyName Property name.
-	 * @param accessType Expected access type. Legal values are <i>field</i> and <i>property</i>.
-	 *
-	 * @return Property object or {@code null} if none with expected name and access type has been found.
-	 */
-	public static XProperty getProperty(XClass clazz, String propertyName, String accessType) {
-		for ( XProperty property : clazz.getDeclaredProperties( accessType ) ) {
-			if ( propertyName.equals( property.getName() ) ) {
-				return property;
-			}
-		}
-		return null;
 	}
 
 	/**

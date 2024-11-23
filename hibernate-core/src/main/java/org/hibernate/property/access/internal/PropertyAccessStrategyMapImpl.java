@@ -1,14 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
-import org.hibernate.mapping.Map;
+import java.util.Map;
+
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -21,10 +22,10 @@ public class PropertyAccessStrategyMapImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategyMapImpl INSTANCE = new PropertyAccessStrategyMapImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
-		
+	public PropertyAccess buildPropertyAccess(@Nullable Class<?> containerJavaType, String propertyName, boolean setterRequired) {
+
 		// Sometimes containerJavaType is null, but if it isn't, make sure it's a Map.
-		if (containerJavaType != null && !Map.class.isAssignableFrom(containerJavaType)) {
+		if (containerJavaType != null && !Map.class.isAssignableFrom( containerJavaType)) {
 			throw new IllegalArgumentException(
 				String.format(
 					"Expecting class: [%1$s], but containerJavaType is of type: [%2$s] for propertyName: [%3$s]",

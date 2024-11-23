@@ -1,31 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.JavaTypedExpressible;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
+import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
+import org.hibernate.type.internal.UserTypeVersionJavaTypeWrapper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
-import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -33,41 +38,109 @@ import org.hibernate.usertype.UserVersionType;
  * Adapts {@link UserType} to the generic {@link Type} interface, in order
  * to isolate user code from changes in the internal Type contracts.
  *
+ * @apiNote Many of the interfaces implemented here are implemented just to
+ * handle the case of the wrapped type implementing them so we can pass them
+ * along.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CustomType
+public class CustomType<J>
 		extends AbstractType
-		implements IdentifierType, DiscriminatorType, VersionType, BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
+		implements ConvertedBasicType<J>, ProcedureParameterNamedBinder<J>, ProcedureParameterExtractionAware<J> {
 
-	private final UserType userType;
-	private final String name;
-	private final int[] types;
-	private final Size[] dictatedSizes;
-	private final Size[] defaultSizes;
-	private final boolean customLogging;
+	private final UserType<J> userType;
 	private final String[] registrationKeys;
 
-	public CustomType(UserType userType) throws MappingException {
-		this( userType, ArrayHelper.EMPTY_STRING_ARRAY );
+	private final String name;
+
+	private final JavaType<J> mappedJavaType;
+	private final JavaType<?> jdbcJavaType;
+	private final JdbcType jdbcType;
+
+	private final ValueExtractor<J> valueExtractor;
+	private final ValueBinder<J> valueBinder;
+	private final JdbcLiteralFormatter<J> jdbcLiteralFormatter;
+
+	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
+		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
 	}
 
-	public CustomType(UserType userType, String[] registrationKeys) throws MappingException {
+	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration)
+			throws MappingException {
 		this.userType = userType;
-		this.name = userType.getClass().getName();
-		this.types = userType.sqlTypes();
-		this.dictatedSizes = Sized.class.isInstance( userType )
-				? ( (Sized) userType ).dictatedSizes()
-				: new Size[ types.length ];
-		this.defaultSizes = Sized.class.isInstance( userType )
-				? ( (Sized) userType ).defaultSizes()
-				: new Size[ types.length ];
-		this.customLogging = LoggableUserType.class.isInstance( userType );
+		name = userType.getClass().getName();
+
+		if ( userType instanceof JavaType<?> ) {
+			//noinspection unchecked
+			mappedJavaType = (JavaType<J>) userType;
+		}
+		else if ( userType instanceof JavaTypedExpressible) {
+			//noinspection unchecked
+			mappedJavaType = ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
+		}
+		else if ( userType instanceof UserVersionType ) {
+			mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
+		}
+		else {
+			mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
+		}
+
+		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+		if ( valueConverter != null ) {
+			// When an explicit value converter is given,
+			// we configure the custom type to use that instead of adapters that delegate to UserType.
+			// This is necessary to support selecting a column with multiple domain type representations.
+			jdbcType = userType.getJdbcType( typeConfiguration );
+			jdbcJavaType = valueConverter.getRelationalJavaType();
+			//noinspection unchecked
+			valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
+			//noinspection unchecked
+			valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
+			//noinspection unchecked
+			jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
+		}
+		else {
+			// create a JdbcType adapter that uses the UserType binder/extract handling
+			jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration );
+			jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			valueExtractor = jdbcType.getExtractor( mappedJavaType );
+			valueBinder = jdbcType.getBinder( mappedJavaType );
+			jdbcLiteralFormatter = userType instanceof EnhancedUserType
+					? jdbcType.getJdbcLiteralFormatter( mappedJavaType )
+					: null;
+		}
+
 		this.registrationKeys = registrationKeys;
 	}
 
-	public UserType getUserType() {
+	public UserType<J> getUserType() {
 		return userType;
+	}
+
+	@Override
+	public ValueExtractor<J> getJdbcValueExtractor() {
+		return valueExtractor;
+	}
+
+	@Override
+	public ValueBinder<J> getJdbcValueBinder() {
+		return valueBinder;
+	}
+
+	@Override
+	public JdbcLiteralFormatter<J> getJdbcLiteralFormatter() {
+		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public JdbcType getJdbcType() {
+		return jdbcType;
+	}
+
+	@Override
+	public int[] getSqlTypeCodes(MappingContext mappingContext) {
+		return new int[] { jdbcType.getDdlTypeCode() };
 	}
 
 	@Override
@@ -76,67 +149,104 @@ public class CustomType
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping pi) {
-		return types;
+	public int getColumnSpan(MappingContext session) {
+		return 1;
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return dictatedSizes;
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return defaultSizes;
-	}
-
-	@Override
-	public int getColumnSpan(Mapping session) {
-		return types.length;
-	}
-
-	@Override
-	public Class getReturnedClass() {
+	public Class<J> getReturnedClass() {
 		return getUserType().returnedClass();
 	}
 
 	@Override
 	public boolean isEqual(Object x, Object y) throws HibernateException {
-		return getUserType().equals( x, y );
+		return getUserType().equals( (J) x, (J) y );
 	}
 
 	@Override
 	public int getHashCode(Object x) {
-		return getUserType().hashCode( x);
+		return getUserType().hashCode( (J) x );
 	}
-
-	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		return getUserType().nullSafeGet( rs, names, session, owner);
-	}
-
-	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String columnName,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		return nullSafeGet(rs, new String[] { columnName }, session, owner);
-	}
-
 
 	@Override
 	public Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) {
-		return getUserType().assemble( cached, owner);
+		final J assembled = getUserType().assemble( cached, owner );
+		// Since UserType#assemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for assembling,
+		// or if that doesn't exist, simply use the relational value as is
+		if ( assembled == null && cached != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return cached;
+			}
+			else {
+				return valueConverter.toDomainValue( cached );
+			}
+		}
+		return assembled;
 	}
 
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
-		return getUserType().disassemble( value);
+		return disassembleForCache( value );
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+		return disassembleForCache( value );
+	}
+
+	private Serializable disassembleForCache(Object value) {
+		final Serializable disassembled = getUserType().disassemble( (J) value );
+		// Since UserType#disassemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for disassembling,
+		// or if that doesn't exist, simply use the domain value as is
+		if ( disassembled == null ){
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return disassembled;
+			}
+			else {
+				return (Serializable) valueConverter.toRelationalValue( (J) value );
+			}
+		}
+		return disassembled;
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		// Use the value converter if available for conversion to the jdbc representation
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return value;
+			}
+			else {
+				return valueConverter.toRelationalValue( (J) value );
+			}
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+
+		final Serializable disassembled = getUserType().disassemble( (J) value );
+		// Since UserType#disassemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for disassembling,
+		// or if that doesn't exist, simply use the domain value as is
+		if ( disassembled == null) {
+			CacheHelper.addBasicValueToCacheKey( cacheKey, value, this, session );
+		}
+		else {
+			cacheKey.addValue( disassembled );
+			if ( value == null ) {
+				cacheKey.addHashCode( 0 );
+			}
+			else {
+				cacheKey.addHashCode( getUserType().hashCode( (J) value ) );
+			}
+		}
 	}
 
 	@Override
@@ -145,8 +255,8 @@ public class CustomType
 			Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
-			Map copyCache) throws HibernateException {
-		return getUserType().replace( original, target, owner );
+			Map<Object, Object> copyCache) throws HibernateException {
+		return getUserType().replace( (J) original, (J) target, owner );
 	}
 
 	@Override
@@ -157,7 +267,8 @@ public class CustomType
 			boolean[] settable,
 			SharedSessionContractImplementor session) throws SQLException {
 		if ( settable[0] ) {
-			getUserType().nullSafeSet( st, value, index, session );
+			//noinspection unchecked
+			getUserType().nullSafeSet( st, (J) value, index, session );
 		}
 	}
 
@@ -167,17 +278,8 @@ public class CustomType
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws SQLException {
-		getUserType().nullSafeSet( st, value, index, session );
-	}
-
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public String toXMLString(Object value, SessionFactoryImplementor factory) {
-		return toString( value );
-	}
-
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public Object fromXMLString(String xml, Mapping factory) {
-		return fromStringValue( xml );
+		//noinspection unchecked
+		getUserType().nullSafeSet( st, (J) value, index, session );
 	}
 
 	@Override
@@ -187,7 +289,7 @@ public class CustomType
 
 	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) throws HibernateException {
-		return getUserType().deepCopy( value);
+		return getUserType().deepCopy( (J) value );
 	}
 
 	@Override
@@ -196,46 +298,23 @@ public class CustomType
 	}
 
 	@Override
-	public Object stringToObject(String xml) {
-		return fromStringValue( xml );
-	}
-
-	@Override
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return ( (EnhancedUserType) getUserType() ).objectToSQLString( value);
-	}
-
-	@Override
-	public Comparator getComparator() {
-		return (Comparator) getUserType();
-	}
-
-	@Override
-	public Object next(Object current, SharedSessionContractImplementor session) {
-		return ( (UserVersionType) getUserType() ).next( current, session );
-	}
-
-	@Override
-	public Object seed(SharedSessionContractImplementor session) {
-		return ( (UserVersionType) getUserType() ).seed( session );
-	}
-
-	@Override
-	public String toLoggableString(Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == null ) {
 			return "null";
 		}
-		else if ( customLogging ) {
-			return ( ( LoggableUserType ) getUserType() ).toLoggableString( value, factory );
+		else if ( userType instanceof LoggableUserType ) {
+			return ( (LoggableUserType) userType ).toLoggableString( value, factory );
+		}
+		else if ( userType instanceof EnhancedUserType<?> ) {
+			return ( (EnhancedUserType<Object>) userType ).toString( value );
 		}
 		else {
-			return toXMLString( value, factory );
+			return value.toString();
 		}
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];
 		if ( value != null ) {
 			Arrays.fill(result, true);
@@ -250,53 +329,18 @@ public class CustomType
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public String toString(Object value) throws HibernateException {
-		if ( StringRepresentableType.class.isInstance( getUserType() ) ) {
-			return ( (StringRepresentableType) getUserType() ).toString( value );
-		}
-		if ( value == null ) {
-			return null;
-		}
-		if ( EnhancedUserType.class.isInstance( getUserType() ) ) {
-			//noinspection deprecation
-			return ( (EnhancedUserType) getUserType() ).toXMLString( value );
-		}
-		return value.toString();
-	}
-
-	@Override
-	public Object fromStringValue(String string) throws HibernateException {
-		if ( StringRepresentableType.class.isInstance( getUserType() ) ) {
-			return ( (StringRepresentableType) getUserType() ).fromStringValue( string );
-		}
-		if ( EnhancedUserType.class.isInstance( getUserType() ) ) {
-			//noinspection deprecation
-			return ( (EnhancedUserType) getUserType() ).fromXMLString( string );
-		}
-		throw new HibernateException(
-				String.format(
-						"Could not process #fromStringValue, UserType class [%s] did not implement %s or %s",
-						name,
-						StringRepresentableType.class.getName(),
-						EnhancedUserType.class.getName()
-				)
-		);
-	}
-
-	@Override
 	public boolean canDoSetting() {
-		if ( ProcedureParameterNamedBinder.class.isInstance( getUserType() ) ) {
-			return ((ProcedureParameterNamedBinder) getUserType() ).canDoSetting();
+		if ( getUserType() instanceof ProcedureParameterNamedBinder ) {
+			return ((ProcedureParameterNamedBinder<?>) getUserType() ).canDoSetting();
 		}
 		return false;
 	}
 
 	@Override
 	public void nullSafeSet(
-			CallableStatement statement, Object value, String name, SharedSessionContractImplementor session) throws SQLException {
+			CallableStatement statement, J value, String name, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoSetting() ) {
-			((ProcedureParameterNamedBinder) getUserType() ).nullSafeSet( statement, value, name, session );
+			((ProcedureParameterNamedBinder<J>) getUserType() ).nullSafeSet( statement, value, name, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -307,16 +351,17 @@ public class CustomType
 
 	@Override
 	public boolean canDoExtraction() {
-		if ( ProcedureParameterExtractionAware.class.isInstance( getUserType() ) ) {
-			return ((ProcedureParameterExtractionAware) getUserType() ).canDoExtraction();
+		if ( getUserType() instanceof ProcedureParameterExtractionAware ) {
+			return ((ProcedureParameterExtractionAware<?>) getUserType() ).canDoExtraction();
 		}
 		return false;
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
+	public J extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, startIndex, session );
+			//noinspection unchecked
+			return ((ProcedureParameterExtractionAware<J>) getUserType() ).extract( statement, startIndex, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -326,10 +371,11 @@ public class CustomType
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, String[] paramNames, SharedSessionContractImplementor session)
+	public J extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, paramNames, session );
+			//noinspection unchecked
+			return ((ProcedureParameterExtractionAware<J>) getUserType() ).extract( statement, paramName, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -345,6 +391,37 @@ public class CustomType
 
 	@Override
 	public boolean equals(Object obj) {
-		return ( obj instanceof CustomType ) && getUserType().equals( ( (CustomType) obj ).getUserType() );
+		return ( obj instanceof CustomType ) && getUserType().equals( ( (CustomType<?>) obj ).getUserType() );
 	}
+
+	@Override
+	public Class<J> getJavaType() {
+		return mappedJavaType.getJavaTypeClass();
+	}
+
+	@Override
+	public JavaType<J> getMappedJavaType() {
+		return mappedJavaType;
+	}
+
+	@Override
+	public JavaType<J> getExpressibleJavaType() {
+		return this.getMappedJavaType();
+	}
+
+	@Override
+	public JavaType<J> getJavaTypeDescriptor() {
+		return this.getMappedJavaType();
+	}
+
+	@Override
+	public JavaType<?> getJdbcJavaType() {
+		return jdbcJavaType;
+	}
+
+	@Override
+	public BasicValueConverter<J, Object> getValueConverter() {
+		return userType.getValueConverter();
+	}
+
 }

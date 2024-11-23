@@ -1,12 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
 
 import java.lang.reflect.Method;
+
+import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.FieldValue;
@@ -23,7 +23,7 @@ import net.bytebuddy.implementation.bind.annotation.This;
  * suppressed by the runtime if they are not available on a class loader. This allows using this interceptor
  * and configuration with for example OSGi without any export of Byte Buddy when using Hibernate.
  */
-public interface ProxyConfiguration {
+public interface ProxyConfiguration extends PrimeAmongSecondarySupertypes {
 
 	/**
 	 * The canonical field name for an interceptor object stored in a proxied object.
@@ -36,6 +36,11 @@ public interface ProxyConfiguration {
 	 * @param interceptor The interceptor object.
 	 */
 	void $$_hibernate_set_interceptor(Interceptor interceptor);
+
+	@Override
+	default ProxyConfiguration asProxyConfiguration() {
+		return this;
+	}
 
 	/**
 	 * An interceptor object that is responsible for invoking a proxy's method.

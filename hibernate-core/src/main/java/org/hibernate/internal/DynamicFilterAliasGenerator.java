@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -12,8 +10,8 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
  * @author Rob Worsnop
  */
 public class DynamicFilterAliasGenerator implements FilterAliasGenerator {
-	private String[] tables;
-	private String rootAlias;
+	private final String[] tables;
+	private final String rootAlias;
 
 	public DynamicFilterAliasGenerator(String[] tables, String rootAlias) {
 		this.tables = tables;

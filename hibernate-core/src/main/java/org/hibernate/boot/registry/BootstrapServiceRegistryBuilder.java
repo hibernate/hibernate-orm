@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry;
 
@@ -24,10 +22,18 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Builder for {@link BootstrapServiceRegistry} instances.  Provides registry for services needed for
- * most operations.  This includes {@link Integrator} handling and ClassLoader handling.
- *
- * Additionally responsible for building and managing the {@link org.hibernate.boot.registry.selector.spi.StrategySelector}
+ * Builder for {@link BootstrapServiceRegistry} instances.
+ * <p>
+ * An instance of this class may be obtained simply by
+ * {@linkplain #BootstrapServiceRegistryBuilder() instantiation}. Then a new
+ * {@code BootstrapServiceRegistry} may be obtained by calling {@link #build()}.
+ * It should be later destroyed by calling {@link #destroy(ServiceRegistry)}.
+ * Alternatively, {@linkplain #enableAutoClose() auto-close} may be enabled.
+ * <p>
+ * Provides a registry of services needed for most operations.
+ * Manages a {@link ClassLoaderService}, a set of {@link Integrator}s, and a
+ * {@link StrategySelectorBuilder} responsible for creation and management
+ * of {@link org.hibernate.boot.registry.selector.spi.StrategySelector}s.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -35,21 +41,16 @@ import org.hibernate.service.ServiceRegistry;
  * @see StandardServiceRegistryBuilder
  */
 public class BootstrapServiceRegistryBuilder {
-	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
+	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<>();
 
 	private List<ClassLoader> providedClassLoaders;
 	private ClassLoaderService providedClassLoaderService;
-	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
+	private final StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
 	private TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.AFTER;
 
 	private boolean autoCloseRegistry = true;
 
-	/**
-	 * @deprecated Use {@link #applyIntegrator} instead
-	 */
-	@Deprecated
-	public BootstrapServiceRegistryBuilder with(Integrator integrator) {
-		return applyIntegrator( integrator );
+	public BootstrapServiceRegistryBuilder() {
 	}
 
 	/**
@@ -65,15 +66,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * @deprecated Use {@link #applyClassLoader} instead
-	 */
-	@Deprecated
-	public BootstrapServiceRegistryBuilder with(ClassLoader classLoader) {
-		return applyClassLoader( classLoader );
-	}
-
-	/**
-	 * Adds a provided {@link ClassLoader} for use in class-loading and resource-lookup.
+	 * Adds a provided {@link ClassLoader} for use in classloading and resource lookup.
 	 *
 	 * @param classLoader The class loader to use
 	 *
@@ -81,15 +74,15 @@ public class BootstrapServiceRegistryBuilder {
 	 */
 	public BootstrapServiceRegistryBuilder applyClassLoader(ClassLoader classLoader) {
 		if ( providedClassLoaders == null ) {
-			providedClassLoaders = new ArrayList<ClassLoader>();
+			providedClassLoaders = new ArrayList<>();
 		}
 		providedClassLoaders.add( classLoader );
 		return this;
 	}
 
 	/**
-	 * Defines when the lookup in the thread context {@code ClassLoader} is done
-	 * 
+	 * Defines when the lookup in the thread context {@code ClassLoader} is done.
+	 *
 	 * @param precedence The lookup precedence
 	 */
 	public void applyTcclLookupPrecedence(TcclLookupPrecedence precedence) {
@@ -97,15 +90,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * @deprecated Use {@link #applyClassLoaderService} instead
-	 */
-	@Deprecated
-	public BootstrapServiceRegistryBuilder with(ClassLoaderService classLoaderService) {
-		return applyClassLoaderService( classLoaderService );
-	}
-
-	/**
-	 * Adds a provided {@link ClassLoaderService} for use in class-loading and resource-lookup.
+	 * Adds a provided {@link ClassLoaderService} for use in classloading and resource lookup.
 	 *
 	 * @param classLoaderService The class loader service to use
 	 *
@@ -117,40 +102,21 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * @deprecated Use {@link #applyStrategySelector} instead
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	@Deprecated
-	public <T> BootstrapServiceRegistryBuilder withStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
-		return applyStrategySelector( strategy, name, implementation );
-	}
-
-	/**
 	 * Applies a named strategy implementation to the bootstrap registry.
 	 *
 	 * @param strategy The strategy
 	 * @param name The registered name
 	 * @param implementation The strategy implementation Class
-	 * @param <T> Defines the strategy type and makes sure that the strategy and implementation are of
-	 * compatible types.
+	 * @param <T> Defines the strategy type and makes sure that the strategy and implementation
+	 *            are of compatible types.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public <T> BootstrapServiceRegistryBuilder applyStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
 		this.strategySelectorBuilder.addExplicitStrategyRegistration( strategy, implementation, name );
 		return this;
-	}
-
-	/**
-	 * @deprecated Use {@link #applyStrategySelectors} instead
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	@Deprecated
-	public BootstrapServiceRegistryBuilder withStrategySelectors(StrategyRegistrationProvider strategyRegistrationProvider) {
-		return applyStrategySelectors( strategyRegistrationProvider );
 	}
 
 	/**
@@ -162,21 +128,20 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public BootstrapServiceRegistryBuilder applyStrategySelectors(StrategyRegistrationProvider strategyRegistrationProvider) {
-		for ( StrategyRegistration strategyRegistration : strategyRegistrationProvider.getStrategyRegistrations() ) {
+		for ( StrategyRegistration<?> strategyRegistration : strategyRegistrationProvider.getStrategyRegistrations() ) {
 			this.strategySelectorBuilder.addExplicitStrategyRegistration( strategyRegistration );
 		}
 		return this;
 	}
 
 	/**
-	 * By default, when a ServiceRegistry is no longer referenced by any other
-	 * registries as a parent it will be closed.
-	 * <p/>
-	 * Some applications that explicitly build "shared registries" may want to
-	 * circumvent that behavior.
-	 * <p/>
+	 * By default, when a {@link ServiceRegistry} is no longer referenced by
+	 * any other registries as a parent it will be closed.
+	 * <p>
+	 * Some applications that explicitly build "shared registries" may want
+	 * to circumvent that behavior.
+	 * <p>
 	 * This method indicates that the registry being built should not be
 	 * automatically closed.  The caller agrees to take responsibility to
 	 * close it themselves.
@@ -189,8 +154,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * See the discussion on {@link #disableAutoClose}.  This method enables
-	 * the auto-closing.
+	 * See the discussion on {@link #disableAutoClose}. This method enables the auto-closing.
 	 *
 	 * @return this, for method chaining
 	 */
@@ -209,19 +173,19 @@ public class BootstrapServiceRegistryBuilder {
 		if ( providedClassLoaderService == null ) {
 			// Use a set.  As an example, in JPA, OsgiClassLoader may be in both
 			// the providedClassLoaders and the overriddenClassLoader.
-			final Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+			final Set<ClassLoader> classLoaders = new HashSet<>();
 
 			if ( providedClassLoaders != null )  {
 				classLoaders.addAll( providedClassLoaders );
 			}
-			
+
 			classLoaderService = new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
 		}
 		else {
 			classLoaderService = providedClassLoaderService;
 		}
 
-		final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
+		final IntegratorServiceImpl integratorService = IntegratorServiceImpl.create(
 				providedIntegrators,
 				classLoaderService
 		);
@@ -235,7 +199,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Destroy a service registry.  Applications should only destroy registries they have explicitly created.
+	 * Destroy a service registry. Clients should only destroy registries they have created.
 	 *
 	 * @param serviceRegistry The registry to be closed.
 	 */

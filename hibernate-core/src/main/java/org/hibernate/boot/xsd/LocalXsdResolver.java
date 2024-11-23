@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.xsd;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.List;
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -30,11 +26,10 @@ import org.xml.sax.SAXException;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class LocalXsdResolver {
 
 	public static String latestJpaVerison() {
-		return "2.2";
+		return "3.2";
 	}
 
 	public static boolean isValidJpaVersion(String version) {
@@ -44,6 +39,8 @@ public class LocalXsdResolver {
 			case "2.1":
 			case "2.2":
 			case "3.0":
+			case "3.1":
+			case "3.2":
 				return true;
 			default:
 				return false;

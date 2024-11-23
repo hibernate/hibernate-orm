@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.spi;
 
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Additional integration contracts for a service registry.
@@ -23,7 +23,7 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 *
 	 * @return The located binding; may be {@code null}
 	 */
-	<R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
+	<R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
 
 	@Override
 	default void close() {
@@ -46,4 +46,6 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 * via this callback.
 	 */
 	void deRegisterChild(ServiceRegistryImplementor child);
+
+	<T extends Service> @Nullable T fromRegistryOrChildren(Class<T> serviceRole);
 }

@@ -1,0 +1,92 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.tree.expression;
+
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
+
+/**
+ * Models a positional parameter expression
+ *
+ * @author Steve Ebersole
+ */
+public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
+	private final int position;
+
+	public SqmPositionalParameter(
+			int position,
+			boolean canBeMultiValued,
+			NodeBuilder nodeBuilder) {
+		this( position, canBeMultiValued, null, nodeBuilder );
+	}
+
+	public SqmPositionalParameter(
+			int position,
+			boolean canBeMultiValued,
+			SqmExpressible<T> expressibleType,
+			NodeBuilder nodeBuilder) {
+		super( canBeMultiValued, expressibleType, nodeBuilder );
+		this.position = position;
+	}
+
+	@Override
+	public SqmPositionalParameter<T> copy(SqmCopyContext context) {
+		final SqmPositionalParameter<T> existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmPositionalParameter<T> expression = context.registerCopy(
+				this,
+				new SqmPositionalParameter<>(
+						position,
+						allowMultiValuedBinding(),
+						getNodeType(),
+						nodeBuilder()
+				)
+		);
+		copyTo( expression, context );
+		return expression;
+	}
+
+	@Override
+	public Integer getPosition() {
+		return position;
+	}
+
+	@Override
+	public SqmParameter<T> copy() {
+		return new SqmPositionalParameter<>( getPosition(), allowMultiValuedBinding(), this.getNodeType(), nodeBuilder() );
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitPositionalParameterExpression( this );
+	}
+
+	@Override
+	public String toString() {
+		return "SqmPositionalParameter(" + getPosition() + ")";
+	}
+
+	@Override
+	public String asLoggableText() {
+		return "?" + getPosition();
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( '?' );
+		sb.append( getPosition() );
+	}
+
+	@Override
+	public int compareTo(SqmParameter anotherParameter) {
+		return anotherParameter instanceof SqmPositionalParameter<?>
+				? getPosition().compareTo( ( (SqmPositionalParameter<?>) anotherParameter ).getPosition() )
+				: 1;
+	}
+}

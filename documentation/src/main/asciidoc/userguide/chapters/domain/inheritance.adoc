@@ -1,6 +1,8 @@
 [[entity-inheritance]]
 === Inheritance
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/inheritance
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-inheritance: {core-project-dir}/src/test/java/org/hibernate/orm/test/inheritance
 :extrasdir: extras/inheritance
 
 Although relational database systems don't provide support for inheritance, Hibernate provides several strategies to leverage this object-oriented trait onto domain model entities:
@@ -24,7 +26,7 @@ When using `MappedSuperclass`, the inheritance is visible in the domain model on
 ====
 [source,java]
 ----
-include::{sourcedir}/MappedSuperclassTest.java[tags=entity-inheritance-mapped-superclass-example,indent=0]
+include::{example-dir-inheritance}/MappedSuperclassTest.java[tags=entity-inheritance-mapped-superclass-example,indent=0]
 ----
 
 [source,sql]
@@ -48,7 +50,7 @@ Version and id properties are assumed to be inherited from the root class.
 
 [NOTE]
 ====
-When omitting an explicit inheritance strategy (e.g. `@Inheritance`), JPA will choose the `SINGLE_TABLE` strategy by default.
+When omitting an explicit inheritance strategy (e.g. `@Inheritance`), Jakarta Persistence will choose the `SINGLE_TABLE` strategy by default.
 ====
 
 [[entity-inheritance-single-table-example]]
@@ -56,7 +58,7 @@ When omitting an explicit inheritance strategy (e.g. `@Inheritance`), JPA will c
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-example,indent=0]
+include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-single-table-example,indent=0]
 ----
 
 [source,sql]
@@ -73,7 +75,7 @@ If this is not specified, the `DTYPE` column is used as a discriminator, storing
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-persist-example,indent=0]
+include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-single-table-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -89,7 +91,7 @@ When using polymorphic queries, only a single table is required to be scanned to
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-query-example,indent=0]
+include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-single-table-query-example,indent=0]
 ----
 
 [source,sql]
@@ -114,12 +116,12 @@ Use the `@DiscriminatorColumn` to define the discriminator column as well as the
 
 [NOTE]
 ====
-The enum `DiscriminatorType` used in `javax.persistence.DiscriminatorColumn` only contains the values `STRING`, `CHAR` and `INTEGER` which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
+The enum `DiscriminatorType` used in `jakarta.persistence.DiscriminatorColumn` only contains the values `STRING`, `CHAR` and `INTEGER` which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
 You can also use `@DiscriminatorFormula` to express in SQL a virtual discriminator column.
 This is particularly useful when the discriminator value can be extracted from one or more columns of the table.
 Both `@DiscriminatorColumn` and `@DiscriminatorFormula` are to be set on the root entity (once per persisted hierarchy).
 
-`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate-specific discriminator options which are not standardized in JPA.
+`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate-specific discriminator options which are not standardized in Jakarta Persistence.
 The available options are `force` and `insert`.
 
 The `force` attribute is useful if the table contains rows with _extra_ discriminator values that are not mapped to a persistent class.
@@ -146,7 +148,7 @@ we can take advantage of the Hibernate specific `@DiscriminatorFormula` annotati
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableDiscriminatorFormulaTest.java[tags=entity-inheritance-single-table-discriminator-formula-example,indent=0]
+include::{example-dir-inheritance}/SingleTableDiscriminatorFormulaTest.java[tags=entity-inheritance-single-table-discriminator-formula-example,indent=0]
 ----
 
 [source,sql]
@@ -173,7 +175,7 @@ To understand how these two values work, consider the following entity mapping:
 ====
 [source,java]
 ----
-include::{sourcedir}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-example,indent=0]
+include::{example-dir-inheritance}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-example,indent=0]
 ----
 ====
 
@@ -188,7 +190,7 @@ To visualize how it works, consider the following example:
 ====
 [source,java]
 ----
-include::{sourcedir}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-persist-example,indent=0]
+include::{example-dir-inheritance}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -215,7 +217,7 @@ Each subclass must, however, declare a table column holding the object identifie
 ====
 [source,java]
 ----
-include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-example,indent=0]
+include::{example-dir-inheritance}/JoinTableTest.java[tags=entity-inheritance-joined-table-example,indent=0]
 ----
 
 [source,sql]
@@ -237,7 +239,7 @@ Also, if `@PrimaryKeyJoinColumn` is not set, the primary key / foreign key colum
 ====
 [source,java]
 ----
-include::{sourcedir}/JoinTablePrimaryKeyJoinColumnTest.java[tags=entity-inheritance-joined-table-primary-key-join-column-example,indent=0]
+include::{example-dir-inheritance}/JoinTablePrimaryKeyJoinColumnTest.java[tags=entity-inheritance-joined-table-primary-key-join-column-example,indent=0]
 ----
 
 [source,sql]
@@ -253,7 +255,7 @@ When using polymorphic queries, the base class table must be joined with all sub
 ====
 [source,java]
 ----
-include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-query-example,indent=0]
+include::{example-dir-inheritance}/JoinTableTest.java[tags=entity-inheritance-joined-table-query-example,indent=0]
 ----
 
 [source,sql]
@@ -283,7 +285,7 @@ However, if you wish to use polymorphic associations (e.g. an association to the
 ====
 [source,java]
 ----
-include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-example,indent=0]
+include::{example-dir-inheritance}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-example,indent=0]
 ----
 
 [source,sql]
@@ -298,7 +300,7 @@ When using polymorphic queries, a UNION is required to fetch the base class tabl
 ====
 [source,java]
 ----
-include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-query-example,indent=0]
+include::{example-dir-inheritance}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-query-example,indent=0]
 ----
 
 [source,sql]
@@ -310,84 +312,60 @@ include::{extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
 [IMPORTANT]
 ====
 Polymorphic queries require multiple UNION queries, so be aware of the performance implications of a large class hierarchy.
-
-Unfortunately, not all database systems support UNION ALL, in which case, UNION is going to be used instead of UNION ALL.
-
-The following Hibernate dialects support UNION ALL:
-
-- `AbstractHANADialect`
-- `AbstractTransactSQLDialect`
-- `CUBRIDDialect`
-- `DB2Dialect`
-- `H2Dialect`
-- `HSQLDialect`
-- `Ingres9Dialect`
-- `MySQL5Dialect`
-- `Oracle8iDialect`
-- `Oracle9Dialect`
-- `PostgreSQL81Dialect`
-- `RDMSOS2200Dialect`
 ====
 
-[[entity-inheritance-polymorphism]]
-==== Implicit and explicit polymorphism
+[[embeddable-inheritance]]
+==== Embeddable inheritance
 
-By default, when you query a base class entity,
-the polymorphic query will fetch all subclasses belonging to the base type.
+Hibernate also supports discriminator-based inheritance for *embeddable types*. This works similarly to
+<<entity-inheritance-single-table, Single Table Entity inheritance>>: an `@Embeddable` class may be
+extended by other `@Embeddable` classes, in which case the `@Embedded` properties using that type will
+rely on an additional discriminator column to store information about the composite value's subtype.
 
-However, you can even query
-*interfaces or base classes that don't belong to the JPA entity inheritance model*.
+When retrieving the inherited  property, Hibernate will read the discriminator value and instantiate the
+correct `@Embeddable` subtype with its corresponding properties.
 
-For instance, considering the following `DomainModelEntity` interface:
+By default, the discriminator column will be `STRING` typed and named like `<property_name>_DTYPE`,
+where `property_name` is the name of the `@Embedded` property in the respective entity mapping.
+It's possible to customize the discriminator column mapping:
 
-[[entity-inheritance-polymorphism-interface-example]]
-.DomainModelEntity interface
+* For the whole `@Embeddable` type, by using `@DiscriminatorColumn` or `@DiscriminatorFormula` on the *root* class of the inheritance hierarchy
+(NOTE: if using the same inheritance-enabled embeddable type for two different properties in the same entity mapping,
+this will cause a column name conflict);
+* For a specific `@Embedded` property, by using the `@AttributeOverride` annotation with the special name `+{discriminator}+`.
+
+Finally, to specify custom discriminator values for each subtype one can annotate the inheritance hierarchy's
+classes with `@DiscriminatorValue`.
+
+[IMPORTANT]
 ====
+Embeddable inheritance *IS* also supported for components used in an `@ElementCollection`.
+Embeddable inheritance *is NOT* supported for `@EmbeddedId`, embeddable types used as `@IdClass`
+and embedded properties using a custom `@CompositeType`.
+====
+
+Of course, the `type()` and `treat()` functions are also supported for embeddable inheritance and can serve to explicitly use the embeddable type information in queries, see <<chapters/jndi/QueryLanguage.adoc#hql-functions-typecasts,types and typecasts>>.
+
+[[embeddable-inheritance-example]]
+.Example mapping of an embeddable inheritance hierarchy
 [source,java]
 ----
-include::{sourcedir}/polymorphism/DomainModelEntity.java[tags=entity-inheritance-polymorphism-interface-example,indent=0]
+include::{example-dir-inheritance}/embeddable/ParentEmbeddable.java[tags=embeddable-inheritance-parent-example,indent=0]
 ----
-====
-
-If we have two entity mappings, a `Book` and a `Blog`,
-and the `Blog` entity is mapped with the
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation
-and taking the `PolymorphismType.EXPLICIT` setting:
-
-[[entity-inheritance-polymorphism-mapping-example]]
-.`@Polymorphism` entity mapping
-====
 [source,java]
 ----
-include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-mapping-example,indent=0]
+include::{example-dir-inheritance}/embeddable/ChildOneEmbeddable.java[tags=embeddable-inheritance-child-one-example,indent=0]
 ----
-====
-
-If we have the following entity objects in our system:
-
-[[entity-inheritance-polymorphism-persist-example]]
-.Domain Model entity objects
-====
 [source,java]
 ----
-include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-persist-example,indent=0]
+include::{example-dir-inheritance}/embeddable/SubChildOneEmbeddable.java[tags=embeddable-inheritance-sub-child-one-example,indent=0]
 ----
-====
-
-We can now query against the `DomainModelEntity` interface,
-and Hibernate is going to fetch only the entities that are either mapped with
-`@Polymorphism(type = PolymorphismType.IMPLICIT)`
-or they are not annotated at all with the `@Polymorphism` annotation (implying the IMPLICIT behavior):
-
-[[entity-inheritance-polymorphism-fetch-example]]
-.Fetching Domain Model entities using non-mapped base class polymorphism
-====
 [source,java]
 ----
-include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-fetch-example,indent=0]
+include::{example-dir-inheritance}/embeddable/BasicEmbeddableInheritanceTest.java[tags=embeddable-inheritance-entity-example,indent=0]
 ----
-====
-
-Therefore, only the `Book` was fetched since the `Blog` entity was marked with the
-`@Polymorphism(type = PolymorphismType.EXPLICIT)` annotation, which instructs Hibernate
-to skip it when executing a polymorphic query against a non-mapped base class.
+This is the resulting table structure:
+[source,sql]
+----
+include::{extrasdir}/embeddable-inheritance-create-table-example.sql[]
+----

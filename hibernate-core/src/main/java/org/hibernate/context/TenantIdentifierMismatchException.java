@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.context;
 
@@ -10,8 +8,8 @@ import org.hibernate.HibernateException;
 
 /**
  * Indicates that tenant identifiers did not match in cases where
- * {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver#validateExistingCurrentSessions()} returns
- * {@code true} and there is a mismatch found.
+ * {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver#validateExistingCurrentSessions()}
+ * returns {@code true} and there is a mismatch found.
  *
  * @author Steve Ebersole
  */

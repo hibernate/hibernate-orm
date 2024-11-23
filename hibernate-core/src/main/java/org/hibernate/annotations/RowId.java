@@ -1,26 +1,45 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Support for {@code ROWID} mapping feature of Hibernate.
+ * Specifies that a {@code rowid}-like column or pseudo-column should be
+ * used as the row locator in CRUD operations for an entity,
+ * instead of the primary key of the table.
+ * <p>
+ * If the {@linkplain org.hibernate.dialect.Dialect SQL dialect} does
+ * not support some sort of {@code rowid}-like column or pseudo-column,
+ * then this annotation is ignored, and the primary key is used as the
+ * row locator.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.dialect.Dialect#rowId
  */
-@java.lang.annotation.Target( { TYPE })
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface RowId {
 	/**
-	 * Names the {@code ROWID} identifier.
+	 * Specifies the name of the {@code rowid}-like column for databases
+	 * where the column is declared explicitly in DDL.
+	 * <p>
+	 * It is <em>not</em> necessary to specify the name for databases where
+	 * the {@code rowid}-like value is an implicitly-existing pseudo-column,
+	 * and on those databases, this annotation member is ignored.
+	 *
+	 * @apiNote Previously, this annotation member was required. But the
+	 *          name of the column it is now usually determined by calling
+	 *          {@link org.hibernate.dialect.Dialect#rowId}, and so this
+	 *          member is now usually ignored. The exception is for certain
+	 *          flavors of DB2.
 	 */
-	String value();
+	String value() default "";
 }

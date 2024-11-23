@@ -1,26 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
-import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
@@ -29,16 +23,14 @@ import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * @author Gail Badner
@@ -47,6 +39,7 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
 public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor {
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
+	private final BootstrapContext bootstrapContext;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this(
@@ -54,18 +47,29 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 				new SessionFactoryOptionsBuilder(
 						metadata.getMetadataBuildingOptions().getServiceRegistry(),
 						bootstrapContext
-				)
+				),
+				bootstrapContext
 		);
 	}
 
-	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
+	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder, BootstrapContext context) {
 		this.metadata = metadata;
 		this.optionsBuilder = optionsBuilder;
+		this.bootstrapContext = context;
+
 		if ( metadata.getSqlFunctionMap() != null ) {
-			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
+			for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
+
+		final BytecodeProvider bytecodeProvider =
+				metadata.getMetadataBuildingOptions().getServiceRegistry()
+						.getService( BytecodeProvider.class );
+		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
+		addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
+		addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
+		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );
 	}
 
 	@Override
@@ -177,12 +181,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode) {
-		this.optionsBuilder.applyDefaultEntityMode( entityMode );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyNullabilityChecking(boolean enabled) {
 		this.optionsBuilder.enableNullabilityChecking( enabled );
 		return this;
@@ -195,34 +193,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		this.optionsBuilder.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		this.optionsBuilder.applyEntityTuplizer( entityMode, tuplizerClass );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyMultiTableBulkIdStrategy(MultiTableBulkIdStrategy strategy) {
-		this.optionsBuilder.applyMultiTableBulkIdStrategy( strategy );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		this.optionsBuilder.applyTempTableDdlTransactionHandling( handling );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style) {
-		this.optionsBuilder.applyBatchFetchStyle( style );
 		return this;
 	}
 
@@ -245,7 +217,13 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public SessionFactoryBuilder applySubselectFetchEnabled(boolean enabled) {
+		this.optionsBuilder.applySubselectFetchEnabled( enabled );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		this.optionsBuilder.applyDefaultNullPrecedence( nullPrecedence );
 		return this;
 	}
@@ -263,20 +241,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyMultiTenancyStrategy(MultiTenancyStrategy strategy) {
-		this.optionsBuilder.applyMultiTenancyStrategy( strategy );
+	public SessionFactoryBuilder applyMultiTenancy(boolean enabled) {
+		this.optionsBuilder.applyMultiTenancy(enabled);
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		this.optionsBuilder.applyCurrentTenantIdentifierResolver( resolver );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyQuerySubstitutions(@SuppressWarnings("rawtypes") Map substitutions) {
-		this.optionsBuilder.applyQuerySubstitutions( substitutions );
 		return this;
 	}
 
@@ -295,6 +267,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyQueryCacheSupport(boolean enabled) {
 		this.optionsBuilder.enableQueryCacheSupport( enabled );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout) {
+		this.optionsBuilder.applyQueryCacheLayout( cacheLayout );
 		return this;
 	}
 
@@ -353,12 +331,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyResultSetsWrapping(boolean enabled) {
-		this.optionsBuilder.enableResultSetWrappingSupport( enabled );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyGetGeneratedKeysSupport(boolean enabled) {
 		this.optionsBuilder.enableGeneratedKeysSupport( enabled );
 		return this;
@@ -377,12 +349,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyConnectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
-		this.optionsBuilder.applyConnectionReleaseMode( connectionReleaseMode );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
 		this.optionsBuilder.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
 		return this;
@@ -395,8 +361,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction) {
-		this.optionsBuilder.applySqlFunction( registrationName, sqlFunction );
+	public SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor) {
+		this.optionsBuilder.applySqlFunction( registrationName, functionDescriptor );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled) {
+		this.optionsBuilder.enableCollectionInDefaultFetchGroup( enabled );
 		return this;
 	}
 
@@ -412,16 +384,15 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-
 	@Override
-	public SessionFactoryBuilder applyStrictJpaQueryLanguageCompliance(boolean enabled) {
-		this.optionsBuilder.enableStrictJpaQueryLanguageCompliance( enabled );
+	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
+		this.optionsBuilder.enableJpaQueryCompliance( enabled );
 		return this;
 	}
 
 	@Override
-	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
-		this.optionsBuilder.enableJpaQueryCompliance( enabled );
+	public SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled) {
+		this.optionsBuilder.enableJpaOrderByMappingCompliance( enabled );
 		return this;
 	}
 
@@ -431,9 +402,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
-	public SessionFactoryBuilder enableJpaListCompliance(boolean enabled) {
-		this.optionsBuilder.enableJpaListCompliance( enabled );
+	@Override @Deprecated
+	public SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled) {
+		this.optionsBuilder.enableJpaCascadeCompliance( enabled );
 		return this;
 	}
 
@@ -444,8 +415,15 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public void disableRefreshDetachedEntity() {
-		this.optionsBuilder.disableRefreshDetachedEntity();
+	public SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+		this.optionsBuilder.applyJsonFormatMapper( jsonFormatMapper );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+		this.optionsBuilder.applyXmlFormatMapper( xmlFormatMapper );
+		return this;
 	}
 
 	@Override
@@ -453,23 +431,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		this.optionsBuilder.disableJtaTransactionAccess();
 	}
 
-	public void enableJdbcStyleParamsZeroBased() {
-		this.optionsBuilder.enableJdbcStyleParamsZeroBased();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T extends SessionFactoryBuilder> T unwrap(Class<T> type) {
-		return (T) this;
-	}
-
 	@Override
 	public SessionFactory build() {
-		metadata.validate();
-		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
-		BytecodeProvider bytecodeProvider = serviceRegistry.getService( BytecodeProvider.class );
-		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
-		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions(), HQLQueryPlan::new );
+		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions(), bootstrapContext );
 	}
 
 	@Override

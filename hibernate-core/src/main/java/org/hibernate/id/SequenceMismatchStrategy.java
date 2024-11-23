@@ -1,16 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import org.hibernate.HibernateException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Describes the strategy for handling the mismatch between a database sequence configuration and
  * the one defined by the entity mapping.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY
  *
  * @author Vlad Mihalcea
  */
@@ -32,7 +34,13 @@ public enum SequenceMismatchStrategy {
 	 * When detecting a mismatch, Hibernate tries to fix it by overriding the entity sequence mapping using the one
 	 * found in the database.
 	 */
-	FIX;
+	FIX,
+
+	/**
+	 * Don't perform any check. This is useful to speedup bootstrap as it won't query the sequences on the DB,
+	 * at cost of not validating the sequences.
+	 */
+	NONE;
 
 	/**
 	 * Interpret the configured SequenceMismatchStrategy value.
@@ -45,7 +53,7 @@ public enum SequenceMismatchStrategy {
 	 *
 	 * @return associated {@link SequenceMismatchStrategy} object
 	 */
-	public static SequenceMismatchStrategy interpret(Object sequenceMismatchStrategy) {
+	public static SequenceMismatchStrategy interpret(@Nullable Object sequenceMismatchStrategy) {
 		if ( sequenceMismatchStrategy == null ) {
 			return EXCEPTION;
 		}

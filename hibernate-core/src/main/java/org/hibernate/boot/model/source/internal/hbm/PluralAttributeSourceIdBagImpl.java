@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -12,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.model.source.spi.AttributeSourceContainer;
 import org.hibernate.boot.model.source.spi.CollectionIdSource;
@@ -66,13 +65,13 @@ public class PluralAttributeSourceIdBagImpl extends AbstractPluralAttributeSourc
 					}
 
 					@Override
-					public List getColumnOrFormulaElements() {
+					public List<JaxbHbmColumnType> getColumnOrFormulaElements() {
 						return idBagMapping.getCollectionId().getColumn();
 					}
 				}
 		);
 
-		if ( !ColumnSource.class.isInstance( collectionIdRelationalValueSource ) ) {
+		if ( !(collectionIdRelationalValueSource instanceof ColumnSource) ) {
 			throw new MappingException(
 					String.format(
 							Locale.ENGLISH,

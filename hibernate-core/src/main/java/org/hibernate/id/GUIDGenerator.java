@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,10 +14,15 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * Generates <tt>string</tt> values using the SQL Server NEWID() function.
+ * The legacy id generator named {@code guid}.
+ * <p>
+ * Generates {@code string} values using the SQL Server {@code NEWID()} function.
  *
  * @author Joseph Fifield
+ *
+ * @deprecated use {@link org.hibernate.id.uuid.UuidGenerator}
  */
+@Deprecated(since = "6.0")
 public class GUIDGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
@@ -33,24 +35,23 @@ public class GUIDGenerator implements IdentifierGenerator {
 		}
 	}
 
-	public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		final String sql = session.getJdbcServices().getJdbcEnvironment().getDialect().getSelectGUIDString();
 		try {
-			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
-				final String result;
+				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sql );
 				try {
 					if ( !rs.next() ) {
 						throw new HibernateException( "The database returned no GUID identity value" );
 					}
-					result = rs.getString( 1 );
+					final String result = rs.getString( 1 );
+					LOG.guidGenerated( result );
+					return result;
 				}
 				finally {
 					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
-				LOG.guidGenerated( result );
-				return result;
 			}
 			finally {
 				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );

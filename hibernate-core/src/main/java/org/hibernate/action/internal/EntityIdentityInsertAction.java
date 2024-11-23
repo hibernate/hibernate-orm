@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
-
-import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -15,14 +11,16 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * The action for performing entity insertions when entity is using IDENTITY column identifier generation
@@ -34,7 +32,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	private final boolean isDelayed;
 	private final EntityKey delayedEntityKey;
 	private EntityKey entityKey;
-	private Serializable generatedId;
+	private Object generatedId;
+	private Object rowId;
 
 	/**
 	 * Constructs an EntityIdentityInsertAction
@@ -49,14 +48,14 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 * @throws HibernateException Indicates an illegal state
 	 */
 	public EntityIdentityInsertAction(
-			Object[] state,
-			Object instance,
-			EntityPersister persister,
-			boolean isVersionIncrementDisabled,
-			SharedSessionContractImplementor session,
-			boolean isDelayed) {
+			final Object[] state,
+			final Object instance,
+			final EntityPersister persister,
+			final boolean isVersionIncrementDisabled,
+			final EventSource session,
+			final boolean isDelayed) {
 		super(
-				( isDelayed ? generateDelayedPostInsertIdentifier() : null ),
+				isDelayed ? generateDelayedPostInsertIdentifier() : null,
 				state,
 				instance,
 				isVersionIncrementDisabled,
@@ -81,19 +80,29 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		// else inserted the same pk first, the insert would fail
 
 		if ( !isVeto() ) {
-			generatedId = persister.insert( getState(), instance, session );
+			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert(
+					instance,
+					getState(),
+					session
+			);
+			generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			if ( persister.getRowIdMapping() != null ) {
+				rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
+				if ( rowId != null && isDelayed ) {
+					persistenceContext.replaceEntityEntryRowId( getInstance(), rowId );
+				}
+			}
 			if ( persister.hasInsertGeneratedProperties() ) {
-				persister.processInsertGeneratedProperties( generatedId, instance, getState(), session );
+				persister.processInsertGeneratedProperties( generatedId, instance, getState(), generatedValues, session );
 			}
 			//need to do that here rather than in the save event listener to let
-			//the post insert events to have a id-filled entity when IDENTITY is used (EJB3)
+			//the post insert events to have an id-filled entity when IDENTITY is used (EJB3)
 			persister.setIdentifier( instance, generatedId, session );
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			persistenceContext.registerInsertedKey( getPersister(), generatedId );
 			entityKey = session.generateEntityKey( generatedId, persister );
 			persistenceContext.checkUniqueness( entityKey, getInstance() );
 		}
-
 
 		//TODO: this bit actually has to be called after all cascades!
 		//      but since identity insert is called *synchronously*,
@@ -121,13 +130,13 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
+		final EventListenerGroup<PostInsertEventListener> group
+				= getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
 		for ( PostInsertEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
@@ -142,67 +151,55 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected void postInsert() {
-		final EventSource eventSource = eventSource();
 		if ( isDelayed ) {
-			eventSource.getPersistenceContextInternal().replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
+			eventSource().getPersistenceContextInternal()
+					.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 		}
-
-		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_INSERT );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostInsertEvent event = new PostInsertEvent(
-				getInstance(),
-				generatedId,
-				getState(),
-				getPersister(),
-				eventSource
-		);
-		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostInsert( event );
-		}
+		getFastSessionServices().eventListenerGroup_POST_INSERT
+				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
 
-	protected void postCommitInsert(boolean success) {
-		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostInsertEvent event = new PostInsertEvent(
+	PostInsertEvent newPostInsertEvent() {
+		return new PostInsertEvent(
 				getInstance(),
 				generatedId,
 				getState(),
 				getPersister(),
 				eventSource()
 		);
-		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitInsertEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostInsert( event );
-				}
-				else {
-					((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostInsert( event );
-			}
+	}
+
+	protected void postCommitInsert(boolean success) {
+		getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT
+			.fireLazyEventOnEachListener( this::newPostInsertEvent,
+					success ? PostInsertEventListener::onPostInsert : this::postCommitInsertOnFailure );
+	}
+
+	private void postCommitInsertOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
+		if ( listener instanceof PostCommitInsertEventListener ) {
+			((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+		}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostInsert( event );
 		}
 	}
 
 	protected boolean preInsert() {
-		final EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
+		final EventListenerGroup<PreInsertEventListener> listenerGroup
+				= getFastSessionServices().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			// NO_VETO
 			return false;
 		}
-		boolean veto = false;
-		final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
-		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
-			veto |= listener.onPreInsert( event );
+		else {
+			final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
+			boolean veto = false;
+			for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
+				veto |= listener.onPreInsert( event );
+			}
+			return veto;
 		}
-		return veto;
 	}
 
 	/**
@@ -210,25 +207,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 *
 	 * @return The generated identifier
 	 */
-	public final Serializable getGeneratedId() {
+	public final Object getGeneratedId() {
 		return generatedId;
 	}
 
-	protected void setGeneratedId(Serializable generatedId) {
+	protected void setGeneratedId(Object generatedId) {
 		this.generatedId = generatedId;
-	}
-
-	/**
-	 * Access to the delayed entity key
-	 *
-	 * @return The delayed entity key
-	 *
-	 * @deprecated No Hibernate code currently uses this method
-	 */
-	@Deprecated
-	@SuppressWarnings("UnusedDeclaration")
-	public EntityKey getDelayedEntityKey() {
-		return delayedEntityKey;
 	}
 
 	@Override
@@ -241,6 +225,11 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		return entityKey != null ? entityKey : delayedEntityKey;
 	}
 
+	@Override
+	public Object getRowId() {
+		return rowId;
+	}
+
 	protected void setEntityKey(EntityKey entityKey) {
 		this.entityKey = entityKey;
 	}
@@ -250,9 +239,11 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected EntityKey generateDelayedEntityKey() {
-		if ( !isDelayed ) {
+		if ( isDelayed ) {
+			return getSession().generateEntityKey( getDelayedId(), getPersister() );
+		}
+		else {
 			throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
 		}
-		return getSession().generateEntityKey( getDelayedId(), getPersister() );
 	}
 }

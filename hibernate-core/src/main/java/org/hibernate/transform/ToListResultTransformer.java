@@ -1,17 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.transform;
 
 import java.util.Arrays;
+import java.util.List;
+
+import org.hibernate.query.TypedTupleTransformer;
 
 /**
- * Transforms each result row from a tuple into a {@link java.util.List} whose elements are each tuple value
+ * Transforms each result row from a tuple into a {@link List} whose elements are each tuple value
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
-public class ToListResultTransformer extends BasicTransformerAdapter {
+@Deprecated
+public class ToListResultTransformer implements ResultTransformer<List<Object>>, TypedTupleTransformer<List<Object>> {
 	public static final ToListResultTransformer INSTANCE = new ToListResultTransformer();
 
 	/**
@@ -20,8 +24,14 @@ public class ToListResultTransformer extends BasicTransformerAdapter {
 	private ToListResultTransformer() {
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	public Class<List<Object>> getTransformedType() {
+		return (Class) List.class;
+	}
+
+	@Override
+	public List<Object> transformTuple(Object[] tuple, String[] aliases) {
 		return Arrays.asList( tuple );
 	}
 

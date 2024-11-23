@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.spi;
 
@@ -22,9 +20,9 @@ import org.hibernate.resource.beans.internal.ManagedBeanRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Hibernate's standard initializer for the ManagedBeanRegistry service.
+ * Hibernate's standard initializer for the {@link ManagedBeanRegistry} service.
  *
- * Produces a {@link org.hibernate.resource.beans.internal.ManagedBeanRegistryImpl}
+ * Produces a {@link ManagedBeanRegistryImpl}
  *
  * @author Steve Ebersole
  */
@@ -41,14 +39,14 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 
 	@Override
 	public ManagedBeanRegistry initiateService(
-			Map configurationValues,
+			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor serviceRegistry) {
 		return new ManagedBeanRegistryImpl( resolveBeanContainer( configurationValues, serviceRegistry ) );
 	}
 
-	private BeanContainer resolveBeanContainer(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		final ConfigurationService cfgSvc = serviceRegistry.getService( ConfigurationService.class );
+	private BeanContainer resolveBeanContainer(Map<?,?> configurationValues, ServiceRegistryImplementor serviceRegistry) {
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		final ConfigurationService cfgSvc = serviceRegistry.requireService( ConfigurationService.class );
 
 		// was a specific container explicitly specified?
 		final Object explicitBeanContainer = configurationValues.get( AvailableSettings.BEAN_CONTAINER );
@@ -60,17 +58,20 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		// simplified CDI support
 
 		final boolean isCdiAvailable = isCdiAvailable( classLoaderService );
-		final Object beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.CDI_BEAN_MANAGER );
+		Object beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.CDI_BEAN_MANAGER );
+		if ( beanManagerRef == null ) {
+			beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
+		}
 		if ( beanManagerRef != null ) {
 			if ( !isCdiAvailable ) {
-				BeansMessageLogger.BEANS_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );
+				BeansMessageLogger.BEANS_MSG_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );
 			}
 
 			return CdiBeanContainerBuilder.fromBeanManagerReference( beanManagerRef, serviceRegistry );
 		}
 		else {
 			if ( isCdiAvailable ) {
-				BeansMessageLogger.BEANS_LOGGER.noBeanManagerButCdiAvailable();
+				BeansMessageLogger.BEANS_MSG_LOGGER.noBeanManagerButCdiAvailable();
 			}
 		}
 
@@ -89,14 +90,14 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		}
 
 		// otherwise we ultimately need to resolve this to a class
-		final Class containerClass;
+		final Class<?> containerClass;
 		if ( explicitSetting instanceof Class ) {
-			containerClass = (Class) explicitSetting;
+			containerClass = (Class<?>) explicitSetting;
 		}
 		else {
 			final String name = explicitSetting.toString();
 			// try the StrategySelector service
-			final Class selected = serviceRegistry.getService( StrategySelector.class )
+			final Class<?> selected = serviceRegistry.requireService( StrategySelector.class )
 					.selectStrategyImplementor( BeanContainer.class, name );
 			if ( selected != null ) {
 				containerClass = selected;
@@ -110,7 +111,7 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 			return (BeanContainer) containerClass.newInstance();
 		}
 		catch (Exception e) {
-			throw new InstantiationException( "Unable to instantiate specified BeanContainer : " + containerClass.getName(), containerClass, e );
+			throw new InstantiationException( "Unable to instantiate specified BeanContainer", containerClass, e );
 		}
 	}
 
@@ -125,8 +126,13 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		}
 	}
 
-	public static Class cdiBeanManagerClass(ClassLoaderService classLoaderService) throws ClassLoadingException {
-		return classLoaderService.classForName( "javax.enterprise.inject.spi.BeanManager" );
+	public static Class<?> cdiBeanManagerClass(ClassLoaderService classLoaderService) throws ClassLoadingException {
+		try {
+			return classLoaderService.classForName( "jakarta.enterprise.inject.spi.BeanManager" );
+		}
+		catch (ClassLoadingException e) {
+			return classLoaderService.classForName( "jakarta.enterprise.inject.spi.BeanManager" );
+		}
 	}
 
 }

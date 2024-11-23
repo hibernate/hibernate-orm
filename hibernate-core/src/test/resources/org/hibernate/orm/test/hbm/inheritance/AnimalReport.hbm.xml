@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.hbm.inheritance">
+    <class name="AnimalReport">
+        <id name="id"/>
+        <property name="name"/>
+        <many-to-one class="Animal" name="animal" not-found="ignore"/>
+    </class>
+
+    <class abstract="true" name="Animal">
+        <id name="id"/>
+
+        <joined-subclass name="Cat">
+            <key column="ANIMAL_ID"/>
+            <many-to-one class="CatName" name="name" not-found="ignore"/>
+        </joined-subclass>
+
+        <joined-subclass name="Dog">
+            <key column="ANIMAL_ID"/>
+            <many-to-one class="DogName" name="name" not-found="ignore"/>
+        </joined-subclass>
+    </class>
+
+    <class name="CatName">
+        <id name="id"/>
+        <property name="name"/>
+    </class>
+
+    <class name="DogName">
+        <id name="id"/>
+        <property name="name"/>
+    </class>
+</hibernate-mapping>

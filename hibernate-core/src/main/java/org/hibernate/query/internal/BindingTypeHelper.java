@@ -1,28 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
 import java.time.Instant;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
-import javax.persistence.TemporalType;
 
-import org.hibernate.type.BasicType;
-import org.hibernate.type.CalendarDateType;
-import org.hibernate.type.CalendarTimeType;
-import org.hibernate.type.CalendarType;
-import org.hibernate.type.InstantType;
-import org.hibernate.type.OffsetDateTimeType;
-import org.hibernate.type.OffsetTimeType;
-import org.hibernate.type.TimestampType;
-import org.hibernate.type.Type;
-import org.hibernate.type.ZonedDateTimeType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.BindableType;
+import org.hibernate.query.BindingContext;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Steve Ebersole
@@ -36,46 +34,66 @@ public class BindingTypeHelper {
 	private BindingTypeHelper() {
 	}
 
-	public BasicType determineTypeForTemporalType(TemporalType temporalType, Type baseType, Object bindValue) {
-		// todo : for 6.0 make TemporalType part of org.hibernate.type.descriptor.java.JdbcRecommendedSqlTypeMappingContext
-		//		then we can just ask the org.hibernate.type.basic.BasicTypeFactory to handle this based on its registry
-		//
-		//   - or for 6.0 make TemporalType part of the state for those BasicType impls dealing with date/time types
-		//
-		// 	 - or for 6.0 make TemporalType part of Binder contract
-		//
-		//   - or add a org.hibernate.type.TemporalType#getVariant(TemporalType)
-		//
-		//	 - or ...
+	public <T> BindableType<T> resolveTemporalPrecision(
+			TemporalType precision,
+			BindableType<T> declaredParameterType,
+			BindingContext bindingContext) {
+		if ( precision != null ) {
+			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible(bindingContext);
+			if ( !( JavaTypeHelper.isTemporal( sqmExpressible.getExpressibleJavaType() ) ) ) {
+				throw new UnsupportedOperationException(
+						"Cannot treat non-temporal parameter type with temporal precision"
+				);
+			}
 
-		// todo : (5.2) review Java type handling for sanity.  This part was done quickly ;)
-
-		final Class javaType;
-
-		// Determine the "value java type" :
-		// 		prefer to leverage the bindValue java type (if bindValue not null),
-		// 		followed by the java type reported by the baseType,
-		// 		fallback to java.sql.Timestamp
-
-		if ( bindValue != null ) {
-			javaType = bindValue.getClass();
+			final TemporalJavaType<T> temporalJtd = (TemporalJavaType<T>) sqmExpressible.getExpressibleJavaType();
+			if ( temporalJtd.getPrecision() != precision ) {
+				final TypeConfiguration typeConfiguration = bindingContext.getTypeConfiguration();
+				final TemporalJavaType<T> temporalTypeForPrecision;
+				// Special case java.util.Date, because TemporalJavaType#resolveTypeForPrecision doesn't support widening,
+				// since the main purpose of that method is to determine the final java type based on the reflective type
+				// + the explicit @Temporal(TemporalType...) configuration
+				if ( java.util.Date.class.isAssignableFrom( temporalJtd.getJavaTypeClass() ) ) {
+					//noinspection unchecked
+					temporalTypeForPrecision = (TemporalJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor(
+							TemporalJavaType.resolveJavaTypeClass( precision )
+					);
+				}
+				else {
+					temporalTypeForPrecision = temporalJtd.resolveTypeForPrecision(
+							precision,
+							typeConfiguration
+					);
+				}
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						temporalTypeForPrecision,
+						TemporalJavaType.resolveJdbcTypeCode( precision )
+				);
+			}
 		}
-		else if ( baseType != null ) {
-			javaType = baseType.getReturnedClass();
-		}
-		else {
-			javaType = java.sql.Timestamp.class;
+
+		return declaredParameterType;
+	}
+
+	public JdbcMapping resolveBindType(
+			Object value,
+			JdbcMapping baseType,
+			TypeConfiguration typeConfiguration) {
+		if ( value == null || !JavaTypeHelper.isTemporal( baseType.getJdbcJavaType() ) ) {
+			return baseType;
 		}
 
+		final Class<?> javaType = value.getClass();
+		final TemporalType temporalType = ( (TemporalJavaType<?>) baseType.getJdbcJavaType() ).getPrecision();
 		switch ( temporalType ) {
 			case TIMESTAMP: {
-				return resolveTimestampTemporalTypeVariant( javaType, baseType );
+				return (JdbcMapping) resolveTimestampTemporalTypeVariant( javaType, (BindableType<?>) baseType, typeConfiguration );
 			}
 			case DATE: {
-				return resolveDateTemporalTypeVariant( javaType, baseType );
+				return (JdbcMapping) resolveDateTemporalTypeVariant( javaType, (BindableType<?>) baseType, typeConfiguration );
 			}
 			case TIME: {
-				return resolveTimeTemporalTypeVariant( javaType, baseType );
+				return (JdbcMapping) resolveTimeTemporalTypeVariant( javaType, (BindableType<?>) baseType, typeConfiguration );
 			}
 			default: {
 				throw new IllegalArgumentException( "Unexpected TemporalType [" + temporalType + "]; expecting TIMESTAMP, DATE or TIME" );
@@ -83,78 +101,91 @@ public class BindingTypeHelper {
 		}
 	}
 
-	public BasicType resolveTimestampTemporalTypeVariant(Class javaType, Type baseType) {
-		// prefer to use any Type already known - interprets TIMESTAMP as "no narrowing"
-		if ( baseType != null && baseType instanceof BasicType ) {
-			return (BasicType) baseType;
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public BindableType resolveTimestampTemporalTypeVariant(
+			Class javaType,
+			BindableType baseType,
+			TypeConfiguration typeConfiguration) {
+		if ( baseType.getBindableJavaType().isAssignableFrom( javaType ) ) {
+			return baseType;
 		}
 
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
-			return CalendarType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.CALENDAR );
 		}
 
 		if ( java.util.Date.class.isAssignableFrom( javaType ) ) {
-			return TimestampType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.TIMESTAMP );
 		}
 
 		if ( Instant.class.isAssignableFrom( javaType ) ) {
-			return InstantType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INSTANT );
 		}
 
 		if ( OffsetDateTime.class.isAssignableFrom( javaType ) ) {
-			return OffsetDateTimeType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.OFFSET_DATE_TIME );
 		}
 
 		if ( ZonedDateTime.class.isAssignableFrom( javaType ) ) {
-			return ZonedDateTimeType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.ZONED_DATE_TIME );
 		}
 
 		if ( OffsetTime.class.isAssignableFrom( javaType ) ) {
-			return OffsetTimeType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.OFFSET_TIME );
 		}
 
 		throw new IllegalArgumentException( "Unsure how to handle given Java type [" + javaType.getName() + "] as TemporalType#TIMESTAMP" );
 	}
 
-	@SuppressWarnings("unchecked")
-	public BasicType resolveDateTemporalTypeVariant(Class javaType, Type baseType) {
-		// prefer to use any Type already known
-		if ( baseType != null && baseType instanceof BasicType ) {
-			if ( baseType.getReturnedClass().isAssignableFrom( javaType ) ) {
-				return (BasicType) baseType;
-			}
+	public BindableType<?> resolveDateTemporalTypeVariant(
+			Class<?> javaType,
+			BindableType<?> baseType,
+			TypeConfiguration typeConfiguration) {
+		if ( baseType.getBindableJavaType().isAssignableFrom( javaType ) ) {
+			return baseType;
 		}
 
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
-			return CalendarDateType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.CALENDAR_DATE );
 		}
 
 		if ( java.util.Date.class.isAssignableFrom( javaType ) ) {
-			return TimestampType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DATE );
 		}
 
 		if ( Instant.class.isAssignableFrom( javaType ) ) {
-			return OffsetDateTimeType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INSTANT );
 		}
 
 		if ( OffsetDateTime.class.isAssignableFrom( javaType ) ) {
-			return OffsetDateTimeType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.OFFSET_DATE_TIME );
 		}
 
 		if ( ZonedDateTime.class.isAssignableFrom( javaType ) ) {
-			return ZonedDateTimeType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.ZONED_DATE_TIME );
 		}
 
 		throw new IllegalArgumentException( "Unsure how to handle given Java type [" + javaType.getName() + "] as TemporalType#DATE" );
 	}
 
-	public BasicType resolveTimeTemporalTypeVariant(Class javaType, Type baseType) {
+	public BindableType resolveTimeTemporalTypeVariant(
+			Class javaType,
+			BindableType baseType,
+			TypeConfiguration typeConfiguration) {
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
-			return CalendarTimeType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.CALENDAR_TIME );
 		}
 
 		if ( java.util.Date.class.isAssignableFrom( javaType ) ) {
-			return TimestampType.INSTANCE;
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.TIME );
+		}
+
+		if ( LocalTime.class.isAssignableFrom( javaType ) ) {
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LOCAL_TIME );
+		}
+
+		if ( OffsetTime.class.isAssignableFrom( javaType ) ) {
+			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.OFFSET_TIME );
 		}
 
 		throw new IllegalArgumentException( "Unsure how to handle given Java type [" + javaType.getName() + "] as TemporalType#TIME" );

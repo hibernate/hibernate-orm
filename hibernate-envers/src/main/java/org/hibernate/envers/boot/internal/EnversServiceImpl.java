@@ -1,28 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.internal;
 
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.EntitiesConfigurator;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.MappingCollector;
-import org.hibernate.envers.configuration.internal.RevisionInfoConfiguration;
-import org.hibernate.envers.configuration.internal.RevisionInfoConfigurationResult;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
@@ -31,15 +24,14 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.synchronization.AuditProcessManager;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.envers.strategy.spi.AuditStrategyContext;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
 import org.jboss.logging.Logger;
-
-import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
 
 /**
  * Provides central access to Envers' configuration.
@@ -62,24 +54,14 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	private ClassLoaderService classLoaderService;
 
 	// todo : not at all a fan of all these...
-	//		1) GlobalConfiguration, AuditEntitiesConfiguration and AuditStrategy are
-	// 			all "configuration" objects.  They seem unnecessarily split apart from
-	//			each other.  Why 3?  Why not just one?
 	//		2) AuditProcessManager is a glorified Map of AuditProcess instances (BeforeTransactionCompletionProcess)
 	//			keyed by Transaction (Session)
-	//		3) Make sure that the info kept here is all really needed at run time, and not just at
-	//			"mapping time"
-	private GlobalConfiguration globalConfiguration;
-	private AuditEntitiesConfiguration auditEntitiesConfiguration;
+	private Configuration configuration;
 	private AuditProcessManager auditProcessManager;
-	private AuditStrategy auditStrategy;
 	private EntitiesConfigurations entitiesConfigurations;
-	private RevisionInfoQueryCreator revisionInfoQueryCreator;
-	private RevisionInfoNumberReader revisionInfoNumberReader;
-	private ModifiedEntityNamesReader modifiedEntityNamesReader;
 
 	@Override
-	public void configure(Map configurationValues) {
+	public void configure(Map<String, Object> configurationValues) {
 		if ( configurationValues.containsKey( LEGACY_AUTO_REGISTER ) ) {
 			log.debugf(
 					"Encountered deprecated Envers setting [%s]; use [%s] or [%s] instead",
@@ -89,10 +71,6 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 			);
 		}
 		this.integrationEnabled = ConfigurationHelper.getBoolean( INTEGRATION_ENABLED, configurationValues, true );
-		boolean xmlMappingEnabled = ConfigurationHelper.getBoolean( XML_MAPPING_ENABLED, configurationValues, true );
-		if ( this.integrationEnabled && !xmlMappingEnabled ) {
-			throw new HibernateException( "Hibernate Envers currently requires XML mapping to be enabled. Please don't disable setting `" + XML_MAPPING_ENABLED + "`; alternatively disable Hibernate Envers." );
-		}
 
 		log.infof( "Envers integration enabled? : %s", integrationEnabled );
 	}
@@ -108,121 +86,59 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	}
 
 	@Override
-	public void initialize(final MetadataImplementor metadata, final MappingCollector mappingCollector) {
+	public void initialize(
+			MetadataImplementor metadata,
+			MappingCollector mappingCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults) {
 		if ( initialized ) {
 			throw new UnsupportedOperationException( "EnversService#initialize should be called only once" );
 		}
 
 		initialized = true;
 
-
+		final InFlightMetadataCollector metadataCollector = (InFlightMetadataCollector) metadata;
 		this.serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-		doInitialize( metadata, mappingCollector, serviceRegistry );
-	}
-
-	private void doInitialize(
-			final MetadataImplementor metadata,
-			final MappingCollector mappingCollector,
-			ServiceRegistry serviceRegistry) {
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final Properties properties = new Properties();
 		properties.putAll( cfgService.getSettings() );
 
-		this.globalConfiguration = new GlobalConfiguration( this, properties );
+		this.configuration = new Configuration( properties, this, metadataCollector );
+		this.auditProcessManager = new AuditProcessManager( configuration.getRevisionInfo().getRevisionInfoGenerator() );
 
-		final ReflectionManager reflectionManager = metadata.getMetadataBuildingOptions()
-				.getReflectionManager();
-		final RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalConfiguration );
-		final RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(
-				metadata,
-				reflectionManager
+		final EnversMetadataBuildingContext metadataBuildingContext = new EnversMetadataBuildingContextImpl(
+				configuration,
+				metadataCollector,
+				effectiveMappingDefaults,
+				mappingCollector
 		);
-
-		EnversServiceImpl.this.auditEntitiesConfiguration = new AuditEntitiesConfiguration(
-				properties,
-				revInfoCfgResult.getRevisionInfoEntityName(),
-				this
-		);
-		this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
-		this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
-		this.revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-		this.modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
-		this.auditStrategy = initializeAuditStrategy(
-				auditEntitiesConfiguration.getAuditStrategyName(),
-				revInfoCfgResult.getRevisionInfoClass(),
-				revInfoCfgResult.getRevisionInfoTimestampData(),
-				serviceRegistry
-		);
-		this.entitiesConfigurations = new EntitiesConfigurator().configure(
-				metadata,
-				serviceRegistry,
-				reflectionManager,
-				mappingCollector,
-				globalConfiguration,
-				auditEntitiesConfiguration,
-				auditStrategy,
-				revInfoCfgResult.getRevisionInfoXmlMapping(),
-				revInfoCfgResult.getRevisionInfoRelationMapping()
-		);
-	}
-
-	private static AuditStrategy initializeAuditStrategy(
-			String auditStrategyName,
-			Class<?> revisionInfoClass,
-			PropertyData revisionInfoTimestampData,
-			ServiceRegistry serviceRegistry) {
-		AuditStrategy strategy;
-
-		try {
-			final Class<?> auditStrategyClass = loadClass( auditStrategyName, serviceRegistry );
-			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor( auditStrategyClass ).newInstance();
-		}
-		catch (Exception e) {
-			throw new MappingException(
-					String.format( "Unable to create AuditStrategy [%s] instance.", auditStrategyName ),
-					e
-			);
-		}
 
 		// Strategy-specific initialization
-		strategy.postInitialize( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
+		configuration.getAuditStrategy().postInitialize(
+				new AuditStrategyContext() {
+					@Override
+					public Class<?> getRevisionInfoClass() {
+						return configuration.getRevisionInfo().getRevisionInfoClass();
+					}
 
-		return strategy;
-	}
+					@Override
+					public Getter getRevisionInfoTimestampAccessor() {
+						final PropertyData pd = configuration.getRevisionInfo().getRevisionInfoTimestampData();
+						return ReflectionTools.getGetter( getRevisionInfoClass(), pd, serviceRegistry );
+					}
+				}
+		);
 
-	/**
-	 * Load a class by name, preferring our ClassLoader and then the ClassLoaderService.
-	 *
-	 * @param auditStrategyName The name of the class to load
-	 * @param serviceRegistry The ServiceRegistry
-	 *
-	 * @return The loaded class.
-	 */
-	private static Class<?> loadClass(String auditStrategyName, ServiceRegistry serviceRegistry) {
-		try {
-			return EnversServiceImpl.class.getClassLoader().loadClass( auditStrategyName );
-		}
-		catch (Exception e) {
-			return ReflectionTools.loadClass( auditStrategyName, serviceRegistry.getService( ClassLoaderService.class ) );
-		}
+		this.entitiesConfigurations = new EntitiesConfigurator().configure( metadataBuildingContext );
 	}
 
 	@Override
-	public GlobalConfiguration getGlobalConfiguration() {
+	public Configuration getConfig() {
 		if ( !initialized ) {
 			throw new IllegalStateException( "Service is not yet initialized" );
 		}
-		return globalConfiguration;
-	}
-
-	@Override
-	public AuditEntitiesConfiguration getAuditEntitiesConfiguration() {
-		if ( !initialized ) {
-			throw new IllegalStateException( "Service is not yet initialized" );
-		}
-		return auditEntitiesConfiguration;
+		return configuration;
 	}
 
 	@Override
@@ -234,11 +150,12 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 	}
 
 	@Override
+	@Deprecated
 	public AuditStrategy getAuditStrategy() {
 		if ( !initialized ) {
 			throw new IllegalStateException( "Service is not yet initialized" );
 		}
-		return auditStrategy;
+		return configuration.getAuditStrategy();
 	}
 
 	@Override
@@ -254,7 +171,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		if ( !initialized ) {
 			throw new IllegalStateException( "Service is not yet initialized" );
 		}
-		return revisionInfoQueryCreator;
+		return configuration.getRevisionInfo().getRevisionInfoQueryCreator();
 	}
 
 	@Override
@@ -262,7 +179,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		if ( !initialized ) {
 			throw new IllegalStateException( "Service is not yet initialized" );
 		}
-		return revisionInfoNumberReader;
+		return configuration.getRevisionInfo().getRevisionInfoNumberReader();
 	}
 
 	@Override
@@ -270,7 +187,7 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 		if ( !initialized ) {
 			throw new IllegalStateException( "Service is not yet initialized" );
 		}
-		return modifiedEntityNamesReader;
+		return configuration.getRevisionInfo().getModifiedEntityNamesReader();
 	}
 
 	@Override

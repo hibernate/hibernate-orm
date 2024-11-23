@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -11,23 +9,22 @@ import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
 import java.util.Properties;
-import javax.persistence.Enumerated;
-import javax.persistence.MapKeyEnumerated;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MapKeyEnumerated;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
-import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
-import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -36,43 +33,75 @@ import org.hibernate.usertype.LoggableUserType;
 
 import org.jboss.logging.Logger;
 
+import static jakarta.persistence.EnumType.ORDINAL;
+import static jakarta.persistence.EnumType.STRING;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+
 /**
  * Value type mapper for enumerations.
- *
- * Generally speaking, the proper configuration is picked up from the annotations associated with the mapped attribute.
- *
- * There are a few configuration parameters understood by this type mapper:<ul>
- *     <li>
- *         <strong>enumClass</strong> - Names the enumeration class.
- *     </li>
- *     <li>
- *         <strong>useNamed</strong> - Should enum be mapped via name.  Default is to map as ordinal.  Used when
- *         annotations are not used (otherwise {@link javax.persistence.EnumType} is used).
- *     </li>
- *     <li>
- *         <strong>type</strong> - Identifies the JDBC type (via type code) to be used for the column.
- *     </li>
- * </ul>
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ *
+ * @deprecated Use the built-in support for enums
  */
-@SuppressWarnings("unchecked")
-public class EnumType<T extends Enum>
-		implements EnhancedUserType, DynamicParameterizedType, LoggableUserType, TypeConfigurationAware, Serializable {
+@Deprecated(since="6.2", forRemoval=true)
+public class EnumType<T extends Enum<T>>
+		implements EnhancedUserType<T>, DynamicParameterizedType, LoggableUserType, TypeConfigurationAware, Serializable {
 	private static final Logger LOG = CoreLogging.logger( EnumType.class );
 
 	public static final String ENUM = "enumClass";
 	public static final String NAMED = "useNamed";
 	public static final String TYPE = "type";
 
-	private Class enumClass;
+	private Class<T> enumClass;
 
-	private EnumValueConverter enumValueConverter;
+	private boolean isOrdinal;
+	private JdbcType jdbcType;
+	private EnumJavaType<T> enumJavaType;
 
 	private TypeConfiguration typeConfiguration;
 
+	public EnumType() {
+	}
+
+	public Class<T> getEnumClass() {
+		return enumClass;
+	}
+
+	@Override
+	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
+		return jdbcType;
+	}
+
+	/**
+	 * <p>
+	 * An instance of this class is "configured" by a call to {@link #setParameterValues},
+	 * where configuration parameters are given as entries in a {@link Properties} object.
+	 * There are two distinct ways an instance may be configured:
+	 * <ul>
+	 * <li>one for {@code hbm.xml}-based mapping, and
+	 * <li>another for annotation-based or {@code orm.xml}-based mapping.
+	 * </ul>
+	 * <p>
+	 * In the case of annotations or {@code orm.xml}, a {@link ParameterType} is passed to
+	 * {@link #setParameterValues} under the key {@value #PARAMETER_TYPE}.
+	 * <p>
+	 * But in the case of {@code hbm.xml}, there are multiple parameters:
+	 * <ul>
+	 *     <li>
+	 *         {@value #ENUM}, the name of the Java enumeration class.
+	 *     </li>
+	 *     <li>
+	 *         {@value #NAMED}, specifies if the enum should be mapped by name.
+	 *         Default is to map as ordinal.
+	 *     </li>
+	 *     <li>
+	 * 			{@value #TYPE}, a JDBC type code (legacy alternative to {@value #NAMED}).
+	 *     </li>
+	 * </ul>
+	 */
 	@Override
 	public void setParameterValues(Properties parameters) {
 		// IMPL NOTE: we handle 2 distinct cases here:
@@ -82,188 +111,135 @@ public class EnumType<T extends Enum>
 		//		2) we are not passed a ParameterType - generally this indicates a hbm.xml binding case.
 		final ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 
-		if ( reader != null ) {
-			enumClass = reader.getReturnedClass().asSubclass( Enum.class );
-
-			final boolean isOrdinal;
-			final javax.persistence.EnumType enumType = getEnumType( reader );
-			if ( enumType == null ) {
-				isOrdinal = true;
-			}
-			else if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
-				isOrdinal = true;
-			}
-			else if ( javax.persistence.EnumType.STRING.equals( enumType ) ) {
-				isOrdinal = false;
-			}
-			else {
-				throw new AssertionFailure( "Unknown EnumType: " + enumType );
-			}
-
-			final EnumJavaTypeDescriptor enumJavaDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
-					.getJavaTypeDescriptorRegistry()
-					.getDescriptor( enumClass );
-
-			if ( isOrdinal ) {
-				this.enumValueConverter = new OrdinalEnumValueConverter( enumJavaDescriptor );
-			}
-			else {
-				this.enumValueConverter = new NamedEnumValueConverter( enumJavaDescriptor );
-			}
-		}
-		else {
+		if ( parameters.containsKey( ENUM ) ) {
 			final String enumClassName = (String) parameters.get( ENUM );
 			try {
-				enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
+				enumClass = (Class<T>) ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
 			}
 			catch ( ClassNotFoundException exception ) {
-				throw new HibernateException( "Enum class not found: " + enumClassName, exception );
+				throw new HibernateException("Enum class not found: " + enumClassName, exception);
 			}
-
-			this.enumValueConverter = interpretParameters( parameters );
+		}
+		else if ( reader != null ) {
+			enumClass = (Class<T>) reader.getReturnedClass().asSubclass( Enum.class );
 		}
 
-		LOG.debugf(
-				"Using %s-based conversion for Enum %s",
-				isOrdinal() ? "ORDINAL" : "NAMED",
-				enumClass.getName()
-		);
-	}
+		final JavaType<T> descriptor = typeConfiguration.getJavaTypeRegistry().getDescriptor( enumClass );
+		enumJavaType = (EnumJavaType<T>) descriptor;
 
-	private javax.persistence.EnumType getEnumType(ParameterType reader) {
-		javax.persistence.EnumType enumType = null;
-		if ( reader.isPrimaryKey() ) {
-			MapKeyEnumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), MapKeyEnumerated.class );
-			if ( enumAnn != null ) {
-				enumType = enumAnn.value();
-			}
+		if ( parameters.containsKey( TYPE ) ) {
+			int jdbcTypeCode = Integer.parseInt( (String) parameters.get( TYPE ) );
+			jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
+			isOrdinal = jdbcType.isInteger()
+					// Both, ENUM and NAMED_ENUM are treated like ordinal with respect to the ordering
+					|| jdbcType.getDefaultSqlTypeCode() == SqlTypes.ENUM
+					|| jdbcType.getDefaultSqlTypeCode() == SqlTypes.NAMED_ENUM;
 		}
 		else {
-			Enumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), Enumerated.class );
-			if ( enumAnn != null ) {
-				enumType = enumAnn.value();
+			final LocalJdbcTypeIndicators indicators;
+			final Long columnLength = reader == null ? null : reader.getColumnLengths()[0];
+			if ( parameters.containsKey (NAMED ) ) {
+				indicators = new LocalJdbcTypeIndicators(
+						// use ORDINAL as default for hbm.xml mappings
+						getBoolean( NAMED, parameters ) ? STRING : ORDINAL,
+						false,
+						columnLength
+				);
 			}
+			else {
+				indicators = new LocalJdbcTypeIndicators(
+						getEnumType( reader ),
+						isNationalized( reader ),
+						columnLength
+				);
+			}
+			jdbcType = descriptor.getRecommendedJdbcType( indicators );
+			isOrdinal = indicators.getEnumeratedType() != STRING;
 		}
-		return enumType;
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"Using %s-based conversion for Enum %s",
+					isOrdinal() ? "ORDINAL" : "NAMED",
+					enumClass.getName()
+			);
+		}
 	}
 
-	private <A extends Annotation> A getAnnotation(Annotation[] annotations, Class<A> anClass) {
+	private jakarta.persistence.EnumType getEnumType(ParameterType reader) {
+		if ( reader != null ) {
+			if ( reader.isPrimaryKey() ) {
+				final MapKeyEnumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), MapKeyEnumerated.class );
+				if ( enumAnn != null ) {
+					return enumAnn.value();
+				}
+			}
+			final Enumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), Enumerated.class );
+			if ( enumAnn != null ) {
+				return enumAnn.value();
+			}
+		}
+		return ORDINAL;
+	}
+
+	private boolean isNationalized(ParameterType reader) {
+		return typeConfiguration.getCurrentBaseSqlTypeIndicators().isNationalized()
+			|| reader!=null && getAnnotation( reader.getAnnotationsMethod(), Nationalized.class ) != null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <A extends Annotation> A getAnnotation(Annotation[] annotations, Class<A> annotationType) {
 		for ( Annotation annotation : annotations ) {
-			if ( anClass.isInstance( annotation ) ) {
+			if ( annotationType.isInstance( annotation ) ) {
 				return (A) annotation;
 			}
 		}
 		return null;
 	}
 
-	private EnumValueConverter interpretParameters(Properties parameters) {
-		final EnumJavaTypeDescriptor javaTypeDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( enumClass );
-		if ( parameters.containsKey( NAMED ) ) {
-			final boolean useNamed = ConfigurationHelper.getBoolean( NAMED, parameters );
-			if ( useNamed ) {
-				return new NamedEnumValueConverter( javaTypeDescriptor );
-			}
-			else {
-				return new OrdinalEnumValueConverter( javaTypeDescriptor );
-			}
-		}
-
-		if ( parameters.containsKey( TYPE ) ) {
-			final int type = Integer.decode( (String) parameters.get( TYPE ) );
-			if ( isNumericType( type ) ) {
-				return new OrdinalEnumValueConverter( javaTypeDescriptor );
-			}
-			else if ( isCharacterType( type ) ) {
-				return new NamedEnumValueConverter( javaTypeDescriptor );
-			}
-			else {
-				throw new HibernateException(
-						String.format(
-								Locale.ENGLISH,
-								"Passed JDBC type code [%s] not recognized as numeric nor character",
-								type
-						)
-				);
-			}
-		}
-
-		// the fallback
-		return new OrdinalEnumValueConverter( javaTypeDescriptor );
-	}
-
-	private boolean isCharacterType(int jdbcTypeCode) {
-		switch ( jdbcTypeCode ) {
-			case Types.CHAR:
-			case Types.LONGVARCHAR:
-			case Types.VARCHAR: {
-				return true;
-			}
-			default: {
-				return false;
-			}
-		}
-	}
-
-	private boolean isNumericType(int jdbcTypeCode) {
-		switch ( jdbcTypeCode ) {
-			case Types.INTEGER:
-			case Types.NUMERIC:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.BIGINT:
-			case Types.DECIMAL:
-			case Types.DOUBLE:
-			case Types.FLOAT: {
-				return true;
-			}
-			default:
-				return false;
-		}
-	}
-
 	@Override
-	public int[] sqlTypes() {
+	public int getSqlType() {
 		verifyConfigured();
-		return new int[] { enumValueConverter.getJdbcTypeCode() };
+		return jdbcType.getJdbcTypeCode();
 	}
 
 	@Override
-	public Class<? extends Enum> returnedClass() {
+	public Class<T> returnedClass() {
 		return enumClass;
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(T x, T y) throws HibernateException {
 		return x == y;
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(T x) throws HibernateException {
 		return x == null ? 0 : x.hashCode();
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+			throws SQLException {
 		verifyConfigured();
-		return enumValueConverter.readValue( rs, names[0], session );
+		return jdbcType.getExtractor( enumJavaType ).extract( rs, position, session );
 	}
 
 	private void verifyConfigured() {
-		if ( enumValueConverter == null ) {
-			throw new AssertionFailure( "EnumType (" + enumClass.getName() + ") not properly, fully configured" );
+		if ( enumJavaType == null ) {
+			throw new AssertionFailure("EnumType (" + enumClass.getName() + ") not properly, fully configured");
 		}
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session)
+			throws SQLException {
 		verifyConfigured();
-		enumValueConverter.writeValue( st, (Enum) value, index, session );
+		jdbcType.getBinder( enumJavaType ).bind( st, value, index, session );
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
+	public T deepCopy(T value) throws HibernateException {
 		return value;
 	}
 
@@ -273,17 +249,17 @@ public class EnumType<T extends Enum>
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
-		return ( Serializable ) value;
+	public Serializable disassemble(T value) throws HibernateException {
+		return value;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return cached;
+	public T assemble(Serializable cached, Object owner) throws HibernateException {
+		return (T) cached;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	public T replace(T original, T target, Object owner) throws HibernateException {
 		return original;
 	}
 
@@ -298,32 +274,71 @@ public class EnumType<T extends Enum>
 	}
 
 	@Override
-	public String objectToSQLString(Object value) {
+	public String toSqlLiteral(T value) {
 		verifyConfigured();
-		return enumValueConverter.toSqlLiteral( value );
+		return isOrdinal()
+				? Integer.toString( value.ordinal() )
+				: "'" + value.name() + "'";
 	}
 
 	@Override
-	public String toXMLString(Object value) {
+	public String toString(T value) {
 		verifyConfigured();
-		return (String) enumValueConverter.getJavaDescriptor().unwrap( (Enum) value, String.class, null );
+		return enumJavaType.toName( value );
 	}
 
 	@Override
-	@SuppressWarnings("RedundantCast")
-	public Object fromXMLString(String xmlValue) {
+	public T fromStringValue(CharSequence sequence) {
 		verifyConfigured();
-		return (T) enumValueConverter.getJavaDescriptor().wrap( xmlValue, null );
+		return enumJavaType.fromName( sequence.toString() );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		verifyConfigured();
-		return enumValueConverter.getJavaDescriptor().toString( (Enum) value );
+		return enumJavaType.extractLoggableRepresentation( (T) value );
 	}
 
 	public boolean isOrdinal() {
 		verifyConfigured();
-		return enumValueConverter instanceof OrdinalEnumValueConverter;
+		return isOrdinal;
+	}
+
+	private class LocalJdbcTypeIndicators implements JdbcTypeIndicators {
+		private final jakarta.persistence.EnumType enumType;
+		private final boolean nationalized;
+		private final Long columnLength;
+
+		private LocalJdbcTypeIndicators(jakarta.persistence.EnumType enumType, boolean nationalized, Long columnLength) {
+			this.enumType = enumType;
+			this.nationalized = nationalized;
+			this.columnLength = columnLength;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+
+		@Override
+		public jakarta.persistence.EnumType getEnumeratedType() {
+			return enumType != null ? enumType : typeConfiguration.getCurrentBaseSqlTypeIndicators().getEnumeratedType();
+		}
+
+		@Override
+		public boolean isNationalized() {
+			return nationalized;
+		}
+
+
+		@Override
+		public long getColumnLength() {
+			return columnLength == null ? NO_COLUMN_LENGTH : columnLength;
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
+		}
 	}
 }

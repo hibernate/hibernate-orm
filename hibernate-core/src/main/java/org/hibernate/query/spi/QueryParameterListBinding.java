@@ -1,23 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
 import java.util.Collection;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.BindableType;
 import org.hibernate.type.Type;
 
 /**
  * Represents a "parameter list" binding: aka the binding of a collection of values for a single
- * query parameter.  At some point these need to be "expanded"; see {@link QueryParameterBindingsImpl#expandListValuedParameters(String, SharedSessionContractImplementor)}
- * for details.
+ * query parameter.
  *
  * @author Steve Ebersole
  */
@@ -37,7 +33,7 @@ public interface QueryParameterListBinding<T> {
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValues(Collection<T> values, Type clarifiedType);
+	void setBindValues(Collection<T> values, BindableType clarifiedType);
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *

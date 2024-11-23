@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.spi;
 
@@ -16,7 +14,7 @@ public interface DuplicationStrategy {
 	/**
 	 * The enumerated list of actions available on duplication match
 	 */
-	public static enum Action {
+	enum Action {
 		ERROR,
 		KEEP_ORIGINAL,
 		REPLACE_ORIGINAL
@@ -30,12 +28,12 @@ public interface DuplicationStrategy {
 	 *
 	 * @return {@literal true} if the two instances are considered a duplication; {@literal false} otherwise
 	 */
-	public boolean areMatch(Object listener, Object original);
+	boolean areMatch(Object listener, Object original);
 
 	/**
 	 * How should a duplication be handled?
 	 *
 	 * @return The strategy for handling duplication
 	 */
-	public Action getAction();
+	Action getAction();
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 
@@ -41,7 +39,7 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected List initializeCollection(int size) {
 		// There are two types of List collections that this class may generate
 		//
@@ -61,14 +59,14 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings("unchecked")
 	protected void addToCollection(List collection, Object collectionRow) {
 		// collectionRow will be the actual object if retrieved from audit relation or middle table
 		// otherwise it will be a List
 		Object elementData = collectionRow;
 		Object indexData = collectionRow;
-		if ( java.util.List.class.isInstance( collectionRow ) ) {
-			final java.util.List row = java.util.List.class.cast( collectionRow );
+		if ( List.class.isInstance( collectionRow ) ) {
+			final List row = List.class.cast( collectionRow );
 			elementData = row.get( elementComponentData.getComponentIndex() );
 			indexData = row.get( indexComponentData.getComponentIndex() );
 		}

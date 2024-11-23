@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.event.service.internal;
 
 import java.util.ArrayList;
@@ -10,24 +14,20 @@ import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.EventType;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test that a listener replacing the original one is actually called when the event is fired for each listener.
  * <p>
- *     Note: I'm using ClearEvent for the tests because it's the simpler one I've found.
+ * Note: I'm using ClearEvent for the tests because it's the simpler one I've found.
  * </p>
  */
-@TestForIssue(jiraKey = "HHH-13831")
+@JiraKey(value = "HHH-13831")
 public class EventListenerDuplicationStrategyTest {
-
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
 
 	Tracker tracker = new Tracker();
 	ClearEvent event = new ClearEvent( null );
@@ -37,13 +37,13 @@ public class EventListenerDuplicationStrategyTest {
 	public void testListenersIterator() {
 		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( OriginalListener.class );
 
 		tracker.reset();
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class );
 	}
@@ -83,9 +83,13 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
-		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExpectedListener.class, ExtraListener.class );
+		assertThat( tracker.callers ).containsExactly(
+				OriginalListener.class,
+				ExpectedListener.class,
+				ExtraListener.class
+		);
 	}
 
 	@Test
@@ -95,7 +99,11 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
 		listenerGroup.fireLazyEventOnEachListener( () -> event, ClearEventListener::onClear );
 
-		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExpectedListener.class, ExtraListener.class );
+		assertThat( tracker.callers ).containsExactly(
+				OriginalListener.class,
+				ExpectedListener.class,
+				ExtraListener.class
+		);
 	}
 
 	@Test
@@ -105,7 +113,11 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
 		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
-		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExpectedListener.class, ExtraListener.class );
+		assertThat( tracker.callers ).containsExactly(
+				OriginalListener.class,
+				ExpectedListener.class,
+				ExtraListener.class
+		);
 	}
 
 	@Test
@@ -114,7 +126,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class, ExtraListener.class );
 	}
@@ -147,7 +159,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExtraListener.class );
 	}
@@ -176,12 +188,34 @@ public class EventListenerDuplicationStrategyTest {
 
 	@Test
 	public void testErrorStrategyOnAppend() {
-		thrown.expect( EventListenerRegistrationException.class );
-		thrown.expectMessage( "Duplicate event listener found" );
+		final EventListenerRegistrationException expectedException = assertThrows(
+				EventListenerRegistrationException.class,
+				() -> {
+					listenerGroup.addDuplicationStrategy( ErrorStrategy.INSTANCE );
+					listenerGroup.appendListener( new OriginalListener( tracker ) );
+					listenerGroup.appendListener( new ExpectedListener( tracker ) );
+				}
+		);
+		assertThat( expectedException.getMessage() ).isEqualTo( "Duplicate event listener found" );
+	}
 
-		listenerGroup.addDuplicationStrategy( ErrorStrategy.INSTANCE );
+	@Test
+	public void testDuplicationStrategyRemovedOnClear() {
+		listenerGroup.clear();
+		//As side-effect, it's now allowed to register the same event twice:
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
-		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+	}
+
+	@Test
+	public void testDefaultDuplicationStrategy() {
+		assertThrows(
+				EventListenerRegistrationException.class, () -> {
+					//By default, it's not allowed to register the same type of listener twice:
+					listenerGroup.appendListener( new OriginalListener( tracker ) );
+					listenerGroup.appendListener( new OriginalListener( tracker ) );
+				}
+		);
 	}
 
 	/**

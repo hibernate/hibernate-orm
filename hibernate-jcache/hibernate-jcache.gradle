@@ -1,14 +1,16 @@
 description = 'Integration for javax.cache into Hibernate as a second-level caching service'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.jcache )
+    api project( ':hibernate-core' )
+    api libs.jcache
 
-    testCompile project( ':hibernate-testing' )
-    testCompile( libraries.mockito )
-    testCompile( libraries.mockito_inline )
-    testRuntime( libraries.ehcache3 )
+    testImplementation project( ':hibernate-testing' )
+
+    testRuntimeOnly(libs.ehcache3) {
+        capabilities {
+            requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
+        }
+    }
 }

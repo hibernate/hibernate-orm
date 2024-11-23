@@ -1,27 +1,30 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.hikaricp.internal;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Map;
 import javax.sql.DataSource;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.internal.log.ConnectionInfoLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 
-import org.jboss.logging.Logger;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
+import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
  * HikariCP Connection provider for Hibernate.
@@ -32,8 +35,7 @@ import com.zaxxer.hikari.HikariDataSource;
 public class HikariCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
 	private static final long serialVersionUID = -9131625057941275711L;
-
-	private static final Logger LOGGER = Logger.getLogger( HikariCPConnectionProvider.class );
+	private boolean isMetadataAccessAllowed = true;
 
 	/**
 	 * HikariCP configuration.
@@ -49,21 +51,20 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	// Configurable
 	// *************************************************************************
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public void configure(Map props) throws HibernateException {
+	public void configure(Map<String, Object> props) throws HibernateException {
 		try {
-			LOGGER.debug( "Configuring HikariCP" );
+			isMetadataAccessAllowed = allowJdbcMetadataAccess( props );
+
+			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "HikariCP" );
 
 			hcfg = HikariConfigurationUtil.loadConfiguration( props );
 			hds = new HikariDataSource( hcfg );
-
 		}
 		catch (Exception e) {
+			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
 			throw new HibernateException( e );
 		}
-
-		LOGGER.debug( "HikariCP Configured" );
 	}
 
 	// *************************************************************************
@@ -72,17 +73,12 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		Connection conn = null;
-		if ( hds != null ) {
-			conn = hds.getConnection();
-		}
-
-		return conn;
+		return hds != null ? hds.getConnection() : null;
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		conn.close();
+	public void closeConnection(Connection connection) throws SQLException {
+		connection.close();
 	}
 
 	@Override
@@ -91,18 +87,45 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				hcfg.getJdbcUrl(),
+				// Attempt to resolve the driver name from the dialect, in case it wasn't explicitly set and access to
+				// the database metadata is allowed
+				!StringHelper.isBlank( hcfg.getDriverClassName() ) ? hcfg.getDriverClassName() : extractDriverNameFromMetadata(),
+				dialect.getVersion(),
+				Boolean.toString( hcfg.isAutoCommit() ),
+				hcfg.getTransactionIsolation(),
+				hcfg.getMinimumIdle(),
+				hcfg.getMaximumPoolSize()
+		);
+	}
+
+	private String extractDriverNameFromMetadata() {
+		if (isMetadataAccessAllowed) {
+			try ( Connection conn = getConnection() ) {
+				DatabaseMetaData dbmd = conn.getMetaData();
+				return dbmd.getDriverName();
+			}
+			catch (SQLException e) {
+				// Do nothing
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public boolean isUnwrappableAs(Class<?> unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType )
-				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
-				|| DataSource.class.isAssignableFrom( unwrapType );
+			|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType )
+			|| DataSource.class.isAssignableFrom( unwrapType );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
-		if ( ConnectionProvider.class.equals( unwrapType ) ||
-				HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+		if ( ConnectionProvider.class.equals( unwrapType )
+				|| HikariCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;
 		}
 		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
@@ -119,6 +142,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	public void stop() {
-		hds.close();
+		if ( hds != null ) {
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( "HikariCP" );
+			hds.close();
+		}
 	}
 }

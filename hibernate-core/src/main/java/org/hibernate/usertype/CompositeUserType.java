@@ -1,137 +1,196 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
+
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.Incubating;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
- * A <tt>UserType</tt> that may be dereferenced in a query.
- * This interface allows a custom type to define "properties".
- * These need not necessarily correspond to physical JavaBeans
- * style properties.<br>
- * <br>
- * A <tt>CompositeUserType</tt> may be used in almost every way
- * that a component may be used. It may even contain many-to-one
- * associations.<br>
- * <br>
- * Implementors must be immutable and must declare a public
- * default constructor.<br>
- * <br>
- * Unlike <tt>UserType</tt>, cacheability does not depend upon
- * serializability. Instead, <tt>assemble()</tt> and
- * <tt>disassemble</tt> provide conversion to/from a cacheable
- * representation.
+ * This interface should be implemented by user-defined custom types
+ * that have persistent attributes and can be thought of as something
+ * more like an {@linkplain jakarta.persistence.Embeddable embeddable}
+ * object. However, these persistent "attributes" need not necessarily
+ * correspond directly to Java fields or properties.
+ * <p>
+ * A value type managed by a {@code CompositeUserType} may be used in
+ * almost every way that a regular embeddable type may be used. It may
+ * even contain {@linkplain jakarta.persistence.ManyToOne many to one}
+ * associations.
+ * <p>
+ * To "map" the attributes of a composite custom type, each
+ * {@code CompositeUserType} provides a {@linkplain #embeddable()
+ * regular embeddable class} with the same logical structure as the
+ * {@linkplain #returnedClass() value type managed by the custom type}.
+ * <p>
+ * Properties of this embeddable class are sorted alphabetically by
+ * name, and assigned an index based on this ordering.
+ * <p>
+ * For example, if we were to implement a {@code CompositeUserType}
+ * for a {@code MonetaryAmount} class, we would also provide a
+ * {@code MonetaryAmountEmbeddable} class with a field for each
+ * logical persistent attribute of the custom type. Of course,
+ * {@code MonetaryAmountEmbeddable} is never instantiated at runtime,
+ * and is never referenced in any entity class. It is a source of
+ * metadata only.
+ * <p>
+ * Here's a full implementation of {@code CompositeUserType} for an
+ * immutable {@code MonetaryAmount} class:
+ * <pre>
+ * public class MonetaryAmountUserType implements CompositeUserType&lt;MonetaryAmount&gt; {
  *
- * @see UserType for more simple cases
- * @see org.hibernate.type.Type
- * @author Gavin King
+ *    &#64;Override
+ *    public Object getPropertyValue(MonetaryAmount component, int property) {
+ *         switch ( property ) {
+ *             case 0:
+ *                 return component.getCurrency();
+ *             case 1:
+ *                 return component.getValue();
+ *         }
+ *         throw new HibernateException( "Illegal property index: " + property );
+ *    }
+ *
+ *    &#64;Override
+ *    public MonetaryAmount instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+ *         final Currency currency = valueAccess.getValue(0, Currency.class);
+ *         final BigDecimal value = valueAccess.getValue(1, BigDecimal.class);
+ *
+ *         if ( value == null &amp;&amp; currency == null ) {
+ *             return null;
+ *         }
+ *         return new MonetaryAmount( value, currency );
+ *    }
+ *
+ *    &#64;Override
+ *    public Class&lt;MonetaryAmountEmbeddable&gt; embeddable() {
+ *         return MonetaryAmountEmbeddable.class;
+ *    }
+ *
+ *    &#64;Override
+ *    public Class&lt;MonetaryAmount&gt; returnedClass() {
+ *         return MonetaryAmount.class;
+ *    }
+ *
+ *    &#64;Override
+ *    public boolean isMutable() {
+ *         return false;
+ *    }
+ *
+ *    &#64;Override
+ *    public MonetaryAmount deepCopy(MonetaryAmount value) {
+ *         return value; // MonetaryAmount is immutable
+ *    }
+ *
+ *    &#64;Override
+ *    public boolean equals(MonetaryAmount x, MonetaryAmount y) {
+ *         if ( x == y ) {
+ *             return true;
+ *        }
+ *         if ( x == null || y == null ) {
+ *             return false;
+ *        }
+ *         return x.equals( y );
+ *    }
+ *
+ *     &#64;Override
+ *     public Serializable disassemble(MonetaryAmount value) {
+ *         return value;
+ *     }
+ *
+ *     &#64;Override
+ *     public MonetaryAmount assemble(Serializable cached, Object owner) {
+ *         return (MonetaryAmount) cached;
+ *     }
+ *
+ *     &#64;Override
+ *     public MonetaryAmount replace(MonetaryAmount original, MonetaryAmount target, Object owner) {
+ *         return original;
+ *     }
+ *
+ *     &#64;Override
+ *     public int hashCode(MonetaryAmount x) throws HibernateException {
+ *         return x.hashCode();
+ *     }
+ *
+ *     // the embeddable class which acts as a source of metadata
+ *     public static class MonetaryAmountEmbeddable {
+ *         private BigDecimal value;
+ *         private Currency currency;
+ *     }
+ * }
+ * </pre>
+ * <p>
+ * Every implementor of {@code CompositeUserType} must be immutable
+ * and must declare a public default constructor.
+ * <p>
+ * A custom type may be applied to an attribute of an entity either:
+ * <ul>
+ * <li>explicitly, using
+ *     {@link org.hibernate.annotations.CompositeType @CompositeType},
+ *     or
+ * <li>implicitly, using
+ *     {@link org.hibernate.annotations.CompositeTypeRegistration @CompositeTypeRegistration}.
+ * </ul>
+ *
+ * @see org.hibernate.annotations.CompositeType
+ * @see org.hibernate.annotations.CompositeTypeRegistration
  */
-public interface CompositeUserType {
+@Incubating
+public interface CompositeUserType<J> extends EmbeddableInstantiator {
 
 	/**
-	 * Get the "property names" that may be used in a
-	 * query.
-	 *
-	 * @return an array of "property names"
-	 */
-	String[] getPropertyNames();
-
-	/**
-	 * Get the corresponding "property types".
-	 *
-	 * @return an array of Hibernate types
-	 */
-	Type[] getPropertyTypes();
-
-	/**
-	 * Get the value of a property.
+	 * Get the value of the property with the given index. Properties
+	 * of the {@link #embeddable()} are sorted by name and assigned an
+	 * index based on this ordering.
 	 *
 	 * @param component an instance of class mapped by this "type"
-	 * @param property
+	 * @param property the property index
 	 * @return the property value
-	 * @throws HibernateException
 	 */
-	Object getPropertyValue(Object component, int property) throws HibernateException;
+	Object getPropertyValue(J component, int property) throws HibernateException;
+
+	@Override
+	J instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory);
 
 	/**
-	 * Set the value of a property.
-	 *
-	 * @param component an instance of class mapped by this "type"
-	 * @param property
-	 * @param value the value to set
-	 * @throws HibernateException
+	 * The class that represents the embeddable mapping of the type.
 	 */
-	void setPropertyValue(Object component, int property, Object value) throws HibernateException;
+	Class<?> embeddable();
 
 	/**
-	 * The class returned by <tt>nullSafeGet()</tt>.
-	 *
-	 * @return Class
+	 * The class returned by {@code instantiate()}.
 	 */
-	Class returnedClass();
+	Class<J> returnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
 	 * Equality of the persistent state.
-     *
-	 * @throws HibernateException
 	 */
-	boolean equals(Object x, Object y) throws HibernateException;
+	boolean equals(J x, J y);
 
 	/**
 	 * Get a hashcode for the instance, consistent with persistence "equality"
 	 */
-	int hashCode(Object x) throws HibernateException;
+	int hashCode(J x);
 
 	/**
-	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
-	 * should handle possibility of null values.
+	 * Return a deep copy of the persistent state, stopping at entities and at
+	 * collections. It is not necessary to copy immutable objects, or null
+	 * values, in which case it is safe to simply return the argument.
 	 *
-	 * @param rs a JDBC result set
-	 * @param names the column names
-	 * @param session
-	 * @param owner the containing entity
-	 * @return Object
-	 * @throws HibernateException
-	 * @throws SQLException
-	 */
-	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException;
-
-	/**
-	 * Write an instance of the mapped class to a prepared statement. Implementors
-	 * should handle possibility of null values. A multi-column type should be written
-	 * to parameters starting from <tt>index</tt>.
-	 *
-	 * @param st a JDBC prepared statement
-	 * @param value the object to write
-	 * @param index statement parameter index
-	 * @param session
-	 * @throws HibernateException
-	 * @throws SQLException
-	 */
-	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
-
-	/**
-	 * Return a deep copy of the persistent state, stopping at entities and at collections.
-	 *
-	 * @param value generally a collection element or entity field
+	 * @param value the object to be cloned, which may be null
 	 * @return Object a copy
-	 * @throws HibernateException
 	 */
-	Object deepCopy(Object value) throws HibernateException;
+	J deepCopy(J value);
 
 	/**
-	 * Check if objects of this type mutable.
+	 * Are objects of this type mutable?
 	 *
 	 * @return boolean
 	 */
@@ -139,38 +198,46 @@ public interface CompositeUserType {
 
 	/**
 	 * Transform the object into its cacheable representation. At the very least this
-	 * method should perform a deep copy. That may not be enough for some implementations,
-	 * however; for example, associations must be cached as identifier values. (optional
-	 * operation)
+	 * method should perform a deep copy if the type is mutable. That may not be enough
+	 * for some implementations, however; for example, associations must be cached as
+	 * identifier values. (optional operation)
 	 *
 	 * @param value the object to be cached
-	 * @param session
 	 * @return a cacheable representation of the object
-	 * @throws HibernateException
 	 */
-	Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException;
+	Serializable disassemble(J value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
-	 * method should perform a deep copy. (optional operation)
+	 * method should perform a deep copy if the type is mutable. (optional operation)
 	 *
 	 * @param cached the object to be cached
-	 * @param session
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
-	 * @throws HibernateException
 	 */
-	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	J assemble(Serializable cached, Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
 	 * with a new (original) value from the detached entity we are merging. For immutable
 	 * objects, or null values, it is safe to simply return the first parameter. For
-	 * mutable objects, it is safe to return a copy of the first parameter. However, since
-	 * composite user types often define component values, it might make sense to recursively
-	 * replace component values in the target object.
+	 * mutable objects, it is safe to return a copy of the first parameter. For objects
+	 * with component values, it might make sense to recursively replace component values.
 	 *
-	 * @throws HibernateException
+	 * @param detached the value from the detached entity being merged
+	 * @param managed the value in the managed entity
+	 *
+	 * @return the value to be merged
 	 */
-	Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner) throws HibernateException;
+	J replace(J detached, J managed, Object owner);
+
+	@Override
+	default boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+		return returnedClass().isInstance( object );
+	}
+
+	@Override
+	default boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+		return object.getClass().equals( returnedClass() );
+	}
 }

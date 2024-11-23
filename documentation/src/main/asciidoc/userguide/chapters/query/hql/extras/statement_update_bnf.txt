@@ -1,12 +1,17 @@
-update_statement ::=
-    update_clause [where_clause]
+updateStatement
+    : "UPDATE" "VERSIONED"? entityWithJoins setClause whereClause?
 
-update_clause ::=
-    UPDATE entity_name [[AS] identification_variable]
-    SET update_item {, update_item}*
+entityWithJoins
+	: fromRoot (join | crossJoin | jpaCollectionJoin)*
 
-update_item ::=
-    [identification_variable.]{state_field | single_valued_object_field} = new_value
+fromRoot
+	: entityName variable?
 
-new_value ::=
-    scalar_expression | simple_entity_expression | NULL
+targetEntity
+	: entityName variable?
+
+setClause
+	: "SET" assignment ("," assignment)*
+
+assignment
+    : simplePath "=" expression

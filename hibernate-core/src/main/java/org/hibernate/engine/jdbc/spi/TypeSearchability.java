@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.spi;
 
@@ -16,27 +14,27 @@ import java.sql.DatabaseMetaData;
 public enum TypeSearchability {
 	/**
 	 * Type is not searchable.
-	 * @see java.sql.DatabaseMetaData#typePredNone
+	 * @see DatabaseMetaData#typePredNone
 	 */
 	NONE,
 	/**
 	 * Type is fully searchable
-	 * @see java.sql.DatabaseMetaData#typeSearchable
+	 * @see DatabaseMetaData#typeSearchable
 	 */
 	FULL,
 	/**
 	 * Type is valid only in {@code WHERE ... LIKE}
-	 * @see java.sql.DatabaseMetaData#typePredChar
+	 * @see DatabaseMetaData#typePredChar
 	 */
 	CHAR,
 	/**
 	 * Type is supported only in {@code WHERE ... LIKE}
-	 * @see java.sql.DatabaseMetaData#typePredBasic
+	 * @see DatabaseMetaData#typePredBasic
 	 */
 	BASIC;
 
 	/**
-	 * Based on the code retrieved from {@link java.sql.DatabaseMetaData#getTypeInfo()} for the {@code SEARCHABLE}
+	 * Based on the code retrieved from {@link DatabaseMetaData#getTypeInfo()} for the {@code SEARCHABLE}
 	 * column, return the appropriate enum.
 	 *
 	 * @param code The retrieved code value.
@@ -44,22 +42,12 @@ public enum TypeSearchability {
 	 * @return The corresponding enum.
 	 */
 	public static TypeSearchability interpret(short code) {
-		switch ( code ) {
-			case DatabaseMetaData.typeSearchable: {
-				return FULL;
-			}
-			case DatabaseMetaData.typePredNone: {
-				return NONE;
-			}
-			case DatabaseMetaData.typePredBasic: {
-				return BASIC;
-			}
-			case DatabaseMetaData.typePredChar: {
-				return CHAR;
-			}
-			default: {
-				throw new IllegalArgumentException( "Unknown type searchability code [" + code + "] enountered" );
-			}
-		}
+		return switch (code) {
+			case DatabaseMetaData.typeSearchable -> FULL;
+			case DatabaseMetaData.typePredNone -> NONE;
+			case DatabaseMetaData.typePredBasic -> BASIC;
+			case DatabaseMetaData.typePredChar -> CHAR;
+			default -> throw new IllegalArgumentException( "Unknown type searchability code [" + code + "] encountered" );
+		};
 	}
 }

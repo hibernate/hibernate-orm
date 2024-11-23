@@ -7,30 +7,45 @@
 
 description = 'Support for testing Hibernate ORM functionality'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.jta )
-    compile( libraries.junit )
-    compile( libraries.byteman )
-    compile( libraries.byteman_install )
-    compile( libraries.byteman_bmunit )
-    compile( libraries.xapool )
-    compile( libraries.log4j )
-    compile ( libraries.jboss_jta ) {
+    api project( ':hibernate-core' )
+    api project( ':hibernate-community-dialects' )
+
+    api testLibs.junit4
+    api testLibs.junit5Api
+    api testLibs.junit5Params
+
+    api 'org.hamcrest:hamcrest-all:1.3'
+    api testLibs.assertjCore
+
+    api testLibs.mockito
+    api testLibs.mockitoInline
+
+    api testLibs.byteman
+    api testLibs.bytemanInstall
+    api testLibs.bytemanBmunit
+
+    api testLibs.xapool
+    api( testLibs.jbossTxSpi ) {
         transitive=false;
     }
-}
+    api( testLibs.jbossJta ) {
+        transitive=false;
+    }
 
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java'] )
-}
+    api 'javax.money:money-api:1.0.1'
+    api 'org.javamoney:moneta:1.1'
 
-// todo : Fold into hibernate-core and publish in separate publications
-// 		once http://issues.gradle.org/browse/GRADLE-2966 is resolved;
-//		that will allow us to keep the same artifactId and publish the pom
-//		with proper dependencies
+    api testLibs.log4j2
+
+    implementation libs.hibernateModels
+    implementation libs.jandex
+    implementation testLibs.wildFlyTxnClient
+    implementation testLibs.junit5Engine
+    implementation testLibs.junit5Launcher
+
+    annotationProcessor project( ':hibernate-processor' )
+}
 

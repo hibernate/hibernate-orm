@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service;
 
@@ -25,77 +23,137 @@ import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
+import org.hibernate.engine.jdbc.internal.SqlStatementLoggerInitiator;
+import org.hibernate.engine.jdbc.mutation.internal.MutationExecutorServiceInitiator;
 import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
 import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
-import org.hibernate.hql.internal.QueryTranslatorFactoryInitiator;
-import org.hibernate.id.factory.internal.MutableIdentifierGeneratorFactoryInitiator;
-import org.hibernate.jmx.internal.JmxServiceInitiator;
+import org.hibernate.loader.ast.internal.BatchLoaderFactoryInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInitiator;
+import org.hibernate.query.sqm.mutation.internal.SqmMultiTableMutationStrategyProviderInitiator;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyInitiator;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderInitiator;
 import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
+import org.hibernate.tool.schema.internal.script.SqlScriptExtractorInitiator;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
- * 
+ *
  * @author Steve Ebersole
  */
 public final class StandardServiceInitiators {
 	private StandardServiceInitiators() {
 	}
 
-	public static final List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
+	public static final List<StandardServiceInitiator<?>> LIST = buildStandardServiceInitiatorList();
 
-	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {
-		final ArrayList<StandardServiceInitiator> serviceInitiators = new ArrayList<StandardServiceInitiator>();
+	private static List<StandardServiceInitiator<?>> buildStandardServiceInitiatorList() {
 
+		// Please do not rearrange - it's useful to maintain this particular order
+		// so to simplify comparisons with custom initiator lists in other projects;
+		// for example we customize this list in Hibernate Reactive and Quarkus.
+
+		final ArrayList<StandardServiceInitiator<?>> serviceInitiators = new ArrayList<>();
+
+		// SessionFactoryBuilderService
 		serviceInitiators.add( DefaultSessionFactoryBuilderInitiator.INSTANCE );
 
+		// BytecodeProvider
 		serviceInitiators.add( BytecodeProviderInitiator.INSTANCE );
+
+		// ProxyFactoryFactory
 		serviceInitiators.add( ProxyFactoryFactoryInitiator.INSTANCE );
 
+		// CfgXmlAccessService
 		serviceInitiators.add( CfgXmlAccessServiceInitiator.INSTANCE );
+
+		// ConfigurationService
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );
+
+		// PropertyAccessStrategyResolver
 		serviceInitiators.add( PropertyAccessStrategyResolverInitiator.INSTANCE );
 
-		serviceInitiators.add( ImportSqlCommandExtractorInitiator.INSTANCE );
+		// SqlScriptCommandExtractor
+		serviceInitiators.add( SqlScriptExtractorInitiator.INSTANCE );
+
+		// SchemaManagementTool
 		serviceInitiators.add( SchemaManagementToolInitiator.INSTANCE );
 
+		// JdbcEnvironment
 		serviceInitiators.add( JdbcEnvironmentInitiator.INSTANCE );
-		serviceInitiators.add( JndiServiceInitiator.INSTANCE );
-		serviceInitiators.add( JmxServiceInitiator.INSTANCE );
 
+		// JndiService
+		serviceInitiators.add( JndiServiceInitiator.INSTANCE );
+
+		// PersisterClassResolver
 		serviceInitiators.add( PersisterClassResolverInitiator.INSTANCE );
+
+		// PersisterFactory
 		serviceInitiators.add( PersisterFactoryInitiator.INSTANCE );
 
+		// ConnectionProvider
 		serviceInitiators.add( ConnectionProviderInitiator.INSTANCE );
+
+		// MultiTenantConnectionProvider
 		serviceInitiators.add( MultiTenantConnectionProviderInitiator.INSTANCE );
+
+		// DialectResolver
 		serviceInitiators.add( DialectResolverInitiator.INSTANCE );
+
+		// DialectFactory
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
+
+		// MutationExecutorService
+		serviceInitiators.add( MutationExecutorServiceInitiator.INSTANCE );
+
+		// BatchBuilder
 		serviceInitiators.add( BatchBuilderInitiator.INSTANCE );
+
+		// SqlStatementLoggerInitiator
+		serviceInitiators.add( SqlStatementLoggerInitiator.INSTANCE );
+
+		// JdbcServices
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
+
+		// RefCursorSupport
 		serviceInitiators.add( RefCursorSupportInitiator.INSTANCE );
 
-		serviceInitiators.add( QueryTranslatorFactoryInitiator.INSTANCE );
-		serviceInitiators.add( MutableIdentifierGeneratorFactoryInitiator.INSTANCE);
-
+		// JtaPlatformResolver
 		serviceInitiators.add( JtaPlatformResolverInitiator.INSTANCE );
+
+		// JtaPlatform
 		serviceInitiators.add( JtaPlatformInitiator.INSTANCE );
 
+		// SessionFactoryServiceRegistryFactory
 		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );
 
+		// RegionFactory
 		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
 
+		// TransactionCoordinatorBuilder
 		serviceInitiators.add( TransactionCoordinatorBuilderInitiator.INSTANCE );
 
+		// ManagedBeanRegistry
 		serviceInitiators.add( ManagedBeanRegistryInitiator.INSTANCE );
+
+		// EntityCopyObserverFactory
 		serviceInitiators.add( EntityCopyObserverFactoryInitiator.INSTANCE );
+
+		// JdbcValuesMappingProducerProvider
+		serviceInitiators.add( JdbcValuesMappingProducerProviderInitiator.INSTANCE );
+
+		// SqmMultiTableMutationStrategyProvider
+		serviceInitiators.add( SqmMultiTableMutationStrategyProviderInitiator.INSTANCE );
+
+		// ParameterMarkerStrategy
+		serviceInitiators.add( ParameterMarkerStrategyInitiator.INSTANCE );
+		serviceInitiators.add( BatchLoaderFactoryInitiator.INSTANCE );
 
 		serviceInitiators.trimToSize();
 

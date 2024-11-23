@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.internal;
 
@@ -32,19 +30,16 @@ import org.hibernate.event.internal.DefaultPreLoadEventListener;
 import org.hibernate.event.internal.DefaultRefreshEventListener;
 import org.hibernate.event.internal.DefaultReplicateEventListener;
 import org.hibernate.event.internal.DefaultResolveNaturalIdEventListener;
-import org.hibernate.event.internal.DefaultSaveEventListener;
-import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
-import org.hibernate.event.internal.DefaultUpdateEventListener;
 import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
 import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
 import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
+import org.hibernate.event.internal.PostUpsertEventListenerStandardImpl;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.jpa.event.internal.CallbackRegistryImplementor;
-import org.hibernate.service.spi.Stoppable;
+import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
 import static org.hibernate.event.spi.EventType.CLEAR;
@@ -69,6 +64,7 @@ import static org.hibernate.event.spi.EventType.POST_DELETE;
 import static org.hibernate.event.spi.EventType.POST_INSERT;
 import static org.hibernate.event.spi.EventType.POST_LOAD;
 import static org.hibernate.event.spi.EventType.POST_UPDATE;
+import static org.hibernate.event.spi.EventType.POST_UPSERT;
 import static org.hibernate.event.spi.EventType.PRE_COLLECTION_RECREATE;
 import static org.hibernate.event.spi.EventType.PRE_COLLECTION_REMOVE;
 import static org.hibernate.event.spi.EventType.PRE_COLLECTION_UPDATE;
@@ -76,19 +72,17 @@ import static org.hibernate.event.spi.EventType.PRE_DELETE;
 import static org.hibernate.event.spi.EventType.PRE_INSERT;
 import static org.hibernate.event.spi.EventType.PRE_LOAD;
 import static org.hibernate.event.spi.EventType.PRE_UPDATE;
+import static org.hibernate.event.spi.EventType.PRE_UPSERT;
 import static org.hibernate.event.spi.EventType.REFRESH;
 import static org.hibernate.event.spi.EventType.REPLICATE;
 import static org.hibernate.event.spi.EventType.RESOLVE_NATURAL_ID;
-import static org.hibernate.event.spi.EventType.SAVE;
-import static org.hibernate.event.spi.EventType.SAVE_UPDATE;
-import static org.hibernate.event.spi.EventType.UPDATE;
 
 /**
  * Standard implementation of EventListenerRegistry
  *
  * @author Steve Ebersole
  */
-public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppable {
+public class EventListenerRegistryImpl implements EventListenerRegistry {
 	@SuppressWarnings("rawtypes")
 	private final EventListenerGroup[] eventListeners;
 	private final Map<Class<?>,Object> listenerClassToInstanceMap = new HashMap<>();
@@ -98,14 +92,14 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		this.eventListeners = eventListeners;
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	public <T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType) {
 		if ( eventListeners.length < eventType.ordinal() + 1 ) {
-			// eventTpe is a custom EventType that has not been registered.
+			// eventType is a custom EventType that has not been registered.
 			// registeredEventListeners array was not allocated enough space to
 			// accommodate it.
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
 		}
+		@SuppressWarnings("unchecked")
 		final EventListenerGroup<T> listeners = eventListeners[ eventType.ordinal() ];
 		if ( listeners == null ) {
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
@@ -197,26 +191,19 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		getEventListenerGroup( type ).prependListeners( listeners );
 	}
 
-	@Deprecated
-	@Override
-	public void stop() {
-		// legacy - no longer used
-	}
-
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Builder
 
 	public static class Builder {
-		private final CallbackRegistryImplementor callbackRegistry;
+		private final CallbackRegistry callbackRegistry;
 		private final boolean jpaBootstrap;
 
 		private final Map<EventType<?>,EventListenerGroup<?>> listenerGroupMap = new TreeMap<>(
 				Comparator.comparing( EventType::ordinal )
 		);
 
-		public Builder(CallbackRegistryImplementor callbackRegistry, boolean jpaBootstrap) {
+		public Builder(CallbackRegistry callbackRegistry, boolean jpaBootstrap) {
 			this.callbackRegistry = callbackRegistry;
 			this.jpaBootstrap = jpaBootstrap;
 
@@ -286,6 +273,9 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			// pre-update listeners
 			prepareListeners( PRE_UPDATE );
 
+			// pre-update listeners
+			prepareListeners( PRE_UPSERT );
+
 			// post-collection-recreate listeners
 			prepareListeners( POST_COLLECTION_RECREATE );
 
@@ -316,20 +306,14 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			// post-update listeners
 			prepareListeners( POST_UPDATE, new PostUpdateEventListenerStandardImpl() );
 
-			// update listeners
-			prepareListeners( UPDATE, new DefaultUpdateEventListener() );
+			// post-upsert listeners
+			prepareListeners( POST_UPSERT, new PostUpsertEventListenerStandardImpl() );
 
 			// refresh listeners
 			prepareListeners( REFRESH, new DefaultRefreshEventListener() );
 
 			// replicate listeners
 			prepareListeners( REPLICATE, new DefaultReplicateEventListener() );
-
-			// save listeners
-			prepareListeners( SAVE, new DefaultSaveEventListener() );
-
-			// save-update listeners
-			prepareListeners( SAVE_UPDATE, new DefaultSaveOrUpdateEventListener() );
 		}
 
 		public <T> void prepareListeners(EventType<T> eventType) {
@@ -353,12 +337,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			);
 		}
 
-		@SuppressWarnings({"rawtypes", "unchecked"})
 		public <T> void prepareListeners(
 				EventType<T> type,
 				T defaultListener,
 				Function<EventType<T>,EventListenerGroupImpl<T>> groupCreator) {
-			final EventListenerGroupImpl listenerGroup = groupCreator.apply( type );
+			final EventListenerGroupImpl<T> listenerGroup = groupCreator.apply( type );
 
 			if ( defaultListener != null ) {
 				listenerGroup.appendListener( defaultListener );
@@ -372,18 +355,17 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			return (EventListenerGroup<T>) listenerGroupMap.get( eventType );
 		}
 
-		@SuppressWarnings("rawtypes")
-		public EventListenerRegistry buildRegistry(Map<String, EventType> registeredEventTypes) {
+		public EventListenerRegistry buildRegistry(Map<String, EventType<?>> registeredEventTypes) {
 			// validate contiguity of the event-type ordinals and build the EventListenerGroups array
 
-			final ArrayList<EventType> eventTypeList = new ArrayList<>( registeredEventTypes.values() );
+			final ArrayList<EventType<?>> eventTypeList = new ArrayList<>( registeredEventTypes.values() );
 			eventTypeList.sort( Comparator.comparing( EventType::ordinal ) );
 
-			final EventListenerGroup[] eventListeners = new EventListenerGroup[ eventTypeList.size() ];
+			final EventListenerGroup<?>[] eventListeners = new EventListenerGroup[ eventTypeList.size() ];
 
 			int previous = -1;
 			for ( int i = 0; i < eventTypeList.size(); i++ ) {
-				final EventType eventType = eventTypeList.get( i );
+				final EventType<?> eventType = eventTypeList.get( i );
 
 				assert i == eventType.ordinal();
 				assert i - 1 == previous;

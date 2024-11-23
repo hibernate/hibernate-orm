@@ -1,25 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.concurrent.Callable;
-import javax.persistence.AttributeConverter;
-import javax.persistence.ConstraintMode;
-import javax.persistence.SharedCacheMode;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.AttributeConverterInfo;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -30,7 +24,14 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
+import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -42,6 +43,9 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -53,31 +57,45 @@ import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataBuilderInitializer;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.jandex.IndexView;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.SharedCacheMode;
+
+import static org.hibernate.cfg.AvailableSettings.JPA_COMPLIANCE;
+import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
+import static org.hibernate.cfg.MappingSettings.XML_FORMAT_MAPPER_LEGACY_FORMAT;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * @author Steve Ebersole
@@ -93,17 +111,17 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		this( sources, getStandardServiceRegistry( sources.getServiceRegistry() ) );
 	}
 
-	private static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
+	public static StandardServiceRegistry getStandardServiceRegistry(ServiceRegistry serviceRegistry) {
 		if ( serviceRegistry == null ) {
 			throw new HibernateException( "ServiceRegistry passed to MetadataBuilder cannot be null" );
 		}
 
-		if ( StandardServiceRegistry.class.isInstance( serviceRegistry ) ) {
-			return ( StandardServiceRegistry ) serviceRegistry;
+		if ( serviceRegistry instanceof StandardServiceRegistry ) {
+			return (StandardServiceRegistry) serviceRegistry;
 		}
-		else if ( BootstrapServiceRegistry.class.isInstance( serviceRegistry ) ) {
-			log.debugf(
-					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely wont end well" +
+		else if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
+			log.debug(
+					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
 							"if attempt is made to build SessionFactory"
 			);
 			return new StandardServiceRegistryBuilder( (BootstrapServiceRegistry) serviceRegistry ).build();
@@ -127,29 +145,28 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		for ( MetadataSourcesContributor contributor :
 				sources.getServiceRegistry()
-						.getService( ClassLoaderService.class )
+						.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataSourcesContributor.class ) ) {
 			contributor.contribute( sources );
 		}
 
 		// todo : not so sure this is needed anymore.
 		//		these should be set during the StandardServiceRegistryBuilder.configure call
-		applyCfgXmlValues( serviceRegistry.getService( CfgXmlAccessService.class ) );
+		applyCfgXmlValues( serviceRegistry.requireService( CfgXmlAccessService.class ) );
 
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		for ( MetadataBuilderInitializer contributor : classLoaderService.loadJavaServices( MetadataBuilderInitializer.class ) ) {
+		for ( MetadataBuilderInitializer contributor :
+				serviceRegistry.requireService( ClassLoaderService.class )
+						.loadJavaServices( MetadataBuilderInitializer.class ) ) {
 			contributor.contribute( this, serviceRegistry );
 		}
 	}
 
 	private void applyCfgXmlValues(CfgXmlAccessService service) {
 		final LoadedConfig aggregatedConfig = service.getAggregatedConfig();
-		if ( aggregatedConfig == null ) {
-			return;
-		}
-
-		for ( CacheRegionDefinition cacheRegionDefinition : aggregatedConfig.getCacheRegionDefinitions() ) {
-			applyCacheRegionDefinition( cacheRegionDefinition );
+		if ( aggregatedConfig != null ) {
+			for ( CacheRegionDefinition cacheRegionDefinition : aggregatedConfig.getCacheRegionDefinitions() ) {
+				applyCacheRegionDefinition( cacheRegionDefinition );
+			}
 		}
 	}
 
@@ -178,6 +195,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		this.options.columnOrderingStrategy = columnOrderingStrategy;
+		return this;
+	}
+
+	@Override
 	public MetadataBuilder applySharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.options.sharedCacheMode = sharedCacheMode;
 		return this;
@@ -190,7 +213,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyIndexView(IndexView jandexView) {
+	public MetadataBuilder applyIndexView(Object jandexView) {
 		this.bootstrapContext.injectJandexView( jandexView );
 		return this;
 	}
@@ -220,6 +243,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
+		if ( classification != null ) {
+			options.mappingDefaults.implicitListClassification = classification;
+		}
+		return this;
+	}
+
+	@Override
 	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
 		options.explicitDiscriminatorsForJoinedInheritanceSupported = supported;
 		return this;
@@ -244,26 +275,20 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type) {
+	public MetadataBuilder applyBasicType(BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType type, String... keys) {
+	public MetadataBuilder applyBasicType(BasicType<?> type, String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyBasicType(CompositeUserType type, String... keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	public MetadataBuilder applyBasicType(UserType<?> type, String... keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 		return this;
 	}
 
@@ -274,38 +299,38 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeType(BasicType type) {
+	@Deprecated
+	public void contributeType(BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 	}
 
 	@Override
-	public void contributeType(BasicType type, String... keys) {
+	@Deprecated
+	public void contributeType(BasicType<?> type, String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
-	public void contributeType(UserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
+	@Deprecated
+	public void contributeType(UserType<?> type, String[] keys) {
+		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 	}
 
 	@Override
-	public void contributeType(CompositeUserType type, String[] keys) {
-		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
-	}
-
-	@Override
-	public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
-		this.bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
-	}
-
-	@Override
-	public void contributeSqlTypeDescriptor(SqlTypeDescriptor descriptor) {
-		this.bootstrapContext.getTypeConfiguration().getSqlTypeDescriptorRegistry().addDescriptor( descriptor );
+	public void contributeType(CompositeUserType<?> type) {
+		options.compositeUserTypes.add( type );
 	}
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return bootstrapContext.getTypeConfiguration();
+	}
+
+	@Override
+	public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+		bootstrapContext.addAttributeConverterDescriptor(
+				new ClassBasedConverterDescriptor( converterClass, bootstrapContext.getClassmateContext() )
+		);
 	}
 
 	@Override
@@ -320,12 +345,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-	@Override
-	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
-		options.sourceProcessOrdering.addAll( Arrays.asList( sourceTypes ) );
-		return this;
-	}
-
 	public MetadataBuilder allowSpecjSyntax() {
 		this.options.specjProprietarySyntaxEnabled = true;
 		return this;
@@ -337,7 +356,28 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
+	public MetadataBuilder applyFunctions(FunctionContributor functionContributor) {
+		functionContributor.contributeFunctions( new FunctionContributions() {
+			@Override
+			public SqmFunctionRegistry getFunctionRegistry() {
+				return bootstrapContext.getFunctionRegistry();
+			}
+
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return bootstrapContext.getTypeConfiguration();
+			}
+
+			@Override
+			public ServiceRegistry getServiceRegistry() {
+				return bootstrapContext.getServiceRegistry();
+			}
+		}  );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function) {
 		this.bootstrapContext.addSqlFunction( functionName, function );
 		return this;
 	}
@@ -349,125 +389,50 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverterDefinition definition) {
-		this.bootstrapContext.addAttributeConverterInfo( definition );
+	public MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor) {
+		this.bootstrapContext.addAttributeConverterDescriptor( descriptor );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverterClass;
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new ClassBasedConverterDescriptor(
-								attributeConverterClass,
-								null,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
+		bootstrapContext.addAttributeConverterDescriptor(
+				new ClassBasedConverterDescriptor( attributeConverterClass, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass, boolean autoApply) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverterClass;
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new ClassBasedConverterDescriptor(
-								attributeConverterClass,
-								autoApply,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
+		this.bootstrapContext.addAttributeConverterDescriptor(
+				new ClassBasedConverterDescriptor(
+						attributeConverterClass,
+						autoApply,
+						bootstrapContext.getClassmateContext()
+				)
 		);
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverter.getClass();
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new InstanceBasedConverterDescriptor(
-								attributeConverter,
-								null,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+	public <O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter) {
+		bootstrapContext.addAttributeConverterDescriptor(
+				new InstanceBasedConverterDescriptor( attributeConverter, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
-		this.bootstrapContext.addAttributeConverterInfo(
-				new AttributeConverterInfo() {
-					@Override
-					public Class<? extends AttributeConverter> getConverterClass() {
-						return attributeConverter.getClass();
-					}
-
-					@Override
-					public ConverterDescriptor toConverterDescriptor(MetadataBuildingContext context) {
-						return new InstanceBasedConverterDescriptor(
-								attributeConverter,
-								autoApply,
-								context.getBootstrapContext().getClassmateContext()
-						);
-					}
-				}
+	public MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
+		bootstrapContext.addAttributeConverterDescriptor(
+				new InstanceBasedConverterDescriptor( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
 		);
 		return this;
-	}
-
-	@Override
-	public MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enabled) {
-		if ( enabled ) {
-			this.options.idGenerationTypeInterpreter.disableLegacyFallback();
-		}
-		else {
-			this.options.idGenerationTypeInterpreter.enableLegacyFallback();
-		}
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
-		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
-		return this;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T extends MetadataBuilder> T unwrap(Class<T> type) {
-		return (T) this;
 	}
 
 	@Override
 	public MetadataImplementor build() {
-		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.getService( CfgXmlAccessService.class );
+		final CfgXmlAccessService cfgXmlAccessService = options.serviceRegistry.requireService( CfgXmlAccessService.class );
 		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
 			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
 				for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig().getMappingReferences() ) {
@@ -476,7 +441,52 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+		final MetadataImplementor bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
+
+		if ( CollectionHelper.isNotEmpty( sources.getHbmXmlBindings() ) ) {
+			final ConfigurationService configurationService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+			final boolean transformHbm = configurationService != null
+					&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
+
+			if ( !transformHbm ) {
+				for ( Binding<JaxbHbmHibernateMapping> hbmXmlBinding : sources.getHbmXmlBindings() ) {
+					final Origin origin = hbmXmlBinding.getOrigin();
+					DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
+				}
+			}
+			else {
+				final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
+						sources.getHbmXmlBindings(),
+						bootModel,
+						bootstrapContext.getServiceRegistry(),
+						UnsupportedFeatureHandling.fromSetting(
+								configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
+								UnsupportedFeatureHandling.ERROR
+						)
+				);
+
+				final MetadataSources newSources = new MetadataSources( bootstrapContext.getServiceRegistry() );
+				if ( sources.getAnnotatedClasses() != null ) {
+					sources.getAnnotatedClasses().forEach( newSources::addAnnotatedClass );
+				}
+				if ( sources.getAnnotatedClassNames() != null ) {
+					sources.getAnnotatedClassNames().forEach( newSources::addAnnotatedClassName );
+				}
+				if ( sources.getAnnotatedPackages() != null ) {
+					sources.getAnnotatedPackages().forEach( newSources::addPackage );
+				}
+				if ( sources.getExtraQueryImports() != null ) {
+					sources.getExtraQueryImports().forEach( newSources::addQueryImport );
+				}
+				for ( Binding<JaxbEntityMappingsImpl> mappingXmlBinding : transformed ) {
+					newSources.addMappingXmlBinding( mappingXmlBinding );
+				}
+
+				return (MetadataImplementor) newSources.buildMetadata();
+			}
+		}
+
+		return bootModel;
 	}
 
 	@Override
@@ -495,36 +505,48 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitlyQuoteIdentifiers;
 
 		private AccessType implicitCacheAccessType;
+		private CollectionClassification implicitListClassification;
 
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
-			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
-			this.implicitSchemaName = configService.getSetting(
-					AvailableSettings.DEFAULT_SCHEMA,
-					StandardConverters.STRING,
-					null
-			);
-
-			this.implicitCatalogName = configService.getSetting(
-					AvailableSettings.DEFAULT_CATALOG,
-					StandardConverters.STRING,
-					null
-			);
+			// AvailableSettings.DEFAULT_SCHEMA and AvailableSettings.DEFAULT_CATALOG
+			// are taken into account later, at runtime, when rendering table/sequence names.
+			// These fields are exclusively about mapping defaults,
+			// overridden in XML mappings or through setters in MetadataBuilder.
+			this.implicitSchemaName = null;
+			this.implicitCatalogName = null;
 
 			this.implicitlyQuoteIdentifiers = configService.getSetting(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
 			this.implicitCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					new ConfigurationService.Converter<AccessType>() {
-						@Override
-						public AccessType convert(Object value) {
-							return AccessType.fromExternalName( value.toString() );
+					value -> AccessType.fromExternalName( value.toString() )
+			);
+
+			this.implicitListClassification = configService.getSetting(
+					AvailableSettings.DEFAULT_LIST_SEMANTICS,
+					value -> {
+						final CollectionClassification classification = CollectionClassification.interpretSetting( value );
+						if ( classification != CollectionClassification.LIST && classification != CollectionClassification.BAG ) {
+							throw new AnnotationException(
+									String.format(
+											Locale.ROOT,
+											"'%s' should specify either '%s' or '%s' (was '%s')",
+											AvailableSettings.DEFAULT_LIST_SEMANTICS,
+											java.util.List.class.getName(),
+											java.util.Collection.class.getName(),
+											classification.name()
+									)
+							);
 						}
-					}
+						return classification;
+					},
+					CollectionClassification.BAG
 			);
 		}
 
@@ -594,131 +616,144 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		public AccessType getImplicitCacheAccessType() {
 			return implicitCacheAccessType;
 		}
+
+		@Override
+		public CollectionClassification getImplicitListClassification() {
+			return implicitListClassification;
+		}
 	}
 
 	public static class MetadataBuildingOptionsImpl
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
+		private final TimeZoneStorageType defaultTimezoneStorage;
+		private final WrapperArrayHandling wrapperArrayHandling;
+
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
 
-		private ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
+		private final ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
+		private final ArrayList<CompositeUserType<?>> compositeUserTypes = new ArrayList<>();
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
+		private ColumnOrderingStrategy columnOrderingStrategy;
 
 		private SharedCacheMode sharedCacheMode;
-		private AccessType defaultCacheAccessType;
-		private MultiTenancyStrategy multiTenancyStrategy;
+		private final AccessType defaultCacheAccessType;
+		private final boolean multiTenancyEnabled;
 		private boolean explicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
 		private boolean specjProprietarySyntaxEnabled;
 		private boolean noConstraintByDefault;
-		private ArrayList<MetadataSourceType> sourceProcessOrdering;
 
-		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
-
-		private String schemaCharset;
-		private boolean xmlMappingEnabled;
+		private final String schemaCharset;
+		private final boolean xmlMappingEnabled;
+		private final boolean allowExtensionsInCdi;
+		private final boolean xmlFormatMapperLegacyFormat;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
 
-			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+			final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+			final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
-			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
+			mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
-			this.multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
+			defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
+			wrapperArrayHandling = resolveWrapperArrayHandling( configService, serviceRegistry );
+			multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 
-			this.xmlMappingEnabled = configService.getSetting(
+			xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					true
 			);
+			xmlFormatMapperLegacyFormat = configService.getSetting( XML_FORMAT_MAPPER_LEGACY_FORMAT, BOOLEAN, false );
 
-			this.implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
+			implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
-			this.explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
+			explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
 					AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
-			this.implicitlyForceDiscriminatorInSelect = configService.getSetting(
+			implicitlyForceDiscriminatorInSelect = configService.getSetting(
 					AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
-			this.sharedCacheMode = configService.getSetting(
-					"javax.persistence.sharedCache.mode",
-					new ConfigurationService.Converter<SharedCacheMode>() {
-						@Override
-						public SharedCacheMode convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
+			sharedCacheMode = configService.getSetting(
+					AvailableSettings.JAKARTA_SHARED_CACHE_MODE,
+					value -> value instanceof SharedCacheMode cacheMode
+							? cacheMode
+							: SharedCacheMode.valueOf( value.toString() ),
+					configService.getSetting(
+							AvailableSettings.JPA_SHARED_CACHE_MODE,
+							value -> {
+								if ( value == null ) {
+									return null;
+								}
 
-							if ( SharedCacheMode.class.isInstance( value ) ) {
-								return (SharedCacheMode) value;
-							}
+								DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+										AvailableSettings.JPA_SHARED_CACHE_MODE,
+										AvailableSettings.JAKARTA_SHARED_CACHE_MODE
+								);
 
-							return SharedCacheMode.valueOf( value.toString() );
-						}
-					},
-					SharedCacheMode.UNSPECIFIED
+								return value instanceof SharedCacheMode cacheMode
+										? cacheMode
+										: SharedCacheMode.valueOf( value.toString() );
+							},
+							SharedCacheMode.UNSPECIFIED
+					)
 			);
 
-			this.defaultCacheAccessType = configService.getSetting(
+			final RegionFactory regionFactory =  serviceRegistry.getService( RegionFactory.class );
+			defaultCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					new ConfigurationService.Converter<AccessType>() {
-						@Override
-						public AccessType convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							if ( CacheConcurrencyStrategy.class.isInstance( value ) ) {
-								return ( (CacheConcurrencyStrategy) value ).toAccessType();
-							}
-
-							if ( AccessType.class.isInstance( value ) ) {
-								return (AccessType) value;
-							}
-
+					value -> {
+						if ( value == null ) {
+							return null;
+						}
+						else if ( value instanceof CacheConcurrencyStrategy cacheConcurrencyStrategy ) {
+							return cacheConcurrencyStrategy.toAccessType();
+						}
+						else if ( value instanceof AccessType accessType ) {
+							return accessType;
+						}
+						else {
 							return AccessType.fromExternalName( value.toString() );
 						}
 					},
 					// by default, see if the defined RegionFactory (if one) defines a default
-					serviceRegistry.getService( RegionFactory.class ) == null
-							? null
-							: serviceRegistry.getService( RegionFactory.class ).getDefaultAccessType()
+					regionFactory == null ? null : regionFactory.getDefaultAccessType()
 			);
 
-			this.specjProprietarySyntaxEnabled = configService.getSetting(
+			specjProprietarySyntaxEnabled = configService.getSetting(
 					"hibernate.enable_specj_proprietary_syntax",
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
-			this.noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
+			noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
 					AvailableSettings.HBM2DDL_DEFAULT_CONSTRAINT_MODE,
 					String.class,
 					null
 			) );
 
-			this.implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<ImplicitNamingStrategy>() {
+					new Callable<>() {
 						@Override
 						public ImplicitNamingStrategy call() {
 							return strategySelector.resolveDefaultableStrategy(
@@ -730,59 +765,44 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					}
 			);
 
-			this.physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
 					PhysicalNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.PHYSICAL_NAMING_STRATEGY ),
 					PhysicalNamingStrategyStandardImpl.INSTANCE
 			);
 
-			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
-
-			final boolean useNewIdentifierGenerators = configService.getSetting(
-					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
-					StandardConverters.BOOLEAN,
-					true
+			columnOrderingStrategy = strategySelector.resolveDefaultableStrategy(
+					ColumnOrderingStrategy.class,
+					configService.getSettings().get( AvailableSettings.COLUMN_ORDERING_STRATEGY ),
+					new Callable<>() {
+						@Override
+						public ColumnOrderingStrategy call() {
+							return strategySelector.resolveDefaultableStrategy(
+									ColumnOrderingStrategy.class,
+									"default",
+									ColumnOrderingStrategyStandard.INSTANCE
+							);
+						}
+					}
 			);
-			if ( useNewIdentifierGenerators ) {
-				this.idGenerationTypeInterpreter.disableLegacyFallback();
-			}
-			else {
-				this.idGenerationTypeInterpreter.enableLegacyFallback();
-			}
 
-			this.useNationalizedCharacterData = configService.getSetting(
+			useNationalizedCharacterData = configService.getSetting(
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
-			this.schemaCharset = configService.getSetting(
+			schemaCharset = configService.getSetting(
 					AvailableSettings.HBM2DDL_CHARSET_NAME,
 					String.class,
 					null
 			);
-		}
 
-		private ArrayList<MetadataSourceType> resolveInitialSourceProcessOrdering(ConfigurationService configService) {
-			final ArrayList<MetadataSourceType> initialSelections = new ArrayList<>();
-
-			final String sourceProcessOrderingSetting = configService.getSetting(
-					AvailableSettings.ARTIFACT_PROCESSING_ORDER,
-					StandardConverters.STRING
+			allowExtensionsInCdi = configService.getSetting(
+					AvailableSettings.ALLOW_EXTENSIONS_IN_CDI,
+					BOOLEAN,
+					false
 			);
-			if ( sourceProcessOrderingSetting != null ) {
-				final String[] orderChoices = StringHelper.split( ",; ", sourceProcessOrderingSetting, false );
-				initialSelections.addAll( CollectionHelper.arrayList( orderChoices.length ) );
-				for ( String orderChoice : orderChoices ) {
-					initialSelections.add( MetadataSourceType.parsePrecedence( orderChoice ) );
-				}
-			}
-			if ( initialSelections.isEmpty() ) {
-				initialSelections.add( MetadataSourceType.HBM );
-				initialSelections.add( MetadataSourceType.CLASS );
-			}
-
-			return initialSelections;
 		}
 
 		@Override
@@ -796,43 +816,70 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
+			return toTimeZoneStorageStrategy( getTimeZoneSupport() );
+		}
+
+		@Override
+		public TimeZoneSupport getTimeZoneSupport() {
+			try {
+				return serviceRegistry.requireService( JdbcServices.class )
+						.getDialect()
+						.getTimeZoneSupport();
+			}
+			catch ( ServiceException se ) {
+				return TimeZoneSupport.NONE;
+			}
+		}
+
+		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(TimeZoneSupport timeZoneSupport) {
+			return switch (defaultTimezoneStorage) {
+				case NATIVE -> {
+					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
+						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
+					}
+					yield TimeZoneStorageStrategy.NATIVE;
+				}
+				case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+				case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+				case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+				case AUTO -> switch (timeZoneSupport) {
+					case NATIVE ->
+							// if the db has native support for timezones, we use that, not a column
+							TimeZoneStorageStrategy.NATIVE;
+					case NORMALIZE, NONE ->
+							// otherwise we use a separate column
+							TimeZoneStorageStrategy.COLUMN;
+				};
+				case DEFAULT -> switch (timeZoneSupport) {
+					case NATIVE ->
+							// if the db has native support for timezones, we use that, and don't normalize
+							TimeZoneStorageStrategy.NATIVE;
+					case NORMALIZE, NONE ->
+							// otherwise we normalize things to UTC
+							TimeZoneStorageStrategy.NORMALIZE_UTC;
+				};
+			};
+		}
+
+		@Override
+		public WrapperArrayHandling getWrapperArrayHandling() {
+			return wrapperArrayHandling;
+		}
+
+		@Override
 		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
 		}
 
 		@Override
-		public ReflectionManager getReflectionManager() {
-			return bootstrapContext.getReflectionManager();
+		public List<CompositeUserType<?>> getCompositeUserTypes() {
+			return compositeUserTypes;
 		}
 
 		@Override
-		public IndexView getJandexView() {
-			return bootstrapContext.getJandexView();
-		}
-
-		@Override
-		public ScanOptions getScanOptions() {
-			return bootstrapContext.getScanOptions();
-		}
-
-		@Override
-		public ScanEnvironment getScanEnvironment() {
-			return bootstrapContext.getScanEnvironment();
-		}
-
-		@Override
-		public Object getScanner() {
-			return bootstrapContext.getScanner();
-		}
-
-		@Override
-		public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
-			return bootstrapContext.getArchiveDescriptorFactory();
-		}
-
-		@Override
-		public ClassLoader getTempClassLoader() {
-			return bootstrapContext.getJpaTempClassLoader();
+		public TypeConfiguration getTypeConfiguration() {
+			return bootstrapContext.getTypeConfiguration();
 		}
 
 		@Override
@@ -846,6 +893,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public ColumnOrderingStrategy getColumnOrderingStrategy() {
+			return columnOrderingStrategy;
+		}
+
+		@Override
 		public SharedCacheMode getSharedCacheMode() {
 			return sharedCacheMode;
 		}
@@ -856,18 +908,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public MultiTenancyStrategy getMultiTenancyStrategy() {
-			return multiTenancyStrategy;
-		}
-
-		@Override
-		public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
-			return idGenerationTypeInterpreter;
-		}
-
-		@Override
-		public List<CacheRegionDefinition> getCacheRegionDefinitions() {
-			return new ArrayList<>( bootstrapContext.getCacheRegionDefinitions() );
+		public boolean isMultiTenancyEnabled() {
+			return multiTenancyEnabled;
 		}
 
 		@Override
@@ -901,26 +943,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public List<MetadataSourceType> getSourceProcessOrdering() {
-			return sourceProcessOrdering;
-		}
-
-		@Override
-		public Map<String, SQLFunction> getSqlFunctions() {
-			return bootstrapContext.getSqlFunctions();
-		}
-
-		@Override
-		public List<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-			return new ArrayList<>( bootstrapContext.getAuxiliaryDatabaseObjectList());
-		}
-
-		@Override
-		public List<AttributeConverterInfo> getAttributeConverters() {
-			return new ArrayList<>( bootstrapContext.getAttributeConverters() );
-		}
-
-		@Override
 		public String getSchemaCharset() {
 			return schemaCharset;
 		}
@@ -928,6 +950,16 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isXmlMappingEnabled() {
 			return xmlMappingEnabled;
+		}
+
+		@Override
+		public boolean isAllowExtensionsInCdi() {
+			return allowExtensionsInCdi;
+		}
+
+		@Override
+		public boolean isXmlFormatMapperLegacyFormatEnabled() {
+			return xmlFormatMapperLegacyFormat;
 		}
 
 		/**
@@ -941,20 +973,81 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 
 			if ( mappingDefaults.getImplicitCatalogName() == null ) {
-				mappingDefaults.implicitCatalogName = StringHelper.nullIfEmpty(
+				mappingDefaults.implicitCatalogName = nullIfEmpty(
 						jpaOrmXmlPersistenceUnitDefaults.getDefaultCatalogName()
 				);
 			}
 
 			if ( mappingDefaults.getImplicitSchemaName() == null ) {
-				mappingDefaults.implicitSchemaName = StringHelper.nullIfEmpty(
+				mappingDefaults.implicitSchemaName = nullIfEmpty(
 						jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName()
 				);
 			}
 		}
 
-		public void setBootstrapContext(BootstrapContextImpl bootstrapContext) {
+		@Override
+		public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
+			if ( !mappingDefaults.implicitlyQuoteIdentifiers ) {
+				mappingDefaults.implicitlyQuoteIdentifiers = persistenceUnitMetadata.useQuotedIdentifiers();
+			}
+
+			if ( mappingDefaults.getImplicitCatalogName() == null ) {
+				mappingDefaults.implicitCatalogName = nullIfEmpty( persistenceUnitMetadata.getDefaultCatalog() );
+			}
+
+			if ( mappingDefaults.getImplicitSchemaName() == null ) {
+				mappingDefaults.implicitSchemaName = nullIfEmpty( persistenceUnitMetadata.getDefaultSchema() );
+			}
+		}
+
+		public void setBootstrapContext(BootstrapContext bootstrapContext) {
 			this.bootstrapContext = bootstrapContext;
+		}
+	}
+
+	private static TimeZoneStorageType resolveTimeZoneStorageStrategy(
+			ConfigurationService configService) {
+		return configService.getSetting(
+				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
+				value -> TimeZoneStorageType.valueOf( value.toString() ),
+				TimeZoneStorageType.DEFAULT
+		);
+	}
+
+	private static WrapperArrayHandling resolveWrapperArrayHandling(
+			ConfigurationService configService,
+			StandardServiceRegistry serviceRegistry) {
+		final WrapperArrayHandling setting = NullnessHelper.coalesceSuppliedValues(
+				() -> configService.getSetting(
+						WRAPPER_ARRAY_HANDLING,
+						WrapperArrayHandling::interpretExternalSettingLeniently
+				),
+				() -> resolveFallbackWrapperArrayHandling( configService )
+		);
+
+		if ( setting == WrapperArrayHandling.PICK ) {
+			final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+			if ( dialect.supportsStandardArrays()
+					&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
+						|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
+				return WrapperArrayHandling.ALLOW;
+			}
+			else {
+				return WrapperArrayHandling.LEGACY;
+			}
+		}
+
+		return setting;
+	}
+
+	private static WrapperArrayHandling resolveFallbackWrapperArrayHandling(
+			ConfigurationService configService) {
+		if ( configService.getSetting( JPA_COMPLIANCE, BOOLEAN, false ) ) {
+			// JPA compliance was enabled.  Use PICK
+			return WrapperArrayHandling.PICK;
+		}
+		else {
+			return WrapperArrayHandling.DISALLOW;
 		}
 	}
 }

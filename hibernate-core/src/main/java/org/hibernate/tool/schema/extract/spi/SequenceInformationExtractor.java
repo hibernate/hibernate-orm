@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.spi;
 
@@ -22,8 +20,8 @@ public interface SequenceInformationExtractor {
 	 *
 	 * @return The extracted information about existing sequences.
 	 *
-	 * @throws java.sql.SQLException Don't bother handling SQLExceptions (unless you want to), we will deal with them in the
+	 * @throws SQLException Don't bother handling SQLExceptions (unless you want to), we will deal with them in the
 	 * caller.
 	 */
-	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException;
+	Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException;
 }

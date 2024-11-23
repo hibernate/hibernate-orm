@@ -1,576 +1,321 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import org.hibernate.HibernateException;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
+import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
 
 /**
- * List all supported relational database systems.
+ * A list of relational database systems for which Hibernate can resolve a {@link Dialect}.
+ *
+ * However, Hibernate can work with other database systems that are not listed by the {@link Database}
+ * enumeration, as long as a {@link Dialect} implementation class is provided via the {@code hibernate.dialect}
+ * configuration property.
  *
  * @author Vlad Mihalcea
  */
 public enum Database {
 
-	CACHE {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return Cache71Dialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
-	CUBRID {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return CUBRIDDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "CUBRID".equalsIgnoreCase( databaseName ) ) {
-				return latestDialectInstance( this );
-			}
-
-			return null;
-		}
-	},
 	DB2 {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return DB2400V7R3Dialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			String databaseVersion = info.getDatabaseVersion();
+			if ( databaseVersion != null ) {
+				//See https://www.ibm.com/support/knowledgecenter/SSEPEK_12.0.0/java/src/tpc/imjcc_c0053013.html
+				switch ( databaseVersion.substring( 0, 3 ) ) {
+					case "SQL": {
+						// Linux, UNIX, Windows
+						return new DB2Dialect( info );
+					}
+					case "DSN": {
+						// z/OS
+						return new DB2zDialect( info );
+					}
+					case "QSQ": {
+						// i
+						return new DB2iDialect( info );
+					}
+				}
+			}
+
+			return new DB2Dialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "DB2 UDB for AS/400".equals( databaseName ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-				final int minorVersion = info.getDatabaseMinorVersion();
-
-				if ( majorVersion > 7 || ( majorVersion == 7 && minorVersion >= 3 ) ) {
-					return latestDialectInstance( this );
-				}
-				else {
-					return new DB2400Dialect();
-				}
-			}
-
-			if ( databaseName.startsWith( "DB2/" ) ) {
-				return new DB2Dialect();
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return databaseName.startsWith( "DB2" );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.ibm.db2.jcc.DB2Driver";
 		}
 	},
-	DERBY {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return DerbyTenSevenDialect.class;
-		}
 
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "Apache Derby".equals( databaseName ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-				final int minorVersion = info.getDatabaseMinorVersion();
-
-				if ( majorVersion > 10 || ( majorVersion == 10 && minorVersion >= 7 ) ) {
-					return latestDialectInstance( this );
-				}
-				else if ( majorVersion == 10 && minorVersion == 6 ) {
-					return new DerbyTenSixDialect();
-				}
-				else if ( majorVersion == 10 && minorVersion == 5 ) {
-					return new DerbyTenFiveDialect();
-				}
-				else {
-					return new DerbyDialect();
-				}
-			}
-
-			return null;
-		}
-	},
 	ENTERPRISEDB {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return PostgresPlusDialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new PostgresPlusDialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "EnterpriseDB".equals( databaseName ) ) {
-				return latestDialectInstance( this );
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return "EnterpriseDB".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.edb.Driver";
+		}
+		@Override
+		public String getUrlPrefix() {
+			return "jdbc:edb:";
 		}
 	},
-	FIREBIRD {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return FirebirdDialect.class;
-		}
 
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( databaseName.startsWith( "Firebird" ) ) {
-				return latestDialectInstance( this );
-			}
-
-			return null;
-		}
-	},
-	FRONTBASE {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return FrontBaseDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
 	H2 {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return H2Dialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new H2Dialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "H2".equals( databaseName ) ) {
-				return latestDialectInstance( this );
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return "H2".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "org.h2.Driver";
 		}
 	},
-	HANA {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return HANAColumnStoreDialect.class;
-		}
 
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-			int databaseMajorVersion = info.getDatabaseMajorVersion();
-
-			if ( "HDB".equals( databaseName ) ) {
-				// SAP recommends defaulting to column store.
-				if ( databaseMajorVersion >= 4 ) {
-					return new HANACloudColumnStoreDialect();
-				}
-				return latestDialectInstance( this );
-			}
-
-			return null;
-		}
-	},
 	HSQL {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return HSQLDialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new HSQLDialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "HSQL Database Engine".equals( databaseName ) ) {
-				return latestDialectInstance( this );
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return "HSQL Database Engine".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "org.hsqldb.jdbc.JDBCDriver";
+		}
+		@Override
+		public String getUrlPrefix() {
+			return "jdbc:hsqldb:";
 		}
 	},
-	INFORMIX {
+
+	HANA {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return Informix10Dialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new HANADialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "Informix Dynamic Server".equals( databaseName ) ) {
-				return latestDialectInstance( this );
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return "HDB".equals( databaseName );
 		}
-	},
-	INGRES {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return Ingres10Dialect.class;
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.sap.db.jdbc.Driver";
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "ingres".equalsIgnoreCase( databaseName ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-				final int minorVersion = info.getDatabaseMinorVersion();
-
-				if ( majorVersion < 9 ) {
-					return new IngresDialect();
-				}
-				else if ( majorVersion == 9 ) {
-					if ( minorVersion > 2 ) {
-						return new Ingres9Dialect();
-					}
-					return new IngresDialect();
-				}
-				else if ( majorVersion == 10 ) {
-					return new Ingres10Dialect();
-				}
-
-				return latestDialectInstance( this );
-			}
-
-			return null;
+		public String getUrlPrefix() {
+			return "jdbc:sap:";
 		}
 	},
-	INTERBASE {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return InterbaseDialect.class;
-		}
 
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
 	MARIADB {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return MariaDB103Dialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-
-			if ( info.getDriverName() != null && info.getDriverName().startsWith( "MariaDB" ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-				final int minorVersion = info.getDatabaseMinorVersion();
-
-				if ( majorVersion == 10 ) {
-					if ( minorVersion >= 3 ) {
-						return new MariaDB103Dialect();
-					}
-					else if ( minorVersion == 2 ) {
-						return new MariaDB102Dialect();
-					}
-					else if ( minorVersion >= 0 ) {
-						return new MariaDB10Dialect();
-					}
-					return new MariaDB53Dialect();
-				}
-				else if ( majorVersion > 5 || ( majorVersion == 5 && minorVersion >= 3 ) ) {
-					return new MariaDB53Dialect();
-				}
-				return new MariaDBDialect();
+		public boolean matchesResolutionInfo(DialectResolutionInfo info) {
+			if ( productNameMatches( info.getDatabaseName() ) ) {
+				return true;
 			}
-
-			return null;
+			else {
+				//in case the product name has been set to MySQL
+				String driverName = info.getDriverName();
+				return driverName != null && driverName.startsWith( "MariaDB" );
+			}
+		}
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new MariaDBDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String productName) {
+			return "MariaDB".equals( productName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "org.mariadb.jdbc.Driver";
 		}
 	},
-	MAXDB {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return SAPDBDialect.class;
-		}
 
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
-	MCKOI {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return MckoiDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
-	MIMERSQL {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return MimerSQLDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
 	MYSQL {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return MySQL8Dialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new MySQLDialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "MySQL".equals( databaseName ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-				final int minorVersion = info.getDatabaseMinorVersion();
-
-				if ( majorVersion < 5 ) {
-					return new MySQLDialect();
-				}
-				else if ( majorVersion == 5 ) {
-					if ( minorVersion < 5 ) {
-						return new MySQL5Dialect();
-					}
-					else if ( minorVersion < 7 ) {
-						return new MySQL55Dialect();
-					}
-					else {
-						return new MySQL57Dialect();
-					}
-				}
-				else if ( majorVersion < 8 ) {
-					// There is no MySQL 6 or 7.
-					// Adding this just in case.
-					return new MySQL57Dialect();
-				}
-				else if ( majorVersion == 8 ) {
-					return new MySQL8Dialect();
-				}
-
-				return latestDialectInstance( this );
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return "MySQL".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.mysql.cj.jdbc.Driver";
 		}
 	},
+
 	ORACLE {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return Oracle12cDialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new OracleDialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "Oracle".equals( databaseName ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-
-				switch ( majorVersion ) {
-					case 12:
-						return new Oracle12cDialect();
-					case 11:
-						// fall through
-					case 10:
-						return new Oracle10gDialect();
-					case 9:
-						return new Oracle9iDialect();
-					case 8:
-						return new Oracle8iDialect();
-					default:
-						return latestDialectInstance( this );
-
-				}
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return "Oracle".equals( databaseName );
 		}
+		/*@Override
+		public String getDriverClassName() {
+			return "oracle.jdbc.OracleDriver";
+		}*/
 	},
-	POINTBASE {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return PointbaseDialect.class;
-		}
 
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
-		}
-	},
 	POSTGRESQL {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return PostgreSQL10Dialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			final String version = getVersion( info );
+			if ( version.startsWith( "Cockroach" ) ) {
+				return new CockroachDialect( info, version );
+			}
+			return new PostgreSQLDialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( "PostgreSQL".equals( databaseName ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-				final int minorVersion = info.getDatabaseMinorVersion();
-
-				if ( majorVersion < 8 ) {
-					return new PostgreSQL81Dialect();
-				}
-
-				if ( majorVersion == 8 ) {
-					return minorVersion >= 2 ? new PostgreSQL82Dialect() : new PostgreSQL81Dialect();
-				}
-
-				if ( majorVersion == 9 ) {
-					if ( minorVersion < 2 ) {
-						return new PostgreSQL9Dialect();
-					}
-					else if ( minorVersion < 4 ) {
-						return new PostgreSQL92Dialect();
-					}
-					else if ( minorVersion < 5 ) {
-						return new PostgreSQL94Dialect();
-					}
-					else {
-						return new PostgreSQL95Dialect();
+		public boolean productNameMatches(String databaseName) {
+			return "PostgreSQL".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "org.postgresql.Driver";
+		}
+		private String getVersion(DialectResolutionInfo info) {
+			final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+			if ( databaseMetaData != null ) {
+				try ( Statement statement = databaseMetaData.getConnection().createStatement() ) {
+					final ResultSet rs = statement.executeQuery( "select version()" );
+					if ( rs.next() ) {
+						return rs.getString( 1 );
 					}
 				}
-
-				return latestDialectInstance( this );
+				catch (SQLException e) {
+					throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+				}
 			}
 
-			return null;
+			// default to the dialect-specific configuration setting
+			return ConfigurationHelper.getString( COCKROACH_VERSION_STRING, info.getConfigurationValues(), "" );
 		}
 	},
-	PROGRESS {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return ProgressDialect.class;
-		}
 
+	SPANNER {
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new SpannerDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return databaseName.startsWith( "Google Cloud Spanner" );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.google.cloud.spanner.jdbc.JdbcDriver";
 		}
 	},
+
 	SQLSERVER {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return SQLServer2012Dialect.class;
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new SQLServerDialect( info );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			final String databaseName = info.getDatabaseName();
-
-			if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
-				final int majorVersion = info.getDatabaseMajorVersion();
-
-				switch ( majorVersion ) {
-					case 8: {
-						return new SQLServerDialect();
-					}
-					case 9: {
-						return new SQLServer2005Dialect();
-					}
-					case 10: {
-						return new SQLServer2008Dialect();
-					}
-					case 11:
-					case 12:
-					case 13: {
-						return new SQLServer2012Dialect();
-					}
-					default: {
-						if ( majorVersion < 8 ) {
-							return new SQLServerDialect();
-						}
-						else {
-							// assume `majorVersion > 13`
-							return latestDialectInstance( this );
-						}
-					}
-				}
-			}
-
-			return null;
+		public boolean productNameMatches(String databaseName) {
+			return databaseName.startsWith( "Microsoft SQL Server" );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 		}
 	},
+
 	SYBASE {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return SybaseASE15Dialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
+		public Dialect createDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
-
-			if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {
-				return latestDialectInstance( this );
+			if ( isASE( databaseName ) ) {
+				return new SybaseASEDialect( info );
 			}
-
-			if ( databaseName.startsWith( "Adaptive Server Anywhere" ) || "SQL Anywhere".equals( databaseName ) ) {
-				return new SybaseAnywhereDialect();
-			}
-
 			return null;
 		}
-	},
-	TERADATA {
-		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return Teradata14Dialect.class;
+		private boolean isASE(String databaseName) {
+			return "Sybase SQL Server".equals( databaseName )
+				|| "Adaptive Server Enterprise".equals( databaseName )
+					|| "ASE".equals( databaseName );
 		}
-
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
+		public boolean productNameMatches(String productName) {
+			return isASE( productName );
 		}
-	},
-	TIMESTEN {
 		@Override
-		public Class<? extends Dialect> latestDialect() {
-			return TimesTenDialect.class;
-		}
-
-		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
-			return null;
+		public boolean matchesUrl(String jdbcUrl) {
+			return jdbcUrl.startsWith( "jdbc:sybase:" )
+					|| jdbcUrl.startsWith( "jdbc:sqlanywhere:" );
 		}
 	};
 
-	public abstract Class<? extends Dialect> latestDialect();
-
-	public abstract Dialect resolveDialect(DialectResolutionInfo info);
-
-	private static Dialect latestDialectInstance(Database database) {
-		try {
-			return database.latestDialect().newInstance();
-		}
-		catch (InstantiationException | IllegalAccessException e) {
-			throw new HibernateException( e );
-		}
+	/**
+	 * Does this database match the given metadata?
+	 */
+	public boolean matchesResolutionInfo(DialectResolutionInfo info) {
+		return productNameMatches( info.getDatabaseName() );
 	}
+
+	/**
+	 * Does this database have the given product name?
+	 */
+	public abstract boolean productNameMatches(String productName);
+
+	/**
+	 * Create a {@link Dialect} for the given metadata.
+	 */
+	public abstract Dialect createDialect(DialectResolutionInfo info);
+
+	/**
+	 * Get the name of the JDBC driver class for this database,
+	 * or null if we're not too sure what it should be.
+	 */
+	public String getDriverClassName(String jdbcUrl) {
+		return null;
+	}
+
+	/**
+	 * Get the JDBC URL prefix used by this database.
+	 */
+	public String getUrlPrefix() {
+		return "jdbc:" + toString().toLowerCase() + ":";
+	}
+
+	/**
+	 * Does the given JDBC URL connect to this database?
+	 */
+	public boolean matchesUrl(String jdbcUrl) {
+		return jdbcUrl.toLowerCase().startsWith( getUrlPrefix() );
+	}
+
 }

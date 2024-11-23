@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
@@ -12,6 +10,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * A factory for keys into the second-level cache.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface CacheKeysFactory {
@@ -19,11 +19,11 @@ public interface CacheKeysFactory {
 
 	Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier);
 
-	Object createNaturalIdKey(Object[] naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session);
+	Object createNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session);
 
 	Object getEntityId(Object cacheKey);
 
 	Object getCollectionId(Object cacheKey);
 
-	Object[] getNaturalIdValues(Object cacheKey);
+	Object getNaturalIdValues(Object cacheKey);
 }

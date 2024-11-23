@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
 
@@ -12,15 +10,32 @@ import org.hibernate.boot.model.naming.Identifier;
 
 /**
  * Mainly this is used to support legacy sequence exporting.
- *
- * @author Steve Ebersole
- *
- * @see org.hibernate.id.SequenceGenerator
  */
 public class NamedAuxiliaryDatabaseObject
 		extends SimpleAuxiliaryDatabaseObject
 		implements Exportable {
 	private final String name;
+
+	public NamedAuxiliaryDatabaseObject(
+			String name,
+			Namespace namespace,
+			String[] createStrings,
+			String[] dropStrings,
+			Set<String> dialectScopes) {
+		super( namespace, createStrings, dropStrings, dialectScopes );
+		this.name = name;
+	}
+
+	public NamedAuxiliaryDatabaseObject(
+			String name,
+			Namespace namespace,
+			String[] createStrings,
+			String[] dropStrings,
+			Set<String> dialectScopes,
+			boolean beforeTables) {
+		super( namespace, createStrings, dropStrings, dialectScopes, beforeTables );
+		this.name = name;
+	}
 
 	public NamedAuxiliaryDatabaseObject(
 			String name,
@@ -35,10 +50,11 @@ public class NamedAuxiliaryDatabaseObject
 	public NamedAuxiliaryDatabaseObject(
 			String name,
 			Namespace namespace,
-			String[] createStrings,
-			String[] dropStrings,
-			Set<String> dialectScopes) {
-		super( namespace, createStrings, dropStrings, dialectScopes );
+			String createString,
+			String dropString,
+			Set<String> dialectScopes,
+			boolean beforeTables) {
+		super( namespace, createString, dropString, dialectScopes, beforeTables );
 		this.name = name;
 	}
 

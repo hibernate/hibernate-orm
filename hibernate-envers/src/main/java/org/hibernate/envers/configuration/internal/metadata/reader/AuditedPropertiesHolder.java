@@ -1,17 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
+import java.util.List;
 
 /**
  * Implementations hold other audited properties.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacut;n Chanfreau
+ * @author Chris Cranford
  */
 public interface AuditedPropertiesHolder {
 	/**
@@ -29,7 +29,6 @@ public interface AuditedPropertiesHolder {
 	 */
 	PropertyAuditingData getPropertyAuditingData(String propertyName);
 
-
 	/**
 	 * @return true if the holder contains any audited property
 	 */
@@ -40,4 +39,8 @@ public interface AuditedPropertiesHolder {
 	 */
 	boolean contains(String propertyName);
 
+	/**
+	 * @return the holder's property audit overrides
+	 */
+	List<AuditOverrideData> getAuditingOverrides();
 }

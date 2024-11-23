@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,14 +14,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * A <tt>Map</tt> where keys are compared by object identity,
- * rather than <tt>equals()</tt>.
+ * A {@code Map} where keys are compared by object identity,
+ * rather than {@code equals()}.
  */
 public final class IdentityMap<K,V> implements Map<K,V> {
 
 	private final LinkedHashMap<IdentityKey<K>,V> map;
-	@SuppressWarnings( {"unchecked"})
-	private transient Map.Entry<IdentityKey<K>,V>[] entryArray = null;
+
+	private transient Entry<K,V>[] entryArray = null;
 
 	/**
 	 * Return a new instance of this class, with iteration
@@ -34,7 +31,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 * @return The map
 	 */
 	public static <K,V> IdentityMap<K,V> instantiateSequenced(int size) {
-		return new IdentityMap<K,V>( new LinkedHashMap<>( size << 1, 0.6f ) );
+		return new IdentityMap<>( new LinkedHashMap<>( size << 1, 0.6f ) );
 	}
 
 	/**
@@ -47,14 +44,14 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	/**
-	 * Return the map entries (as instances of <tt>Map.Entry</tt> in a collection that
+	 * Return the map entries (as instances of {@code Map.Entry} in a collection that
 	 * is safe from concurrent modification). ie. we may safely add new instances to
-	 * the underlying <tt>Map</tt> during iteration of the <tt>entries()</tt>.
+	 * the underlying {@code Map} during iteration of the {@code entries()}.
 	 *
 	 * @param map The map of entries
 	 * @return Collection
 	 */
-	public static <K,V> Map.Entry<K,V>[] concurrentEntries(Map<K,V> map) {
+	public static <K,V> Entry<K,V>[] concurrentEntries(Map<K,V> map) {
 		return ( (IdentityMap<K,V>) map ).entryArray();
 	}
 
@@ -73,7 +70,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	public Iterator<K> keyIterator() {
-		return new KeyIterator<K>( map.keySet().iterator() );
+		return new KeyIterator<>( map.keySet().iterator() );
 	}
 
 	@Override
@@ -87,7 +84,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public boolean containsKey(Object key) {
 		return map.containsKey( new IdentityKey( key ) );
 	}
@@ -107,7 +104,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	@Override
 	public V put(K key, V value) {
 		this.entryArray = null;
-		return map.put( new IdentityKey<K>( key ), value );
+		return map.put( new IdentityKey<>( key ), value );
 	}
 
 	@Override
@@ -144,22 +141,21 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	@Override
 	public Set<Entry<K,V>> entrySet() {
-		Set<Entry<K,V>> set = new HashSet<Entry<K,V>>( map.size() );
+		Set<Entry<K,V>> set = CollectionHelper.setOfSize( map.size() );
 		for ( Entry<IdentityKey<K>, V> entry : map.entrySet() ) {
-			set.add( new IdentityMapEntry<K,V>( entry.getKey().key, entry.getValue() ) );
+			set.add( new IdentityMapEntry<>( entry.getKey().key, entry.getValue() ) );
 		}
 		return set;
 	}
 
-	@SuppressWarnings( {"unchecked"})
-	public Map.Entry[] entryArray() {
+	public Entry<K,V>[] entryArray() {
 		if ( entryArray == null ) {
-			entryArray = new Map.Entry[ map.size() ];
+			entryArray = new Entry[ map.size() ];
 			final Iterator<Entry<IdentityKey<K>, V>> itr = map.entrySet().iterator();
 			int i = 0;
 			while ( itr.hasNext() ) {
 				final Entry<IdentityKey<K>, V> me = itr.next();
-				entryArray[i++] = new IdentityMapEntry( me.getKey().key, me.getValue() );
+				entryArray[i++] = new IdentityMapEntry<>( me.getKey().key, me.getValue() );
 			}
 		}
 		return entryArray;
@@ -191,7 +187,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	}
 
-	private static final class IdentityMapEntry<K,V> implements java.util.Map.Entry<K,V> {
+	private static final class IdentityMapEntry<K,V> implements Entry<K,V> {
 
 		private final K key;
 		private final V value;

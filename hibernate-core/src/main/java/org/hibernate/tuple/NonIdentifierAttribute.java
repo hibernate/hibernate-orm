@@ -1,40 +1,36 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
 
 /**
- * @author Steve Ebersole
+ * @deprecated No direct replacement
  */
-public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
-	public boolean isLazy();
+@Deprecated(forRemoval = true)
+public interface NonIdentifierAttribute extends Attribute {
+	boolean isLazy();
 
-	public boolean isInsertable();
+	boolean isInsertable();
 
-	public boolean isUpdateable();
+	boolean isUpdateable();
 
-	public ValueGeneration getValueGenerationStrategy();
-
-	public boolean isNullable();
+	boolean isNullable();
 
 	/**
-	 * @deprecated Use {@link org.hibernate.tuple.NonIdentifierAttribute#isDirtyCheckable()} instead
+	 * @deprecated Use {@link NonIdentifierAttribute#isDirtyCheckable()} instead
 	 */
 	@Deprecated
-	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
+	boolean isDirtyCheckable(boolean hasUninitializedProperties);
 
-	public boolean isDirtyCheckable();
+	boolean isDirtyCheckable();
 
-	public boolean isVersionable();
+	boolean isVersionable();
 
-	public CascadeStyle getCascadeStyle();
+	CascadeStyle getCascadeStyle();
 
-	public FetchMode getFetchMode();
+	FetchMode getFetchMode();
 }

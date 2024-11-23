@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
 
@@ -13,7 +11,6 @@ import java.sql.Connection;
 
 import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.jboss.logging.Logger;
@@ -79,13 +76,6 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	public Connection getPhysicalConnection() {
 		errorIfClosed();
 		return providedConnection;
-	}
-
-	@Override
-	public LogicalConnectionImplementor makeShareableCopy() {
-		errorIfClosed();
-
-		return new LogicalConnectionProvidedImpl( providedConnection, new ResourceRegistryStandardImpl() );
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.cfgxml.internal;
 
@@ -34,8 +32,8 @@ public class ConfigLoader {
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 
-	private ValueHolder<JaxbCfgProcessor> jaxbProcessorHolder = new ValueHolder<JaxbCfgProcessor>(
-			new ValueHolder.DeferredInitializer<JaxbCfgProcessor>() {
+	private final ValueHolder<JaxbCfgProcessor> jaxbProcessorHolder = new ValueHolder<>(
+			new ValueHolder.DeferredInitializer<>() {
 				@Override
 				public JaxbCfgProcessor initialize() {
 					return new JaxbCfgProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
@@ -48,7 +46,7 @@ public class ConfigLoader {
 	}
 
 	public LoadedConfig loadConfigXmlResource(String cfgXmlResourceName) {
-		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
+		final InputStream stream = bootstrapServiceRegistry.requireService( ClassLoaderService.class ).locateResourceStream( cfgXmlResourceName );
 		if ( stream == null ) {
 			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlResourceName + "]" );
 		}
@@ -113,7 +111,7 @@ public class ConfigLoader {
 	}
 
 	public Properties loadProperties(String resourceName) {
-		final InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
+		final InputStream stream = bootstrapServiceRegistry.requireService( ClassLoaderService.class ).locateResourceStream( resourceName );
 
 		if ( stream == null ) {
 			throw new ConfigurationException( "Unable to apply settings from properties file [" + resourceName + "]" );
@@ -168,7 +166,7 @@ public class ConfigLoader {
 		}
 		catch (FileNotFoundException e) {
 			throw new ConfigurationException(
-					"Unable locate specified properties file [" + file.getAbsolutePath() + "]",
+					"Unable to locate specified properties file [" + file.getAbsolutePath() + "]",
 					e
 			);
 		}

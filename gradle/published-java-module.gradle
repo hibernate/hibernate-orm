@@ -5,141 +5,24 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
+apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
-
-apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Jar
+apply plugin: 'signing'
 
-jar {
-	manifest {
-		attributes(
-				// Basic JAR manifest attributes
-				'Specification-Title': project.name,
-				'Specification-Version': project.version,
-				'Specification-Vendor': 'Hibernate.org',
-				'Implementation-Title': project.name,
-				'Implementation-Version': project.version,
-				'Implementation-Vendor': 'Hibernate.org',
-				'Implementation-Vendor-Id': 'org.hibernate',
-				'Implementation-Url': 'http://hibernate.org/orm',
+// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
+tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
 
-				// Java 9 module name
-				'Automatic-Module-Name': project.java9ModuleName,
-
-				// Hibernate-specific JAR manifest attributes
-				'Hibernate-VersionFamily': project.ormVersion.family,
-				'Hibernate-JpaVersion': project.jpaVersion.name,
-
-				// BND Plugin instructions (for OSGi):
-				'Bundle-Name': project.name,
-				'Bundle-SymbolicName': project.java9ModuleName,
-				'Bundle-Vendor': 'Hibernate.org',
-				'Bundle-DocURL': "http://www.hibernate.org/orm/${project.ormVersion.family}",
-				// This is overridden in some sub-projects
-				'Import-Package': [
-						// Temporarily support JTA 1.1 -- Karaf and other frameworks still
-						// use it.  Without this, the plugin generates [1.2,2).
-						'javax.transaction;version="[1.1,2)"',
-						// Also import every package referenced in the code
-						// (note that '*' is resolved at build time to a list of packages)
-						'*'
-				].join( ',' ),
-				'-exportcontents': "*;version=${project.version}"
-		)
+configurations {
+	javadocSources {
+		description 'Used to aggregate javadocs for the whole project'
 	}
 }
 
-
-task sourcesJar(type: Jar) {
-	from project.sourceSets.main.allSource
-	manifest {
-		attributes(
-				// Basic JAR manifest attributes
-				'Specification-Title': project.name,
-				'Specification-Version': project.version,
-				'Specification-Vendor': 'Hibernate.org',
-				'Implementation-Title': project.name,
-				'Implementation-Version': project.version,
-				'Implementation-Vendor': 'Hibernate.org',
-				'Implementation-Vendor-Id': 'org.hibernate',
-				'Implementation-Url': 'http://hibernate.org/orm',
-
-				// Hibernate-specific JAR manifest attributes
-				'Hibernate-VersionFamily': project.ormVersion.family,
-				'Hibernate-JpaVersion': project.jpaVersion.name
-		)
-	}
-	archiveClassifier.set( 'sources' )
+dependencies {
+	javadocSources sourceSets.main.allJava
 }
-
-task javadocJar(type: Jar) {
-	from project.tasks.javadoc.outputs
-	manifest {
-		attributes(
-				// Basic JAR manifest attributes
-				'Specification-Title': project.name,
-				'Specification-Version': project.version,
-				'Specification-Vendor': 'Hibernate.org',
-				'Implementation-Title': project.name,
-				'Implementation-Version': project.version,
-				'Implementation-Vendor': 'Hibernate.org',
-				'Implementation-Vendor-Id': 'org.hibernate',
-				'Implementation-Url': 'http://hibernate.org/orm',
-
-				// Hibernate-specific JAR manifest attributes
-				'Hibernate-VersionFamily': project.ormVersion.family,
-				'Hibernate-JpaVersion': project.jpaVersion.name
-		)
-	}
-	archiveClassifier.set( 'javadoc' )
-}
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Javadoc
-
-javadoc {
-	exclude( "**/internal/*" )
-	exclude( "**/generated-src/**" )
-
-	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
-
-	configure( options ) {
-		windowTitle = "$project.name JavaDocs"
-		docTitle = "$project.name JavaDocs ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-		use = true
-		encoding = 'UTF-8'
-		links += [
-				'https://docs.oracle.com/javase/8/docs/api/',
-				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-				'http://docs.jboss.org/cdi/api/2.0/',
-				'https://javaee.github.io/javaee-spec/javadocs/'
-		]
-		tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
-		
-		if ( gradle.ext.javaVersions.main.compiler.asInt() >= 11 ) {
-			//The need to set `--source 1.8` applies to all JVMs after 11, and also to 11
-			// but after excluding the first two builds; see also specific comments on
-			// https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
-			// For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
-			// complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
-			logger.lifecycle "Forcing Javadoc in Java 8 compatible mode"
-			options.source = gradle.ext.baselineJavaVersion
-		}
-
-		options.addStringOption( 'Xdoclint:none', '-quiet' )
-
-		doFirst {
-			// ordering problems if we try to do this during config phase :(
-			classpath += project.sourceSets.main.output.classesDirs + project.sourceSets.main.compileClasspath + project.configurations.provided
-		}
-	}
-}
-
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -147,24 +30,174 @@ javadoc {
 
 publishing {
 	publications {
+		// main publication
 		publishedArtifacts {
+			// Add the Java component to the main publication
 			from components.java
-
-			artifact( sourcesJar ) {
-				// todo : do these really need to be specified twice?
-				classifier 'sources'
-			}
-
-			artifact( javadocJar ) {
-				// todo : do these really need to be specified twice?
-				classifier "javadoc"
-			}
 		}
 	}
 }
 
-task ciBuild( dependsOn: [test, publish] )
+java {
+	// include javadoc and sources jar in the Java component
+	// 		- classes jar included by default
+	withJavadocJar()
+	withSourcesJar()
+}
 
-task release( dependsOn: [test, bintrayUpload] )
-bintrayUpload.mustRunAfter test
+var signingKey = resolveSigningKey()
+var signingPassword = findSigningProperty( "signingPassword" )
 
+signing {
+	useInMemoryPgpKeys( signingKey, signingPassword )
+
+	sign publishing.publications.publishedArtifacts
+}
+
+String resolveSigningKey() {
+	var key = findSigningProperty( "signingKey" )
+	if ( key != null ) {
+		return key
+	}
+
+	var keyFile = findSigningProperty( "signingKeyFile" )
+	if ( keyFile != null ) {
+		return new File( keyFile ).text
+	}
+
+	return null
+}
+
+String findSigningProperty(String propName) {
+	if ( System.getProperty( propName ) != null ) {
+		logger.debug "Found `{}` as a system property", propName
+		return System.getProperty(propName )
+	}
+	else if ( System.getenv().get( propName ) != null ) {
+		logger.debug "Found `{}` as an env-var property", propName
+		return System.getenv().get( propName )
+	}
+	else if ( project.hasProperty( propName ) ) {
+		logger.debug "Found `{}` as a project property", propName
+		return project.hasProperty( propName )
+	}
+	else {
+		logger.debug "Did not find `{}`", propName
+		return null
+	}
+}
+
+
+var signingTask = project.tasks.getByName( "signPublishedArtifactsPublication" ) as Sign
+var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
+
+task sign {
+	dependsOn "signPublications"
+}
+
+task signPublications { t ->
+	tasks.withType( Sign ).all { s ->
+		t.dependsOn s
+	}
+}
+
+signingTask.doFirst {
+	if ( signingKey == null || signingPassword == null ) {
+		throw new GradleException(
+				"Cannot perform signing without GPG details.  Please set the `signingKey` and `signingKeyFile` properties"
+		)
+	}
+}
+
+
+boolean wasSigningExplicitlyRequested() {
+	// check whether signing task was explicitly requested when running the build
+	//
+	// NOTE: due to https://discuss.gradle.org/t/how-to-tell-if-a-task-was-explicitly-asked-for-on-the-command-line/42853/3
+	// we cannot definitively know whether the task was requested.  Gradle really just does not expose this information.
+	// so we make a convention - we check the "start parameters" object to see which task-names were requested;
+	// the problem is that these are the raw names directly from the command line.  e.g. it is perfectly legal to
+	// say `gradlew signPubArtPub` in place of `gradlew signPublishedArtifactsPublication` - Gradle will simply
+	// "expand" the name it finds.  However, it does not make that available.
+	//
+	// so the convention is that we will check for the following task names
+	//
+	// for each of:
+	//		1. `sign`
+	//		2. `signPublications`
+	//		3. `signPublishedArtifactsPublication`
+	//
+	// and we check both forms:
+	//		1. "${taskName}"
+	//		2. project.path + ":${taskName}"
+	//
+	// we need to check both again because of the "start parameters" discussion
+
+	def signingTaskNames = ["sign", "signPublications", "signPublishedArtifactsPublication"]
+
+	for ( String taskName : signingTaskNames ) {
+		if ( gradle.startParameter.taskNames.contains( taskName )
+				|| gradle.startParameter.taskNames.contains( "${project.path}:${taskName}" ) ) {
+			return true
+		}
+	}
+
+	return false
+}
+
+if ( wasSigningExplicitlyRequested() ) {
+	// signing was explicitly requested
+	signingExtension.required = true
+}
+else {
+	gradle.taskGraph.whenReady { graph ->
+		if ( graph.hasTask( signingTask ) ) {
+			// signing is scheduled to happen.
+			//
+			// we know, from above if-check, that it was not explicitly requested -
+			// so it is triggered via task dependency. make sure we want it to happen
+			var publishingTask = project.tasks.getByName( "publishPublishedArtifactsPublicationToSonatypeRepository" ) as PublishToMavenRepository
+			if ( graph.hasTask( publishingTask ) ) {
+				// we are publishing to Sonatype OSSRH - we need the signing to happen
+				signingExtension.required = true
+			}
+			else {
+				// signing was not explicitly requested and we are not publishing to OSSRH,
+				// so do not sign.
+				signingTask.enabled = false
+			}
+		}
+
+	}
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Release / publishing tasks
+
+task ciBuild {
+	dependsOn test, tasks.publishToSonatype
+}
+
+tasks.release.dependsOn tasks.test, tasks.publishToSonatype
+
+tasks.preVerifyRelease.dependsOn build
+tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
+tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
+
+tasks.publishToSonatype.mustRunAfter test
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Ancillary tasks
+
+task showPublications {
+	doFirst {
+		project.publishing.publications.each { publication ->
+			println "Publication (${publication.name}): ${publication.groupId}:${publication.artifactId}:${publication.version}"
+			publication.artifacts.each { artifact ->
+				println "    > ${artifact}"
+			}
+		}
+	}
+}

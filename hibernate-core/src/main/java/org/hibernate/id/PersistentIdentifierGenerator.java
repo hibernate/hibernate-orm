@@ -1,28 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.dialect.Dialect;
+import java.util.Properties;
+
+import org.hibernate.generator.GeneratorCreationContext;
 
 /**
- * An <tt>IdentifierGenerator</tt> that requires creation of database objects.
- * <br><br>
- * All <tt>PersistentIdentifierGenerator</tt>s that also implement
- * <tt>Configurable</tt> have access to a special mapping parameter: schema
+ * An {@link IdentifierGenerator} that requires creation of database objects.
+ * <p>
+ * All instances have access to a special mapping parameter in their
+ * {@link #configure(GeneratorCreationContext, Properties)} method: schema
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see IdentifierGenerator
- * @see Configurable
  */
-public interface PersistentIdentifierGenerator extends IdentifierGenerator, ExportableProducer {
+public interface PersistentIdentifierGenerator extends OptimizableGenerator {
+	/**
+	 * The configuration parameter holding the catalog name
+	 */
+	String CATALOG = "catalog";
 
 	/**
 	 * The configuration parameter holding the schema name
@@ -48,46 +49,15 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator, Expo
 	String PK = "target_column";
 
 	/**
-	 * The configuration parameter holding the catalog name
-	 */
-	String CATALOG = "catalog";
-
-	/**
 	 * The key under which to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
+	 *
+	 * @deprecated no longer set, use {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment#getIdentifierHelper}
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
 
 	/**
-	 * The SQL required to create the underlying database objects.
-	 *
-	 * @param dialect The dialect against which to generate the create command(s)
-	 *
-	 * @return The create command(s)
-	 *
-	 * @throws HibernateException problem creating the create command(s)
-	 * @deprecated Utilize the ExportableProducer contract instead
+	 * The configuration parameter holding the generator options.
 	 */
-	@Deprecated
-	String[] sqlCreateStrings(Dialect dialect) throws HibernateException;
-
-	/**
-	 * The SQL required to remove the underlying database objects.
-	 *
-	 * @param dialect The dialect against which to generate the drop command(s)
-	 *
-	 * @return The drop command(s)
-	 *
-	 * @throws HibernateException problem creating the drop command(s)
-	 * @deprecated Utilize the ExportableProducer contract instead
-	 */
-	@Deprecated
-	String[] sqlDropStrings(Dialect dialect) throws HibernateException;
-
-	/**
-	 * Return a key unique to the underlying database objects. Prevents us from
-	 * trying to create/remove them multiple times.
-	 *
-	 * @return Object an identifying key for this generator
-	 */
-	Object generatorKey();
+	String OPTIONS = "options";
 }

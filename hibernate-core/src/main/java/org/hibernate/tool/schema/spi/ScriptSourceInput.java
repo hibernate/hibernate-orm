@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
 
+import java.io.Reader;
+import java.net.URL;
 import java.util.List;
-
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import java.util.function.Function;
 
 /**
  * Contract for hiding the differences between a passed Reader, File or URL in terms of how we read input
@@ -18,22 +17,21 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
  */
 public interface ScriptSourceInput {
 
-	/**
-	 * Prepare source for use, and log that this script is about to be imported.
-	 */
-	void prepare();
+	default String getScriptDescription() {
+		return toString();
+	}
 
 	/**
-	 * Read the abstracted script, using the given extractor to split up the input into individual commands.
-	 *
-	 * @param commandExtractor The extractor for individual commands within the input.
-	 *
-	 * @return The scripted commands
+	 * Allows managed access to the input's Reader, returning a result
 	 */
-	List<String> read(ImportSqlCommandExtractor commandExtractor);
+	List<String> extract(Function<Reader, List<String>> extractor);
 
-	/**
-	 * Release this input.
-	 */
-	void release();
+	default boolean containsScript(URL url) {
+		return false;
+	}
+
+	default boolean exists() {
+		return true;
+	}
+
 }

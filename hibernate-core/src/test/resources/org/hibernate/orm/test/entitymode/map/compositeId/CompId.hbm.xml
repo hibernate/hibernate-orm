@@ -1,0 +1,13 @@
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class entity-name="CompId">
+        <composite-id>
+            <key-property name="id1" column="id1" length="32" type="string"/>
+            <key-property name="id2" column="id2" length="32" type="string"/>
+        </composite-id>
+        <property name="name" type="string"/>
+    </class>
+</hibernate-mapping>

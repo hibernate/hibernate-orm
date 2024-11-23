@@ -1,71 +1,81 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import javax.persistence.EntityTransaction;
-import javax.transaction.Synchronization;
+import jakarta.persistence.EntityTransaction;
+import jakarta.transaction.Synchronization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
- * Defines the contract for abstracting applications from the configured underlying means of transaction management.
- * Allows the application to define units of work, while maintaining abstraction from the underlying transaction
- * implementation (eg. JTA, JDBC).
- * <p/>
- * A transaction is associated with a {@link Session} and is usually initiated by a call to
- * {@link org.hibernate.Session#beginTransaction()}.  A single session might span multiple transactions since
- * the notion of a session (a conversation between the application and the datastore) is of coarser granularity than
- * the notion of a transaction.  However, it is intended that there be at most one uncommitted transaction associated
- * with a particular {@link Session} at any time.
- * <p/>
- * Implementers are not intended to be thread-safe.
+ * Represents a resource-local transaction, where <em>resource-local</em> is interpreted
+ * by Hibernate to mean any transaction under the control of Hibernate. That is to say,
+ * the underlying transaction might be a JTA transaction, or it might be a JDBC transaction,
+ * depending on how Hibernate is configured.
+ * <p>
+ * Every resource-local transaction is associated with a {@link Session} and begins with
+ * an explicit call to {@link Session#beginTransaction()}, or, equivalently, with
+ * {@code session.getTransaction().begin()}, and ends with a call to {@link #commit()}
+ * or {@link #rollback()}.
+ * <p>
+ * A single session might span multiple transactions since the notion of a session
+ * (a conversation between the application and the datastore) is of coarser granularity
+ * than the concept of a database transaction. However, there is at most one uncommitted
+ * transaction associated with a given {@link Session} at any time.
+ * <p>
+ * Note that this interface is never used to control container managed JTA transactions,
+ * and is not usually used to control transactions that affect multiple resources.
+ * <p>
+ * A {@code Transaction} object is not threadsafe.
  *
  * @author Anton van Straaten
  * @author Steve Ebersole
+ *
+ * @see Session#beginTransaction()
  */
 public interface Transaction extends EntityTransaction {
 	/**
-	 * Get the current local status of this transaction.
-	 * <p/>
-	 * This only accounts for the local view of the transaction status.  In other words it does not check the status
-	 * of the actual underlying transaction.
-	 *
-	 * @return The current local status.
+	 * Get the current {@linkplain TransactionStatus status} of this transaction.
 	 */
 	TransactionStatus getStatus();
 
 	/**
-	 * Register a user synchronization callback for this transaction.
+	 * Register a user {@link Synchronization synchronization callback} for this transaction.
 	 *
-	 * @param synchronization The Synchronization callback to register.
+	 * @param synchronization The {@link Synchronization} callback to register.
 	 *
 	 * @throws HibernateException Indicates a problem registering the synchronization.
 	 */
-	void registerSynchronization(Synchronization synchronization) throws HibernateException;
+	void registerSynchronization(Synchronization synchronization);
 
 	/**
-	 * Set the transaction timeout for any transaction started by a subsequent call to {@link #begin} on this instance.
+	 * Set the transaction timeout for any transaction started by any subsequent call to
+	 * {@link #begin} on this instance.
 	 *
 	 * @param seconds The number of seconds before a timeout.
 	 */
 	void setTimeout(int seconds);
 
 	/**
-	 * Retrieve the transaction timeout set for this transaction.  A negative indicates no timeout has been set.
+	 * Retrieve the transaction timeout set for this instance. A negative integer indicates
+	 * that no timeout has been set.
 	 *
 	 * @return The timeout, in seconds.
 	 */
-	int getTimeout();
+	@Nullable Integer getTimeout();
 
 	/**
-	 * Make a best effort to mark the underlying transaction for rollback only.
+	 * Attempt to mark the underlying transaction for rollback only.
+	 * <p>
+	 * Unlike {@link #setRollbackOnly()}, which is specified by JPA
+	 * to throw when the transaction is inactive, this operation may
+	 * be called on an inactive transaction, in which case it has no
+	 * effect.
+	 *
+	 * @see #setRollbackOnly()
 	 */
-	default void markRollbackOnly() {
-		setRollbackOnly();
-	}
-
+	void markRollbackOnly();
 }

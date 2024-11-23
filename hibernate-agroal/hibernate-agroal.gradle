@@ -7,15 +7,12 @@
 
 description = 'Integration for Agroal as a ConnectionProvider for Hibernate ORM'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.agroal_api )
+    implementation project( ':hibernate-core' )
+    implementation libs.agroal
 
-    runtime( libraries.agroal_pool )
-
-    testCompile project( ':hibernate-testing' )
-    testCompile( libraries.mockito )
-    testCompile( libraries.mockito_inline )
+    testImplementation project( ':hibernate-testing' )
+    testRuntimeOnly libs.agroalPool
 }

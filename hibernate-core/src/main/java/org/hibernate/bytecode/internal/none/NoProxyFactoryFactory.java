@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.none;
 
@@ -10,7 +8,6 @@ import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.proxy.ProxyFactory;
-
 
 /**
  * When entities are enhanced in advance, proxies are not needed.
@@ -23,7 +20,7 @@ final class NoProxyFactoryFactory implements ProxyFactoryFactory {
 	}
 
 	@Override
-	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
-		return new NoneBasicProxyFactory( superClass, interfaces );
+	public BasicProxyFactory buildBasicProxyFactory(Class superClassOrInterface) {
+		return new NoneBasicProxyFactory( superClassOrInterface );
 	}
 }

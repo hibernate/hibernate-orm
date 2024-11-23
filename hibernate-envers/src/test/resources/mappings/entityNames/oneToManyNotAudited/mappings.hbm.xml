@@ -8,7 +8,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-	<class name="org.hibernate.envers.test.integration.entityNames.oneToManyNotAudited.Person" entity-name="Personaje">
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.oneToManyNotAudited.Person" entity-name="Personaje">
 		
 		<id name="id" column="ID_PERSON" type="long" >
 			<generator class="native" />
@@ -21,7 +21,7 @@
 			
 	</class>
 	
-	<class name="org.hibernate.envers.test.integration.entityNames.oneToManyNotAudited.Car" >
+	<class name="org.hibernate.orm.test.envers.integration.entityNames.oneToManyNotAudited.Car" >
 
 		<id name="id" column="ID_CAR" type="long">
 			<generator class="native" />
@@ -29,7 +29,7 @@
 
 		<property name="number" type="int" column="int" not-null="true" />
 
-		<bag name="owners" cascade="save-update">
+		<bag name="owners" cascade="persist, merge">
 			<key column="ID_GARAGE" not-null="true" update="false" />
 			<one-to-many entity-name="Personaje"/>
 		</bag>

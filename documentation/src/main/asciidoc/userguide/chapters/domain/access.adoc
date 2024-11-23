@@ -1,9 +1,11 @@
 [[access]]
-==== Access strategies
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/access
+=== Access strategies
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-access: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/access
 :extrasdir: extras
 
-As a JPA provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).
+As a Jakarta Persistence provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).
 By default, the placement of the `@Id` annotation gives the default access strategy.
 When placed on a field, Hibernate will assume field-based access.
 When placed on the identifier getter, Hibernate will use property-based access.
@@ -18,14 +20,14 @@ https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapital
 Embeddable types inherit the access strategy from their parent entities.
 
 [[field-based-access]]
-===== Field-based access
+==== Field-based access
 
 [[access-field-mapping-example]]
 .Field-based access
 ====
 [source,java]
 ----
-include::{sourcedir}/FieldAccessTest.java[tag=access-field-mapping-example, indent=0]
+include::{example-dir-access}/FieldAccessTest.java[tag=access-field-mapping-example, indent=0]
 ----
 ====
 
@@ -42,23 +44,23 @@ With field-based access, we can simply omit the getter and the setter for this v
 ====
 
 [[property-based-access]]
-===== Property-based access
+==== Property-based access
 
 [[access-property-mapping-example]]
 .Property-based access
 ====
 [source,java]
 ----
-include::{sourcedir}/PropertyAccessTest.java[tag=access-property-mapping-example, indent=0]
+include::{example-dir-access}/PropertyAccessTest.java[tag=access-property-mapping-example, indent=0]
 ----
 ====
 
 When using property-based access, Hibernate uses the accessors for both reading and writing the entity state.
 Every other method that will be added to the entity (e.g. helper methods for synchronizing both ends of a bidirectional one-to-many association) will have to be marked with the `@Transient` annotation.
 
-===== Overriding the default access strategy
+==== Overriding the default access strategy
 
-The default access strategy mechanism can be overridden with the JPA `@Access` annotation.
+The default access strategy mechanism can be overridden with the Jakarta Persistence `@Access` annotation.
 In the following example, the `@Version` attribute is accessed by its field and not by its getter, like the rest of entity attributes.
 
 [[access-property-override-mapping-example]]
@@ -66,12 +68,12 @@ In the following example, the `@Version` attribute is accessed by its field and 
 ====
 [source,java]
 ----
-include::{sourcedir}/PropertyAccessOverrideTest.java[tag=access-property-override-mapping-example, indent=0]
+include::{example-dir-access}/PropertyAccessOverrideTest.java[tag=access-property-override-mapping-example, indent=0]
 ----
 ====
 
 [[access-embeddable-types]]
-===== Embeddable types and access strategy
+==== Embeddable types and access strategy
 
 Because embeddables are managed by their owning entities, the access strategy is therefore inherited from the entity too.
 This applies to both simple embeddable types as well as for collection of embeddables.
@@ -84,7 +86,7 @@ In the following example, the embeddable uses property-based access, no matter w
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableAccessTest.java[tag=access-embeddable-mapping-example, indent=0]
+include::{example-dir-access}/EmbeddableAccessTest.java[tag=access-embeddable-mapping-example, indent=0]
 ----
 ====
 
@@ -95,7 +97,7 @@ The owning entity can use field-based access while the embeddable uses property-
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableAccessTest.java[tag=access-embedded-mapping-example, indent=0]
+include::{example-dir-access}/EmbeddableAccessTest.java[tag=access-embedded-mapping-example, indent=0]
 ----
 ====
 
@@ -106,6 +108,6 @@ This works also for collection of embeddable types:
 ====
 [source,java]
 ----
-include::{sourcedir}/ElementCollectionAccessTest.java[tag=access-element-collection-mapping-example, indent=0]
+include::{example-dir-access}/ElementCollectionAccessTest.java[tag=access-element-collection-mapping-example, indent=0]
 ----
 ====

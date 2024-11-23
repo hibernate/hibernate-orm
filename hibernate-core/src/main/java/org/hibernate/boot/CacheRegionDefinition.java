@@ -1,23 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
 /**
- * Models the definition of caching settings for a particular region.  Generally as found in either:<ul>
+ * Models the definition of caching settings for a particular region.  Generally found in:<ul>
  *     <li>{@code cfg.xml}</li>
+ *     <li>annotations</li>
+ *     <li>{@code orm.xml}</li>
  *     <li>{@code hbm.xml}</li>
- *     <li>annotation</li>
  * </ul>
- * Though certainly other custom sources are acceptable too.
  *
  * @author Steve Ebersole
  */
 public class CacheRegionDefinition {
-	public static enum CacheRegionType {
+	public enum CacheRegionType {
 		ENTITY,
 		COLLECTION,
 		QUERY

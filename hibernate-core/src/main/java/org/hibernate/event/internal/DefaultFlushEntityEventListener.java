@@ -67,9 +67,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	/**
-	 * make sure user didn't mangle the id
+	 * Make sure user didn't mangle the id.
 	 */
-	public void checkId(Object object, EntityPersister persister, Object id, SessionImplementor session)
+	public void checkId(Object object, EntityPersister persister, Object id, Status status, SessionImplementor session)
 			throws HibernateException {
 
 		if ( id instanceof DelayedPostInsertIdentifier ) {
@@ -79,22 +79,17 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 
 		final Object oid = persister.getIdentifier( object, session );
-
 		if ( id == null ) {
 			throw new AssertionFailure( "null id in " + persister.getEntityName()
 					+ " entry (don't flush the Session after an exception occurs)" );
 		}
-
-		//Small optimisation: always try to avoid getIdentifierType().isEqual(..) when possible.
-		//(However it's not safe to invoke the equals() method as it might trigger side-effects)
-		if ( id == oid ) {
-			//No further checks necessary:
-			return;
-		}
-
-		if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
+		// Small optimisation: always try to avoid getIdentifierType().isEqual(..) when possible.
+		// (However it's not safe to invoke the equals() method as it might trigger side effects.)
+		else if ( id != oid
+				&& !status.isDeletedOrGone()
+				&& !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
 			throw new HibernateException( "identifier of an instance of " + persister.getEntityName()
-					+ " was altered from " + oid + " to " + id );
+										+ " was altered from " + oid + " to " + id );
 		}
 	}
 
@@ -177,9 +172,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 		else {
 			final EntityPersister persister = entry.getPersister();
-			checkId( entity, persister, entry.getId(), session );
+			checkId( entity, persister, entry.getId(), entry.getStatus(), session );
 			// grab its current state
-			Object[] values = persister.getValues( entity );
+			final Object[] values = persister.getValues( entity );
 			checkNaturalId( persister, entity, entry, values, loadedState, session );
 			return values;
 		}

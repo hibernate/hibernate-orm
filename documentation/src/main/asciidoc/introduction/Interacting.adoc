@@ -301,6 +301,14 @@ The persistence context is fragile.
 If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
 ====
 
+[CAUTION]
+====
+Some of these operations require slightly more care than others.
+When you call `detach()`, `clear()`, `flush()`, or `refresh()`, you've already strayed from the narrow path.
+You didn't stray far--and you probably had a good reason for going there--but you're in territory where Hibernate just has to assume you know what you're doing.
+If you start to feel that this terrain is bogging you down, consider using a <<stateless-sessions,stateless session>>.
+====
+
 Four of these operations accept _options_, allowing influence over their behavior.
 
 [%breakable,cols="50,~"]

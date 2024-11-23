@@ -1393,6 +1393,57 @@ The `Connection` passed to the work is the same connection being used by the ses
 In a container environment where transactions and database connections are managed by the container, this might not be the easiest way to obtain the JDBC connection.
 ====
 
+[[callbacks]]
+=== Lifecycle callbacks and entity listeners
+
+The annotations `@PrePersist`, `@PreRemove`, `@PreUpdate`, `@PostPersist`, `@PostRemove`, `@PostUpdate`, and `@PostLoad` allow an entity to respond to persistence lifecycle operations and maintain its transient internal state.
+For example:
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+    transient double total;
+
+    @PostLoad
+    void computeTotal() {
+        total = items.stream().mapToDouble(i -> i.price * i.quantity).sum();
+    }
+
+    ...
+}
+----
+
+If we need to interact with technical objects, we can place the lifecycle callback on a separate class, called an _entity listener_.
+The `@EntityListeners` annotation specifies the listeners for a given entity class:
+
+[source,java]
+----
+@Entity
+@EntityListeners(OrderEvents.class)
+class Order { ... }
+----
+
+An entity listener may inject CDI beans:
+
+[source,java]
+----
+// entity listener class
+class OrderEvents {
+    @Inject
+    Event<NewOrder> newOrderEvent;
+
+    @PostPersist
+    void newOrder(Order order) {
+        // send a CDI event
+        newOrderEvent.fire(new NewOrder(order));
+    }
+}
+----
+A single entity listener class may even be a generic listener that receives lifecycle callbacks for multiple different entity classes.
+
+
 [[advice]]
 === What to do when things go wrong
 

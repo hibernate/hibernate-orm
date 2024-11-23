@@ -27,7 +27,7 @@ public class DynamicBatchingEntityLoader extends BatchingEntityLoader {
 	private static final Logger log = Logger.getLogger( DynamicBatchingEntityLoader.class );
 
 	private final int maxBatchSize;
-	private final EntityLoader.Builder entityLoaderBuilder;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 
 	public DynamicBatchingEntityLoader(
 			OuterJoinLoadable persister,
@@ -37,10 +37,7 @@ public class DynamicBatchingEntityLoader extends BatchingEntityLoader {
 			LoadQueryInfluencers loadQueryInfluencers) {
 		super( persister );
 		this.maxBatchSize = maxBatchSize;
-
-		entityLoaderBuilder = EntityLoader.forEntity( persister )
-				.withInfluencers( loadQueryInfluencers )
-				.withLockOptions( lockOptions );
+		this.loadQueryInfluencers = loadQueryInfluencers;
 	}
 
 	@Override
@@ -67,7 +64,12 @@ public class DynamicBatchingEntityLoader extends BatchingEntityLoader {
 			log.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister(), idsToLoad, session.getFactory() ) );
 		}
 
-		final EntityLoader dynamicLoader = entityLoaderBuilder.withBatchSize( idsToLoad.length ).byPrimaryKey();
+
+		final EntityLoader dynamicLoader = EntityLoader.forEntity( (OuterJoinLoadable) persister() )
+				.withInfluencers( loadQueryInfluencers )
+				.withLockOptions( lockOptions )
+				.withBatchSize( idsToLoad.length )
+				.byPrimaryKey();
 
 		final List<?> results = dynamicLoader.loadEntityBatch(
 				session,

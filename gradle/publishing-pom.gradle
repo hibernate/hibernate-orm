@@ -20,25 +20,25 @@ publishing {
 			pom {
 				name = 'Hibernate ORM - ' + project.name
 				description = project.description
-				url = 'http://hibernate.org/orm'
+				url = 'https://hibernate.org/orm'
 
 				organization {
 					name = 'Hibernate.org'
-					url = 'http://hibernate.org'
+					url = 'https://hibernate.org'
 				}
 
 				licenses {
 					license {
 						name = 'GNU Library General Public License v2.1 or later'
-						url = 'http://www.opensource.org/licenses/LGPL-2.1'
-						comments = 'See discussion at http://hibernate.org/community/license/ for more details.'
+						url = 'https://www.opensource.org/licenses/LGPL-2.1'
+						comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
 						distribution = 'repo'
 					}
 				}
 
 				scm {
-					url = 'http://github.com/hibernate/hibernate-orm'
-					connection = 'scm:git:http://github.com/hibernate/hibernate-orm.git'
+					url = 'https://github.com/hibernate/hibernate-orm'
+					connection = 'scm:git:https://github.com/hibernate/hibernate-orm.git'
 					developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
 				}
 
@@ -52,7 +52,7 @@ publishing {
 						id = 'hibernate-team'
 						name = 'The Hibernate Development Team'
 						organization = 'Hibernate.org'
-						organizationUrl = 'http://hibernate.org'
+						organizationUrl = 'https://hibernate.org'
 					}
 				}
 

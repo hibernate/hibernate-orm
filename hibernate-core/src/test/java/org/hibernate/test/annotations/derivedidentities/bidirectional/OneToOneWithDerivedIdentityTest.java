@@ -11,6 +11,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -18,7 +19,6 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -80,7 +80,6 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14389")
-	@FailureExpected( jiraKey = "HHH-14389")
 	public void testFindById() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -95,13 +94,15 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 		assertEquals( foo.getId(), bar.getFoo().getId() );
 
 		s.clear();
-		Bar newBar = s.find( Bar.class, foo );
-		assertNotNull( newBar );
-		assertNotNull( newBar.getFoo() );
-		assertSame( foo, newBar.getFoo() );
-		assertEquals( foo.getId(), newBar.getFoo().getId() );
-		assertEquals( "Some details", newBar.getDetails() );
-		s.getTransaction().rollback();
+		try {
+			s.find( Bar.class, foo );
+			fail( "Should have thrown IllegalArgumentException" );
+		}
+		catch(IllegalArgumentException expected) {
+		}
+		finally {
+			s.getTransaction().rollback();
+		}
 		s.close();
 	}
 

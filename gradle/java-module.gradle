@@ -21,7 +21,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
  * Support for modules that contain Java code
  */
 
-apply from: rootProject.file( 'gradle/base-information.gradle' )
 apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
@@ -72,8 +71,7 @@ dependencies {
 	testCompile( libraries.byteman_install )
 	testCompile( libraries.byteman_bmunit )
 
-	testRuntime( libraries.log4j )
-	testRuntime( libraries.javassist )
+	testRuntime( libraries.log4j2 )
 	testRuntime( libraries.byteBuddy )
 
 	//Databases
@@ -81,16 +79,13 @@ dependencies {
 	testRuntime( libraries.derby )
 	testRuntime( libraries.hsqldb )
 	testRuntime( libraries.postgresql )
-	testRuntime( libraries.mysql )
-	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.informix )
-	testRuntime( libraries.hana )
 	testRuntime( libraries.cockroachdb )
+	testRuntime( libraries.oracle )
+	testRuntime( libraries.sybase )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
-
-	testRuntime( libraries.oracle )
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
@@ -100,6 +95,12 @@ dependencies {
 	}
 	else if ( db.startsWith( 'hana' ) ) {
 		testRuntime( libraries.hana )
+	}
+	else if ( db.startsWith( 'mysql' ) ) {
+		testRuntimeOnly libraries.mysql
+	}
+	else if ( db.startsWith( 'mariadb' ) ) {
+		testRuntimeOnly libraries.mariadb
 	}
 
 	// Mac-specific
@@ -138,6 +139,8 @@ else {
 			options.compilerArgs << gradle.ext.javaVersions.main.release.toString()
 		} else {
 			options.release = gradle.ext.javaVersions.main.release.asInt()
+			// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
+			options.forkOptions.jvmArgs.addAll( ["--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"] )
 		}
 	}
 	tasks.compileTestJava.configure {
@@ -148,6 +151,8 @@ else {
 			options.compilerArgs << gradle.ext.javaVersions.test.release.toString()
 		} else {
 			options.release = gradle.ext.javaVersions.test.release.asInt()
+			// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
+			options.forkOptions.jvmArgs.addAll( ["--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"] )
 		}
 	}
 
@@ -287,11 +292,13 @@ test {
 	systemProperty 'user.country', 'US'
 	systemProperty 'user.timezone', 'UTC'
 	systemProperty 'file.encoding', 'UTF-8'
+	// Needed for AdoptOpenJDK on alpine? The problem is similar to this: https://github.com/mockito/mockito/issues/978
+	jvmArgs '-XX:+StartAttachListener'
 }
 
-// Enable the experimental features of ByteBuddy with JDK 15+
+// Enable the experimental features of ByteBuddy with JDK 19+
 test {
-	if ( gradle.ext.javaVersions.test.release.asInt() >= 15 ) {
+	if ( gradle.ext.javaVersions.test.release.asInt() >= 19 ) {
 		logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
 				 " Setting 'net.bytebuddy.experimental=true'." )
 		systemProperty 'net.bytebuddy.experimental', true

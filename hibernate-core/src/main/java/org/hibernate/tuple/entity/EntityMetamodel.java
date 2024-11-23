@@ -20,6 +20,7 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -36,6 +37,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
@@ -131,8 +133,8 @@ public class EntityMetamodel implements Serializable {
 	public EntityMetamodel(
 			PersistentClass persistentClass,
 			EntityPersister persister,
-			SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+			PersisterCreationContext creationContext) {
+		this.sessionFactory = creationContext.getSessionFactory();
 
 		name = persistentClass.getEntityName();
 		rootName = persistentClass.getRootClass().getEntityName();
@@ -169,8 +171,8 @@ public class EntityMetamodel implements Serializable {
 					persistentClass,
 					idAttributeNames,
 					nonAggregatedCidMapper,
-					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
-					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
+					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled(),
+					creationContext
 			);
 		}
 		else {
@@ -233,7 +235,8 @@ public class EntityMetamodel implements Serializable {
 						sessionFactory,
 						i,
 						prop,
-						bytecodeEnhancementMetadata.isEnhancedForLazyLoading()
+						bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
+						creationContext
 				);
 			}
 
@@ -252,7 +255,12 @@ public class EntityMetamodel implements Serializable {
 			boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 					prop,
 					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-					sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+					(entityName) -> {
+						final MetadataImplementor metadata = creationContext.getMetadata();
+						final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+						assert entityBinding != null;
+						return entityBinding.hasSubclasses();
+					},
 					sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 			);
 
@@ -387,9 +395,7 @@ public class EntityMetamodel implements Serializable {
 		hasSubclasses = persistentClass.hasSubclasses();
 
 		optimisticLockStyle = persistentClass.getOptimisticLockStyle();
-		final boolean isAllOrDirty =
-				optimisticLockStyle == OptimisticLockStyle.ALL
-						|| optimisticLockStyle == OptimisticLockStyle.DIRTY;
+		final boolean isAllOrDirty = optimisticLockStyle.isAllOrDirty();
 		if ( isAllOrDirty && !dynamicUpdate ) {
 			throw new MappingException( "optimistic-lock=all|dirty requires dynamic-update=\"true\": " + name );
 		}

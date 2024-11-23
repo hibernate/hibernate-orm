@@ -32,6 +32,8 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -43,28 +45,39 @@ import static org.junit.Assert.assertFalse;
 public class NaturalIdInUninitializedAssociationTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	public void testImmutableNaturalId() {
+	public void testLoad() {
 		inTransaction(
 				session -> {
-					final AnEntity e = session.get( AnEntity.class, 3 );
-					assertFalse( Hibernate.isPropertyInitialized( e,"entityImmutableNaturalId" ) );
-				}
-		);
+					final AnEntity e = session.byId( AnEntity.class ).load(3 );
+					assertTrue( Hibernate.isInitialized( e ) );
 
-		inTransaction(
-				session -> {
-					final AnEntity e = session.get( AnEntity.class, 3 );
+					// because we can (enhanced) proxy both EntityMutableNaturalId and EntityImmutableNaturalId
+					// we will select their FKs and all attributes will be "bytecode initialized"
+					assertTrue( Hibernate.isPropertyInitialized( e,"entityMutableNaturalId" ) );
+					assertTrue( Hibernate.isPropertyInitialized( e,"entityImmutableNaturalId" ) );
+
+					assertEquals( "mutable name", e.entityMutableNaturalId.name );
 					assertEquals( "immutable name", e.entityImmutableNaturalId.name );
 				}
 		);
 	}
 
 	@Test
-	public void testMutableNaturalId() {
+	public void testGetReference() {
 		inTransaction(
 				session -> {
-					final AnEntity e = session.get( AnEntity.class, 3 );
-					assertFalse( Hibernate.isPropertyInitialized( e,"entityMutableNaturalId" ) );
+					final AnEntity e = session.byId( AnEntity.class ).getReference( 3 );
+					assertFalse( Hibernate.isInitialized( e ) );
+
+					// trigger initialization
+					Hibernate.initialize( e );
+					// silly, but...
+					assertTrue( Hibernate.isInitialized( e ) );
+
+					// because we can (enhanced) proxy both EntityMutableNaturalId and EntityImmutableNaturalId
+					// we will select their FKs and all attributes will be "bytecode initialized"
+					assertTrue( Hibernate.isPropertyInitialized( e,"entityMutableNaturalId" ) );
+					assertTrue( Hibernate.isPropertyInitialized( e,"entityImmutableNaturalId" ) );
 				}
 		);
 

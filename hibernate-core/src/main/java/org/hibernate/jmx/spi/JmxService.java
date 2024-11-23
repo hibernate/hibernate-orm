@@ -15,7 +15,11 @@ import org.hibernate.service.spi.Manageable;
  * Service providing simplified access to JMX related features needed by Hibernate.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Scheduled for removal in 6.0; see https://hibernate.atlassian.net/browse/HHH-14847
+ * and https://hibernate.atlassian.net/browse/HHH-14846
  */
+@Deprecated
 public interface JmxService extends Service {
 	/**
 	 * Handles registration of a manageable service.

@@ -10,8 +10,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -20,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement character stream handling")
 public class ClobStringTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

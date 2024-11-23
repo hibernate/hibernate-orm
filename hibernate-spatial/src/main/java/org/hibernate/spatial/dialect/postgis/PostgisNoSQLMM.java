@@ -23,7 +23,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 	public PostgisNoSQLMM() {
 
 		registerColumnType(
-				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
+				PGGeometryTypeDescriptor.INSTANCE_WKB_1.getSqlType(),
 				"GEOMETRY"
 		);
 

@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.LockOptions;
+import org.hibernate.WrongClassException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
@@ -19,6 +19,7 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -96,10 +97,11 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The entity from the cache, or null.
 	 */
 	protected Serializable resolveFromCache(final ResolveNaturalIdEvent event) {
-		return event.getSession().getPersistenceContextInternal().getNaturalIdHelper().findCachedNaturalIdResolution(
-				event.getEntityPersister(),
-				event.getOrderedNaturalIdValues()
-		);
+		return event.getSession().getPersistenceContextInternal().getNaturalIdHelper()
+				.findCachedNaturalIdResolution(
+						event.getEntityPersister(),
+						event.getOrderedNaturalIdValues()
+				);
 	}
 
 	/**
@@ -120,29 +122,46 @@ public class DefaultResolveNaturalIdEventListener
 			startTime = System.nanoTime();
 		}
 
-		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
-				event.getOrderedNaturalIdValues(),
-				event.getLockOptions(),
-				session
-		);
+		Object[] naturalIdValues = event.getOrderedNaturalIdValues();
+
+		final Serializable pk;
+		EntityPersister persister = event.getEntityPersister();
+		LockOptions lockOptions = event.getLockOptions();
+		if ( persister instanceof UniqueKeyLoadable) {
+			UniqueKeyLoadable rootPersister = (UniqueKeyLoadable)
+					persister.getFactory().getMetamodel().entityPersister( persister.getRootEntityName() );
+			Object entity = rootPersister.loadByNaturalId( naturalIdValues, lockOptions, session );
+			if ( entity == null ) {
+				pk = null;
+			}
+			else {
+				if ( !persister.isInstance(entity) ) {
+					throw new WrongClassException(
+							"loaded object was of wrong class " + entity.getClass(),
+							naturalIdValues,
+							persister.getEntityName()
+					);
+				}
+				pk = persister.getIdentifier( entity, session );
+			}
+		}
+		else {
+			pk = persister.loadEntityIdByNaturalId( naturalIdValues, lockOptions, session );
+		}
 
 		if ( stats ) {
 			final long endTime = System.nanoTime();
 			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			statistics.naturalIdQueryExecuted(
-					event.getEntityPersister().getRootEntityName(),
+					persister.getRootEntityName(),
 					milliseconds
 			);
 		}
 
 		//PK can be null if the entity doesn't exist
 		if (pk != null) {
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
-					event.getEntityPersister(),
-					pk,
-					event.getOrderedNaturalIdValues()
-			);
+			session.getPersistenceContextInternal().getNaturalIdHelper()
+					.cacheNaturalIdCrossReferenceFromLoad( persister, pk, naturalIdValues );
 		}
 
 		return pk;

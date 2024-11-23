@@ -18,11 +18,10 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * Base class for actions relating to insert/update/delete of an entity
@@ -32,7 +31,6 @@ import org.jboss.logging.Logger;
  */
 public abstract class EntityAction
 		implements Executable, Serializable, Comparable, AfterTransactionCompletionProcess {
-	private static final Logger LOG = Logger.getLogger(EntityAction.class);
 
 	private final String entityName;
 	private final Serializable id;
@@ -189,6 +187,11 @@ public abstract class EntityAction
 		}
 	}
 
+	/**
+	 * @deprecated This will be removed as it's not very efficient. If you need access to EventListenerGroup(s),
+	 * use the direct references from {@link #getFastSessionServices()}.
+	 */
+	@Deprecated
 	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
 		return getSession()
 				.getFactory()
@@ -200,4 +203,13 @@ public abstract class EntityAction
 	protected EventSource eventSource() {
 		return (EventSource) getSession();
 	}
+
+	/**
+	 * Convenience method for all subclasses.
+	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 */
+	protected FastSessionServices getFastSessionServices() {
+		return session.getFactory().getFastSessionServices();
+	}
+
 }

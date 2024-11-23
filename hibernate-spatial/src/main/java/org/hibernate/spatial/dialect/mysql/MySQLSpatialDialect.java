@@ -6,6 +6,7 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
@@ -93,7 +94,10 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 
 	@Override
 	public String getDWithinSQL(String columnName) {
-		throw new UnsupportedOperationException( String.format( "Mysql doesn't support the Dwithin function" ) );
+		throw new UnsupportedOperationException( String.format(
+				Locale.ENGLISH,
+				"Mysql doesn't support the Dwithin function"
+		) );
 	}
 
 	@Override

@@ -19,7 +19,7 @@ public class InformixLimitHandlerTestCase extends
 
 	private Informix10LimitHandler informixLimitHandler;
 
-	private final String TEST_SQL = "SELECT field FROM table";
+	private final String TEST_SQL = "select field from table";
 
 	@Before
 	public void setup() {
@@ -29,10 +29,10 @@ public class InformixLimitHandlerTestCase extends
 	@Test
 	@TestForIssue(jiraKey = "HHH-11509")
 	public void testCorrectLimit() {
-		assertLimitHandlerEquals( "SELECT FIRST 10 field FROM table", 0, 10 );
-		assertLimitHandlerEquals( "SELECT SKIP 3 FIRST 5 field FROM table", 3, 5 );
-		assertLimitHandlerEquals( "SELECT SKIP 10 FIRST 5 field FROM table", 10, 5 );
-		assertLimitHandlerEquals( "SELECT SKIP 55 FIRST 12 field FROM table", 55, 12 );
+		assertLimitHandlerEquals( "select first 10 field from table", 0, 10 );
+		assertLimitHandlerEquals( "select skip 3 first 5 field from table", 3, 5 );
+		assertLimitHandlerEquals( "select skip 10 first 5 field from table", 10, 5 );
+		assertLimitHandlerEquals( "select skip 55 first 12 field from table", 55, 12 );
 	}
 
 	private void assertLimitHandlerEquals(String sql, int firstRow, int maxRows) {

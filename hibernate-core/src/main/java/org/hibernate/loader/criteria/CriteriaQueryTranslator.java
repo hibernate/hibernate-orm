@@ -9,12 +9,10 @@ package org.hibernate.loader.criteria;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,9 +27,7 @@ import org.hibernate.QueryException;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.EnhancedProjection;
-import org.hibernate.criterion.ParameterInfoCollector;
 import org.hibernate.criterion.Projection;
-import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,12 +37,14 @@ import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
 
@@ -531,14 +529,77 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	@Override
-	public String[] getColumns(
-			String propertyName,
-			Criteria subcriteria) throws HibernateException {
-		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
-				.toColumns(
-						getSQLAlias( subcriteria, propertyName ),
-						getPropertyName( propertyName )
-				);
+	public Type getForeignKeyType(Criteria criteria, String associationPropertyName) {
+		final Type propertyType = ( (Loadable) getPropertyMapping( getEntityName( criteria ) ) ).getPropertyType(	associationPropertyName );
+		if ( !( propertyType instanceof ManyToOneType ) ) {
+			throw new QueryException(
+					"Argument to fk() function must be the fk owner of a to-one association, but found " + propertyType
+			);
+		}
+		return ( (ManyToOneType) propertyType ).getIdentifierOrUniqueKeyType( getFactory() );
+	}
+
+	@Override
+	public String[] getForeignKeyColumns(Criteria criteria, String associationPropertyName) {
+		final PropertyMapping propertyMapping = getPropertyMapping( getEntityName( criteria ) );
+
+		assert propertyMapping instanceof EntityPersister;
+		final Type propertyType = ((EntityPersister) propertyMapping).getPropertyType( associationPropertyName );
+		if ( !( propertyType instanceof ManyToOneType ) ) {
+			throw new QueryException(
+					"Argument to fk() function must be the fk owner of a to-one association, but found " + propertyType
+			);
+		}
+
+		return propertyMapping.toColumns( getSQLAlias( criteria, associationPropertyName ), associationPropertyName );
+	}
+
+	@Override
+	public TypedValue getForeignKeyTypeValue(Criteria criteria, String associationPropertyName, Object value) {
+		return new TypedValue( getForeignKeyType( criteria, associationPropertyName ), value );
+	}
+
+	@Override
+	public String[] getColumns(String propertyName, Criteria subcriteria) throws HibernateException {
+		try {
+			return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
+					.toColumns( getSQLAlias( subcriteria, propertyName ), getPropertyName( propertyName ) );
+		}
+		catch (QueryException qe) {
+			if ( propertyName.indexOf( '.' ) > 0 ) {
+				final String propertyRootName = StringHelper.root( propertyName );
+				final CriteriaInfoProvider pathInfo = getPathInfo( propertyRootName );
+				final PropertyMapping propertyMapping = pathInfo.getPropertyMapping();
+				if ( propertyMapping instanceof EntityPersister ) {
+					final String name = propertyName.substring( propertyRootName.length() + 1 );
+					if ( ( (EntityPersister) propertyMapping ).getIdentifierPropertyName().equals( name ) ) {
+						final Criteria associationPathCriteria = associationPathCriteriaMap.get( propertyRootName );
+						if ( associationPathCriteria == null ) {
+							final Criteria criteria = addInnerJoin( subcriteria, propertyRootName, pathInfo );
+							return propertyMapping.toColumns( getSQLAlias( criteria, name ), name );
+						}
+						else {
+							return propertyMapping.toColumns( getSQLAlias( associationPathCriteria, name ), name );
+						}
+					}
+				}
+				throw qe;
+			}
+			else {
+				throw qe;
+			}
+		}
+	}
+
+	private Criteria addInnerJoin(Criteria subcriteria, String root, CriteriaInfoProvider pathInfo) {
+		final Criteria criteria = subcriteria.createCriteria( root, root, JoinType.INNER_JOIN );
+		aliasCriteriaMap.put( root, criteria );
+		associationPathCriteriaMap.put( root, criteria );
+		associationPathJoinTypesMap.put( root, JoinType.INNER_JOIN );
+		criteriaInfoMap.put( criteria, pathInfo );
+		nameCriteriaInfoMap.put( pathInfo.getName(), pathInfo );
+		criteriaSQLAliasMap.put( criteria, StringHelper.generateAlias( root, criteriaSQLAliasMap.size() ) );
+		return criteria;
 	}
 
 	/**
@@ -601,8 +662,28 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	@Override
 	public Type getType(Criteria subcriteria, String propertyName)
 			throws HibernateException {
-		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
-				.toType( getPropertyName( propertyName ) );
+		try {
+			return getPropertyMapping( getEntityName( subcriteria, propertyName ) )
+					.toType( getPropertyName( propertyName ) );
+		}
+		catch (QueryException qe) {
+			if ( propertyName.indexOf( '.' ) > 0 ) {
+				final String propertyRootName = StringHelper.root( propertyName );
+				final String name = propertyName.substring( propertyRootName.length() + 1 );
+				final Criteria associationPathCriteria = associationPathCriteriaMap.get( propertyRootName );
+				if ( associationPathCriteria != null ) {
+					final PropertyMapping propertyMapping = getPropertyMapping(
+							getEntityName( associationPathCriteria, propertyRootName )
+					);
+					if ( propertyMapping instanceof EntityPersister
+							&& ( (EntityPersister) propertyMapping ).getIdentifierPropertyName().equals( name ) ) {
+						return propertyMapping.toType( getPropertyName( name ) );
+					}
+				}
+				throw qe;
+			}
+			throw qe;
+		}
 	}
 
 	/**

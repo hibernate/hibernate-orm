@@ -12,13 +12,14 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-
+import org.hibernate.collection.spi.LazyInitializable;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class SortedMapProxy<K, V> implements SortedMap<K, V>, Serializable {
+public class SortedMapProxy<K, V> implements SortedMap<K, V>, LazyInitializable, Serializable {
+
 	private static final long serialVersionUID = 2645817952901452375L;
 
 	private transient Initializor<SortedMap<K, V>> initializor;
@@ -35,6 +36,16 @@ public class SortedMapProxy<K, V> implements SortedMap<K, V>, Serializable {
 		if ( delegate == null ) {
 			delegate = initializor.initialize();
 		}
+	}
+
+	@Override
+	public final boolean wasInitialized() {
+		return delegate != null;
+	}
+	
+	@Override
+	public final void forceInitialization() {
+		checkInit();
 	}
 
 	@Override
@@ -146,7 +157,7 @@ public class SortedMapProxy<K, V> implements SortedMap<K, V>, Serializable {
 	}
 
 	@Override
-	@SuppressWarnings({"EqualsWhichDoesntCheckParameterClass"})
+	@SuppressWarnings({ "EqualsWhichDoesntCheckParameterClass" })
 	public boolean equals(Object o) {
 		checkInit();
 		return delegate.equals( o );

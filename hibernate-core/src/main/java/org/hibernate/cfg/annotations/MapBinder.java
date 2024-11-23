@@ -23,13 +23,17 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
@@ -41,6 +45,8 @@ import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -56,6 +62,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Template;
 
 /**
@@ -87,16 +94,15 @@ public class MapBinder extends CollectionBinder {
 			final boolean isEmbedded,
 			final XProperty property,
 			final XClass collType,
-			final boolean ignoreNotFound,
+			final NotFoundAction notFoundAction,
 			final boolean unique,
 			final TableBinder assocTableBinder,
 			final MetadataBuildingContext buildingContext) {
 		return new CollectionSecondPass( buildingContext, MapBinder.this.collection ) {
-			public void secondPass(Map persistentClasses, Map inheritedMetas)
-					throws MappingException {
+			public void secondPass(Map persistentClasses, Map inheritedMetas) {
 				bindStarToManySecondPass(
 						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
-						isEmbedded, property, unique, assocTableBinder, ignoreNotFound, buildingContext
+						isEmbedded, property, unique, assocTableBinder, notFoundAction, buildingContext
 				);
 				bindKeyFromAssociationTable(
 						collType, persistentClasses, mapKeyPropertyName, property, isEmbedded, buildingContext,
@@ -412,6 +418,14 @@ public class MapBinder extends CollectionBinder {
 			MetadataBuildingContext buildingContext) {
 		Value element = collection.getElement();
 		String fromAndWhere = null;
+		final ServiceRegistry serviceRegistry = buildingContext.getBootstrapContext().getServiceRegistry();
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class);
+		final SqlStringGenerationContext generationContext = SqlStringGenerationContextImpl.fromExplicit(
+				serviceRegistry.getService( JdbcServices.class).getJdbcEnvironment(),
+				buildingContext.getMetadataCollector().getDatabase(),
+				configurationService.getSetting(AvailableSettings.DEFAULT_CATALOG, String.class, null),
+				configurationService.getSetting( AvailableSettings.DEFAULT_SCHEMA, String.class, null)
+		);
 		if ( !( element instanceof OneToMany ) ) {
 			String referencedPropertyName = null;
 			if ( element instanceof ToOne ) {
@@ -435,7 +449,7 @@ public class MapBinder extends CollectionBinder {
 				referencedEntityColumns = referencedProperty.getColumnIterator();
 			}
 			fromAndWhere = getFromAndWhereFormula(
-					associatedClass.getTable().getQualifiedTableName().toString(),
+					generationContext.format(associatedClass.getTable().getQualifiedTableName()),
 					element.getColumnIterator(),
 					referencedEntityColumns
 			);
@@ -444,9 +458,7 @@ public class MapBinder extends CollectionBinder {
 			// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
 			if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
 				fromAndWhere = getFromAndWhereFormula(
-						targetPropertyPersistentClass.getTable()
-								.getQualifiedTableName()
-								.toString(),
+						generationContext.format(targetPropertyPersistentClass.getTable().getQualifiedTableName()),
 						element.getColumnIterator(),
 						associatedClass.getIdentifier().getColumnIterator()
 				);

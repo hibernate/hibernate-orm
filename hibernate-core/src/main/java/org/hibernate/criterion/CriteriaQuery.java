@@ -8,6 +8,7 @@ package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.type.Type;
@@ -200,4 +201,16 @@ public interface CriteriaQuery {
 	 * @return The generated alias
 	 */
 	public String generateSQLAlias();
+
+	default Type getForeignKeyType(Criteria criteria, String associationPropertyName){
+		throw new NotYetImplementedException("CriteriaQuery#getForeignKeyType() has not been yet implemented!");
+	}
+
+	default String[] getForeignKeyColumns(Criteria criteria, String associationPropertyName){
+		throw new NotYetImplementedException("CriteriaQuery#getForeignKeyColumns() has not been yet implemented!");
+	}
+
+	default TypedValue getForeignKeyTypeValue(Criteria criteria, String associationPropertyName, Object value){
+		throw new NotYetImplementedException("CriteriaQuery#getForeignKeyTypeValue() has not been yet implemented!");
+	}
 }

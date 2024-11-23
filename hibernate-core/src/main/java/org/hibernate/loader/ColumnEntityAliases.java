@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.loader;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.hibernate.persister.entity.Loadable;
@@ -35,6 +36,10 @@ public class ColumnEntityAliases extends DefaultEntityAliases {
 	}
 	
 	protected String[] getPropertyAliases(Loadable persister, int j) {
-		return persister.getPropertyColumnNames(j);
+		String[] propertyColumnNames = persister.getPropertyColumnNames(j);
+		if ( propertyColumnNames.length == 1 && propertyColumnNames[0] == null ) {
+			return new String[]{ persister.getPropertyNames()[j] };
+		}
+		return propertyColumnNames;
 	}
 }

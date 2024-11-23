@@ -14,6 +14,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -109,6 +111,7 @@ public class OneToOneCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-14216", message = "The changes introduces by HHH-14216 have been reverted see https://github.com/hibernate/hibernate-orm/pull/5061 discussion")
 	public void OneToOneCacheByForeignKey() throws Exception {
 		OneToOneTest(PersonByFK.class, DetailsByFK.class);
 	}

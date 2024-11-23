@@ -121,7 +121,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		final EventListenerGroup<PostInsertEventListener> group = listenerGroup( EventType.POST_COMMIT_INSERT );
+		final EventListenerGroup<PostInsertEventListener> group = getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
 		for ( PostInsertEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
@@ -142,57 +142,42 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected void postInsert() {
-		final EventSource eventSource = eventSource();
 		if ( isDelayed ) {
-			eventSource.getPersistenceContextInternal().replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
+			eventSource().getPersistenceContextInternal().replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 		}
-
-		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_INSERT );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostInsertEvent event = new PostInsertEvent(
-				getInstance(),
-				generatedId,
-				getState(),
-				getPersister(),
-				eventSource
-		);
-		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostInsert( event );
-		}
+		getFastSessionServices()
+				.eventListenerGroup_POST_INSERT
+				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
 
-	protected void postCommitInsert(boolean success) {
-		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostInsertEvent event = new PostInsertEvent(
+	PostInsertEvent newPostInsertEvent() {
+		return new PostInsertEvent(
 				getInstance(),
 				generatedId,
 				getState(),
 				getPersister(),
 				eventSource()
 		);
-		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitInsertEventListener.class.isInstance( listener ) ) {
-				if ( success ) {
-					listener.onPostInsert( event );
-				}
-				else {
-					((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
-				}
-			}
-			else {
-				//default to the legacy implementation that always fires the event
-				listener.onPostInsert( event );
-			}
+	}
+
+	protected void postCommitInsert(boolean success) {
+		getFastSessionServices()
+			.eventListenerGroup_POST_COMMIT_INSERT
+			.fireLazyEventOnEachListener( this::newPostInsertEvent, success ? PostInsertEventListener::onPostInsert : this::postCommitInsertOnFailure );
+	}
+
+	private void postCommitInsertOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
+		if ( listener instanceof PostCommitInsertEventListener ) {
+			((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+		}
+		else {
+			//default to the legacy implementation that always fires the event
+			listener.onPostInsert( event );
 		}
 	}
 
 	protected boolean preInsert() {
-		final EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
+		final EventListenerGroup<PreInsertEventListener> listenerGroup = getFastSessionServices().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			// NO_VETO
 			return false;

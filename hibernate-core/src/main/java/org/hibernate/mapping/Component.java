@@ -16,7 +16,7 @@ import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -362,7 +362,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 				return prop;
 			}
 		}
-		throw new MappingException("component property not found: " + propertyName);
+		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
 	}
 
 	public String getRoleName() {
@@ -512,9 +512,12 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 		@Override
 		public void registerExportables(Database database) {
-			if ( ExportableProducer.class.isInstance( subGenerator ) ) {
-				( (ExportableProducer) subGenerator ).registerExportables( database );
-			}
+			subGenerator.registerExportables( database );
+		}
+
+		@Override
+		public void initialize(SqlStringGenerationContext context) {
+			subGenerator.initialize( context );
 		}
 	}
 

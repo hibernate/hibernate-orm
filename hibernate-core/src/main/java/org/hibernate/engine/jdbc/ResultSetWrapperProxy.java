@@ -27,9 +27,12 @@ import org.hibernate.service.ServiceRegistry;
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
  * has been found to be inefficient in a few vendor's drivers (i.e., Oracle and Postgres).
  *
+ * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
+ *
  * @author Steve Ebersole
  * @author Gail Badner
  */
+@Deprecated
 public class ResultSetWrapperProxy implements InvocationHandler {
 	private static final CoreMessageLogger LOG = messageLogger( ResultSetWrapperProxy.class );
 

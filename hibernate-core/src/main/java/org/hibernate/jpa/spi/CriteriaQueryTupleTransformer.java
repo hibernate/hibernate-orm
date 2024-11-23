@@ -10,6 +10,7 @@ import java.util.List;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
+import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.transform.BasicTransformerAdapter;
 
@@ -101,7 +102,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 		public <X> X get(String alias, Class<X> type) {
 			final Object untyped = get( alias );
 			if ( untyped != null ) {
-				if ( !type.isInstance( untyped ) ) {
+				if (!elementTypeMatches(type, untyped)) {
 					throw new IllegalArgumentException(
 							String.format(
 									"Requested tuple value [alias=%s, value=%s] cannot be assigned to requested type [%s]",
@@ -126,17 +127,25 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 
 		public <X> X get(int i, Class<X> type) {
 			final Object result = get( i );
-			if ( result != null && !type.isInstance( result ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Requested tuple value [index=%s, realType=%s] cannot be assigned to requested type [%s]",
-								i,
-								result.getClass().getName(),
-								type.getName()
-						)
-				);
+			if (result != null) {
+				if (!elementTypeMatches(type, result)) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Requested tuple value [index=%s, realType=%s] cannot be assigned to requested type [%s]",
+									i,
+									result.getClass().getName(),
+									type.getName()
+							)
+					);
+				}
 			}
 			return (X) result;
+		}
+
+		private <X> boolean elementTypeMatches(Class<X> type, Object untyped) {
+			return type.isInstance(untyped)
+					|| type.isPrimitive()
+					&& PrimitiveWrapperHelper.getDescriptorByPrimitiveType(type).getWrapperClass().isInstance(untyped);
 		}
 
 		public Object[] toArray() {

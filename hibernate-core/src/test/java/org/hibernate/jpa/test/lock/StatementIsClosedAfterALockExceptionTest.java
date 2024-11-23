@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@RequiresDialectFeature({DialectChecks.SupportsJdbcDriverProxying.class, DialectChecks.SupportsLockTimeouts.class})
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( false, false );
@@ -44,7 +44,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 	@Override
 	protected Map getConfig() {
 		Map config = super.getConfig();
-		CONNECTION_PROVIDER.setConnectionProvider( (ConnectionProvider) config.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 		config.put(
 			org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
 			CONNECTION_PROVIDER

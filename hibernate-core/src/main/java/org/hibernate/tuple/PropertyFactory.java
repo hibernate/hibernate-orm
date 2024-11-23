@@ -10,6 +10,7 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.internal.UnsavedValueFactory;
@@ -22,6 +23,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -155,7 +157,8 @@ public final class PropertyFactory {
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			Property property,
-			boolean lazyAvailable) {
+			boolean lazyAvailable,
+			PersisterCreationContext creationContext) {
 		final Type type = property.getValue().getType();
 
 		final NonIdentifierAttributeNature nature = decode( type );
@@ -174,7 +177,12 @@ public final class PropertyFactory {
 		final boolean lazy = ! EnhancementHelper.includeInBaseFetchGroup(
 				property,
 				lazyAvailable,
-				sessionFactoryOptions.isEnhancementAsProxyEnabled(),
+				(entityName) -> {
+					final MetadataImplementor metadata = creationContext.getMetadata();
+					final PersistentClass entityBinding = metadata.getEntityBinding( entityName );
+					assert entityBinding != null;
+					return entityBinding.hasSubclasses();
+				},
 				sessionFactoryOptions.isCollectionsInDefaultFetchGroupEnabled()
 		);
 

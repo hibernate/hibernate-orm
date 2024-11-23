@@ -58,7 +58,6 @@ public class LazyCollectionDeletedAllowProxyTest extends BaseNonConfigCoreFuncti
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
 
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 		ssrb.applySetting( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 	}

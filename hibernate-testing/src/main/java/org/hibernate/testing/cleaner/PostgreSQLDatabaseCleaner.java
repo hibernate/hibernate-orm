@@ -31,7 +31,8 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 	@Override
 	public boolean isApplicable(Connection connection) {
 		try {
-			return connection.getMetaData().getDatabaseProductName().startsWith( "PostgreSQL" );
+			return connection.getMetaData().getDatabaseProductName().startsWith( "PostgreSQL" )
+					&& isPostgresql( connection );
 		}
 		catch (SQLException e) {
 			throw new RuntimeException( "Could not resolve the database metadata!", e );
@@ -85,12 +86,26 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 			// Collect schema objects
 			String user = c.getMetaData().getUserName();
 			LOG.log( Level.FINEST, "Collect schema objects: START" );
+			Map<String, List<String>> schemaExtensions = new HashMap<>();
+			try (Statement s2 = c.createStatement()) {
+				rs = s2.executeQuery(
+						"SELECT ns.nspname, 'CREATE EXTENSION ' || e.extname || ' SCHEMA \"' || ns.nspname || '\"' FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
+				);
+				while ( rs.next() ) {
+					schemaExtensions.computeIfAbsent( rs.getString( 1 ), k -> new ArrayList<>() )
+							.add( rs.getString( 2 ) );
+				}
+			}
 			rs = schemasProvider.apply( s );
 			while ( rs.next() ) {
 				String schema = rs.getString( 1 );
 				sqls.add( "DROP SCHEMA \"" + schema + "\" CASCADE" );
 				sqls.add( "CREATE SCHEMA \"" + schema + "\"" );
 				sqls.add( "GRANT ALL ON SCHEMA \"" + schema + "\" TO \"" + user + "\"" );
+				List<String> extensions = schemaExtensions.get( schema );
+				if ( extensions != null ) {
+					sqls.addAll( extensions );
+				}
 			}
 			LOG.log( Level.FINEST, "Collect schema objects: END" );
 
@@ -195,6 +210,21 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 
 			throw new RuntimeException( e );
 		}
+	}
+
+	// We need this check to differentiate between Postgresql and Cockroachdb
+	private boolean isPostgresql(Connection connection) {
+		try (Statement stmt = connection.createStatement()) {
+			ResultSet rs = stmt.executeQuery( "select version() " );
+			while ( rs.next() ) {
+				String version = rs.getString( 1 );
+				return version.contains( "PostgreSQL" );
+			}
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
+		return false;
 	}
 
 }

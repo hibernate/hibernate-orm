@@ -43,7 +43,6 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "100" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
@@ -63,6 +62,9 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 
 	@Before
 	public void setUp() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = new User();
@@ -88,6 +90,9 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 
 	@Test
 	public void testIt() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = session.getReference( User.class, 1 );

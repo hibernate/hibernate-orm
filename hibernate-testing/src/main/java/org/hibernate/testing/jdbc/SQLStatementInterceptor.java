@@ -10,7 +10,9 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import static org.junit.Assert.assertEquals;
@@ -37,6 +39,20 @@ public class SQLStatementInterceptor {
 		} );
 	}
 
+	public SQLStatementInterceptor(StandardServiceRegistryBuilder ssrb) {
+		ssrb.applySetting(
+				AvailableSettings.STATEMENT_INSPECTOR,
+				(StatementInspector) sql -> {
+					sqlQueries.add( sql );
+					return sql;
+				}
+		);
+	}
+
+	public SQLStatementInterceptor(Configuration configuration) {
+		this( configuration.getProperties() );
+	}
+
 	public LinkedList<String> getSqlQueries() {
 		return sqlQueries;
 	}
@@ -51,5 +67,9 @@ public class SQLStatementInterceptor {
 
 	public void assertExecutedCount(int expected) {
 		assertEquals(expected, sqlQueries.size());
+	}
+
+	public int getQueryCount() {
+		return sqlQueries.size();
 	}
 }

@@ -14,6 +14,8 @@ public class GlobalTemporaryTableBulkCompositeIdTest extends AbstractBulkComposi
 
 	@Override
 	protected Class<? extends MultiTableBulkIdStrategy> getMultiTableBulkIdStrategyClass() {
-		return GlobalTemporaryTableBulkIdStrategy.class;
+		// Since we only allow dialects that support global temporary tables, we avoid overriding the strategy
+		// This is important because otherwise we would loose id table configurations that are made in the dialects
+		return null;
 	}
 }

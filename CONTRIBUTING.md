@@ -21,10 +21,10 @@ While we try to keep requirements for contributing to a minimum, there are a few
 we ask that you mind.
 
 For code contributions, these guidelines include:
-* respect the project code style - find templates for [IntelliJ IDEA](https://community.jboss.org/docs/DOC-15468) or [Eclipse](https://community.jboss.org/docs/DOC-16649)
+* respect the project code style - find templates for [IntelliJ IDEA](https://hibernate.org/community/contribute/intellij-idea/) or [Eclipse](https://hibernate.org/community/contribute/eclipse-ide/)
 * have a corresponding JIRA issue and the key for this JIRA issue should be used in the commit message
 * have a set of appropriate tests.  For bug reports, the tests reproduce the initial reported bug
-	and illustrates that the solution actually fixes the bug.  For features/enhancements, the 
+	and illustrate that the solution actually fixes the bug.  For features/enhancements, the 
 	tests illustrate the feature working as intended.  In both cases the tests are incorporated into
 	the project to protect against regressions
 * if applicable, documentation is updated to reflect the introduced changes
@@ -47,14 +47,14 @@ GitHub there are a few pre-requisite steps to follow:
 the linked page, this also includes:
     * [set up your local git install](https://help.github.com/articles/set-up-git) 
     * clone your fork
-* See the wiki pages for setting up your IDE, whether you use 
-[IntelliJ IDEA](https://community.jboss.org/wiki/ContributingToHibernateUsingIntelliJ)
-or [Eclipse](https://community.jboss.org/wiki/ContributingToHibernateUsingEclipse)<sup>(1)</sup>.
+* see the wiki pages for setting up your IDE, whether you use 
+[IntelliJ IDEA](https://hibernate.org/community/contribute/intellij-idea/)
+or [Eclipse](https://hibernate.org/community/contribute/eclipse-ide/)<sup>(1)</sup>.
 
 
 ## Create the working (topic) branch
 
-Create a [topic branch](http://git-scm.com/book/en/Git-Branching-Branching-Workflows#Topic-Branches) 
+Create a [topic branch](https://git-scm.com/book/en/Git-Branching-Branching-Workflows#Topic-Branches) 
 on which you will work.  The convention is to incorporate the JIRA issue key in the name of this branch,
 although this is more of a mnemonic strategy than a hard-and-fast rule - but doing so helps:
 * remember what each branch is for 
@@ -62,8 +62,8 @@ although this is more of a mnemonic strategy than a hard-and-fast rule - but doi
 
 _If there is not already a JIRA issue covering the work you want to do, create one._
   
-Assuming you will be working from the master branch and working
-on the JIRA HHH-123 : `git checkout -b HHH-123 master`
+Assuming you will be working from the `main` branch and working
+on the JIRA HHH-123 : `git checkout -b HHH-123 main`
 
 
 ## Code
@@ -87,7 +87,7 @@ appreciated btw), please use rebasing rather than merging.  Merging creates
 ## Submit
 
 * push your changes to the topic branch in your fork of the repository
-* initiate a [pull request](http://help.github.com/articles/creating-a-pull-request)
+* initiate a [pull request](https://help.github.com/articles/creating-a-pull-request)
 * update the JIRA issue by providing the PR link in the **Pull Request** column on the right
 
 

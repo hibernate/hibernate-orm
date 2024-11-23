@@ -65,7 +65,7 @@ public class CollectionBinderTest extends BaseUnitTestCase {
 
 		String expectMessage = "Association [abc] for entity [CollectionBinderTest] references unmapped class [List]";
 		try {
-			collectionBinder.bindOneToManySecondPass(collection, new HashMap(), null, collectionType, false, false, buildingContext, null);
+			collectionBinder.bindOneToManySecondPass(collection, new HashMap(), null, collectionType, false, null, buildingContext, null);
 		} catch (MappingException e) {
 			assertEquals(expectMessage, e.getMessage());
 		}

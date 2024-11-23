@@ -6,8 +6,10 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -17,11 +19,26 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface DatabaseStructure extends ExportableProducer {
+
 	/**
 	 * The name of the database structure (table or sequence).
+	 * @deprecated Use {@link #getPhysicalName()} instead.
+	 */
+	@Deprecated
+	default String getName() {
+		// Not a great implementation, but that'll have to do: it's only for backwards compatibility.
+		return getPhysicalName().render();
+	}
+
+	/**
+	 * The physical name of the database structure (table or sequence).
+	 * <p>
+	 * Only available after {@link #registerExportables(Database)}
+	 * has been called.
+	 *
 	 * @return The structure name.
 	 */
-	String getName();
+	QualifiedName getPhysicalName();
 
 	/**
 	 * How many times has this structure been accessed through this reference?
@@ -55,22 +72,45 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * but before first use.
 	 *
 	 * @param optimizer The optimizer being applied to the generator.
+	 *
+	 * @deprecated Use {@link #configure(Optimizer)} instead.
 	 */
-	void prepare(Optimizer optimizer);
+	@Deprecated
+	default void prepare(Optimizer optimizer) {
+	}
 
 	/**
-	 * Commands needed to create the underlying structures.
-	 * @param dialect The database dialect being used.
-	 * @return The creation commands.
+	 * Configures this structure with the given arguments.
+	 * <p>
+	 * Called just after instantiation, before {@link #initialize(SqlStringGenerationContext)}
+	 *
+	 * @param optimizer The optimizer being applied to the generator.
 	 */
-	String[] sqlCreateStrings(Dialect dialect);
+	default void configure(Optimizer optimizer) {
+		prepare( optimizer );
+	}
 
 	/**
-	 * Commands needed to drop the underlying structures.
-	 * @param dialect The database dialect being used.
-	 * @return The drop commands.
+	 * Register database objects involved in this structure, e.g. sequences, tables, etc.
+	 * <p>
+	 * This method is called just once, after {@link #configure(Optimizer)},
+	 * but before {@link #initialize(SqlStringGenerationContext)}.
+	 *
+	 * @param database The database instance
 	 */
-	String[] sqlDropStrings(Dialect dialect);
+	@Override
+	void registerExportables(Database database);
+
+	/**
+	 * Initializes this structure, in particular pre-generates SQL as necessary.
+	 * <p>
+	 * This method is called just once, after {@link #registerExportables(Database)},
+	 * before first use.
+	 *
+	 * @param context A context to help generate SQL strings
+	 */
+	default void initialize(SqlStringGenerationContext context) {
+	}
 
 	/**
 	 * Is the structure physically a sequence?
@@ -78,4 +118,12 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @return {@code true} if the actual database structure is a sequence; {@code false} otherwise.
 	 */
 	boolean isPhysicalSequence();
+
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public default String[] getAllSqlForTests() {
+		return new String[] { };
+	}
 }

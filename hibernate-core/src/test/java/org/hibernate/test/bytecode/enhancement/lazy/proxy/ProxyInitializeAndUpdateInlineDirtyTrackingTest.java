@@ -36,11 +36,6 @@ import static org.junit.Assert.assertTrue;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true,inlineDirtyChecking = true)
 public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
 
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {

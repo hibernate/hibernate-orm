@@ -38,8 +38,12 @@ public final class JdbcConnectionContext {
 			password = connectionProperties.getProperty(
 					AvailableSettings.PASS );
 			Properties p = new Properties();
-			p.put( "user", user );
-			p.put( "password", password );
+			if ( user != null ) {
+				p.put( "user", user );
+			}
+			if ( password != null ) {
+				p.put( "password", password );
+			}
 			properties = p;
 		}
 		catch (Exception e) {

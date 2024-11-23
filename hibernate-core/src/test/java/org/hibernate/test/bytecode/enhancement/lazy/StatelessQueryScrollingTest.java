@@ -175,12 +175,6 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Override
-	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
-		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
-	}
-
-	@Override
 	protected void applyMetadataSources(MetadataSources sources) {
 		super.applyMetadataSources( sources );
 		sources.addAnnotatedClass( Task.class );

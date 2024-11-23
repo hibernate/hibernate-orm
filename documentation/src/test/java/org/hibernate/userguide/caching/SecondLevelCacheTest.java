@@ -22,23 +22,27 @@ import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
 /**
  * @author Vlad Mihalcea
  */
-@Ignore
+
 //@FailureExpected( jiraKey = "HHH-12146", message = "No idea why those changes cause this to fail, especially in the way it does" )
 public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 
@@ -251,10 +255,89 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-14944") // issue is also reproduceable in Hibernate 5.4
+	public void testCacheVerifyHits() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist( new Person() );
+			Person aPerson= new Person();
+			aPerson.setName( "John Doe" );
+			aPerson.setCode( "unique-code" );
+			entityManager.persist( aPerson );
+			Session session = entityManager.unwrap(Session.class);
+			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			sfi.getStatistics().clear();
+			return aPerson;
+		});
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native load by natural-id, generate first hit");
+
+			Session session = entityManager.unwrap(Session.class);
+			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			//tag::caching-entity-natural-id-example[]
+			Person person = session
+					.byNaturalId(Person.class)
+					.using("code", "unique-code")
+					.load();
+
+			assertNotNull(person);
+			log.info("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			log.info("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
+			assertEquals(1, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals(1, sfi.getStatistics().getSecondLevelCacheHitCount());
+			//end::caching-entity-natural-id-example[]
+		});
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native load by natural-id, generate second hit");
+
+			Session session = entityManager.unwrap(Session.class);
+			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			//tag::caching-entity-natural-id-example[]
+			Person person = session.bySimpleNaturalId(Person.class).load("unique-code");
+			assertNotNull(person);
+
+			// resolve in persistence context (first level cache)
+			session.bySimpleNaturalId(Person.class).load("unique-code");
+			log.info("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			log.info("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
+			assertEquals(2, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals(2, sfi.getStatistics().getSecondLevelCacheHitCount());
+
+			session.clear();
+			//  persistence context (first level cache) empty, should resolve from second level cache
+			log.info("Native load by natural-id, generate third hit");
+			person = session.bySimpleNaturalId(Person.class).load("unique-code");
+			log.info("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			log.info("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
+			assertNotNull(person);
+			assertEquals(3, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals(3, sfi.getStatistics().getSecondLevelCacheHitCount());
+
+			//Remove the entity from the persistence context
+			Long id = person.getId();
+
+			entityManager.detach(person); // still it should resolve from second level cache after this
+
+			log.info("Native load by natural-id, generate 4. hit");
+			person = session.bySimpleNaturalId(Person.class).load("unique-code");
+			log.info("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals("we expected now 4 hits" , 4, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertNotNull(person);
+			session.delete(person); // evicts natural-id from first & second level cache
+			person = session.bySimpleNaturalId(Person.class).load("unique-code");
+			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount()); // thus hits should not increment
+
+			//end::caching-entity-natural-id-example[]
+		});
+	}
+
 	//tag::caching-entity-natural-id-mapping-example[]
 	@Entity(name = "Person")
 	@Cacheable
 	@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+	@NaturalIdCache
     public static class Person {
 
         @Id

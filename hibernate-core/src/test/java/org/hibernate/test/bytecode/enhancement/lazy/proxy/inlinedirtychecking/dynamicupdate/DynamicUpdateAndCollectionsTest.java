@@ -44,7 +44,6 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "100" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
@@ -66,6 +65,9 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 
 	@Before
 	public void setUp() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = new User();
@@ -92,7 +94,10 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 	}
 
 	@After
-	public void tearDwon() {
+	public void tearDown() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					session.createQuery( "delete from SamplingOrder" ).executeUpdate();
@@ -105,6 +110,9 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testLoad() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -128,6 +136,9 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testRemoveCustomers() {
+		if ( skipTest ) {
+			return;
+		}
 		Long samplingOrderId = fromTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
@@ -146,6 +157,9 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testAddUserRoles() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
@@ -207,6 +221,9 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testDeleteUserRoles() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );
@@ -226,6 +243,9 @@ public class DynamicUpdateAndCollectionsTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testModifyUserMail() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					SamplingOrder samplingOrder = getSamplingOrderFetchCustomer( session );

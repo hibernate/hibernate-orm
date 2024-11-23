@@ -22,7 +22,7 @@
              where="MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'">
             <key column="MAIN_ID"/>
             <many-to-many column="ASSOCIATION_ID" class="LazyManyToManyNonUniqueIdWhereTest$Rating"
-                    where="name = 'high' or name = 'medium'"/>
+                          where="NAME = 'high' or NAME = 'medium'"/>
         </bag>
 
         <set name="ratings" table="MATERIAL_RATINGS" lazy="true" mutable="false">
@@ -54,7 +54,7 @@
         <bag name="mediumOrHighRatings" table="BUILDING_RATINGS" lazy="true" mutable="false">
             <key column="BUILDING_ID"/>
             <many-to-many column="RATING_ID" class="LazyManyToManyNonUniqueIdWhereTest$Rating"
-                          where="name = 'high' or name = 'medium'"/>
+                          where="NAME = 'high' or NAME = 'medium'"/>
         </bag>
 
     </class>

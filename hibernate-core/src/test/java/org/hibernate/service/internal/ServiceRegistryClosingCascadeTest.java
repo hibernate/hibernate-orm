@@ -30,9 +30,9 @@ public class ServiceRegistryClosingCascadeTest extends BaseUnitTestCase {
 		StandardServiceRegistry sr = new StandardServiceRegistryBuilder(bsr).build();
 		assertTrue( ( (BootstrapServiceRegistryImpl) bsr ).isActive() );
 		Configuration config = new Configuration();
-		SessionFactory sf = config.buildSessionFactory( sr );
+		try (SessionFactory sf = config.buildSessionFactory( sr )) {
 
-		sf.close();
+		}
 		assertFalse( ( (BootstrapServiceRegistryImpl) bsr ).isActive() );
 	}
 }

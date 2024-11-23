@@ -31,13 +31,13 @@ public class InheritanceSchemaUpdateTest extends BaseUnitTestCase {
 	public void testBidirectionalOneToManyReferencingRootEntity() throws Exception {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 
-		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Step.class )
-				.addAnnotatedClass( GroupStep.class )
-				.buildMetadata();
-		metadata.validate();
-
 		try {
+			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+					.addAnnotatedClass( Step.class )
+					.addAnnotatedClass( GroupStep.class )
+					.buildMetadata();
+			metadata.validate();
+
 			try {
 				new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 			}

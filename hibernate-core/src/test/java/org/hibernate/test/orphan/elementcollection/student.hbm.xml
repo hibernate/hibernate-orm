@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN" 
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="org.hibernate.test.orphan.elementcollection.Student" table="STUDENT" lazy="true" >
+
+		<id name="id" column="id">
+			<generator class="assigned"/>
+		</id>
+		
+		<property name="firstName" column="FIRSTNAME" />
+		<property name="lastName" column="LASTNAME" />
+
+		<set name="enrolledClasses" table="STUDENT_CLASS" lazy="true" fetch="subselect" cascade="all">
+			<key column="STUDENT_ID" />
+			
+			<composite-element class="org.hibernate.test.orphan.elementcollection.StudentEnrolledClass" >
+				<many-to-one class="org.hibernate.test.orphan.elementcollection.EnrollableClass" name="enrolledClass" 
+				    column="ENROLLED_CLASS_ID" not-null="true" lazy="false" unique="false" cascade="none" />
+				<property name="classStartTime" column="STARTTIME" />
+				<many-to-one class="org.hibernate.test.orphan.elementcollection.EnrolledClassSeat" name="seat" 
+				    column="ENROLLED_CLASS_SEAT_ID" not-null="true" lazy="false" unique="true" cascade="all-delete-orphan" />
+			</composite-element>
+		</set>
+	</class>
+	
+	<class name="org.hibernate.test.orphan.elementcollection.EnrollableClass" lazy="true" >
+
+		<id name="id" column="id">
+			<generator class="assigned"/>
+		</id>
+		<property name="name" column="NAME" />
+	</class>
+
+	<class name="org.hibernate.test.orphan.elementcollection.EnrolledClassSeat" lazy="true" >
+		<id name="id" column="id">
+			<generator class="assigned"/>
+		</id>
+		<property name="row" column="SEAT_ROW" />
+		<property name="column" column="SEAT_COLUMN" />
+	</class>
+</hibernate-mapping>

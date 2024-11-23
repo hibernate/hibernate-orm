@@ -9,7 +9,9 @@ package org.hibernate.test.lob;
 import java.util.Arrays;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.SybaseASE15Dialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,6 +28,7 @@ public abstract class LongByteArrayTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
 
 	@Test
+	@SkipForDialect( value = SybaseASE15Dialect.class, comment = "Sybase doesn't support empty blobs")
 	public void testBoundedLongByteArrayAccess() {
 		byte[] original = buildRecursively( ARRAY_SIZE, true );
 		byte[] changed = buildRecursively( ARRAY_SIZE, false );

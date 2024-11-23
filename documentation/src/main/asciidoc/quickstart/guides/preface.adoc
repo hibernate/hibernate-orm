@@ -7,14 +7,14 @@ Working with both Object-Oriented software and Relational Databases can be cumbe
 Development costs are significantly higher due to a number of "paradigm mismatches" between how data is represented in objects
 versus relational databases.  Hibernate is an Object/Relational Mapping (ORM) solution for Java environments.  The
 term Object/Relational Mapping refers to the technique of mapping data between an object model representation to
-a relational data model representation.  See http://en.wikipedia.org/wiki/Object-relational_mapping for a good
-high-level discussion.  Also, Martin Fowler's link:$$http://martinfowler.com/bliki/OrmHate.html$$[OrmHate] article
+a relational data model representation.  See https://en.wikipedia.org/wiki/Object-relational_mapping for a good
+high-level discussion.  Also, Martin Fowler's link:$$https://martinfowler.com/bliki/OrmHate.html$$[OrmHate] article
 takes a look at many of the mismatch problems.
 
 Although having a strong background in SQL is not required to use Hibernate, having a basic understanding of the
 concepts can help you understand Hibernate more quickly and fully.  An understanding of data modeling principles
-is especially important.  Both http://www.agiledata.org/essays/dataModeling101.html and
-http://en.wikipedia.org/wiki/Data_modeling are good starting points for understanding these data modeling
+is especially important.  Both https://www.agiledata.org/essays/dataModeling101.html and
+https://en.wikipedia.org/wiki/Data_modeling are good starting points for understanding these data modeling
 principles.  If you are completely new to database access in Java,
 https://www.marcobehler.com/guides/a-guide-to-accessing-databases-in-java contains a good overview of the various parts,
 pieces and options.
@@ -33,6 +33,6 @@ logic in the Java-based middle-tier. However, Hibernate can certainly help you t
 vendor-specific SQL code and streamlines the common task of translating result sets from a tabular
 representation to a graph of objects.
 
-See http://hibernate.org/orm/contribute/ for information on getting involved.
+See https://hibernate.org/orm/contribute/ for information on getting involved.
 
 IMPORTANT: The projects and code for the tutorials referenced in this guide are available as link:hibernate-tutorials.zip[]

@@ -37,11 +37,9 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	 */
 	@Test
 	public void testWithoutIntegrator() {
-		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
+		try (SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
 				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" )
-				.buildSessionFactory();
-
-		try {
+				.buildSessionFactory()) {
 			Session sess = sf.openSession();
 			try {
 				sess.getTransaction().begin();
@@ -62,20 +60,14 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 			}
 			sess.close();
 		}
-		finally {
-			sf.close();
-		}
 	}
 
 	@Test
 	public void testWithTypeContributor() {
-		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
+		try (SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
 				.registerTypeContributor( new InvestorTypeContributor() )
 				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" )
-				.buildSessionFactory();
-
-		Session sess = sf.openSession();
-		try {
+				.buildSessionFactory(); Session sess = sf.openSession()) {
 			sess.getTransaction().begin();
 			Investor myInv = getInvestor();
 			myInv.setId( 2L );
@@ -86,13 +78,6 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 
 			Investor inv = (Investor) sess.get( Investor.class, 2L );
 			assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
-		}catch (Exception e){
-			sess.getTransaction().rollback();
-			throw e;
-		}
-		finally {
-			sess.close();
-			sf.close();
 		}
 	}
 

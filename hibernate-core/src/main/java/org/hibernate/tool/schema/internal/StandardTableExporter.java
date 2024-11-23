@@ -16,8 +16,9 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
@@ -35,23 +36,19 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Table table, Metadata metadata) {
+	public String[] getSqlCreateStrings(Table table, Metadata metadata,
+			SqlStringGenerationContext context) {
 		final QualifiedName tableName = new QualifiedNameParser.NameParts(
 				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
 				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
 				table.getNameIdentifier()
 		);
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		String formattedTableName = context.format( tableName );
 		StringBuilder buf =
 				new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 						.append( ' ' )
-						.append(
-								jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-										tableName,
-										jdbcEnvironment.getDialect()
-								)
-						)
+						.append( formattedTableName )
 						.append( " (" );
 
 
@@ -115,7 +112,7 @@ public class StandardTableExporter implements Exporter<Table> {
 				uk.addColumn( col );
 				buf.append(
 						dialect.getUniqueDelegate()
-								.getColumnDefinitionUniquenessFragment( col )
+								.getColumnDefinitionUniquenessFragment( col, context )
 				);
 			}
 
@@ -135,7 +132,7 @@ public class StandardTableExporter implements Exporter<Table> {
 					.append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table ) );
+		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
 
 		applyTableCheck( table, buf );
 
@@ -150,31 +147,48 @@ public class StandardTableExporter implements Exporter<Table> {
 		List<String> sqlStrings = new ArrayList<String>();
 		sqlStrings.add( buf.toString() );
 
-		applyComments( table, tableName, sqlStrings );
+		applyComments( table, formattedTableName, sqlStrings );
 
-		applyInitCommands( table, sqlStrings );
+		applyInitCommands( table, sqlStrings, context );
 
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
 
-	protected void applyComments(Table table, QualifiedName tableName, List<String> sqlStrings) {
+	/**
+	 * @param table The table.
+	 * @param tableName The qualified table name.
+	 * @param sqlStrings The list of SQL strings to add comments to.
+	 * @deprecated Use {@link #applyComments(Table, String, List)} instead.
+	 */
+	// For backwards compatibility with subclasses that happen to call this method...
+	@Deprecated
+	protected void applyComments(Table table, QualifiedTableName tableName, List<String> sqlStrings) {
+		applyComments( table, tableName.toString(), sqlStrings );
+	}
+
+	/**
+	 * @param table The table.
+	 * @param formattedTableName The formatted table name.
+	 * @param sqlStrings The list of SQL strings to add comments to.
+	 */
+	protected void applyComments(Table table, String formattedTableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
 			if ( table.getComment() != null ) {
-				sqlStrings.add( "comment on table " + tableName + " is '" + table.getComment() + "'" );
+				sqlStrings.add( "comment on table " + formattedTableName + " is '" + table.getComment() + "'" );
 			}
 			final Iterator iter = table.getColumnIterator();
 			while ( iter.hasNext() ) {
 				Column column = (Column) iter.next();
 				String columnComment = column.getComment();
 				if ( columnComment != null ) {
-					sqlStrings.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
+					sqlStrings.add( "comment on column " + formattedTableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
 				}
 			}
 		}
 	}
 
-	protected void applyInitCommands(Table table, List<String> sqlStrings) {
-		for ( InitCommand initCommand : table.getInitCommands() ) {
+	protected void applyInitCommands(Table table, List<String> sqlStrings, SqlStringGenerationContext context) {
+		for ( InitCommand initCommand : table.getInitCommands( context ) ) {
 			Collections.addAll( sqlStrings, initCommand.getInitCommands() );
 		}
 	}
@@ -200,7 +214,7 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Table table, Metadata metadata) {
+	public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
 		StringBuilder buf = new StringBuilder( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			buf.append( "if exists " );
@@ -211,8 +225,7 @@ public class StandardTableExporter implements Exporter<Table> {
 				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
 				table.getNameIdentifier()
 		);
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		buf.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( tableName, jdbcEnvironment.getDialect() ) )
+		buf.append( context.format( tableName ) )
 				.append( dialect.getCascadeConstraintsString() );
 
 		if ( dialect.supportsIfExistsAfterTableName() ) {

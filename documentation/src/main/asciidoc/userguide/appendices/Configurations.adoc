@@ -207,22 +207,22 @@ The number of seconds between two consecutive pool validations. During validatio
 === c3p0 properties
 
 `*hibernate.c3p0.min_size*` (e.g. 1)::
- Minimum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
+ Minimum size of C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
 
 `*hibernate.c3p0.max_size*` (e.g. 5)::
- Maximum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
+ Maximum size of C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
 
 `*hibernate.c3p0.timeout*` (e.g. 30)::
- Maximum idle time for C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
+ Maximum idle time for C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
 
 `*hibernate.c3p0.max_statements*` (e.g. 5)::
- Maximum size of C3P0 statement cache. Refers to http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
+ Maximum size of C3P0 statement cache. Refers to https://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
 
 `*hibernate.c3p0.acquire_increment*` (e.g. 2)::
- The number of connections acquired at a time when there's no connection available in the pool. Refers to http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
+ The number of connections acquired at a time when there's no connection available in the pool. Refers to https://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
 
 `*hibernate.c3p0.idle_test_period*` (e.g. 5)::
- Idle time before a C3P0 pooled connection is validated. Refers to http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
+ Idle time before a C3P0 pooled connection is validated. Refers to https://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
 
 `*hibernate.c3p0*`::
  A setting prefix used to indicate additional c3p0 properties that need to be passed to the underlying c3p0 connection pool.
@@ -275,7 +275,7 @@ Please report your mapping that causes the problem to us so we can examine the d
 +
 The default value is `false` which means Hibernate will use an algorithm to determine if the insert can be delayed or if the insert should be performed immediately.
 
-`*hibernate.id.sequence.increment_size_mismatch_strategy*` (e.g. `LOG`, `FIX` or `EXCEPTION` (default value))::
+`*hibernate.id.sequence.increment_size_mismatch_strategy*` (e.g. `LOG`, `FIX`, `NONE` or `EXCEPTION` (default value))::
 This setting defines the `org.hibernate.id.SequenceMismatchStrategy` used when
 Hibernate detects a mismatch between a sequence configuration in an entity mapping
 and its database sequence object counterpart.
@@ -434,7 +434,7 @@ Enable lazy loading feature in runtime bytecode enhancement. This way, even basi
 Enable association management feature in runtime bytecode enhancement which automatically synchronizes a bidirectional association when only one side is changed.
 
 `*hibernate.bytecode.provider*` (e.g. `bytebuddy` (default value))::
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` and `javassist` are valid values.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` is a valid value, as older deprecated options have been removed.
 
 `*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` or `false` (default value))::
 Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls.
@@ -887,6 +887,10 @@ For cases where the `javax.persistence.schema-generation.scripts.action` value i
 `*javax.persistence.schema-generation.scripts.drop-target*`::
 For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema dropping commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.drop-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
 
+`*hibernate.hbm2ddl.schema-generation.script.append*` (e.g. `true` (default value) or `false`)::
+For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema commands should be written to DDL script file, `hibernate.hbm2ddl.schema-generation.script.append` specifies if schema commands should be appended to the end of the file rather than written at the beginning of the file.
+Values are `true` for appending schema commands to the end of the file, `false` for writing achema commands at the beginning of the file.
+
 `*javax.persistence.hibernate.hbm2ddl.import_files*` (e.g. `import.sql` (default value))::
 Comma-separated names of the optional files containing SQL DML statements executed during the `SessionFactory` creation.
 File order matters, the statements of a given file are executed before the statements of the following one.
@@ -929,6 +933,7 @@ Valid options are defined by the `strategy` value of the https://docs.jboss.org/
 
 `*hibernate.hbm2ddl.delimiter*` (e.g. `;`)::
 Identifies the delimiter to use to separate schema management statements in script outputs.
+The default value is `;`.
 
 `*hibernate.schema_management_tool*` (e.g. A schema name)::
 Used to specify the `SchemaManagementTool` to use for performing schema management. The default is to use `HibernateSchemaManagementTool`.
@@ -1096,8 +1101,8 @@ Like a `PersisterClassResolver`, the `PersisterFactory` can be used to customize
 `*hibernate.service.allow_crawling*` (e.g. `true` (default value) or `false`)::
 Crawl all available service bindings for an alternate registration of a given Hibernate `Service`.
 
-`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
-Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
+`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
+Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
 
 [[configurations-misc]]
 === Miscellaneous properties

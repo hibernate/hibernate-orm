@@ -5,10 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.annotations.naturalid;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
@@ -28,7 +25,7 @@ class NaturalIdOnManyToOne {
     int id;
 
     @NaturalId
-    @ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY )
     Citizen citizen;
     
 	public int getId() {

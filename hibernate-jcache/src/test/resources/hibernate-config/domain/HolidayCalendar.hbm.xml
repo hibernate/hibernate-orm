@@ -16,6 +16,8 @@
             <generator class="native"/>
         </id>
 
+        <property name="name"/>
+
         <map name="holidays" table="CALENDAR_HOLIDAYS" lazy="false">
             <key column="CALENDAR_ID"/>
             <map-key column="hol_date" type="date"/>

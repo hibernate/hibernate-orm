@@ -24,7 +24,7 @@ import org.locationtech.jts.geom.Point;
 public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 
 
-	MySQL8ExpectationsFactory(DataSourceUtils dataSourceUtils) {
+	public MySQL8ExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		super( dataSourceUtils );
 	}
 
@@ -93,10 +93,10 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 
-
 	@Override
 	protected NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
-		throw new UnsupportedOperationException();
+		String sql = "select t.id, ST_Relate(t.geom, ST_GeomFromText(?, 31370), '" + matrix + "' ) from geomtest t where ST_Relate(t.geom, ST_GeomFromText(?, 31370), '" + matrix + "') = 1 ";
+		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
 
 	@Override
@@ -201,7 +201,7 @@ public class MySQL8ExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeBoundaryStatement() {
-		throw new UnsupportedOperationException();
+		return createNativeSQLStatement( "select id, st_boundary(geom) from geomtest" );
 	}
 
 	@Override

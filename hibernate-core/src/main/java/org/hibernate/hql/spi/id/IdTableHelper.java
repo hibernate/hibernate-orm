@@ -184,7 +184,7 @@ public class IdTableHelper {
 					target.accept( createStatement );
 				}
 				catch ( CommandAcceptanceException e) {
-					// The exception will be logged, so ignore this
+					log.debugf( "Error attempting to export id-table [%s] : %s", createStatement, e.getMessage() );
 				}
 			}
 		}
@@ -215,7 +215,7 @@ public class IdTableHelper {
 					target.accept( dropStatement );
 				}
 				catch ( CommandAcceptanceException e) {
-					// The exception will be logged, so ignore this
+					log.debugf( "Error attempting to drop id-table : [%s]", e.getMessage() );
 				}
 			}
 		}

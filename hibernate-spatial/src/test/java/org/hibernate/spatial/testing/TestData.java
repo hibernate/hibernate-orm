@@ -26,8 +26,6 @@ public class TestData implements List<TestDataElement> {
 	protected TestData() {
 	}
 
-	;
-
 	public static TestData fromFile(String fileName) {
 		TestDataReader reader = new TestDataReader();
 		return fromFile( fileName, reader );

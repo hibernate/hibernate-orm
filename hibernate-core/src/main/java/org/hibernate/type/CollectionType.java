@@ -576,7 +576,6 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map copyCache,
 			SharedSessionContractImplementor session) {
-		// TODO: does not work for EntityMode.DOM4J yet!
 		java.util.Collection result = ( java.util.Collection ) target;
 		result.clear();
 

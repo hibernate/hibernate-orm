@@ -48,16 +48,16 @@ public class ManyToOneNotInsertable extends BaseEnversJPAFunctionalTestCase {
 		// Rev 2
 		em.getTransaction().begin();
 
-		ManyToOneNotInsertableEntity master = new ManyToOneNotInsertableEntity( mto_id1, type_id1, type1 );
-		em.persist( master );
+		ManyToOneNotInsertableEntity entity = new ManyToOneNotInsertableEntity( mto_id1, type_id1, type1 );
+		em.persist( entity );
 
 		em.getTransaction().commit();
 
 		// Rev 2
 		em.getTransaction().begin();
 
-		master = em.find( ManyToOneNotInsertableEntity.class, mto_id1 );
-		master.setNumber( type_id2 );
+		entity = em.find( ManyToOneNotInsertableEntity.class, mto_id1 );
+		entity.setNumber( type_id2 );
 
 		em.getTransaction().commit();
 	}

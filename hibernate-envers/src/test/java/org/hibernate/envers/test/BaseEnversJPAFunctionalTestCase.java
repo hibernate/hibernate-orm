@@ -16,11 +16,11 @@ import javax.transaction.SystemException;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
@@ -29,17 +29,16 @@ import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
-import org.jboss.logging.Logger;
 import org.junit.After;
 
 /**
@@ -99,7 +98,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		addMappings( settings );
 
 		if ( createSchema() ) {
-			settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 			final String secondSchemaName = createSecondSchema();
 			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
 				if ( !(getDialect() instanceof H2Dialect) ) {
@@ -119,8 +118,8 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
 		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
 
-		settings.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, getDialect().getClass().getName() );
+		settings.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		settings.put( AvailableSettings.DIALECT, getDialect().getClass().getName() );
 		return settings;
 	}
 
@@ -138,16 +137,16 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 
 		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<String>();
+			ArrayList<String> dds = new ArrayList<>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
-			config.put( AvailableSettings.XML_FILE_NAMES, dds );
+			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			config.put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
-			config.put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		config.put( GlobalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableBulkIdStrategy.DROP_ID_TABLES, "true" );
+		if ( ! Environment.getProperties().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
 			config.put(
-					org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
+					AvailableSettings.CONNECTION_PROVIDER,
 					SharedDriverManagerConnectionProviderImpl.getInstance()
 			);
 		}
@@ -160,7 +159,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 	protected void addMappings(Map settings) {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
-			settings.put( AvailableSettings.HBXML_FILES, String.join( ",", mappings ) );
+			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
 		}
 	}
 

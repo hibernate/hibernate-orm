@@ -14,7 +14,7 @@ import org.hibernate.service.Service;
  * An interface for factories of {@link ProxyFactory proxy factory} instances.
  * <p/>
  * Currently used to abstract from the tuplizer whether we are using Byte Buddy or
- * Javassist for lazy proxy generation.
+ * possibly another implementation (in the future?) for lazy proxy generation.
  *
  * @author Steve Ebersole
  */
@@ -39,7 +39,26 @@ public interface ProxyFactoryFactory extends Service {
 	 *
 	 * @param superClass The abstract super class (or null if none).
 	 * @param interfaces Interfaces to be proxied (or null if none).
+	 * @deprecated Use {@link #buildBasicProxyFactory(Class)} instead.
 	 * @return The proxy class
 	 */
+	@Deprecated
 	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces);
+
+	/**
+	 * Build a proxy factory for basic proxy concerns.  The return
+	 * should be capable of properly handling newInstance() calls.
+	 * <p/>
+	 * Should build basic proxies essentially equivalent to JDK proxies in
+	 * terms of capabilities, but should be able to deal with abstract super
+	 * classes in addition to proxy interfaces.
+	 * <p/>
+	 * Must pass in either a superClass or an interface.
+	 *
+	 * @param superClassOrInterface The abstract super class, or the
+	 * interface to be proxied.
+	 * @return The proxy class
+	 */
+	public BasicProxyFactory buildBasicProxyFactory(Class superClassOrInterface);
+
 }

@@ -10,8 +10,8 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -42,7 +42,7 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	protected void addConfigOptions(Map options) {
-		options.put(  AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
+		options.put(  AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 	}
 
 	@Override

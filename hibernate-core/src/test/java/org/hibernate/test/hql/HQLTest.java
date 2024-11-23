@@ -445,8 +445,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testKeyManyToOneJoin() {
 		//TODO: new parser generates unnecessary joins (though the query results are correct)
 		assertTranslation( "from Order o left join fetch o.lineItems li left join fetch li.product p" );
-		assertTranslation( "from Outer o where o.id.master.id.sup.dudu is not null" );
-		assertTranslation( "from Outer o where o.id.master.id.sup.dudu is not null" );
+		assertTranslation( "from Outer o where o.id.root.id.sup.dudu is not null" );
+		assertTranslation( "from Outer o where o.id.root.id.sup.dudu is not null" );
 	}
 
 	@Test
@@ -670,7 +670,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testCollectionFetchWithExplicitThetaJoin() {
-		assertTranslation( "select m from Master m1, Master m left join fetch m.details where m.name=m1.name" );
+		assertTranslation( "select m from Root m1, Root m left join fetch m.details where m.name=m1.name" );
 	}
 
 	@Test

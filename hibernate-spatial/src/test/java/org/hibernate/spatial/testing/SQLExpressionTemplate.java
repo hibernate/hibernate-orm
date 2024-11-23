@@ -22,6 +22,6 @@ public interface SQLExpressionTemplate {
 	 *
 	 * @return an insert SQL for testDataElement
 	 */
-	public String toInsertSql(TestDataElement testDataElement);
+	String toInsertSql(TestDataElement testDataElement);
 
 }

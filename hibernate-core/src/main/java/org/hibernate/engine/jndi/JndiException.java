@@ -22,4 +22,14 @@ public class JndiException extends HibernateException {
 	public JndiException(String message, Throwable cause) {
 		super( message, cause );
 	}
+
+	/**
+	 * Constructs a JndiException
+	 *
+	 * @param message Message explaining the exception condition
+	 */
+	public JndiException(String message) {
+		super( message );
+	}
+
 }

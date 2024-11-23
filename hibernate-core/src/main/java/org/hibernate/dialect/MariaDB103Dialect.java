@@ -76,7 +76,7 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select table_name from information_schema.TABLES where table_schema = database() and table_type = 'SEQUENCE'";
+		return "select table_name from information_schema.tables where table_schema = database() and table_type = 'SEQUENCE'";
 	}
 
 	@Override

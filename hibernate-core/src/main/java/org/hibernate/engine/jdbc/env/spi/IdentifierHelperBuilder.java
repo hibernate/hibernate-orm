@@ -38,7 +38,7 @@ public class IdentifierHelperBuilder {
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
-	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
 	public static IdentifierHelperBuilder from(JdbcEnvironment jdbcEnvironment) {
@@ -61,6 +61,10 @@ public class IdentifierHelperBuilder {
 			return;
 		}
 
+		//Important optimisation: skip loading all keywords from the DB when autoQuoteKeywords is disabled
+		if ( autoQuoteKeywords == false ) {
+			return;
+		}
 		this.reservedWords.addAll( parseKeywords( metaData.getSQLKeywords() ) );
 	}
 
@@ -176,6 +180,10 @@ public class IdentifierHelperBuilder {
 	}
 
 	public void applyReservedWords(Set<String> words) {
+		//No use when autoQuoteKeywords is disabled
+		if ( autoQuoteKeywords == false ) {
+			return;
+		}
 		this.reservedWords.addAll( words );
 	}
 

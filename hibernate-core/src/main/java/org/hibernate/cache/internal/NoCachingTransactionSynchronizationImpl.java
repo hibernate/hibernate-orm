@@ -16,4 +16,9 @@ public class NoCachingTransactionSynchronizationImpl extends AbstractCacheTransa
 	public NoCachingTransactionSynchronizationImpl(RegionFactory regionFactory) {
 		super( regionFactory );
 	}
+
+	@Override
+	public long getCachingTimestamp() {
+		throw new UnsupportedOperationException( "Method not supported when 2LC is not enabled" );
+	}
 }

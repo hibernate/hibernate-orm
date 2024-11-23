@@ -12,8 +12,8 @@ package org.hibernate.jpa.test;
 import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.jpa.AvailableSettings;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;

@@ -9,6 +9,7 @@ package org.hibernate.dialect.pagination;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
@@ -37,12 +38,24 @@ public interface LimitHandler {
 	/**
 	 * Return processed SQL query.
 	 *
-     * @param sql       the SQL query to process.
+     * @param sql the SQL query to process.
      * @param selection the selection criteria for rows.
      *
 	 * @return Query statement with LIMIT clause applied.
 	 */
 	String processSql(String sql, RowSelection selection);
+
+	/**
+	 * Return processed SQL query.
+	 *
+	 * @param sql the SQL query to process.
+	 * @param queryParameters the queryParameters.
+	 *
+	 * @return Query statement with LIMIT clause applied.
+	 */
+	default String processSql(String sql, QueryParameters queryParameters ){
+		return processSql( sql, queryParameters.getRowSelection() );
+	}
 
 	/**
 	 * Bind parameter values needed by the LIMIT clause before original SELECT statement.

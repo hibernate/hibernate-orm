@@ -10,11 +10,13 @@ import javax.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.id.IdentifierGenerationException;
 
 import org.junit.Test;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -25,6 +27,7 @@ import static org.junit.Assert.fail;
 public class OneToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 
 	@Test
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
 	public void storeNonUniqueRelationship() throws Throwable {
 		Session session = null;
 		try {

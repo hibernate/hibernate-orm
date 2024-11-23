@@ -66,7 +66,7 @@ Hibernate was changed slightly, once the implications of this were better unders
 The underlying issue is that the actual semantics of the application itself changes in these cases.
 ====
 
-Starting with version 3.2.3, Hibernate comes with a set of http://in.relation.to/2082.lace[enhanced] identifier generators targeting portability in a much different way.
+Starting with version 3.2.3, Hibernate comes with a set of https://in.relation.to/2082.lace[enhanced] identifier generators targeting portability in a much different way.
 
 [NOTE]
 ====

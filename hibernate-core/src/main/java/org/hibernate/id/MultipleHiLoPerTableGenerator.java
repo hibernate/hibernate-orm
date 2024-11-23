@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -22,6 +21,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -78,7 +78,7 @@ import org.hibernate.type.Type;
  * @deprecated Use {@link org.hibernate.id.enhanced.TableGenerator} instead.
  */
 @Deprecated
-public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
+public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MultipleHiLoPerTableGenerator.class );
 
 	public static final String ID_TABLE = "table";
@@ -93,7 +93,9 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private static final String DEFAULT_VALUE_COLUMN = "sequence_next_hi_value";
 
 	private QualifiedName qualifiedTableName;
-	private String tableName;
+	private QualifiedName physicalTableName;
+	@Deprecated
+	private String formattedTableNameForLegacyGetter;
 	private String segmentColumnName;
 	private String segmentName;
 	private String valueColumnName;
@@ -177,7 +179,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 						rows = executeUpdate( updatePreparedStatement, statsCollector );
 					}
 					catch (SQLException sqle) {
-						LOG.error( LOG.unableToUpdateHiValue( tableName ), sqle );
+						LOG.error( LOG.unableToUpdateHiValue( physicalTableName.render() ), sqle );
 						throw sqle;
 					}
 					finally {
@@ -253,6 +255,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		}
 	}
 
+	@Override
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		returnClass = type.getReturnedClass();
@@ -341,23 +344,30 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 			table.addColumn( valueColumn );
 		}
 
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-
 		// allow physical naming strategies a chance to kick in
-		tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
+		physicalTableName = table.getQualifiedTableName();
+
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+		this.formattedTableNameForLegacyGetter = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				physicalTableName,
+				dialect
 		);
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		String formattedPhysicalTableName = context.format( physicalTableName );
 
 		query = "select " +
 				valueColumnName +
 				" from " +
-				jdbcEnvironment.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+				context.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, formattedPhysicalTableName ) +
 				" where " + segmentColumnName + " = '" + segmentName + "'" +
-				jdbcEnvironment.getDialect().getForUpdateString();
+				context.getDialect().getForUpdateString();
 
 		update = "update " +
-				tableName +
+				formattedPhysicalTableName +
 				" set " +
 				valueColumnName +
 				" = ? where " +
@@ -368,7 +378,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 				segmentName
 				+ "'";
 
-		insert = "insert into " + tableName +
+		insert = "insert into " + formattedPhysicalTableName +
 				"(" + segmentColumnName + ", " + valueColumnName + ") " +
 				"values('" + segmentName + "', ?)";
 
@@ -376,21 +386,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	}
 
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return new String[] {
-				dialect.getCreateTableString()
-						+ ' ' + tableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) + ",  "
-						+ valueColumnName + ' ' + dialect.getTypeName( Types.INTEGER )
-						+ " )" + dialect.getTableTypeString()
-		};
-	}
-
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return new String[] {dialect.getDropTableString( tableName )};
-	}
-
+	@Deprecated
 	public Object generatorKey() {
-		return tableName;
+		return formattedTableNameForLegacyGetter;
 	}
 }

@@ -21,6 +21,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Table( name = "T_LOCK_A" )
 public class A {
 	private Long id;
+	@Column(name = "val")
 	private String value;
 
 	public A() {

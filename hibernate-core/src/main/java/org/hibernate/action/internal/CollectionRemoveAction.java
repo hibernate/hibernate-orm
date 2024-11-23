@@ -114,34 +114,33 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private void preRemove() {
-		final EventListenerGroup<PreCollectionRemoveEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_REMOVE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PreCollectionRemoveEvent event = new PreCollectionRemoveEvent(
+		getFastSessionServices()
+				.eventListenerGroup_PRE_COLLECTION_REMOVE
+				.fireLazyEventOnEachListener( this::newPreCollectionRemoveEvent, PreCollectionRemoveEventListener::onPreRemoveCollection );
+	}
+
+	private PreCollectionRemoveEvent newPreCollectionRemoveEvent() {
+		return new PreCollectionRemoveEvent(
 				getPersister(),
 				getCollection(),
 				eventSource(),
 				affectedOwner
 		);
-		for ( PreCollectionRemoveEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreRemoveCollection( event );
-		}
 	}
 
 	private void postRemove() {
-		final EventListenerGroup<PostCollectionRemoveEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_REMOVE );
-		if ( listenerGroup.isEmpty() ) {
-			return;
-		}
-		final PostCollectionRemoveEvent event = new PostCollectionRemoveEvent(
+		getFastSessionServices()
+				.eventListenerGroup_POST_COLLECTION_REMOVE
+				.fireLazyEventOnEachListener( this::newPostCollectionRemoveEvent, PostCollectionRemoveEventListener::onPostRemoveCollection );
+	}
+
+	private PostCollectionRemoveEvent newPostCollectionRemoveEvent() {
+		return new PostCollectionRemoveEvent(
 				getPersister(),
 				getCollection(),
 				eventSource(),
 				affectedOwner
 		);
-		for ( PostCollectionRemoveEventListener listener : listenerGroup.listeners() ) {
-			listener.onPostRemoveCollection( event );
-		}
 	}
+
 }

@@ -86,7 +86,7 @@ public class AccessTypeTest extends CompilationTest {
 	@TestForIssue(jiraKey = " METAGEN-81")
 	public void testAccessTypeForEmbeddableDeterminedByIdAnnotationInRootEntity() {
 		assertPresenceOfFieldInMetamodelFor(
-				Hotel.class, "webmaster",
+				Hotel.class, "webDomainExpert",
 				"Access type should be inherited position of the @Id field annotation in the root entity"
 		);
 	}

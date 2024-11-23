@@ -10,6 +10,7 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -39,6 +40,7 @@ public class Goods {
         this.productList = productList;
     }
 
+    @NotNull
     @Convert(converter = StringToListConverter.class)
     public List<String> getTags() {
         return tags;

@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -19,6 +20,7 @@ import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,7 +30,14 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
+@TestForIssue(jiraKey = "HHH-14529")
 public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+		super.prepareBootstrapRegistryBuilder( builder );
+	}
+
 	@Test
 	@SkipForDialect(value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class, CockroachDB192Dialect.class},
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")

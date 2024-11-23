@@ -17,8 +17,10 @@ import javax.persistence.Table;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -39,6 +41,7 @@ public class UniqueConstraintThrowsConstraintViolationExceptionTest extends Base
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
 	public void testUniqueConstraintWithEmptyColumnName() {
 		doInHibernate( this::sessionFactory, session -> {
 			Customer customer1 = new Customer();

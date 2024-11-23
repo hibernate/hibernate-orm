@@ -12,10 +12,12 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.service.ServiceRegistry;
@@ -56,7 +58,15 @@ public class CdiBeanContainerBuilder {
 			ctorArgType = beanManagerClass;
 
 			final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
-			final boolean delayAccessToCdi = cfgService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false );
+			final boolean delayAccessToCdi = NullnessHelper.coalesceSuppliedValues(
+					() -> cfgService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN ),
+					() -> {
+						final Boolean oldSetting = cfgService.getSetting( org.hibernate.jpa.AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN );
+						//Not invoking the DeprecationLogger in this case as the user can't avoid using this property (the string value is the same)
+						return oldSetting;
+					},
+					() -> false
+			);
 			if ( delayAccessToCdi ) {
 				containerClass = getHibernateClass( CONTAINER_FQN_DELAYED );
 			}

@@ -21,18 +21,26 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -41,11 +49,18 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue(jiraKey = "HHH-10252")
 @RunWith(BytecodeEnhancerRunner.class)
 public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
+	private SQLStatementInterceptor sqlInterceptor;
 	private Child originalChild;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Parent.class, Child.class };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		sqlInterceptor = new SQLStatementInterceptor( configuration );
 	}
 
 	@Before
@@ -64,68 +79,27 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testManagedWithUninitializedAssociation() {
-		// Delete the Child
-		doInHibernate(
-				this::sessionFactory, s -> {
-					Child loadedChild = (Child) s.createQuery( "SELECT c FROM Child c WHERE name=:name" )
-							.setParameter( "name", "CHILD" )
-							.uniqueResult();
-					checkInterceptor( loadedChild, false );
-					assertFalse( Hibernate.isPropertyInitialized( loadedChild, "parent" ) );
-					s.delete( loadedChild );
-				}
-		);
-		// Explicitly check that both got deleted
-		doInHibernate(
-				this::sessionFactory, s -> {
-					assertNull( s.createQuery( "FROM Child c" ).uniqueResult() );
-					assertNull( s.createQuery( "FROM Parent p" ).uniqueResult() );
-				}
-		);
-	}
-
-	@Test
 	public void testManagedWithInitializedAssociation() {
+		sqlInterceptor.clear();
+
 		// Delete the Child
-		doInHibernate(
-				this::sessionFactory, s -> {
-					Child loadedChild = (Child) s.createQuery( "SELECT c FROM Child c WHERE name=:name" )
+		inTransaction(
+				(s) -> {
+					final Child managedChild = (Child) s.createQuery( "SELECT c FROM Child c WHERE name=:name" )
 							.setParameter( "name", "CHILD" )
 							.uniqueResult();
-					checkInterceptor( loadedChild, false );
-					loadedChild.getParent();
-					assertTrue( Hibernate.isPropertyInitialized( loadedChild, "parent" ) );
-					s.delete( loadedChild );
-				}
-		);
-		// Explicitly check that both got deleted
-		doInHibernate(
-				this::sessionFactory, s -> {
-					assertNull( s.createQuery( "FROM Child c" ).uniqueResult() );
-					assertNull( s.createQuery( "FROM Parent p" ).uniqueResult() );
-				}
-		);
-	}
 
-	@Test
-	public void testDetachedWithUninitializedAssociation() {
-		final Child detachedChild = doInHibernate(
-				this::sessionFactory, s -> {
-					return s.get( Child.class, originalChild.getId() );
+					assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+
+					// parent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( managedChild, "parent" ) );
+					assertThat( managedChild.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+					assertFalse( Hibernate.isInitialized( managedChild.getParent() ) );
+
+					s.delete( managedChild );
 				}
 		);
 
-		assertFalse( Hibernate.isPropertyInitialized( detachedChild, "parent" ) );
-
-		checkInterceptor( detachedChild, false );
-
-		// Delete the detached Child with uninitialized parent
-		doInHibernate(
-				this::sessionFactory, s -> {
-					s.delete( detachedChild );
-				}
-		);
 		// Explicitly check that both got deleted
 		doInHibernate(
 				this::sessionFactory, s -> {
@@ -137,13 +111,20 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDetachedWithInitializedAssociation() {
-		final Child detachedChild = doInHibernate(
-				this::sessionFactory, s -> {
-					Child child = s.get( Child.class, originalChild.getId() );
-					assertFalse( Hibernate.isPropertyInitialized( child, "parent" ) );
+		sqlInterceptor.clear();
 
-					// initialize parent before detaching
-					child.getParent();
+		final Child detachedChild = fromTransaction(
+				sessionFactory(),
+				(s) -> {
+					Child child = s.get( Child.class, originalChild.getId() );
+
+					assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
+
+					// parent should be an uninitialized enhanced-proxy
+					assertTrue( Hibernate.isPropertyInitialized( child, "parent" ) );
+					assertThat( child.getParent(), not( instanceOf( HibernateProxy.class ) ) );
+					assertFalse( Hibernate.isInitialized( child.getParent() ) );
+
 					return child;
 				}
 		);
@@ -153,14 +134,13 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 		checkInterceptor( detachedChild, false );
 
 		// Delete the detached Child with initialized parent
-		doInHibernate(
-				this::sessionFactory, s -> {
-					s.delete( detachedChild );
-				}
+		inTransaction(
+				(s) -> s.delete( detachedChild )
 		);
+
 		// Explicitly check that both got deleted
-		doInHibernate(
-				this::sessionFactory, s -> {
+		inTransaction(
+				(s) -> {
 					assertNull( s.createQuery( "FROM Child c" ).uniqueResult() );
 					assertNull( s.createQuery( "FROM Parent p" ).uniqueResult() );
 				}
@@ -191,8 +171,7 @@ public class CascadeDeleteManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void checkInterceptor(Child child, boolean isNullExpected) {
-		final BytecodeEnhancementMetadata bytecodeEnhancementMetadata =
-				sessionFactory()
+		final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = sessionFactory()
 						.getMetamodel()
 						.entityPersister( Child.class )
 						.getEntityMetamodel()

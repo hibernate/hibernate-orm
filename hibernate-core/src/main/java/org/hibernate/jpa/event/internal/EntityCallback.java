@@ -9,7 +9,10 @@ package org.hibernate.jpa.event.internal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
  * Represents a JPA callback on the entity itself
@@ -19,9 +22,24 @@ import org.hibernate.jpa.event.spi.CallbackType;
  */
 final class EntityCallback extends AbstractCallback {
 
+	public static class Definition implements CallbackDefinition {
+		private final Method callbackMethod;
+		private final CallbackType callbackType;
+
+		public Definition(Method callbackMethod, CallbackType callbackType) {
+			this.callbackMethod = callbackMethod;
+			this.callbackType = callbackType;
+		}
+
+		@Override
+		public Callback createCallback(ManagedBeanRegistry beanRegistry) {
+			return new EntityCallback( callbackMethod, callbackType );
+		}
+	}
+
 	private final Method callbackMethod;
 
-	EntityCallback(Method callbackMethod, CallbackType callbackType) {
+	private EntityCallback(Method callbackMethod, CallbackType callbackType) {
 		super( callbackType );
 		this.callbackMethod = callbackMethod;
 	}

@@ -34,9 +34,9 @@ public class Middle implements Serializable {
 		if (this == o) return true;
 		if (!(o instanceof Middle)) return false;
 
-		final Middle cidMaster = (Middle) o;
+		final Middle cidMiddle = (Middle) o;
 
-		if (id != null ? !id.equals(cidMaster.id) : cidMaster.id != null) return false;
+		if (id != null ? !id.equals(cidMiddle.id) : cidMiddle.id != null) return false;
 
 		return true;
 	}

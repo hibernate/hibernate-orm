@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.BytecodeLogger;
+import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
@@ -72,8 +72,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		this.inLineDirtyChecking = entityPersister.getEntityMode() == EntityMode.POJO
 				&& SelfDirtinessTracker.class.isAssignableFrom( entityPersister.getMappedClass() );
 		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
-		// 	because the pre-computed update statement contains even not dirty properties and so we need all the values
-		initializeBeforeWrite = !( inLineDirtyChecking && entityPersister.getEntityMetamodel().isDynamicUpdate() );
+		// because the pre-computed update statement contains even not dirty properties and so we need all the values
+		// we have to initialise it even if it's versioned to fetch the current version
+		initializeBeforeWrite = !( inLineDirtyChecking && entityPersister.getEntityMetamodel().isDynamicUpdate() ) || entityPersister.isVersioned();
 		status = Status.UNINITIALIZED;
 	}
 
@@ -170,7 +171,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),
@@ -186,7 +187,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	}
 
 	public Object forceInitialize(Object target, String attributeName, SharedSessionContractImplementor session, boolean isTemporarySession) {
-		BytecodeLogger.LOGGER.tracef(
+		BytecodeLogging.LOGGER.tracef(
 				"EnhancementAsProxyLazinessInterceptor#forceInitialize : %s#%s -> %s )",
 				entityKey.getEntityName(),
 				entityKey.getIdentifier(),

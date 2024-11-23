@@ -24,6 +24,8 @@ import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.SkipForDialect;
@@ -52,7 +54,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 				.configure( "hibernate-config/hibernate.cfg.xml" );
 
 		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
-			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
+			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 
@@ -89,6 +91,8 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 	@Test
 	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "does not support nested transactions")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Derby does not support nested transactions")
+	@SkipForDialect(SybaseASE15Dialect.class)
+	@SkipForDialect(HSQLDialect.class)
 	public void testUpdateAndFlushThenRefresh() {
 		final String BEFORE = "before";
 

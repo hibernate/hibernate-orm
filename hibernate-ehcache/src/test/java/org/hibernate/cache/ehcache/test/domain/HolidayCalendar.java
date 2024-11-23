@@ -19,10 +19,12 @@ public class HolidayCalendar {
 
 
 	private Long id;
+	private String name;
 	// Date -> String
 	private Map holidays = new HashMap();
 
 	public HolidayCalendar init() {
+		name = "default";
 		DateFormat df = new SimpleDateFormat("yyyy.MM.dd");
 		try {
 			holidays.clear();
@@ -33,6 +35,14 @@ public class HolidayCalendar {
 			throw new RuntimeException(e);
 		}
 		return this;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public Map getHolidays() {

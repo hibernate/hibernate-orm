@@ -21,45 +21,45 @@ public class DeleteQuerySubqueryReferencingTargetPropertyTest extends BaseEntity
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Master.class, Detail.class };
+		return new Class<?>[] { Root.class, Detail.class };
 	}
 
 	@Test
 	public void testSubQueryReferencingTargetProperty() {
 		// prepare
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Master m1 = new Master();
+			Root m1 = new Root();
 			entityManager.persist( m1 );
 			Detail d11 = new Detail( m1 );
 			entityManager.persist( d11 );
 			Detail d12 = new Detail( m1 );
 			entityManager.persist( d12 );
 
-			Master m2 = new Master();
+			Root m2 = new Root();
 			entityManager.persist( m2 );
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			// depending on the generated ids above this delete removes all masters or nothing
-			// removal of all masters results in foreign key constraint violation
-			// removal of nothing is incorrect since 2nd master does not have any details
+			// depending on the generated ids above this delete removes all Roots or nothing
+			// removal of all Roots results in foreign key constraint violation
+			// removal of nothing is incorrect since 2nd Root does not have any details
 
 			// DO NOT CHANGE this query: it used to trigger a very specific bug caused
 			// by the alias not being added to the generated query
-			String d = "delete from Master m where not exists (select d from Detail d where d.master=m)";
+			String d = "delete from Root m where not exists (select d from Detail d where d.root=m)";
 			Query del = entityManager.createQuery( d );
 			del.executeUpdate();
 
-			// so check for exactly one master after deletion
+			// so check for exactly one Root after deletion
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Master> query = builder.createQuery( Master.class );
-			query.select( query.from( Master.class ) );
+			CriteriaQuery<Root> query = builder.createQuery( Root.class );
+			query.select( query.from( Root.class ) );
 			Assert.assertEquals( 1, entityManager.createQuery( query ).getResultList().size() );
 		} );
 	}
 
-	@Entity(name = "Master")
-	public static class Master {
+	@Entity(name = "Root")
+	public static class Root {
 		@Id
 		@GeneratedValue
 		private Integer id;
@@ -72,10 +72,10 @@ public class DeleteQuerySubqueryReferencingTargetPropertyTest extends BaseEntity
 		private Integer id;
 
 		@ManyToOne(optional = false)
-		private Master master;
+		private Root root;
 
-		public Detail(Master master) {
-			this.master = master;
+		public Detail(Root root) {
+			this.root = root;
 		}
 	}
 }

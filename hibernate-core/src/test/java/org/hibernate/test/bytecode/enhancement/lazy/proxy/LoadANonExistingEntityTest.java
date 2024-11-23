@@ -159,7 +159,6 @@ public class LoadANonExistingEntityTest extends BaseNonConfigCoreFunctionalTestC
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}

@@ -499,17 +499,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
-			this.implicitSchemaName = configService.getSetting(
-					AvailableSettings.DEFAULT_SCHEMA,
-					StandardConverters.STRING,
-					null
-			);
-
-			this.implicitCatalogName = configService.getSetting(
-					AvailableSettings.DEFAULT_CATALOG,
-					StandardConverters.STRING,
-					null
-			);
+			// AvailableSettings.DEFAULT_SCHEMA and AvailableSettings.DEFAULT_CATALOG
+			// are taken into account later, at runtime, when rendering table/sequence names.
+			// These fields are exclusively about mapping defaults,
+			// overridden in XML mappings or through setters in MetadataBuilder.
+			this.implicitSchemaName = null;
+			this.implicitCatalogName = null;
 
 			this.implicitlyQuoteIdentifiers = configService.getSetting(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
@@ -622,7 +617,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
 
 		private String schemaCharset;
-		private boolean xmlMappingEnabled;
+		private final boolean xmlMappingEnabled;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -659,7 +654,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.sharedCacheMode = configService.getSetting(
-					"javax.persistence.sharedCache.mode",
+					AvailableSettings.JPA_SHARED_CACHE_MODE,
 					new ConfigurationService.Converter<SharedCacheMode>() {
 						@Override
 						public SharedCacheMode convert(Object value) {
@@ -674,7 +669,24 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 							return SharedCacheMode.valueOf( value.toString() );
 						}
 					},
-					SharedCacheMode.UNSPECIFIED
+					configService.getSetting(
+							AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE,
+							new ConfigurationService.Converter<SharedCacheMode>() {
+								@Override
+								public SharedCacheMode convert(Object value) {
+									if ( value == null ) {
+										return null;
+									}
+
+									if ( SharedCacheMode.class.isInstance( value ) ) {
+										return (SharedCacheMode) value;
+									}
+
+									return SharedCacheMode.valueOf( value.toString() );
+								}
+							},
+							SharedCacheMode.UNSPECIFIED
+					)
 			);
 
 			this.defaultCacheAccessType = configService.getSetting(

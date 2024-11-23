@@ -78,9 +78,13 @@ public class BatchingBatch extends AbstractBatchImpl {
 			currentStatement.addBatch();
 		}
 		catch ( SQLException e ) {
-			abortBatch();
+			abortBatch( e );
 			LOG.debugf( "SQLException escaped proxy", e );
 			throw sqlExceptionHelper().convert( e, "could not perform addBatch", currentStatementSql );
+		}
+		catch (RuntimeException e) {
+			abortBatch( e );
+			throw e;
 		}
 		statementPosition++;
 		if ( statementPosition >= getKey().getBatchedStatementCount() ) {
@@ -126,12 +130,12 @@ public class BatchingBatch extends AbstractBatchImpl {
 					checkRowCounts( rowCounts, statement, sql );
 				}
 				catch ( SQLException e ) {
-					abortBatch();
+					abortBatch( e );
 					LOG.unableToExecuteBatch( e, sql );
 					throw sqlExceptionHelper().convert( e, "could not execute batch", sql );
 				}
 				catch ( RuntimeException re ) {
-					abortBatch();
+					abortBatch( re );
 					LOG.unableToExecuteBatch( re, sql );
 					throw re;
 				}

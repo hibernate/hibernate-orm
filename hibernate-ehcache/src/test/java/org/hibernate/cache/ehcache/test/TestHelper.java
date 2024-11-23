@@ -80,7 +80,7 @@ public class TestHelper {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
-			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
+			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		return ssrb;
 	}

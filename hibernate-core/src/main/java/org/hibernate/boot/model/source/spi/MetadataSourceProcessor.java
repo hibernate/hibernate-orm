@@ -47,7 +47,7 @@ public interface MetadataSourceProcessor {
 	void processNamedQueries();
 
 	/**
-	 * Process all {@link org.hibernate.mapping.AuxiliaryDatabaseObject} definitions.
+	 * Process all {@link org.hibernate.boot.model.relational.AuxiliaryDatabaseObject} definitions.
 	 * <p/>
 	 * This step has no prerequisites.
 	 */

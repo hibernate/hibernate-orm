@@ -238,7 +238,19 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 				Assert.fail( "SchemaManagementException expected" );
 			}
 			catch (SchemaManagementException e) {
-				assertEquals("Schema-validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [varchar (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]", e.getMessage());
+				if ( ( (H2Dialect) metadata.getDatabase().getDialect() ).isVersion2() ) {
+					// Reports "character varying" since 2.0
+					assertEquals(
+							"Schema-validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [character (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
+							e.getMessage()
+					);
+				}
+				else {
+					assertEquals(
+							"Schema-validation: wrong column type encountered in column [name] in table [SomeSchema.ColumnEntity]; found [varchar (Types#VARCHAR)], but expecting [integer (Types#INTEGER)]",
+							e.getMessage()
+					);
+				}
 			}
 		}
 		finally {

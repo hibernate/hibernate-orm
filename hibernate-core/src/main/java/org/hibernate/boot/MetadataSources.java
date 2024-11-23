@@ -339,6 +339,18 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
+	 * Add XML mapping bindings created from an arbitrary source by the {@link #getXmlMappingBinderAccess() binder}.
+	 *
+	 * @param binding The binding.
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public MetadataSources addXmlBinding(Binding<?> binding) {
+		getXmlBindingsForWrite().add( binding );
+		return this;
+	}
+
+	/**
 	 * See {@link #addCacheableFile(java.io.File)} for description
 	 *
 	 * @param path The path to a file.  Expected to be resolvable by {@link java.io.File#File(String)}

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -48,7 +49,8 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
 			MetadataImplementor metadata,
-			SessionFactoryOptions sessionFactoryOptions) {
+			SessionFactoryOptions sessionFactoryOptions,
+			SqlStringGenerationContext sqlStringGenerationContext) {
 		// build/get Table representation of the bulk-id tables - subclasses need hooks
 		// for each:
 		// 		handle DDL
@@ -66,12 +68,8 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 				continue;
 			}
 
-			final String idTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-					determineIdTableName( jdbcEnvironment, entityBinding ),
-					jdbcEnvironment.getDialect()
-			);
-			final Table idTable = new Table();
-			idTable.setName( idTableName );
+			final QualifiedTableName idTableName = determineIdTableName( jdbcEnvironment, entityBinding );
+			final Table idTable = new Table( idTableName.getCatalogName(), idTableName.getSchemaName(), idTableName.getTableName(), false );
 			idTable.setComment( "Used to hold id values for the " + entityBinding.getEntityName() + " entity" );
 
 			Iterator itr = entityBinding.getTable().getPrimaryKey().getColumnIterator();
@@ -81,7 +79,9 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 			}
 			augmentIdTableDefinition( idTable );
 
-			final TT idTableInfo = buildIdTableInfo( entityBinding, idTable, jdbcServices, metadata, context );
+			final TT idTableInfo = buildIdTableInfo( entityBinding, idTable, jdbcServices, metadata, context,
+					sqlStringGenerationContext
+			);
 			idTableInfoMap.put( entityBinding.getEntityName(), idTableInfo );
 		}
 
@@ -125,16 +125,17 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 			Table idTable,
 			JdbcServices jdbcServices,
 			MetadataImplementor metadata,
-			CT context);
+			CT context,
+			SqlStringGenerationContext sqlStringGenerationContext);
 
 
-	protected String buildIdTableCreateStatement(Table idTable, JdbcServices jdbcServices, MetadataImplementor metadata) {
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
+	protected String buildIdTableCreateStatement(Table idTable, MetadataImplementor metadata,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		final Dialect dialect = sqlStringGenerationContext.getDialect();
 
 		StringBuilder buffer = new StringBuilder( getIdTableSupport().getCreateIdTableCommand() )
 				.append( ' ' )
-				.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( idTable.getQualifiedTableName(), dialect ) )
+				.append( formatIdTableName( idTable.getQualifiedTableName(), sqlStringGenerationContext ) )
 				.append( " (" );
 
 		Iterator<Column> itr = idTable.getColumnIterator();
@@ -169,12 +170,19 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 		return buffer.toString();
 	}
 
-	protected String buildIdTableDropStatement(Table idTable, JdbcServices jdbcServices) {
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
+	protected String buildIdTableDropStatement(Table idTable, SqlStringGenerationContext sqlStringGenerationContext) {
 		return getIdTableSupport().getDropIdTableCommand() + " "
-				+ jdbcEnvironment.getQualifiedObjectNameFormatter().format( idTable.getQualifiedTableName(), dialect );
+				+ formatIdTableName( idTable.getQualifiedTableName(), sqlStringGenerationContext );
+	}
+
+	protected String formatIdTableName(QualifiedTableName qualifiedTableName,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		// Historically, we've always ignored the default catalog/schema here,
+		// so for the sake of backwards compatibility, we will continue that way.
+		// Also, we must not use the default catalog/schema for temporary tables,
+		// because some vendors don't allow creating temporary tables
+		// in just any catalog/schema (for postgres, it must be a "temporary schema").
+		return sqlStringGenerationContext.formatWithoutDefaults( qualifiedTableName );
 	}
 
 	protected void finishPreparation(

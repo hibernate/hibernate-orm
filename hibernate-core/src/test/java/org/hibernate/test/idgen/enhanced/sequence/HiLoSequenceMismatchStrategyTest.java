@@ -16,6 +16,7 @@ import javax.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -93,8 +94,8 @@ public class HiLoSequenceMismatchStrategyTest extends BaseCoreFunctionalTestCase
 		SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
 		assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
 
-		String sequenceName = generator.getDatabaseStructure().getName();
-		Assert.assertEquals( this.sequenceName, sequenceName );
+		QualifiedName sequenceName = generator.getDatabaseStructure().getPhysicalName();
+		Assert.assertEquals( this.sequenceName, sequenceName.render() );
 
 		int incrementSize = generator.getOptimizer().getIncrementSize();
 		Assert.assertNotEquals( 1, incrementSize );

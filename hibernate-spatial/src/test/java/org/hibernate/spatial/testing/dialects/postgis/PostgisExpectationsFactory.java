@@ -238,10 +238,9 @@ public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 		);
 	}
 
-	//remove redundancy with toGeometry function in PGGeometryTypeDescriptor
 	@Override
 	protected Geometry decode(Object object) {
-		org.geolatte.geom.Geometry geometry = PGGeometryTypeDescriptor.toGeometry( object );
+		org.geolatte.geom.Geometry geometry = PGGeometryTypeDescriptor.INSTANCE_WKB_1.toGeometry( object );
 		return JTS.to( geometry );
 	}
 

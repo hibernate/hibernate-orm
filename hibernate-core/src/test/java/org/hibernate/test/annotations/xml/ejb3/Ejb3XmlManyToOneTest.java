@@ -18,12 +18,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@TestForIssue(jiraKey = "HHH-14529")
 public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	@Test
 	public void testNoJoins() throws Exception {

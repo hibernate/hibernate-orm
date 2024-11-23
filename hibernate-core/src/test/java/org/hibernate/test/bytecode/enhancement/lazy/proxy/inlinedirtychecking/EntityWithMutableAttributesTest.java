@@ -44,7 +44,6 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
 		ssrb.applySetting( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "100" );
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
@@ -64,6 +63,9 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 
 	@Before
 	public void setUp() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = new User();
@@ -87,6 +89,9 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 
 	@After
 	public void tearDown() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					session.createQuery( "delete from User" ).executeUpdate();
@@ -97,6 +102,9 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testLoad() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = session.load( User.class, 1 );
@@ -114,6 +122,9 @@ public class EntityWithMutableAttributesTest extends BaseNonConfigCoreFunctional
 
 	@Test
 	public void testMutableAttributeIsUpdated() {
+		if ( skipTest ) {
+			return;
+		}
 		inTransaction(
 				session -> {
 					User user = session.load( User.class, 1 );

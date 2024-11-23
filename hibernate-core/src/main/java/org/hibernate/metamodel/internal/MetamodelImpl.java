@@ -91,7 +91,8 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Map<String,String> imports = new ConcurrentHashMap<>();
+	private final Map<String,String> knownValidImports = new ConcurrentHashMap<>();
+	private final Map<String,String> knownInvalidImports = new ConcurrentHashMap<>();
 	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
 	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
@@ -155,7 +156,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	 * @param jpaMetaModelPopulationSetting Should the JPA Metamodel be built as well?
 	 */
 	public void initialize(MetadataImplementor mappingMetadata, JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting) {
-		this.imports.putAll( mappingMetadata.getImports() );
+		this.knownValidImports.putAll( mappingMetadata.getImports() );
 
 		primeSecondLevelCacheRegions( mappingMetadata );
 
@@ -623,27 +624,37 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public String getImportedClassName(String className) {
-		String result = imports.get( className );
-		if ( result == null ) {
-			try {
-				sessionFactory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
-				imports.put( className, className );
-				return className;
-			}
-			catch ( ClassLoadingException cnfe ) {
-				imports.put( className, INVALID_IMPORT );
-				return null;
-			}
+	public String getImportedClassName(final String className) {
+		final String result = knownValidImports.get( className );
+		if ( result != null ) {
+			//optimal path:
+			return result;
 		}
 		else {
-			// explicitly check for same instance
-			//noinspection StringEquality
-			if ( result == INVALID_IMPORT ) {
+			//check the negative cache first, to avoid ClassLoadingException for commonly used strings which aren't class names:
+			if ( knownInvalidImports.containsKey( className ) ) {
 				return null;
 			}
 			else {
-				return result;
+				//either we've not seen this string yet, or the negative cache has grown too much;
+				//either way we need to attempt a regular class load:
+				try {
+					sessionFactory.getServiceRegistry().getService( ClassLoaderService.class ).classForName( className );
+					//Store this information in the cache:
+					knownValidImports.put( className, className );
+					return className;
+				}
+				catch ( ClassLoadingException cnfe ) {
+					// This check doesn't necessarily mean that the map can't exceed 1000 elements because
+					// new entries might be added _while_ performing the check (making it 1000+ since size() isn't
+					// synchronized). Regardless, this would pass as "good enough" to prevent the map from growing
+					// above a certain threshold, thus, avoiding memory issues.
+					if ( knownInvalidImports.size() < 1_000 ) {
+						//Store this in the negative cache, but only if it's not getting too large.
+						knownInvalidImports.put( className, INVALID_IMPORT );
+					}
+					return null;
+				}
 			}
 		}
 	}

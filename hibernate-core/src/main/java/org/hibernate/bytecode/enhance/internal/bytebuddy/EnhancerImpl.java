@@ -34,6 +34,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
+import org.hibernate.engine.spi.EnhancedEntity;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
 import org.hibernate.engine.spi.Managed;
@@ -68,6 +69,7 @@ import net.bytebuddy.pool.TypePool;
 public class EnhancerImpl implements Enhancer {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
+	private static final AnnotationDescription TRANSIENT_ANNOTATION = AnnotationDescription.Builder.ofType( Transient.class ).build();
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
@@ -154,12 +156,14 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
 			return null;
 		}
+		final EnhancementStatus es = new EnhancementStatus( managedCtClass.getName() );
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
 			builder = builder.implement( ManagedEntity.class )
 					.defineMethod( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME, Object.class, Visibility.PUBLIC )
 					.intercept( FixedValue.self() );
+			es.enabledInterfaceManagedEntity();
 
 			builder = addFieldWithGetterAndSetter(
 					builder,
@@ -183,7 +187,7 @@ public class EnhancerImpl implements Enhancer {
 					EnhancerConstants.NEXT_SETTER_NAME
 			);
 
-			builder = addInterceptorHandling( builder, managedCtClass );
+			builder = addInterceptorHandling( builder, managedCtClass, es );
 
 			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 				List<AnnotatedFieldDescription> collectionFields = collectCollectionFields( managedCtClass );
@@ -191,7 +195,7 @@ public class EnhancerImpl implements Enhancer {
 				if ( collectionFields.isEmpty() ) {
 					builder = builder.implement( SelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
 									.withParameters( String.class )
 									.intercept( implementationTrackChange )
@@ -206,13 +210,15 @@ public class EnhancerImpl implements Enhancer {
 									.intercept( implementationSuspendDirtyTracking )
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_GET_NAME, CollectionTracker.class, Visibility.PUBLIC )
 									.intercept( implementationGetCollectionTrackerWithoutCollections );
+					es.enabledInterfaceSelfDirtinessTracker();
 				}
 				else {
+					//TODO es.enableInterfaceExtendedSelfDirtinessTracker ? Careful with consequences..
 					builder = builder.implement( ExtendedSelfDirtinessTracker.class )
 							.defineField( EnhancerConstants.TRACKER_FIELD_NAME, DirtyTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineField( EnhancerConstants.TRACKER_COLLECTION_NAME, CollectionTracker.class, FieldPersistence.TRANSIENT, Visibility.PRIVATE )
-									.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+									.annotateField( TRANSIENT_ANNOTATION )
 							.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
 									.withParameters( String.class )
 									.intercept( implementationTrackChange )
@@ -302,13 +308,13 @@ public class EnhancerImpl implements Enhancer {
 				}
 			}
 
-			return createTransformer( managedCtClass ).applyTo( builder );
+			return createTransformer( managedCtClass ).applyTo( builder, es );
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 
 			builder = builder.implement( ManagedComposite.class );
-			builder = addInterceptorHandling( builder, managedCtClass );
+			builder = addInterceptorHandling( builder, managedCtClass, es );
 
 			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 				builder = builder.implement( CompositeTracker.class )
@@ -318,7 +324,7 @@ public class EnhancerImpl implements Enhancer {
 								FieldPersistence.TRANSIENT,
 								Visibility.PRIVATE
 						)
-								.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+								.annotateField( TRANSIENT_ANNOTATION )
 						.defineMethod(
 								EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
 								void.class,
@@ -335,17 +341,17 @@ public class EnhancerImpl implements Enhancer {
 								.intercept( implementationClearOwner );
 			}
 
-			return createTransformer( managedCtClass ).applyTo( builder );
+			return createTransformer( managedCtClass ).applyTo( builder, es );
 		}
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			builder = builder.implement( ManagedMappedSuperclass.class );
-			return createTransformer( managedCtClass ).applyTo( builder );
+			return createTransformer( managedCtClass ).applyTo( builder, es );
 		}
 		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
 			log.debugf( "Extended enhancement of [%s]", managedCtClass.getName() );
-			return createTransformer( managedCtClass ).applyExtended( builder );
+			return createTransformer( managedCtClass ).applyExtended( builder, es );
 		}
 		else {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
@@ -367,12 +373,13 @@ public class EnhancerImpl implements Enhancer {
 		return false;
 	}
 
-	private DynamicType.Builder<?> addInterceptorHandling(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {
+	private DynamicType.Builder<?> addInterceptorHandling(DynamicType.Builder<?> builder, TypeDescription managedCtClass, EnhancementStatus es) {
 		// interceptor handling is only needed if class has lazy-loadable attributes
 		if ( enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
 			log.debugf( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );
 
 			builder = builder.implement( PersistentAttributeInterceptable.class );
+			es.enabledInterfacePersistentAttributeInterceptable();
 
 			builder = addFieldWithGetterAndSetter(
 					builder,
@@ -394,7 +401,7 @@ public class EnhancerImpl implements Enhancer {
 			String setterName) {
 		return builder
 				.defineField( fieldName, type, Visibility.PRIVATE, FieldPersistence.TRANSIENT )
-						.annotateField( AnnotationDescription.Builder.ofType( Transient.class ).build() )
+						.annotateField( TRANSIENT_ANNOTATION )
 				.defineMethod( getterName, type, Visibility.PUBLIC )
 						.intercept( FieldAccessor.ofField( fieldName ) )
 				.defineMethod( setterName, void.class, Visibility.PUBLIC )
@@ -592,4 +599,53 @@ public class EnhancerImpl implements Enhancer {
 			this.resolution = new Resolution.Explicit( bytes);
 		}
 	}
+
+	/**
+	 * Attempt to keep track of which interfaces are being applied,
+	 * so to attempt dodging the performance implications of for https://bugs.openjdk.org/browse/JDK-8180450
+	 * We're optimising for the case in which entities are fully enhanced.
+	 */
+	final static class EnhancementStatus {
+
+		private final String typeName;
+		private boolean managedEntity = false;
+		private boolean selfDirtynessTracker = false;
+		private boolean persistentAttributeInterceptable = false;
+		private boolean applied = false;
+
+		public EnhancementStatus(String typeName) {
+			this.typeName = typeName;
+		}
+
+		public void enabledInterfaceManagedEntity() {
+			this.managedEntity = true;
+		}
+
+		public void enabledInterfaceSelfDirtinessTracker() {
+			this.selfDirtynessTracker = true;
+		}
+
+		public void enabledInterfacePersistentAttributeInterceptable() {
+			this.persistentAttributeInterceptable = true;
+		}
+
+		public DynamicType.Builder<?> applySuperInterfaceOptimisations(DynamicType.Builder<?> builder) {
+			if ( applied ) {
+				throw new IllegalStateException("Should not apply super-interface optimisations twice");
+			}
+			else {
+				applied = true;
+				if ( managedEntity && persistentAttributeInterceptable && selfDirtynessTracker ) {
+					log.debugf( "Applying Enhancer optimisations for type [%s]; adding EnhancedEntity as additional marker.", typeName );
+					return builder.implement( EnhancedEntity.class );
+				}
+				else {
+					log.debugf( "Applying Enhancer optimisations for type [%s]; NOT enabling EnhancedEntity as additional marker.", typeName );
+				}
+				//TODO consider applying a marker for other combinations of interfaces as well?
+			}
+			return builder;
+		}
+	}
+
 }

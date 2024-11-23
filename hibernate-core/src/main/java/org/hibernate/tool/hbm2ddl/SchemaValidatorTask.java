@@ -160,7 +160,9 @@ public class SchemaValidatorTask extends MatchingTask {
 			properties.putAll( getProject().getProperties() );
 		}
 		else {
-			properties.load( new FileInputStream( propertiesFile ) );
+			try ( final FileInputStream fis = new FileInputStream( propertiesFile ) ) {
+				properties.load( fis );
+			}
 		}
 
 		registryBuilder.applySettings( properties );

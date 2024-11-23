@@ -116,16 +116,45 @@ Take your time with this code, and try to produce a Java model that's as close a
 When in the slightest doubt, map a foreign key relationship using `@ManyToOne` with `@OneToMany(mappedBy=...)` in preference to more complicated association mappings.
 ====
 
+.What sort of logic belongs in an entity?
+****
+There exists an extensive online literature which posits that there are _rich domain model_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
+
+We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
+
+A more interesting question is not _how much_ logic belongs in the entity class, but _what sort_ of logic belongs there.
+We think the answer is that an entity should never implement technical concerns, and should never obtain references to framework objects.
+Nor should it hold extra mutable state which is not very directly related to its role in representing persistent state.
+For example:
+
+- an entity may compute totals and averages, even caching them if necessary, enforce its invariants, interact with and construct other entities, and so on,
+- but the entity should never call the `EntityManager` or a Jakarta Data repository, build a criteria query, send a JMS message, start a transaction, publish events to the CDI event bus, maintain a stateful queue of events to be published later, or anything of a similar nature.
+
+One way to summarize this is:
+
+> Entities do business logic; but they don't do orchestration.
+
+So which code is responsible for orchestration of things like transaction management, query execution, or event publication?
+Well, that's what we're about to discuss.
+****
+
 The second part of the code is much trickier to get right. This code must:
 
 - manage transactions and sessions,
 - interact with the database via the Hibernate session,
+- publish CDI events and send JMS messages,
 - fetch and prepare data needed by the UI, and
 - handle failures.
 
 [TIP]
 ====
 Responsibility for transaction and session management, and for recovery from certain kinds of failure, is best handled in some sort of framework code.
+====
+
+[TIP]
+====
+A great way to handle CDI event publication is via a <<callbacks,JPA entity listener>>.
+Whereas we would never want to inject a CDI https://jakarta.ee/specifications/cdi/3.0/apidocs/[event publisher] into an entity object, it's perfectly fine to inject them in an entity listener.
 ====
 
 We're going to <<organizing-persistence,come back soon>> to the thorny question of how this persistence logic should be organized, and how it should fit into the rest of the system.

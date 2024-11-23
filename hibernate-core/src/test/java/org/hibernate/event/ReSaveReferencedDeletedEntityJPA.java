@@ -14,7 +14,7 @@ public class ReSaveReferencedDeletedEntityJPA extends BaseEntityManagerFunctiona
     }
 
     @Test
-    @TestForIssue(jiraKey = "HHH-14416")
+    @ JiraKey("HHH-14416")
     public void testRefreshUnDeletedEntityWithReferencesJPA() {
         EntityManager em = getOrCreateEntityManager();
         em.getTransaction().begin();

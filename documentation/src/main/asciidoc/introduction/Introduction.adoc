@@ -118,7 +118,7 @@ When in the slightest doubt, map a foreign key relationship using `@ManyToOne` w
 
 .What sort of logic belongs in an entity?
 ****
-There exists an extensive online literature which posits that there are _rich domain model_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
+There exists an extensive online literature which posits that there are _rich domain models_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
 
 We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
 
@@ -134,8 +134,8 @@ One way to summarize this is:
 
 > Entities do business logic; but they don't do orchestration.
 
-So which code is responsible for orchestration of things like transaction management, query execution, or event publication?
-Well, that's what we're about to discuss.
+Later, we'll discuss various ways to <<managing-transactions,manage transactions>>, <<callbacks,send event notifications>>, and <<organizing-persistence,query the database>>.
+Such code will always be external to the entity itself.
 ****
 
 The second part of the code is much trickier to get right. This code must:
@@ -151,11 +151,11 @@ The second part of the code is much trickier to get right. This code must:
 Responsibility for transaction and session management, and for recovery from certain kinds of failure, is best handled in some sort of framework code.
 ====
 
-[TIP]
-====
-A great way to handle CDI event publication is via a <<callbacks,JPA entity listener>>.
-Whereas we would never want to inject a CDI https://jakarta.ee/specifications/cdi/3.0/apidocs/[event publisher] into an entity object, it's perfectly fine to inject them in an entity listener.
-====
+// [TIP]
+// ====
+// A great way to handle CDI event publication is via a <<callbacks,JPA entity listener>>.
+// Whereas we would never want to inject a CDI https://jakarta.ee/specifications/cdi/3.0/apidocs/[event publisher] into an entity object, it's perfectly fine to inject them in an entity listener.
+// ====
 
 We're going to <<organizing-persistence,come back soon>> to the thorny question of how this persistence logic should be organized, and how it should fit into the rest of the system.
 // First we want to make the ideas above concrete by seeing a simple example program that uses Hibernate in isolation.

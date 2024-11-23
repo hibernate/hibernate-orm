@@ -23,8 +23,8 @@ import org.jboss.logging.Logger;
 
 /**
  * The intent of this class is to use a lighter implementation
- * when JPA callbacks are disabled via
- * {@link SessionFactoryOptions#areJPACallbacksEnabled()}
+ * when standard JPA entity lifecycle callbacks are disabled via
+ * {@link SessionFactoryOptions#areJPACallbacksEnabled()}.
  */
 public final class CallbacksFactory {
 	private static final Logger log = Logger.getLogger( CallbacksFactory.class );

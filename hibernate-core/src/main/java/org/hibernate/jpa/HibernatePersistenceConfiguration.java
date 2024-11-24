@@ -32,6 +32,12 @@ import jakarta.persistence.ValidationMode;
  * Hibernate extension to the Jakarta Persistence {@link PersistenceConfiguration}
  * contract.
  *
+ * @apiNote The specification explicitly encourages implementors to extend
+ *          {@link PersistenceConfiguration} to accommodate vendor-specific
+ *          extensions in a more typesafe way. Of course, programs which
+ *          desire configuration logic to be portable between JPA providers
+ *          should use {@code PersistenceConfiguration} directly.
+ *
  * @author Steve Ebersole
  *
  * @since 7.0
@@ -49,6 +55,9 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 		super( name );
 	}
 
+	/**
+	 * Create a new {@link SessionFactory} based on this configuration.
+	 */
 	@Override
 	public SessionFactory createEntityManagerFactory() {
 		return (SessionFactory) super.createEntityManagerFactory();

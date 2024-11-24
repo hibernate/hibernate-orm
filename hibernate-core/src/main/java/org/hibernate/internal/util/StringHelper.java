@@ -570,6 +570,10 @@ public final class StringHelper {
 		return string == null || string.isEmpty();
 	}
 
+	public static boolean isNotBlank(@Nullable String string) {
+		return string != null && !string.isBlank();
+	}
+
 	public static boolean isBlank(@Nullable String string) {
 		return string == null || string.isBlank();
 	}
@@ -811,6 +815,10 @@ public final class StringHelper {
 
 	public static String nullIfEmpty(@Nullable String value) {
 		return isEmpty( value ) ? null : value;
+	}
+
+	public static String nullIfBlank(@Nullable String value) {
+		return isBlank( value ) ? null : value;
 	}
 
 	public static String subStringNullIfEmpty(String value, Character startChar) {

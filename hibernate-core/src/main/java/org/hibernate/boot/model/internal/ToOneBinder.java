@@ -22,7 +22,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.SimpleValue;
@@ -53,7 +52,8 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -158,7 +158,7 @@ public class ToOneBinder {
 			boolean inSecondPass,
 			PropertyBinder propertyBinder,
 			MetadataBuildingContext context) {
-		if ( joinTable != null && !isEmpty( joinTable.name() ) ) {
+		if ( joinTable != null && !isBlank( joinTable.name() ) ) {
 			final Join join = propertyHolder.addJoin( joinTable, false );
 			// TODO: if notFoundAction!=null should we call join.disableForeignKeyCreation() ?
 			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
@@ -173,7 +173,7 @@ public class ToOneBinder {
 		final org.hibernate.mapping.ManyToOne value =
 				new org.hibernate.mapping.ManyToOne( context, joinColumns.getTable() );
 
-		if ( joinTable != null && isEmpty( joinTable.name() ) ) {
+		if ( joinTable != null && isBlank( joinTable.name() ) ) {
 			context.getMetadataCollector().addSecondPass( new ImplicitToOneJoinTableSecondPass(
 					propertyHolder,
 					inferredData,
@@ -274,7 +274,7 @@ public class ToOneBinder {
 
 				if ( property.hasDirectAnnotationUsage( ManyToOne.class ) && joinColumn != null ) {
 					final String joinColumnName = joinColumn.name();
-					if ( StringHelper.isNotEmpty( joinColumnName )
+					if ( isNotBlank( joinColumnName )
 							&& joinColumnName.equals( columnName )
 							&& !property.hasDirectAnnotationUsage( MapsId.class ) ) {
 						hasSpecjManyToOne = true;

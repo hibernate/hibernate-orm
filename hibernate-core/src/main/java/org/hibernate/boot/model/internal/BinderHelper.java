@@ -71,9 +71,10 @@ import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnyBinder.resolveImplicitDiscriminatorStrategy;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
@@ -890,9 +891,10 @@ public class BinderHelper {
 				.getSourceModelBuildingContext()
 				.getClassDetailsRegistry();
 		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
-		final String name = isEmpty( persistentClass.getClassName() )
-				? persistentClass.getEntityName()
-				: persistentClass.getClassName();
+		final String name =
+				isEmpty( persistentClass.getClassName() )
+						? persistentClass.getEntityName()
+						: persistentClass.getClassName();
 		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( name );
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
@@ -912,7 +914,7 @@ public class BinderHelper {
 		final Map<String,String> ret = new HashMap<>();
 		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
 			final String table = aliasAnnotation.table();
-			if ( isNotEmpty( table ) ) {
+			if ( isNotBlank( table ) ) {
 				ret.put( aliasAnnotation.alias(), table );
 			}
 		}
@@ -952,7 +954,7 @@ public class BinderHelper {
 		final CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null
 				? null
 				: hibernateCascadeAnnotation.value();
-		if ( !ArrayHelper.isEmpty( hibernateCascades ) ) {
+		if ( !isEmpty( hibernateCascades ) ) {
 			Collections.addAll( cascadeTypes, hibernateCascades );
 		}
 		if ( orphanRemoval ) {

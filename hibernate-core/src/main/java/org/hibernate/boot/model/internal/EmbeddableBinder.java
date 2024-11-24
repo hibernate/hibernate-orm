@@ -27,7 +27,6 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -70,9 +69,10 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -232,7 +232,7 @@ public class EmbeddableBinder {
 		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 
 		final List<? extends Annotation> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class, sourceModelContext );
-		if ( CollectionHelper.isEmpty( metaAnnotatedAnnotations ) ) {
+		if ( isEmpty( metaAnnotatedAnnotations ) ) {
 			return;
 		}
 
@@ -712,7 +712,7 @@ public class EmbeddableBinder {
 				? annotatedClass.getDirectAnnotationUsage( DiscriminatorValue.class ).value()
 				: null;
 		final String discriminatorValue;
-		if ( isEmpty( explicitValue ) ) {
+		if ( isBlank( explicitValue ) ) {
 			final String name = unqualify( annotatedClass.getName() );
 			if ( "character".equals( discriminatorType.getName() ) ) {
 				throw new AnnotationException( String.format(

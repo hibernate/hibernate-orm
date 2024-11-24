@@ -18,6 +18,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+
 /**
  * @author Sanne Grinovero
  * @author Steve Ebersole
@@ -84,7 +86,7 @@ public class DialectOverridesAnnotationHelper {
 			final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
 
 			final Annotation[] overrides = element.getRepeatedAnnotationUsages( overrideAnnotation, sourceModelContext );
-			if ( CollectionHelper.isNotEmpty( overrides ) ) {
+			if ( isNotEmpty( overrides ) ) {
 				for ( int i = 0; i < overrides.length; i++ ) {
 					//noinspection unchecked
 					final DialectOverrider<T> override = (DialectOverrider<T>) overrides[i];

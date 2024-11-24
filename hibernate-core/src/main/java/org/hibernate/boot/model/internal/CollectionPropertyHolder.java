@@ -109,16 +109,16 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		// elements cannot be converted so any @Convert likely meant the key, so we apply it to the key
 
 		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
+		final String attributeName = info.getAttributeName();
 		if ( collection.isMap() ) {
-			boolean specCompliant = isNotEmpty( info.getAttributeName() )
-					&& ( info.getAttributeName().startsWith( "key" )
-					|| info.getAttributeName().startsWith( "value" ) );
+			final boolean specCompliant = isNotEmpty( attributeName )
+					&& ( attributeName.startsWith( "key" ) || attributeName.startsWith( "value" ) );
 			if ( !specCompliant ) {
 				log.nonCompliantMapConversion( collection.getRole() );
 			}
 		}
 
-		if ( isEmpty( info.getAttributeName() ) ) {
+		if ( isEmpty( attributeName ) ) {
 			// the @Convert did not name an attribute...
 			if ( canElementBeConverted && canKeyBeConverted ) {
 				if ( !isComposite ) {
@@ -147,8 +147,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			final String elementPath;
 
 			if ( canElementBeConverted && canKeyBeConverted ) {
-				keyPath = removePrefix( info.getAttributeName(), "key" );
-				elementPath = removePrefix( info.getAttributeName(), "value" );
+				keyPath = removePrefix( attributeName, "key" );
+				elementPath = removePrefix( attributeName, "value" );
 
 				if ( keyPath == null && elementPath == null ) {
 					// specified attributeName needs to have 'key.' or 'value.' prefix
@@ -159,12 +159,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 			else if ( canKeyBeConverted ) {
-				keyPath = removePrefix( info.getAttributeName(), "key", info.getAttributeName() );
+				keyPath = removePrefix( attributeName, "key", attributeName );
 				elementPath = null;
 			}
 			else {
 				keyPath = null;
-				elementPath = removePrefix( info.getAttributeName(), "value", info.getAttributeName() );
+				elementPath = removePrefix( attributeName, "value", attributeName );
 			}
 
 			if ( keyPath != null ) {
@@ -179,7 +179,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 						String.format(
 								Locale.ROOT,
 								"Could not determine how to apply @Convert(attributeName='%s') to collection [%s]",
-								info.getAttributeName(),
+								attributeName,
 								collection.getRole()
 						)
 				);

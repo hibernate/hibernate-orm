@@ -38,6 +38,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Do the initial discovery of columns metadata and apply defaults.
@@ -245,7 +246,7 @@ class ColumnsBuilder {
 				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
 				sourceModelContext
 		);
-		if ( CollectionHelper.isNotEmpty( annotations ) ) {
+		if ( isNotEmpty( annotations ) ) {
 			return annotations;
 		}
 
@@ -259,7 +260,7 @@ class ColumnsBuilder {
 				JpaAnnotations.JOIN_COLUMN,
 				sourceModelContext
 		);
-		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
+		if ( isNotEmpty( joinColumns ) ) {
 			return joinColumns;
 		}
 
@@ -272,7 +273,7 @@ class ColumnsBuilder {
 					JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
 					sourceModelContext
 			);
-			if ( CollectionHelper.isNotEmpty( primaryKeyJoinColumns ) ) {
+			if ( isNotEmpty( primaryKeyJoinColumns ) ) {
 				final JoinColumn[] adapters = new JoinColumn[primaryKeyJoinColumns.length];
 				for ( int i = 0; i < primaryKeyJoinColumns.length; i++ ) {
 					final PrimaryKeyJoinColumn primaryKeyJoinColumn = primaryKeyJoinColumns[i];

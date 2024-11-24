@@ -28,8 +28,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -46,9 +44,13 @@ import org.jboss.logging.Logger;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * A mapping to a column, logically representing a
@@ -664,7 +666,7 @@ public class AnnotatedColumn {
 		}
 		else {
 			final jakarta.persistence.Column[] actualColumns = overrideColumns( columns, propertyHolder, inferredData );
-			if ( ArrayHelper.isEmpty( actualColumns ) ) {
+			if ( isEmpty( actualColumns ) ) {
 				return buildImplicitColumn(
 						fractionalSeconds,
 						inferredData,
@@ -708,7 +710,7 @@ public class AnnotatedColumn {
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
 			LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
-			return ArrayHelper.isEmpty( overriddenCols ) ? null : overriddenCols;
+			return isEmpty( overriddenCols ) ? null : overriddenCols;
 		}
 		else {
 			return columns;
@@ -760,7 +762,7 @@ public class AnnotatedColumn {
 			jakarta.persistence.Column column,
 			Database database) {
 		final String table = column.table();
-		return table.isEmpty()
+		return table.isBlank()
 				? ""
 				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( table ).render();
 	}
@@ -769,7 +771,7 @@ public class AnnotatedColumn {
 			MetadataBuildingContext context,
 			jakarta.persistence.Column column) {
 		final String columnDefinition = column.columnDefinition();
-		return columnDefinition.isEmpty()
+		return columnDefinition.isBlank()
 				? null
 				: context.getObjectNameNormalizer().applyGlobalQuoting( columnDefinition );
 	}
@@ -844,7 +846,7 @@ public class AnnotatedColumn {
 
 	private static String getColumnName(Database database, jakarta.persistence.Column column) {
 		final String name = column.name();
-		return name.isEmpty()
+		return name.isBlank()
 				? null
 				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( name ).render();
 	}
@@ -896,7 +898,7 @@ public class AnnotatedColumn {
 	}
 
 	void applyCheckConstraints(jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
-		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
+		if ( isNotEmpty( checkConstraintAnnotationUsages ) ) {
 			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				addCheckConstraint(
 						checkConstraintAnnotationUsage.name(),
@@ -959,10 +961,10 @@ public class AnnotatedColumn {
 		}
 
 		final String targetColumnName = annotation.forColumn();
-		if ( isEmpty( targetColumnName )
+		if ( isBlank( targetColumnName )
 				|| targetColumnName.equals( logicalColumnName != null ? logicalColumnName : "" ) ) {
-			readExpression = nullIfEmpty( annotation.read() );
-			writeExpression = nullIfEmpty( annotation.write() );
+			readExpression = nullIfBlank( annotation.read() );
+			writeExpression = nullIfBlank( annotation.write() );
 		}
 	}
 
@@ -1016,7 +1018,7 @@ public class AnnotatedColumn {
 
 	@Override
 	public String toString() {
-		StringBuilder string = new StringBuilder();
+		final StringBuilder string = new StringBuilder();
 		string.append( getClass().getSimpleName() ).append( "(" );
 		if ( isNotEmpty( logicalColumnName ) ) {
 			string.append( "column='" ).append( logicalColumnName ).append( "'," );
@@ -1040,7 +1042,7 @@ public class AnnotatedColumn {
 	}
 
 	private void applyColumnComment(jakarta.persistence.Column column) {
-		if ( !column.comment().isEmpty() ) {
+		if ( !column.comment().isBlank() ) {
 			comment = column.comment();
 		}
 	}

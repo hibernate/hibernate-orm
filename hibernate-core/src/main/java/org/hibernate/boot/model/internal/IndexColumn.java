@@ -96,7 +96,7 @@ public class IndexColumn extends AnnotatedColumn {
 		if ( orderColumn != null ) {
 			final String sqlType = nullIfEmpty( orderColumn.columnDefinition() );
 			final String explicitName = orderColumn.name();
-			final String name = explicitName.isEmpty()
+			final String name = explicitName.isBlank()
 					? inferredData.getPropertyName() + "_ORDER"
 					: explicitName;
 			final IndexColumn column = new IndexColumn();

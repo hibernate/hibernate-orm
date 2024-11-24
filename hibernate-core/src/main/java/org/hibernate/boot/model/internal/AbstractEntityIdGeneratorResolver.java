@@ -73,7 +73,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	}
 
 	private void handleSequenceStrategy() {
-		if ( generatedValue.generator().isEmpty() ) {
+		if ( generatedValue.generator().isBlank() ) {
 			handleUnnamedSequenceGenerator();
 		}
 		else {
@@ -86,7 +86,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	protected abstract void handleNamedSequenceGenerator();
 
 	private void handleTableStrategy() {
-		if ( generatedValue.generator().isEmpty() ) {
+		if ( generatedValue.generator().isBlank() ) {
 			handleUnnamedTableGenerator();
 		}
 		else {
@@ -99,7 +99,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	protected abstract void handleNamedTableGenerator();
 
 	private void handleAutoStrategy() {
-		if ( generatedValue.generator().isEmpty() ) {
+		if ( generatedValue.generator().isBlank() ) {
 			handleUnnamedAutoGenerator();
 		}
 		else {
@@ -148,7 +148,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	protected boolean handleAsLegacyGenerator() {
 		// Handle a few legacy Hibernate generators...
 		final String nameFromGeneratedValue = generatedValue.generator();
-		if ( !nameFromGeneratedValue.isEmpty() ) {
+		if ( !nameFromGeneratedValue.isBlank() ) {
 			final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( nameFromGeneratedValue, idValue );
 			if ( legacyNamedGenerator != null ) {
 				final Map<String,String> configuration = buildLegacyGeneratorConfig();

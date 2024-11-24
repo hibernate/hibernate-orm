@@ -25,6 +25,8 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
 
+import static java.util.Collections.emptyMap;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
@@ -36,8 +38,8 @@ public class QueryHintDefinition {
 
 	public QueryHintDefinition(String queryName, final QueryHint[] hints) {
 		this.queryName = queryName;
-		if ( CollectionHelper.isEmpty( hints ) ) {
-			hintsMap = Collections.emptyMap();
+		if ( isEmpty( hints ) ) {
+			hintsMap = emptyMap();
 		}
 		else {
 			final Map<String, Object> hintsMap = mapOfSize( hints.length );

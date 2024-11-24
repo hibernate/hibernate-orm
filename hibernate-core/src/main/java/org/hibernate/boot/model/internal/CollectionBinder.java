@@ -84,9 +84,7 @@ import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
@@ -172,11 +170,12 @@ import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPrope
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.mapping.MappingHelper.createLocalUserCollectionTypeBean;
 
 /**
@@ -459,7 +458,7 @@ public abstract class CollectionBinder {
 
 		if ( property.hasDirectAnnotationUsage( OrderColumn.class )
 				&& manyToMany != null
-				&& StringHelper.isNotEmpty( manyToMany.mappedBy() ) ) {
+				&& isNotBlank( manyToMany.mappedBy() ) ) {
 			throw new AnnotationException("Collection '" + getPath( propertyHolder, inferredData ) +
 					"' is the unowned side of a bidirectional '@ManyToMany' and may not have an '@OrderColumn'");
 		}
@@ -740,16 +739,16 @@ public abstract class CollectionBinder {
 			}
 
 			collectionBinder.setExplicitAssociationTable( true );
-			if ( CollectionHelper.isNotEmpty( jpaIndexes ) ) {
+			if ( isNotEmpty( jpaIndexes ) ) {
 				associationTableBinder.setJpaIndex( jpaIndexes );
 			}
-			if ( !schema.isEmpty() ) {
+			if ( !schema.isBlank() ) {
 				associationTableBinder.setSchema( schema );
 			}
-			if ( !catalog.isEmpty() ) {
+			if ( !catalog.isBlank() ) {
 				associationTableBinder.setCatalog( catalog );
 			}
-			if ( !tableName.isEmpty() ) {
+			if ( !tableName.isBlank() ) {
 				associationTableBinder.setName( tableName );
 			}
 			associationTableBinder.setUniqueConstraints( uniqueConstraints );
@@ -910,7 +909,7 @@ public abstract class CollectionBinder {
 			Class<? extends UserCollectionType> implementation,
 			Map<String,String> parameters,
 			MetadataBuildingContext buildingContext) {
-		final boolean hasParameters = CollectionHelper.isNotEmpty( parameters );
+		final boolean hasParameters = isNotEmpty( parameters );
 		if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			// if deferred container access is enabled, we locally create the user-type
 			return createLocalUserCollectionTypeBean( role, implementation, hasParameters, parameters );
@@ -1094,13 +1093,13 @@ public abstract class CollectionBinder {
 
 			final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
 			final ManyToMany manyToMany = property.getAnnotationUsage( ManyToMany.class, sourceModelContext );
-			if ( manyToMany != null && !manyToMany.mappedBy().isEmpty() ) {
+			if ( manyToMany != null && !manyToMany.mappedBy().isBlank() ) {
 				// We don't support @OrderColumn on the non-owning side of a many-to-many association.
 				return CollectionClassification.BAG;
 			}
 
 			final OneToMany oneToMany = property.getAnnotationUsage( OneToMany.class, sourceModelContext );
-			if ( oneToMany != null && !oneToMany.mappedBy().isEmpty() ) {
+			if ( oneToMany != null && !oneToMany.mappedBy().isBlank() ) {
 				// Unowned to-many mappings are always considered BAG by default
 				return CollectionClassification.BAG;
 			}
@@ -1268,7 +1267,7 @@ public abstract class CollectionBinder {
 
 	private void bindCache() {
 		//set cache
-		if ( isNotEmpty( cacheConcurrencyStrategy ) ) {
+		if ( isNotBlank( cacheConcurrencyStrategy ) ) {
 			collection.setCacheConcurrencyStrategy( cacheConcurrencyStrategy );
 			collection.setCacheRegionName( cacheRegionName );
 		}
@@ -1780,7 +1779,7 @@ public abstract class CollectionBinder {
 		final String hqlOrderBy = extractHqlOrderBy( jpaOrderBy );
 		if ( hqlOrderBy != null ) {
 			final String orderByFragment = buildOrderByClauseFromHql( hqlOrderBy, associatedClass );
-			if ( isNotEmpty( orderByFragment ) ) {
+			if ( isNotBlank( orderByFragment ) ) {
 				collection.setOrderBy( orderByFragment );
 			}
 		}
@@ -1824,7 +1823,7 @@ public abstract class CollectionBinder {
 			final String alias = aliasAnnotation.alias();
 
 			final String table = aliasAnnotation.table();
-			if ( isNotEmpty( table ) ) {
+			if ( isNotBlank( table ) ) {
 				aliasTableMap.put( alias, table );
 			}
 
@@ -1870,7 +1869,7 @@ public abstract class CollectionBinder {
 		}
 
 		final String whereJoinTableClause = getWhereJoinTableClause();
-		if ( isNotEmpty( whereJoinTableClause ) ) {
+		if ( isNotBlank( whereJoinTableClause ) ) {
 			if ( hasAssociationTable ) {
 				// This is a many-to-many association.
 				// Collection#setWhere is used to set the "where" clause that applies to the collection table
@@ -1926,7 +1925,7 @@ public abstract class CollectionBinder {
 				final String alias = aliasAnnotation.alias();
 
 				final String table = aliasAnnotation.table();
-				if ( isNotEmpty( table ) ) {
+				if ( isNotBlank( table ) ) {
 					aliasTableMap.put( alias, table );
 				}
 
@@ -1952,14 +1951,14 @@ public abstract class CollectionBinder {
 
 	private String getFilterConditionForJoinTable(FilterJoinTable filterJoinTableAnnotation) {
 		final String condition = filterJoinTableAnnotation.condition();
-		return condition.isEmpty()
+		return condition.isBlank()
 				? getDefaultFilterCondition( filterJoinTableAnnotation.name(), filterJoinTableAnnotation )
 				: condition;
 	}
 
 	private String getFilterCondition(Filter filter) {
 		final String condition = filter.condition();
-		return condition.isEmpty()
+		return condition.isBlank()
 				? getDefaultFilterCondition( filter.name(), filter )
 				: condition;
 	}
@@ -1972,7 +1971,7 @@ public abstract class CollectionBinder {
 					+ "' for an undefined filter named '" + name + "'" );
 		}
 		final String defaultCondition = definition.getDefaultFilterCondition();
-		if ( isEmpty( defaultCondition ) ) {
+		if ( isBlank( defaultCondition ) ) {
 			throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName ) +
 					"' has a '@"  + annotation.annotationType().getSimpleName()
 					+ "' with no 'condition' and no default condition was given by the '@FilterDef' named '"
@@ -2016,7 +2015,7 @@ public abstract class CollectionBinder {
 		if ( orderByFragment == null ) {
 			return null;
 		}
-		else if ( orderByFragment.isEmpty() ) {
+		else if ( orderByFragment.isBlank() ) {
 			//order by id
 			return buildOrderById( associatedClass, " asc" );
 		}
@@ -2042,7 +2041,7 @@ public abstract class CollectionBinder {
 	public static String adjustUserSuppliedValueCollectionOrderingFragment(String orderByFragment) {
 		if ( orderByFragment != null ) {
 			orderByFragment = orderByFragment.trim();
-			if ( orderByFragment.isEmpty() || orderByFragment.equalsIgnoreCase( "asc" ) ) {
+			if ( orderByFragment.isBlank() || orderByFragment.equalsIgnoreCase( "asc" ) ) {
 				// This indicates something like either:
 				//		`@OrderBy()`
 				//		`@OrderBy("asc")
@@ -2124,7 +2123,7 @@ public abstract class CollectionBinder {
 					if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
 						final JoinColumn joinColumnAnn = joinColumnAnnotations[0];
 						final ForeignKey joinColumnForeignKey = joinColumnAnn.foreignKey();
-						if ( foreignKeyName.isEmpty() ) {
+						if ( foreignKeyName.isBlank() ) {
 							foreignKeyName = joinColumnForeignKey.name();
 							foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
 							foreignKeyOptions = joinColumnForeignKey.options();
@@ -2153,7 +2152,7 @@ public abstract class CollectionBinder {
 						final OneToMany oneToManyAnn = property.getDirectAnnotationUsage( OneToMany.class );
 						final OnDelete onDeleteAnn = property.getDirectAnnotationUsage( OnDelete.class );
 						if ( oneToManyAnn != null
-								&& !oneToManyAnn.mappedBy().isEmpty()
+								&& !oneToManyAnn.mappedBy().isBlank()
 								&& ( onDeleteAnn == null || onDeleteAnn.action() != OnDeleteAction.CASCADE ) ) {
 							// foreign key should be up to @ManyToOne side
 							// @OnDelete generate "on delete cascade" foreign key
@@ -2342,7 +2341,7 @@ public abstract class CollectionBinder {
 				inheritanceStatePerClass
 		);
 		collection.setElement( component );
-		if ( isNotEmpty( hqlOrderBy ) ) {
+		if ( isNotBlank( hqlOrderBy ) ) {
 			final String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 			if ( orderBy != null ) {
 				collection.setOrderBy( orderBy );
@@ -2455,7 +2454,7 @@ public abstract class CollectionBinder {
 			final JoinColumn[] inverseJoinColumns = joinTableAnn.inverseJoinColumns();
 			if ( !ArrayHelper.isEmpty( inverseJoinColumns ) ) {
 				final JoinColumn joinColumnAnn = inverseJoinColumns[0];
-				if ( foreignKeyName.isEmpty() ) {
+				if ( foreignKeyName.isBlank() ) {
 					final ForeignKey inverseJoinColumnForeignKey = joinColumnAnn.foreignKey();
 					foreignKeyName = inverseJoinColumnForeignKey.name();
 					foreignKeyDefinition = inverseJoinColumnForeignKey.foreignKeyDefinition();
@@ -2544,7 +2543,7 @@ public abstract class CollectionBinder {
 				collector.getLogicalTableName( owner.getTable() ),
 				collector.getFromMappedBy( owner.getEntityName(), joinColumns.getPropertyName() )
 		);
-		if ( isEmpty( tableBinder.getName() ) ) {
+		if ( isBlank( tableBinder.getName() ) ) {
 			//default value
 			tableBinder.setDefaultName(
 					owner.getClassName(),
@@ -2581,7 +2580,7 @@ public abstract class CollectionBinder {
 	private static void addCheckToCollection(Table collectionTable, Check check) {
 		final String name = check.name();
 		final String constraint = check.constraints();
-		collectionTable.addCheck( name.isEmpty()
+		collectionTable.addCheck( name.isBlank()
 				? new CheckConstraint( constraint )
 				: new CheckConstraint( name, constraint ) );
 	}
@@ -2742,7 +2741,7 @@ public abstract class CollectionBinder {
 
 	private static void checkFilterConditions(Collection collection) {
 		//for now it can't happen, but sometime soon...
-		if ( ( !collection.getFilters().isEmpty() || isNotEmpty( collection.getWhere() ) )
+		if ( ( !collection.getFilters().isEmpty() || isNotBlank( collection.getWhere() ) )
 				&& collection.getFetchMode() == FetchMode.JOIN
 				&& !( collection.getElement() instanceof SimpleValue ) //SimpleValue (CollectionOfElements) are always SELECT but it does not matter
 				&& collection.getElement().getFetchMode() != FetchMode.JOIN ) {

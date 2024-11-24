@@ -226,7 +226,7 @@ public final class AnnotationBinder {
 			final String qualifiedName = annotatedClass.getName();
 			final String name = unqualify( qualifiedName );
 			final String rename = annotatedClass.getDirectAnnotationUsage( Imported.class ).rename();
-			context.getMetadataCollector().addImport( rename.isEmpty() ? name : rename, qualifiedName );
+			context.getMetadataCollector().addImport( rename.isBlank() ? name : rename, qualifiedName );
 		}
 	}
 

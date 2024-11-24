@@ -239,8 +239,14 @@ SessionFactory sessionFactory =
         new HibernatePersistenceConfiguration("Bookshop")
             .managedClass(Book.class)
             .managedClass(Author.class)
-            // Set properties
-            ...
+            // PostgreSQL
+            .jdbcUrl("jdbc:postgresql://localhost/example")
+            // Credentials
+            .jdbcCredentials(user, password)
+            // Automatic schema export
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .showSql(true, true, true)
             // Create a new SessionFactory
             .createEntityManagerFactory();
 ----

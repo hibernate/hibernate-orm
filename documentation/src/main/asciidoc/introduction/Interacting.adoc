@@ -37,7 +37,7 @@ Stateful sessions certainly have their advantages, but they're more difficult to
 ====
 
 [[persistence-contexts]]
-=== Persistence Contexts
+=== Persistence contexts
 
 A persistence context is a sort of cache; we sometimes call it the "first-level cache", to distinguish it from the <<second-level-cache,second-level cache>>.
 For every entity instance read from the database within the scope of a persistence context, and for every new entity made persistent within the scope of the persistence context, the context holds a unique mapping from the identifier of the entity instance to the instance itself.

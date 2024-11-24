@@ -985,7 +985,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if (logicalColumnIdentifier == null) {
 			throw new MappingException( String.format(
 					Locale.ENGLISH,
-					"Column with logical name \"[%s]\" in table [%s] cannot be mapped to column identifier.",
+					"Column with logical name '%s' in table '%s' cannot be mapped to column identifier",
 					logicalName,
 					table.getName()
 			) );

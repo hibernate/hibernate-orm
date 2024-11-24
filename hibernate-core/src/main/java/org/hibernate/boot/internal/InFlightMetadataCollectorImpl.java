@@ -1216,7 +1216,16 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public String getPhysicalColumnName(Table table, String logicalName) throws MappingException {
-		return getPhysicalColumnName( table, getDatabase().toIdentifier( logicalName ) );
+		final Identifier identifier = getDatabase().toIdentifier( logicalName );
+		if ( identifier == null ) {
+			throw new MappingException( String.format(
+					Locale.ENGLISH,
+					"Column with logical name '%s' in table '%s' cannot be mapped to column identifier",
+					logicalName,
+					table.getName()
+			) );
+		}
+		return getPhysicalColumnName( table, identifier );
 	}
 
 	@Override

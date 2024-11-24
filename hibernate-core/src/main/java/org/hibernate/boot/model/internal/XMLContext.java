@@ -29,10 +29,12 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * A helper for consuming orm.xml mappings.
@@ -189,10 +191,9 @@ public class XMLContext implements Serializable {
 	}
 
 	public static String buildSafeClassName(String className, String defaultPackageName) {
-		if ( className.indexOf( '.' ) < 0 && StringHelper.isNotEmpty( defaultPackageName ) ) {
-			className = StringHelper.qualify( defaultPackageName, className );
-		}
-		return className;
+		return className.indexOf( '.' ) < 0 && isNotEmpty( defaultPackageName )
+				? qualify( defaultPackageName, className )
+				: className;
 	}
 
 	public static String buildSafeClassName(String className, Default defaults) {

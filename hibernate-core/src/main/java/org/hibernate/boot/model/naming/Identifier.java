@@ -9,6 +9,8 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.internal.util.StringHelper.isBlank;
+
 /**
  * Models an identifier (name), which may or may not be quoted.
  *
@@ -75,7 +77,7 @@ public class Identifier implements Comparable<Identifier> {
 	 * @return The identifier form, or {@code null} if text was {@code null}
 	 */
 	public static Identifier toIdentifier(String text, boolean quote, boolean quoteOnNonIdentifierChar) {
-		if ( StringHelper.isEmpty( text ) ) {
+		if ( isBlank( text ) ) {
 			return null;
 		}
 		int start = 0;

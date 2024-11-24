@@ -34,6 +34,7 @@ import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicTyp
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * @author Gavin King
@@ -57,7 +58,7 @@ public class FilterDefBinder {
 		final Map<String, JdbcMapping> paramJdbcMappings;
 		final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolvers;
 		final ParamDef[] explicitParameters = filterDef.parameters();
-		if ( CollectionHelper.isEmpty( explicitParameters ) ) {
+		if ( isEmpty( explicitParameters ) ) {
 			paramJdbcMappings = emptyMap();
 			parameterResolvers = emptyMap();
 		}

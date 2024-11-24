@@ -77,7 +77,6 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.internal.CallbackDefinitionResolver;
 import org.hibernate.jpa.event.spi.CallbackType;
@@ -155,10 +154,12 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 
@@ -367,7 +368,7 @@ public class EntityBinder {
 	private void addCheckToEntity(Check check) {
 		final String name = check.name();
 		final String constraint = check.constraints();
-		persistentClass.addCheckConstraint( name.isEmpty()
+		persistentClass.addCheckConstraint( name.isBlank()
 				? new CheckConstraint( constraint )
 				: new CheckConstraint( name, constraint ) );
 	}
@@ -1300,7 +1301,7 @@ public class EntityBinder {
 			throw new AssertionFailure( "@Entity should never be missing" );
 		}
 		final String entityName = entity.name();
-		name = entityName.isEmpty() ? unqualify( annotatedClass.getName() ) : entityName;
+		name = entityName.isBlank() ? unqualify( annotatedClass.getName() ) : entityName;
 	}
 
 	public boolean isRootEntity() {
@@ -1351,7 +1352,7 @@ public class EntityBinder {
 					+ "' is annotated '@Immutable' but it is a subclass in an entity inheritance hierarchy"
 					+ " (only a root class may declare its mutability)" );
 		}
-		if ( isNotEmpty( where ) ) {
+		if ( isNotBlank( where ) ) {
 			throw new AnnotationException( "Entity class '" + annotatedClass.getName()
 					+ "' specifies an '@SQLRestriction' but it is a subclass in an entity inheritance hierarchy"
 					+ " (only a root class may be specify a restriction)" );
@@ -1386,7 +1387,7 @@ public class EntityBinder {
 	private void bindRootEntity() {
 		final RootClass rootClass = (RootClass) persistentClass;
 		rootClass.setMutable( isMutable() );
-		if ( isNotEmpty( where ) ) {
+		if ( isNotBlank( where ) ) {
 			rootClass.setWhere( where );
 		}
 		if ( cacheConcurrentStrategy != null ) {
@@ -1498,11 +1499,11 @@ public class EntityBinder {
 				}
 
 				final A override = dialectOverride.override();
-				if ( isEmpty( tableName )
+				if ( isBlank( tableName )
 						&& isEmpty( ( (CustomSqlDetails) override ).table() ) ) {
 					return override;
 				}
-				else if ( isNotEmpty( tableName )
+				else if ( isNotBlank( tableName )
 						&& tableName.equals( ( (CustomSqlDetails) override ).table() ) ) {
 					return override;
 				}
@@ -1516,7 +1517,7 @@ public class EntityBinder {
 		for ( Filter filter : filters ) {
 			final String filterName = filter.name();
 			String condition = filter.condition();
-			if ( condition.isEmpty() ) {
+			if ( condition.isBlank() ) {
 				condition = getDefaultFilterCondition( filterName );
 			}
 			persistentClass.addFilter(
@@ -1536,7 +1537,7 @@ public class EntityBinder {
 					+ "' has a '@Filter' for an undefined filter named '" + filterName + "'" );
 		}
 		final String condition = definition.getDefaultFilterCondition();
-		if ( isEmpty( condition ) ) {
+		if ( isBlank( condition ) ) {
 			throw new AnnotationException( "Entity '" + name +
 					"' has a '@Filter' with no 'condition' and no default condition was given by the '@FilterDef' named '"
 					+ filterName + "'" );
@@ -1587,7 +1588,7 @@ public class EntityBinder {
 		final String discriminatorValue = discriminatorValueAnn != null
 				? discriminatorValueAnn.value()
 				: null;
-		if ( isEmpty( discriminatorValue ) ) {
+		if ( isBlank( discriminatorValue ) ) {
 			final Value discriminator = persistentClass.getDiscriminator();
 			if ( discriminator == null ) {
 				persistentClass.setDiscriminatorValue( name );
@@ -1646,12 +1647,13 @@ public class EntityBinder {
 		}
 
 		final String region = naturalIdCacheAnn.region();
-		if ( region.isEmpty() ) {
+		if ( region.isBlank() ) {
 			final Cache explicitCacheAnn = annotatedClass.getAnnotationUsage( Cache.class, getSourceModelContext() );
 
-			naturalIdCacheRegion = explicitCacheAnn != null && isNotEmpty( explicitCacheAnn.region() )
-					? explicitCacheAnn.region() + NATURAL_ID_CACHE_SUFFIX
-					: annotatedClass.getName() + NATURAL_ID_CACHE_SUFFIX;
+			naturalIdCacheRegion =
+					explicitCacheAnn != null && isNotBlank( explicitCacheAnn.region() )
+							? explicitCacheAnn.region() + NATURAL_ID_CACHE_SUFFIX
+							: annotatedClass.getName() + NATURAL_ID_CACHE_SUFFIX;
 		}
 		else {
 			naturalIdCacheRegion = naturalIdCacheAnn.region();
@@ -1853,7 +1855,7 @@ public class EntityBinder {
 		final EntityTableNamingStrategyHelper namingStrategyHelper =
 				new EntityTableNamingStrategyHelper( persistentClass.getClassName(), entityName, name );
 		final Identifier logicalName =
-				isNotEmpty( tableName )
+				isNotBlank( tableName )
 						? namingStrategyHelper.handleExplicitName( tableName, context )
 						: namingStrategyHelper.determineImplicitName( context );
 
@@ -1917,7 +1919,7 @@ public class EntityBinder {
 		final Annotation[] joinColumnSource = (Annotation[]) incoming;
 		final AnnotatedJoinColumns annotatedJoinColumns;
 
-		if ( CollectionHelper.isEmpty( joinColumnSource ) ) {
+		if ( isEmpty( joinColumnSource ) ) {
 			annotatedJoinColumns = createDefaultJoinColumn( propertyHolder );
 		}
 		else {
@@ -2047,7 +2049,7 @@ public class EntityBinder {
 
 	private SecondaryRow findMatchingSecondaryRowAnnotation(String tableName) {
 		final SecondaryRow row = annotatedClass.getDirectAnnotationUsage( SecondaryRow.class );
-		if ( row != null && ( row.table().isEmpty() || tableName.equals( row.table() ) ) ) {
+		if ( row != null && ( row.table().isBlank() || tableName.equals( row.table() ) ) ) {
 			return row;
 		}
 		else {

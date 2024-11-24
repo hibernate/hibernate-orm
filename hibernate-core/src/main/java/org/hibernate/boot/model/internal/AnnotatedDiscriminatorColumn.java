@@ -65,10 +65,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		else if ( discriminatorColumn != null ) {
 			discriminatorType = discriminatorColumn.discriminatorType();
 			column.setImplicit( false );
-			if ( !discriminatorColumn.columnDefinition().isEmpty() ) {
+			if ( !discriminatorColumn.columnDefinition().isBlank() ) {
 				column.setSqlType( discriminatorColumn.columnDefinition() );
 			}
-			if ( !discriminatorColumn.name().isEmpty() ) {
+			if ( !discriminatorColumn.name().isBlank() ) {
 				column.setLogicalColumnName( discriminatorColumn.name() );
 			}
 			column.setNullable( false );
@@ -82,7 +82,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			column.setLogicalColumnName( columnOverride.name() );
 
 			final String columnDefinition = columnOverride.columnDefinition();
-			if ( !columnDefinition.isEmpty() ) {
+			if ( !columnDefinition.isBlank() ) {
 				column.setSqlType( columnDefinition );
 			}
 		}

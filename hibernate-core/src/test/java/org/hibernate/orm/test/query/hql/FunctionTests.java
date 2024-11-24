@@ -526,7 +526,7 @@ public class FunctionTests {
 					session.createQuery("select round(cast(e.theDouble as BigDecimal), 3) from EntityOfBasics e", BigDecimal.class)
 							.list();
 					assertThat( session.createQuery("select round(1.2345bd, 2)").getSingleResult(),
-							isOneOf(BigDecimal.valueOf(1.23), BigDecimal.valueOf(1.2300)) );
+							isOneOf(BigDecimal.valueOf(1.23), BigDecimal.valueOf(12300,4)) );
 					assertThat( session.createQuery("select abs(-2)", Integer.class).getSingleResult(), is(2) );
 					assertThat( session.createQuery("select sign(-2)", Integer.class).getSingleResult(), is(-1) );
 					assertThat(

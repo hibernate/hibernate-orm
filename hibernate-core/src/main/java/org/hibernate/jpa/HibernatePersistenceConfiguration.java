@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.JpaComplianceSettings;
@@ -54,7 +55,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Name of the JDBC driver to use for non-Datasource connection
+	 * JDBC driver class name for non-{@link javax.sql.DataSource DataSource}
+	 * connection.
 	 *
 	 * @see #JDBC_DRIVER
 	 */
@@ -64,7 +66,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * URL to use for non-Datasource JDBC connection
+	 * JDBC URL of non-{@link javax.sql.DataSource DataSource} JDBC connection.
 	 *
 	 * @see #JDBC_URL
 	 */
@@ -74,7 +76,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * User-name to use for non-Datasource JDBC connection
+	 * Username for non-{@link javax.sql.DataSource DataSource} JDBC connection.
 	 *
 	 * @see #JDBC_USER
 	 * @see #jdbcPassword
@@ -85,7 +87,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * User-name to use for non-Datasource JDBC connection
+	 * Password for non-{@link javax.sql.DataSource DataSource} JDBC connection.
 	 *
 	 * @see #JDBC_PASSWORD
 	 * @see #jdbcUsername
@@ -96,7 +98,39 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Username and password for non-{@link javax.sql.DataSource DataSource}
+	 * JDBC connection.
+	 *
+	 * @see #JDBC_USER
+	 * @see #JDBC_PASSWORD
+	 * @see #jdbcUsername
+	 * @see #jdbcPassword
+	 */
+	public HibernatePersistenceConfiguration jdbcCredentials(String username, String password) {
+		jdbcUsername( username );
+		jdbcPassword( password );
+		return this;
+	}
+
+	/**
+	 * Enables SQL logging to the console.
+	 * <p>
+	 * Sets {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},
+	 * and {@value AvailableSettings#HIGHLIGHT_SQL}.
+	 *
+	 * @param showSql should SQL be logged to console?
+	 * @param formatSql should logged SQL be formatted
+	 * @param highlightSql should logged SQL be highlighted with pretty colors
+	 */
+	public HibernatePersistenceConfiguration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
+		property( JdbcSettings.SHOW_SQL, showSql );
+		property( JdbcSettings.FORMAT_SQL, formatSql );
+		property( JdbcSettings.HIGHLIGHT_SQL, highlightSql );
+		return this;
+	}
+
+	/**
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * all aspects of {@linkplain jakarta.persistence.Query} handling.
 	 *
 	 * @see JpaComplianceSettings#JPA_QUERY_COMPLIANCE
@@ -107,7 +141,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * all aspects of transaction handling.
 	 *
 	 * @see JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE
@@ -118,7 +152,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * handling around calls to {@linkplain EntityManager#close()},
 	 * {@linkplain EntityManager#isOpen()},
 	 * {@linkplain EntityManagerFactory#close()} and
@@ -132,7 +166,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * handling of proxies.
 	 *
 	 * @see JpaComplianceSettings#JPA_PROXY_COMPLIANCE
@@ -143,7 +177,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * handling of proxies.
 	 *
 	 * @see JpaComplianceSettings#JPA_PROXY_COMPLIANCE
@@ -154,7 +188,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * in terms of collecting all named value generators globally, regardless of location.
 	 *
 	 * @see JpaComplianceSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
@@ -165,7 +199,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * the interpretation of {@link jakarta.persistence.OrderBy}.
 	 *
 	 * @see JpaComplianceSettings#JPA_ORDER_BY_MAPPING_COMPLIANCE
@@ -176,7 +210,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * the allowed type of identifier value passed to
 	 * {@link jakarta.persistence.EntityManager#getReference} and
 	 * {@link jakarta.persistence.EntityManager#find}
@@ -189,7 +223,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Enable/disable Hibernate's caching support
+	 * Enable or disable the second-level and query caches.
 	 */
 	public HibernatePersistenceConfiguration caching(CachingType type) {
 		assert Objects.nonNull( type );

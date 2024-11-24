@@ -8,13 +8,13 @@ public class EventPublishingServiceInitiator
             "com.acme.EventPublishingService.enabled";
 
     @Override
-    public Class<R> getServiceInitiated() {
+    public Class<EventPublishingService> getServiceInitiated() {
         return EventPublishingService.class;
     }
 
     @Override
-    public R initiateService(
-            Map configurationValues,
+    public EventPublishingService initiateService(
+            Map<String, Object> configurationValues,
             ServiceRegistryImplementor registry) {
 
         final boolean enabled = extractBoolean(

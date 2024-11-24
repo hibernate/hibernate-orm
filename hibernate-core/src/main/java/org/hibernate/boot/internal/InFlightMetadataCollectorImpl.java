@@ -542,14 +542,13 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
-		addCollectionTypeRegistration(
-				registrationAnnotation.classification(),
-				toDescriptor( registrationAnnotation )
-		);
+		addCollectionTypeRegistration( registrationAnnotation.classification(),
+				toDescriptor( registrationAnnotation ) );
 	}
 
 	@Override
-	public void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor) {
+	public void addCollectionTypeRegistration(
+			CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor) {
 		if ( collectionTypeRegistrations == null ) {
 			collectionTypeRegistrations = new HashMap<>();
 		}
@@ -558,18 +557,13 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification) {
-		if ( collectionTypeRegistrations == null ) {
-			return null;
-		}
+		return collectionTypeRegistrations == null ? null : collectionTypeRegistrations.get( classification );
 
-		return collectionTypeRegistrations.get( classification );
 	}
 
 	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
-		return new CollectionTypeRegistrationDescriptor(
-				registrationAnnotation.type(),
-				extractParameters( registrationAnnotation.parameters() )
-		);
+		return new CollectionTypeRegistrationDescriptor( registrationAnnotation.type(),
+				extractParameters( registrationAnnotation.parameters() ) );
 	}
 
 	private Map<String,String> extractParameters(Parameter[] annotationUsages) {
@@ -675,7 +669,7 @@ public class InFlightMetadataCollectorImpl
 		if ( profile == null || profile.getName() == null ) {
 			throw new IllegalArgumentException( "Fetch profile object or name is null: " + profile );
 		}
-		FetchProfile old = fetchProfileMap.put( profile.getName(), profile );
+		final FetchProfile old = fetchProfileMap.put( profile.getName(), profile );
 		if ( old != null ) {
 			log.warn( "Duplicated fetch profile with same name [" + profile.getName() + "] found." );
 		}
@@ -966,16 +960,11 @@ public class InFlightMetadataCollectorImpl
 
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
-		final Identifier logicalName;
-		if ( name != null ) {
-			logicalName = getDatabase().toIdentifier( name );
-		}
-		else {
-			logicalName = null;
-		}
+		final Identifier logicalName = name != null ? getDatabase().toIdentifier( name ) : null;
 
 		if ( subselectFragment != null ) {
-			return new Table( buildingContext.getCurrentContributorName(), namespace, logicalName, subselectFragment, isAbstract );
+			return new Table( buildingContext.getCurrentContributorName(),
+					namespace, logicalName, subselectFragment, isAbstract );
 		}
 		else {
 			final Table existing = namespace.locateTable( logicalName );
@@ -988,7 +977,9 @@ public class InFlightMetadataCollectorImpl
 
 			return namespace.createTable(
 					logicalName,
-					(physicalName) -> new Table( buildingContext.getCurrentContributorName(), namespace, physicalName, isAbstract )
+					(physicalName) ->
+							new Table( buildingContext.getCurrentContributorName(),
+									namespace, physicalName, isAbstract )
 			);
 		}
 	}
@@ -1379,14 +1370,8 @@ public class InFlightMetadataCollectorImpl
 			propertiesAnnotatedWithMapsId = new HashMap<>();
 		}
 
-		final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.computeIfAbsent(
-				entityType,
-				k -> new HashMap<>()
-		);
-		map.put(
-				property.getAttributeMember().getDirectAnnotationUsage( MapsId.class ).value(),
-				property
-		);
+		propertiesAnnotatedWithMapsId.computeIfAbsent( entityType, k -> new HashMap<>() )
+				.put( property.getAttributeMember().getDirectAnnotationUsage( MapsId.class ).value(), property );
 	}
 
 	@Override
@@ -1395,11 +1380,8 @@ public class InFlightMetadataCollectorImpl
 			propertiesAnnotatedWithMapsId = new HashMap<>();
 		}
 
-		final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.computeIfAbsent(
-				entityType,
-				k -> new HashMap<>()
-		);
-		map.put( mapsIdValue, property );
+		propertiesAnnotatedWithMapsId.computeIfAbsent( entityType, k -> new HashMap<>() )
+				.put( mapsIdValue, property );
 	}
 
 	@Override
@@ -1418,9 +1400,8 @@ public class InFlightMetadataCollectorImpl
 			propertiesAnnotatedWithIdAndToOne = new HashMap<>();
 		}
 
-		final Map<String, PropertyData> map =
-				propertiesAnnotatedWithIdAndToOne.computeIfAbsent( entityType, k -> new HashMap<>() );
-		map.put( property.getPropertyName(), property );
+		propertiesAnnotatedWithIdAndToOne.computeIfAbsent( entityType, k -> new HashMap<>() )
+				.put( property.getPropertyName(), property );
 	}
 
 	@Override
@@ -1433,10 +1414,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public String getFromMappedBy(String entityName, String propertyName) {
-		if ( mappedByResolver == null ) {
-			return null;
-		}
-		return mappedByResolver.get( entityName + "." + propertyName );
+		return mappedByResolver == null ? null : mappedByResolver.get( entityName + "." + propertyName );
 	}
 
 	@Override
@@ -1449,10 +1427,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public String getPropertyReferencedAssociation(String entityName, String propertyName) {
-		if ( propertyRefResolver == null ) {
-			return null;
-		}
-		return propertyRefResolver.get( entityName + "." + propertyName );
+		return propertyRefResolver == null ? null : propertyRefResolver.get( entityName + "." + propertyName );
 	}
 
 	private static class DelayedPropertyReferenceHandlerAnnotationImpl implements DelayedPropertyReferenceHandler {
@@ -1528,7 +1503,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public Map<String, Join> getJoins(String entityName) {
-		EntityTableXrefImpl xrefEntry = entityTableXrefMap.get( entityName );
+		final EntityTableXrefImpl xrefEntry = entityTableXrefMap.get( entityName );
 		return xrefEntry == null ? null : xrefEntry.secondaryTableJoinMap;
 	}
 
@@ -1541,14 +1516,16 @@ public class InFlightMetadataCollectorImpl
 		//private Map<Identifier,Join> secondaryTableJoinMap;
 		private Map<String,Join> secondaryTableJoinMap;
 
-		public EntityTableXrefImpl(Identifier primaryTableLogicalName, Table primaryTable, EntityTableXrefImpl superEntityTableXref) {
+		public EntityTableXrefImpl(
+				Identifier primaryTableLogicalName, Table primaryTable, EntityTableXrefImpl superEntityTableXref) {
 			this.primaryTableLogicalName = primaryTableLogicalName;
 			this.primaryTable = primaryTable;
 			this.superEntityTableXref = superEntityTableXref;
 		}
 
 		@Override
-		public void addSecondaryTable(LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin) {
+		public void addSecondaryTable(
+				LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin) {
 			if ( Identifier.areEqual( primaryTableLogicalName, logicalName ) ) {
 				throw new org.hibernate.boot.MappingException(
 						String.format(
@@ -1586,6 +1563,8 @@ public class InFlightMetadataCollectorImpl
 
 		@Override
 		public void addSecondaryTable(QualifiedTableName logicalQualifiedTableName, Join secondaryTableJoin) {
+			final Identifier tableName = logicalQualifiedTableName.getTableName();
+
 			if ( Identifier.areEqual(
 				toIdentifier(
 					new QualifiedTableName(
@@ -1595,21 +1574,21 @@ public class InFlightMetadataCollectorImpl
 					).render()
 				),
 				toIdentifier( logicalQualifiedTableName.render() ) ) ) {
-				throw new DuplicateSecondaryTableException( logicalQualifiedTableName.getTableName() );
+				throw new DuplicateSecondaryTableException( tableName );
 			}
 
 			if ( secondaryTableJoinMap == null ) {
 				//secondaryTableJoinMap = new HashMap<Identifier,Join>();
 				//secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
 				secondaryTableJoinMap = new HashMap<>();
-				secondaryTableJoinMap.put( logicalQualifiedTableName.getTableName().getCanonicalName(), secondaryTableJoin );
+				secondaryTableJoinMap.put( tableName.getCanonicalName(), secondaryTableJoin );
 			}
 			else {
 				//final Join existing = secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
-				final Join existing = secondaryTableJoinMap.put( logicalQualifiedTableName.getTableName().getCanonicalName(), secondaryTableJoin );
-
+				final Join existing =
+						secondaryTableJoinMap.put( tableName.getCanonicalName(), secondaryTableJoin );
 				if ( existing != null ) {
-					throw new DuplicateSecondaryTableException( logicalQualifiedTableName.getTableName() );
+					throw new DuplicateSecondaryTableException( tableName );
 				}
 			}
 		}
@@ -1689,41 +1668,38 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public void addSecondPass(SecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( secondPass instanceof IdGeneratorResolver ) {
-			addIdGeneratorResolverSecondPass( (IdGeneratorResolver) secondPass, onTopOfTheQueue );
+		if ( secondPass instanceof IdGeneratorResolver generatorResolver ) {
+			addIdGeneratorResolverSecondPass( generatorResolver, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof SetBasicValueTypeSecondPass ) {
-			addSetBasicValueTypeSecondPass( (SetBasicValueTypeSecondPass) secondPass, onTopOfTheQueue );
+		else if ( secondPass instanceof SetBasicValueTypeSecondPass setBasicValueTypeSecondPass ) {
+			addSetBasicValueTypeSecondPass( setBasicValueTypeSecondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof AggregateComponentSecondPass ) {
-			addAggregateComponentSecondPass( (AggregateComponentSecondPass) secondPass, onTopOfTheQueue );
+		else if ( secondPass instanceof AggregateComponentSecondPass aggregateComponentSecondPass ) {
+			addAggregateComponentSecondPass( aggregateComponentSecondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof FkSecondPass ) {
-			addFkSecondPass( (FkSecondPass) secondPass, onTopOfTheQueue );
+		else if ( secondPass instanceof FkSecondPass fkSecondPass ) {
+			addFkSecondPass( fkSecondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof CreateKeySecondPass ) {
-			addCreateKeySecondPass( (CreateKeySecondPass) secondPass, onTopOfTheQueue );
+		else if ( secondPass instanceof CreateKeySecondPass createKeySecondPass ) {
+			addCreateKeySecondPass( createKeySecondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof ImplicitToOneJoinTableSecondPass ) {
-			addImplicitToOneJoinTableSecondPass( (ImplicitToOneJoinTableSecondPass) secondPass );
+		else if ( secondPass instanceof ImplicitToOneJoinTableSecondPass implicitToOneJoinTableSecondPass ) {
+			addImplicitToOneJoinTableSecondPass( implicitToOneJoinTableSecondPass );
 		}
-		else if ( secondPass instanceof SecondaryTableSecondPass ) {
-			addSecondaryTableSecondPass( (SecondaryTableSecondPass) secondPass, onTopOfTheQueue );
+		else if ( secondPass instanceof SecondaryTableSecondPass secondaryTableSecondPass ) {
+			addSecondaryTableSecondPass( secondaryTableSecondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof SecondaryTableFromAnnotationSecondPass ) {
-			addSecondaryTableFromAnnotationSecondPass(
-					(SecondaryTableFromAnnotationSecondPass) secondPass,
-					onTopOfTheQueue
-			);
+		else if ( secondPass instanceof SecondaryTableFromAnnotationSecondPass secondaryTableFromAnnotationSecondPass ) {
+			addSecondaryTableFromAnnotationSecondPass( secondaryTableFromAnnotationSecondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof QuerySecondPass ) {
-			addQuerySecondPass( (QuerySecondPass) secondPass, onTopOfTheQueue );
+		else if ( secondPass instanceof QuerySecondPass querySecondPass ) {
+			addQuerySecondPass( querySecondPass, onTopOfTheQueue );
 		}
-		else if ( secondPass instanceof ImplicitColumnNamingSecondPass ) {
-			addImplicitColumnNamingSecondPass( (ImplicitColumnNamingSecondPass) secondPass );
+		else if ( secondPass instanceof ImplicitColumnNamingSecondPass implicitColumnNamingSecondPass ) {
+			addImplicitColumnNamingSecondPass( implicitColumnNamingSecondPass );
 		}
-		else if ( secondPass instanceof OptionalDeterminationSecondPass ) {
-			addOptionalDeterminationSecondPass( (OptionalDeterminationSecondPass) secondPass );
+		else if ( secondPass instanceof OptionalDeterminationSecondPass optionalDeterminationSecondPass ) {
+			addOptionalDeterminationSecondPass( optionalDeterminationSecondPass );
 		}
 		else {
 			// add to the general SecondPass list
@@ -1792,7 +1768,8 @@ public class InFlightMetadataCollectorImpl
 		addSecondPass( secondPass, secondaryTableSecondPassList, onTopOfTheQueue );
 	}
 
-	private void addSecondaryTableFromAnnotationSecondPass(SecondaryTableFromAnnotationSecondPass secondPass, boolean onTopOfTheQueue){
+	private void addSecondaryTableFromAnnotationSecondPass(
+			SecondaryTableFromAnnotationSecondPass secondPass, boolean onTopOfTheQueue){
 		if ( secondaryTableFromAnnotationSecondPassesList == null ) {
 			secondaryTableFromAnnotationSecondPassesList = new ArrayList<>();
 		}

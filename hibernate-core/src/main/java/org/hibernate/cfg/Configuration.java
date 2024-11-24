@@ -1268,18 +1268,22 @@ public class Configuration {
 	}
 
 	/**
-	 * Adds the incoming properties to the internal properties structure, as
-	 * long as the internal structure does not already contain an entry for
-	 * the given key.
+	 * Adds the incoming properties to the internal properties structure,
+	 * as long as the internal structure does <em>not</em> already contain
+	 * an entry for the given key. If a given property is already set in
+	 * this {@code Configuration}, ignore the setting specified in the
+	 * argument {@link Properties} object.
+	 *
+	 * @apiNote You're probably looking for {@link #addProperties(Properties)}.
 	 *
 	 * @param properties The properties to merge
 	 *
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
-		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {
-			if ( !properties.containsKey( entry.getKey() ) ) {
-				properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
+		for ( String property : properties.stringPropertyNames() ) {
+			if ( !this.properties.containsKey( property ) ) {
+				this.properties.setProperty( property, properties.getProperty( property ) );
 			}
 		}
 		return this;

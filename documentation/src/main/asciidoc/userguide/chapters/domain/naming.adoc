@@ -25,7 +25,7 @@ Also, the NamingStrategy contract was often not flexible enough to properly appl
 "rule", either because the API lacked the information to decide or because the API was honestly
 not well defined as it grew.
 
-Due to these limitation, `org.hibernate.cfg.NamingStrategy` has been deprecated
+Due to these limitations, `org.hibernate.cfg.NamingStrategy` has been deprecated
 in favor of ImplicitNamingStrategy and PhysicalNamingStrategy.
 ====
 
@@ -89,7 +89,7 @@ into the mapping via explicit names.
 
 While the purpose of an ImplicitNamingStrategy is to determine that an attribute named `accountNumber` maps to
 a logical column name of `accountNumber` when not explicitly specified, the purpose of a PhysicalNamingStrategy
-would be, for example, to say that the physical column name should instead be abbreviated `acct_num`.
+would be, for example, to say that the physical column name should instead be abbreviated to `acct_num`.
 
 [NOTE]
 ====

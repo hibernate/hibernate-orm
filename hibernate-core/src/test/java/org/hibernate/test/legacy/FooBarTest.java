@@ -71,7 +71,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
+//@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
+@RequiresDialectFeature(value = {DialectChecks.SupportsNoColumnInsert.class, DialectChecks.NotH2Version2.class}, comment = "See https://github.com/h2database/h2database/issues/3385")
 public class FooBarTest extends LegacyTestCase {
 
 	@Override

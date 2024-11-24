@@ -9,6 +9,7 @@ package org.hibernate.testing;
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -296,6 +297,11 @@ abstract public class DialectChecks {
 	public static class SupportsGlobalTemporaryTables implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.getDefaultMultiTableBulkIdStrategy() instanceof GlobalTemporaryTableBulkIdStrategy;
+		}
+	}
+	public static class NotH2Version2 implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return !( dialect instanceof H2Dialect ) || !( (H2Dialect) dialect ).isVersion2();
 		}
 	}
 }

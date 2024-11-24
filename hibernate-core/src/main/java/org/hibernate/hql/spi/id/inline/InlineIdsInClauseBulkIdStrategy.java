@@ -6,6 +6,7 @@
  */
 package org.hibernate.hql.spi.id.inline;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -43,7 +44,8 @@ public class InlineIdsInClauseBulkIdStrategy
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess jdbcConnectionAccess,
 			MetadataImplementor metadataImplementor,
-			SessionFactoryOptions sessionFactoryOptions) {
+			SessionFactoryOptions sessionFactoryOptions,
+			SqlStringGenerationContext sqlStringGenerationContext) {
 		// nothing to do
 	}
 

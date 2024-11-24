@@ -4,6 +4,7 @@ import java.io.StringReader;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.mapping.PersistentClass;
@@ -28,14 +29,16 @@ public class ClassCommentTest {
 	public void testClassComment() {
 		StandardServiceRegistryBuilder serviceRegistryBuilder = new StandardServiceRegistryBuilder()
 				.applySetting("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-		MetadataSources metadataSources = new MetadataSources(serviceRegistryBuilder.build());
-		metadataSources.addInputStream(new ReaderInputStream(new StringReader(CLASS_COMMENT_HBM_XML)));
-		Metadata metadata = metadataSources.buildMetadata();
-		PersistentClass pc = metadata.getEntityBinding("org.hibernate.test.hbm.Foo");
-		Assert.assertNotNull(pc);
-		Table table = pc.getTable();
-		Assert.assertNotNull(table);
-		Assert.assertEquals("This is class 'Foo' with property 'bar'.", table.getComment());
+		try (StandardServiceRegistry serviceRegistry = serviceRegistryBuilder.build()) {
+			MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+			metadataSources.addInputStream( new ReaderInputStream( new StringReader( CLASS_COMMENT_HBM_XML ) ) );
+			Metadata metadata = metadataSources.buildMetadata();
+			PersistentClass pc = metadata.getEntityBinding( "org.hibernate.test.hbm.Foo" );
+			Assert.assertNotNull( pc );
+			Table table = pc.getTable();
+			Assert.assertNotNull( table );
+			Assert.assertEquals( "This is class 'Foo' with property 'bar'.", table.getComment() );
+		}
 	}	
 	
 }

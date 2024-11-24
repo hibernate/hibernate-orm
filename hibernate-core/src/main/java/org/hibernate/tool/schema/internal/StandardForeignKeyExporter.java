@@ -11,6 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
@@ -31,7 +32,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(ForeignKey foreignKey, Metadata metadata) {
+	public String[] getSqlCreateStrings(ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
 		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
@@ -90,15 +91,8 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			i++;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
-				dialect
-		);
-		final String targetTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getReferencedTable().getQualifiedTableName(),
-				dialect
-		);
+		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
+		final String targetTableName = context.format( foreignKey.getReferencedTable().getQualifiedTableName() );
 
 		final StringBuilder buffer = new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
 				.append(
@@ -126,7 +120,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(ForeignKey foreignKey, Metadata metadata) {
+	public String[] getSqlDropStrings(ForeignKey foreignKey, Metadata metadata, SqlStringGenerationContext context) {
 		if ( !dialect.hasAlterTable() ) {
 			return NO_COMMANDS;
 		}
@@ -139,11 +133,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			return NO_COMMANDS;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		final String sourceTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				foreignKey.getTable().getQualifiedTableName(),
-				dialect
-		);
+		final String sourceTableName = context.format( foreignKey.getTable().getQualifiedTableName() );
 		return new String[] {
 				getSqlDropStrings( sourceTableName, foreignKey, dialect )
 		};

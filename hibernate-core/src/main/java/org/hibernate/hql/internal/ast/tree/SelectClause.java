@@ -15,7 +15,6 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTAppender;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.type.Type;
 
@@ -108,7 +107,7 @@ public class SelectClause extends SelectExpressionList {
 	/**
 	 * Prepares an explicitly defined select clause.
 	 *
-	 * @param fromClause The from clause linked to this select clause.
+	 * @param fromClause The from-clause linked to this select clause.
 	 *
 	 * @throws SemanticException indicates a semantic issue with the explicit select clause.
 	 */
@@ -133,8 +132,24 @@ public class SelectClause extends SelectExpressionList {
 			);
 		}
 
+		if ( !getWalker().isShallowQuery() ) {
+			if ( getWalker().hasAnyForcibleNotFoundImplicitJoins() ) {
+				// we encountered implicit joins to at least one NotFound association mapping.
+				// find them and make sure they get added to the result-graph if their parent is
+				for ( SelectExpression selectExpression : selectExpressions ) {
+					if ( selectExpression instanceof FromReferenceNode ) {
+						final FromReferenceNode selectedPath = (FromReferenceNode) selectExpression;
+						if ( isFromElementSelection( selectedPath ) ) {
+							final FromElement fromElement = selectedPath.getFromElement();
+							applyForcibleImplicitNotFoundJoins( fromElement );
+						}
+					}
+				}
+			}
+		}
+
 		for ( SelectExpression selectExpression : selectExpressions ) {
-			if ( AggregatedSelectExpression.class.isInstance( selectExpression ) ) {
+			if ( selectExpression instanceof AggregatedSelectExpression ) {
 				aggregatedSelectExpression = (AggregatedSelectExpression) selectExpression;
 				queryReturnTypeList.addAll( aggregatedSelectExpression.getAggregatedSelectionTypeList() );
 				scalarSelect = true;
@@ -251,6 +266,31 @@ public class SelectClause extends SelectExpressionList {
 		}
 
 		finishInitialization( /*sqlResultTypeList,*/ queryReturnTypeList );
+	}
+
+	private boolean isFromElementSelection(FromReferenceNode selectedPath) {
+		if ( selectedPath.getType() == HqlSqlTokenTypes.ALIAS_REF ) {
+			return true;
+		}
+
+		// ugh
+		return selectedPath instanceof SelectExpressionImpl;
+	}
+
+	private void applyForcibleImplicitNotFoundJoins(FromElement fromElement) {
+		final List<FromElement> destinations = fromElement.getDestinations();
+		for ( int i = 0; i < destinations.size(); i++ ) {
+			final FromElement destination = destinations.get( i );
+			if ( destination instanceof ImpliedFromElement ) {
+				final ImpliedFromElement impliedJoin = (ImpliedFromElement) destination;
+				if ( impliedJoin.isForcedNotFoundFetch() ) {
+					impliedJoin.setInProjectionList( true );
+					impliedJoin.setFetch( true );
+				}
+			}
+
+			applyForcibleImplicitNotFoundJoins( destination );
+		}
 	}
 
 	private void finishInitialization(ArrayList queryReturnTypeList) {

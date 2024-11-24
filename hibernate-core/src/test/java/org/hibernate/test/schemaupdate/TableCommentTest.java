@@ -61,7 +61,7 @@ public class TableCommentTest extends BaseNonConfigCoreFunctionalTestCase {
 		final String tableName = getTableName();
 		for ( String sqlStatement : sqlLines ) {
 			if ( sqlStatement.toLowerCase()
-					.equals( "comment on table " + tableName.toLowerCase() + " is 'comment snippet'" ) ) {
+					.equals( "comment on table " + tableName.toLowerCase() + " is 'comment snippet';" ) ) {
 				if ( getDialect().supportsCommentOn() ) {
 					found = true;
 				}

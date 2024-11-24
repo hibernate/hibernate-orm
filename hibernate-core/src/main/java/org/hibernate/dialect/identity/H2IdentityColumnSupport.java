@@ -10,6 +10,12 @@ package org.hibernate.dialect.identity;
  * @author Andrea Boriero
  */
 public class H2IdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final H2IdentityColumnSupport INSTANCE = new H2IdentityColumnSupport();
+
+	protected H2IdentityColumnSupport() {
+	}
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;
@@ -28,6 +34,6 @@ public class H2IdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentityInsertString() {
-		return "null";
+		return "default";
 	}
 }

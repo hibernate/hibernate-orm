@@ -16,6 +16,7 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
@@ -28,6 +29,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support a CONCAT function")
+@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Sybase doesn't support a CONCAT function")
 public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

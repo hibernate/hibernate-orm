@@ -74,14 +74,15 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	JtaTransactionCoordinatorImpl(
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
 			TransactionCoordinatorOwner owner,
-			boolean autoJoinTransactions) {
+			boolean autoJoinTransactions,
+			JtaPlatform jtaPlatform) {
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
 
 		final JdbcSessionContext jdbcSessionContext = owner.getJdbcSessionOwner().getJdbcSessionContext();
 
-		this.jtaPlatform = jdbcSessionContext.getServiceRegistry().getService( JtaPlatform.class );
+		this.jtaPlatform = jtaPlatform;
 
 		final SessionFactoryOptions sessionFactoryOptions = jdbcSessionContext.getSessionFactory().getSessionFactoryOptions();
 		this.preferUserTransactions = sessionFactoryOptions.isPreferUserTransaction();

@@ -8,14 +8,13 @@ package org.hibernate.cfg;
 
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.PropertyBinder;
@@ -41,7 +40,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private String ownerEntity;
 	private String ownerProperty;
 	private PropertyHolder propertyHolder;
-	private boolean ignoreNotFound;
+	private NotFoundAction notFoundAction;
 	private PropertyData inferredData;
 	private XClass targetEntity;
 	private boolean cascadeOnDelete;
@@ -57,7 +56,7 @@ public class OneToOneSecondPass implements SecondPass {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			XClass targetEntity,
-			boolean ignoreNotFound,
+			NotFoundAction notFoundAction,
 			boolean cascadeOnDelete,
 			boolean optional,
 			String cascadeStrategy,
@@ -68,7 +67,7 @@ public class OneToOneSecondPass implements SecondPass {
 		this.mappedBy = mappedBy;
 		this.propertyHolder = propertyHolder;
 		this.buildingContext = buildingContext;
-		this.ignoreNotFound = ignoreNotFound;
+		this.notFoundAction = notFoundAction;
 		this.inferredData = inferredData;
 		this.targetEntity = targetEntity;
 		this.cascadeOnDelete = cascadeOnDelete;
@@ -109,6 +108,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
+		binder.setProperty( inferredData.getProperty() );
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
@@ -191,7 +191,7 @@ public class OneToOneSecondPass implements SecondPass {
 					);
 					ManyToOne manyToOne = new ManyToOne( buildingContext, mappedByJoin.getTable() );
 					//FIXME use ignore not found here
-					manyToOne.setIgnoreNotFound( ignoreNotFound );
+					manyToOne.setNotFoundAction( notFoundAction );
 					manyToOne.setCascadeDeleteEnabled( value.isCascadeDeleteEnabled() );
 					manyToOne.setFetchMode( value.getFetchMode() );
 					manyToOne.setLazy( value.isLazy() );
@@ -236,18 +236,6 @@ public class OneToOneSecondPass implements SecondPass {
 				}
 				boolean referenceToPrimaryKey  = referencesDerivedId || mappedBy == null;
 				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
-
-				// If the other side is an entity with an ID that is derived from
-				// this side's owner entity, and both sides of the association are eager,
-				// then this side must be set to FetchMode.SELECT; otherwise,
-				// there will be an infinite loop attempting to load the derived ID on
-				// the opposite side.
-				if ( referencesDerivedId &&
-						!value.isLazy() &&
-						value.getFetchMode() == FetchMode.JOIN &&
-						!otherSideProperty.isLazy() ) {
-					value.setFetchMode( FetchMode.SELECT );
-				}
 
 				String propertyRef = value.getReferencedPropertyName();
 				if ( propertyRef != null ) {

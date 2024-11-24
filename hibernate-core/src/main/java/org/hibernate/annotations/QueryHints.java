@@ -97,6 +97,11 @@ public class QueryHints {
 	public static final String TIMEOUT_JPA = "javax.persistence.query.timeout";
 
 	/**
+	 * Apply a JPA query timeout, which is defined in <b>milliseconds</b>.
+	 */
+	public static final String TIMEOUT_JAKARTA_JPA = "jakarta.persistence.query.timeout";
+
+	/**
 	 * Available to apply lock mode to a native SQL query since JPA requires that
 	 * {@link javax.persistence.Query#setLockMode} throw an IllegalStateException if called for a native query.
 	 * <p/>

@@ -522,7 +522,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 	}
 
 	public void convexhull(String pckg) throws SQLException {
-		if ( !isSupportedByDialect( SpatialFunction.convexhull ) ) {
+		if ( !isSupportedByDialect( SpatialFunction.convexhull ) || !isSupportedByDialect( SpatialFunction.geomunion )) {
 			return;
 		}
 		Map<Integer, Geometry> dbexpected = expectationsFactory.getConvexHull( expectationsFactory.getTestPolygon() );

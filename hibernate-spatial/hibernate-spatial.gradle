@@ -19,12 +19,9 @@ dependencies {
 
     compile( libraries.postgresql )
 
-    compile(libraries.dom4j) {
-        transitive = false
-    }
-
     testCompile(libraries.junit)
     testCompile(project(':hibernate-testing'))
+    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
     testCompile([group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.8.0'])
     testCompile(libraries.validation)
     testCompile(libraries.jandex)
@@ -32,6 +29,9 @@ dependencies {
     testCompile(libraries.validator) {
         // for test runtime
         transitive = true
+    }
+    testCompile(libraries.dom4j) {
+        transitive = false
     }
 
     testRuntime( libraries.expression_language )

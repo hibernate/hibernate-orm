@@ -18,11 +18,21 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
  */
 public interface KeyValue extends Value {
 
+	/**
+	 * @deprecated Use {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, RootClass)}
+	 * instead.
+	 */
+	@Deprecated
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			String defaultCatalog,
 			String defaultSchema,
+			RootClass rootClass) throws MappingException;
+
+	IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
 			RootClass rootClass) throws MappingException;
 
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);

@@ -167,7 +167,10 @@ public interface SharedSessionContractImplementor
 	 * @apiNote This "timestamp" need not be related to timestamp in the Java Date/millisecond
 	 * sense.  It just needs to be an incrementing value.  See
 	 * {@link CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()}
+	 *
+	 * @deprecated no longer supported, when the Second Level Cache is enabled {{@link CacheTransactionSynchronization#getCachingTimestamp()}} can be used.
 	 */
+	@Deprecated
 	long getTransactionStartTimestamp();
 
 	/**
@@ -332,6 +335,13 @@ public interface SharedSessionContractImplementor
 	 * Instantiate the entity class, initializing with the given identifier
 	 */
 	Object instantiate(String entityName, Serializable id) throws HibernateException;
+
+	/**
+	 * Instantiate the entity class of an EntityPersister, initializing with the given identifier.
+	 * This is more efficient than {@link #instantiate(String, Serializable)} but not always
+	 * interchangeable: a single persister might be responsible for multiple types.
+	 */
+	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
 
 	/**
 	 * Execute an SQL Query

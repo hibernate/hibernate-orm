@@ -10,7 +10,7 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
@@ -27,8 +27,8 @@ public class JtaGetTransactionThrowsExceptionTest extends BaseEntityManagerFunct
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
-		options.put( org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
+		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
+		options.put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, "true" );
 	}
 
 	@Test(expected = IllegalStateException.class)

@@ -39,9 +39,12 @@ public class SQLFunctionRegistry {
 	 *
 	 * @param functionName The name of the function to locate
 	 *
-	 * @return The located function, maye return {@code null}
+	 * @return The located function, may return {@code null}
 	 */
-	public SQLFunction findSQLFunction(String functionName) {
+	public SQLFunction findSQLFunction(final String functionName) {
+		if ( functionName == null ) {
+			return null;
+		}
 		return functionMap.get( functionName );
 	}
 

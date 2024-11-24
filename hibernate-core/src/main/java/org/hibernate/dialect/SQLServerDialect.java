@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
@@ -19,6 +21,10 @@ import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
@@ -108,6 +114,20 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public IdentifierHelper buildIdentifierHelper(
+			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
+
+		if ( dbMetaData == null ) {
+			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
+			//       Check to see if this setting is correct.
+			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+		}
+
+		return super.buildIdentifierHelper( builder, dbMetaData );
+	}
+
+	@Override
 	public boolean supportsLimitOffset() {
 		return false;
 	}
@@ -124,7 +144,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "SELECT SCHEMA_NAME()";
+		return "select schema_name()";
 	}
 
 	@Override
@@ -231,4 +251,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return "";
 		}
 	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return NameQualifierSupport.BOTH;
+	}
+
 }

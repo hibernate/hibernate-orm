@@ -102,34 +102,40 @@ public class AttributeFactory {
 
 		if ( attributeContext.getPropertyMapping().getType().isComponentType() && jpaAttributeNature.equals( Attribute.PersistentAttributeType.BASIC ) ) {
 			CompositeType compositeType = (CompositeType) attributeContext.getPropertyMapping().getType();
-			EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
-					attributeMetadata.getJavaType(),
-					ownerType,
-					compositeType,
-					context.getSessionFactory()
-			);
-			context.registerEmbeddedableType(embeddableType);
-
-			String[] propertyNames = compositeType.getPropertyNames();
-			org.hibernate.type.Type[] subtypes = compositeType.getSubtypes();
-			InFlightAccess<?> inFlightAccess = embeddableType.getInFlightAccess();
-
-			for ( int i = 0; i < propertyNames.length; i++ ) {
-				SingularAttributeImpl nestedAttribute = new SingularAttributeImpl(
-						embeddableType,
-						propertyNames[i],
-						Attribute.PersistentAttributeType.BASIC,
-						new BasicTypeImpl<Object>(subtypes[i].getReturnedClass(), Type.PersistenceType.BASIC),
-						null,
-						false,
-						false,
-						property.isOptional()
-				);
-				inFlightAccess.addAttribute(nestedAttribute);
-			}
-
-			metaModelType = embeddableType;
+			metaModelType = context.locateEmbeddable( attributeMetadata.getJavaType(), compositeType );
 			jpaAttributeNature = Attribute.PersistentAttributeType.EMBEDDED;
+			if ( metaModelType == null ) {
+				metaModelType = context.locateEmbeddable( attributeMetadata.getJavaType(), compositeType );
+				if ( metaModelType == null ) {
+					EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
+						attributeMetadata.getJavaType(),
+						ownerType,
+						compositeType,
+						context.getSessionFactory()
+					);
+					context.registerEmbeddableType( embeddableType, compositeType );
+
+					String[] propertyNames = compositeType.getPropertyNames();
+					org.hibernate.type.Type[] subtypes = compositeType.getSubtypes();
+					InFlightAccess<?> inFlightAccess = embeddableType.getInFlightAccess();
+
+					for (int i = 0; i < propertyNames.length; i++) {
+						SingularAttributeImpl nestedAttribute = new SingularAttributeImpl(
+							embeddableType,
+							propertyNames[i],
+							Attribute.PersistentAttributeType.BASIC,
+							new BasicTypeImpl<Object>( subtypes[i].getReturnedClass(), Type.PersistenceType.BASIC ),
+							null,
+							false,
+							false,
+							property.isOptional()
+						);
+						inFlightAccess.addAttribute( nestedAttribute );
+					}
+
+					metaModelType = embeddableType;
+				}
+			}
 		}
 
 		return new SingularAttributeImpl(
@@ -249,13 +255,17 @@ public class AttributeFactory {
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getHibernateValue();
-
+				final CompositeType compositeType = (CompositeType) component.getType();
 				Class javaType;
 				if ( component.getComponentClassName() == null ) {
 					javaType = typeContext.getJpaBindableType();
 				}
 				else {
 					javaType = component.getComponentClass();
+					final EmbeddedTypeDescriptor<Y> cached = context.locateEmbeddable( javaType, compositeType );
+					if ( cached != null ) {
+						return cached;
+					}
 				}
 
 				final EmbeddedTypeDescriptor<Y> embeddableType = new EmbeddableTypeImpl<Y>(
@@ -264,7 +274,7 @@ public class AttributeFactory {
 						(ComponentType) typeContext.getHibernateValue().getType(),
 						context.getSessionFactory()
 				);
-				context.registerEmbeddedableType( embeddableType );
+				context.registerEmbeddableType( embeddableType, compositeType );
 
 				final InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();
 				final Iterator<Property> subProperties = component.getPropertyIterator();

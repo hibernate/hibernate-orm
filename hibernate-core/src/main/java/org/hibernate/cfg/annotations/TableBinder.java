@@ -477,10 +477,10 @@ public class TableBinder {
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		schema = BinderHelper.isEmptyOrNullAnnotationValue( schema )
-				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultNamespace().getPhysicalName().getSchema() )
+				? null
 				: schema;
 		catalog = BinderHelper.isEmptyOrNullAnnotationValue( catalog )
-				? extract( buildingContext.getMetadataCollector().getDatabase().getDefaultNamespace().getPhysicalName().getCatalog() )
+				? null
 				: catalog;
 
 		final Table table;

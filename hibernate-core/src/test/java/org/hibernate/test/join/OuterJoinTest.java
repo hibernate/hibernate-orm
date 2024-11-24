@@ -28,6 +28,7 @@ public class OuterJoinTest extends BaseCoreFunctionalTestCase {
 		@Column(name = "key_id")
 		Long key;
 
+		@Column(name = "val")
 		String value;
 
 		@ManyToOne(optional = false)
@@ -102,6 +103,7 @@ public class OuterJoinTest extends BaseCoreFunctionalTestCase {
 		@Column(name = "key_id")
 		private Long key;
 
+		@Column(name = "val")
 		private String value;
 
 		public Association() {

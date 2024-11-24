@@ -21,7 +21,6 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
@@ -31,11 +30,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Gail Badner
@@ -86,10 +82,10 @@ public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 				this::sessionFactory, session -> {
 					User user = session.find( User.class, ID );
 
-					assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
-					assertFalse( Hibernate.isPropertyInitialized( user, "lazy" ) );
+					assertThat( sqlInterceptor.getQueryCount() ).isEqualTo( 2 );
+					assertThat( Hibernate.isPropertyInitialized( user, "lazy" ) ).isTrue();
 
-					assertNull( user.getLazy() );
+					assertThat( user.getLazy() ).isNull();
 				}
 		);
 	}

@@ -131,7 +131,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 						final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
 						SimpleSelect select = new SimpleSelect( getDialect() )
 								.setTableName( queryableCollection.getTableName() )
-								.addColumn( "ORDER_ID" )
+								.addColumn( "order_id" )
 								.addColumn( "INDX" )
 								.addColumn( "PRD_CODE" );
 						PreparedStatement preparedStatement = ((SessionImplementor)session2).getJdbcCoordinator().getStatementPreparer().prepareStatement( select.toStatementString() );

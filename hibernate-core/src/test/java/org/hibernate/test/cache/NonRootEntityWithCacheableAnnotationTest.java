@@ -53,23 +53,22 @@ public class NonRootEntityWithCacheableAnnotationTest {
 		settings.put( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-write" );
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		try (ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( settings )
-				.build();
+				.build()) {
 
-		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000482" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000482" );
 
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( ABase.class )
-				.addAnnotatedClass( AEntity.class )
-				.buildMetadata();
+			Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( ABase.class )
+					.addAnnotatedClass( AEntity.class )
+					.buildMetadata();
 
-		assertFalse( metadata.getEntityBinding( ABase.class.getName() ).isCached() );
-		assertTrue( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );
+			assertFalse( metadata.getEntityBinding( ABase.class.getName() ).isCached() );
+			assertTrue( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );
 
-		assertFalse( triggerable.wasTriggered() );
-
-		serviceRegistry.destroy();
+			assertFalse( triggerable.wasTriggered() );
+		}
 	}
 
 	@Entity

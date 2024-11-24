@@ -237,6 +237,15 @@ public final class ArrayHelper {
 		return true;
 	}
 
+	public static boolean[] negate(boolean[] valueNullness) {
+		boolean[] result = new boolean[valueNullness.length];
+		for (int i = 0; i < valueNullness.length; i++) {
+			result[i] = !valueNullness[i];
+		}
+		return result;
+	}
+
+
 	public static <T> void addAll(Collection<T> collection, T[] array) {
 		collection.addAll( Arrays.asList( array ) );
 	}

@@ -509,6 +509,7 @@ parameter
 
 addrExpr
 	: #(r:DOT . .) { out(r); }
+	| #(fk:FK_REF .) { out(fk); }
 	| i:ALIAS_REF { out(i); }
 	| j:INDEX_OP { out(j); }
 	| v:RESULT_VARIABLE_REF { out(v); }

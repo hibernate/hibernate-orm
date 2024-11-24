@@ -26,7 +26,7 @@ public class FormalLastName {
 	@Embedded
 	private LastName lastName;
 
-	private String designation; /* Mr/Mrs/Master */
+	private String designation; /* Mr/Mrs */
 
 	public Integer getId() {
 		return id;

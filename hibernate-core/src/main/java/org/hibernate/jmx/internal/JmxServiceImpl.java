@@ -19,6 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jmx.spi.JmxService;
 import org.hibernate.service.Service;
@@ -119,6 +120,12 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 
 	@Override
 	public void registerService(Manageable service, Class<? extends Service> serviceRole) {
+		if ( service == null ) {
+			return;
+		}
+
+		DeprecationLogger.DEPRECATION_LOGGER.deprecatedJmxManageableServiceRegistration( service.getClass().getName() );
+
 		if ( OptionallyManageable.class.isInstance( service ) ) {
 			for ( Manageable realManageable : ( (OptionallyManageable) service ).getRealManageables() ) {
 				registerService( realManageable,serviceRole );
@@ -151,6 +158,8 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 
 	@Override
 	public void registerMBean(ObjectName objectName, Object mBean) {
+		DeprecationLogger.DEPRECATION_LOGGER.deprecatedJmxBeanRegistration( mBean.getClass().getName() );
+
 		MBeanServer mBeanServer = findServer();
 		if ( mBeanServer == null ) {
 			if ( startedServer ) {

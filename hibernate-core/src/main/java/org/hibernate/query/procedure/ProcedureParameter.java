@@ -44,6 +44,10 @@ public interface ProcedureParameter<T> extends QueryParameter<T> {
 	 * @param enabled {@code true} indicates that the NULL should be passed; {@code false} indicates it should not.
 	 *
 	 * @see org.hibernate.procedure.ParameterRegistration#enablePassingNulls
+	 *
+	 * @deprecated with no replacement.  See {@link org.hibernate.cfg.AvailableSettings#PROCEDURE_NULL_PARAM_PASSING}
+	 * for details
 	 */
+	@Deprecated
 	void enablePassingNulls(boolean enabled);
 }

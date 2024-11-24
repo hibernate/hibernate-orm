@@ -74,7 +74,7 @@ public final class TypeUtils {
 		if ( type.getKind().isPrimitive() ) {
 			return PRIMITIVE_WRAPPERS.get( type.getKind() );
 		}
-		return type.toString();
+		return TypeRenderingVisitor.toString( type );
 	}
 
 	public static String toArrayTypeString(ArrayType type, Context context) {

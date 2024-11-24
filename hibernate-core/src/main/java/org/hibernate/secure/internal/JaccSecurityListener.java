@@ -11,6 +11,9 @@ package org.hibernate.secure.internal;
  * {@link org.hibernate.secure.spi.JaccIntegrator} for details.
  * 
  * @author <a href="kabir.khan@jboss.com">Kabir Khan</a>
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public interface JaccSecurityListener {
 }

@@ -60,12 +60,12 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
-import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -136,11 +136,24 @@ public abstract class Loader {
 
 	/**
 	 * An array indicating whether the entities have eager property fetching
-	 * enabled.
+	 * enabled for all of their properties.
+	 * <p>
+	 * Supersedes {@link #getEntityEagerPerPropertyFetches()}.
 	 *
 	 * @return Eager property fetching indicators.
 	 */
 	protected boolean[] getEntityEagerPropertyFetches() {
+		return null;
+	}
+
+	/**
+	 * An array indicating for each entity which specific properties must have eager fetching enabled.
+	 * <p>
+	 * Superseded by {@link #getEntityEagerPropertyFetches()}.
+	 *
+	 * @return Eager property fetching indicators.
+	 */
+	protected boolean[][] getEntityEagerPerPropertyFetches() {
 		return null;
 	}
 
@@ -242,7 +255,7 @@ public abstract class Loader {
 			SessionFactoryImplementor sessionFactory,
 			List<AfterLoadAction> afterLoadActions) throws HibernateException {
 
-		Dialect dialect = sessionFactory.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		final Dialect dialect = sessionFactory.getFastSessionServices().dialect;
 
 		sql = applyLocks( sql, parameters, dialect, afterLoadActions );
 
@@ -1184,14 +1197,8 @@ public abstract class Loader {
 			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 
 			if ( hydratedObjectsSize != 0 ) {
-				final Iterable<PreLoadEventListener> listeners = session
-					.getFactory()
-					.getFastSessionServices()
-					.eventListenerGroup_PRE_LOAD
-					.listeners();
-
 				for ( Object hydratedObject : hydratedObjects ) {
-					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
+					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre );
 				}
 
 			}
@@ -1663,24 +1670,29 @@ public abstract class Loader {
 			// perform the hydration just as if it were "not yet loaded"
 			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) object ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				hydrateEntityState(
-						rs,
-						i,
-						persister,
-						getEntityAliases()[i].getRowIdAlias(),
-						key,
-						hydratedObjects,
-						session,
-						getInstanceClass(
-								rs,
-								i,
-								persister,
-								key.getIdentifier(),
-								session
-						),
-						object,
-						requestedLockMode
-				);
+				EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
+				// Avoid loading the same entity proxy twice for the same result set: it could lead to errors,
+				// because some code writes to its input (ID in hydrated state replaced by the loaded entity, in particular).
+				if ( entry != null && entry.getStatus() != Status.LOADING ) {
+					hydrateEntityState(
+							rs,
+							i,
+							persister,
+							getEntityAliases()[i].getRowIdAlias(),
+							key,
+							hydratedObjects,
+							session,
+							getInstanceClass(
+									rs,
+									i,
+									persister,
+									key.getIdentifier(),
+									session
+							),
+							object,
+							requestedLockMode
+					);
+				}
 
 				// EARLY EXIT!!!
 				//		- to skip the version check
@@ -1753,7 +1765,14 @@ public abstract class Loader {
 		}
 		else {
 			// instantiate a new instance
-			object = session.instantiate( instanceClass, key.getIdentifier() );
+			if ( persister.hasSubclasses() ) {
+				object = session.instantiate( instanceClass , key.getIdentifier() );
+			}
+			else {
+				//When there are no subclasses, use the persister instance directly
+				//so to short-circuit the persister lookup:
+				object = session.instantiate( persister, key.getIdentifier() );
+			}
 		}
 
 		//need to hydrate it.
@@ -1805,11 +1824,15 @@ public abstract class Loader {
 		hydratedObjects.add( object );
 	}
 
-	private boolean isEagerPropertyFetchEnabled(int i) {
+	private boolean isAllPropertyEagerFetchEnabled(int i) {
 		boolean[] array = getEntityEagerPropertyFetches();
 		return array != null && array[i];
 	}
 
+	private boolean[] getPerPropertyEagerFetchEnabled(int i) {
+		boolean[][] array = getEntityEagerPerPropertyFetches();
+		return array != null ? array[i] : null;
+	}
 
 	/**
 	 * Hydrate the state an object from the SQL <tt>ResultSet</tt>, into
@@ -1843,7 +1866,7 @@ public abstract class Loader {
 			);
 		}
 
-		boolean fetchAllPropertiesRequested = isEagerPropertyFetchEnabled( i );
+		boolean fetchAllPropertiesRequested = isAllPropertyEagerFetchEnabled( i );
 
 		// add temp entry so that the next step is circular-reference
 		// safe - only needed because some types don't take proper
@@ -1868,6 +1891,7 @@ public abstract class Loader {
 				rootPersister,
 				cols,
 				fetchAllPropertiesRequested,
+				getPerPropertyEagerFetchEnabled( i ),
 				session
 		);
 
@@ -2027,7 +2051,7 @@ public abstract class Loader {
 		final LimitHandler limitHandler = getLimitHandler(
 				queryParameters.getRowSelection()
 		);
-		String sql = limitHandler.processSql( queryParameters.getFilteredSQL(), queryParameters.getRowSelection() );
+		String sql = limitHandler.processSql( queryParameters.getFilteredSQL(), queryParameters );
 
 		// Adding locks and comments.
 		sql = preprocessSQL( sql, queryParameters, getFactory(), afterLoadActions );

@@ -42,6 +42,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -71,8 +72,8 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -91,8 +92,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -140,7 +139,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -175,6 +174,10 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -267,6 +270,14 @@ public class SessionImpl
 				initialMode = fastSessionServices.initialSessionFlushMode;
 			}
 			else {
+				final Object setting = NullnessHelper.coalesceSuppliedValues(
+						() -> getSessionProperty( AvailableSettings.FLUSH_MODE ),
+						() -> {
+							final Object oldSetting = getSessionProperty( org.hibernate.jpa.AvailableSettings.FLUSH_MODE );
+							//Not invoking the DeprecationLogger in this case as the user can't avoid using this property (the string value is the same)
+							return oldSetting;
+						}
+				);
 				initialMode = ConfigurationHelper.getFlushMode( getSessionProperty( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO );
 			}
 			getSession().setHibernateFlushMode( initialMode );
@@ -305,8 +316,28 @@ public class SessionImpl
 		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
+		final Object jakartaQueryTimeout;
+		if ( ( jakartaQueryTimeout = getSessionProperty( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT )  ) != null ) {
+			query.setHint( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT, jakartaQueryTimeout );
+		}
 		final Object lockTimeout;
-		if ( ( lockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT ) ) != null ) {
+		final Object jpaLockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT );
+		if ( jpaLockTimeout == null ) {
+			lockTimeout = getSessionProperty( JAKARTA_JPA_LOCK_TIMEOUT );
+		}
+		else if ( Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( jpaLockTimeout ) ) {
+			final Object jakartaLockTimeout = getSessionProperty( JAKARTA_JPA_LOCK_TIMEOUT );
+			if ( jakartaLockTimeout == null ) {
+				lockTimeout = jpaLockTimeout;
+			}
+			else {
+				lockTimeout = jakartaLockTimeout;
+			}
+		}
+		else {
+			lockTimeout = jpaLockTimeout;
+		}
+		if ( lockTimeout != null ) {
 			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
 		}
 	}
@@ -1007,7 +1038,16 @@ public class SessionImpl
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		event = recycleEventInstance( event, id, entityName );
-		fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
+
+		try {
+			fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
+		}
+		catch (FetchNotFoundException e) {
+			// when this happens at the "top-level" of a load, for 5.x we want to
+			// keep this the same user-facing exception as it was before
+			getSessionFactory().getEntityNotFoundDelegate().handleEntityNotFound( e.getEntityName(), (Serializable) e.getIdentifier() );
+		}
+
 		Object result = event.getResult();
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );
@@ -1528,7 +1568,7 @@ public class SessionImpl
 		queryParameters.validateParameters();
 
 		HQLQueryPlan plan = queryParameters.getQueryPlan();
-		if ( plan == null ) {
+		if ( plan == null || !plan.isShallow() ) {
 			plan = getQueryPlan( query, true );
 		}
 
@@ -1642,7 +1682,7 @@ public class SessionImpl
 			if ( li.getSession() != this ) {
 				throw new TransientObjectException( "The proxy was not associated with this session" );
 			}
-			return li.getIdentifier();
+			return li.getInternalIdentifier();
 		}
 		else {
 			EntityEntry entry = persistenceContext.getEntry( object );
@@ -1670,7 +1710,7 @@ public class SessionImpl
 	}
 
 	private Serializable getProxyIdentifier(Object proxy) {
-		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getIdentifier();
+		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getInternalIdentifier();
 	}
 
 	private FilterQueryPlan getFilterQueryPlan(
@@ -2212,6 +2252,19 @@ public class SessionImpl
 				"object references an unsaved transient instance - save the transient instance before flushing: " +
 						guessEntityName( object )
 		);
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public <T> T getReference(T object) {
+		checkOpen();
+		if ( object instanceof HibernateProxy ) {
+			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+			return (T) getReference( initializer.getPersistentClass(), initializer.getIdentifier() );
+		}
+		else {
+			EntityPersister persister = getEntityPersister( null, object );
+			return (T) getReference( persister.getMappedClass(), persister.getIdentifier(object, this) );
+		}
 	}
 
 	@Override
@@ -3356,7 +3409,7 @@ public class SessionImpl
 			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
 				setEnforcingFetchGraph( true );
 			}
-			
+
 			return loadAccess.load( (Serializable) primaryKey );
 		}
 		catch ( EntityNotFoundException ignored ) {
@@ -3424,11 +3477,19 @@ public class SessionImpl
 	}
 
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
-		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		final CacheRetrieveMode cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		if ( cacheRetrieveMode == null ) {
+			return (CacheRetrieveMode) settings.get( JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE );
+		}
+		return cacheRetrieveMode;
 	}
 
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
-		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		final CacheStoreMode cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
+		if ( cacheStoreMode == null ) {
+			return ( CacheStoreMode ) settings.get( JAKARTA_JPA_SHARED_CACHE_STORE_MODE );
+		}
+		return cacheStoreMode;
 	}
 
 	private void checkTransactionNeededForUpdateOperation() {
@@ -3571,13 +3632,18 @@ public class SessionImpl
 
 		//now actually update settings, if it's any of these which have a direct impact on this Session state:
 
-		if ( AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
+		if ( AvailableSettings.FLUSH_MODE.equals( propertyName )
+				|| org.hibernate.jpa.AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
 			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 		}
-		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals(  propertyName ) ) {
+		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals( propertyName )
+				|| JAKARTA_JPA_LOCK_SCOPE.equals( propertyName ) || JAKARTA_JPA_LOCK_TIMEOUT.equals( propertyName ) ) {
 			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 		}
-		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName ) || JPA_SHARED_CACHE_STORE_MODE.equals(  propertyName ) ) {
+		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
+				|| JPA_SHARED_CACHE_STORE_MODE.equals( propertyName )
+				|| JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
+				|| JAKARTA_JPA_SHARED_CACHE_STORE_MODE.equals( propertyName ) ) {
 			getSession().setCacheMode(
 					CacheModeHelper.interpretCacheMode(
 							determineCacheStoreMode( properties ),

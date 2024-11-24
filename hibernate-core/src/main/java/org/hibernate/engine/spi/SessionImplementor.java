@@ -78,8 +78,6 @@ public interface SessionImplementor
 
 	ActionQueue getActionQueue();
 
-	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
-
 	void forceFlush(EntityEntry e) throws HibernateException;
 
 	@Override

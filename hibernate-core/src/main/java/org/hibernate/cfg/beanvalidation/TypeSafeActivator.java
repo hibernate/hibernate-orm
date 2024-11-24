@@ -33,6 +33,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -59,8 +60,6 @@ import org.jboss.logging.Logger;
 class TypeSafeActivator {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
-
-	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -532,7 +531,7 @@ class TypeSafeActivator {
 	@SuppressWarnings("unchecked")
 	private static ValidatorFactory resolveProvidedFactory(ConfigurationService cfgService) {
 		return cfgService.getSetting(
-				FACTORY_PROPERTY,
+				AvailableSettings.JPA_VALIDATION_FACTORY,
 				new ConfigurationService.Converter<ValidatorFactory>() {
 					@Override
 					public ValidatorFactory convert(Object value) {
@@ -544,7 +543,7 @@ class TypeSafeActivator {
 									String.format(
 											Locale.ENGLISH,
 											"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
-											FACTORY_PROPERTY,
+											AvailableSettings.JPA_VALIDATION_FACTORY,
 											ValidatorFactory.class.getName(),
 											value.getClass().getName()
 									)
@@ -552,7 +551,29 @@ class TypeSafeActivator {
 						}
 					}
 				},
-				null
+				cfgService.getSetting(
+						AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
+						new ConfigurationService.Converter<ValidatorFactory>() {
+							@Override
+							public ValidatorFactory convert(Object value) {
+								try {
+									return ValidatorFactory.class.cast( value );
+								}
+								catch ( ClassCastException e ) {
+									throw new IntegrationException(
+											String.format(
+													Locale.ENGLISH,
+													"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
+													AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
+													ValidatorFactory.class.getName(),
+													value.getClass().getName()
+											)
+									);
+								}
+							}
+						},
+						null
+				)
 		);
 	}
 }

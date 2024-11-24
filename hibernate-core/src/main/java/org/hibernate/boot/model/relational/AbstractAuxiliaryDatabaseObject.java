@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Convenience base class for {@link org.hibernate.mapping.AuxiliaryDatabaseObject}s.
+ * Convenience base class for {@link AuxiliaryDatabaseObject}s.
  * <p/>
  * This implementation performs dialect scoping checks strictly based on
  * dialect name comparisons.  Custom implementations might want to do

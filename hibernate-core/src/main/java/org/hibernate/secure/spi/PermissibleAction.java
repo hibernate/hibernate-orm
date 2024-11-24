@@ -8,7 +8,10 @@ package org.hibernate.secure.spi;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public enum PermissibleAction {
 	INSERT( "insert" ),
 	UPDATE( "update" ),

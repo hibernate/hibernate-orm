@@ -15,14 +15,24 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.spi.CollectionReturn;
+import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
+import org.hibernate.type.CompositeType;
+import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
@@ -190,11 +200,105 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
 		}
 
-		if ( attributeDefinition.getType().isCollectionType() && isTooManyCollections() ) {
-			// todo : have this revert to batch or subselect fetching once "sql gen redesign" is in place
-			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+		final FetchSource currentSource = currentSource();
+		final Type attributeType = attributeDefinition.getType();
+
+
+		if ( attributeType.isCollectionType() ) {
+			if ( isTooManyCollections() ) {
+				// todo : have this revert to batch or subselect fetching once "sql gen redesign" is in place
+				return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+			}
+			if ( currentSource.resolveEntityReference() != null ) {
+				CollectionPersister collectionPersister =
+						(CollectionPersister) attributeDefinition.getType().getAssociatedJoinable( sessionFactory() );
+				// Check if this is an eager "mappedBy" (inverse) side of a bidirectional
+				// one-to-many/many-to-one association, with the many-to-one side
+				// being the associated entity's ID as in:
+				//
+				//  @Entity
+				//  public class Foo {
+				//      ...
+				//      @OneToMany(mappedBy = "foo", fetch = FetchType.EAGER)
+				//      private Set<Bar> bars = new HashSet<>();
+				//  }
+				//  @Entity
+				//  public class Bar implements Serializable {
+				//      @Id
+				//      @ManyToOne(fetch = FetchType.EAGER)
+				//      private Foo foo;
+				//      ...
+				//  }
+				//
+				if ( fetchStrategy.getTiming() == FetchTiming.IMMEDIATE &&
+						fetchStrategy.getStyle() == FetchStyle.JOIN &&
+						collectionPersister.isOneToMany() &&
+						collectionPersister.isInverse() ) {
+					// This is an eager "mappedBy" (inverse) side of a bidirectional
+					// one-to-many/many-to-one association
+					final EntityType elementType = (EntityType) collectionPersister.getElementType();
+					final Type elementIdType = ( (EntityPersister) elementType.getAssociatedJoinable( sessionFactory() ) ).getIdentifierType();
+					if ( elementIdType.isComponentType() && ( (CompositeType) elementIdType ).isEmbedded() ) {
+						final EmbeddedComponentType elementIdTypeEmbedded = (EmbeddedComponentType) elementIdType;
+						if ( elementIdTypeEmbedded.getSubtypes().length == 1 &&
+								elementIdTypeEmbedded.getPropertyNames()[ 0 ].equals( collectionPersister.getMappedByProperty() ) ) {
+							// The owning side of the inverse collection is defined by the associated entity's id.
+							//
+							// Because of how Loaders process ids when processing the ResultSet, this condition would
+							// lead to an infinite loop. Adjust the fetch to use a SELECT fetch instead of JOIN to
+							// avoid the infinite loop.
+							return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+						}
+					}
+				}
+			}
 		}
 
+		if ( attributeType.isEntityType() &&
+				fetchStrategy.getTiming() == FetchTiming.IMMEDIATE &&
+				fetchStrategy.getStyle() == FetchStyle.JOIN ) {
+			final EntityType entityType = (EntityType) attributeType;
+			final EntityReference currentEntityReference = currentSource.resolveEntityReference();
+			if ( currentEntityReference != null ) {
+				final EntityPersister currentEntityPersister = currentEntityReference.getEntityPersister();
+				if ( entityType.isOneToOne() && entityType.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
+					// attributeDefinition is the "mappedBy" (inverse) side of a
+					// bidirectional one-to-one association.
+					final OneToOneType oneToOneType = (OneToOneType) attributeType;
+					final String associatedUniqueKeyPropertyName = oneToOneType.getIdentifierOrUniqueKeyPropertyName(
+							sessionFactory()
+					);
+					if ( associatedUniqueKeyPropertyName == null ) {
+						// The foreign key for the other side of the association is the ID.
+						// Now check if the ID itself is the other side of the association.
+						final EntityPersister associatedEntityPersister = (EntityPersister) oneToOneType.getAssociatedJoinable(
+								sessionFactory()
+						);
+						final Type associatedIdentifierType = associatedEntityPersister.getIdentifierType();
+						if ( associatedIdentifierType.isComponentType() &&
+								( (CompositeType) associatedIdentifierType ).isEmbedded() ) {
+							final EmbeddedComponentType associatedNonEncapsulatedIdentifierType =
+									(EmbeddedComponentType) associatedIdentifierType;
+							if ( associatedNonEncapsulatedIdentifierType.getSubtypes().length == 1 &&
+									EntityType.class.isInstance( associatedNonEncapsulatedIdentifierType.getSubtypes()[0] ) ) {
+								final EntityType otherSideEntityType =
+										( (EntityType) associatedNonEncapsulatedIdentifierType.getSubtypes()[0] );
+								if ( otherSideEntityType.isLogicalOneToOne() &&
+										otherSideEntityType.isReferenceToPrimaryKey() &&
+										otherSideEntityType.getAssociatedEntityName().equals( currentEntityPersister.getEntityName() ) ) {
+									// The owning side of the inverse to-one is defined by the associated entity's id.
+									//
+									// Because of how Loaders process ids when processing the ResultSet, this condition
+									// would lead to an infinite loop. Adjust the fetch to use a SELECT fetch instead
+									// of JOIN to avoid the infinite loop.
+									return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		return fetchStrategy;
 	}
 

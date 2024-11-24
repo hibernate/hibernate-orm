@@ -12,7 +12,10 @@ package org.hibernate.jpa;
  * NOTE : Does *not* include {@link org.hibernate.cfg.Environment} values.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.cfg.AvailableSettings} instead.  Will be removed in 6.0
  */
+@Deprecated
 public interface AvailableSettings {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -278,37 +281,48 @@ public interface AvailableSettings {
 
 	/**
 	 * cfg.xml configuration file used
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#CFG_XML_FILE}
 	 */
+	@Deprecated
 	String CFG_FILE = "hibernate.ejb.cfgfile";
 
 	/**
-	 * Caching configuration should follow the following pattern
-	 * {@code hibernate.ejb.classcache.<fully.qualified.Classname> usage[, region]}
-	 * where usage is the cache strategy used and region the cache region name
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#CLASS_CACHE_PREFIX}
 	 */
+	@Deprecated
 	String CLASS_CACHE_PREFIX = "hibernate.ejb.classcache";
 
 	/**
-	 * Caching configuration should follow the following pattern
-	 * {@code hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> usage[, region]}
-	 * where usage is the cache strategy used and region the cache region name
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#COLLECTION_CACHE_PREFIX}
 	 */
+	@Deprecated
 	String COLLECTION_CACHE_PREFIX = "hibernate.ejb.collectioncache";
 
 	/**
 	 * SessionFactoryObserver class name, the class must have a no-arg constructor
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER} instead
 	 */
+	@Deprecated
 	String SESSION_FACTORY_OBSERVER = "hibernate.ejb.session_factory_observer";
 
 	/**
 	 * IdentifierGeneratorStrategyProvider class name, the class must have a no-arg constructor
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#IDENTIFIER_GENERATOR_STRATEGY_PROVIDER}
+	 * instead
 	 */
+	@Deprecated
 	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.ejb.identifier_generator_strategy_provider";
 
 	/**
 	 * Event configuration should follow the following pattern
 	 * hibernate.ejb.event.[eventType] f.q.c.n.EventListener1, f.q.c.n.EventListener12 ...
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#EVENT_LISTENER_PREFIX} instead
 	 */
+	@Deprecated
 	String EVENT_LISTENER_PREFIX = "hibernate.ejb.event";
 
 	/**
@@ -327,9 +341,9 @@ public interface AvailableSettings {
 	String ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT = "hibernate.enhancer.enableAssociationManagement";
 
 	/**
-	 * Whether or not discard persistent context on entityManager.close()
-	 * The EJB3 compliant and default choice is false
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#DISCARD_PC_ON_CLOSE} instead
 	 */
+	@Deprecated
 	String DISCARD_PC_ON_CLOSE = "hibernate.ejb.discard_pc_on_close";
 
 
@@ -342,22 +356,36 @@ public interface AvailableSettings {
 
 	/**
 	 * EntityManagerFactory name
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#EMF_NAME} instead
 	 */
+	@Deprecated
 	String ENTITY_MANAGER_FACTORY_NAME = "hibernate.ejb.entitymanager_factory_name";
 
 
 	/**
-	 * List of classes names
-	 * Internal use only
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#ORM_XML_FILES}
 	 */
+	@Deprecated
 	String XML_FILE_NAMES = "hibernate.ejb.xml_files";
+	/**
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#HBM_XML_FILES}
+	 */
+	@Deprecated
 	String HBXML_FILES = "hibernate.hbmxml.files";
+	/**
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#LOADED_CLASSES}
+	 */
+	@Deprecated
 	String LOADED_CLASSES = "hibernate.ejb.loaded.classes";
 
 
 	/**
 	 * Used to pass along the name of the persistence unit.
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#PERSISTENCE_UNIT_NAME} instead
 	 */
+	@Deprecated
 	String PERSISTENCE_UNIT_NAME = "hibernate.ejb.persistenceUnitName";
 
 	/**

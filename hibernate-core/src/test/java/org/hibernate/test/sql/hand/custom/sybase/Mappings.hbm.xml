@@ -70,11 +70,11 @@
 		<sql-delete>DELETE FROM EMPLOYMENT WHERE EMPID=?</sql-delete> 
 	</class>
 
-    <class name="TextHolder">
-        <id name="id" column="id">
+    <class name="TextHolder" table="TEXTHOLDER">
+        <id name="id" column="ID">
             <generator class="increment"/>
         </id>
-        <property name="description" type="text" length="15000"/>
+        <property name="description" column="DESCRIPTION" type="text" length="15000"/>
         <loader query-ref="textholder"/>
         <sql-insert>
             INSERT INTO TEXTHOLDER
@@ -85,11 +85,11 @@
         <sql-delete>DELETE FROM TEXTHOLDER WHERE ID=?</sql-delete>
     </class>
 
-    <class name="ImageHolder">
-        <id name="id" column="id">
+    <class name="ImageHolder" table="IMAGEHOLDER">
+        <id name="id" column="ID">
             <generator class="increment"/>
         </id>
-        <property name="photo" type="image" length="15000"/>
+        <property name="photo" column="PHOTO" type="image" length="15000"/>
         <loader query-ref="imageholder"/>
         <sql-insert>
             INSERT INTO IMAGEHOLDER

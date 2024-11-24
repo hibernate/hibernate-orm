@@ -15,6 +15,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.HSQLDialect;
 
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -22,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@RequiresDialectFeature(value = { DialectChecks.NotH2Version2.class}, comment = "See https://github.com/h2database/h2database/issues/3385")
 public class IJTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

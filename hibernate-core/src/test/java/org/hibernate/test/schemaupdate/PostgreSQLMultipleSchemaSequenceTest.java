@@ -85,7 +85,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 				);
 				try(Statement statement = ddlTransactionIsolator1.getIsolatedConnection().createStatement()) {
 					statement.execute( String.format( "DROP SCHEMA IF EXISTS %s CASCADE", extraSchemaName ) );
-					statement.execute( String.format( "CREATE SCHEMA %s", extraSchemaName ) );
+					statement.execute( String.format( "CREATE SCHEMA %s;", extraSchemaName ) );
 
 					try(ResultSet resultSet = statement.executeQuery( "SELECT NEXTVAL('SEQ_TEST')" )) {
 						while ( resultSet.next() ) {
@@ -156,7 +156,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 			assertEquals( 2 ,
 						  sqlLines
 						  .stream()
-						  .filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start 1 increment 1" ) )
+						  .filter( s -> s.equalsIgnoreCase( "create sequence SEQ_TEST start 1 increment 1;" ) )
 						  .count()
 			);
 		}

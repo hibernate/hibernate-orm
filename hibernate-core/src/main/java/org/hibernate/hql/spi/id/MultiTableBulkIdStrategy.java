@@ -6,6 +6,7 @@
  */
 package org.hibernate.hql.spi.id;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -22,21 +23,47 @@ import org.hibernate.persister.entity.Queryable;
  * @author Steve Ebersole
  */
 public interface MultiTableBulkIdStrategy {
+
 	/**
 	 * Prepare the strategy.  Called as the SessionFactory is being built.  Intended patterns here include:<ul>
 	 *     <li>Adding tables to the passed Mappings, to be picked by by "schema management tools"</li>
 	 *     <li>Manually creating the tables immediately through the passed JDBC Connection access</li>
 	 * </ul>
-	 *  @param jdbcServices The JdbcService object
+	 * @param jdbcServices The JdbcService object
 	 * @param connectionAccess Access to the JDBC Connection
 	 * @param metadata Access to the O/RM mapping information
 	 * @param sessionFactoryOptions
+	 * @deprecated Will be removed in favor of the variant accepting a {@link SqlStringGenerationContext}
+	 * @see #prepare(JdbcServices, JdbcConnectionAccess, MetadataImplementor, SessionFactoryOptions, SqlStringGenerationContext)
 	 */
-	void prepare(
+	@Deprecated
+	default void prepare(
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
 			MetadataImplementor metadata,
-			SessionFactoryOptions sessionFactoryOptions);
+			SessionFactoryOptions sessionFactoryOptions) {
+		throw new IllegalStateException("prepare() was not implemented!");
+	}
+
+	/**
+	 * Prepare the strategy.  Called as the SessionFactory is being built.  Intended patterns here include:<ul>
+	 *     <li>Adding tables to the passed Mappings, to be picked by by "schema management tools"</li>
+	 *     <li>Manually creating the tables immediately through the passed JDBC Connection access</li>
+	 * </ul>
+	 * @param jdbcServices The JdbcService object
+	 * @param connectionAccess Access to the JDBC Connection
+	 * @param metadata Access to the O/RM mapping information
+	 * @param sessionFactoryOptions
+	 * @param sqlStringGenerationContext
+	 */
+	default void prepare(
+			JdbcServices jdbcServices,
+			JdbcConnectionAccess connectionAccess,
+			MetadataImplementor metadata,
+			SessionFactoryOptions sessionFactoryOptions,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		prepare( jdbcServices, connectionAccess, metadata, sessionFactoryOptions );
+	}
 
 	/**
 	 * Release the strategy.   Called as the SessionFactory is being shut down.

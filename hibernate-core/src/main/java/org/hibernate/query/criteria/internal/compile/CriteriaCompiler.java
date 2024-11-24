@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.ParameterExpression;
 
@@ -22,6 +23,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.internal.expression.ParameterExpressionImpl;
 import org.hibernate.query.criteria.internal.expression.function.FunctionExpression;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.sql.ast.Clause;
@@ -92,7 +94,7 @@ public class CriteriaCompiler implements Serializable {
 			public ExplicitParameterInfo registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter) {
 				ExplicitParameterInfo parameterInfo = explicitParameterInfoMap.get( criteriaQueryParameter );
 				if ( parameterInfo == null ) {
-					if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) ) {
+					if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) && !( (ParameterExpressionImpl) criteriaQueryParameter ).isNameGenerated() ) {
 						parameterInfo = new ExplicitParameterInfo(
 								criteriaQueryParameter.getName(),
 								null,
@@ -132,6 +134,9 @@ public class CriteriaCompiler implements Serializable {
 					}
 
 					public void bind(TypedQuery typedQuery) {
+						if ( literal instanceof Parameter ) {
+							return;
+						}
 						typedQuery.setParameter( parameterName, literal );
 					}
 				};

@@ -145,91 +145,91 @@ public class StatsTest extends BaseUnitTestCase {
 
 	@Test
 	public void testQueryStatGathering() {
-		SessionFactory sf = buildBaseConfiguration()
+		try (SessionFactory sf = buildBaseConfiguration()
 				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-				.buildSessionFactory();
+				.buildSessionFactory()) {
 
-		Session s = sf.openSession();
-		Transaction tx = s.beginTransaction();
-		fillDb(s);
-		tx.commit();
-		s.close();
+			Session s = sf.openSession();
+			Transaction tx = s.beginTransaction();
+			fillDb( s );
+			tx.commit();
+			s.close();
 
-		s = sf.openSession();
-		tx = s.beginTransaction();
-		final String continents = "from Continent";
-		int results = s.createQuery( continents ).list().size();
-		QueryStatistics continentStats = sf.getStatistics().getQueryStatistics( continents );
-		assertNotNull( "stats were null",  continentStats );
-		assertEquals( "unexpected execution count", 1, continentStats.getExecutionCount() );
-		assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
-		long maxTime = continentStats.getExecutionMaxTime();
-		assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
+			s = sf.openSession();
+			tx = s.beginTransaction();
+			final String continents = "from Continent";
+			int results = s.createQuery( continents ).list().size();
+			QueryStatistics continentStats = sf.getStatistics().getQueryStatistics( continents );
+			assertNotNull( "stats were null", continentStats );
+			assertEquals( "unexpected execution count", 1, continentStats.getExecutionCount() );
+			assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
+			long maxTime = continentStats.getExecutionMaxTime();
+			assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( continents, stats.getQueryExecutionMaxTimeQueryString() );
 
-		Iterator itr = s.createQuery( continents ).iterate();
-		// iterate() should increment the execution count
-		assertEquals( "unexpected execution count", 2, continentStats.getExecutionCount() );
-		// but should not effect the cumulative row count
-		assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
-		Hibernate.close( itr );
+			Iterator itr = s.createQuery( continents ).iterate();
+			// iterate() should increment the execution count
+			assertEquals( "unexpected execution count", 2, continentStats.getExecutionCount() );
+			// but should not effect the cumulative row count
+			assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
+			Hibernate.close( itr );
 
-		ScrollableResults scrollableResults = s.createQuery( continents ).scroll();
-		// same deal with scroll()...
-		assertEquals( "unexpected execution count", 3, continentStats.getExecutionCount() );
-		assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
-		// scroll through data because SybaseASE15Dialect throws NullPointerException
-		// if data is not read before closing the ResultSet
-		while ( scrollableResults.next() ) {
-			// do nothing
-		}
-		scrollableResults.close();
-		tx.commit();
-		s.close();
+			ScrollableResults scrollableResults = s.createQuery( continents ).scroll();
+			// same deal with scroll()...
+			assertEquals( "unexpected execution count", 3, continentStats.getExecutionCount() );
+			assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
+			// scroll through data because SybaseASE15Dialect throws NullPointerException
+			// if data is not read before closing the ResultSet
+			while ( scrollableResults.next() ) {
+				// do nothing
+			}
+			scrollableResults.close();
+			tx.commit();
+			s.close();
 
-		// explicitly check that statistics for "split queries" get collected
-		// under the original query
-		sf.getStatistics().clear();
+			// explicitly check that statistics for "split queries" get collected
+			// under the original query
+			sf.getStatistics().clear();
 
-		s = sf.openSession();
-		tx = s.beginTransaction();
-		final String localities = "from Locality";
-		results = s.createQuery( localities ).list().size();
-		QueryStatistics localityStats = sf.getStatistics().getQueryStatistics( localities );
-		assertNotNull( "stats were null",  localityStats );
-		// ...one for each split query
-		assertEquals( "unexpected execution count", 2, localityStats.getExecutionCount() );
-		assertEquals( "unexpected row count", results, localityStats.getExecutionRowCount() );
-		maxTime = localityStats.getExecutionMaxTime();
-		assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
+			s = sf.openSession();
+			tx = s.beginTransaction();
+			final String localities = "from Locality";
+			results = s.createQuery( localities ).list().size();
+			QueryStatistics localityStats = sf.getStatistics().getQueryStatistics( localities );
+			assertNotNull( "stats were null", localityStats );
+			// ...one for each split query
+			assertEquals( "unexpected execution count", 2, localityStats.getExecutionCount() );
+			assertEquals( "unexpected row count", results, localityStats.getExecutionRowCount() );
+			maxTime = localityStats.getExecutionMaxTime();
+			assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( localities, stats.getQueryExecutionMaxTimeQueryString() );
-		tx.commit();
-		s.close();
-		assertFalse( s.isOpen() );
+			tx.commit();
+			s.close();
+			assertFalse( s.isOpen() );
 
-		// native sql queries
-		sf.getStatistics().clear();
+			// native sql queries
+			sf.getStatistics().clear();
 
-		s = sf.openSession();
-		tx = s.beginTransaction();
-		final String sql = "select id, name from Country";
-		results = s.createSQLQuery( sql ).addEntity( Country.class ).list().size();
-		QueryStatistics sqlStats = sf.getStatistics().getQueryStatistics( sql );
-		assertNotNull( "sql stats were null", sqlStats );
-		assertEquals( "unexpected execution count", 1, sqlStats.getExecutionCount() );
-		assertEquals( "unexpected row count", results, sqlStats.getExecutionRowCount() );
-		maxTime = sqlStats.getExecutionMaxTime();
-		assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
+			s = sf.openSession();
+			tx = s.beginTransaction();
+			final String sql = "select id, name from Country";
+			results = s.createSQLQuery( sql ).addEntity( Country.class ).list().size();
+			QueryStatistics sqlStats = sf.getStatistics().getQueryStatistics( sql );
+			assertNotNull( "sql stats were null", sqlStats );
+			assertEquals( "unexpected execution count", 1, sqlStats.getExecutionCount() );
+			assertEquals( "unexpected row count", results, sqlStats.getExecutionRowCount() );
+			maxTime = sqlStats.getExecutionMaxTime();
+			assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( sql, stats.getQueryExecutionMaxTimeQueryString() );
-		tx.commit();
-		s.close();
+			tx.commit();
+			s.close();
 
-		s = sf.openSession();
-		tx = s.beginTransaction();
-		cleanDb( s );
-		tx.commit();
-		s.close();
-		sf.close();
+			s = sf.openSession();
+			tx = s.beginTransaction();
+			cleanDb( s );
+			tx.commit();
+			s.close();
+		}
 	}
 
 	private Continent fillDb(Session s) {

@@ -233,6 +233,20 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	/**
+	 * Override the implementation provided on SharedSessionContractImplementor
+	 * which is not very efficient: this method is hot in Hibernate Reactive, and could
+	 * be hot in some ORM contexts as well.
+	 * @return
+	 */
+	@Override
+	public Integer getConfiguredJdbcBatchSize() {
+		final Integer sessionJdbcBatchSize = this.jdbcBatchSize;
+		return sessionJdbcBatchSize == null ?
+				fastSessionServices.defaultJdbcBatchSize :
+				sessionJdbcBatchSize;
+	}
+
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 	}
 
@@ -647,11 +661,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
 	}
 
-	protected QueryImplementor createQuery(NamedQueryDefinition queryDefinition) {
+	protected QueryImpl createQuery(NamedQueryDefinition queryDefinition) {
 		String queryString = queryDefinition.getQueryString();
 		final QueryImpl query = new QueryImpl(
 				this,
-				getQueryPlan( queryString, false ).getParameterMetadata(),
+				getQueryPlan( queryString, false ),
 				queryString
 		);
 		applyQuerySettingsAndHints( query );
@@ -723,7 +737,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public QueryImplementor createQuery(String queryString) {
+	public QueryImpl createQuery(String queryString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -731,7 +745,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			final QueryImpl query = new QueryImpl(
 					this,
-					getQueryPlan( queryString, false ).getParameterMetadata(),
+					getQueryPlan( queryString, false ),
 					queryString
 			);
 			applyQuerySettingsAndHints( query );
@@ -831,7 +845,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			// do the translation
-			final QueryImplementor<T> query = createQuery( queryString );
+			final QueryImpl<T> query = createQuery( queryString );
 			resultClassChecking( resultClass, query );
 			return query;
 		}
@@ -841,13 +855,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess", "StatementWithEmptyBody"})
-	protected void resultClassChecking(Class resultClass, org.hibernate.Query hqlQuery) {
+	protected void resultClassChecking(Class resultClass, QueryImpl hqlQuery) {
 		// make sure the query is a select -> HHH-7192
-		final HQLQueryPlan queryPlan = getFactory().getQueryPlanCache().getHQLQueryPlan(
-				hqlQuery.getQueryString(),
-				false,
-				getLoadQueryInfluencers().getEnabledFilters()
-		);
+		HQLQueryPlan queryPlan = hqlQuery.getQueryPlan();
+
 		if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
 			throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
 		}
@@ -874,12 +885,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				// if we have only a single return expression, its java type should match the requested type
 				final Type queryResultType = queryPlan.getTranslators()[0].getReturnTypes()[0];
 				if ( !resultClass.isAssignableFrom( queryResultType.getReturnedClass() ) ) {
-					throw new IllegalArgumentException(
-							"Type specified for TypedQuery [" +
-									resultClass.getName() +
-									"] is incompatible with query return type [" +
-									queryResultType.getReturnedClass() + "]"
-					);
+					throw buildIncompatibleException( resultClass, queryResultType.getReturnedClass() );
 				}
 			}
 			else {
@@ -923,7 +929,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})
 	protected <T> QueryImplementor<T> createQuery(NamedQueryDefinition namedQueryDefinition, Class<T> resultType) {
-		final QueryImplementor query = createQuery( namedQueryDefinition );
+		final QueryImpl query = createQuery( namedQueryDefinition );
 		if ( resultType != null ) {
 			resultClassChecking( resultType, query );
 		}
@@ -967,11 +973,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			queryReturns = rsMapping.getQueryReturns();
 		}
 		else {
-			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
+			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager" );
 		}
 
 		if ( queryReturns.length > 1 ) {
 			throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+		}
+
+		if ( queryReturns.length == 0 ) {
+			throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );
 		}
 
 		final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
@@ -1004,10 +1014,23 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
-		return new IllegalArgumentException(
-				"Type specified for TypedQuery [" + resultClass.getName() +
-						"] is incompatible with query return type [" + actualResultClass + "]"
-		);
+		final String resultClassName = resultClass.getName();
+		final String actualResultClassName = actualResultClass.getName();
+		if ( resultClassName.equals( actualResultClassName ) ) {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with the query return type of the same name." +
+							" Both classes have the same name but are different as they have been loaded respectively by Classloaders " +
+							resultClass.getClassLoader().toString() + ", " + actualResultClass.getClassLoader().toString() +
+							". This suggests a classloader bug in the Runtime executing Hibernate ORM, or in the integration code."
+			);
+		}
+		else {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with query return type [" + actualResultClass + "]"
+			);
+		}
 	}
 
 	@Override

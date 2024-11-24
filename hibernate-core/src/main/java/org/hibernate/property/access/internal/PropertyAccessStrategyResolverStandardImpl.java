@@ -9,7 +9,7 @@ package org.hibernate.property.access.internal;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.engine.spi.Managed;
+import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
@@ -37,7 +37,8 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 		if ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName )
 				|| BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName )
 				|| BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
-			if ( Managed.class.isAssignableFrom( containerClass ) ) {
+			//type-cache-pollution agent: always check for EnhancedEntity type first.
+			if ( ManagedTypeHelper.isManagedType( containerClass ) ) {
 				// PROPERTY (BASIC) and MIXED are not valid for bytecode enhanced entities...
 				return PropertyAccessStrategyEnhancedImpl.INSTANCE;
 			}

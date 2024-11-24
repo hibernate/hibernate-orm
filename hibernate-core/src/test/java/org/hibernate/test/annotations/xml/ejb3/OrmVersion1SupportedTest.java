@@ -8,6 +8,7 @@ package org.hibernate.test.annotations.xml.ejb3;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.ErrorLogger;
 
@@ -23,8 +24,13 @@ import org.jboss.logging.Logger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-@TestForIssue(jiraKey = "HHH-6271")
+@TestForIssue(jiraKey = {"HHH-6271", "HHH-14529"})
 public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+		super.prepareBootstrapRegistryBuilder( builder );
+	}
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(

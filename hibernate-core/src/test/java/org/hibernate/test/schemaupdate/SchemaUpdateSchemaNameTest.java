@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
@@ -75,8 +76,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 					.applySettings( cfg.getProperties() )
 					.build();
 
-			SessionFactory sf = cfg.buildSessionFactory( ssr );
-			try {
+			try (SessionFactory sf = cfg.buildSessionFactory();) {
 				Session session = sf.openSession();
 				try {
 					session.getTransaction().begin();
@@ -92,9 +92,6 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 				finally {
 					session.close();
 				}
-			}
-			finally {
-				sf.close();
 			}
 		}
 		finally {
@@ -112,8 +109,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 					cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml() )
 					.applySettings( cfg.getProperties() )
 					.build();
-			SessionFactory sf = cfg.buildSessionFactory( ssr );
-			try {
+			try (SessionFactory sf = cfg.buildSessionFactory( ssr )) {
 				Session session = sf.openSession();
 				try {
 					session.getTransaction().begin();
@@ -129,9 +125,6 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 				finally {
 					session.close();
 				}
-			}
-			finally {
-				sf.close();
 			}
 		}
 		finally {
@@ -152,6 +145,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 	public static abstract class AbstractSimple {
 		@Id
 		private Integer id;
+		@Column(name = "val")
 		private Integer value;
 
 		public Integer getId() {

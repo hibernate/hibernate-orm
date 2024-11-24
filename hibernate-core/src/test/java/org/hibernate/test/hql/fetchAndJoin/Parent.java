@@ -26,6 +26,7 @@ package org.hibernate.test.hql.fetchAndJoin;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -45,6 +46,7 @@ public class Parent {
 	@JoinColumn
 	private Set<Child> children = new HashSet<Child>();
 
+	@Column(name = "val")
 	private String value;
 
 	public Parent() {

@@ -5,21 +5,10 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
-apply from: rootProject.file( 'gradle/base-information.gradle' )
-
-
 apply plugin: 'maven-publish'
-apply plugin: 'org.hibernate.build.maven-repo-auth'
-apply plugin: 'com.jfrog.bintray'
-
-
-ext {
-	bintrayUser = project.findProperty( 'PERSONAL_BINTRAY_USER' )
-	bintrayKey = project.findProperty( 'PERSONAL_BINTRAY_API_KEY' )
-	sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
-	sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
+if ( rootProject.ormVersion.isSnapshot ) {
+	apply plugin: 'org.hibernate.build.maven-repo-auth'
 }
-
 
 publishing {
 	publications {
@@ -30,39 +19,6 @@ publishing {
 		maven {
 			name 'jboss-snapshots-repository'
 			url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
-		}
-	}
-}
-
-bintray {
-	user = project.bintrayUser
-	key = project.bintrayKey
-
-	publications = ['publishedArtifacts']
-
-	pkg {
-		userOrg = 'hibernate'
-		repo = 'artifacts'
-		name = 'hibernate-orm'
-
-		publish = true
-
-		version {
-			name = project.version
-			released  = new Date()
-			vcsTag = project.version
-			gpg {
-				sign = true
-			}
-			attributes = [
-					'jpa': project.jpaVersion,
-					'family': project.ormVersion.family
-			]
-			mavenCentralSync {
-				sync = true
-				user = project.sonatypeOssrhUser
-				password = project.sonatypeOssrhPassword
-			}
 		}
 	}
 }

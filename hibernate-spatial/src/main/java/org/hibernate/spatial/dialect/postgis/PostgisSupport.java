@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.postgis;
 
 import java.io.Serializable;
+import java.sql.Types;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.service.ServiceRegistry;
@@ -18,25 +19,46 @@ import org.hibernate.spatial.SpatialAggregate;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
+import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
 public class PostgisSupport implements SpatialDialect, Serializable {
 
+	private final SpatialFunctionsRegistry postgisFunctions;
 
-	private PostgisFunctions postgisFunctions = new PostgisFunctions();
+	public PostgisSupport(SpatialFunctionsRegistry functions) {
+		postgisFunctions = functions;
+	}
 
-	void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
+	public PostgisSupport() {
+		postgisFunctions = new PostgisFunctions();
+	}
+
+	public void contributeTypes(
+			TypeContributions typeContributions,
+			ServiceRegistry serviceRegistry,
+			SqlTypeDescriptor wkbType) {
+		typeContributions.contributeType( new GeolatteGeometryType( wkbType ) );
+		typeContributions.contributeType( new JTSGeometryType( wkbType ) );
 
 		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
-	public PostgisFunctions functionsToRegister() {
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		contributeTypes( typeContributions, serviceRegistry, PGGeometryTypeDescriptor.INSTANCE_WKB_2 );
+	}
+
+
+	public SpatialFunctionsRegistry functionsToRegister() {
 		return postgisFunctions;
+	}
+
+	public boolean isSpatial(int typeCode) {
+		return typeCode == Types.OTHER || typeCode == PGGeometryTypeDescriptor.INSTANCE_WKB_2.getSqlType();
 	}
 
 	/**
@@ -104,17 +126,13 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	 */
 	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
-		switch ( aggregation ) {
-			case SpatialAggregate.EXTENT:
-				final StringBuilder stbuf = new StringBuilder();
-				stbuf.append( "st_extent(" ).append( columnName ).append( ")::geometry" );
-				return stbuf.toString();
-			default:
-				throw new IllegalArgumentException(
-						"Aggregation of type "
-								+ aggregation + " are not supported by this dialect"
-				);
+		if ( aggregation == SpatialAggregate.EXTENT ) {
+			return "st_extent(" + columnName + ")::geometry";
 		}
+		throw new IllegalArgumentException(
+				"Aggregation of type "
+						+ aggregation + " are not supported by this dialect"
+		);
 	}
 
 	/**

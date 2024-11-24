@@ -6,17 +6,10 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
-import java.util.Map;
-
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Manageable;
 
 /**
@@ -24,10 +17,9 @@ import org.hibernate.service.spi.Manageable;
  *
  * @author Steve Ebersole
  */
-public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable, BatchBuilderMXBean {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BatchBuilderImpl.class );
+public class BatchBuilderImpl implements BatchBuilder, Manageable, BatchBuilderMXBean {
 
-	private int jdbcBatchSize;
+	private volatile int jdbcBatchSize;
 
 	/**
 	 * Constructs a BatchBuilderImpl
@@ -45,11 +37,6 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable,
 	}
 
 	@Override
-	public void configure(Map configurationValues) {
-		jdbcBatchSize = ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, jdbcBatchSize );
-	}
-
-	@Override
 	public int getJdbcBatchSize() {
 		return jdbcBatchSize;
 	}
@@ -61,13 +48,7 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable,
 
 	@Override
 	public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-		final Integer sessionJdbcBatchSize = jdbcCoordinator.getJdbcSessionOwner()
-				.getJdbcBatchSize();
-		final int jdbcBatchSizeToUse = sessionJdbcBatchSize == null ?
-				this.jdbcBatchSize :
-				sessionJdbcBatchSize;
-		return jdbcBatchSizeToUse > 1
-				? new BatchingBatch( key, jdbcCoordinator, jdbcBatchSizeToUse )
-				: new NonBatchingBatch( key, jdbcCoordinator );
+		return SharedBatchBuildingCode.buildBatch( jdbcBatchSize, key, jdbcCoordinator );
 	}
+
 }

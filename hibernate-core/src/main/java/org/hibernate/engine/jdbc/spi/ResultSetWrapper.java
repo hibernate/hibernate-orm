@@ -13,8 +13,11 @@ import org.hibernate.engine.jdbc.ColumnNameCache;
 /**
  * Contract for wrapping a {@link ResultSet} in a "column name cache" wrapper.
  *
+ * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
+ *
  * @author Gail Badner
  */
+@Deprecated
 public interface ResultSetWrapper {
 	/**
 	 * Wrap a result set in a "column name cache" wrapper.

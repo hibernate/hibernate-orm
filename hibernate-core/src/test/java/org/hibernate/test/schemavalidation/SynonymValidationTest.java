@@ -16,19 +16,19 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB297Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Allows the BaseCoreFunctionalTestCase to create the schema using TestEntity.  The test method validates against an
@@ -39,7 +39,11 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Brett Meyer
  */
-@RequiresDialect(Oracle9iDialect.class)
+@RequiresDialects({
+		@RequiresDialect(Oracle9iDialect.class),
+		@RequiresDialect(DB297Dialect.class)
+
+})
 public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 	private StandardServiceRegistry ssr;
 
@@ -51,14 +55,29 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Before
 	public void setUp() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createSQLQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
+			final String createStatement;
+			if ( getDialect() instanceof Oracle9iDialect ) {
+				createStatement = "CREATE SYNONYM test_synonym FOR test_entity";
+			}
+			else {
+				createStatement = "CREATE ALIAS test_synonym FOR test_entity";
+			}
+			session.createNativeQuery( createStatement ).executeUpdate();
+
 		} );
 	}
 
 	@After
 	public void tearDown() {
 		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createSQLQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
+			final String dropStatement;
+			if ( getDialect() instanceof Oracle9iDialect ) {
+				dropStatement = "DROP SYNONYM test_synonym FORCE";
+			}
+			else {
+				dropStatement = "DROP ALIAS test_synonym FOR TABLE";
+			}
+			session.createNativeQuery( dropStatement ).executeUpdate();
 		});
 	}
 
@@ -138,6 +157,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Column(nullable = false)
 		private String key;
 
+		@Column(name = "val")
 		private String value;
 
 		public Long getId() {
@@ -175,6 +195,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Column(nullable = false)
 		private String key;
 
+		@Column(name = "val")
 		private String value;
 
 		public Long getId() {

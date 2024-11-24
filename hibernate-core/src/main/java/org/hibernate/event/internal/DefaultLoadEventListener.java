@@ -362,10 +362,17 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( !options.isAllowProxyCreation() ) {
 			impl = load( event, persister, keyToLoad, options );
 			if ( impl == null ) {
-				event.getSession()
-						.getFactory()
-						.getEntityNotFoundDelegate()
-						.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
+				if ( options == LoadEventListener.INTERNAL_LOAD_NULLABLE ) {
+					// The proxy is for a non-existing association mapped as @NotFound.
+					// Don't throw an exeption; just return null.
+					return null;
+				}
+				else {
+					event.getSession()
+							.getFactory()
+							.getEntityNotFoundDelegate()
+							.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
+				}
 			}
 		}
 

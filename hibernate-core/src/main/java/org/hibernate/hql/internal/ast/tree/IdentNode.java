@@ -39,6 +39,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	}
 
 	private boolean nakedPropertyRef;
+	private boolean fromClauseAlias;
 	private String[] columns;
 	
 	public String[] getColumns() {
@@ -103,82 +104,85 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	}
 	
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent, AST parentPredicate) {
-		if (!isResolved()) {
-			if ( getWalker().getCurrentFromClause().isFromElementAlias( getText() ) ) {
-				FromElement fromElement = getWalker().getCurrentFromClause().getFromElement( getText() );
-				if ( fromElement.getQueryableCollection() != null && fromElement.getQueryableCollection().getElementType().isComponentType() ) {
-					if ( getWalker().isInSelect() ) {
-						// This is a reference to an element collection
-						setFromElement( fromElement );
-						super.setDataType( fromElement.getQueryableCollection().getElementType() );
-						this.columns = resolveColumns( fromElement.getQueryableCollection() );
-						initText( getColumns() );
-						setFirstChild( null );
-						// Don't resolve it
-					}
-					else {
-						resolveAsAlias();
-						// Don't resolve it
-					}
-				}
-				else if ( resolveAsAlias() ) {
-					setResolved();
-					// We represent a from-clause alias
-				}
-			}
-			else if (
-					getColumns() != null
-					&& ( getWalker().getAST() instanceof AbstractMapComponentNode || getWalker().getAST() instanceof IndexNode )
-					&& getWalker().getCurrentFromClause().isFromElementAlias( getOriginalText() )
-					) {
-				// We might have to revert our decision that this is naked element collection reference when we encounter it is embedded in a map function
-				setText( getOriginalText() );
-				if ( resolveAsAlias() ) {
-					setResolved();
-				}
-			}
-			else if (parent != null && parent.getType() == SqlTokenTypes.DOT) {
-				DotNode dot = (DotNode) parent;
-				if (parent.getFirstChild() == this) {
-					if (resolveAsNakedComponentPropertyRefLHS(dot)) {
-						// we are the LHS of the DOT representing a naked comp-prop-ref
-						setResolved();
-					}
+		if ( isResolved() ) {
+			return;
+		}
+
+		if ( getWalker().getCurrentFromClause().isFromElementAlias( getText() ) ) {
+			final FromElement fromElement = getWalker().getCurrentFromClause().getFromElement( getText() );
+			if ( fromElement.getQueryableCollection() != null && fromElement.getQueryableCollection().getElementType().isComponentType() ) {
+				if ( getWalker().isInSelect() ) {
+					// This is a reference to an element collection
+					setFromElement( fromElement );
+					super.setDataType( fromElement.getQueryableCollection().getElementType() );
+					this.columns = resolveColumns( fromElement.getQueryableCollection() );
+					initText( getColumns() );
+					setFirstChild( null );
+					// Don't resolve it
 				}
 				else {
-					if (resolveAsNakedComponentPropertyRefRHS(dot)) {
-						// we are the RHS of the DOT representing a naked comp-prop-ref
-						setResolved();
-					}
+					resolveAsAlias();
+					// Don't resolve it
+				}
+			}
+			else if ( resolveAsAlias() ) {
+				setResolved();
+				// We represent a from-clause alias
+			}
+		}
+		else if (
+				getColumns() != null
+				&& ( getWalker().getAST() instanceof AbstractMapComponentNode || getWalker().getAST() instanceof IndexNode )
+				&& getWalker().getCurrentFromClause().isFromElementAlias( getOriginalText() )
+				) {
+			// We might have to revert our decision that this is naked element collection reference when we encounter it is embedded in a map function
+			setText( getOriginalText() );
+			if ( resolveAsAlias() ) {
+				setResolved();
+			}
+		}
+		else if (parent != null && parent.getType() == SqlTokenTypes.DOT) {
+			DotNode dot = (DotNode) parent;
+			if (parent.getFirstChild() == this) {
+				if (resolveAsNakedComponentPropertyRefLHS(dot)) {
+					// we are the LHS of the DOT representing a naked comp-prop-ref
+					setResolved();
 				}
 			}
 			else {
-				DereferenceType result = resolveAsNakedPropertyRef();
-				if (result == DereferenceType.PROPERTY_REF) {
-					// we represent a naked (simple) prop-ref
+				if (resolveAsNakedComponentPropertyRefRHS(dot)) {
+					// we are the RHS of the DOT representing a naked comp-prop-ref
 					setResolved();
-				}
-				else if (result == DereferenceType.COMPONENT_REF) {
-					// EARLY EXIT!!!  return so the resolve call explicitly coming from DotNode can
-					// resolve this...
-					return;
-				}
-			}
-
-			// if we are still not resolved, we might represent a constant.
-			//      needed to add this here because the allowance of
-			//      naked-prop-refs in the grammar collides with the
-			//      definition of literals/constants ("nondeterminism").
-			//      TODO: cleanup the grammar so that "processConstants" is always just handled from here
-			if (!isResolved()) {
-				try {
-					getWalker().getLiteralProcessor().processConstant(this, false);
-				}
-				catch (Throwable ignore) {
-					// just ignore it for now, it'll get resolved later...
 				}
 			}
 		}
+		else {
+			DereferenceType result = resolveAsNakedPropertyRef();
+			if (result == DereferenceType.PROPERTY_REF) {
+				// we represent a naked (simple) prop-ref
+				setResolved();
+			}
+			else if (result == DereferenceType.COMPONENT_REF) {
+				// EARLY EXIT!!!  return so the resolve call explicitly coming from DotNode can
+				// resolve this...
+				return;
+			}
+		}
+
+		// if we are still not resolved, we might represent a constant.
+		//      needed to add this here because the allowance of
+		//      naked-prop-refs in the grammar collides with the
+		//      definition of literals/constants ("nondeterminism").
+		//      TODO: cleanup the grammar so that "processConstants" is always just handled from here
+		if (!isResolved()) {
+			try {
+				getWalker().getLiteralProcessor().processConstant(this, false);
+			}
+			catch (Throwable ignore) {
+				// just ignore it for now, it'll get resolved later...
+			}
+		}
+
 	}
 
 	private boolean resolveAsAlias() {

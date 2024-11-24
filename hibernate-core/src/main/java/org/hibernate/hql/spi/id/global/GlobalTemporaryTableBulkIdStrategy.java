@@ -8,6 +8,7 @@ package org.hibernate.hql.spi.id.global;
 
 import java.sql.PreparedStatement;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -104,16 +105,14 @@ public class GlobalTemporaryTableBulkIdStrategy
 			Table idTable,
 			JdbcServices jdbcServices,
 			MetadataImplementor metadata,
-			PreparationContextImpl context) {
-		context.creationStatements.add( buildIdTableCreateStatement( idTable, jdbcServices, metadata ) );
+			PreparationContextImpl context,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		context.creationStatements.add( buildIdTableCreateStatement( idTable, metadata, sqlStringGenerationContext ) );
 		if ( dropIdTables ) {
-			context.dropStatements.add( buildIdTableDropStatement( idTable, jdbcServices ) );
+			context.dropStatements.add( buildIdTableDropStatement( idTable, sqlStringGenerationContext ) );
 		}
 
-		final String renderedName = jdbcServices.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				idTable.getQualifiedTableName(),
-				jdbcServices.getJdbcEnvironment().getDialect()
-		);
+		final String renderedName = sqlStringGenerationContext.formatWithoutDefaults( idTable.getQualifiedTableName() );
 
 		return new IdTableInfoImpl( renderedName );
 	}

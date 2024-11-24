@@ -34,22 +34,23 @@ public class CacheKeyImplementationHashCodeTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-12746")
 	public void test() {
-		ServiceRegistryImplementor serviceRegistry = (
-				ServiceRegistryImplementor) new StandardServiceRegistryBuilder().build();
-		MetadataSources ms = new MetadataSources( serviceRegistry );
-		ms.addAnnotatedClass( AnEntity.class ).addAnnotatedClass( AnotherEntity.class );
-		Metadata metadata = ms.buildMetadata();
-		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sfb.build();
+		try (ServiceRegistryImplementor serviceRegistry = (
+				ServiceRegistryImplementor) new StandardServiceRegistryBuilder().build()) {
+			MetadataSources ms = new MetadataSources( serviceRegistry );
+			ms.addAnnotatedClass( AnEntity.class ).addAnnotatedClass( AnotherEntity.class );
+			Metadata metadata = ms.buildMetadata();
+			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
+			SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sfb.build();
 
 
-		CacheKeyImplementation anEntityCacheKey = createCacheKeyImplementation(
-				1, sessionFactory.getMetamodel().entityPersister( AnEntity.class ), sessionFactory
-		);
-		CacheKeyImplementation anotherEntityCacheKey = createCacheKeyImplementation(
-				1, sessionFactory.getMetamodel().entityPersister( AnotherEntity.class ), sessionFactory
-		);
-		assertFalse( anEntityCacheKey.equals( anotherEntityCacheKey ) );
+			CacheKeyImplementation anEntityCacheKey = createCacheKeyImplementation(
+					1, sessionFactory.getMetamodel().entityPersister( AnEntity.class ), sessionFactory
+			);
+			CacheKeyImplementation anotherEntityCacheKey = createCacheKeyImplementation(
+					1, sessionFactory.getMetamodel().entityPersister( AnotherEntity.class ), sessionFactory
+			);
+			assertFalse( anEntityCacheKey.equals( anotherEntityCacheKey ) );
+		}
 	}
 
 	private CacheKeyImplementation createCacheKeyImplementation(

@@ -6,6 +6,14 @@
  */
 package org.hibernate.envers.test.integration.reventity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Optional;
+
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.enhanced.OrderedSequenceGenerator;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
@@ -35,10 +43,18 @@ public class MonotonicRevisionNumberTest extends BaseEnversFunctionalTestCase {
 		EntityPersister persister = sessionFactory().getEntityPersister( SequenceIdRevisionEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		Assert.assertTrue( OrderedSequenceGenerator.class.isInstance( generator ) );
-		OrderedSequenceGenerator seqGenerator = (OrderedSequenceGenerator) generator;
+
+		Database database = metadata().getDatabase();
+		SqlStringGenerationContext sqlStringGenerationContext =
+				SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
+		Optional<AuxiliaryDatabaseObject> sequenceOptional = database.getAuxiliaryDatabaseObjects().stream()
+				.filter( o -> "REVISION_GENERATOR".equals( o.getExportIdentifier() ) )
+				.findFirst();
+		assertThat( sequenceOptional ).isPresent();
+		String[] sqlCreateStrings = sequenceOptional.get().sqlCreateStrings( sqlStringGenerationContext );
 		Assert.assertTrue(
 				"Oracle sequence needs to be ordered in RAC environment.",
-				seqGenerator.sqlCreateStrings( getDialect() )[0].toLowerCase().endsWith( " order" )
+				sqlCreateStrings[0].toLowerCase().endsWith( " order" )
 		);
 	}
 }

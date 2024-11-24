@@ -24,6 +24,7 @@
 package org.hibernate.jpa.test.criteria.selectcase;
 
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.EntityManager;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -37,6 +38,7 @@ import javax.persistence.criteria.Root;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
@@ -47,6 +49,7 @@ import org.junit.Test;
 @TestForIssue( jiraKey = "HHH-9731" )
 @SkipForDialect(value = DB2Dialect.class, comment = "We would need casts in the case clauses. See HHH-12822.")
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby requires either casted parameters or literals in the result arms of CASE expressions")
+@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Sybase requires either casted parameters or literals in the result arms of CASE expressions")
 public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -131,6 +134,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 		private Long id;
 
 		@Enumerated(EnumType.STRING)
+		@Column(name = "val")
 		private EnumValue value;
 	}
 

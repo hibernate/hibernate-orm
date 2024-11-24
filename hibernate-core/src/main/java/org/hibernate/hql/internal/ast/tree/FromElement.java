@@ -471,6 +471,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	public static final String DISCRIMINATOR_PROPERTY_NAME = "class";
 	private TypeDiscriminatorMetadata typeDiscriminatorMetadata;
 
+	public boolean isNonQualifiedPropertyRef(String identifier) {
+		return elementType.isNonQualifiedPropertyRef( identifier );
+	}
+
 	private static class TypeDiscriminatorMetadataImpl implements TypeDiscriminatorMetadata {
 		private final DiscriminatorMetadata persisterDiscriminatorMetadata;
 		private final String alias;

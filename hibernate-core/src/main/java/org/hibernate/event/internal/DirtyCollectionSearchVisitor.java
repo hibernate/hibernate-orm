@@ -7,7 +7,10 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.ManagedTypeHelper;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
@@ -22,11 +25,19 @@ import org.hibernate.type.CollectionType;
  */
 public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
+	private final EnhancementAsProxyLazinessInterceptor interceptor;
+	private final boolean[] propertyVersionability;
 	private boolean dirty;
-	private boolean[] propertyVersionability;
 
-	public DirtyCollectionSearchVisitor(EventSource session, boolean[] propertyVersionability) {
+	public DirtyCollectionSearchVisitor(Object entity, EventSource session, boolean[] propertyVersionability) {
 		super( session );
+		EnhancementAsProxyLazinessInterceptor interceptor = null;
+		if ( ManagedTypeHelper.isPersistentAttributeInterceptable( entity ) ) {
+			if ( ManagedTypeHelper.asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor() instanceof EnhancementAsProxyLazinessInterceptor ) {
+				interceptor = (EnhancementAsProxyLazinessInterceptor) ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			}
+		}
+		this.interceptor = interceptor;
 		this.propertyVersionability = propertyVersionability;
 	}
 
@@ -45,6 +56,9 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 				// return (ah==null) ? true : searchForDirtyCollections(ah, type);
 			}
 			else {
+				if ( interceptor != null && !interceptor.isAttributeLoaded( type.getName() ) ) {
+					return null;
+				}
 				// if not wrapped yet, its dirty (this can't occur, because
 				// we now always call wrap() before getting to here)
 				// return ( ! (obj instanceof PersistentCollection) ) ?

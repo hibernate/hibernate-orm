@@ -435,7 +435,7 @@ public final class ReflectHelper {
 		}
 	}
 
-	private static boolean isStaticField(Field field) {
+	public static boolean isStaticField(Field field) {
 		return field != null && ( field.getModifiers() & Modifier.STATIC ) == Modifier.STATIC;
 	}
 

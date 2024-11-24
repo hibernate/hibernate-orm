@@ -24,7 +24,7 @@ jar {
 				'Implementation-Version': project.version,
 				'Implementation-Vendor': 'Hibernate.org',
 				'Implementation-Vendor-Id': 'org.hibernate',
-				'Implementation-Url': 'http://hibernate.org/orm',
+				'Implementation-Url': 'https://hibernate.org/orm',
 
 				// Java 9 module name
 				'Automatic-Module-Name': project.java9ModuleName,
@@ -37,7 +37,7 @@ jar {
 				'Bundle-Name': project.name,
 				'Bundle-SymbolicName': project.java9ModuleName,
 				'Bundle-Vendor': 'Hibernate.org',
-				'Bundle-DocURL': "http://www.hibernate.org/orm/${project.ormVersion.family}",
+				'Bundle-DocURL': "https://hibernate.org/orm/${project.ormVersion.family}",
 				// This is overridden in some sub-projects
 				'Import-Package': [
 						// Temporarily support JTA 1.1 -- Karaf and other frameworks still
@@ -65,7 +65,7 @@ task sourcesJar(type: Jar) {
 				'Implementation-Version': project.version,
 				'Implementation-Vendor': 'Hibernate.org',
 				'Implementation-Vendor-Id': 'org.hibernate',
-				'Implementation-Url': 'http://hibernate.org/orm',
+				'Implementation-Url': 'https://hibernate.org/orm',
 
 				// Hibernate-specific JAR manifest attributes
 				'Hibernate-VersionFamily': project.ormVersion.family,
@@ -87,7 +87,7 @@ task javadocJar(type: Jar) {
 				'Implementation-Version': project.version,
 				'Implementation-Vendor': 'Hibernate.org',
 				'Implementation-Vendor-Id': 'org.hibernate',
-				'Implementation-Url': 'http://hibernate.org/orm',
+				'Implementation-Url': 'https://hibernate.org/orm',
 
 				// Hibernate-specific JAR manifest attributes
 				'Hibernate-VersionFamily': project.ormVersion.family,
@@ -110,13 +110,13 @@ javadoc {
 	configure( options ) {
 		windowTitle = "$project.name JavaDocs"
 		docTitle = "$project.name JavaDocs ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 		use = true
 		encoding = 'UTF-8'
 		links += [
 				'https://docs.oracle.com/javase/8/docs/api/',
-				'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-				'http://docs.jboss.org/cdi/api/2.0/',
+				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'https://docs.jboss.org/cdi/api/2.0/',
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
 		tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
@@ -165,6 +165,6 @@ publishing {
 
 task ciBuild( dependsOn: [test, publish] )
 
-task release( dependsOn: [test, bintrayUpload] )
-bintrayUpload.mustRunAfter test
+task release( dependsOn: [test, publishToSonatype] )
+publishToSonatype.mustRunAfter test
 

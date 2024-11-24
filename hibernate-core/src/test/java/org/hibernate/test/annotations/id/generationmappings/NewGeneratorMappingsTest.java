@@ -66,7 +66,8 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
-		assertEquals( MinimalSequenceEntity.SEQ_NAME, seqGenerator.getDatabaseStructure().getName() );
+		assertEquals( MinimalSequenceEntity.SEQ_NAME,
+				seqGenerator.getDatabaseStructure().getPhysicalName().render() );
 		// 1 is the annotation default
 		assertEquals( 1, seqGenerator.getDatabaseStructure().getInitialValue() );
 		// 50 is the annotation default
@@ -91,7 +92,8 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
-		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, seqGenerator.getDatabaseStructure().getName() );
+		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME,
+				seqGenerator.getDatabaseStructure().getPhysicalName().render() );
 		assertEquals( SequenceStyleGenerator.DEFAULT_INITIAL_VALUE, seqGenerator.getDatabaseStructure().getInitialValue() );
 		assertEquals( SequenceStyleGenerator.DEFAULT_INCREMENT_SIZE, seqGenerator.getDatabaseStructure().getIncrementSize() );
 	}
@@ -123,7 +125,7 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals(
 				StringHelper.unqualifyEntityName( DedicatedSequenceEntity1.class.getName() ) + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
-				seqGenerator.getDatabaseStructure().getName()
+				seqGenerator.getDatabaseStructure().getPhysicalName().render()
 		);
 
 		// Checking second entity.
@@ -133,7 +135,7 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals(
 				DedicatedSequenceEntity2.ENTITY_NAME + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
-				seqGenerator.getDatabaseStructure().getName()
+				seqGenerator.getDatabaseStructure().getPhysicalName().render()
 		);
 	}
 }

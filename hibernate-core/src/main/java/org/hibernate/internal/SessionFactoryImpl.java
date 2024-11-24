@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -49,6 +48,8 @@ import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -160,7 +161,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final String name;
 	private final String uuid;
 
-	private transient volatile boolean isClosed;
+	private transient volatile Status status = Status.OPEN;
 
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 
@@ -171,6 +172,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
+	private final transient SqlStringGenerationContext sqlStringGenerationContext;
 
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 
@@ -232,12 +234,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
+		ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+
 		this.properties = new HashMap<>();
-		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
-		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY ) ) {
+		this.properties.putAll( configurationService.getSettings() );
+		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY )
+				&& !properties.containsKey( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) ) {
 			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
 				properties.put(
 						AvailableSettings.JPA_VALIDATION_FACTORY,
+						getSessionFactoryOptions().getValidatorFactoryReference()
+				);
+				properties.put(
+						AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
 						getSessionFactoryOptions().getValidatorFactoryReference()
 				);
 			}
@@ -245,6 +254,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		maskOutSensitiveInformation(this.properties);
 		logIfEmptyCompositesEnabled( this.properties );
+
+		sqlStringGenerationContext = SqlStringGenerationContextImpl.fromExplicit(
+				jdbcServices.getJdbcEnvironment(), metadata.getDatabase(),
+				options.getDefaultCatalog(), options.getDefaultSchema() );
 
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
@@ -293,10 +306,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
 						metadata.getIdentifierGeneratorFactory(),
 						jdbcServices.getJdbcEnvironment().getDialect(),
-						settings.getDefaultCatalogName(),
-						settings.getDefaultSchemaName(),
 						(RootClass) model
 				);
+				generator.initialize( sqlStringGenerationContext );
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
 			metadata.validate();
@@ -316,7 +328,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					jdbcServices,
 					buildLocalConnectionAccess(),
 					metadata,
-					sessionFactoryOptions
+					sessionFactoryOptions,
+					sqlStringGenerationContext
 			);
 
 			SchemaManagementToolCoordinator.process(
@@ -327,26 +340,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			);
 
 			currentSessionContext = buildCurrentSessionContext();
-
-			//checking for named queries
-			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
-				final Map<String, HibernateException> errors = checkNamedQueries();
-				if ( !errors.isEmpty() ) {
-					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-					String separator = System.lineSeparator();
-
-					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-						LOG.namedQueryError( entry.getKey(), entry.getValue() );
-
-						failingQueries
-							.append( separator)
-							.append( entry.getKey() )
-							.append( " failed because of: " )
-							.append( entry.getValue() );
-					}
-					throw new HibernateException( failingQueries.toString() );
-				}
-			}
 
 			// this needs to happen after persisters are all ready to go...
 			this.fetchProfiles = new HashMap<>();
@@ -385,6 +378,26 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.temporarySessionOpenOptions = this.defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			this.defaultStatelessOptions = this.defaultSessionOpenOptions == null ? null : withStatelessOptions();
 			this.fastSessionServices = new FastSessionServices( this );
+
+			//checking for named queries - requires fastSessionServices to have been initialized.
+			if ( settings.isNamedQueryStartupCheckingEnabled() ) {
+				final Map<String, HibernateException> errors = checkNamedQueries();
+				if ( !errors.isEmpty() ) {
+					StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+					String separator = System.lineSeparator();
+
+					for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
+						LOG.namedQueryError( entry.getKey(), entry.getValue() );
+
+						failingQueries
+								.append( separator)
+								.append( entry.getKey() )
+								.append( " failed because of: " )
+								.append( entry.getValue() );
+					}
+					throw new HibernateException( failingQueries.toString() );
+				}
+			}
 
 			this.observer.sessionFactoryCreated( this );
 
@@ -530,7 +543,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	protected void validateNotClosed() {
-		if ( isClosed ) {
+		if ( status == Status.CLOSED ) {
 			throw new IllegalStateException( "EntityManagerFactory is closed" );
 		}
 	}
@@ -553,6 +566,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
+	}
+
+	@Override
+	public SqlStringGenerationContext getSqlStringGenerationContext() {
+		return sqlStringGenerationContext;
 	}
 
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
@@ -620,7 +638,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
-		assert !isClosed;
+		assert status != Status.CLOSED;
 
 		SessionBuilderImplementor builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
@@ -689,7 +707,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public boolean isOpen() {
-		return !isClosed;
+		return status != Status.CLOSED;
 	}
 
 	@Override
@@ -784,9 +802,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * collector release the memory.
 	 * @throws HibernateException
 	 */
+	@Override
 	public void close() throws HibernateException {
 		synchronized (this) {
-			if ( isClosed ) {
+			if ( status != Status.OPEN ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 					throw new IllegalStateException( "EntityManagerFactory is already closed" );
 				}
@@ -795,39 +814,47 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				return;
 			}
 
-			isClosed = true;
+			status = Status.CLOSING;
 		}
 
-		LOG.closing();
-		observer.sessionFactoryClosing( this );
+		try {
+			LOG.closing();
+			observer.sessionFactoryClosing( this );
 
-		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
+			settings.getMultiTableBulkIdStrategy().release(
+					serviceRegistry.getService( JdbcServices.class ),
+					buildLocalConnectionAccess()
+			);
 
-		// NOTE : the null checks below handle cases where close is called from
-		//		a failed attempt to create the SessionFactory
+			// NOTE : the null checks below handle cases where close is called from
+			//		a failed attempt to create the SessionFactory
 
-		if ( cacheAccess != null ) {
-			cacheAccess.close();
+			if ( cacheAccess != null ) {
+				cacheAccess.close();
+			}
+
+			if ( metamodel != null ) {
+				metamodel.close();
+			}
+
+			if ( queryPlanCache != null ) {
+				queryPlanCache.cleanup();
+			}
+
+			if ( delayedDropAction != null ) {
+				delayedDropAction.perform( serviceRegistry );
+			}
+
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory(
+					getUuid(),
+					name,
+					settings.isSessionFactoryNameAlsoJndiName(),
+					serviceRegistry.getService( JndiService.class )
+			);
 		}
-
-		if ( metamodel != null ) {
-			metamodel.close();
+		finally {
+			status = Status.CLOSED;
 		}
-
-		if ( queryPlanCache != null ) {
-			queryPlanCache.cleanup();
-		}
-
-		if ( delayedDropAction != null ) {
-			delayedDropAction.perform( serviceRegistry );
-		}
-
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
-				getUuid(),
-				name,
-				settings.isSessionFactoryNameAlsoJndiName(),
-				serviceRegistry.getService( JndiService.class )
-		);
 
 		observer.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
@@ -972,8 +999,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		getMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
+	@Override
 	public boolean isClosed() {
-		return isClosed;
+		return status == Status.CLOSED;
 	}
 
 	private transient StatisticsImplementor statistics;
@@ -1108,7 +1136,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
+	/**
+	 * @deprecated use {@link #configuredInterceptor(Interceptor, boolean, SessionFactoryOptions)}
+	 */
+	@Deprecated
 	public static Interceptor configuredInterceptor(Interceptor interceptor, SessionFactoryOptions options) {
+		return configuredInterceptor( interceptor, false, options );
+	}
+
+	public static Interceptor configuredInterceptor(Interceptor interceptor, boolean explicitNoInterceptor, SessionFactoryOptions options) {
 		// NOTE : DO NOT return EmptyInterceptor.INSTANCE from here as a "default for the Session"
 		// 		we "filter" that one out here.  The return from here should represent the
 		//		explicitly configured Interceptor (if one).  Return null from here instead; Session
@@ -1122,6 +1158,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		final Interceptor optionsInterceptor = options.getInterceptor();
 		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
 			return optionsInterceptor;
+		}
+
+		// If explicitly asking for no interceptor and there is no SessionFactory-scoped interceptors, then
+		// no need to inherit from the configured stateless session ones.
+		if ( explicitNoInterceptor ) {
+			return null;
 		}
 
 		// then check the Session-scoped interceptor prototype
@@ -1166,6 +1208,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
 		private boolean queryParametersValidationEnabled;
+		private boolean explicitNoInterceptor;
 
 		// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
 		// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
@@ -1254,7 +1297,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Interceptor getInterceptor() {
-			return configuredInterceptor( interceptor, sessionFactory.getSessionFactoryOptions() );
+			return configuredInterceptor( interceptor, explicitNoInterceptor, sessionFactory.getSessionFactoryOptions() );
 		}
 
 		@Override
@@ -1301,6 +1344,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T interceptor(Interceptor interceptor) {
 			this.interceptor = interceptor;
+			this.explicitNoInterceptor = false;
 			return (T) this;
 		}
 
@@ -1308,6 +1352,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T noInterceptor() {
 			this.interceptor = EmptyInterceptor.INSTANCE;
+			this.explicitNoInterceptor = true;
 			return (T) this;
 		}
 
@@ -1479,7 +1524,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Interceptor getInterceptor() {
-			return configuredInterceptor( EmptyInterceptor.INSTANCE, sessionFactory.getSessionFactoryOptions() );
+			return configuredInterceptor( EmptyInterceptor.INSTANCE, false, sessionFactory.getSessionFactoryOptions() );
 
 		}
 
@@ -1647,6 +1692,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void maskOutSensitiveInformation(Map<String, Object> props) {
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_USER );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD );
 		maskOutIfSet( props, AvailableSettings.USER );
 		maskOutIfSet( props, AvailableSettings.PASS );
 	}
@@ -1681,4 +1728,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return this.fastSessionServices;
 	}
 
+	private enum Status {
+		OPEN,
+		CLOSING,
+		CLOSED;
+	}
 }

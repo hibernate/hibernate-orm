@@ -15,11 +15,14 @@ import org.hibernate.type.Type;
 /**
  * An {@link IdentifierGenerator} that supports "configuration".
  *
+ * @deprecated All methods are already defined in {@link IdentifierGenerator}.
+ * Just implement {@link IdentifierGenerator}.
  * @see IdentifierGenerator
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Deprecated
 public interface Configurable {
 	/**
 	 * Configure this instance, given the value of parameters

@@ -9,7 +9,6 @@ package org.hibernate.event.spi;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -23,9 +22,6 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.internal.CallbackRegistryImplementor;
 import org.hibernate.jpa.event.internal.CallbacksFactory;
-import org.hibernate.jpa.event.spi.CallbackBuilder;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.service.spi.Stoppable;
 
 /**
@@ -39,7 +35,6 @@ public class EventEngine {
 	private final EventListenerRegistry listenerRegistry;
 
 	private final CallbackRegistryImplementor callbackRegistry;
-	private final CallbackBuilder callbackBuilder;
 
 	public EventEngine(
 			MetadataImplementor mappings,
@@ -48,33 +43,8 @@ public class EventEngine {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// resolve (JPA) callback handlers
 
-		this.callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory.getSessionFactoryOptions() );
-		this.callbackBuilder = CallbacksFactory.buildCallbackBuilder(
-				sessionFactory.getSessionFactoryOptions(),
-				sessionFactory.getServiceRegistry(),
-				mappings.getMetadataBuildingOptions().getReflectionManager()
-		);
-
-		for ( PersistentClass persistentClass : mappings.getEntityBindings() ) {
-			if ( persistentClass.getClassName() == null ) {
-				// we can have dynamic (non-java class) mapping
-				continue;
-			}
-
-			this.callbackBuilder.buildCallbacksForEntity( persistentClass.getMappedClass(), callbackRegistry );
-
-			for ( Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator(); propertyIterator.hasNext(); ) {
-				final Property property = propertyIterator.next();
-
-				if ( property.isComposite() ) {
-					this.callbackBuilder.buildCallbacksForEmbeddable(
-							property,
-							persistentClass.getMappedClass(),
-							callbackRegistry
-					);
-				}
-			}
-		}
+		this.callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory.getSessionFactoryOptions(),
+				sessionFactory.getServiceRegistry(), mappings.getEntityBindings() );
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,7 +162,5 @@ public class EventEngine {
 		}
 
 		callbackRegistry.release();
-
-		callbackBuilder.release();
 	}
 }

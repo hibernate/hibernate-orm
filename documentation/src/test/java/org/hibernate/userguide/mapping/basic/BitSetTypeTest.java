@@ -32,14 +32,13 @@ public class BitSetTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration configuration = super.constructAndConfigureConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		//tag::basic-custom-type-register-BasicType-example[]
 		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
 			typeContributions.contributeType( BitSetType.INSTANCE );
 		} );
 		//end::basic-custom-type-register-BasicType-example[]
-		return configuration;
 	}
 
 	@Test

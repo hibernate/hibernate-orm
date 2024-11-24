@@ -261,6 +261,15 @@ tokens
 		return dot;
 	}
 
+	protected AST lookupFkRefSource(AST path) throws SemanticException {
+		if ( path.getType() == DOT ) {
+			return lookupProperty( path, true, isInSelect() );
+		}
+		else {
+			return lookupNonQualifiedProperty( path );
+		}
+	}
+
 	protected boolean isNonQualifiedPropertyRef(AST ident) { return false; }
 
 	protected AST lookupNonQualifiedProperty(AST property) throws SemanticException { return property; }
@@ -746,11 +755,14 @@ identifier
 	;
 
 addrExpr! [ boolean root ]
-	: #(d:DOT lhs:addrExprLhs rhs:propertyName )	{
+	: #(d:DOT lhs:addrExprLhs rhs:propertyName ) {
 		// This gives lookupProperty() a chance to transform the tree 
 		// to process collection properties (.elements, etc).
 		#addrExpr = #(#d, #lhs, #rhs);
 		#addrExpr = lookupProperty(#addrExpr,root,false);
+	}
+	| fk_ref:fkRef {
+		#addrExpr = #fk_ref;
 	}
 	| #(i:INDEX_OP lhs2:addrExprLhs rhs2:expr [ null ])	{
 		#addrExpr = #(#i, #lhs2, #rhs2);
@@ -776,6 +788,12 @@ addrExpr! [ boolean root ]
 	}
 	;
 
+fkRef
+	: #( r:FK_REF p:propertyRef ) {
+		#p = lookupProperty( #p, false, isInSelect() );
+	}
+	;
+
 addrExprLhs
 	: addrExpr [ false ]
 	;
@@ -797,8 +815,7 @@ propertyRef!
 		#propertyRef = #(#d, #lhs, #rhs);
 		#propertyRef = lookupProperty(#propertyRef,false,true);
 	}
-	|
-	p:identifier {
+	| p:identifier {
 		// In many cases, things other than property-refs are recognized
 		// by this propertyRef rule.  Some of those I have seen:
 		//  1) select-clause from-aliases

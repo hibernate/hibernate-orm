@@ -24,9 +24,9 @@ import org.hibernate.type.Type;
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
-class PostgisFunctions extends SpatialFunctionsRegistry {
+public class PostgisFunctions extends SpatialFunctionsRegistry {
 
-	PostgisFunctions() {
+	public PostgisFunctions() {
 
 		put(
 				"dimension", new StandardSQLFunction(

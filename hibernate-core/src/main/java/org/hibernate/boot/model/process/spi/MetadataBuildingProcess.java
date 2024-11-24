@@ -295,7 +295,7 @@ public class MetadataBuildingProcess {
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
 
 		if ( options.isXmlMappingEnabled() ) {
-			Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
 			if ( producers != null ) {
 				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 				// final MappingBinder mappingBinder = new MappingBinder( true );

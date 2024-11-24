@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	private static final String QUERY_STRING =
-			"select u.name as username, g.name as groupname, m.joindate " +
+			"select u.name as username, g.name as groupname, m.joinDate " +
 					"from t_membership m " +
 					"        inner join t_user u on m.member_id = u.id " +
 					"        inner join t_group g on m.group_id = g.id";

@@ -34,12 +34,14 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@TestForIssue(jiraKey = "HHH-14529")
 public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	@Test
 	public void testNoChildren() throws Exception {

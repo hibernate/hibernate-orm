@@ -10,7 +10,10 @@ import java.io.Serializable;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public interface PermissionCheckEntityInformation {
 	public Object getEntity();
 	public String getEntityName();

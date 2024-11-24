@@ -272,8 +272,6 @@ package org.hibernate.example;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 
 import static java.lang.System.out;
-import static jakarta.persistence.PersistenceConfiguration.*;
-import static org.hibernate.cfg.JdbcSettings.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -281,15 +279,12 @@ public class Main {
                 new HibernatePersistenceConfiguration("Bookshelf")
                         .managedClass(Book.class)
                         // use H2 in-memory database
-                        .property(JDBC_URL, "jdbc:h2:mem:db1")
-                        .property(JDBC_USER, "sa")
-                        .property(JDBC_PASSWORD, "")
+                        .jdbcUrl("jdbc:h2:mem:db1")
+                        .jdbcCredentials("sa", "")
                         // use Agroal connection pool
                         .property("hibernate.agroal.maxSize", 20)
                         // display SQL in console
-                        .property(SHOW_SQL, true)
-                        .property(FORMAT_SQL, true)
-                        .property(HIGHLIGHT_SQL, true)
+                        .showSql(true, true, true)
                         .createEntityManagerFactory();
 
         // export the inferred database schema

@@ -7,7 +7,6 @@ package org.hibernate.boot.model.internal;
 import java.util.Properties;
 
 import org.hibernate.boot.BootLogging;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.ParameterizedType;
 

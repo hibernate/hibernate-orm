@@ -14,7 +14,6 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 

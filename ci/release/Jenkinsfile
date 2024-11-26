@@ -148,8 +148,10 @@ pipeline {
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
 
-// 					def matchingFiles = findFiles(glob: "/release_notes.md")
-// 					env.SCRIPT_OPTIONS = " --notes=${matchingFiles[0]}"
+                    def notesFile = new File( "release_notes.md" )
+                    assert notesFile.exists
+                    env.SCRIPT_OPTIONS = " --notes=${notesFile.absolutePath}"
+
 					if ( params.RELEASE_DRY_RUN ) {
 					    env.SCRIPT_OPTIONS += " -d"
 					}

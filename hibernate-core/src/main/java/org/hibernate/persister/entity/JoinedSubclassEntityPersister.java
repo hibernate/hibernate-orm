@@ -160,20 +160,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
-		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, new EntityMetamodelFactory());
-	}
-
-	/*
-	 * Used by Hibernate Reactive
-	 */
-	public JoinedSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext,
-			final EntityMetamodelFactory entityMetamodelFactory) throws HibernateException {
-
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, entityMetamodelFactory );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final Dialect dialect = creationContext.getDialect();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();

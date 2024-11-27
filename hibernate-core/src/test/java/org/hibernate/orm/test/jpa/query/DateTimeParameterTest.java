@@ -6,100 +6,118 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
+import jakarta.persistence.Parameter;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * @author Steve Ebersole
  */
-public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(annotatedClasses = {DateTimeParameterTest.Thing.class})
+public class DateTimeParameterTest {
 	private static GregorianCalendar nowCal = new GregorianCalendar();
 	private static Date now = new Date( nowCal.getTime().getTime() );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Thing.class };
-	}
-
 	@Test
-	public void testBindingCalendarAsDate() {
-		createTestData();
-
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			Query query = em.createQuery( "from Thing t where t.someDate = :aDate" );
+	public void testBindingCalendarAsDate(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final Query query = entityManager.createQuery( "from Thing t where t.someDate = :aDate" );
 			query.setParameter( "aDate", nowCal, TemporalType.DATE );
-			List list = query.getResultList();
-			assertEquals( 1, list.size() );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
-
-		deleteTestData();
+			final List list = query.getResultList();
+			assertThat( list.size() ).isEqualTo( 1 );
+		} );
 	}
 
 	@Test
-	public void testBindingNulls() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			Query query = em.createQuery( "from Thing t where t.someDate = :aDate or t.someTime = :aTime or t.someTimestamp = :aTimestamp" );
+	public void testBindingNulls(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final Query query = entityManager.createQuery(
+					"from Thing t where t.someDate = :aDate or t.someTime = :aTime or t.someTimestamp = :aTimestamp"
+			);
 			query.setParameter( "aDate", (Date) null, TemporalType.DATE );
 			query.setParameter( "aTime", (Date) null, TemporalType.DATE );
 			query.setParameter( "aTimestamp", (Date) null, TemporalType.DATE );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+		} );
+
 	}
 
-	private void createTestData() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( new Thing( 1, "test", now, now, now ) );
-		em.getTransaction().commit();
-		em.close();
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17151")
+	public void testBindingNullNativeQueryPositional(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final Query query = entityManager.createNativeQuery( "update Thing set someDate = ?1 where id = 1" );
+			//noinspection deprecation
+			query.setParameter( 1, (Date) null, TemporalType.DATE );
+			assertThat( query.executeUpdate() ).isEqualTo( 1 );
+		} );
+		scope.inTransaction( entityManager -> assertThat( entityManager.find( Thing.class, 1 ).someDate ).isNull() );
 	}
 
-	private void deleteTestData() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete Thing" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17151")
+	public void testBindingNullNativeQueryNamed(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			final Query query = entityManager.createNativeQuery( "update Thing set someDate = :me where id = 1" );
+			Parameter<Date> p = new Parameter<>() {
+				@Override
+				public String getName() {
+					return "me";
+				}
+
+				@Override
+				public Integer getPosition() {
+					return null;
+				}
+
+				@Override
+				public Class<Date> getParameterType() {
+					return Date.class;
+				}
+			};
+			//noinspection deprecation
+			query.setParameter( p, null, TemporalType.DATE );
+			assertThat( query.executeUpdate() ).isEqualTo( 1 );
+		} );
+		scope.inTransaction( entityManager -> assertThat( entityManager.find( Thing.class, 1 ).someDate ).isNull() );
 	}
 
-	@Entity( name="Thing" )
-	@Table( name = "THING" )
+	@BeforeEach
+	public void createTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> entityManager.persist( new Thing( 1, "test", now, now, now ) ) );
+	}
+
+	@AfterEach
+	public void deleteTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> entityManager.createQuery( "delete from Thing" ).executeUpdate() );
+	}
+
+	@Entity(name = "Thing")
+	@Table(name = "Thing")
 	public static class Thing {
 		@Id
 		public Integer id;
 		public String someString;
-		@Temporal( TemporalType.DATE )
+		@Temporal(TemporalType.DATE)
 		public Date someDate;
-		@Temporal( TemporalType.TIME )
+		@Temporal(TemporalType.TIME)
 		public Date someTime;
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		public Date someTimestamp;
 
 		public Thing() {

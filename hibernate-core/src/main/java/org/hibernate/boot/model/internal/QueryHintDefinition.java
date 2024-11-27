@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
@@ -15,7 +14,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.LockModeConverter;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;

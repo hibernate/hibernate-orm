@@ -15,7 +15,6 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 

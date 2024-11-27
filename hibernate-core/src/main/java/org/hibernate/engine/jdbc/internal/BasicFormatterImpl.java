@@ -69,8 +69,16 @@ public class BasicFormatterImpl implements Formatter {
 
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
-				lcToken = token.toLowerCase(Locale.ROOT);
 
+				if ( "-".equals(token) && result.toString().endsWith("-") ) {
+					do {
+						result.append( token );
+						token = tokens.nextToken();
+					}
+					while ( !"\n".equals( token ) && tokens.hasMoreTokens() );
+				}
+
+				lcToken = token.toLowerCase(Locale.ROOT);
 				switch (lcToken) {
 
 					case "'":

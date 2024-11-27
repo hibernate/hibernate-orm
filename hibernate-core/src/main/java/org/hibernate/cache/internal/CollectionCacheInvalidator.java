@@ -157,19 +157,21 @@ public class CollectionCacheInvalidator
 		}
 	}
 
-	private Object getIdentifier(EventSource session, Object obj) {
-		Object id = null;
-		if ( obj != null ) {
-			id = session.getContextEntityIdentifier( obj );
+	private Object getIdentifier(EventSource session, Object object) {
+		if ( object != null ) {
+			final Object id = session.getContextEntityIdentifier( object );
 			if ( id == null ) {
-				final EntityPersister persister = session.getFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getEntityDescriptor( obj.getClass() );
-				id = persister.getIdentifier( obj, session );
+				return session.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( object.getClass() )
+						.getIdentifier( object, session );
+			}
+			else {
+				return id;
 			}
 		}
-		return id;
+		else {
+			return null;
+		}
 	}
 
 	private void evict(Object id, CollectionPersister collectionPersister, EventSource session) {

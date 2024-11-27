@@ -1990,9 +1990,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		sqmQueryPartStack.push( queryGroup );
 		pushProcessingState( processingState );
 
+		FromClauseIndex firstQueryPartIndex = null;
+		SqlAstProcessingState firstPoppedProcessingState = null;
 		try {
 			newQueryParts.add( visitQueryPart( queryParts.get( 0 ) ) );
 
+			firstQueryPartIndex = lastPoppedFromClauseIndex;
+			firstPoppedProcessingState = lastPoppedProcessingState;
 			collector.setSqmAliasedNodeCollector(
 					(SqmAliasedNodeCollector) lastPoppedProcessingState.getSqlExpressionResolver()
 			);
@@ -2010,6 +2014,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			popProcessingStateStack();
 			sqmQueryPartStack.pop();
+			lastPoppedFromClauseIndex = firstQueryPartIndex;
+			lastPoppedProcessingState = firstPoppedProcessingState;
 		}
 	}
 

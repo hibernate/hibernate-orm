@@ -836,6 +836,12 @@ public class NativeSQLQueriesTest {
 		);
 	}
 
+	@Test @JiraKey( "HHH-15102" )
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+	public void testCommentInSQLQuery(SessionFactoryScope scope) {
+		scope.inTransaction( s -> s.createNativeQuery( "select sum(1) --count(*), effectively\nfrom ORGANIZATION" ).getSingleResult() );
+	}
+
 	@Test
 	public void testTextTypeInSQLQuery(SessionFactoryScope scope) {
 		String description = buildLongString( 15000, 'a' );

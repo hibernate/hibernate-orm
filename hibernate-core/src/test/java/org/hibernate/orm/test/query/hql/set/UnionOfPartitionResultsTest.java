@@ -10,7 +10,7 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,40 +25,105 @@ import jakarta.persistence.ManyToOne;
 /**
  * @author Jan Schatteman
  */
-@DomainModel (
-		annotatedClasses = { UnionOfPartitionResultsTest.Apple.class, UnionOfPartitionResultsTest.Pie.class }
+@DomainModel(
+		annotatedClasses = {UnionOfPartitionResultsTest.Apple.class, UnionOfPartitionResultsTest.Pie.class}
 )
 @SessionFactory
+@JiraKey( "HHH-18069" )
 public class UnionOfPartitionResultsTest {
 
 	@Test
-	@FailureExpected
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	public void testSubqueryWithUnion(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String q = "SELECT id " +
+							"FROM " +
+							"( " +
+							"( SELECT id id, bakedPie bakedPie " +
+							"\tFROM Apple c " +
+							") " +
+							"\tUNION ALL " +
+							"( SELECT id id, bakedPie bakedPie " +
+							"\tFROM Apple a " +
+							") " +
+							")";
+
+                    Query query = session.createQuery( q );
+
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	public void testSubquery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String q = "SELECT id " +
+							"FROM " +
+							"( " +
+							"\tSELECT id id, bakedPie bakedPie " +
+							"\tFROM Apple c " +
+							")";
+
+					Query query = session.createQuery( q );
+
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	public void testUnionQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String q = "( SELECT id id, bakedPie bakedPie " +
+							"\tFROM Apple c " +
+							") " +
+							"\tUNION ALL " +
+							"( SELECT id id, bakedPie bakedPie " +
+							"\tFROM Apple c " +
+							") ";
+
+                    Query query = session.createQuery( q );
+
+					query.list();
+				}
+		);
+	}
+
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportPartitionBy.class)
 	public void testUnionOfPartitionResults(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					String q =
 							"SELECT new CurrentApple(id, bakedPie.id, dir) " +
 							"FROM (" +
-								"(" +
-									"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MAX(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, -1 dir " +
-									"FROM Apple c " +
-									"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn <= :now" +
-								") UNION ALL (" +
-									"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MIN(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, 1 dir " +
-									"FROM Apple c " +
-									"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn > :now" +
-								")" +
+							"(" +
+							"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MAX(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, -1 dir " +
+							"FROM Apple c " +
+							"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn <= :now" +
+							") UNION ALL (" +
+							"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MIN(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, 1 dir " +
+							"FROM Apple c " +
+							"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn > :now" +
+							")" +
 							") " +
 							"WHERE bakedOn = mbo ORDER BY dir";
 
 					Query<CurrentApple> query = session.createQuery( q, CurrentApple.class );
 					query.setParameter( "now", LocalDate.now());
 
-					query.getSingleResult();
+					query.list();
 				}
 		);
 	}
+
 
 	public static class CurrentApple {
 		private final int id;
@@ -70,12 +135,15 @@ public class UnionOfPartitionResultsTest {
 			this.pieId = pieId;
 			this.dir = dir;
 		}
+
 		public int getDir() {
 			return dir;
 		}
+
 		public int getId() {
 			return id;
 		}
+
 		public int getPieId() {
 			return pieId;
 		}
@@ -93,20 +161,25 @@ public class UnionOfPartitionResultsTest {
 		public Integer getId() {
 			return id;
 		}
+
 		public Apple setId(Integer id) {
 			this.id = id;
 			return this;
 		}
+
 		public LocalDate getBakedOn() {
 			return bakedOn;
 		}
+
 		public Apple setBakedOn(LocalDate bakedOn) {
 			this.bakedOn = bakedOn;
 			return this;
 		}
+
 		public Pie getBakedPie() {
 			return bakedPie;
 		}
+
 		public Apple setBakedPie(Pie bakedPie) {
 			this.bakedPie = bakedPie;
 			return this;
@@ -123,13 +196,16 @@ public class UnionOfPartitionResultsTest {
 		public Integer getId() {
 			return id;
 		}
+
 		public Pie setId(Integer id) {
 			this.id = id;
 			return this;
 		}
+
 		public String getTaste() {
 			return taste;
 		}
+
 		public Pie setTaste(String taste) {
 			this.taste = taste;
 			return this;

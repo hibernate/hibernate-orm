@@ -199,7 +199,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			// "long" string types
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
-				return "varchar";
+				return "text";
 			case BLOB:
 			case CLOB:
 			case NCLOB:
@@ -232,9 +232,10 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
+				return "varchar";
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
-				return "varchar";
+				return "text";
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:

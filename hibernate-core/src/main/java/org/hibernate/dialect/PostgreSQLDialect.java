@@ -220,7 +220,7 @@ public class PostgreSQLDialect extends Dialect {
 			// since there's no real difference between TEXT and VARCHAR,
 			// except for the length limit, we can just use 'text' for the
 			// "long" string types
-			case LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
 
 			// use oid as the blob/clob type on Postgres because
 			// the JDBC driver doesn't allow using bytea/text via
@@ -246,7 +246,8 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
 			default -> super.castType( sqlTypeCode );
 		};

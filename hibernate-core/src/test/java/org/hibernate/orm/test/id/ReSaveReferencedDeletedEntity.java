@@ -76,8 +76,9 @@ public class ReSaveReferencedDeletedEntity extends BaseCoreFunctionalTestCase {
 	@Entity(name = "Child")
 	public static class Child {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		private Integer id;
+		private String name;
 
 		public Integer getId() {
 			return id;
@@ -91,7 +92,7 @@ public class ReSaveReferencedDeletedEntity extends BaseCoreFunctionalTestCase {
 	@Entity(name = "Parent")
 	public static class Parent {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		private Integer id;
 
 		@OneToOne(cascade = CascadeType.ALL)

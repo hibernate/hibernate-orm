@@ -1583,14 +1583,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			final Type type = entry.getPropertyType();
 
 			// polymorphism not really handled completely correctly,
-			// perhaps...well, actually its ok, assuming that the
+			// perhaps...well, actually it's ok, assuming that the
 			// entity name used in the lookup is the same as the
 			// one used here, which it will be
 
 			if ( resolvedEntityState[index] != null ) {
 				final Object key;
 				if ( type instanceof ManyToOneType manyToOneType ) {
-					key = ForeignKeys.getEntityIdentifierIfNotUnsaved(
+					key = ForeignKeys.getEntityIdentifier(
 							manyToOneType.getAssociatedEntityName(),
 							resolvedEntityState[index],
 							session

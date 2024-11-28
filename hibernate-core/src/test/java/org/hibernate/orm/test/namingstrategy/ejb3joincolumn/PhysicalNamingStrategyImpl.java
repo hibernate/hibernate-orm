@@ -8,6 +8,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+
 /**
  * @author Anton Wimmer
  * @author Steve Ebersole
@@ -20,19 +22,17 @@ public class PhysicalNamingStrategyImpl extends PhysicalNamingStrategyStandardIm
 
 	@Override
 	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return Identifier.toIdentifier(makeCleanIdentifier("tbl_" + logicalName.getText()), logicalName.isQuoted());
+		return toIdentifier( makeCleanIdentifier("tbl_" + logicalName.getText()), logicalName.isQuoted() );
 	}
 
 	@Override
 	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		if ( logicalName.getText().equals("DTYPE") ) {
-			return logicalName;
-		}
-
-		return Identifier.toIdentifier(makeCleanIdentifier("c_" + logicalName.getText()), logicalName.isQuoted());
+		return logicalName.getText().equals( "DTYPE" )
+				? logicalName
+				: toIdentifier( makeCleanIdentifier( "c_" + logicalName.getText() ), logicalName.isQuoted() );
 	}
 
 	private String makeCleanIdentifier(String s) {
-		return s.substring(0, Math.min(s.length(), 63)).toLowerCase();
+		return s.substring( 0, Math.min(s.length(), 63) ).toLowerCase();
 	}
 }

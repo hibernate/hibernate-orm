@@ -582,9 +582,10 @@ We happen to not much like the naming rules defined by JPA, which specify that m
 We bet you could easily come up with a much better `ImplicitNamingStrategy` than that!
 (Hint: it should always produce legit mixed case identifiers.)
 ====
+
 [TIP]
 ====
-A popular `PhysicalNamingStrategy` produces snake case identifiers.
+The popular link:{doc-javadoc-url}org/hibernate/boot/model/naming/PhysicalNamingStrategySnakeCaseImpl.html[`PhysicalNamingStrategySnakeCaseImpl`] produces snake case identifiers.
 ====
 
 Custom naming strategies may be enabled using the configuration properties we already mentioned without much explanation back in <<minimizing>>.

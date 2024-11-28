@@ -1090,7 +1090,7 @@ abstract public class DialectFeatureChecks {
 		return sqmFunctionRegistry;
 	}
 
-	private static class FakeTypeContributions implements TypeContributions {
+	public static class FakeTypeContributions implements TypeContributions {
 		private final TypeConfiguration typeConfiguration;
 
 		public FakeTypeContributions(TypeConfiguration typeConfiguration) {
@@ -1103,7 +1103,7 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	private static class FakeFunctionContributions implements FunctionContributions {
+	public static class FakeFunctionContributions implements FunctionContributions {
 		private final Dialect dialect;
 		private final TypeConfiguration typeConfiguration;
 		private final SqmFunctionRegistry functionRegistry;

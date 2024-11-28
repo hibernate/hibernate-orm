@@ -43,6 +43,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.spi.NavigablePath;
@@ -451,8 +452,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				subquery.append( "select " );
 				for ( Column col : columns ) {
 					if ( !table.containsColumn( col ) ) {
-						int sqlType = col.getSqlTypeCode( mapping );
-						subquery.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
+						subquery.append( getSelectClauseNullString( col, dialect ) )
 								.append(" as ");
 					}
 					subquery.append( col.getQuotedName( dialect ) )
@@ -465,6 +465,20 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		return subquery.append( ")" ).toString();
+	}
+
+	private String getSelectClauseNullString(Column col, Dialect dialect) {
+		return dialect.getSelectClauseNullString(
+				new SqlTypedMappingImpl(
+						col.getTypeName(),
+						col.getLength(),
+						col.getPrecision(),
+						col.getScale(),
+						col.getTemporalPrecision(),
+						col.getType()
+				),
+				getFactory().getTypeConfiguration()
+		);
 	}
 
 	protected String generateSubquery(Map<String, EntityNameUse> entityNameUses) {
@@ -533,9 +547,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					if ( selectableMapping == null ) {
 						// If there is no selectable mapping for a table name, we render a null expression
 						selectableMapping = selectableMappings.values().iterator().next();
-						final int sqlType = selectableMapping.getJdbcMapping().getJdbcType()
-								.getDdlTypeCode();
-						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
+						buf.append( dialect.getSelectClauseNullString( selectableMapping, getFactory().getTypeConfiguration() ) )
 								.append( " as " );
 					}
 					if ( selectableMapping.isFormula() ) {

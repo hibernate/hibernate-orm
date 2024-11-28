@@ -289,7 +289,21 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	public EnumJavaType<?> getEnumType(String className) {
-		return enumJavaTypes.get( className );
+		final EnumJavaType<?> enumJavaType = enumJavaTypes.get( className );
+		if ( enumJavaType != null ) {
+			return enumJavaType;
+		}
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		try {
+			final Class<Object> clazz = classLoaderService.classForName( className );
+			if ( clazz == null || !clazz.isEnum() ) {
+				return null;
+			}
+			return new EnumJavaType( clazz );
+		}
+		catch (ClassLoadingException e) {
+			throw new RuntimeException( e );
+		}
 	}
 
 	@Override

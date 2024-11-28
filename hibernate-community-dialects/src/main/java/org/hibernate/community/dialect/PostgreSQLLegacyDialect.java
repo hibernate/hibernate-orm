@@ -55,6 +55,8 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -217,6 +219,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
+				return "varchar";
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "text";
@@ -870,6 +873,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// Workaround for postgres bug #1453
 		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
+	}
+
+	@Override
+	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
+		final String castTypeName = typeConfiguration.getDdlTypeRegistry()
+				.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
+				.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), typeConfiguration.getDdlTypeRegistry() );
+		return "cast(null as " + castTypeName + ")";
 	}
 
 	@Override

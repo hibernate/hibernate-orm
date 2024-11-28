@@ -116,6 +116,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -3115,9 +3116,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param sqlType The {@link Types} type code.
 	 * @param typeConfiguration The type configuration
 	 * @return The appropriate select clause value fragment.
+	 * @deprecated Use {@link #getSelectClauseNullString(SqlTypedMapping, TypeConfiguration)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return "null";
+	}
+
+	/**
+	 * Given a type mapping, return the expression
+	 * for a literal null value of that type, to use in a {@code select}
+	 * clause.
+	 * <p>
+	 * The {@code select} query will be an element of a {@code UNION}
+	 * or {@code UNION ALL}.
+	 *
+	 * @implNote Some databases require an explicit type cast.
+	 *
+	 * @param sqlTypeMapping The type mapping.
+	 * @param typeConfiguration The type configuration
+	 * @return The appropriate select clause value fragment.
+	 */
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		return getSelectClauseNullString( sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode(), typeConfiguration );
 	}
 
 	/**

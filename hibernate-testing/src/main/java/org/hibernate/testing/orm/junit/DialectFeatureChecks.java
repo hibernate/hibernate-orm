@@ -7,8 +7,51 @@
 package org.hibernate.testing.orm.junit;
 
 import java.sql.Types;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
+import org.hibernate.DuplicateMappingException;
+import org.hibernate.SessionFactory;
+import org.hibernate.annotations.CollectionTypeRegistration;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.boot.MappingException;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TruthValue;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
+import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.internal.AnnotatedClassType;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
+import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.AbstractHANADialect;
@@ -27,15 +70,42 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDriverKind;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.FetchProfile;
+import org.hibernate.mapping.Join;
+import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
+
+import org.hibernate.testing.boot.BootstrapContextImpl;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -333,12 +403,6 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsTemporaryTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsTemporaryTables();
-		}
-	}
-
-	public static class SupportsSubqueryInSelect implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsSubqueryInSelect();
 		}
 	}
 
@@ -725,6 +789,781 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;
+		}
+	}
+
+	public static class SupportsUnicodeNClob implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !( dialect instanceof SybaseASEDialect )
+					// The jconn driver apparently doesn't support unicode characters
+					|| ( (SybaseASEDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
+		}
+	}
+
+	private static final HashMap<Dialect, SqmFunctionRegistry> FUNCTION_REGISTRIES = new HashMap<>();
+
+	public static boolean definesFunction(Dialect dialect, String functionName) {
+		return getSqmFunctionRegistry( dialect ).findFunctionDescriptor( functionName ) != null;
+	}
+
+	public static class SupportsSubqueryInSelect implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubqueryInSelect();
+		}
+	}
+
+	public static class SupportSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubselectAsInPredicateLHS();
+		}
+	}
+
+
+	private static SqmFunctionRegistry getSqmFunctionRegistry(Dialect dialect) {
+		SqmFunctionRegistry sqmFunctionRegistry = FUNCTION_REGISTRIES.get( dialect );
+		if ( sqmFunctionRegistry == null ) {
+			final TypeConfiguration typeConfiguration = new TypeConfiguration();
+			final SqmFunctionRegistry functionRegistry = new SqmFunctionRegistry();
+			typeConfiguration.scope( new FakeMetadataBuildingContext( typeConfiguration, functionRegistry ) );
+			final FakeTypeContributions typeContributions = new FakeTypeContributions( typeConfiguration );
+			final FakeFunctionContributions functionContributions = new FakeFunctionContributions(
+					dialect,
+					typeConfiguration,
+					functionRegistry
+			);
+			dialect.contribute( typeContributions, typeConfiguration.getServiceRegistry() );
+			dialect.initializeFunctionRegistry( functionContributions );
+			FUNCTION_REGISTRIES.put( dialect, sqmFunctionRegistry = functionContributions.functionRegistry );
+		}
+		return sqmFunctionRegistry;
+	}
+
+	public static class FakeTypeContributions implements TypeContributions {
+		private final TypeConfiguration typeConfiguration;
+
+		public FakeTypeContributions(TypeConfiguration typeConfiguration) {
+			this.typeConfiguration = typeConfiguration;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+	}
+
+	public static class FakeFunctionContributions implements FunctionContributions {
+		private final Dialect dialect;
+		private final TypeConfiguration typeConfiguration;
+		private final SqmFunctionRegistry functionRegistry;
+
+		public FakeFunctionContributions(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry functionRegistry) {
+			this.dialect = dialect;
+			this.typeConfiguration = typeConfiguration;
+			this.functionRegistry = functionRegistry;
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return dialect;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+
+		@Override
+		public SqmFunctionRegistry getFunctionRegistry() {
+			return functionRegistry;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return null;
+		}
+	}
+
+	public static class FakeMetadataBuildingContext implements MetadataBuildingContext, InFlightMetadataCollector {
+
+		private final TypeConfiguration typeConfiguration;
+		private final SqmFunctionRegistry functionRegistry;
+		private final MetadataBuilderImpl.MetadataBuildingOptionsImpl options;
+		private final BootstrapContextImpl bootstrapContext;
+		private final Database database;
+
+		public FakeMetadataBuildingContext(TypeConfiguration typeConfiguration, SqmFunctionRegistry functionRegistry) {
+			this.typeConfiguration = typeConfiguration;
+			this.functionRegistry = functionRegistry;
+			this.bootstrapContext = new BootstrapContextImpl();
+			this.options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() );
+			this.options.setBootstrapContext( bootstrapContext );
+			this.database = new Database( options, null );
+		}
+
+		@Override
+		public BootstrapContext getBootstrapContext() {
+			return bootstrapContext;
+		}
+
+		@Override
+		public MetadataBuildingOptions getBuildingOptions() {
+			return options;
+		}
+
+		@Override
+		public Database getDatabase() {
+			return database;
+		}
+
+		@Override
+		public MetadataBuildingOptions getMetadataBuildingOptions() {
+			return options;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+
+		@Override
+		public SqmFunctionRegistry getFunctionRegistry() {
+			return functionRegistry;
+		}
+
+		// The rest are no-ops
+
+
+		@Override
+		public void registerEmbeddableSubclass(XClass superclass, XClass subclass) {
+
+		}
+
+		@Override
+		public List<XClass> getEmbeddableSubclasses(XClass superclass) {
+			return List.of();
+		}
+
+		@Override
+		public AnnotatedClassType addClassType(XClass clazz) {
+			return null;
+		}
+
+		@Override
+		public AnnotatedClassType getClassType(XClass clazz) {
+			return null;
+		}
+
+		@Override
+		public PropertyData getPropertyAnnotatedWithMapsId(XClass persistentXClass, String propertyName) {
+			return null;
+		}
+
+		@Override
+		public void addPropertyAnnotatedWithMapsId(XClass entity, PropertyData propertyAnnotatedElement) {
+
+		}
+
+		@Override
+		public void addPropertyAnnotatedWithMapsIdSpecj(XClass entity, PropertyData specJPropertyData, String s) {
+
+		}
+
+		@Override
+		public void addToOneAndIdProperty(XClass entity, PropertyData propertyAnnotatedElement) {
+
+		}
+
+		@Override
+		public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass persistentXClass, String propertyName) {
+			return null;
+		}
+
+		@Override
+		public MappingDefaults getMappingDefaults() {
+			return null;
+		}
+
+		@Override
+		public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
+			return null;
+		}
+
+		@Override
+		public InFlightMetadataCollector getMetadataCollector() {
+			return this;
+		}
+
+		@Override
+		public ObjectNameNormalizer getObjectNameNormalizer() {
+			return null;
+		}
+
+		@Override
+		public TypeDefinitionRegistry getTypeDefinitionRegistry() {
+			return null;
+		}
+
+		@Override
+		public String getCurrentContributorName() {
+			return "";
+		}
+
+		@Override
+		public void addEntityBinding(PersistentClass persistentClass) throws DuplicateMappingException {
+
+		}
+
+		@Override
+		public Map<String, PersistentClass> getEntityBindingMap() {
+			return Map.of();
+		}
+
+		@Override
+		public void registerComponent(Component component) {
+
+		}
+
+		@Override
+		public void registerGenericComponent(Component component) {
+
+		}
+
+		@Override
+		public void addImport(String importName, String className) throws DuplicateMappingException {
+
+		}
+
+		@Override
+		public void addCollectionBinding(Collection collection) throws DuplicateMappingException {
+
+		}
+
+		@Override
+		public Table addTable(
+				String schema,
+				String catalog,
+				String name,
+				String subselect,
+				boolean isAbstract,
+				MetadataBuildingContext buildingContext) {
+			return null;
+		}
+
+		@Override
+		public Table addDenormalizedTable(
+				String schema,
+				String catalog,
+				String name,
+				boolean isAbstract,
+				String subselect,
+				Table includedTable,
+				MetadataBuildingContext buildingContext) throws DuplicateMappingException {
+			return null;
+		}
+
+		@Override
+		public void addNamedQuery(NamedHqlQueryDefinition query) throws DuplicateMappingException {
+
+		}
+
+		@Override
+		public void addNamedNativeQuery(NamedNativeQueryDefinition query) throws DuplicateMappingException {
+
+		}
+
+		@Override
+		public void addResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDefinition)
+				throws DuplicateMappingException {
+
+		}
+
+		@Override
+		public void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition)
+				throws DuplicateMappingException {
+
+		}
+
+		@Override
+		public void addNamedEntityGraph(NamedEntityGraphDefinition namedEntityGraphDefinition) {
+
+		}
+
+		@Override
+		public void addTypeDefinition(TypeDefinition typeDefinition) {
+
+		}
+
+		@Override
+		public void addFilterDefinition(FilterDefinition definition) {
+
+		}
+
+		@Override
+		public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+
+		}
+
+		@Override
+		public void addFetchProfile(FetchProfile profile) {
+
+		}
+
+		@Override
+		public void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition) {
+
+		}
+
+		@Override
+		public ConverterRegistry getConverterRegistry() {
+			return null;
+		}
+
+		@Override
+		public void addAttributeConverter(ConverterDescriptor descriptor) {
+
+		}
+
+		@Override
+		public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+
+		}
+
+		@Override
+		public void addRegisteredConversion(RegisteredConversion conversion) {
+
+		}
+
+		@Override
+		public ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
+			return null;
+		}
+
+		@Override
+		public void addSecondPass(SecondPass secondPass) {
+
+		}
+
+		@Override
+		public void addSecondPass(SecondPass sp, boolean onTopOfTheQueue) {
+
+		}
+
+		@Override
+		public void addTableNameBinding(Identifier logicalName, Table table) {
+
+		}
+
+		@Override
+		public void addTableNameBinding(
+				String schema,
+				String catalog,
+				String logicalName,
+				String realTableName,
+				Table denormalizedSuperTable) {
+
+		}
+
+		@Override
+		public String getLogicalTableName(Table ownerTable) {
+			return "";
+		}
+
+		@Override
+		public String getPhysicalTableName(Identifier logicalName) {
+			return "";
+		}
+
+		@Override
+		public String getPhysicalTableName(String logicalName) {
+			return "";
+		}
+
+		@Override
+		public void addColumnNameBinding(Table table, Identifier logicalColumnName, Column column) {
+
+		}
+
+		@Override
+		public void addColumnNameBinding(Table table, String logicalColumnName, Column column) {
+
+		}
+
+		@Override
+		public String getPhysicalColumnName(Table table, Identifier logicalName) throws MappingException {
+			return "";
+		}
+
+		@Override
+		public String getPhysicalColumnName(Table table, String logicalName) throws MappingException {
+			return "";
+		}
+
+		@Override
+		public String getLogicalColumnName(Table table, Identifier physicalName) {
+			return "";
+		}
+
+		@Override
+		public String getLogicalColumnName(Table table, String physicalName) {
+			return "";
+		}
+
+		@Override
+		public void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition) {
+
+		}
+
+		@Override
+		public void addDefaultQuery(NamedHqlQueryDefinition queryDefinition) {
+
+		}
+
+		@Override
+		public void addDefaultNamedNativeQuery(NamedNativeQueryDefinition query) {
+
+		}
+
+		@Override
+		public void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition) {
+
+		}
+
+		@Override
+		public void addDefaultNamedProcedureCall(NamedProcedureCallDefinitionImpl procedureCallDefinition) {
+
+		}
+
+		@Override
+		public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {
+
+		}
+
+		@Override
+		public MappedSuperclass getMappedSuperclass(Class<?> type) {
+			return null;
+		}
+
+		@Override
+		public boolean isInSecondPass() {
+			return false;
+		}
+
+		@Override
+		public NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName) {
+			return null;
+		}
+
+		@Override
+		public void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder) {
+
+		}
+
+		@Override
+		public void registerValueMappingResolver(Function<MetadataBuildingContext, Boolean> resolver) {
+
+		}
+
+		@Override
+		public void addJavaTypeRegistration(Class<?> javaType, JavaType<?> jtd) {
+
+		}
+
+		@Override
+		public void addJdbcTypeRegistration(int typeCode, JdbcType jdbcType) {
+
+		}
+
+		@Override
+		public void registerEmbeddableInstantiator(
+				Class<?> embeddableType,
+				Class<? extends EmbeddableInstantiator> instantiator) {
+
+		}
+
+		@Override
+		public Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableType) {
+			return null;
+		}
+
+		@Override
+		public void registerCompositeUserType(Class<?> embeddableType, Class<? extends CompositeUserType<?>> userType) {
+
+		}
+
+		@Override
+		public Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableType) {
+			return null;
+		}
+
+		@Override
+		public void registerUserType(Class<?> embeddableType, Class<? extends UserType<?>> userType) {
+
+		}
+
+		@Override
+		public Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType) {
+			return null;
+		}
+
+		@Override
+		public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
+
+		}
+
+		@Override
+		public void addCollectionTypeRegistration(
+				CollectionClassification classification,
+				CollectionTypeRegistrationDescriptor descriptor) {
+
+		}
+
+		@Override
+		public CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification) {
+			return null;
+		}
+
+		@Override
+		public void addDelayedPropertyReferenceHandler(DelayedPropertyReferenceHandler handler) {
+
+		}
+
+		@Override
+		public void addPropertyReference(String entityName, String propertyName) {
+
+		}
+
+		@Override
+		public void addUniquePropertyReference(String entityName, String propertyName) {
+
+		}
+
+		@Override
+		public void addPropertyReferencedAssociation(String entityName, String propertyName, String syntheticPropertyName) {
+
+		}
+
+		@Override
+		public String getPropertyReferencedAssociation(String entityName, String mappedBy) {
+			return "";
+		}
+
+		@Override
+		public void addMappedBy(String name, String mappedBy, String propertyName) {
+
+		}
+
+		@Override
+		public String getFromMappedBy(String ownerEntityName, String propertyName) {
+			return "";
+		}
+
+		@Override
+		public EntityTableXref getEntityTableXref(String entityName) {
+			return null;
+		}
+
+		@Override
+		public EntityTableXref addEntityTableXref(
+				String entityName,
+				Identifier primaryTableLogicalName,
+				Table primaryTable,
+				EntityTableXref superEntityTableXref) {
+			return null;
+		}
+
+		@Override
+		public Map<String, Join> getJoins(String entityName) {
+			return Map.of();
+		}
+
+		@Override
+		public SessionFactoryBuilder getSessionFactoryBuilder() {
+			return null;
+		}
+
+		@Override
+		public SessionFactory buildSessionFactory() {
+			return null;
+		}
+
+		@Override
+		public UUID getUUID() {
+			return null;
+		}
+
+		@Override
+		public java.util.Collection<PersistentClass> getEntityBindings() {
+			return List.of();
+		}
+
+		@Override
+		public PersistentClass getEntityBinding(String entityName) {
+			return null;
+		}
+
+		@Override
+		public java.util.Collection<Collection> getCollectionBindings() {
+			return List.of();
+		}
+
+		@Override
+		public Collection getCollectionBinding(String role) {
+			return null;
+		}
+
+		@Override
+		public Map<String, String> getImports() {
+			return Map.of();
+		}
+
+		@Override
+		public NamedHqlQueryDefinition getNamedHqlQueryMapping(String name) {
+			return null;
+		}
+
+		@Override
+		public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer) {
+
+		}
+
+		@Override
+		public NamedNativeQueryDefinition getNamedNativeQueryMapping(String name) {
+			return null;
+		}
+
+		@Override
+		public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer) {
+
+		}
+
+		@Override
+		public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+			return null;
+		}
+
+		@Override
+		public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+
+		}
+
+		@Override
+		public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
+			return null;
+		}
+
+		@Override
+		public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
+
+		}
+
+		@Override
+		public TypeDefinition getTypeDefinition(String typeName) {
+			return null;
+		}
+
+		@Override
+		public Map<String, FilterDefinition> getFilterDefinitions() {
+			return Map.of();
+		}
+
+		@Override
+		public FilterDefinition getFilterDefinition(String name) {
+			return null;
+		}
+
+		@Override
+		public FetchProfile getFetchProfile(String name) {
+			return null;
+		}
+
+		@Override
+		public java.util.Collection<FetchProfile> getFetchProfiles() {
+			return List.of();
+		}
+
+		@Override
+		public NamedEntityGraphDefinition getNamedEntityGraph(String name) {
+			return null;
+		}
+
+		@Override
+		public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs() {
+			return Map.of();
+		}
+
+		@Override
+		public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
+			return null;
+		}
+
+		@Override
+		public java.util.Collection<Table> collectTableMappings() {
+			return List.of();
+		}
+
+		@Override
+		public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
+			return Map.of();
+		}
+
+		@Override
+		public Set<String> getContributors() {
+			return Set.of();
+		}
+
+		@Override
+		public void orderColumns(boolean forceOrdering) {
+
+		}
+
+		@Override
+		public void validate() throws MappingException {
+
+		}
+
+		@Override
+		public Set<MappedSuperclass> getMappedSuperclassMappingsCopy() {
+			return Set.of();
+		}
+
+		@Override
+		public void initSessionFactory(SessionFactoryImplementor sessionFactoryImplementor) {
+
+		}
+
+		@Override
+		public void visitRegisteredComponents(Consumer<Component> consumer) {
+
+		}
+
+		@Override
+		public Component getGenericComponent(Class<?> componentClass) {
+			return null;
+		}
+
+		@Override
+		public DiscriminatorType<?> resolveEmbeddableDiscriminatorType(
+				Class<?> embeddableClass,
+				Supplier<DiscriminatorType<?>> supplier) {
+			return null;
+		}
+
+		@Override
+		public Type getIdentifierType(String className) throws MappingException {
+			return null;
+		}
+
+		@Override
+		public String getIdentifierPropertyName(String className) throws MappingException {
+			return "";
+		}
+
+		@Override
+		public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
+			return null;
 		}
 	}
 }

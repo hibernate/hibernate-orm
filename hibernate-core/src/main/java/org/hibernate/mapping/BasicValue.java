@@ -737,12 +737,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 	}
 
-	private java.lang.reflect.Type impliedJavaType(TypeConfiguration typeConfiguration) {
+	@Incubating
+	public java.lang.reflect.Type impliedJavaType(TypeConfiguration typeConfiguration) {
 		if ( resolvedJavaType != null ) {
 			return resolvedJavaType;
 		}
 		else if ( implicitJavaTypeAccess != null ) {
-			return implicitJavaTypeAccess.apply(typeConfiguration);
+			return implicitJavaTypeAccess.apply( typeConfiguration );
 		}
 		else if ( ownerName != null && propertyName != null ) {
 			return reflectedPropertyType( ownerName, propertyName, classLoaderService() );

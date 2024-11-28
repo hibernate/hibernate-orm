@@ -252,7 +252,7 @@ public interface DialectOverride {
 
 		org.hibernate.annotations.SQLRestriction override();
 	}
-	@Target({METHOD, FIELD})
+	@Target({METHOD, FIELD, TYPE})
 	@Retention(RUNTIME)
 	@interface SQLRestrictions {
 		SQLRestriction[] value();

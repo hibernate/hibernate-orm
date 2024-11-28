@@ -55,6 +55,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -729,6 +730,11 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return wrapped.getSelectClauseNullString( sqlType, typeConfiguration );
+	}
+
+	@Override
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		return wrapped.getSelectClauseNullString( sqlTypeMapping, typeConfiguration );
 	}
 
 	@Override

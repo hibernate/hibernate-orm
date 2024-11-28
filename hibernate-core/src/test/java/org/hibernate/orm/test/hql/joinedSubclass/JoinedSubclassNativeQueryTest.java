@@ -8,12 +8,13 @@ package org.hibernate.orm.test.hql.joinedSubclass;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,10 +64,14 @@ public class JoinedSubclassNativeQueryTest {
 		scope.inTransaction(
 				session -> {
 					final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+					final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 					final String nullColumnString = sessionFactory
 							.getJdbcServices()
 							.getDialect()
-							.getSelectClauseNullString( SqlTypes.VARCHAR, sessionFactory.getTypeConfiguration() );
+							.getSelectClauseNullString(
+									new SqlTypedMappingImpl( typeConfiguration.getBasicTypeForJavaType( String.class ) ),
+									typeConfiguration
+							);
 					// PostgreSQLDialect#getSelectClauseNullString produces e.g. `null::text` which we interpret as parameter,
 					// so workaround this problem by configuring to ignore JDBC parameters
 					session.setProperty( AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS, true );

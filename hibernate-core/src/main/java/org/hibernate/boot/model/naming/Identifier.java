@@ -7,9 +7,12 @@ package org.hibernate.boot.model.naming;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 
+import static java.lang.Character.isLetter;
+import static java.lang.Character.isLetterOrDigit;
+import static java.lang.Character.isWhitespace;
 import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Models an identifier (name), which may or may not be quoted.
@@ -83,13 +86,13 @@ public class Identifier implements Comparable<Identifier> {
 		int start = 0;
 		int end = text.length();
 		while ( start < end ) {
-			if ( !Character.isWhitespace( text.charAt( start ) ) ) {
+			if ( !isWhitespace( text.charAt( start ) ) ) {
 				break;
 			}
 			start++;
 		}
 		while ( start < end ) {
-			if ( !Character.isWhitespace( text.charAt( end - 1 ) ) ) {
+			if ( !isWhitespace( text.charAt( end - 1 ) ) ) {
 				break;
 			}
 			end--;
@@ -102,14 +105,14 @@ public class Identifier implements Comparable<Identifier> {
 		else if ( quoteOnNonIdentifierChar && !quote ) {
 			// Check the letters to determine if we must quote the text
 			char c = text.charAt( start );
-			if ( !Character.isLetter( c ) && c != '_' ) {
+			if ( !isLetter( c ) && c != '_' ) {
 				// SQL identifiers must begin with a letter or underscore
 				quote = true;
 			}
 			else {
 				for ( int i = start + 1; i < end; i++ ) {
 					c = text.charAt( i );
-					if ( !Character.isLetterOrDigit( c ) && c != '_' ) {
+					if ( !isLetterOrDigit( c ) && c != '_' ) {
 						quote = true;
 						break;
 					}
@@ -163,7 +166,7 @@ public class Identifier implements Comparable<Identifier> {
 	 * @param quoted Is this a quoted identifier?
 	 */
 	public Identifier(String text, boolean quoted) {
-		if ( StringHelper.isEmpty( text ) ) {
+		if ( isEmpty( text ) ) {
 			throw new IllegalIdentifierException( "Identifier text cannot be null" );
 		}
 		if ( isQuoted( text ) ) {
@@ -234,11 +237,9 @@ public class Identifier implements Comparable<Identifier> {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( !(o instanceof Identifier) ) {
+		if ( !(o instanceof Identifier that) ) {
 			return false;
 		}
-
-		final Identifier that = (Identifier) o;
 		return getCanonicalName().equals( that.getCanonicalName() );
 	}
 

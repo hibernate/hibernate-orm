@@ -59,4 +59,15 @@ public class QueryTest {
 				}
 		);
 	}
+
+	@Test
+	@JiraKey(value = "HHH-14125" )
+	public void testSelectElementCollectionProperty(SessionFactoryScope scope) {
+		// Selecting property directly works for basic types and associated entities, should also work for ElementCollection
+		scope.inSession(
+				session -> {
+					session.createQuery( "select e.someStrings from EntityWithAnElementCollection e" ).list();
+				}
+		);
+	}
 }

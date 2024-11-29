@@ -98,6 +98,7 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 				// This does not work, but it's unrelated to HHH-13379; see HHH-13515
 				//.add( 2018, 9, 30, 2, 0, 0, 0, ZONE_AUCKLAND )
 				.add( 2018, 9, 30, 3, 0, 0, 0, ZONE_AUCKLAND )
+				.add( -1, 1, 1, 0, 0, 0, 0, ZONE_PARIS )
 				.build();
 	}
 

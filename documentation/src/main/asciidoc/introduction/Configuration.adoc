@@ -503,10 +503,11 @@ We'll have more to say about them in <<naming-strategies>>.
 [[quoted-identifiers]]
 === Quoting SQL identifiers
 
-By default, Hibernate never quotes SQL table and column names in generated SQL.
+By default, Hibernate never quotes a SQL table or column name in generated SQL when the name contains only alphanumeric characters.
 This behavior is usually much more convenient, especially when working with a legacy schema, since unquoted identifiers aren't case-sensitive, and so Hibernate doesn't need to know or care whether a column is named `NAME`, `name`, or `Name` on the database side.
+On the other hand, any table or column name containing a punctuation character like `$` is automatically quoted by default.
 
-The following settings enable automatic quoting:
+The following settings enable additional automatic quoting:
 
 .Settings for identifier quoting
 [%breakable,cols="35,~"]

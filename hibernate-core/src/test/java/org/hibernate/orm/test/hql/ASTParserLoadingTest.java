@@ -747,6 +747,7 @@ public class ASTParserLoadingTest {
 
 	@Test
 	@JiraKey(value = "HHH-4150")
+	@SkipForDialect( dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 70, reason = "Informix does not support case with count distinct")
 	public void testSelectClauseCaseWithCountDistinct(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -3643,19 +3644,21 @@ public class ASTParserLoadingTest {
 					hql = "select length(a.description) from Animal a";
 					session.createQuery( hql ).list();
 
-					if ( !( getDialect() instanceof InformixDialect && getDialect().getVersion().isBefore( 12 ) ) ) {
-			//note: postgres and db2 don't have a 3-arg form, it gets transformed to 2-args
-			hql = "from Animal a where locate('abc', a.description, 2) = 2";
-			session.createQuery( hql ).list();
+					Dialect dialect = session.getDialect();
+					// Informix before version 12 didn't support finding the index of substrings
+					if ( !(dialect instanceof InformixDialect && dialect.getVersion().isBefore( 12 )) ) {
+						//note: postgres and db2 don't have a 3-arg form, it gets transformed to 2-args
+						hql = "from Animal a where locate('abc', a.description, 2) = 2";
+						session.createQuery( hql ).list();
 
-			hql = "from Animal a where locate('abc', a.description) = 2";
-			session.createQuery( hql ).list();
+						hql = "from Animal a where locate('abc', a.description) = 2";
+						session.createQuery( hql ).list();
 
-			hql = "select locate('cat', a.description, 2) from Animal a";
-			session.createQuery( hql ).list();
-		}
+						hql = "select locate('cat', a.description, 2) from Animal a";
+						session.createQuery( hql ).list();
+					}
 
-					if ( !(session.getDialect() instanceof DB2Dialect) ) {
+					if ( !(dialect instanceof DB2Dialect) ) {
 						hql = "from Animal a where trim(trailing '_' from a.description) = 'cat'";
 						session.createQuery( hql ).list();
 
@@ -3669,7 +3672,7 @@ public class ASTParserLoadingTest {
 						session.createQuery( hql ).list();
 					}
 
-					if ( !(session.getDialect() instanceof HSQLDialect) ) { //HSQL doesn't like trim() without specification
+					if ( !(dialect instanceof HSQLDialect) ) { //HSQL doesn't like trim() without specification
 						hql = "from Animal a where trim(a.description) = 'cat'";
 						session.createQuery( hql ).list();
 					}
@@ -3728,6 +3731,7 @@ public class ASTParserLoadingTest {
 		}
 	}
 
+	@Test
 	@RequiresDialectFeature(
 			feature = DialectFeatureChecks.SupportSubqueryAsLeftHandSideInPredicate.class,
 			comment = "Database does not support using subquery as singular value expression"

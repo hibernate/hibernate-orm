@@ -712,6 +712,7 @@ public class HSQLDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );
+		builder.setAutoQuoteDollar( true );
 		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 

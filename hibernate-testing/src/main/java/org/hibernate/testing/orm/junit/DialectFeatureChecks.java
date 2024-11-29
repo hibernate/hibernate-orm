@@ -333,6 +333,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsSubqueryInSelect implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubqueryInSelect();
+		}
+	}
+
 	public static class SupportsValuesListForInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsValuesListForInsert();

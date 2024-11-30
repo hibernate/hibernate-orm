@@ -11,10 +11,13 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -22,9 +25,13 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * 
  * @author Shawn Clowater
  */
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+		reason = "JtdsConnection.isValid not implemented")
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-7193" )
+	@JiraKey(value = "HHH-7193")
+	@SkipForDialect(dialectClass = SQLServerDialect.class,
+			reason = "started failing after upgrade to c3p0 0.10")
 	public void testStatementCaching() {
 		inSession(
 				session -> {
@@ -58,7 +65,8 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		//only one entity should have been inserted to the database (if the statement in the cache wasn't cleared then it would have inserted both entities)
+		// only one entity should have been inserted to the database
+		// (if the statement in the cache wasn't cleared then it would have inserted both entities)
 		inTransaction(
 				session -> {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();

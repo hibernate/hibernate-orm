@@ -27,7 +27,7 @@ dependencies {
     api testLibs.bytemanInstall
     api testLibs.bytemanBmunit
 
-    api testLibs.xapool
+//    api testLibs.xapool
     api( testLibs.jbossTxSpi ) {
         transitive=false;
     }

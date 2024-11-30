@@ -85,7 +85,7 @@ dependencyResolutionManagement {
             def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.3.Final"
 
             def agroalVersion = version "agroal", "2.5"
-            def c3poVersion = version"c3p0", "0.10.1"
+            def c3poVersion = version "c3p0", "0.10.1"
             def hikaricpVersion = version "hikaricp", "6.2.1"
             def proxoolVersion = version "proxool", "0.8.3"
             def viburVersion = version "vibur", "25.0"
@@ -189,7 +189,7 @@ dependencyResolutionManagement {
             def shrinkwrapDescriptorsVersion = version "shrinkwrapDescriptors", "2.0.0"
             def weldVersion = version "weld", "5.1.3.Final"
             def wildFlyTxnClientVersion = version "wildFlyTxnClient", "2.0.0.Final"
-            def xapoolVersion = version "xapool", "1.5.0"
+//            def xapoolVersion = version "xapool", "1.5.0"
 
             def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
 
@@ -217,7 +217,7 @@ dependencyResolutionManagement {
             library( "mockito", "org.mockito", "mockito-core" ).versionRef( mockitoVersion )
 //            library( "mockitoInline", "org.mockito", "mockito-inline" ).versionRef( mockitoVersion )
 
-            library( "xapool", "com.experlog", "xapool" ).versionRef( xapoolVersion )
+//            library( "xapool", "com.experlog", "xapool" ).versionRef( xapoolVersion )
             library( "jbossJta", "org.jboss.narayana.jta", "narayana-jta" ).versionRef( jbossJtaVersion )
             library( "jbossTxSpi", "org.jboss", "jboss-transaction-spi" ).versionRef( jbossTxSpiVersion )
             library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).versionRef( wildFlyTxnClientVersion )
